@@ -81,6 +81,7 @@ export interface StarPlayer {
     skills: string;
     specialRules: string;
     playsFor: string[];
+    image?: string;
 }
 
 

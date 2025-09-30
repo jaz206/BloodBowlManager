@@ -92,7 +92,6 @@ const Casualties: React.FC = () => {
         )}
       </div>
 
-      {/* Fix: Removed invalid `jsx` prop from the `<style>` tag. */}
       <style>{`
         @keyframes fade-in {
           from { opacity: 0; transform: translateY(10px); }

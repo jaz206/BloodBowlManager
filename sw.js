@@ -1,4 +1,4 @@
-const CACHE_NAME = 'blood-bowl-guide-v23';
+const CACHE_NAME = 'blood-bowl-guide-v24';
 const URLS_TO_CACHE = [
   '/',
   '/index.html',
@@ -48,6 +48,7 @@ const URLS_TO_CACHE = [
   '/components/PostGameWizard.tsx',
   '/components/TurnoverModal.tsx',
   '/components/ApothecaryModal.tsx',
+  '/components/ImageModal.tsx',
   '/components/icons/ChevronDownIcon.tsx',
   '/components/icons/ChevronUpIcon.tsx',
   '/components/icons/DiceIcon.tsx',

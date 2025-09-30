@@ -10,7 +10,7 @@ export const teamsData: Team[] = [
     roster: [
       { qty: "0-12", position: "Goblin Bruiser Lineman", cost: 45000, stats: { MV: 6, FU: "2", AG: "3+", PS: "4+", AR: "8+" }, skills: "Cabeza dura, Escurridizo, Esquivar, Humanoide bala", primary: "A", secondary: "FGP" },
       { qty: "0-6", position: "Black Orc", cost: 90000, stats: { MV: 4, FU: "4", AG: "4+", PS: "5+", AR: "10+" }, skills: "Apartar, Luchador", primary: "FG", secondary: "AP" },
-      { qty: "0-1", position: "Trained Troll", cost: 115000, stats: { MV: 4, FU: "5", AG: "5+", PS: "5+", AR: "10+" }, skills: "Golpe mortífero (+1), Lanzar compañero, Proyectil de vómito, Realmente estúpido, Regeneración, Siempre hambriento, Solitario (3+)", primary: "F", secondary: "AG" },
+      { qty: "0-1", position: "Trained Troll", cost: 115000, stats: { MV: 4, FU: "5", AG: "5+", PS: "5+", AR: "10+" }, skills: "Golpe mortífero (+1), Lanzar compañero, Proyectil de vómito, Realmente estúpido, Regeneración, Siempre hambriento, Solitario (3+)", primary: "F", secondary: "AG" }
     ],
   },
   {
@@ -84,7 +84,7 @@ export const teamsData: Team[] = [
       { qty: "0-12", position: "Linemen", cost: 60000, stats: { MV: 6, FU: "3", AG: "2+", PS: "4+", AR: "8+" }, skills: "Ninguna", primary: "AG", secondary: "F" },
       { qty: "0-4", position: "Throwers", cost: 75000, stats: { MV: 6, FU: "3", AG: "2+", PS: "2+", AR: "8+" }, skills: "Pasar", primary: "AGP", secondary: "F" },
       { qty: "0-4", position: "Catchers", cost: 100000, stats: { MV: 8, FU: "3", AG: "2+", PS: "4+", AR: "8+" }, skills: "Atrapar, Nervios de acero", primary: "AG", secondary: "FP" },
-      { qty: "0-2", position: "Blitzers", cost: 115000, stats: { MV: 7, FU: "3", AG: "2+", PS: "4+", AR: "9+" }, skills: "Echarse a un lado, Placar", primary: "AG", secondary: "FP" },
+      { qty: "0-2", position: "Blitzers", cost: 115000, stats: { MV: 7, FU: "3", AG: "2+", PS: "4+", AR: "9+" }, skills: "Echarse a um lado, Placar", primary: "AG", secondary: "FP" },
     ],
   },
   {
@@ -97,7 +97,7 @@ export const teamsData: Team[] = [
       { qty: "0-16", position: "Lineman", cost: 40000, stats: { MV: 6, FU: "2", AG: "3+", PS: "4+", AR: "8+" }, skills: "Escurridizo, Esquivar, Humanoide bala", primary: "A", secondary: "FGP" },
       { qty: "0-1", position: "Bomma", cost: 45000, stats: { MV: 6, FU: "2", AG: "3+", PS: "4+", AR: "8+" }, skills: "Arma secreta, Bombardero, Escurridizo, Esquivar", primary: "AP", secondary: "FG" },
       { qty: "0-1", position: "Looney", cost: 40000, stats: { MV: 6, FU: "2", AG: "3+", PS: "-", AR: "8+" }, skills: "Arma secreta, Escurridizo, Motosierra", primary: "A", secondary: "FG" },
-      { qty: "0-1", position: "Fanatic", cost: 70000, stats: { MV: 3, FU: "7", AG: "3+", PS: "-", AR: "8+" }, skills: "Arma secreta, Bola con cadena, Escurridizo, Sin manos", primary: "F", secondary: "AGP" },
+      { qty: "0-1", position: "Fanatic", cost: 70000, stats: { MV: 3, FU: "7", AG: "3+", PS: "-", AR: "8+" }, skills: "Arma secreta, Bola com cadena, Escurridizo, Sin manos", primary: "F", secondary: "AGP" },
       { qty: "0-1", position: "Pogoer", cost: 75000, stats: { MV: 7, FU: "2", AG: "3+", PS: "4+", AR: "8+" }, skills: "Escurridizo, Esquivar, Pogo saltarín", primary: "A", secondary: "FGP" },
       { qty: "0-1", position: "'Ooligan", cost: 65000, stats: { MV: 6, FU: "2", AG: "3+", PS: "6+", AR: "8+" }, skills: "Escurridizo, Esquivar, Humanoide bala, Jugar sucio (+1), Presencia perturbadora", primary: "A", secondary: "FGP" },
       { qty: "0-1", position: "Doom Diver", cost: 60000, stats: { MV: 6, FU: "2", AG: "3+", PS: "6+", AR: "8+" }, skills: "Escurridizo, Humanoide bala, Planear", primary: "A", secondary: "FG" },
@@ -168,7 +168,7 @@ export const teamsData: Team[] = [
     roster: [
       { qty: "0-16", position: "Zombie Linemen", cost: 40000, stats: { MV: 4, FU: "3", AG: "4+", PS: "4+", AR: "9+" }, skills: "Regeneración", primary: "G", secondary: "AF" },
       { qty: "0-2", position: "Ghoul Runners", cost: 75000, stats: { MV: 7, FU: "3", AG: "3+", PS: "4+", AR: "8+" }, skills: "Esquivar", primary: "AG", secondary: "FP" },
-      { qty: "0-2", position: "Wraiths", cost: 95000, stats: { MV: 6, FU: "3", AG: "3+", PS: "-", AR: "9+" }, skills: "Apariencia asquerosa, Echarse a un lado, Placar, Regeneración, Sin manos", primary: "FG", secondary: "A" },
+      { qty: "0-2", position: "Wraiths", cost: 95000, stats: { MV: 6, FU: "3", AG: "3+", PS: "-", AR: "9+" }, skills: "Apariencia asquerosa, Echarse a um lado, Placar, Regeneración, Sin manos", primary: "FG", secondary: "A" },
       { qty: "0-2", position: "Werewolves", cost: 125000, stats: { MV: 8, FU: "3", AG: "3+", PS: "4+", AR: "9+" }, skills: "Furia, Garras, Regeneración", primary: "AG", secondary: "FP" },
       { qty: "0-2", position: "Flesh Golems", cost: 115000, stats: { MV: 4, FU: "4", AG: "4+", PS: "-", AR: "10+" }, skills: "Cabeza dura, Mantenerse firme, Regeneración", primary: "FG", secondary: "A" },
     ],
@@ -193,7 +193,7 @@ export const teamsData: Team[] = [
     tier: 3,
     apothecary: "Sí",
     roster: [
-      { qty: "0-16", position: "Gnoblar Linemen", cost: 15000, stats: { MV: 5, FU: "1", AG: "3+", PS: "5+", AR: "6+" }, skills: "Canijo, Echarse a un lado, Escurridizo, Esquivar, Humanoide bala", primary: "A", secondary: "G" },
+      { qty: "0-16", position: "Gnoblar Linemen", cost: 15000, stats: { MV: 5, FU: "1", AG: "3+", PS: "5+", AR: "6+" }, skills: "Canijo, Echarse a um lado, Escurridizo, Esquivar, Humanoide bala", primary: "A", secondary: "G" },
       { qty: "0-1", position: "Ogre Runt Punter", cost: 145000, stats: { MV: 5, FU: "5", AG: "4+", PS: "4+", AR: "10+" }, skills: "Cabeza dura, Chutar compañero, Estúpido, Golpe mortífero (+1)", primary: "FP", secondary: "AG" },
       { qty: "0-5", position: "Ogre Blockers", cost: 140000, stats: { MV: 5, FU: "5", AG: "4+", PS: "5+", AR: "10+" }, skills: "Cabeza dura, Estúpido, Golpe mortífero (+1), Lanzar compañero", primary: "F", secondary: "AGP" },
     ],
@@ -254,10 +254,10 @@ export const teamsData: Team[] = [
     tier: 3,
     apothecary: "Sí",
     roster: [
-      { qty: "0-16", position: "Snotling Linemen", cost: 15000, stats: { MV: 5, FU: "1", AG: "3+", PS: "5+", AR: "6+" }, skills: "Canijo, Colarse, Echarse a un lado, Escurridizo, Esquivar, Humanoide bala", primary: "A", secondary: "G" },
-      { qty: "0-2", position: "Fungus Flingas", cost: 30000, stats: { MV: 5, FU: "1", AG: "3+", PS: "4+", AR: "6+" }, skills: "Arma secreta, Bombardero, Echarse a un lado, Escurridizo, Esquivar, Humanoide bala", primary: "AP", secondary: "G" },
-      { qty: "0-2", position: "Fun-hoppas", cost: 20000, stats: { MV: 6, FU: "1", AG: "3+", PS: "5+", AR: "6+" }, skills: "Echarse a un lado, Humanoide bala, Pogo saltarín", primary: "A", secondary: "G" },
-      { qty: "0-2", position: "Stilty Runnas", cost: 20000, stats: { MV: 6, FU: "1", AG: "3+", PS: "5+", AR: "6+" }, skills: "Echarse a un lado, Esprintar, Esquivar, Humanoide bala", primary: "A", secondary: "G" },
+      { qty: "0-16", position: "Snotling Linemen", cost: 15000, stats: { MV: 5, FU: "1", AG: "3+", PS: "5+", AR: "6+" }, skills: "Canijo, Colarse, Echarse a um lado, Escurridizo, Esquivar, Humanoide bala", primary: "A", secondary: "G" },
+      { qty: "0-2", position: "Fungus Flingas", cost: 30000, stats: { MV: 5, FU: "1", AG: "3+", PS: "4+", AR: "6+" }, skills: "Arma secreta, Bombardero, Echarse a um lado, Escurridizo, Esquivar, Humanoide bala", primary: "AP", secondary: "G" },
+      { qty: "0-2", position: "Fun-hoppas", cost: 20000, stats: { MV: 6, FU: "1", AG: "3+", PS: "5+", AR: "6+" }, skills: "Echarse a um lado, Humanoide bala, Pogo saltarín", primary: "A", secondary: "G" },
+      { qty: "0-2", position: "Stilty Runnas", cost: 20000, stats: { MV: 6, FU: "1", AG: "3+", PS: "5+", AR: "6+" }, skills: "Echarse a um lado, Esprintar, Esquivar, Humanoide bala", primary: "A", secondary: "G" },
       { qty: "0-2", position: "Pump Wagons", cost: 105000, stats: { MV: 4, FU: "5", AG: "5+", PS: "-", AR: "9+" }, skills: "Arma secreta, Golpe mortífero (+1), Imparable, Jugar sucio (+1), Mantenerse firme, Realmente estúpido, Regeneración, Siempre hambriento, Solitario (3+)", primary: "F", secondary: "AG" },
       { qty: "0-2", position: "Trained Trolls", cost: 115000, stats: { MV: 4, FU: "5", AG: "5+", PS: "5+", AR: "10+" }, skills: "Golpe mortífero (+1), Lanzar compañero, Proyectil de vómito, Realmente estúpido, Regeneración, Siempre hambriento, Solitario (3+)", primary: "F", secondary: "AGP" },
     ],
@@ -284,7 +284,7 @@ export const teamsData: Team[] = [
     apothecary: "Sí",
     roster: [
       { qty: "0-12", position: "Underworld Goblin Linemen", cost: 40000, stats: { MV: 6, FU: "2", AG: "3+", PS: "4+", AR: "8+" }, skills: "Escurridizo, Esquivar, Humanoide bala", primary: "AM", secondary: "FG" },
-      { qty: "0-6", position: "Underworld Snotlings", cost: 15000, stats: { MV: 5, FU: "1", AG: "3+", PS: "5+", AR: "6+" }, skills: "Canijo, Echarse a un lado, Esquivar, Humanoide bala", primary: "AM", secondary: "G" },
+      { qty: "0-6", position: "Underworld Snotlings", cost: 15000, stats: { MV: 5, FU: "1", AG: "3+", PS: "5+", AR: "6+" }, skills: "Canijo, Echarse a um lado, Esquivar, Humanoide bala", primary: "AM", secondary: "G" },
       { qty: "0-3", position: "Skaven Clanrat", cost: 50000, stats: { MV: 7, FU: "3", AG: "3+", PS: "4+", AR: "8+" }, skills: "Animadversión (Underworld Goblin Linemen)", primary: "GM", secondary: "AF" },
       { qty: "0-1", position: "Skaven Thrower", cost: 85000, stats: { MV: 7, FU: "3", AG: "3+", PS: "2+", AR: "8+" }, skills: "Animadversión (Underworld Goblin Linemen), Manos seguras, Pasar", primary: "GMP", secondary: "AF" },
       { qty: "0-1", position: "Gutter Runner", cost: 85000, stats: { MV: 9, FU: "2", AG: "2+", PS: "4+", AR: "8+" }, skills: "Animadversión (Underworld Goblin Linemen), Esquivar", primary: "AGM", secondary: "FP" },
@@ -306,5 +306,5 @@ export const teamsData: Team[] = [
       { qty: "0-2", position: "Wardancers", cost: 125000, stats: { MV: 8, FU: "3", AG: "2+", PS: "4+", AR: "8+" }, skills: "Esquivar, Placar, Saltar", primary: "AG", secondary: "FP" },
       { qty: "0-1", position: "Loren Forest Treeman", cost: 120000, stats: { MV: 2, FU: "6", AG: "5+", PS: "5+", AR: "11+" }, skills: "Echar raíces, Cabeza dura, Golpe mortífero (+1), Lanzar compañero, Mantenerse firme, Solitario (4+)", primary: "F", secondary: "AGP" },
     ],
-  },
+  }
 ];

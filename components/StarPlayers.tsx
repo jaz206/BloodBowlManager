@@ -3,29 +3,38 @@ import React, { useState, useMemo } from 'react';
 import { starPlayersData } from '../data/starPlayers';
 import type { StarPlayer } from '../types';
 import StarPlayerModal from './StarPlayerModal';
+import ImageModal from './ImageModal';
 
-const StarPlayerCard: React.FC<{ player: StarPlayer, onClick: () => void }> = ({ player, onClick }) => (
-    <button onClick={onClick} className="w-full h-full text-left bg-slate-800 p-4 rounded-lg border border-slate-700 hover:bg-slate-700/50 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500">
-        <div className="flex justify-between items-start gap-4">
-            <h3 className="text-lg font-semibold text-amber-400">{player.name}</h3>
-            <span className="text-sm font-bold text-green-400 flex-shrink-0">{player.cost.toLocaleString()} M.O.</span>
+const StarPlayerCard: React.FC<{ player: StarPlayer, onCardClick: () => void, onImageClick: (e: React.MouseEvent) => void }> = ({ player, onCardClick, onImageClick }) => (
+    <div onClick={onCardClick} className="w-full h-full text-left bg-slate-800 p-4 rounded-lg border border-slate-700 hover:bg-slate-700/50 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 flex items-center gap-4 cursor-pointer">
+        {player.image && (
+            <div className="w-24 h-24 flex-shrink-0" onClick={onImageClick}>
+                <img src={player.image} alt={player.name} className="w-full h-full object-contain rounded-md bg-slate-900 transition-transform hover:scale-105" />
+            </div>
+        )}
+        <div className="flex flex-col flex-grow">
+            <div className="flex justify-between items-start gap-2">
+                <h3 className="text-lg font-semibold text-amber-400">{player.name}</h3>
+                <span className="text-sm font-bold text-green-400 flex-shrink-0">{player.cost.toLocaleString()} M.O.</span>
+            </div>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-300 mt-2 font-mono">
+                <span>MV: {player.stats.MV}</span>
+                <span>FU: {player.stats.FU}</span>
+                <span>AG: {player.stats.AG}</span>
+                <span>PS: {player.stats.PS}</span>
+                <span>AR: {player.stats.AR}</span>
+            </div>
+            <p className="text-xs text-slate-400 mt-2">
+                {player.skills}
+            </p>
         </div>
-        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-300 mt-2 font-mono">
-            <span>MV: {player.stats.MV}</span>
-            <span>FU: {player.stats.FU}</span>
-            <span>AG: {player.stats.AG}</span>
-            <span>PS: {player.stats.PS}</span>
-            <span>AR: {player.stats.AR}</span>
-        </div>
-        <p className="text-xs text-slate-400 mt-2">
-            {player.skills}
-        </p>
-    </button>
+    </div>
 );
 
 const StarPlayers: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPlayer, setSelectedPlayer] = useState<StarPlayer | null>(null);
+  const [enlargedImage, setEnlargedImage] = useState<{src: string, alt: string} | null>(null);
 
   const filteredPlayers = useMemo(() => {
     const sortedPlayers = [...starPlayersData].sort((a, b) => a.name.localeCompare(b.name));
@@ -38,6 +47,13 @@ const StarPlayers: React.FC = () => {
       player.playsFor.join(' ').toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [searchTerm]);
+
+  const handleImageClick = (e: React.MouseEvent, player: StarPlayer) => {
+    e.stopPropagation();
+    if (player.image) {
+        setEnlargedImage({src: player.image, alt: player.name});
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -59,13 +75,21 @@ const StarPlayers: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredPlayers.length > 0 ? (
-                filteredPlayers.map(player => <StarPlayerCard key={player.name} player={player} onClick={() => setSelectedPlayer(player)} />)
+                filteredPlayers.map(player => 
+                    <StarPlayerCard 
+                        key={player.name} 
+                        player={player} 
+                        onCardClick={() => setSelectedPlayer(player)} 
+                        onImageClick={(e) => handleImageClick(e, player)} 
+                    />
+                )
             ) : (
                 <p className="text-center text-slate-400 py-8 md:col-span-2 lg:col-span-3">No se encontraron jugadores que coincidan con la búsqueda.</p>
             )}
         </div>
 
         {selectedPlayer && <StarPlayerModal player={selectedPlayer} onClose={() => setSelectedPlayer(null)} />}
+        {enlargedImage && <ImageModal src={enlargedImage.src} alt={enlargedImage.alt} onClose={() => setEnlargedImage(null)} />}
     </div>
   );
 };
