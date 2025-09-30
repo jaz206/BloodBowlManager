@@ -1,0 +1,21 @@
+
+import type { Prayer } from '../types';
+
+export const prayersData: Prayer[] = [
+  { diceRoll: "1", title: "Trampilla traicionera", description: "Hasta el final de esta parte del partido, cada vez que algún jugador entre en una casilla de trampilla por cualquier motivo, tira 1D6. Si sacas un 1 la trampilla se abre y el jugador es inmediatamente retirado del juego." },
+  { diceRoll: "2", title: "Amigo del árbitro", description: "Hasta el final de esta entrada, puedes tratar una tirada de 5 en la tabla de Protestar al árbitro como un resultado de “Ahora que lo dices...” en lugar de uno de “¡Me da igual!”." },
+  { diceRoll: "3", title: "¡Fanático!", description: "Elige un jugador aleatorio de tu equipo que esté disponible para jugar en esta entrada y no tenga el rasgo de Solitario (X+). Hasta el final de esta entrada, dicho jugador puede Apuntalar." },
+  { diceRoll: "4", title: "Músculos de hierro", description: "Elige un jugador de tu equipo que esté disponible para jugar en esta entrada y no tenga el rasgo de Solitario (X+). Hasta el final del partido, dicho jugador aumenta en 1 su atributo AR, hasta un máximo de 11." },
+  { diceRoll: "5", title: "Nudillos", description: "Elige un jugador de tu equipo que esté disponible para jugar en esta entrada y no tenga el rasgo de Solitario (X+). Hasta el final de esta entrada, dicho jugador obtiene la habilidad Golpe mortífero (+1)." },
+  { diceRoll: "6", title: "Malas costumbres", description: "Elige aleatoriamente a 1D3 jugadores rivales que estén disponibles para jugar en esta entrada y no tengan el rasgo de Solitario (X+). Hasta el final de esta entrada, dichos jugadores obtienen Solitario (X+)." },
+  { diceRoll: "7", title: "Tacos engrasados", description: "Elige un jugador rival aleatorio que esté disponible para jugar en esta entrada. ¡Sus botas han sido saboteadas! Hasta el final de la entrada, su atributo MV se reduce en 1." },
+  { diceRoll: "8", title: "Estatua bendita de Nuffle", description: "Elige un jugador de tu equipo que esté disponible para jugar en esta entrada y que no tenga el rasgo de Solitario (X+). Hasta el final del partido, dicho jugador obtiene la habilidad Profesional." },
+  { diceRoll: "9", title: "Topos bajo el campo", description: "Hasta el final de esta parte del partido, aplica un modificador de -1 a los intentos de forzar la marcha (o de -2 si ambos entrenadores obtienen este resultado)." },
+  { diceRoll: "10", title: "Pase perfecto", description: "Hasta el final de esta entrada, si un jugador de tu equipo que logre un Pase completo gana 2 PE en lugar de 1." },
+  { diceRoll: "11", title: "Apoyo del público", description: "Hasta el final de esta entrada, si un jugador de tu equipo deja Lesionado a un rival empujarlo fuera del campo, tu jugador gana 2 PE igual que si lo hubiera dejado Lesionado con una acción de Placaje." },
+  { diceRoll: "12", title: "Vivencias necesarias", description: "Hasta el final de esta entrada, si un jugador de tu equipo deja Lesionado a un rival mientras una acción de Falta, tu jugador gana 2 PE igual que si lo hubiera dejado Lesionado mediante una acción de Placaje." },
+  { diceRoll: "13", title: "Con faltas y a lo loco", description: "Hasta el final de esta entrada, tu jugador gana 2 PE igual que si lo hubiera dejado Lesionado mediante una acción de Falta, tu jugador gana 2 PE igual que si lo hubiera dejado Lesionado mediante una acción de Placaje." },
+  { diceRoll: "14", title: "Pedrada", description: "Hasta el final de esta entrada, si un jugador rival está reteniendo el balón, al final del turno de su equipo puedes tirar 1D6. Con un 5+, un hincha enfurecido lanza una piedra a ese jugador. El jugador es Derribado inmediatamente." },
+  { diceRoll: "15", title: "Escudo de Nuffle", description: "Hasta el final de esta parte del partido, cualquier jugador rival que cometa una acción de Falta y sea pillado por el árbitro, aunque no saque un doble natural en la tirada de Armadura, no es Expulsado." },
+  { diceRoll: "16", title: "Entrenamiento intensivo", description: "Elige aleatoriamente un jugador de tu equipo que esté disponible para jugar en esta entrada y no tenga el rasgo de Solitario (X+). Hasta el final del partido, dicho jugador obtiene una Habilidad Primaria a tu elección." }
+];

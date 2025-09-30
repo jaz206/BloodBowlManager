@@ -1,0 +1,21 @@
+{
+  "short_name": "Asistente BB",
+  "name": "Asistente de Blood Bowl",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#0f172a",
+  "background_color": "#0f172a",
+  "description": "Tu asistente de entrenador definitivo para Blood Bowl. Gestiona equipos, planifica jugadas, consulta reglas, genera tiradas y sigue tus partidos en directo."
+}

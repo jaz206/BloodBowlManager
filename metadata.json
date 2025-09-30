@@ -1,0 +1,7 @@
+{
+  "name": "Asistente de Blood Bowl",
+  "description": "Tu asistente de entrenador definitivo para Blood Bowl. Gestiona equipos, planifica jugadas, consulta reglas, genera tiradas y sigue tus partidos en directo.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
