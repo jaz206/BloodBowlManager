@@ -8,7 +8,7 @@ export const starPlayersData: StarPlayer[] = [
     skills: "Sed de Sangre (2+), Esquivar, Mirada Hipnótica, En pie de um Salto, Solitario (4+), Regeneración",
     specialRules: "Tasty Morsel: Uma vez por partido, si Karina falla uma tirada de Sed de Sangre, puede elegir morder a um jugador rival com FU 3 o menos.",
     playsFor: ["Selectiva de Sylvania"],
-    image: "https://static.wikia.nocookie.net/labibliotecadelviejomundo/images/c/cc/Karina_von_Riesz.jpg/revision/latest?cb=20230905220121&path-prefix=es"
+    image: "https://bloodbowlbase.ru/media/starplayers/CptKarinaVonRiesz1.jpg"
   },
   {
     name: "Akhorne The Squirrel",
