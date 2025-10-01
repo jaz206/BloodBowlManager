@@ -62,6 +62,7 @@ export const starPlayersData: StarPlayer[] = [
     skills: "Precisión, Bombardero, Esquivar, Solitario (4+), Humanoide Bala, Arma Secreta, Escurridizo",
     specialRules: "Kaboom!: Uma vez por partido, si um oponente atrapa uma bomba lanzada por Bomber, puedes decidir que explote inmediatamente.",
     playsFor: ["Reyerta en las Yermas", "Reto del Inframundo"],
+    image: "https://bloodbowlbase.ru/media/starplayers/BomberDribblesnotLead.jpg",
   },
   {
     name: "Bryce 'The Slice' Cambuel",
@@ -70,6 +71,7 @@ export const starPlayersData: StarPlayer[] = [
     skills: "Motosierra, Solitario (4+), Regeneración, Arma Secreta, Mantenerse Firme, Cabeza Dura",
     specialRules: "Ghostly Flames: Uma vez por parte, cuando Bryce realiza um ataque de Motosierra como parte de uma Penetración, puede añadir +4 a la tirada de Armadura en lugar de +3.",
     playsFor: ["Selectiva de Sylvania"],
+    image: "https://bloodbowlbase.ru/media/starplayers/BryceSlice1.jpg",
   },
   {
     name: "Cindy Piewhistle",
@@ -78,6 +80,7 @@ export const starPlayersData: StarPlayer[] = [
     skills: "Accurate, Bombardier, Dodge, Loner (4+), Secret Weapon, Stunty, All You Can Eat",
     specialRules: "Once per game, Cindy can re-roll a single dice when making a Pass action.",
     playsFor: ["Copa Dedal Halfling", "Clásico del Viejo Mundo"],
+    image: "https://bloodbowlbase.ru/media/starplayers/CindyPiewhistle01.jpg",
   },
   {
     name: "Count Luthor von Drakenborg",
@@ -86,7 +89,7 @@ export const starPlayersData: StarPlayer[] = [
     skills: "Block, Hypnotic Gaze, Loner (4+), Regeneration, Side Step, Star of the Show",
     specialRules: "If Luthor is Knocked Down, roll a D6. On a 4+, he stands up immediately.",
     playsFor: ["Selectiva de Sylvania"],
-    image: "https://static.wikia.nocookie.net/labibliotecadelviejomundo/images/a/aa/Luthor_von_Drakenburg_miniatura.jpg/revision/latest?cb=20230905224433&path-prefix=es",
+    image: "https://bloodbowlbase.ru/media/starplayers/LuthorVonDrakenborg1.jpg",
   },
   {
     name: "Crumbleberry",
@@ -95,6 +98,7 @@ export const starPlayersData: StarPlayer[] = [
     skills: "Dodge, Loner (4+), Right Stuff, Stunty, Sure Hands, Two for One",
     specialRules: "Paired with Grak, they must be hired as a pair.",
     playsFor: ["Any Team"],
+    image: "https://bloodbowlbase.ru/media/starplayers/GrakCrumbleberry11hw.jpg",
   },
   {
     name: "Deeproot Strongbranch",
@@ -103,22 +107,16 @@ export const starPlayersData: StarPlayer[] = [
     skills: "Block, Loner (4+), Mighty Blow (2+), Stand Firm, Strong Arm, Thick Skull, Throw Team-mate, Timmm-ber!, Reliable",
     specialRules: "Timmm-ber!: If Deeproot fails a Really Stupid roll, he does not lose his Tackle Zone.",
     playsFor: ["Copa Dedal Halfling", "Clásico del Viejo Mundo"],
+    image: "https://bloodbowlbase.ru/media/starplayers/DeeprootStrongbranch01.jpg",
   },
   {
-    name: "Dribl",
+    name: "Dribl & Drull",
     cost: 190000,
     stats: { MV: 8, FU: "2", AG: "3+", PS: "4+", AR: "8+" },
-    skills: "Dirty Player (+1), Dodge, Loner (4+), Side Step, Sneaky Git, Stunty, A Sneaky Pair",
-    specialRules: "Paired with Drull. Can perform a free Foul action after a Block if they are both adjacent to the target.",
+    skills: "Dribl: Jugar Sucio (+1), Esquivar, Solitario (4+), Echarse a un Lado, Furtivo, Escurridizo. Drull: Esquivar, Solitario (4+), Echarse a un Lado, Apuñalar, Escurridizo.",
+    specialRules: "Un Par Furtivo: Dribl y Drull deben ser contratados como pareja y cuentan como dos Jugadores Estrella. Adicionalmente, cuando Dribl o Drull realizan una acción de Apuñalar o Falta contra un jugador oponente marcado por ambos, pueden aplicar un modificador de +1 a la tirada de herida.",
     playsFor: ["Superliga Lustriana"],
-  },
-  {
-    name: "Drull",
-    cost: 190000,
-    stats: { MV: 8, FU: "2", AG: "3+", PS: "4+", AR: "8+" },
-    skills: "Dodge, Loner (4+), Side Step, Stab, Stunty, A Sneaky Pair",
-    specialRules: "Paired with Dribl. Can perform a free Foul action after a Block if they are both adjacent to the target.",
-    playsFor: ["Superliga Lustriana"],
+    image: "https://bloodbowlbase.ru/media/starplayers/DrullDrible2.jpg",
   },
   {
     name: "Eldril Sidewinder",
@@ -127,6 +125,7 @@ export const starPlayersData: StarPlayer[] = [
     skills: "Catch, Dodge, Hypnotic Gaze, Loner (4+), Nerves Of Steel, On The Ball, Mesmerizing Gaze",
     specialRules: "Mesmerizing Gaze: Once per game, may use Hypnotic Gaze on a player up to 3 squares away.",
     playsFor: ["Liga de los Reinos Elfos"],
+    image: "https://bloodbowlbase.ru/media/starplayers/BBEldrilSidewinder01.jpg",
   },
   {
     name: "Estelle La Veneaux",
@@ -135,6 +134,7 @@ export const starPlayersData: StarPlayer[] = [
     skills: "Disturbing Presence, Dodge, Guard, Loner (4+), Side Step, Baleful Hex",
     specialRules: "Baleful Hex: Once per game, choose an opposition player within 3 squares. On a 2+, that player loses their tackle zones until the start of their next activation.",
     playsFor: ["Superliga Lustriana"],
+    image: "https://bloodbowlbase.ru/media/starplayers/BBEstellelaVeneauxLead.jpg",
   },
   {
     name: "Frank 'n' Stein",
@@ -143,6 +143,7 @@ export const starPlayersData: StarPlayer[] = [
     skills: "Break Tackle, Loner (4+), Mighty Blow (+1), Regeneration, Stand Firm, Thick Skull, Brutal Block",
     specialRules: "Brutal Block: This player may re-roll a single Both Down result.",
     playsFor: ["Clásico del Viejo Mundo", "Selectiva de Sylvania"],
+    image: "https://bloodbowlbase.ru/media/starplayers/FrankNSteinLead.jpg",
   },
   {
     name: "Fungus the Loon",
@@ -151,6 +152,7 @@ export const starPlayersData: StarPlayer[] = [
     skills: "Ball & Chain, Mighty Blow (+1), Loner (4+), No Hands, Secret Weapon, Stunty, Whirling Dervish",
     specialRules: "Whirling Dervish: If this player is ever pushed back, they are Knocked Down instead.",
     playsFor: ["Reyerta en las Yermas", "Reto del Inframundo"],
+    image: "https://bloodbowlbase.ru/media/starplayers/FungusTheLoon.jpg",
   },
   {
     name: "Glart Smashrip",
@@ -159,6 +161,7 @@ export const starPlayersData: StarPlayer[] = [
     skills: "Block, Claw, Grab, Juggernaut, Loner (4+), Stand Firm, Frenzied Rush",
     specialRules: "Frenzied Rush: This player does not have to pay a team re-roll to use the Pro skill.",
     playsFor: ["Elegidos de...", "Reto del Inframundo"],
+    image: "https://bloodbowlbase.ru/media/starplayers/GlartSmashrip01.jpg",
   },
   {
     name: "Gloriel Summerbloom",
@@ -183,6 +186,7 @@ export const starPlayersData: StarPlayer[] = [
     skills: "Bone Head, Kick Team-mate, Loner (4+), Mighty Blow (+1), Thick Skull, Two for One",
     specialRules: "Paired with Crumbleberry, they must be hired as a pair.",
     playsFor: ["Any Team"],
+    image: "https://bloodbowlbase.ru/media/starplayers/GrakCrumbleberry11hw.jpg",
   },
   {
     name: "Grashnak Blackhoof",

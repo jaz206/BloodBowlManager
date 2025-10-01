@@ -35,6 +35,10 @@ const StarPlayerModal: React.FC<StarPlayerModalProps> = ({ player, onClose }) =>
     setSelectedSkill(null);
   };
 
+  const driblSkills = "Jugar Sucio (+1), Esquivar, Solitario (4+), Echarse a un Lado, Furtivo, Escurridizo";
+  const drullSkills = "Esquivar, Solitario (4+), Echarse a un Lado, Apuñalar, Escurridizo";
+
+
   return (
     <>
       <div
@@ -73,40 +77,106 @@ const StarPlayerModal: React.FC<StarPlayerModalProps> = ({ player, onClose }) =>
                 </div>
               )}
               <div className="flex-grow">
-                <div className="mb-4">
-                  <h3 className="font-semibold text-slate-300 mb-2">Estadísticas</h3>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 bg-slate-900/50 p-2 rounded-md text-slate-200 text-sm">
-                    <span className="font-mono">MV: {player.stats.MV}</span>
-                    <span className="font-mono">FU: {player.stats.FU}</span>
-                    <span className="font-mono">AG: {player.stats.AG}</span>
-                    <span className="font-mono">PS: {player.stats.PS}</span>
-                    <span className="font-mono">AR: {player.stats.AR}</span>
+                {player.name === 'Dribl & Drull' ? (
+                  <div className="space-y-6">
+                    {/* Dribl */}
+                    <div>
+                      <h3 className="font-bold text-lg text-white mb-2">Dribl</h3>
+                      <div className="mb-4">
+                        <h4 className="font-semibold text-slate-300 mb-2 text-sm">Estadísticas</h4>
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 bg-slate-900/50 p-2 rounded-md text-slate-200 text-sm">
+                          <span className="font-mono">MV: {player.stats.MV}</span>
+                          <span className="font-mono">FU: {player.stats.FU}</span>
+                          <span className="font-mono">AG: {player.stats.AG}</span>
+                          <span className="font-mono">PS: {player.stats.PS}</span>
+                          <span className="font-mono">AR: {player.stats.AR}</span>
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-slate-300 mb-2 text-sm">Habilidades</h4>
+                        <p className="text-sm text-slate-300">
+                          {driblSkills.split(', ').map((skill, index, arr) => (
+                            <React.Fragment key={`dribl-${skill}`}>
+                              <button onClick={() => handleSkillClick(skill)} className="text-sky-400 hover:text-sky-300 hover:underline focus:outline-none focus:ring-1 focus:ring-sky-300 rounded">{skill.trim()}</button>
+                              {index < arr.length - 1 && ', '}
+                            </React.Fragment>
+                          ))}
+                        </p>
+                      </div>
+                    </div>
+                    {/* Drull */}
+                     <div>
+                      <h3 className="font-bold text-lg text-white mb-2">Drull</h3>
+                      <div className="mb-4">
+                        <h4 className="font-semibold text-slate-300 mb-2 text-sm">Estadísticas</h4>
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 bg-slate-900/50 p-2 rounded-md text-slate-200 text-sm">
+                          <span className="font-mono">MV: {player.stats.MV}</span>
+                          <span className="font-mono">FU: {player.stats.FU}</span>
+                          <span className="font-mono">AG: {player.stats.AG}</span>
+                          <span className="font-mono">PS: {player.stats.PS}</span>
+                          <span className="font-mono">AR: {player.stats.AR}</span>
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-slate-300 mb-2 text-sm">Habilidades</h4>
+                        <p className="text-sm text-slate-300">
+                          {drullSkills.split(', ').map((skill, index, arr) => (
+                            <React.Fragment key={`drull-${skill}`}>
+                              <button onClick={() => handleSkillClick(skill)} className="text-sky-400 hover:text-sky-300 hover:underline focus:outline-none focus:ring-1 focus:ring-sky-300 rounded">{skill.trim()}</button>
+                              {index < arr.length - 1 && ', '}
+                            </React.Fragment>
+                          ))}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-slate-700 pt-4">
+                        <h3 className="font-semibold text-slate-300 mb-2">Reglas Especiales</h3>
+                        <p className="text-sm text-slate-300 italic">{player.specialRules}</p>
+                    </div>
+                    <div>
+                        <h3 className="font-semibold text-slate-300 mb-2">Juega para</h3>
+                        <p className="text-sm text-slate-400">{player.playsFor.join(', ')}</p>
+                    </div>
                   </div>
-                </div>
-                <div className="mb-4">
-                  <h3 className="font-semibold text-slate-300 mb-2">Habilidades</h3>
-                  <p className="text-sm text-slate-300">
-                    {player.skills.split(', ').map((skill, index, arr) => (
-                      <React.Fragment key={skill}>
-                        <button
-                          onClick={() => handleSkillClick(skill)}
-                          className="text-sky-400 hover:text-sky-300 hover:underline focus:outline-none focus:ring-1 focus:ring-sky-300 rounded"
-                        >
-                          {skill.trim()}
-                        </button>
-                        {index < arr.length - 1 && ', '}
-                      </React.Fragment>
-                    ))}
-                  </p>
-                </div>
-                <div className="mb-4">
-                  <h3 className="font-semibold text-slate-300 mb-2">Reglas Especiales</h3>
-                  <p className="text-sm text-slate-300 italic">{player.specialRules}</p>
-                </div>
-                 <div>
-                  <h3 className="font-semibold text-slate-300 mb-2">Juega para</h3>
-                  <p className="text-sm text-slate-400">{player.playsFor.join(', ')}</p>
-                </div>
+                ) : (
+                  <>
+                    <div className="mb-4">
+                      <h3 className="font-semibold text-slate-300 mb-2">Estadísticas</h3>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 bg-slate-900/50 p-2 rounded-md text-slate-200 text-sm">
+                        <span className="font-mono">MV: {player.stats.MV}</span>
+                        <span className="font-mono">FU: {player.stats.FU}</span>
+                        <span className="font-mono">AG: {player.stats.AG}</span>
+                        <span className="font-mono">PS: {player.stats.PS}</span>
+                        <span className="font-mono">AR: {player.stats.AR}</span>
+                      </div>
+                    </div>
+                    <div className="mb-4">
+                      <h3 className="font-semibold text-slate-300 mb-2">Habilidades</h3>
+                      <p className="text-sm text-slate-300">
+                        {player.skills.split(', ').map((skill, index, arr) => (
+                          <React.Fragment key={skill}>
+                            <button
+                              onClick={() => handleSkillClick(skill)}
+                              className="text-sky-400 hover:text-sky-300 hover:underline focus:outline-none focus:ring-1 focus:ring-sky-300 rounded"
+                            >
+                              {skill.trim()}
+                            </button>
+                            {index < arr.length - 1 && ', '}
+                          </React.Fragment>
+                        ))}
+                      </p>
+                    </div>
+                    <div className="mb-4">
+                      <h3 className="font-semibold text-slate-300 mb-2">Reglas Especiales</h3>
+                      <p className="text-sm text-slate-300 italic">{player.specialRules}</p>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-300 mb-2">Juega para</h3>
+                      <p className="text-sm text-slate-400">{player.playsFor.join(', ')}</p>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
