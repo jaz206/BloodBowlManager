@@ -1,9 +1,9 @@
 
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import type { Token, Play, PlayerPosition, ManagedTeam, ManagedPlayer } from '../types';
+import { useAuth } from '../hooks/useAuth';
 
-const PLAYS_STORAGE_KEY = 'bloodbowl-plays';
 const MAX_TOKENS = 11;
 const GRID_COLS = 15;
 const GRID_ROWS = 13;
@@ -25,6 +25,9 @@ interface PlaysProps {
 }
 
 const Plays: React.FC<PlaysProps> = ({ managedTeams }) => {
+  const { user } = useAuth();
+  const PLAYS_STORAGE_KEY = useMemo(() => user ? `bb-plays-${user.id}` : 'bloodbowl-plays', [user]);
+
   const [tokens, setTokens] = useState<BoardToken[]>([]);
   const [savedPlays, setSavedPlays] = useState<Play[]>([]);
   const [playName, setPlayName] = useState('');
@@ -43,12 +46,19 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams }) => {
         setSavedPlays(parsedPlays);
         if (parsedPlays.length > 0) {
             setSelectedPlay(parsedPlays[0].name);
+        } else {
+            setSelectedPlay('');
         }
+      } else {
+        setSavedPlays([]);
+        setSelectedPlay('');
       }
     } catch (error) {
       console.error("Failed to load plays from localStorage", error);
+      setSavedPlays([]);
+      setSelectedPlay('');
     }
-  }, []);
+  }, [PLAYS_STORAGE_KEY]);
 
   // Effect to clean up event listeners on unmount
   useEffect(() => {

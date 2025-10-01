@@ -18,6 +18,8 @@ const URLS_TO_CACHE = [
   '/data/prayers.ts',
   '/data/starPlayers.ts',
   '/data/randomNames.ts',
+  '/contexts/AuthContext.tsx',
+  '/hooks/useAuth.ts',
   '/components/GameSequence.tsx',
   '/components/Weather.tsx',
   '/components/KickoffEvents.tsx',
@@ -49,6 +51,7 @@ const URLS_TO_CACHE = [
   '/components/TurnoverModal.tsx',
   '/components/ApothecaryModal.tsx',
   '/components/ImageModal.tsx',
+  '/components/UserProfile.tsx',
   '/components/icons/ChevronDownIcon.tsx',
   '/components/icons/ChevronUpIcon.tsx',
   '/components/icons/DiceIcon.tsx',
@@ -72,12 +75,14 @@ const URLS_TO_CACHE = [
   '/components/icons/CasualtyIcon.tsx',
   '/components/icons/InterferenceIcon.tsx',
   '/components/icons/QuestionMarkCircleIcon.tsx',
+  '/components/icons/GoogleIcon.tsx',
   'https://cdn.tailwindcss.com',
   'https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js',
   'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js',
   'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
   'https://aistudiocdn.com/react@^19.1.1',
-  'https://aistudiocdn.com/react-dom@^19.1.1/'
+  'https://aistudiocdn.com/react-dom@^19.1.1/',
+  'https://accounts.google.com/gsi/client'
 ];
 
 self.addEventListener('install', event => {
@@ -85,7 +90,22 @@ self.addEventListener('install', event => {
     caches.open(CACHE_NAME)
       .then(cache => {
         console.log('Opened cache');
-        return cache.addAll(URLS_TO_CACHE);
+        const urlsWithHttps = URLS_TO_CACHE.filter(url => url.startsWith('https://'));
+        const urlsWithoutHttps = URLS_TO_CACHE.filter(url => !url.startsWith('https://'));
+        
+        const cachePromises = [
+            cache.addAll(urlsWithoutHttps)
+        ];
+
+        urlsWithHttps.forEach(url => {
+            cachePromises.push(
+                fetch(url, { mode: 'no-cors' })
+                    .then(response => cache.put(url, response))
+                    .catch(err => console.log(`Failed to cache ${url}`, err))
+            );
+        });
+
+        return Promise.all(cachePromises);
       })
   );
 });

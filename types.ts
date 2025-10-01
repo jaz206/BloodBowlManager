@@ -1,6 +1,13 @@
 
 
 
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  picture: string;
+}
+
 export interface Rule {
   text: string;
   subRules?: Rule[];

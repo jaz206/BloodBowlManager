@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import QuickGuide from './components/QuickGuide';
 import TeamsAndSkills from './components/TeamsAndSkills';
 import Plays from './components/Plays';
@@ -15,28 +15,36 @@ import ShieldCheckIcon from './components/icons/ShieldCheckIcon';
 import StopwatchIcon from './components/icons/StopwatchIcon';
 import type { ManagedTeam } from './types';
 import PostGameWizard from './components/PostGameWizard';
+import { useAuth } from './hooks/useAuth';
+import UserProfile from './components/UserProfile';
 
 type View = 'guide' | 'teams' | 'plays' | 'generators' | 'manager' | 'live';
-const TEAMS_STORAGE_KEY = 'bloodbowl-managed-teams';
 
 const App: React.FC = () => {
   const [activeView, setActiveView] = useState<View>('guide');
   const [managedTeams, setManagedTeams] = useState<ManagedTeam[]>([]);
   const [loading, setLoading] = useState(true);
   const [requestedRoster, setRequestedRoster] = useState<string | null>(null);
+  const { user } = useAuth();
+
+  const TEAMS_STORAGE_KEY = useMemo(() => user ? `bb-teams-${user.id}` : 'bloodbowl-managed-teams', [user]);
 
   useEffect(() => {
+    setLoading(true);
     try {
         const storedTeams = localStorage.getItem(TEAMS_STORAGE_KEY);
         if (storedTeams) {
             setManagedTeams(JSON.parse(storedTeams));
+        } else {
+            setManagedTeams([]); // Clear teams when user changes and no data is found
         }
     } catch (error) {
         console.error("Failed to load teams from localStorage", error);
+        setManagedTeams([]);
     } finally {
         setLoading(false);
     }
-  }, []);
+  }, [TEAMS_STORAGE_KEY]);
 
   const handleTeamsUpdate = (updatedTeams: ManagedTeam[]) => {
       setManagedTeams(updatedTeams);
@@ -74,11 +82,14 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-900 text-slate-200 font-sans antialiased">
       <main className="container mx-auto max-w-7xl p-2 sm:p-6">
-        <header className="text-center mb-6">
+        <header className="text-center mb-6 relative">
           <h1 className="text-4xl sm:text-5xl font-bold text-amber-400 tracking-wider" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>
             Asistente de Blood Bowl
           </h1>
           <p className="text-slate-400 mt-2 text-lg">Tu Asistente de Entrenador</p>
+          <div className="absolute top-0 right-0 p-2">
+            <UserProfile />
+          </div>
         </header>
 
         <nav className="mb-4 bg-slate-800 rounded-lg shadow-md overflow-hidden">
