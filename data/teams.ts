@@ -205,7 +205,7 @@ export const teamsData: Team[] = [
     rerollCost: 70000,
     tier: 3,
     apothecary: "Sí",
-    image: "https://www.warhammer-community.com/wp-content/uploads/2020/06/f0e6082c.jpg",
+    image: "https://i.pinimg.com/736x/9b/77/bd/9b77bd2d5538a9bfd2be58af2186de82.jpg",
     roster: [
       { qty: "0-16", position: "Gnoblar Linemen", cost: 15000, stats: { MV: 5, FU: "1", AG: "3+", PS: "5+", AR: "6+" }, skills: "Canijo, Echarse a um lado, Escurridizo, Esquivar, Humanoide bala", primary: "A", secondary: "G" },
       { qty: "0-1", position: "Ogre Runt Punter", cost: 145000, stats: { MV: 5, FU: "5", AG: "4+", PS: "4+", AR: "10+" }, skills: "Cabeza dura, Chutar compañero, Estúpido, Golpe mortífero (+1)", primary: "FP", secondary: "AG" },
@@ -270,7 +270,7 @@ export const teamsData: Team[] = [
     rerollCost: 60000,
     tier: 3,
     apothecary: "Sí",
-    image: "https://www.warhammer-community.com/wp-content/uploads/2020/07/70691e84.jpg",
+    image: "https://i.pinimg.com/736x/85/eb/40/85eb404c109782f86e8ceec6af687db3.jpg",
     roster: [
       { qty: "0-16", position: "Snotling Linemen", cost: 15000, stats: { MV: 5, FU: "1", AG: "3+", PS: "5+", AR: "6+" }, skills: "Canijo, Colarse, Echarse a um lado, Escurridizo, Esquivar, Humanoide bala", primary: "A", secondary: "G" },
       { qty: "0-2", position: "Fungus Flingas", cost: 30000, stats: { MV: 5, FU: "1", AG: "3+", PS: "4+", AR: "6+" }, skills: "Arma secreta, Bombardero, Echarse a um lado, Escurridizo, Esquivar, Humanoide bala", primary: "AP", secondary: "G" },
