@@ -1,14 +1,12 @@
 
-
-
-
 import React, { useState, useEffect } from 'react';
 import QuickGuide from './components/QuickGuide';
 import TeamsAndSkills from './components/TeamsAndSkills';
 import Plays from './components/Plays';
 import Generators from './components/Generators';
 import TeamManager from './components/TeamManager';
-import LiveGame from './components/LiveGame';
+// FIX: Changed import to a named import as LiveGame is not a default export.
+import { LiveGame } from './components/LiveGame';
 import BookOpenIcon from './components/icons/BookOpenIcon';
 import UsersIcon from './components/icons/UsersIcon';
 import ClipboardListIcon from './components/icons/ClipboardListIcon';

@@ -23,7 +23,7 @@ const StarPlayerModal: React.FC<StarPlayerModalProps> = ({ player, onClose }) =>
 
   const handleSkillClick = (skillName: string) => {
     const cleanedName = skillName.split('(')[0].trim();
-    const foundSkill = skillsData.find(s => s.name.toLowerCase() === cleanedName.toLowerCase());
+    const foundSkill = skillsData.find(s => s.name.toLowerCase().startsWith(cleanedName.toLowerCase()));
     if (foundSkill) {
       setSelectedSkill(foundSkill);
     } else {

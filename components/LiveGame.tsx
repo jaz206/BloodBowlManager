@@ -26,6 +26,7 @@ import TurnoverModal from './TurnoverModal';
 import PlayerCardModal from './PlayerCardModal';
 import { skillsData } from '../data/skills';
 import SkillModal from './SkillModal';
+import ApothecaryModal from './ApothecaryModal';
 
 declare const Html5Qrcode: any;
 declare const XLSX: any;
@@ -48,6 +49,22 @@ interface FoulState {
     lastingInjuryRoll: { roll: number; result: string; characteristic: string; } | null;
     wasExpelled: boolean;
     expulsionReason: string;
+    log: string[];
+    armorRollInput: { die1: string; die2: string; };
+    injuryRollInput: { die1: string; die2: string; };
+    casualtyRollInput: string;
+    lastingInjuryRollInput: string;
+}
+
+interface InjuryState {
+    step: 'select_victim_team' | 'select_victim' | 'armor_roll' | 'injury_roll' | 'apothecary' | 'casualty_roll' | 'lasting_injury_roll' | 'summary';
+    victimTeamId: 'home' | 'opponent' | null;
+    victimPlayer: ManagedPlayer | null;
+    isStunty: boolean;
+    armorRoll: { roll: number; armorBroken: boolean; } | null;
+    injuryRoll: { roll: number; result: string; } | null;
+    casualtyRoll: { roll: number; result: string; rerolled: boolean } | null;
+    lastingInjuryRoll: { roll: number; result: string; characteristic: string; } | null;
     log: string[];
     armorRollInput: { die1: string; die2: string; };
     injuryRollInput: { die1: string; die2: string; };
@@ -194,7 +211,8 @@ const isEligibleStar = (star: StarPlayer, teamRoster: Team | undefined) => {
     });
 };
 
-const LiveGame = ({ managedTeams, onTeamsUpdate }: LiveGameProps): React.ReactElement => {
+// FIX: Changed to a named export to resolve the import error in App.tsx.
+export const LiveGame = ({ managedTeams, onTeamsUpdate }: LiveGameProps): React.ReactElement => {
     const [gameState, setGameState] = useState<GameState>('setup');
     const [hasCamera, setHasCamera] = useState<boolean | null>(null);
     const [opponentTeam, setOpponentTeam] = useState<ManagedTeam | null>(null);
@@ -260,6 +278,16 @@ const LiveGame = ({ managedTeams, onTeamsUpdate }: LiveGameProps): React.ReactEl
         lastingInjuryRollInput: '',
     };
     const [foulState, setFoulState] = useState<FoulState>(initialFoulState);
+
+    const initialInjuryState: InjuryState = {
+        step: 'select_victim_team', victimTeamId: null, victimPlayer: null, isStunty: false,
+        armorRoll: null, injuryRoll: null, casualtyRoll: null, lastingInjuryRoll: null,
+        log: [], armorRollInput: { die1: '', die2: '' }, injuryRollInput: { die1: '', die2: '' },
+        casualtyRollInput: '', lastingInjuryRollInput: '',
+    };
+    const [isInjuryModalOpen, setIsInjuryModalOpen] = useState(false);
+    const [injuryState, setInjuryState] = useState<InjuryState>(initialInjuryState);
+    const [isApothecaryModalOpen, setIsApothecaryModalOpen] = useState(false);
 
     const scannerRef = useRef<any>(null);
     const scannerContainerRef = useRef<HTMLDivElement>(null);
@@ -709,6 +737,127 @@ const LiveGame = ({ managedTeams, onTeamsUpdate }: LiveGameProps): React.ReactEl
         }
     };
 
+    const handleInjuryAction = (action: 'next' | 'back') => {
+        const { step, victimPlayer, armorRollInput, log, victimTeamId, injuryRollInput, casualtyRollInput, lastingInjuryRollInput, casualtyRoll } = injuryState;
+
+        if (action === 'back') {
+            const history: InjuryState['step'][] = ['select_victim_team', 'select_victim', 'armor_roll', 'injury_roll', 'apothecary', 'casualty_roll', 'lasting_injury_roll'];
+            const currentStepIndex = history.indexOf(step);
+            if (currentStepIndex > 0) {
+                setInjuryState(prev => ({ ...prev, step: history[currentStepIndex - 1] }));
+            }
+            return;
+        }
+
+        if (action === 'next') {
+            switch(step) {
+                case 'select_victim':
+                    if (victimPlayer) {
+                        const isStunty = victimPlayer.skills.toLowerCase().includes('escurridizo');
+                        setInjuryState(prev => ({...prev, step: 'armor_roll', isStunty }));
+                    }
+                    break;
+                case 'armor_roll': {
+                    const die1 = parseInt(armorRollInput.die1);
+                    const die2 = parseInt(armorRollInput.die2);
+                    if (isNaN(die1) || isNaN(die2)) break;
+
+                    const roll = die1 + die2;
+                    const armorValue = parseInt(victimPlayer!.stats.AR.replace('+', ''));
+                    const armorBroken = roll > armorValue;
+                    
+                    let logMsg = `Tirada de Armadura contra ${victimPlayer!.customName} (AR ${victimPlayer!.stats.AR}): ${die1}+${die2}=${roll}.`;
+                    if (armorBroken) {
+                        logMsg += " ¡Armadura rota!";
+                        setInjuryState(prev => ({ ...prev, armorRoll: {roll, armorBroken}, step: 'injury_roll', log: [...log, logMsg]}));
+                    } else {
+                        logMsg += " La armadura aguanta.";
+                        setInjuryState(prev => ({ ...prev, armorRoll: {roll, armorBroken}, step: 'summary', log: [...log, logMsg]}));
+                    }
+                    break;
+                }
+                 case 'injury_roll': {
+                    const die1 = parseInt(injuryRollInput.die1);
+                    const die2 = parseInt(injuryRollInput.die2);
+                    if (isNaN(die1) || isNaN(die2)) break;
+                    
+                    const roll = die1 + die2;
+                    let result: PlayerStatus = 'Activo';
+                    let resultText = '';
+                    
+                    if (roll <= 7) { result = 'Activo'; resultText = 'Aturdido'; }
+                    else if (roll <= 9) { result = 'KO'; resultText = 'Inconsciente (KO)'; }
+                    else { result = 'Lesionado'; resultText = '¡Lesionado!'; }
+
+                    let logMsg = `Tirada de Heridas: ${die1}+${die2}=${roll} -> ${resultText}.`;
+                    
+                    const team = victimTeamId === 'home' ? liveHomeTeam : liveOpponentTeam;
+                    const hasApo = team?.apothecary;
+
+                    if (hasApo && (result === 'KO' || result === 'Lesionado')) {
+                         setInjuryState(prev => ({...prev, injuryRoll: {roll, result: resultText}, step: 'apothecary', log: [...log, logMsg]}));
+                    } else {
+                        if (result !== 'Lesionado') updatePlayerStatus(victimPlayer!.id, victimTeamId!, result, resultText);
+                        setInjuryState(prev => ({...prev, injuryRoll: {roll, result: resultText}, step: result === 'Lesionado' ? 'casualty_roll' : 'summary', log: [...log, logMsg]}));
+                    }
+                    break;
+                }
+                case 'apothecary': // This step is just a decision point, handled by modal buttons
+                    break; 
+                case 'casualty_roll': {
+                    const roll = parseInt(casualtyRollInput);
+                    if (isNaN(roll) || casualtyRollInput.length === 0) break;
+                    const event = casualtyResults.find(e => {
+                        const range = e.diceRoll.split('-').map(Number);
+                        return range.length > 1 ? (roll >= range[0] && roll <= range[1]) : roll === range[0];
+                    });
+                    if (!event) return;
+                    
+                    let logMsg = `Tirada de Lesión (D16)${casualtyRoll?.rerolled ? ' (repetida)' : ''}: ${roll} -> ${event.title}. ${event.description}`;
+                    
+                    const team = victimTeamId === 'home' ? liveHomeTeam : liveOpponentTeam;
+                    const hasApo = team?.apothecary && !casualtyRoll?.rerolled;
+
+                    if (hasApo) {
+                        setInjuryState(prev => ({...prev, casualtyRoll: { roll, result: event.title, rerolled: false }, step: 'apothecary', log: [...log, logMsg]}));
+                    } else {
+                         if (event.title === 'Muerto') updatePlayerStatus(victimPlayer!.id, victimTeamId!, 'Muerto', event.title);
+                         else updatePlayerStatus(victimPlayer!.id, victimTeamId!, 'Lesionado', event.title);
+
+                        setInjuryState(prev => ({...prev, casualtyRoll: { ...(prev.casualtyRoll!), roll, result: event.title }, step: event.title === 'Lesion Permanente' ? 'lasting_injury_roll' : 'summary', log: [...log, logMsg]}));
+                    }
+                    break;
+                }
+                case 'lasting_injury_roll': {
+                     const roll = parseInt(lastingInjuryRollInput);
+                    if (isNaN(roll) || lastingInjuryRollInput.length === 0) break;
+                    const event = lastingInjuryResults.find(e => {
+                         const range = e.diceRoll.split('-').map(Number);
+                        return range.length > 1 ? (roll >= range[0] && roll <= range[1]) : roll === range[0];
+                    });
+                    if (!event) return;
+                    let logMsg = `Lesión Permanente (D6): ${roll} -> ${event.permanentInjury} (${event.characteristicReduction}).`;
+                    
+                    const setTeamToUpdate = victimTeamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
+                    setTeamToUpdate(prev => prev ? ({ ...prev, players: prev.players.map(p => p.id === victimPlayer!.id ? {...p, lastingInjuries: [...p.lastingInjuries, `${event.permanentInjury} (${event.characteristicReduction})`]} : p)}) : null);
+                    
+                    setInjuryState(prev => ({...prev, lastingInjuryRoll: {roll, result: event.permanentInjury, characteristic: event.characteristicReduction }, step: 'summary', log: [...log, logMsg]}));
+                    break;
+                }
+                 case 'summary': {
+                    const finalLog = injuryState.log.join(' ');
+                    logEvent('INJURY', `Herida a ${victimPlayer?.customName}. ${finalLog}`);
+                    
+                    setIsInjuryModalOpen(false);
+                    setInjuryState(initialInjuryState);
+                    break;
+                }
+
+            }
+        }
+    }
+
+
     const handleManualOpponentSelect = (teamName: string) => {
         const selectedOpponent = managedTeams.find(t => t.name === teamName);
         if (selectedOpponent) {
@@ -869,841 +1018,4 @@ const LiveGame = ({ managedTeams, onTeamsUpdate }: LiveGameProps): React.ReactEl
             case 'armor_roll':
                 return <div className="p-5"><DoubleDiceInputStep title="Paso 4: Tirada de Armadura" value={foulState.armorRollInput} onChange={v => setFoulState(prev => ({...prev, armorRollInput: v}))} onNext={() => handleFoulAction('next')} label={`Introduce el resultado de 2D6 contra AR ${foulState.victimPlayer?.stats.AR}`} /></div>;
             case 'injury_roll':
-                 return <div className="p-5"><DoubleDiceInputStep title="Paso 5: Tirada de Heridas" value={foulState.injuryRollInput} onChange={v => setFoulState(prev => ({...prev, injuryRollInput: v}))} onNext={() => handleFoulAction('next')} label="Introduce el resultado de 2D6" /></div>;
-            case 'casualty_roll':
-                return <div className="p-5"><RollInputStep title="Paso 6: Tirada de Lesión" value={foulState.casualtyRollInput} onChange={v => setFoulState(prev => ({...prev, casualtyRollInput: v.replace(/\D/g, '')}))} onNext={() => handleFoulAction('next')} label="Introduce el resultado de D16" pattern="\d*" placeholder="1-16"/></div>;
-            case 'lasting_injury_roll':
-                 return <div className="p-5"><RollInputStep title="Paso 7: Lesión Permanente" value={foulState.lastingInjuryRollInput} onChange={v => setFoulState(prev => ({...prev, lastingInjuryRollInput: v.replace(/[^1-6]/g, '')}))} onNext={() => handleFoulAction('next')} label="Introduce el resultado de D6" pattern="[1-6]" placeholder="1-6"/></div>;
-            case 'summary':
-                return (
-                    <>
-                        <h2 className="text-xl font-bold text-amber-400 p-4 border-b border-slate-700">Resumen de la Falta</h2>
-                        <div className="p-5 space-y-2 text-slate-300">
-                            {foulState.log.map((line, i) => <p key={i}>{line}</p>)}
-                            {foulState.wasExpelled && <p className="font-bold text-red-400 mt-4">{foulState.expulsionReason || `¡${foulState.foulingPlayer?.customName} ha sido expulsado!`}</p>}
-                        </div>
-                         <div className="p-4 bg-slate-900/50 border-t border-slate-700 flex justify-end">
-                            <button onClick={() => handleFoulAction('next')} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">Finalizar y Registrar</button>
-                        </div>
-                    </>
-                );
-            default:
-                return null;
-        }
-    }
-
-    const renderManualOpponentSelect = () => {
-        if (!homeTeam) {
-            return (
-                <div className="text-center p-8 max-w-lg mx-auto">
-                    <h2 className="text-2xl font-bold text-amber-400 mb-4">Primero selecciona tu equipo</h2>
-                    <p className="text-slate-400 mb-4">Vuelve y elige el equipo que quieres usar.</p>
-                    <button onClick={() => setGameState('select_team')} className="mt-4 text-amber-400 hover:underline">Volver a la selección</button>
-                </div>
-            )
-        }
-        const opponentOptions = managedTeams.filter(t => t.name !== homeTeam.name);
-
-        if (opponentOptions.length === 0) {
-            return (
-                <div className="text-center p-8 max-w-lg mx-auto">
-                    <h2 className="text-2xl font-bold text-amber-400 mb-4">No hay oponentes disponibles</h2>
-                    <p className="text-slate-400 mb-4">Necesitas al menos dos equipos creados para seleccionar un oponente manualmente.</p>
-                    <button onClick={() => setGameState('select_team')} className="mt-4 text-amber-400 hover:underline">Volver a la selección</button>
-                </div>
-            );
-        }
-
-        return (
-            <div className="text-center p-8 max-w-lg mx-auto">
-                <h2 className="text-2xl font-bold text-amber-400 mb-4">Selecciona tu Oponente</h2>
-                <div className="space-y-3">
-                    {opponentOptions.map(team => (
-                        <button
-                            key={team.name}
-                            onClick={() => handleManualOpponentSelect(team.name)}
-                            className="w-full bg-slate-700/50 text-slate-200 font-semibold p-4 rounded-lg shadow-md hover:bg-slate-700 hover:text-white transition-all duration-200"
-                        >
-                            {team.name} <span className="text-xs text-slate-400">({team.rosterName})</span>
-                        </button>
-                    ))}
-                </div>
-                <button onClick={() => setGameState('select_team')} className="mt-6 text-amber-400 hover:underline">Volver</button>
-            </div>
-        );
-    }
-
-    const renderContent = () => {
-        switch (gameState) {
-            case 'setup':
-                if (managedTeams.length === 0) {
-                    return (
-                        <div className="text-center p-8 max-w-lg mx-auto">
-                            <h2 className="text-3xl font-bold text-amber-400 mb-4">No tienes equipos</h2>
-                            <p className="text-slate-400 mb-8">
-                                Para empezar un partido, primero debes crear al menos una plantilla en el "Gestor de Equipo".
-                            </p>
-                        </div>
-                    );
-                }
-                return (
-                    <div className="text-center p-8 max-w-lg mx-auto">
-                        <h2 className="text-3xl font-bold text-amber-400 mb-4">Empezar Partido</h2>
-                        <p className="text-slate-400 mb-8">Elige tu equipo y configura el partido contra tu oponente.</p>
-                        <button onClick={() => setGameState('select_team')} className="w-full bg-amber-500 text-slate-900 font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-amber-400 transition-all duration-200">
-                            Empezar
-                        </button>
-                    </div>
-                );
-            case 'select_team':
-                return (
-                     <div className="text-center p-8 max-w-lg mx-auto">
-                        <h2 className="text-2xl font-bold text-amber-400 mb-4">Selecciona tu equipo</h2>
-                        <select onChange={e => setHomeTeam(managedTeams.find(t => t.name === e.target.value) || null)} className="w-full bg-slate-800 border border-slate-600 rounded-md py-2 px-3 text-white mb-6">
-                            <option>Elige un equipo...</option>
-                            {managedTeams.map(t => <option key={t.name} value={t.name}>{t.name}</option>)}
-                        </select>
-                        {homeTeam && (
-                            <>
-                                <h3 className="text-xl font-semibold text-slate-300 mb-4">¿Cómo juega tu oponente?</h3>
-                                <div className="space-y-4">
-                                    {hasCamera && <button onClick={() => setGameState('scanning')} className="w-full bg-sky-600 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-sky-500 transition-colors">Escanear QR del Oponente</button>}
-                                    <button onClick={() => setGameState('manual_select')} className="w-full bg-slate-600 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-slate-500 transition-colors">Introducir manualmente</button>
-                                </div>
-                            </>
-                        )}
-                    </div>
-                );
-            case 'scanning':
-                return (
-                    <div className="text-center p-4">
-                        <h2 className="text-xl font-bold text-amber-400 mb-4">Escanea el QR del Equipo Rival</h2>
-                        <div id="qr-reader" ref={scannerContainerRef} className="max-w-sm mx-auto aspect-square bg-slate-900 rounded-lg"></div>
-                        <button onClick={() => setGameState('select_team')} className="mt-4 text-amber-400 hover:underline">Cancelar</button>
-                    </div>
-                );
-            case 'manual_select': 
-                return renderManualOpponentSelect();
-            case 'pre_game': {
-                if (!homeTeam || !opponentTeam || !liveHomeTeam || !liveOpponentTeam) {
-                    return (
-                        <div className="text-center p-8">
-                            <p className="text-red-500">Error: No se han configurado los equipos.</p>
-                            <button onClick={() => setGameState('setup')} className="mt-4 text-amber-400 hover:underline">Volver al inicio</button>
-                        </div>
-                    );
-                }
-                
-                const isFullPregameSequence = turn === 0 && half === 1;
-
-                const renderPreGameContent = () => {
-                     if (journeymenNotification && preGameStep === 0) {
-                        return (
-                            <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 animate-fade-in-fast">
-                                <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-md w-full transform animate-slide-in-up">
-                                    <div className="p-4 border-b border-slate-700">
-                                        <h2 className="text-xl font-bold text-amber-400">Jugadores Insuficientes</h2>
-                                    </div>
-                                    <div className="p-5">
-                                        <p className="text-slate-300 whitespace-pre-line">{journeymenNotification}</p>
-                                    </div>
-                                    <div className="p-4 bg-slate-900/50 border-t border-slate-700 flex justify-end">
-                                        <button onClick={handleConfirmJourneymen} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">
-                                            Entendido
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    }
-                    switch (preGameStep) {
-                         case 0:
-                            return (
-                                <div className="text-center p-8 max-w-4xl mx-auto">
-                                    <h2 className="text-3xl font-bold text-amber-400 mb-4">Paso 1: Sustitutos</h2>
-                                    <p className="text-slate-400">Comprobando plantillas para jugadores insuficientes...</p>
-                                </div>
-                            );
-                         case 1: // Incentives
-                            const { underdog, money } = inducementState;
-                            const underdogTeam = underdog === 'home' ? liveHomeTeam : liveOpponentTeam;
-                            const baseUnderdogRoster = teamsData.find(t => t.name === underdogTeam?.rosterName);
-
-                            const availableStars = underdog ? starPlayersData.filter(star => {
-                                if (star.cost > money) return false;
-                                if (inducementState.hiredStars.length >= 2) return false;
-                                if (inducementState.hiredStars.some(hired => hired.customName === star.name)) return false;
-                                return isEligibleStar(star, baseUnderdogRoster);
-                            }) : [];
-                           
-                             const handleInducementPurchase = (type: 'bribes' | 'cheerleaders' | 'assistantCoaches', cost: number, delta: 1 | -1) => {
-                                if (!underdog) return;
-                                if (delta === 1 && money < cost) return;
-
-                                const setUnderdogTeam = underdog === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
-                                setUnderdogTeam(prev => {
-                                    if (!prev) return null;
-                                    const key = `temp${type.charAt(0).toUpperCase() + type.slice(1)}` as 'tempBribes' | 'tempCheerleaders' | 'tempAssistantCoaches';
-                                    return { ...prev, [key]: (prev[key] || 0) + delta };
-                                });
-
-                                setInducementState(prev => ({ ...prev, money: prev.money - (cost * delta) }));
-                            };
-
-
-                            return (
-                                <div className="text-center p-4 sm:p-8 max-w-4xl mx-auto">
-                                    <h2 className="text-3xl font-bold text-amber-400 mb-4">Paso 2: Incentivos</h2>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2 text-slate-300 bg-slate-900/50 p-4 rounded-lg">
-                                            <p>{liveHomeTeam.name} TV: <span className="font-bold text-white">{homeTV.toLocaleString()}</span></p>
-                                        </div>
-                                        <div className="space-y-2 text-slate-300 bg-slate-900/50 p-4 rounded-lg">
-                                            <p>{liveOpponentTeam.name} TV: <span className="font-bold text-white">{opponentTV.toLocaleString()}</span></p>
-                                        </div>
-                                    </div>
-                                    <p className="my-4 text-lg">Diferencia: <span className="font-bold text-amber-300">{Math.abs(homeTV - opponentTV).toLocaleString()}</span></p>
-
-                                    {underdog ? (
-                                        <div className="mt-4 bg-emerald-900/50 p-4 rounded-lg text-emerald-300">
-                                            <p className="font-bold text-lg mb-2">{underdogTeam.name} es el desvalido y recibe:</p>
-                                            <p>Dinero para incentivos: <span className="font-bold text-white">{money.toLocaleString()} M.O.</span></p>
-                                            
-                                            <div className="mt-4 space-y-4 text-left">
-                                                {/* Other Inducements */}
-                                                <div className="flex justify-between items-center p-2 bg-slate-800/50 rounded">
-                                                    <div>
-                                                        <p className="font-semibold text-white">Soborno (100.000)</p>
-                                                        <p className="text-xs text-slate-400">Comprados: {underdogTeam.tempBribes || 0}</p>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <button onClick={() => handleInducementPurchase('bribes', 100000, -1)} disabled={(underdogTeam.tempBribes || 0) === 0} className="font-bold text-xl bg-red-600 rounded-full w-6 h-6 leading-6 text-center disabled:bg-slate-600">-</button>
-                                                        <button onClick={() => handleInducementPurchase('bribes', 100000, 1)} disabled={money < 100000} className="font-bold text-xl bg-green-600 rounded-full w-6 h-6 leading-6 text-center disabled:bg-slate-600">+</button>
-                                                    </div>
-                                                </div>
-                                                <div className="flex justify-between items-center p-2 bg-slate-800/50 rounded">
-                                                    <div>
-                                                        <p className="font-semibold text-white">Animadora Adicional (10.000)</p>
-                                                        <p className="text-xs text-slate-400">Comprados: {underdogTeam.tempCheerleaders || 0}</p>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                         <button onClick={() => handleInducementPurchase('cheerleaders', 10000, -1)} disabled={(underdogTeam.tempCheerleaders || 0) === 0} className="font-bold text-xl bg-red-600 rounded-full w-6 h-6 leading-6 text-center disabled:bg-slate-600">-</button>
-                                                        <button onClick={() => handleInducementPurchase('cheerleaders', 10000, 1)} disabled={money < 10000} className="font-bold text-xl bg-green-600 rounded-full w-6 h-6 leading-6 text-center disabled:bg-slate-600">+</button>
-                                                    </div>
-                                                </div>
-                                                 <div className="flex justify-between items-center p-2 bg-slate-800/50 rounded">
-                                                    <div>
-                                                        <p className="font-semibold text-white">Ayudante Adicional (10.000)</p>
-                                                        <p className="text-xs text-slate-400">Comprados: {underdogTeam.tempAssistantCoaches || 0}</p>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <button onClick={() => handleInducementPurchase('assistantCoaches', 10000, -1)} disabled={(underdogTeam.tempAssistantCoaches || 0) === 0} className="font-bold text-xl bg-red-600 rounded-full w-6 h-6 leading-6 text-center disabled:bg-slate-600">-</button>
-                                                        <button onClick={() => handleInducementPurchase('assistantCoaches', 10000, 1)} disabled={money < 10000} className="font-bold text-xl bg-green-600 rounded-full w-6 h-6 leading-6 text-center disabled:bg-slate-600">+</button>
-                                                    </div>
-                                                </div>
-
-                                                <h4 className="font-bold text-amber-300 mb-2 pt-4">Contratar Jugadores Estrella (máx. 2)</h4>
-                                                {availableStars.length > 0 ? (
-                                                    <div className="max-h-48 overflow-y-auto space-y-2 pr-2">
-                                                        {availableStars.map(star => (
-                                                            <div key={star.name} className="flex justify-between items-center bg-slate-800/50 p-2 rounded">
-                                                                <div>
-                                                                    <button onClick={() => setSelectedStarPlayer(star)} className="font-semibold text-white text-left hover:underline focus:outline-none">
-                                                                        {star.name}
-                                                                    </button>
-                                                                    <p className="text-xs text-slate-400">{star.cost.toLocaleString()} M.O.</p>
-                                                                </div>
-                                                                <button onClick={() => handleHireStar(star)} className="bg-green-600 text-white font-bold py-1 px-3 rounded shadow hover:bg-green-500">Contratar</button>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                ) : <p className="text-sm text-slate-400">No hay jugadores estrella disponibles para contratar.</p>}
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <p className="mt-4 text-slate-300">Los valores de equipo son iguales, no hay incentivos.</p>
-                                    )}
-                                    <button onClick={() => setPreGameStep(2)} className="mt-6 bg-sky-600 text-white font-bold py-2 px-6 rounded-md shadow-md hover:bg-sky-500">Siguiente &rarr;</button>
-                                </div>
-                            );
-                        case 2: // Fans & FAME
-                            const homeAttendance = (parseInt(fansRoll.home) || 0) + (homeTeam.dedicatedFans || 0);
-                            const opponentAttendance = (parseInt(fansRoll.opponent) || 0) + (opponentTeam.dedicatedFans || 0);
-                            let homeFame = 0, opponentFame = 0;
-                            if(homeAttendance > opponentAttendance) homeFame = 1;
-                            if(homeAttendance >= opponentAttendance * 2) homeFame = 2;
-                            if(opponentAttendance > homeAttendance) opponentFame = 1;
-                            if(opponentAttendance >= homeAttendance * 2) opponentFame = 2;
-
-                             return (
-                                <div className="text-center p-8 max-w-lg mx-auto">
-                                    <h2 className="text-3xl font-bold text-amber-400 mb-4">Paso 3: Hinchas y FAMA</h2>
-                                    <div className="grid grid-cols-2 gap-4 text-left">
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-300 mb-1">{homeTeam.name}</label>
-                                            <input type="number" placeholder="Tirada 2D6" value={fansRoll.home} onChange={e => setFansRoll(p => ({...p, home: e.target.value}))} className="w-full bg-slate-800 border border-slate-600 rounded-md p-2" />
-                                            <p className="text-xs text-slate-400 mt-1">Hinchas: {homeTeam.dedicatedFans}</p>
-                                            <p className="text-lg">Total: <span className="font-bold">{homeAttendance}</span></p>
-                                        </div>
-                                        <div>
-                                             <label className="block text-sm font-medium text-slate-300 mb-1">{opponentTeam.name}</label>
-                                            <input type="number" placeholder="Tirada 2D6" value={fansRoll.opponent} onChange={e => setFansRoll(p => ({...p, opponent: e.target.value}))} className="w-full bg-slate-800 border border-slate-600 rounded-md p-2" />
-                                             <p className="text-xs text-slate-400 mt-1">Hinchas: {opponentTeam.dedicatedFans}</p>
-                                            <p className="text-lg">Total: <span className="font-bold">{opponentAttendance}</span></p>
-                                        </div>
-                                    </div>
-                                    <div className="mt-4 text-xl font-bold text-amber-300">FAMA: {homeFame} - {opponentFame}</div>
-                                    <button onClick={() => {
-                                        setFame({ home: homeFame, opponent: opponentFame });
-                                        logEvent('INFO', `Asistencia: ${homeAttendance} - ${opponentAttendance}. FAMA: ${homeFame} - ${opponentFame}.`);
-                                        setPreGameStep(3);
-                                    }} className="mt-6 bg-sky-600 text-white font-bold py-2 px-6 rounded-md shadow-md hover:bg-sky-500">Siguiente &rarr;</button>
-                                </div>
-                            );
-                        case 3: // Weather
-                            return (
-                                <div className="text-center p-8 max-w-lg mx-auto">
-                                    <h2 className="text-3xl font-bold text-amber-400 mb-4">Paso 4: Clima del Partido</h2>
-                                    <p className="text-slate-400 mb-6">Selecciona las condiciones climáticas para el partido.</p>
-                                    <select 
-                                        className="w-full bg-slate-800 border border-slate-600 rounded-md py-2 px-3 text-white mb-4"
-                                        value={gameStatus.weather?.title || ''}
-                                        onChange={(e) => {
-                                            const selectedWeather = weatherConditions.find(w => w.title === e.target.value);
-                                            if (selectedWeather) {
-                                                setGameStatus(prev => ({ ...prev, weather: selectedWeather }));
-                                            }
-                                        }}
-                                    >
-                                        <option value="" disabled>Selecciona un resultado de 2D6...</option>
-                                        {weatherConditions.map(w => <option key={w.title} value={w.title}>[{w.roll}] {w.title}</option>)}
-                                    </select>
-                                    <button 
-                                        onClick={() => {
-                                            if (gameStatus.weather) {
-                                                logEvent('WEATHER', `El clima es: ${gameStatus.weather.title}.`);
-                                                setPreGameStep(4);
-                                            } else {
-                                                alert("Por favor, selecciona un clima.");
-                                            }
-                                        }} 
-                                        disabled={!gameStatus.weather}
-                                        className="bg-sky-600 text-white font-bold py-2 px-6 rounded-md shadow-md hover:bg-sky-500 transition-colors disabled:bg-slate-600 disabled:cursor-not-allowed">
-                                        Siguiente &rarr;
-                                    </button>
-                                </div>
-                            );
-                        case 4: // Prayers to Nuffle
-                             const homeTVWithInducements = calculateTeamValue(liveHomeTeam, true);
-                             const oppTVWithInducements = calculateTeamValue(liveOpponentTeam, true);
-                             const prayersUnderdog = homeTVWithInducements < oppTVWithInducements ? 'home' : (oppTVWithInducements < homeTVWithInducements ? 'opponent' : null);
-                             const prayersUnderdogName = prayersUnderdog === 'home' ? liveHomeTeam.name : liveOpponentTeam?.name;
-                             return (
-                                <div className="text-center p-8 max-w-lg mx-auto">
-                                    <h2 className="text-3xl font-bold text-amber-400 mb-4">Paso 5: Plegarias a Nuffle</h2>
-                                    <p className="text-xs text-slate-500">VE Local: {homeTVWithInducements.toLocaleString()} | VE Visitante: {oppTVWithInducements.toLocaleString()}</p>
-                                    {prayersUnderdog ? (
-                                        <>
-                                            <p className="text-slate-300 mb-4">{prayersUnderdogName} todavía tiene un VE inferior y puede tirar en la tabla de Plegarias a Nuffle.</p>
-                                            <button onClick={() => setIsPrayersModalOpen(true)} className="bg-purple-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-purple-500 transition-all duration-200">
-                                                Abrir Tabla de Plegarias
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <p className="text-slate-400">Ningún equipo tiene un VE inferior después de los incentivos, no hay plegarias.</p>
-                                    )}
-                                    <button onClick={() => setPreGameStep(5)} className="mt-6 bg-sky-600 text-white font-bold py-2 px-6 rounded-md shadow-md hover:bg-sky-500">Siguiente &rarr;</button>
-                                </div>
-                             );
-                        case 5: // Coin Toss
-                             return (
-                                <div className="text-center p-8 max-w-lg mx-auto">
-                                    <h2 className="text-3xl font-bold text-amber-400 mb-4">Paso 6: Lanzamiento de Moneda</h2>
-                                     <button onClick={() => {
-                                        const winner = Math.random() < 0.5 ? 'home' : 'opponent';
-                                        setGameStatus(prev => ({ ...prev, coinTossWinner: winner }));
-                                        const winnerName = winner === 'home' ? homeTeam.name : opponentTeam.name;
-                                        logEvent('INFO', `Lanzamiento de moneda: Gana ${winnerName}.`);
-                                        setPreGameStep(6);
-                                    }} className="bg-amber-500 text-slate-900 font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-500/50 transform hover:scale-105 transition-all duration-200">
-                                        Lanzar Moneda
-                                    </button>
-                                </div>
-                            );
-                        case 6: // Winner Decides
-                            if (!gameStatus.coinTossWinner) return null;
-                            const winnerName = gameStatus.coinTossWinner === 'home' ? homeTeam.name : opponentTeam.name;
-                            return (
-                                 <div className="text-center p-8 max-w-lg mx-auto">
-                                    <h2 className="text-3xl font-bold text-amber-400 mb-4">{winnerName} ha ganado el sorteo</h2>
-                                    <p className="text-slate-400 mb-6">Elige si quieres patear el balón o recibirlo.</p>
-                                    <div className="flex gap-4 justify-center">
-                                        <button onClick={() => {
-                                            const receiving = gameStatus.coinTossWinner === 'home' ? 'opponent' : 'home';
-                                            setGameStatus(prev => ({...prev, receivingTeam: receiving}));
-                                            if (half === 1) setFirstHalfReceiver(receiving);
-                                            logEvent('INFO', `${winnerName} elige PATEAR.`);
-                                            setPreGameStep(7);
-                                        }} className="bg-sky-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-sky-500 transition-all duration-200">
-                                            Patear
-                                        </button>
-                                        <button onClick={() => {
-                                            if (!gameStatus.coinTossWinner) return;
-                                            setGameStatus(prev => ({...prev, receivingTeam: prev.coinTossWinner}));
-                                            if (half === 1) setFirstHalfReceiver(gameStatus.coinTossWinner);
-                                            logEvent('INFO', `${winnerName} elige RECIBIR.`);
-                                            setPreGameStep(7);
-                                        }} className="bg-emerald-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-emerald-500 transition-all duration-200">
-                                            Recibir
-                                        </button>
-                                    </div>
-                                </div>
-                            );
-                        case 7: // Kick-off Event
-                            return (
-                                 <div className="text-center p-8 max-w-lg mx-auto">
-                                    <h2 className="text-3xl font-bold text-amber-400 mb-4">{isFullPregameSequence ? 'Paso 7: Evento de Patada' : 'Nueva Patada Inicial'}</h2>
-                                    {!gameStatus.kickoffEvent ? (
-                                        <button onClick={() => {
-                                            const die1 = Math.floor(Math.random() * 6) + 1;
-                                            const die2 = Math.floor(Math.random() * 6) + 1;
-                                            const roll = die1 + die2;
-                                            const event = kickoffEvents.find(e => parseInt(e.diceRoll, 10) === roll);
-                                            if (event) {
-                                                setGameStatus(prev => ({...prev, kickoffEvent: event}));
-                                                logEvent('KICKOFF', `Evento de Patada (${roll}): ${event.title}.`);
-                                                setKickoffActionCompleted(false);
-                                            }
-                                        }} className="bg-amber-500 text-slate-900 font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-500/50 transform hover:scale-105 transition-all duration-200">
-                                            Generar Evento de Patada
-                                        </button>
-                                    ) : (
-                                        <div className="mt-8 p-6 bg-slate-900/70 border border-slate-700 rounded-lg shadow-xl text-left animate-fade-in">
-                                            <h3 className="text-xl font-bold text-amber-300 mb-2 flex items-center">
-                                                <span className="bg-slate-700 text-amber-300 text-lg font-mono px-3 py-1 rounded-md mr-4">{gameStatus.kickoffEvent.diceRoll}</span>
-                                                <span>{gameStatus.kickoffEvent.title}</span>
-                                            </h3>
-                                            <p className="text-slate-300 mt-4">{gameStatus.kickoffEvent.description}</p>
-                                            <div className="text-right mt-6">
-                                                <button onClick={() => {
-                                                    setGameState('in_progress');
-                                                    if (isFullPregameSequence) {
-                                                        logEvent('INFO', `¡Comienza el partido!`);
-                                                        setTurn(1);
-                                                    }
-                                                }} className="bg-green-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-green-500 transition-all duration-200">
-                                                    {isFullPregameSequence ? '¡Empezar Partido!' : '¡Continuar Partido!'}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        default:
-                            return null;
-                    }
-                }
-                return renderPreGameContent();
-            }
-             case 'ko_recovery': {
-                if (!liveHomeTeam) return null;
-                const koPlayers = liveHomeTeam.players.filter(p => p.status === 'KO');
-                if (koPlayers.length === 0) {
-                    setGameStatus(prev => ({...prev, kickoffEvent: null}));
-                     if (turn >= 8 && half === 2) {
-                        logEvent('INFO', '¡Fin del partido!'); setGameState('post_game');
-                    } else if (turn >= 8 && half < 2) {
-                        handleHalftime();
-                    } else {
-                        const newTurn = turn + 1;
-                        setTurn(newTurn);
-                        logEvent('INFO', `Touchdown! Comienza el turno ${newTurn}. Se prepara una nueva patada inicial.`);
-                        setGameState('pre_game');
-                        setPreGameStep(7);
-                    }
-                    return null;
-                }
-                return (
-                    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-                        <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-md w-full">
-                            <h2 className="text-xl font-bold text-amber-400 p-4 border-b border-slate-700">Recuperación de K.O.</h2>
-                            <div className="p-5 max-h-[60vh] overflow-y-auto space-y-3">
-                                {koPlayers.map(p => (
-                                    <div key={p.id} className="flex justify-between items-center bg-slate-700/50 p-3 rounded-md">
-                                        <div>
-                                            <p className="font-semibold text-white">{p.customName}</p>
-                                            <p className="text-xs text-slate-400">{p.position}</p>
-                                        </div>
-                                        {koRecoveryRolls[p.id] ? (
-                                            <p className={`font-bold ${koRecoveryRolls[p.id]?.success ? 'text-green-400' : 'text-red-400'}`}>
-                                                Tirada: {koRecoveryRolls[p.id]?.roll} - {koRecoveryRolls[p.id]?.success ? 'Recuperado' : 'Sigue KO'}
-                                            </p>
-                                        ) : (
-                                            <button onClick={() => rollKoRecovery(p)} className="bg-sky-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-sky-500">Tirar 4+</button>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="p-4 bg-slate-900/50 border-t border-slate-700 flex justify-end">
-                                <button onClick={() => {
-                                    setKoRecoveryRolls({});
-                                    setGameStatus(prev => ({...prev, kickoffEvent: null}));
-                                    if (turn >= 8 && half === 2) {
-                                        logEvent('INFO', '¡Fin del partido!'); setGameState('post_game');
-                                    } else if (turn >= 8 && half < 2) {
-                                        handleHalftime();
-                                    } else {
-                                        const newTurn = turn + 1;
-                                        setTurn(newTurn);
-                                        logEvent('INFO', `Touchdown! Comienza el turno ${newTurn}. Se prepara una nueva patada inicial.`);
-                                        setGameState('pre_game');
-                                        setPreGameStep(7);
-                                    }
-                                }} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">
-                                    Continuar a la Patada
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                );
-            }
-            case 'in_progress':
-                if (!liveHomeTeam || !liveOpponentTeam) return <p>Cargando...</p>;
-                return (
-                    <div className="p-2 sm:p-4">
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                            <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-700 space-y-2">
-                                <h3 className="text-lg font-bold text-amber-400 truncate">{liveHomeTeam.name}</h3>
-                                {liveHomeTeam.players.map(p => <PlayerStatusCard key={p.id} player={p} onViewPlayer={setViewingPlayer} onSkillClick={handleSkillClick} />)}
-                            </div>
-                            <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-700 flex flex-col gap-4">
-                                <div className="text-center border-b border-slate-700 pb-4">
-                                    <p className="text-sm text-slate-400">Parte {half} - Turno {turn}</p>
-                                    <p className="text-5xl font-bold my-2">{score.home} - {score.opponent}</p>
-                                    <button 
-                                        onClick={() => gameStatus.weather && setIsWeatherModalOpen(true)}
-                                        disabled={!gameStatus.weather}
-                                        className="flex justify-center items-center gap-2 text-sm text-slate-400 hover:text-amber-300 transition-colors disabled:hover:text-slate-400 disabled:cursor-default mx-auto"
-                                    >
-                                        {gameStatus.weather && renderWeatherIcon(gameStatus.weather.title)}
-                                        <span>{gameStatus.weather?.title || 'Clima Desconocido'}</span>
-                                    </button>
-                                </div>
-
-                                {gameStatus.kickoffEvent && (
-                                    <div className="border-b border-slate-700 pb-4">
-                                        <h4 className="text-sm font-bold text-amber-300 mb-2 text-center">Evento de Patada Activo</h4>
-                                        <div className="bg-slate-800/50 p-2 rounded-md">
-                                            <p className="text-xs text-slate-300 text-center"><strong>{gameStatus.kickoffEvent.title}</strong></p>
-                                            <p className="text-xs text-slate-400 mt-1 text-center">{gameStatus.kickoffEvent.description}</p>
-                                        </div>
-                                        <div className="flex flex-col items-center gap-2 mt-2">
-                                            {!kickoffActionCompleted && (
-                                                <>
-                                                    {gameStatus.kickoffEvent.title === 'Los Hinchas Animan' && (
-                                                        <button onClick={() => { setIsPrayersModalOpen(true); setKickoffActionCompleted(true); }} className="text-xs bg-sky-700 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-sky-600 transition-colors">Abrir Plegarias</button>
-                                                    )}
-                                                    {gameStatus.kickoffEvent.title === 'Tiempo Muerto' && (
-                                                        <button onClick={handleAdjustTurnCounter} className="text-xs bg-sky-700 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-sky-600 transition-colors">Ajustar Turno</button>
-                                                    )}
-                                                </>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-                                
-                                <div className="grid grid-cols-2 gap-3 flex-grow content-start">
-                                    <button onClick={() => { setIsTdModalOpen(true); setTdModalTeam('home'); }} className="bg-green-600 text-white font-bold py-2 rounded-md hover:bg-green-500 text-sm">TD Local</button>
-                                    <button onClick={() => { setIsTdModalOpen(true); setTdModalTeam('opponent'); }} className="bg-green-700 text-white font-bold py-2 rounded-md hover:bg-green-600 text-sm">TD Visitante</button>
-                                    
-                                    <button onClick={() => openSppModal('pass')} className="col-span-2 bg-sky-600 text-white font-bold py-2 rounded-md hover:bg-sky-500 text-sm">Pase Completo (+1 PE)</button>
-                                    <button onClick={() => openSppModal('interference')} className="col-span-2 bg-purple-600 text-white font-bold py-2 rounded-md hover:bg-purple-500 text-sm">Interferencia</button>
-                                    <button onClick={() => openSppModal('casualty')} className="col-span-2 bg-orange-600 text-white font-bold py-2 rounded-md hover:bg-orange-500 text-sm">Lesión Causada (+2 PE)</button>
-                                    <button onClick={() => { setIsFoulModalOpen(true); setFoulState(initialFoulState); }} className="col-span-2 bg-red-600 text-white font-bold py-2 rounded-md hover:bg-red-500 text-sm">Falta</button>
-                                    <button onClick={() => setIsTurnoverModalOpen(true)} className="col-span-2 bg-red-800 text-white font-extrabold py-3 rounded-md hover:bg-red-700 text-lg tracking-wider">¡TURNOVER!</button>
-                                    <button onClick={() => setIsCustomEventModalOpen(true)} className="col-span-2 bg-slate-600 text-white font-bold py-2 rounded-md hover:bg-slate-500 text-sm">Otro Evento</button>
-                                </div>
-                                <button onClick={handleNextTurn} className="bg-amber-500 text-slate-900 font-bold py-3 rounded-md hover:bg-amber-400">Siguiente Turno</button>
-                            </div>
-                            <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-700 space-y-2">
-                                <h3 className="text-lg font-bold text-sky-400 truncate">{liveOpponentTeam.name}</h3>
-                                {liveOpponentTeam.players.map(p => <PlayerStatusCard key={p.id} player={p} onViewPlayer={setViewingPlayer} onSkillClick={handleSkillClick} />)}
-                            </div>
-                            <div className="lg:col-span-3 bg-slate-900/50 p-3 rounded-lg border border-slate-700">
-                                <div className="flex justify-between items-center mb-2">
-                                    <h3 className="text-lg font-bold text-amber-400 flex items-center gap-2">
-                                        Registro del Partido
-                                        <button onClick={() => setIsLegendOpen(true)} className="text-slate-400 hover:text-amber-400 transition-colors" aria-label="Mostrar leyenda de iconos">
-                                            <QuestionMarkCircleIcon className="w-5 h-5" />
-                                        </button>
-                                    </h3>
-                                    <button onClick={handleExportLog} className="flex items-center gap-2 text-xs bg-sky-700 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-sky-600 transition-colors">
-                                        <DownloadIcon className="w-4 h-4" />
-                                        Descargar Bitácora
-                                    </button>
-                                </div>
-                                <div className="space-y-2 text-sm h-48 overflow-y-auto pr-2">
-                                    {gameLog.map(e => <p key={e.id} className="text-slate-300"><span className="font-mono text-slate-500 mr-2">{e.timestamp}</span>[{e.type}] {e.description}</p>)}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                );
-            case 'post_game':
-                if (!liveHomeTeam || !opponentTeam) return null;
-                return <PostGameWizard 
-                    initialHomeTeam={liveHomeTeam} 
-                    opponentTeam={opponentTeam} 
-                    score={score} 
-                    fame={fame.home}
-                    onConfirm={handleConfirmPostGame} 
-                />;
-            default:
-                return <p>Estado de juego desconocido.</p>;
-        }
-    };
-
-    return (
-        <div className="animate-fade-in-slow">
-            {renderContent()}
-
-            {viewingPlayer && <PlayerCardModal player={viewingPlayer} onClose={() => setViewingPlayer(null)} />}
-            
-            {selectedSkillForModal && <SkillModal skill={selectedSkillForModal} onClose={() => setSelectedSkillForModal(null)} />}
-
-            {isTurnoverModalOpen && (
-                <TurnoverModal 
-                    onClose={() => setIsTurnoverModalOpen(false)}
-                    onConfirm={handleTurnover}
-                />
-            )}
-
-            {isTdModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={() => setIsTdModalOpen(false)}>
-                    <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-md w-full" onClick={e => e.stopPropagation()}>
-                        <h2 className="text-xl font-bold text-amber-400 p-4 border-b border-slate-700">Selecciona el Anotador</h2>
-                        <div className="p-5 max-h-[60vh] overflow-y-auto space-y-2">
-                            {(tdModalTeam === 'home' ? liveHomeTeam?.players : liveOpponentTeam?.players)?.filter(p => p.status === 'Activo').map(player => (
-                                <button key={player.id} onClick={() => handleSelectTdScorer(player)} className="w-full text-left bg-slate-700/50 p-3 rounded-md hover:bg-slate-700 transition-colors">
-                                    <p className="font-bold text-white">{player.customName}</p>
-                                    <p className="text-xs text-slate-400">{player.position}</p>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {sppModalState.isOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={() => setSppModalState({ isOpen: false, type: null, step: 'select_team', teamId: null, selectedPlayer: null })}>
-                    <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-md w-full" onClick={e => e.stopPropagation()}>
-                        {sppModalState.step === 'select_team' && (
-                            <>
-                                <h2 className="text-xl font-bold text-amber-400 p-4 border-b border-slate-700">Selecciona el Equipo</h2>
-                                <div className="p-5 space-y-3">
-                                    <button onClick={() => setSppModalState(prev => ({ ...prev, teamId: 'home', step: 'select_player' }))} className="w-full bg-slate-700/50 p-4 rounded-md hover:bg-slate-700 font-semibold text-lg">{liveHomeTeam?.name}</button>
-                                    <button onClick={() => setSppModalState(prev => ({ ...prev, teamId: 'opponent', step: 'select_player' }))} className="w-full bg-slate-700/50 p-4 rounded-md hover:bg-slate-700 font-semibold text-lg">{liveOpponentTeam?.name}</button>
-                                </div>
-                            </>
-                        )}
-                        {sppModalState.step === 'select_player' && (
-                            <>
-                                <h2 className="text-xl font-bold text-amber-400 p-4 border-b border-slate-700">Selecciona el Jugador</h2>
-                                <div className="p-5 max-h-[60vh] overflow-y-auto space-y-2">
-                                    {(sppModalState.teamId === 'home' ? liveHomeTeam?.players : liveOpponentTeam?.players)?.filter(p => p.status === 'Activo').map(player => (
-                                        <button key={player.id} onClick={() => {
-                                            if (sppModalState.type === 'pass') {
-                                                handleSppActionAward(player, sppModalState.teamId!, 1, 'PASS', 'un Pase Completo');
-                                            } else if (sppModalState.type === 'casualty') {
-                                                handleSppActionAward(player, sppModalState.teamId!, 2, 'CASUALTY', 'causar una lesión');
-                                            } else if (sppModalState.type === 'interference') {
-                                                setSppModalState(prev => ({...prev, selectedPlayer: player, step: 'interference_type'}));
-                                            }
-                                        }} className="w-full text-left bg-slate-700/50 p-3 rounded-md hover:bg-slate-700 transition-colors">
-                                            <p className="font-bold text-white">{player.customName}</p>
-                                            <p className="text-xs text-slate-400">{player.position}</p>
-                                        </button>
-                                    ))}
-                                </div>
-                            </>
-                        )}
-                        {sppModalState.step === 'interference_type' && sppModalState.selectedPlayer && (
-                             <>
-                                <h2 className="text-xl font-bold text-amber-400 p-4 border-b border-slate-700">Tipo de Interferencia</h2>
-                                <div className="p-5 space-y-3">
-                                    <p className="text-slate-300 text-center">¿Qué tipo de interferencia ha realizado {sppModalState.selectedPlayer.customName}?</p>
-                                    <button onClick={() => handleSppActionAward(sppModalState.selectedPlayer!, sppModalState.teamId!, 1, 'INTERFERENCE', 'una Interferencia (Corte)')} className="w-full bg-slate-700/50 p-4 rounded-md hover:bg-slate-700 font-semibold text-lg">Corte (+1 PE)</button>
-                                    <button onClick={() => handleSppActionAward(sppModalState.selectedPlayer!, sppModalState.teamId!, 2, 'INTERFERENCE', 'una Interferencia (Intercepción)')} className="w-full bg-slate-700/50 p-4 rounded-md hover:bg-slate-700 font-semibold text-lg">Intercepción (+2 PE)</button>
-                                </div>
-                            </>
-                        )}
-                    </div>
-                </div>
-            )}
-
-            {isCustomEventModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={() => setIsCustomEventModalOpen(false)}>
-                    <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-md w-full" onClick={e => e.stopPropagation()}>
-                        <h2 className="text-xl font-bold text-amber-400 p-4 border-b border-slate-700">Añadir Evento Personalizado</h2>
-                        <div className="p-5">
-                            <textarea
-                                value={customEventDescription}
-                                onChange={(e) => setCustomEventDescription(e.target.value)}
-                                className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white"
-                                rows={3}
-                                placeholder="Describe lo que ha ocurrido..."
-                            />
-                        </div>
-                        <div className="p-4 bg-slate-900/50 border-t border-slate-700 flex justify-end gap-3">
-                            <button onClick={() => setIsCustomEventModalOpen(false)} className="bg-slate-600 text-white font-bold py-2 px-4 rounded-md hover:bg-slate-500">Cancelar</button>
-                            <button onClick={() => {
-                                if (customEventDescription.trim()) {
-                                    logEvent('OTHER', customEventDescription.trim());
-                                    setCustomEventDescription('');
-                                    setIsCustomEventModalOpen(false);
-                                }
-                            }} className="bg-amber-500 text-slate-900 font-bold py-2 px-4 rounded-md hover:bg-amber-400">Añadir al Registro</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {isFoulModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={() => setIsFoulModalOpen(false)}>
-                    <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-md w-full" onClick={e => e.stopPropagation()}>
-                        {renderFoulModalContent()}
-                    </div>
-                </div>
-            )}
-
-            {isWeatherModalOpen && gameStatus.weather && (
-                 <div 
-                    className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 animate-fade-in-fast"
-                    onClick={() => setIsWeatherModalOpen(false)}
-                    role="dialog"
-                    aria-modal="true"
-                >
-                    <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-md w-full transform animate-slide-in-up" onClick={e => e.stopPropagation()}>
-                        <div className="flex justify-between items-center p-4 border-b border-slate-700">
-                            <h2 className="text-xl font-bold text-amber-400 flex items-center gap-3">
-                                {renderWeatherIcon(gameStatus.weather.title)}
-                                {gameStatus.weather.title}
-                            </h2>
-                            <button
-                                onClick={() => setIsWeatherModalOpen(false)}
-                                className="text-slate-400 hover:text-white transition-colors p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-white"
-                                aria-label="Cerrar modal"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
-                        <div className="p-5">
-                            <p className="text-slate-300">{gameStatus.weather.description}</p>
-                        </div>
-                    </div>
-                </div>
-            )}
-            {selectedStarPlayer && (
-                <StarPlayerModal player={selectedStarPlayer} onClose={() => setSelectedStarPlayer(null)} />
-            )}
-             {isPrayersModalOpen && (
-                <PrayersModal onClose={() => setIsPrayersModalOpen(false)} />
-            )}
-
-            {isChangingWeatherModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={() => setIsChangingWeatherModalOpen(false)}>
-                    <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-md w-full" onClick={e => e.stopPropagation()}>
-                        <h2 className="text-xl font-bold text-amber-400 p-4 border-b border-slate-700">Clima Cambiante</h2>
-                        <div className="p-5">
-                            <label htmlFor="weather-roll-modal-input" className="block text-sm font-medium text-slate-300 mb-2">Introduce la nueva tirada de 2D6 para el clima:</label>
-                            <input
-                                id="weather-roll-modal-input"
-                                type="text"
-                                pattern="\d*"
-                                inputMode="numeric"
-                                value={weatherRerollInput}
-                                onChange={e => setWeatherRerollInput(e.target.value)}
-                                placeholder="Resultado entre 2 y 12"
-                                className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white text-center"
-                                autoFocus
-                            />
-                        </div>
-                        <div className="p-4 bg-slate-900/50 border-t border-slate-700 flex justify-end">
-                            <button 
-                                onClick={handleConfirmWeatherReroll} 
-                                className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400"
-                            >
-                                Confirmar Clima
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {isLegendOpen && (
-                <div 
-                    className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 animate-fade-in-fast"
-                    onClick={() => setIsLegendOpen(false)}
-                    role="dialog"
-                    aria-modal="true"
-                >
-                    <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-md w-full transform animate-slide-in-up" onClick={e => e.stopPropagation()}>
-                        <div className="flex justify-between items-center p-4 border-b border-slate-700">
-                            <h2 className="text-xl font-bold text-amber-400">Leyenda de Iconos de PE</h2>
-                            <button
-                                onClick={() => setIsLegendOpen(false)}
-                                className="text-slate-400 hover:text-white transition-colors p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-white"
-                                aria-label="Cerrar modal"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
-                        <div className="p-5">
-                            <ul className="space-y-4 text-slate-300">
-                                <li className="flex items-center gap-3">
-                                    <TdIcon className="w-6 h-6 text-amber-300 flex-shrink-0" />
-                                    <div>
-                                        <span className="font-semibold text-white">Touchdown:</span> +3 PE
-                                    </div>
-                                </li>
-                                <li className="flex items-center gap-3">
-                                    <PassIcon className="w-6 h-6 text-amber-300 flex-shrink-0" />
-                                    <div>
-                                        <span className="font-semibold text-white">Pase Completado:</span> +1 PE
-                                    </div>
-                                </li>
-                                <li className="flex items-center gap-3">
-                                    <CasualtyIcon className="w-6 h-6 text-amber-300 flex-shrink-0" />
-                                    <div>
-                                        <span className="font-semibold text-white">Lesión Causada:</span> +2 PE
-                                    </div>
-                                </li>
-                                <li className="flex items-center gap-3">
-                                    <InterferenceIcon className="w-6 h-6 text-amber-300 flex-shrink-0" />
-                                    <div>
-                                        <span className="font-semibold text-white">Interferencia:</span> Corte (+1 PE) o Intercepción (+2 PE)
-                                    </div>
-                                </li>
-            
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            )}
-             <style>{`
-                @keyframes fade-in-slow { from { opacity: 0; } to { opacity: 1; } }
-                .animate-fade-in-slow { animation: fade-in-slow 0.5s ease-out forwards; }
-                @keyframes fade-in-fast { from { opacity: 0; } to { opacity: 1; } }
-                @keyframes slide-in-up { from { transform: translateY(20px) scale(0.98); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
-                .animate-fade-in-fast { animation: fade-in-fast 0.2s ease-out forwards; }
-                .animate-slide-in-up { animation: slide-in-up 0.3s ease-out forwards; }
-            `}</style>
-        </div>
-    );
-};
-
-export default LiveGame;
+                 return <div className="p-5
