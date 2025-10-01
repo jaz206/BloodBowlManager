@@ -107,7 +107,7 @@ export interface Prayer {
     description: string;
 }
 
-export type PlayerStatus = 'Activo' | 'KO' | 'Lesionado' | 'Expulsado' | 'Muerto';
+export type PlayerStatus = 'Activo' | 'Reserva' | 'KO' | 'Lesionado' | 'Expulsado' | 'Muerto';
 export type SppActionType = 'TD' | 'PASS' | 'CASUALTY' | 'INTERFERENCE';
 
 // Team Manager Types

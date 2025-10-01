@@ -5,7 +5,9 @@ import { skillsData } from '../data/skills';
 import PlayerModal from './PlayerModal';
 import QrCodeIcon from './icons/QrCodeIcon';
 import SkillModal from './SkillModal';
+import { generateRandomName } from '../data/randomNames';
 
+// FIX: Declare QRCode as it is loaded from a script tag and available globally.
 declare const QRCode: any;
 
 interface TeamDashboardProps {
@@ -266,10 +268,16 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onTeamUpdate
         }
 
         if (team.treasury >= player.cost) {
+            const existingNames = new Set(team.players.map(p => p.customName.toLowerCase()));
+            let randomName = generateRandomName(team.rosterName);
+            while (existingNames.has(randomName.toLowerCase())) {
+                randomName = generateRandomName(team.rosterName);
+            }
+
             const newPlayer: ManagedPlayer = {
                 ...player,
                 id: Date.now(),
-                customName: player.position,
+                customName: randomName,
                 spp: 0,
                 gainedSkills: [],
                 lastingInjuries: [],
