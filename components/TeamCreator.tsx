@@ -1,10 +1,10 @@
 
-
 import React, { useState } from 'react';
 import { teamsData } from '../data/teams';
 import type { ManagedTeam } from '../types';
 import { GoogleGenAI } from "@google/genai";
 import SparklesIcon from './icons/SparklesIcon';
+import { generateRandomName as generateRandomNameLocally } from '../data/randomNames';
 
 interface TeamCreatorProps {
     onTeamCreate: (team: ManagedTeam) => void;
@@ -32,11 +32,17 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
             });
 
             const generatedName = response.text.trim().replace(/"/g, '');
+
+            if (!generatedName) {
+                throw new Error("La IA no generó un nombre válido.");
+            }
+            
             setTeamName(generatedName);
 
         } catch (error) {
-            console.error("Error generating team name:", error);
-            alert("Hubo un error al generar el nombre. Por favor, inténtalo de nuevo.");
+            console.error("Error generating AI team name, using local fallback:", error);
+            const fallbackName = generateRandomNameLocally(rosterName);
+            setTeamName(fallbackName);
         } finally {
             setIsGenerating(false);
         }
