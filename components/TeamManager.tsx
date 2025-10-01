@@ -1,6 +1,8 @@
 
 
-import React, { useState, useRef } from 'react';
+
+
+import React, { useState, useRef, useEffect } from 'react';
 import type { ManagedTeam } from '../types';
 import TeamCreator from './TeamCreator';
 // FIX: Changed import to a named import as TeamDashboard is not a default export.
@@ -11,14 +13,25 @@ import DownloadIcon from './icons/DownloadIcon';
 interface TeamManagerProps {
     teams: ManagedTeam[];
     onTeamsUpdate: (teams: ManagedTeam[]) => void;
+    requestedRoster?: string | null;
+    onRosterRequestHandled?: () => void;
 }
 
-const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamsUpdate }) => {
+const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamsUpdate, requestedRoster, onRosterRequestHandled = () => {} }) => {
     const [selectedTeamName, setSelectedTeamName] = useState<string | null>(null);
     const [isCreating, setIsCreating] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
     const [selectedTeamsForExport, setSelectedTeamsForExport] = useState<string[]>([]);
+    const [initialRosterForCreation, setInitialRosterForCreation] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (requestedRoster) {
+            setInitialRosterForCreation(requestedRoster);
+            setIsCreating(true);
+            onRosterRequestHandled();
+        }
+    }, [requestedRoster, onRosterRequestHandled]);
 
     const handleTeamCreate = (newTeam: ManagedTeam) => {
         const teamNameExists = teams.some(team => team.name.toLowerCase() === newTeam.name.toLowerCase());
@@ -158,6 +171,11 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamsUpdate }) => {
 
     const selectedTeam = teams.find(team => team.name === selectedTeamName);
 
+    const handleCancelCreation = () => {
+        setIsCreating(false);
+        setInitialRosterForCreation(null);
+    };
+
     if (selectedTeam) {
         return (
             <div className="p-2 sm:p-4 animate-fade-in-slow">
@@ -182,8 +200,8 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamsUpdate }) => {
     if (isCreating) {
         return (
              <div className="p-2 sm:p-4 animate-fade-in-slow">
-                <TeamCreator onTeamCreate={handleTeamCreate} />
-                 <button onClick={() => setIsCreating(false)} className="text-amber-400 hover:underline mt-4">Volver a la lista</button>
+                <TeamCreator onTeamCreate={handleTeamCreate} initialRosterName={initialRosterForCreation} />
+                 <button onClick={handleCancelCreation} className="text-amber-400 hover:underline mt-4">Volver a la lista</button>
                   <style>{`
                     @keyframes fade-in-slow {
                         from { opacity: 0; }

@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import Teams from './Teams';
 import Skills from './Skills';
@@ -6,7 +7,11 @@ import StarPlayers from './StarPlayers';
 
 type SubView = 'teams' | 'skills' | 'star_players';
 
-const TeamsAndSkills: React.FC = () => {
+interface TeamsAndSkillsProps {
+    onRequestTeamCreation?: (rosterName: string) => void;
+}
+
+const TeamsAndSkills: React.FC<TeamsAndSkillsProps> = ({ onRequestTeamCreation = () => {} }) => {
     const [activeView, setActiveView] = useState<SubView>('teams');
 
     const getButtonClass = (view: SubView) => {
@@ -27,7 +32,7 @@ const TeamsAndSkills: React.FC = () => {
                 </div>
 
                 <div>
-                    {activeView === 'teams' && <Teams />}
+                    {activeView === 'teams' && <Teams onRequestTeamCreation={onRequestTeamCreation} />}
                     {activeView === 'skills' && <Skills />}
                     {activeView === 'star_players' && <StarPlayers />}
                 </div>

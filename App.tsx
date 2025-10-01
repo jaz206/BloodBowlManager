@@ -1,6 +1,7 @@
 
 
 
+
 import React, { useState, useEffect } from 'react';
 import QuickGuide from './components/QuickGuide';
 import TeamsAndSkills from './components/TeamsAndSkills';
@@ -24,6 +25,7 @@ const App: React.FC = () => {
   const [activeView, setActiveView] = useState<View>('guide');
   const [managedTeams, setManagedTeams] = useState<ManagedTeam[]>([]);
   const [loading, setLoading] = useState(true);
+  const [requestedRoster, setRequestedRoster] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -41,6 +43,11 @@ const App: React.FC = () => {
   const handleTeamsUpdate = (updatedTeams: ManagedTeam[]) => {
       setManagedTeams(updatedTeams);
       localStorage.setItem(TEAMS_STORAGE_KEY, JSON.stringify(updatedTeams));
+  };
+
+  const handleRequestTeamCreation = (rosterName: string) => {
+    setRequestedRoster(rosterName);
+    setActiveView('manager');
   };
 
 
@@ -89,10 +96,10 @@ const App: React.FC = () => {
         
         <div className="bg-slate-800/50 rounded-lg p-1 sm:p-2">
             {activeView === 'guide' && <QuickGuide />}
-            {activeView === 'teams' && <TeamsAndSkills />}
+            {activeView === 'teams' && <TeamsAndSkills onRequestTeamCreation={handleRequestTeamCreation} />}
             {activeView === 'plays' && <Plays managedTeams={managedTeams} />}
             {activeView === 'generators' && <Generators />}
-            {activeView === 'manager' && !loading && <TeamManager teams={managedTeams} onTeamsUpdate={handleTeamsUpdate} />}
+            {activeView === 'manager' && !loading && <TeamManager teams={managedTeams} onTeamsUpdate={handleTeamsUpdate} requestedRoster={requestedRoster} onRosterRequestHandled={() => setRequestedRoster(null)} />}
             {activeView === 'live' && !loading && <LiveGame managedTeams={managedTeams} onTeamsUpdate={handleTeamsUpdate} />}
         </div>
 

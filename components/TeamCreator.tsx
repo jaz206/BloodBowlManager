@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { teamsData } from '../data/teams';
 import type { ManagedTeam } from '../types';
@@ -7,11 +8,12 @@ import SparklesIcon from './icons/SparklesIcon';
 
 interface TeamCreatorProps {
     onTeamCreate: (team: ManagedTeam) => void;
+    initialRosterName?: string | null;
 }
 
-const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate }) => {
+const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterName }) => {
     const [teamName, setTeamName] = useState('');
-    const [rosterName, setRosterName] = useState(teamsData[0].name);
+    const [rosterName, setRosterName] = useState(initialRosterName || teamsData[0].name);
     const [isGenerating, setIsGenerating] = useState(false);
 
     const handleGenerateName = async () => {
