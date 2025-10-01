@@ -209,28 +209,33 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams }) => {
 
       <div 
         ref={fieldRef}
-        className="relative w-full aspect-[15/13] bg-green-900 overflow-hidden rounded-lg shadow-xl border-2 border-slate-700 select-none"
+        className="relative w-full aspect-[15/13] bg-green-900/70 overflow-hidden rounded-lg shadow-xl border-2 border-slate-700 select-none"
       >
+        {/* Grid Background */}
         <div 
-          className="absolute inset-0 grid"
-          style={{
-              gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`,
-              gridTemplateRows: `repeat(${GRID_ROWS}, 1fr)`,
-          }}
-          aria-hidden="true"
+            className="absolute inset-0 grid" 
+            style={{ gridTemplateColumns: 'repeat(15, 1fr)', gridTemplateRows: 'repeat(13, 1fr)' }}
         >
-          {Array.from({ length: GRID_ROWS * GRID_COLS }).map((_, index) => {
-              const row = Math.floor(index / GRID_COLS);
-              const col = index % GRID_COLS;
-              const isDark = (row + col) % 2 === 0;
-              return (
-                  <div 
-                      key={index} 
-                      className={isDark ? 'bg-green-800' : 'bg-green-700'}
-                  />
-              );
-          })}
+            {Array.from({ length: GRID_ROWS * GRID_COLS }).map((_, i) => {
+                const row = Math.floor(i / GRID_COLS);
+                const col = i % GRID_COLS;
+                const isLight = (row + col) % 2 === 0;
+                return (
+                    <div
+                        key={i}
+                        className={`w-full h-full ${isLight ? 'bg-green-800/40' : 'bg-green-900/40'}`}
+                    ></div>
+                );
+            })}
         </div>
+
+        {/* Field Lines */}
+        <div className="absolute left-0 right-0 h-px bg-white/50" style={{ top: `calc(100% * 3 / 13)` }}></div>
+        <div className="absolute top-0 bottom-0 w-px bg-white/50" style={{ left: `calc(100% * 4 / 15)` }}></div>
+        <div className="absolute top-0 bottom-0 w-px bg-white/50" style={{ left: `calc(100% * 11 / 15)` }}></div>
+        
+        {/* Touchdown Zone (first row) */}
+        <div className="absolute top-0 left-0 right-0 bg-red-800/20" style={{ height: `calc(100% / 13)`}}></div>
 
         {tokens.map((token, index) => (
           <div

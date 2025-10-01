@@ -1,4 +1,4 @@
-const CACHE_NAME = 'blood-bowl-guide-v24';
+const CACHE_NAME = 'blood-bowl-guide-v25';
 const URLS_TO_CACHE = [
   '/',
   '/index.html',
