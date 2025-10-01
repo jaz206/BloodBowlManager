@@ -85,7 +85,7 @@ export const teamsData: Team[] = [
     rerollCost: 50000,
     tier: 2,
     apothecary: "Sí",
-    image: "https://www.warhammer-community.com/wp-content/uploads/2020/09/b8f67e0e.jpg",
+    image: "https://i.pinimg.com/736x/00/92/17/0092173b8d1e26ac361e877e871a6977.jpg",
     roster: [
       { qty: "0-12", position: "Linemen", cost: 60000, stats: { MV: 6, FU: "3", AG: "2+", PS: "4+", AR: "8+" }, skills: "Ninguna", primary: "AG", secondary: "F" },
       { qty: "0-4", position: "Throwers", cost: 75000, stats: { MV: 6, FU: "3", AG: "2+", PS: "2+", AR: "8+" }, skills: "Pasar", primary: "AGP", secondary: "F" },
@@ -99,7 +99,7 @@ export const teamsData: Team[] = [
     rerollCost: 60000,
     tier: 3,
     apothecary: "Sí",
-    image: "https://www.warhammer-community.com/wp-content/uploads/2023/02/z4iYqOMQ5sX06R9b.jpg",
+    image: "https://i.pinimg.com/736x/20/90/b4/2090b456fd49abe77abc7362c8181b0d.jpg",
     roster: [
       { qty: "0-16", position: "Lineman", cost: 40000, stats: { MV: 6, FU: "2", AG: "3+", PS: "4+", AR: "8+" }, skills: "Escurridizo, Esquivar, Humanoide bala", primary: "A", secondary: "FGP" },
       { qty: "0-1", position: "Bomma", cost: 45000, stats: { MV: 6, FU: "2", AG: "3+", PS: "4+", AR: "8+" }, skills: "Arma secreta, Bombardero, Escurridizo, Esquivar", primary: "AP", secondary: "FG" },
@@ -117,7 +117,7 @@ export const teamsData: Team[] = [
     rerollCost: 60000,
     tier: 3,
     apothecary: "Sí",
-    image: "https://www.warhammer-community.com/wp-content/uploads/2019/08/BBHalflings-Aug12-Team5gh.jpg",
+    image: "https://i.pinimg.com/736x/b2/f0/5c/b2f05c2fcd61096bbf20a2b194bad517.jpg",
     roster: [
       { qty: "0-16", position: "Halfling Hopeful Linemen", cost: 30000, stats: { MV: 5, FU: "2", AG: "3+", PS: "4+", AR: "7+" }, skills: "Escurridizo, Esquivar, Humanoide bala", primary: "A", secondary: "FG" },
       { qty: "0-2", position: "Halfling Heftys", cost: 50000, stats: { MV: 5, FU: "2", AG: "3+", PS: "3+", AR: "7+" }, skills: "Escurridizo, Esquivar, Furia, Placaje defensivo, Zafarse", primary: "AP", secondary: "FG" },
@@ -131,7 +131,7 @@ export const teamsData: Team[] = [
     rerollCost: 50000,
     tier: 2,
     apothecary: "Sí",
-    image: "https://www.warhammer-community.com/wp-content/uploads/2020/11/zTjEHDuGYI4lqmT1.jpg",
+    image: "https://i.pinimg.com/736x/c2/63/6b/c2636b8d808236de876bc37716a39f49.jpg",
     roster: [
       { qty: "0-16", position: "Human Linemen", cost: 50000, stats: { MV: 6, FU: "3", AG: "3+", PS: "4+", AR: "9+" }, skills: "Ninguna", primary: "G", secondary: "AF" },
       { qty: "0-2", position: "Throwers", cost: 80000, stats: { MV: 6, FU: "3", AG: "3+", PS: "2+", AR: "9+" }, skills: "Manos seguras, Pasar", primary: "GP", secondary: "AF" },
@@ -147,7 +147,7 @@ export const teamsData: Team[] = [
     rerollCost: 70000,
     tier: 2,
     apothecary: "Sí",
-    image: "https://www.warhammer-community.com/wp-content/uploads/2020/10/RFFd2aD6lYghmYnC.jpg",
+    image: "https://i.pinimg.com/736x/ff/75/29/ff7529450d7c3b9188700a90bf07c9f4.jpg",
     roster: [
       { qty: "0-12", position: "Imperial Retainer Linemen", cost: 45000, stats: { MV: 6, FU: "3", AG: "4+", PS: "5+", AR: "8+" }, skills: "Zafarse", primary: "G", secondary: "AF" },
       { qty: "0-2", position: "Imperial Throwers", cost: 75000, stats: { MV: 6, FU: "3", AG: "3+", PS: "3+", AR: "9+" }, skills: "Pasar, Pase a la carrera", primary: "GP", secondary: "AF" },
@@ -162,7 +162,7 @@ export const teamsData: Team[] = [
     rerollCost: 70000,
     tier: 1,
     apothecary: "Sí",
-    image: "https://www.warhammer-community.com/wp-content/uploads/2020/01/29fe6a0c.jpg",
+    image: "https://i.pinimg.com/736x/b4/c1/f5/b4c1f571ca61aaba9bc450b462b1783d.jpg",
     roster: [
       { qty: "0-12", position: "Skink Runner", cost: 60000, stats: { MV: 8, FU: "2", AG: "3+", PS: "4+", AR: "8+" }, skills: "Escurridizo, Esquivar", primary: "A", secondary: "FG" },
       { qty: "0-2", position: "Chameleon Skinks", cost: 70000, stats: { MV: 7, FU: "2", AG: "3+", PS: "3+", AR: "8+" }, skills: "Atento al balón, Escurridizo, Esquivar, Perseguir", primary: "A", secondary: "FGP" },

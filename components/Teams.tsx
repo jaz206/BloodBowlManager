@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { teamsData } from '../data/teams';
 import { skillsData } from '../data/skills';
 import type { Team, Skill } from '../types';
@@ -53,21 +53,28 @@ const TeamModal: React.FC<{ team: Team, onSkillClick: (skillName: string) => voi
                     <button onClick={onClose} className="text-slate-400 hover:text-white p-1 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
                 </div>
                 <div className="p-4 sm:p-5 overflow-y-auto">
-                    <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-300 mb-4">
-                        <p><span className='font-bold text-slate-400'>Coste Reroll:</span> {team.rerollCost.toLocaleString()} M.O.</p>
-                        <p><span className='font-bold text-slate-400'>Rango:</span> {team.tier}</p>
-                        <p><span className='font-bold text-slate-400'>Boticario:</span> {team.apothecary}</p>
-                        <p className="w-full"><span className='font-bold text-slate-400'>Reglas especiales:</span> {team.specialRules}</p>
+                    <div className="flex flex-col sm:flex-row gap-x-6 gap-y-4 mb-6">
+                        {team.image && (
+                            <div className="flex-shrink-0 sm:w-48">
+                                <img src={team.image} alt={`Escudo de ${team.name}`} className="w-full h-auto object-contain rounded-md bg-slate-900/50 p-2 border border-slate-700" />
+                            </div>
+                        )}
+                        <div className="flex-grow text-sm text-slate-300 space-y-2">
+                            <p><span className='font-bold text-slate-400'>Coste Reroll:</span> {team.rerollCost.toLocaleString()} M.O.</p>
+                            <p><span className='font-bold text-slate-400'>Rango:</span> {team.tier}</p>
+                            <p><span className='font-bold text-slate-400'>Boticario:</span> {team.apothecary}</p>
+                            <p><span className='font-bold text-slate-400'>Reglas especiales:</span> {team.specialRules}</p>
+                        </div>
                     </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm whitespace-nowrap">
+                    <div>
+                        <table className="w-full text-left text-sm">
                             <thead className="bg-slate-700 text-amber-300">
                                 <tr>
                                     <th className="p-2">Cant.</th>
                                     <th className="p-2">Posición</th>
                                     <th className="p-2">Coste</th>
                                     <th className="p-2 text-center">MV</th><th className="p-2 text-center">FU</th><th className="p-2 text-center">AG</th><th className="p-2 text-center">PS</th><th className="p-2 text-center">AR</th>
-                                    <th className="p-2">Habilidades y Rasgos</th>
+                                    <th className="p-2 whitespace-normal">Habilidades y Rasgos</th>
                                     <th className="p-2">Primarias</th>
                                     <th className="p-2">Secundarias</th>
                                 </tr>
@@ -75,11 +82,11 @@ const TeamModal: React.FC<{ team: Team, onSkillClick: (skillName: string) => voi
                             <tbody className="divide-y divide-slate-700">
                                 {team.roster.map(player => (
                                     <tr key={player.position} className="bg-slate-800/50">
-                                        <td className="p-2">{player.qty}</td>
-                                        <td className="p-2 font-semibold text-slate-200">{player.position}</td>
-                                        <td className="p-2">{player.cost.toLocaleString()}</td>
+                                        <td className="p-2 whitespace-nowrap">{player.qty}</td>
+                                        <td className="p-2 font-semibold text-slate-200 whitespace-nowrap">{player.position}</td>
+                                        <td className="p-2 whitespace-nowrap">{player.cost.toLocaleString()}</td>
                                         <td className="p-2 text-center">{player.stats.MV}</td><td className="p-2 text-center">{player.stats.FU}</td><td className="p-2 text-center">{player.stats.AG}</td><td className="p-2 text-center">{player.stats.PS}</td><td className="p-2 text-center">{player.stats.AR}</td>
-                                        <td className="p-2 text-xs">
+                                        <td className="p-2 text-xs whitespace-normal min-w-[250px]">
                                         {player.skills.split(', ').map((skill, index, arr) => {
                                             const cleanSkillName = skill.trim();
                                             if (cleanSkillName && cleanSkillName.toLowerCase() !== 'ninguna') {
@@ -117,6 +124,16 @@ const Teams: React.FC = () => {
     const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
     const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
     const [enlargedImage, setEnlargedImage] = useState<{src: string, alt: string} | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const filteredTeams = useMemo(() => {
+        if (!searchTerm) {
+            return teamsData;
+        }
+        return teamsData.filter(team =>
+            team.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [searchTerm]);
 
     const handleSkillClick = (skillName: string) => {
         const cleanedName = skillName.split('(')[0].trim();
@@ -130,21 +147,39 @@ const Teams: React.FC = () => {
     };
 
   return (
-    <>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-        {teamsData.map((team) => (
-            <TeamCard 
-                key={team.name} 
-                team={team}
-                onViewRoster={() => setSelectedTeam(team)}
-                onViewImage={(e) => handleImageClick(e, team)}
+    <div className="space-y-6">
+        <div className="sticky top-2 z-10 mb-6">
+            <input
+                type="text"
+                placeholder="Buscar equipo..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="w-full max-w-md mx-auto bg-slate-900 border-2 border-slate-600 rounded-lg py-3 px-4 text-white placeholder-slate-400 focus:ring-amber-500 focus:border-amber-500 shadow-lg"
+                aria-label="Buscar equipo por nombre"
             />
-        ))}
         </div>
+        
+        {filteredTeams.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                {filteredTeams.map((team) => (
+                    <TeamCard 
+                        key={team.name} 
+                        team={team}
+                        onViewRoster={() => setSelectedTeam(team)}
+                        onViewImage={(e) => handleImageClick(e, team)}
+                    />
+                ))}
+            </div>
+        ) : (
+            <p className="text-center text-slate-400 py-8">
+                No se encontraron equipos que coincidan con "{searchTerm}".
+            </p>
+        )}
+
         {selectedTeam && <TeamModal team={selectedTeam} onClose={() => setSelectedTeam(null)} onSkillClick={handleSkillClick} />}
         {selectedSkill && <SkillModal skill={selectedSkill} onClose={() => setSelectedSkill(null)} />}
         {enlargedImage && <ImageModal src={enlargedImage.src} alt={enlargedImage.alt} onClose={() => setEnlargedImage(null)} />}
-    </>
+    </div>
   );
 };
 
