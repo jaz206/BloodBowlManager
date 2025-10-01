@@ -92,6 +92,7 @@ export interface Team {
   tier: number;
   apothecary: string;
   roster: Player[];
+  image?: string;
 }
 
 export interface Skill {

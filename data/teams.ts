@@ -7,6 +7,7 @@ export const teamsData: Team[] = [
     rerollCost: 60000,
     tier: 2,
     apothecary: "Sí",
+    image: "https://i.pinimg.com/736x/01/95/95/0195951b4bb9081cf33a85740fedb59c.jpg",
     roster: [
       { qty: "0-12", position: "Goblin Bruiser Lineman", cost: 45000, stats: { MV: 6, FU: "2", AG: "3+", PS: "4+", AR: "8+" }, skills: "Cabeza dura, Escurridizo, Esquivar, Humanoide bala", primary: "A", secondary: "FGP" },
       { qty: "0-6", position: "Black Orc", cost: 90000, stats: { MV: 4, FU: "4", AG: "4+", PS: "5+", AR: "10+" }, skills: "Apartar, Luchador", primary: "FG", secondary: "AP" },
@@ -19,6 +20,7 @@ export const teamsData: Team[] = [
     rerollCost: 60000,
     tier: 2,
     apothecary: "Sí",
+    image: "https://i.pinimg.com/736x/76/4c/a7/764ca7f2f36fbd1cd1a513191cb31c9b.jpg",
     roster: [
       { qty: "0-16", position: "Beastman Runner Linemen", cost: 60000, stats: { MV: 6, FU: "3", AG: "3+", PS: "4+", AR: "9+" }, skills: "Cuernos", primary: "FGM", secondary: "AP" },
       { qty: "0-4", position: "Chosen Blocker", cost: 100000, stats: { MV: 5, FU: "4", AG: "3+", PS: "4+", AR: "10+" }, skills: "Ninguna", primary: "FGM", secondary: "A" },
@@ -33,6 +35,7 @@ export const teamsData: Team[] = [
     rerollCost: 70000,
     tier: 2,
     apothecary: "Sí",
+    image: "https://i.pinimg.com/736x/c3/bc/00/c3bc00232d9e1ffccb8fa176aeb236c2.jpg",
     roster: [
         { qty: "0-12", position: "Renegade Human Lineman", cost: 50000, stats: { MV: 6, FU: "3", AG: "3+", PS: "4+", AR: "9+" }, skills: "Animadversión (todo el equipo), Ninguna", primary: "GM", secondary: "AF" },
         { qty: "0-1", position: "Renegade Human Thrower", cost: 75000, stats: { MV: 6, FU: "3", AG: "3+", PS: "3+", AR: "9+" }, skills: "Animadversión (todo el equipo), Pasar, Proteger el cuero", primary: "GMP", secondary: "AF" },
@@ -52,12 +55,13 @@ export const teamsData: Team[] = [
     rerollCost: 50000,
     tier: 1,
     apothecary: "Sí",
+    image: "https://i.pinimg.com/736x/05/63/62/0563628d5c3b3315c891ad4bd1970384.jpg",
     roster: [
       { qty: "0-12", position: "Linemen", cost: 70000, stats: { MV: 6, FU: "3", AG: "2+", PS: "4+", AR: "9+" }, skills: "Ninguna", primary: "AGP", secondary: "F" },
       { qty: "0-2", position: "Runners", cost: 80000, stats: { MV: 7, FU: "3", AG: "2+", PS: "3+", AR: "8+" }, skills: "Pase precipitado", primary: "AGP", secondary: "F" },
       { qty: "0-4", position: "Blitzers", cost: 100000, stats: { MV: 7, FU: "3", AG: "2+", PS: "4+", AR: "9+" }, skills: "Placar", primary: "AG", secondary: "FP" },
       { qty: "0-2", position: "Assassins", cost: 85000, stats: { MV: 7, FU: "3", AG: "2+", PS: "5+", AR: "8+" }, skills: "Apuñalar, Perseguir", primary: "AG", secondary: "FP" },
-      { qty: "0-2", position: "Witch Elves", cost: 110000, stats: { MV: 7, FU: "3", AG: "2+", PS: "5+", AR: "8+" }, skills: "En pie de un salto, Esquivar, Furia", primary: "AG", secondary: "FP" },
+      { qty: "0-2", position: "Witch Elves", cost: 110000, stats: { MV: 7, FU: "3", AG: "2+", PS: "5+", AR: "8+" }, skills: "En pie de um salto, Esquivar, Furia", primary: "AG", secondary: "FP" },
     ],
   },
   {
@@ -66,6 +70,7 @@ export const teamsData: Team[] = [
     rerollCost: 50000,
     tier: 1,
     apothecary: "Sí",
+    image: "https://i.pinimg.com/736x/67/ea/e3/67eae393dea427e1f14fbeb0996567ea.jpg",
     roster: [
       { qty: "0-12", position: "Dwarf Blocker", cost: 70000, stats: { MV: 4, FU: "3", AG: "4+", PS: "5+", AR: "10+" }, skills: "Cabeza dura, Placaje defensivo, Placar", primary: "FG", secondary: "A" },
       { qty: "0-2", position: "Runners", cost: 85000, stats: { MV: 6, FU: "3", AG: "3+", PS: "4+", AR: "9+" }, skills: "Cabeza dura, Manos seguras", primary: "GP", secondary: "AF" },
@@ -80,6 +85,7 @@ export const teamsData: Team[] = [
     rerollCost: 50000,
     tier: 2,
     apothecary: "Sí",
+    image: "https://www.warhammer-community.com/wp-content/uploads/2020/09/b8f67e0e.jpg",
     roster: [
       { qty: "0-12", position: "Linemen", cost: 60000, stats: { MV: 6, FU: "3", AG: "2+", PS: "4+", AR: "8+" }, skills: "Ninguna", primary: "AG", secondary: "F" },
       { qty: "0-4", position: "Throwers", cost: 75000, stats: { MV: 6, FU: "3", AG: "2+", PS: "2+", AR: "8+" }, skills: "Pasar", primary: "AGP", secondary: "F" },
@@ -93,6 +99,7 @@ export const teamsData: Team[] = [
     rerollCost: 60000,
     tier: 3,
     apothecary: "Sí",
+    image: "https://www.warhammer-community.com/wp-content/uploads/2023/02/z4iYqOMQ5sX06R9b.jpg",
     roster: [
       { qty: "0-16", position: "Lineman", cost: 40000, stats: { MV: 6, FU: "2", AG: "3+", PS: "4+", AR: "8+" }, skills: "Escurridizo, Esquivar, Humanoide bala", primary: "A", secondary: "FGP" },
       { qty: "0-1", position: "Bomma", cost: 45000, stats: { MV: 6, FU: "2", AG: "3+", PS: "4+", AR: "8+" }, skills: "Arma secreta, Bombardero, Escurridizo, Esquivar", primary: "AP", secondary: "FG" },
@@ -110,6 +117,7 @@ export const teamsData: Team[] = [
     rerollCost: 60000,
     tier: 3,
     apothecary: "Sí",
+    image: "https://www.warhammer-community.com/wp-content/uploads/2019/08/BBHalflings-Aug12-Team5gh.jpg",
     roster: [
       { qty: "0-16", position: "Halfling Hopeful Linemen", cost: 30000, stats: { MV: 5, FU: "2", AG: "3+", PS: "4+", AR: "7+" }, skills: "Escurridizo, Esquivar, Humanoide bala", primary: "A", secondary: "FG" },
       { qty: "0-2", position: "Halfling Heftys", cost: 50000, stats: { MV: 5, FU: "2", AG: "3+", PS: "3+", AR: "7+" }, skills: "Escurridizo, Esquivar, Furia, Placaje defensivo, Zafarse", primary: "AP", secondary: "FG" },
@@ -123,6 +131,7 @@ export const teamsData: Team[] = [
     rerollCost: 50000,
     tier: 2,
     apothecary: "Sí",
+    image: "https://www.warhammer-community.com/wp-content/uploads/2020/11/zTjEHDuGYI4lqmT1.jpg",
     roster: [
       { qty: "0-16", position: "Human Linemen", cost: 50000, stats: { MV: 6, FU: "3", AG: "3+", PS: "4+", AR: "9+" }, skills: "Ninguna", primary: "G", secondary: "AF" },
       { qty: "0-2", position: "Throwers", cost: 80000, stats: { MV: 6, FU: "3", AG: "3+", PS: "2+", AR: "9+" }, skills: "Manos seguras, Pasar", primary: "GP", secondary: "AF" },
@@ -138,6 +147,7 @@ export const teamsData: Team[] = [
     rerollCost: 70000,
     tier: 2,
     apothecary: "Sí",
+    image: "https://www.warhammer-community.com/wp-content/uploads/2020/10/RFFd2aD6lYghmYnC.jpg",
     roster: [
       { qty: "0-12", position: "Imperial Retainer Linemen", cost: 45000, stats: { MV: 6, FU: "3", AG: "4+", PS: "5+", AR: "8+" }, skills: "Zafarse", primary: "G", secondary: "AF" },
       { qty: "0-2", position: "Imperial Throwers", cost: 75000, stats: { MV: 6, FU: "3", AG: "3+", PS: "3+", AR: "9+" }, skills: "Pasar, Pase a la carrera", primary: "GP", secondary: "AF" },
@@ -152,6 +162,7 @@ export const teamsData: Team[] = [
     rerollCost: 70000,
     tier: 1,
     apothecary: "Sí",
+    image: "https://www.warhammer-community.com/wp-content/uploads/2020/01/29fe6a0c.jpg",
     roster: [
       { qty: "0-12", position: "Skink Runner", cost: 60000, stats: { MV: 8, FU: "2", AG: "3+", PS: "4+", AR: "8+" }, skills: "Escurridizo, Esquivar", primary: "A", secondary: "FG" },
       { qty: "0-2", position: "Chameleon Skinks", cost: 70000, stats: { MV: 7, FU: "2", AG: "3+", PS: "3+", AR: "8+" }, skills: "Atento al balón, Escurridizo, Esquivar, Perseguir", primary: "A", secondary: "FGP" },
@@ -165,6 +176,7 @@ export const teamsData: Team[] = [
     rerollCost: 70000,
     tier: 2,
     apothecary: "No",
+    image: "https://www.warhammer-community.com/wp-content/uploads/2020/10/T101s75T2Q35sR4A.jpg",
     roster: [
       { qty: "0-16", position: "Zombie Linemen", cost: 40000, stats: { MV: 4, FU: "3", AG: "4+", PS: "4+", AR: "9+" }, skills: "Regeneración", primary: "G", secondary: "AF" },
       { qty: "0-2", position: "Ghoul Runners", cost: 75000, stats: { MV: 7, FU: "3", AG: "3+", PS: "4+", AR: "8+" }, skills: "Esquivar", primary: "AG", secondary: "FP" },
@@ -179,6 +191,7 @@ export const teamsData: Team[] = [
     rerollCost: 70000,
     tier: 2,
     apothecary: "No",
+    image: "https://www.warhammer-community.com/wp-content/uploads/2021/01/Lh7yBGn55y6uc0dJ.jpg",
     roster: [
       { qty: "0-12", position: "Rotter Linemen", cost: 35000, stats: { MV: 5, FU: "3", AG: "4+", PS: "6+", AR: "9+" }, skills: "Descomposición, Infectado", primary: "GM", secondary: "AF" },
       { qty: "0-4", position: "Pestigors", cost: 75000, stats: { MV: 6, FU: "3", AG: "3+", PS: "4+", AR: "9+" }, skills: "Cuernos, Infectado, Regeneración", primary: "FGM", secondary: "AP" },
@@ -192,6 +205,7 @@ export const teamsData: Team[] = [
     rerollCost: 70000,
     tier: 3,
     apothecary: "Sí",
+    image: "https://www.warhammer-community.com/wp-content/uploads/2020/06/f0e6082c.jpg",
     roster: [
       { qty: "0-16", position: "Gnoblar Linemen", cost: 15000, stats: { MV: 5, FU: "1", AG: "3+", PS: "5+", AR: "6+" }, skills: "Canijo, Echarse a um lado, Escurridizo, Esquivar, Humanoide bala", primary: "A", secondary: "G" },
       { qty: "0-1", position: "Ogre Runt Punter", cost: 145000, stats: { MV: 5, FU: "5", AG: "4+", PS: "4+", AR: "10+" }, skills: "Cabeza dura, Chutar compañero, Estúpido, Golpe mortífero (+1)", primary: "FP", secondary: "AG" },
@@ -204,12 +218,13 @@ export const teamsData: Team[] = [
     rerollCost: 70000,
     tier: 2,
     apothecary: "Sí",
+    image: "https://www.warhammer-community.com/wp-content/uploads/2020/10/Kk0zL2P3W8d3sL4k.jpg",
     roster: [
       { qty: "0-12", position: "Old World Linemen", cost: 50000, stats: { MV: 6, FU: "3", AG: "3+", PS: "4+", AR: "9+" }, skills: "Animadversión (compañeros Dwarf y Human), Ninguna", primary: "G", secondary: "AF" },
       { qty: "0-1", position: "Old World Human Thrower", cost: 80000, stats: { MV: 6, FU: "3", AG: "3+", PS: "2+", AR: "9+" }, skills: "Animadversión (compañeros Dwarf y Halfling), Manos seguras, Pasar", primary: "GP", secondary: "AF" },
       { qty: "0-1", position: "Old World Human Catcher", cost: 65000, stats: { MV: 8, FU: "2", AG: "3+", PS: "5+", AR: "8+" }, skills: "Animadversión (compañeros Dwarf y Halfling), Atrapar, Esquivar", primary: "AG", secondary: "F" },
       { qty: "0-2", position: "Old World Human Blitzer", cost: 75000, stats: { MV: 7, FU: "3", AG: "3+", PS: "4+", AR: "9+" }, skills: "Animadversión (compañeros Dwarf y Halfling)", primary: "G", secondary: "AF" },
-      { qty: "0-2", position: "Dwarf Blockers", cost: 75000, stats: { MV: 4, FU: "3", AG: "4+", PS: "5+", AR: "10+" }, skills: "Cabeza dura, Brazo fuerte, Luchador, Solitario (3+)", primary: "FG", secondary: "A" },
+      { qty: "0-2", position: "Dwarf Blockers", cost: 75000, stats: { MV: 4, FU: "3", AG: "4+", PS: "5+", AR: "10+" }, skills: "Cabeza dura, Brazo forte, Luchador, Solitario (3+)", primary: "FG", secondary: "A" },
       { qty: "0-1", position: "Old World Dwarf Runner", cost: 85000, stats: { MV: 6, FU: "3", AG: "3+", PS: "4+", AR: "9+" }, skills: "Cabeza dura, Manos seguras, Solitario (3+)", primary: "GP", secondary: "AF" },
       { qty: "0-1", position: "Dwarf Blitzer", cost: 80000, stats: { MV: 5, FU: "3", AG: "3+", PS: "4+", AR: "10+" }, skills: "Cabeza dura, Placar, Solitario (3+)", primary: "FG", secondary: "AP" },
       { qty: "0-1", position: "Dwarf Troll Slayer", cost: 95000, stats: { MV: 5, FU: "3", AG: "4+", PS: "-", AR: "9+" }, skills: "Agallas, Cabeza dura, Furia, Placar, Solitario (3+)", primary: "FG", secondary: "A" },
@@ -224,6 +239,7 @@ export const teamsData: Team[] = [
     rerollCost: 60000,
     tier: 2,
     apothecary: "Sí",
+    image: "https://www.warhammer-community.com/wp-content/uploads/2020/10/cAGrrAfyMvyiNlTz.jpg",
     roster: [
       { qty: "0-16", position: "Orc Linemen", cost: 50000, stats: { MV: 5, FU: "3", AG: "3+", PS: "4+", AR: "10+" }, skills: "Animadversión (todo el equipo)", primary: "G", secondary: "AF" },
       { qty: "0-2", position: "Throwers", cost: 65000, stats: { MV: 5, FU: "3", AG: "3+", PS: "3+", AR: "9+" }, skills: "Animadversión (todo el equipo), Manos seguras, Pasar", primary: "GP", secondary: "AF" },
@@ -239,6 +255,7 @@ export const teamsData: Team[] = [
     rerollCost: 70000,
     tier: 1,
     apothecary: "No",
+    image: "https://www.warhammer-community.com/wp-content/uploads/2020/10/5h890Gh1a1s4tL5b.jpg",
     roster: [
       { qty: "0-12", position: "Skeleton", cost: 40000, stats: { MV: 5, FU: "3", AG: "4+", PS: "6+", AR: "8+" }, skills: "Cabeza dura, Regeneración", primary: "G", secondary: "AF" },
       { qty: "0-12", position: "Zombie Linemen", cost: 40000, stats: { MV: 4, FU: "3", AG: "4+", PS: "-", AR: "9+" }, skills: "Regeneración", primary: "G", secondary: "AF" },
@@ -253,58 +270,14 @@ export const teamsData: Team[] = [
     rerollCost: 60000,
     tier: 3,
     apothecary: "Sí",
+    image: "https://www.warhammer-community.com/wp-content/uploads/2020/07/70691e84.jpg",
     roster: [
       { qty: "0-16", position: "Snotling Linemen", cost: 15000, stats: { MV: 5, FU: "1", AG: "3+", PS: "5+", AR: "6+" }, skills: "Canijo, Colarse, Echarse a um lado, Escurridizo, Esquivar, Humanoide bala", primary: "A", secondary: "G" },
       { qty: "0-2", position: "Fungus Flingas", cost: 30000, stats: { MV: 5, FU: "1", AG: "3+", PS: "4+", AR: "6+" }, skills: "Arma secreta, Bombardero, Echarse a um lado, Escurridizo, Esquivar, Humanoide bala", primary: "AP", secondary: "G" },
       { qty: "0-2", position: "Fun-hoppas", cost: 20000, stats: { MV: 6, FU: "1", AG: "3+", PS: "5+", AR: "6+" }, skills: "Echarse a um lado, Humanoide bala, Pogo saltarín", primary: "A", secondary: "G" },
       { qty: "0-2", position: "Stilty Runnas", cost: 20000, stats: { MV: 6, FU: "1", AG: "3+", PS: "5+", AR: "6+" }, skills: "Echarse a um lado, Esprintar, Esquivar, Humanoide bala", primary: "A", secondary: "G" },
-      { qty: "0-2", position: "Pump Wagons", cost: 105000, stats: { MV: 4, FU: "5", AG: "5+", PS: "-", AR: "9+" }, skills: "Arma secreta, Golpe mortífero (+1), Imparable, Jugar sucio (+1), Mantenerse firme, Realmente estúpido, Regeneración, Siempre hambriento, Solitario (3+)", primary: "F", secondary: "AG" },
-      { qty: "0-2", position: "Trained Trolls", cost: 115000, stats: { MV: 4, FU: "5", AG: "5+", PS: "5+", AR: "10+" }, skills: "Golpe mortífero (+1), Lanzar compañero, Proyectil de vómito, Realmente estúpido, Regeneración, Siempre hambriento, Solitario (3+)", primary: "F", secondary: "AGP" },
+      { qty: "0-2", position: "Pump Wagons", cost: 105000, stats: { MV: 4, FU: "5", AG: "5+", PS: "-", AR: "9+" }, skills: "Arma secreta, Golpe mortífero (+1), Imparable, Jugar sucio (+1), Realmente estúpido, Solitario (4+)", primary: "F", secondary: "AG" },
+      { qty: "0-2", position: "Trained Trolls", cost: 115000, stats: { MV: 4, FU: "5", AG: "5+", PS: "5+", AR: "10+" }, skills: "Golpe mortífero (+1), Lanzar compañero, Proyectil de vómito, Realmente estúpido, Regeneración, Siempre hambriento, Solitario (3+)", primary: "F", secondary: "AG" }
     ],
   },
-  {
-    name: "Equipos Skaven",
-    specialRules: "Reto del Inframundo",
-    rerollCost: 50000,
-    tier: 1,
-    apothecary: "Sí",
-    roster: [
-      { qty: "0-16", position: "Skaven Clanrat Linemen", cost: 50000, stats: { MV: 7, FU: "3", AG: "3+", PS: "4+", AR: "8+" }, skills: "Ninguna", primary: "G", secondary: "AFM" },
-      { qty: "0-2", position: "Throwers", cost: 85000, stats: { MV: 7, FU: "3", AG: "3+", PS: "2+", AR: "8+" }, skills: "Manos seguras, Pasar", primary: "GP", secondary: "AFM" },
-      { qty: "0-4", position: "Gutter Runners", cost: 85000, stats: { MV: 9, FU: "2", AG: "2+", PS: "4+", AR: "8+" }, skills: "Esquivar", primary: "AG", secondary: "FMP" },
-      { qty: "0-2", position: "Blitzers", cost: 90000, stats: { MV: 7, FU: "3", AG: "3+", PS: "5+", AR: "9+" }, skills: "Placar", primary: "FG", secondary: "AMP" },
-      { qty: "0-1", position: "Rat Ogre", cost: 150000, stats: { MV: 6, FU: "5", AG: "4+", PS: "-", AR: "9+" }, skills: "Ferocidad animal, Furia, Golpe mortífero (+1), Presencia perturbadora, Solitario (4+)", primary: "F", secondary: "AGM" },
-    ],
-  },
-  {
-    name: "Equipos Underworld Denizens",
-    specialRules: "Reto del Inframundo, Sobornos y corrupción",
-    rerollCost: 70000,
-    tier: 1,
-    apothecary: "Sí",
-    roster: [
-      { qty: "0-12", position: "Underworld Goblin Linemen", cost: 40000, stats: { MV: 6, FU: "2", AG: "3+", PS: "4+", AR: "8+" }, skills: "Escurridizo, Esquivar, Humanoide bala", primary: "AM", secondary: "FG" },
-      { qty: "0-6", position: "Underworld Snotlings", cost: 15000, stats: { MV: 5, FU: "1", AG: "3+", PS: "5+", AR: "6+" }, skills: "Canijo, Echarse a um lado, Esquivar, Humanoide bala", primary: "AM", secondary: "G" },
-      { qty: "0-3", position: "Skaven Clanrat", cost: 50000, stats: { MV: 7, FU: "3", AG: "3+", PS: "4+", AR: "8+" }, skills: "Animadversión (Underworld Goblin Linemen)", primary: "GM", secondary: "AF" },
-      { qty: "0-1", position: "Skaven Thrower", cost: 85000, stats: { MV: 7, FU: "3", AG: "3+", PS: "2+", AR: "8+" }, skills: "Animadversión (Underworld Goblin Linemen), Manos seguras, Pasar", primary: "GMP", secondary: "AF" },
-      { qty: "0-1", position: "Gutter Runner", cost: 85000, stats: { MV: 9, FU: "2", AG: "2+", PS: "4+", AR: "8+" }, skills: "Animadversión (Underworld Goblin Linemen), Esquivar", primary: "AGM", secondary: "FP" },
-      { qty: "0-1", position: "Skaven Blitzer", cost: 90000, stats: { MV: 7, FU: "3", AG: "3+", PS: "5+", AR: "9+" }, skills: "Animadversión (Underworld Goblin Linemen), Placar", primary: "FGM", secondary: "AP" },
-      { qty: "0-1", position: "Underworld Troll", cost: 115000, stats: { MV: 4, FU: "5", AG: "5+", PS: "5+", AR: "10+" }, skills: "Golpe mortífero (+1), Lanzar compañero, Proyectil de vómito, Realmente estúpido, Regeneración, Siempre hambriento, Solitario (4+)", primary: "FM", secondary: "AGP" },
-      { qty: "0-1", position: "Mutant Rat Ogre", cost: 150000, stats: { MV: 6, FU: "5", AG: "4+", PS: "-", AR: "9+" }, skills: "Ferocidad animal, Furia, Golpe mortífero (+1), Solitario (4+)", primary: "FM", secondary: "GA" },
-    ],
-  },
-  {
-    name: "Equipos Wood Elf",
-    specialRules: "Liga de los Reinos Elves",
-    rerollCost: 50000,
-    tier: 1,
-    apothecary: "Sí",
-    roster: [
-      { qty: "0-12", position: "Linemen", cost: 70000, stats: { MV: 7, FU: "3", AG: "2+", PS: "4+", AR: "8+" }, skills: "Ninguna", primary: "AG", secondary: "F" },
-      { qty: "0-2", position: "Throwers", cost: 95000, stats: { MV: 7, FU: "3", AG: "2+", PS: "2+", AR: "8+" }, skills: "Pasar", primary: "AGP", secondary: "F" },
-      { qty: "0-4", position: "Catchers", cost: 90000, stats: { MV: 8, FU: "2", AG: "2+", PS: "4+", AR: "8+" }, skills: "Atrapar, Esquivar", primary: "AG", secondary: "FP" },
-      { qty: "0-2", position: "Wardancers", cost: 125000, stats: { MV: 8, FU: "3", AG: "2+", PS: "4+", AR: "8+" }, skills: "Esquivar, Placar, Saltar", primary: "AG", secondary: "FP" },
-      { qty: "0-1", position: "Loren Forest Treeman", cost: 120000, stats: { MV: 2, FU: "6", AG: "5+", PS: "5+", AR: "11+" }, skills: "Echar raíces, Cabeza dura, Golpe mortífero (+1), Lanzar compañero, Mantenerse firme, Solitario (4+)", primary: "F", secondary: "AGP" },
-    ],
-  }
 ];
