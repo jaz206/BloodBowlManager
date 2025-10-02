@@ -105,18 +105,26 @@ const Login: React.FC = () => {
                         <UserIcon className="w-6 h-6" />
                         <span>Acceder como Invitado</span>
                     </button>
-                    {isGsiInitialized ? (
-                         <div ref={googleButtonRef} id="google-signin-button" className="flex justify-center [&>div]:w-full [&>div]:flex [&>div]:justify-center"></div>
-                    ) : (
-                         <button 
-                            onClick={() => setIsConfigModalOpen(true)} 
-                            className="w-full flex items-center justify-center gap-3 bg-slate-600 hover:bg-slate-500 text-slate-200 font-semibold py-3 px-4 rounded-lg transition-colors text-lg"
-                        >
-                            <GoogleIcon className="w-5 h-5" />
-                            <span>Acceder con Google</span>
-                            <QuestionMarkCircleIcon className="w-5 h-5 text-slate-400" />
-                        </button>
-                    )}
+                    
+                    <div ref={googleButtonRef} id="google-signin-button" className="flex justify-center [&>div]:w-full [&>div]:flex [&>div]:justify-center">
+                        {!isGsiInitialized && (
+                            <button 
+                                onClick={() => setIsConfigModalOpen(true)} 
+                                className="w-full flex items-center justify-center gap-3 bg-slate-600 hover:bg-slate-500 text-slate-200 font-semibold py-3 px-4 rounded-lg transition-colors text-lg"
+                            >
+                                <GoogleIcon className="w-5 h-5" />
+                                <span>Conectar con Google</span>
+                            </button>
+                        )}
+                    </div>
+                    
+                    <button 
+                        onClick={() => setIsConfigModalOpen(true)} 
+                        className="text-xs text-slate-400 hover:text-slate-200 hover:underline pt-2 flex items-center justify-center gap-1 w-full"
+                    >
+                        <QuestionMarkCircleIcon className="w-4 h-4" />
+                        <span>¿Problemas con Google? Pulsa aquí para configurar.</span>
+                    </button>
                 </div>
             </main>
 
