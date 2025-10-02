@@ -1,4 +1,4 @@
-const CACHE_NAME = 'blood-bowl-guide-v25';
+const CACHE_NAME = 'blood-bowl-guide-v26';
 const URLS_TO_CACHE = [
   '/',
   '/index.html',
@@ -20,6 +20,8 @@ const URLS_TO_CACHE = [
   '/data/randomNames.ts',
   '/contexts/AuthContext.tsx',
   '/hooks/useAuth.ts',
+  '/components/Login.tsx',
+  '/components/MainApp.tsx',
   '/components/GameSequence.tsx',
   '/components/Weather.tsx',
   '/components/KickoffEvents.tsx',
@@ -57,6 +59,7 @@ const URLS_TO_CACHE = [
   '/components/icons/DiceIcon.tsx',
   '/components/icons/BookOpenIcon.tsx',
   '/components/icons/UsersIcon.tsx',
+  '/components/icons/UserIcon.tsx',
   '/components/icons/ClipboardListIcon.tsx',
   '/components/icons/CubeIcon.tsx',
   '/components/icons/ShieldCheckIcon.tsx',

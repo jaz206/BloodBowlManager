@@ -1,123 +1,25 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
-import QuickGuide from './components/QuickGuide';
-import TeamsAndSkills from './components/TeamsAndSkills';
-import Plays from './components/Plays';
-import Generators from './components/Generators';
-import TeamManager from './components/TeamManager';
-// FIX: Changed import to a named import as LiveGame is not a default export.
-import { LiveGame } from './components/LiveGame';
-import BookOpenIcon from './components/icons/BookOpenIcon';
-import UsersIcon from './components/icons/UsersIcon';
-import ClipboardListIcon from './components/icons/ClipboardListIcon';
-import CubeIcon from './components/icons/CubeIcon';
-import ShieldCheckIcon from './components/icons/ShieldCheckIcon';
-import StopwatchIcon from './components/icons/StopwatchIcon';
-import type { ManagedTeam } from './types';
-import PostGameWizard from './components/PostGameWizard';
+import React from 'react';
 import { useAuth } from './hooks/useAuth';
-import UserProfile from './components/UserProfile';
-
-type View = 'guide' | 'teams' | 'plays' | 'generators' | 'manager' | 'live';
+import Login from './components/Login';
+import MainApp from './components/MainApp';
 
 const App: React.FC = () => {
-  const [activeView, setActiveView] = useState<View>('guide');
-  const [managedTeams, setManagedTeams] = useState<ManagedTeam[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [requestedRoster, setRequestedRoster] = useState<string | null>(null);
-  const { user } = useAuth();
-
-  const TEAMS_STORAGE_KEY = useMemo(() => user ? `bb-teams-${user.id}` : 'bloodbowl-managed-teams', [user]);
-
-  useEffect(() => {
-    setLoading(true);
-    try {
-        const storedTeams = localStorage.getItem(TEAMS_STORAGE_KEY);
-        if (storedTeams) {
-            setManagedTeams(JSON.parse(storedTeams));
-        } else {
-            setManagedTeams([]); // Clear teams when user changes and no data is found
-        }
-    } catch (error) {
-        console.error("Failed to load teams from localStorage", error);
-        setManagedTeams([]);
-    } finally {
-        setLoading(false);
+    const { user, isLoading } = useAuth();
+    
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-white">
+                <svg className="animate-spin -ml-1 mr-3 h-10 w-10 text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p className="text-lg mt-4">Cargando...</p>
+            </div>
+        );
     }
-  }, [TEAMS_STORAGE_KEY]);
-
-  const handleTeamsUpdate = (updatedTeams: ManagedTeam[]) => {
-      setManagedTeams(updatedTeams);
-      localStorage.setItem(TEAMS_STORAGE_KEY, JSON.stringify(updatedTeams));
-  };
-
-  const handleRequestTeamCreation = (rosterName: string) => {
-    setRequestedRoster(rosterName);
-    setActiveView('manager');
-  };
-
-
-  const NavButton: React.FC<{
-    view: View;
-    label: string;
-    icon: React.ReactElement<{ className?: string }>;
-  }> = ({ view, label, icon }) => {
-    const isActive = activeView === view;
-    return (
-      <button
-        onClick={() => setActiveView(view)}
-        className={`flex-1 group flex flex-col sm:flex-row items-center justify-center gap-2 py-3 px-2 text-center text-sm font-bold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-amber-400 transition-all duration-200 whitespace-nowrap border-b-4 ${
-          isActive
-            ? 'border-amber-400 text-amber-400'
-            : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800/50'
-        }`}
-        aria-current={isActive ? 'page' : undefined}
-      >
-        {React.cloneElement(icon, { className: `w-5 h-5 transition-colors ${isActive ? 'text-amber-400' : 'text-slate-500 group-hover:text-white'}`})}
-        <span className="hidden sm:inline">{label}</span>
-      </button>
-    );
-  };
-
-  return (
-    <div className="min-h-screen bg-slate-900 text-slate-200 font-sans antialiased">
-      <main className="container mx-auto max-w-7xl p-2 sm:p-6">
-        <header className="text-center mb-6 relative">
-          <h1 className="text-4xl sm:text-5xl font-bold text-amber-400 tracking-wider" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>
-            Asistente de Blood Bowl
-          </h1>
-          <p className="text-slate-400 mt-2 text-lg">Tu Asistente de Entrenador</p>
-          <div className="absolute top-0 right-0 p-2">
-            <UserProfile />
-          </div>
-        </header>
-
-        <nav className="mb-4 bg-slate-800 rounded-lg shadow-md overflow-hidden">
-          <div className="flex justify-around border-b border-slate-700">
-            <NavButton view="guide" label="Guía Rápida" icon={<BookOpenIcon />} />
-            <NavButton view="teams" label="Equipos y Habilidades" icon={<UsersIcon />} />
-            <NavButton view="plays" label="Pizarra Táctica" icon={<ClipboardListIcon />} />
-            <NavButton view="generators" label="Tablas y Generadores" icon={<CubeIcon />} />
-            <NavButton view="manager" label="Gestor de Equipo" icon={<ShieldCheckIcon />} />
-            <NavButton view="live" label="Directo" icon={<StopwatchIcon />} />
-          </div>
-        </nav>
-        
-        <div className="bg-slate-800/50 rounded-lg p-1 sm:p-2">
-            {activeView === 'guide' && <QuickGuide />}
-            {activeView === 'teams' && <TeamsAndSkills onRequestTeamCreation={handleRequestTeamCreation} />}
-            {activeView === 'plays' && <Plays managedTeams={managedTeams} />}
-            {activeView === 'generators' && <Generators />}
-            {activeView === 'manager' && !loading && <TeamManager teams={managedTeams} onTeamsUpdate={handleTeamsUpdate} requestedRoster={requestedRoster} onRosterRequestHandled={() => setRequestedRoster(null)} />}
-            {activeView === 'live' && !loading && <LiveGame managedTeams={managedTeams} onTeamsUpdate={handleTeamsUpdate} />}
-        </div>
-
-        <footer className="text-center mt-12 text-slate-500 text-sm">
-          <p>Hecho para entrenadores de Blood Bowl en todo el mundo.</p>
-        </footer>
-      </main>
-    </div>
-  );
-};
+    
+    return user ? <MainApp /> : <Login />;
+}
 
 export default App;
