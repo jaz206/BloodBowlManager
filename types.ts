@@ -81,11 +81,18 @@ export interface Player {
   secondary: string;
 }
 
+export interface PairedPlayer {
+    name: string;
+    stats: PlayerStats;
+    skills: string;
+}
+
 export interface StarPlayer {
     name: string;
     cost: number;
-    stats: PlayerStats;
-    skills: string;
+    stats?: PlayerStats;
+    skills?: string;
+    pair?: [PairedPlayer, PairedPlayer];
     specialRules: string;
     playsFor: string[];
     image?: string;

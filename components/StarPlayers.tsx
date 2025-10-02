@@ -5,31 +5,37 @@ import type { StarPlayer } from '../types';
 import StarPlayerModal from './StarPlayerModal';
 import ImageModal from './ImageModal';
 
-const StarPlayerCard: React.FC<{ player: StarPlayer, onCardClick: () => void, onImageClick: (e: React.MouseEvent) => void }> = ({ player, onCardClick, onImageClick }) => (
-    <div onClick={onCardClick} className="w-full h-full text-left bg-slate-800 p-4 rounded-lg border border-slate-700 hover:bg-slate-700/50 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 flex items-center gap-4 cursor-pointer">
-        {player.image && (
-            <div className="w-24 h-24 flex-shrink-0" onClick={onImageClick}>
-                <img src={player.image} alt={player.name} className="w-full h-full object-contain rounded-md bg-slate-900 transition-transform hover:scale-105" />
+const StarPlayerCard: React.FC<{ player: StarPlayer, onCardClick: () => void, onImageClick: (e: React.MouseEvent) => void }> = ({ player, onCardClick, onImageClick }) => {
+    const statsToDisplay = player.stats || player.pair?.[0]?.stats;
+
+    return (
+        <div onClick={onCardClick} className="w-full h-full text-left bg-slate-800 p-4 rounded-lg border border-slate-700 hover:bg-slate-700/50 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 flex items-center gap-4 cursor-pointer">
+            {player.image && (
+                <div className="w-24 h-24 flex-shrink-0" onClick={onImageClick}>
+                    <img src={player.image} alt={player.name} className="w-full h-full object-contain rounded-md bg-slate-900 transition-transform hover:scale-105" />
+                </div>
+            )}
+            <div className="flex flex-col flex-grow min-w-0">
+                <div className="flex justify-between items-start gap-2">
+                    <h3 className="text-lg font-semibold text-amber-400 truncate">{player.name}</h3>
+                    <span className="text-sm font-bold text-green-400 flex-shrink-0">{player.cost.toLocaleString()} M.O.</span>
+                </div>
+                {statsToDisplay && (
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-300 mt-2 font-mono">
+                        <span>MV: {statsToDisplay.MV}</span>
+                        <span>FU: {statsToDisplay.FU}</span>
+                        <span>AG: {statsToDisplay.AG}</span>
+                        <span>PS: {statsToDisplay.PS}</span>
+                        <span>AR: {statsToDisplay.AR}</span>
+                    </div>
+                )}
+                <p className="text-xs text-slate-400 mt-2 truncate">
+                    {player.skills || ''}
+                </p>
             </div>
-        )}
-        <div className="flex flex-col flex-grow">
-            <div className="flex justify-between items-start gap-2">
-                <h3 className="text-lg font-semibold text-amber-400">{player.name}</h3>
-                <span className="text-sm font-bold text-green-400 flex-shrink-0">{player.cost.toLocaleString()} M.O.</span>
-            </div>
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-300 mt-2 font-mono">
-                <span>MV: {player.stats.MV}</span>
-                <span>FU: {player.stats.FU}</span>
-                <span>AG: {player.stats.AG}</span>
-                <span>PS: {player.stats.PS}</span>
-                <span>AR: {player.stats.AR}</span>
-            </div>
-            <p className="text-xs text-slate-400 mt-2">
-                {player.skills}
-            </p>
         </div>
-    </div>
-);
+    );
+};
 
 const StarPlayers: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -43,7 +49,7 @@ const StarPlayers: React.FC = () => {
     }
     return sortedPlayers.filter(player =>
       player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      player.skills.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (player.skills || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       player.playsFor.join(' ').toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [searchTerm]);
