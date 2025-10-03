@@ -6,13 +6,23 @@ import GoogleIcon from './icons/GoogleIcon';
 const Login: React.FC = () => {
     const { login, loginAsGuest } = useAuth();
     const [isLoggingIn, setIsLoggingIn] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const handleGoogleLogin = async () => {
         setIsLoggingIn(true);
+        setError(null);
         try {
             await login();
-        } catch (error) {
-            console.error("Google login failed", error);
+        } catch (err: any) {
+            console.error("Google login failed", err);
+            if (err.code === 'auth/unauthorized-domain') {
+                const domain = window.location.hostname;
+                setError(`Error de autorización: El dominio de esta aplicación ('${domain}') no está autorizado. Ve a tu Consola de Firebase -> Authentication -> Configuración -> Dominios autorizados y añade este dominio para permitir el inicio de sesión.`);
+            } else if (err.code === 'auth/auth-domain-config-required') {
+                setError("Error de configuración de Firebase: Falta el 'authDomain'. Por favor, verifica la configuración de Firebase en el código de la aplicación.");
+            } else {
+                setError(`Error al iniciar sesión: ${err.message}`);
+            }
             setIsLoggingIn(false);
         }
     };
@@ -55,6 +65,8 @@ const Login: React.FC = () => {
                         <span>{isLoggingIn ? 'Iniciando sesión...' : 'Iniciar con Google'}</span>
                     </button>
                 </div>
+
+                {error && <p className="mt-6 text-red-400 bg-red-900/50 border border-red-700 p-3 rounded-lg text-sm">{error}</p>}
             </main>
 
             <footer className="absolute bottom-4 text-center text-slate-400 text-sm z-10">

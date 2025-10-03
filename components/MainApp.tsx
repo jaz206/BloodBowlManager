@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import QuickGuide from './QuickGuide';
 import TeamsAndSkills from './TeamsAndSkills';
@@ -52,6 +53,12 @@ const MainApp: React.FC = () => {
         }
     } else {
         // Firebase user - fetch from Firestore
+        if (!db) {
+            console.error("Firestore is not initialized, cannot fetch teams.");
+            setManagedTeams([]);
+            setLoading(false);
+            return;
+        }
         const fetchTeams = async () => {
             try {
                 const teamsCollectionRef = collection(db, 'users', user.id, 'teams');
@@ -81,6 +88,10 @@ const MainApp: React.FC = () => {
         setManagedTeams(updatedTeams);
         localStorage.setItem(TEAMS_STORAGE_KEY, JSON.stringify(updatedTeams));
     } else {
+        if (!db) {
+            console.error("Firestore is not initialized. Cannot create team.");
+            return;
+        }
         try {
             const teamsCollectionRef = collection(db, 'users', user.id, 'teams');
             const docRef = await addDoc(teamsCollectionRef, newTeamData);
@@ -100,6 +111,10 @@ const MainApp: React.FC = () => {
         const updatedTeams = managedTeams.map(t => t.id === updatedTeam.id ? updatedTeam : t);
         localStorage.setItem(TEAMS_STORAGE_KEY, JSON.stringify(updatedTeams));
     } else {
+        if (!db) {
+            console.error("Firestore is not initialized. Cannot update team.");
+            return;
+        }
         try {
             const teamDocRef = doc(db, 'users', user.id, 'teams', updatedTeam.id);
             const { id, ...teamData } = updatedTeam;
@@ -119,6 +134,10 @@ const MainApp: React.FC = () => {
         const updatedTeams = managedTeams.filter(t => t.id !== teamId);
         localStorage.setItem(TEAMS_STORAGE_KEY, JSON.stringify(updatedTeams));
     } else {
+        if (!db) {
+            console.error("Firestore is not initialized. Cannot delete team.");
+            return;
+        }
         try {
             const teamDocRef = doc(db, 'users', user.id, 'teams', teamId);
             await deleteDoc(teamDocRef);
