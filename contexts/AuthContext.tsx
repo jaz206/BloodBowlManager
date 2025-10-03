@@ -56,9 +56,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async () => {
     try {
         const provider = new GoogleAuthProvider();
-        await signInWithPopup(auth, provider);
+        const result = await signInWithPopup(auth, provider);
+        const firebaseUser = result.user;
+        const newUser: User = {
+          id: firebaseUser.uid,
+          name: firebaseUser.displayName || 'Entrenador',
+          email: firebaseUser.email || '',
+          picture: firebaseUser.photoURL || '',
+        };
+        localStorage.setItem('bloodbowl-user', JSON.stringify(newUser));
+        setUser(newUser);
     } catch (error) {
         console.error("Error durante el inicio de sesión con Google:", error);
+        localStorage.removeItem('bloodbowl-user');
+        setUser(null);
+        throw error;
     }
   };
 
@@ -74,9 +86,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const logout = () => {
-    signOut(auth);
-    // Don't remove guest user data on logout, only when a real user logs in.
-    // This preserves guest data if they just close the app.
+    signOut(auth).catch((error) => {
+        console.error("Error signing out from Firebase:", error);
+    }).finally(() => {
+        // This ensures local/guest user is always logged out
+        localStorage.removeItem('bloodbowl-user');
+        setUser(null);
+    });
   };
   
   const value = { user, login, logout, loginAsGuest, isLoading };
