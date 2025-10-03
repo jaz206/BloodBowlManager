@@ -90,10 +90,11 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, oppone
 
         const tempTeam = JSON.parse(JSON.stringify(initialHomeTeam));
         let mvpPlayer: (ManagedPlayer & { teamName: string }) | null = null;
-        const isEligible = (p: ManagedPlayer) => !p.isStarPlayer;
+        
+        const isEligibleForMvp = (p: ManagedPlayer) => !p.isStarPlayer && !p.isJourneyman;
 
-        const homeEligible = tempTeam.players.filter(isEligible);
-        const oppEligible = opponentTeam.players.filter(isEligible);
+        const homeEligible = tempTeam.players.filter(isEligibleForMvp);
+        const oppEligible = opponentTeam.players.filter(isEligibleForMvp);
 
         let mvpPool: (ManagedPlayer & { teamName: string })[] = [];
         if (score.home > score.opponent) { // Home wins

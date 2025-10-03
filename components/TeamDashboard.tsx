@@ -6,6 +6,9 @@ import PlayerModal from './PlayerModal';
 import QrCodeIcon from './icons/QrCodeIcon';
 import SkillModal from './SkillModal';
 import { generateRandomName } from '../data/randomNames';
+import ShieldCheckIcon from './icons/ShieldCheckIcon';
+import ImageModal from './ImageModal';
+import UploadIcon from './icons/UploadIcon';
 
 // FIX: Declare QRCode as it is loaded from a script tag and available globally.
 declare const QRCode: any;
@@ -24,7 +27,9 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onTeamUpdate
     const [selectedSkillForModal, setSelectedSkillForModal] = useState<Skill | null>(null);
     const [editingPlayerId, setEditingPlayerId] = useState<number | null>(null);
     const [editingName, setEditingName] = useState('');
+    const [isCrestModalOpen, setIsCrestModalOpen] = useState(false);
     const qrCanvasRef = useRef<HTMLCanvasElement>(null);
+    const crestInputRef = useRef<HTMLInputElement>(null);
     const baseRoster = useMemo(() => teamsData.find(t => t.name === team.rosterName), [team.rosterName]);
 
     useEffect(() => {
@@ -127,6 +132,42 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onTeamUpdate
             setEditingPlayerId(null);
             setEditingName('');
         }
+    };
+    
+    const handleCrestUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 200;
+                const MAX_HEIGHT = 200;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width *= MAX_HEIGHT / height;
+                        height = MAX_HEIGHT;
+                    }
+                }
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx?.drawImage(img, 0, 0, width, height);
+                onTeamUpdate({ ...team, crestImage: canvas.toDataURL('image/png') });
+            };
+            img.src = e.target?.result as string;
+        };
+        reader.readAsDataURL(file);
     };
 
     if (!baseRoster) {
@@ -281,6 +322,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onTeamUpdate
                 spp: 0,
                 gainedSkills: [],
                 lastingInjuries: [],
+                isBenched: false, // Default to starter
             };
             onTeamUpdate({
                 ...team,
@@ -290,6 +332,13 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onTeamUpdate
         } else {
             alert('¡No tienes suficiente dinero!');
         }
+    };
+    
+    const togglePlayerBenched = (playerId: number) => {
+        const updatedPlayers = team.players.map(p => 
+            p.id === playerId ? { ...p, isBenched: !(p.isBenched ?? false) } : p
+        );
+        onTeamUpdate({ ...team, players: updatedPlayers });
     };
 
     const handleFirePlayer = (playerId: number) => {
@@ -321,6 +370,8 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onTeamUpdate
         });
     };
 
+    const starterCount = team.players.filter(p => !(p.isBenched ?? false)).length;
+
     return (
         <div className="space-y-6">
              <div className="flex justify-between items-center">
@@ -335,11 +386,36 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onTeamUpdate
             {/* Team Info Header */}
             <div className="bg-slate-900/70 p-4 rounded-lg border border-slate-700">
                 <div className="flex flex-wrap justify-between items-center gap-4">
-                    <div>
-                        <h2 className="text-2xl sm:text-3xl font-bold text-amber-400">{team.name}</h2>
-                        <p className="text-slate-400">{team.rosterName}</p>
+                    <div className="flex items-center gap-4">
+                        <div className="relative group">
+                            <button onClick={() => team.crestImage && setIsCrestModalOpen(true)} className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-slate-800 flex items-center justify-center flex-shrink-0 border-2 border-slate-600 overflow-hidden">
+                                {team.crestImage ? (
+                                    <img src={team.crestImage} alt="Escudo del equipo" className="w-full h-full object-cover" />
+                                ) : (
+                                    <ShieldCheckIcon className="w-10 h-10 text-slate-600" />
+                                )}
+                            </button>
+                             <input
+                                type="file"
+                                ref={crestInputRef}
+                                onChange={handleCrestUpload}
+                                accept="image/*"
+                                className="hidden"
+                            />
+                            <button 
+                                onClick={() => crestInputRef.current?.click()}
+                                className="absolute bottom-0 -right-1 bg-slate-600 hover:bg-slate-500 text-white p-1.5 rounded-full shadow-md transition-opacity opacity-0 group-hover:opacity-100"
+                                aria-label="Cambiar escudo"
+                            >
+                                <UploadIcon className="w-4 h-4" />
+                            </button>
+                        </div>
+                        <div>
+                            <h2 className="text-2xl sm:text-3xl font-bold text-amber-400">{team.name}</h2>
+                            <p className="text-slate-400">{team.rosterName}</p>
+                        </div>
                     </div>
-                     <div className="text-right">
+                     <div className="text-right flex-shrink-0">
                         <p className="text-lg font-semibold text-slate-200">Tesorería: <span className="text-green-400">{team.treasury.toLocaleString()} M.O.</span></p>
                         <p className="text-lg font-semibold text-slate-200">Valor de Equipo (VE): <span className="text-sky-400">{teamValue.toLocaleString()}</span></p>
                     </div>
@@ -426,18 +502,19 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onTeamUpdate
             
              {/* Current Roster */}
             <div className="bg-slate-900/70 p-4 rounded-lg border border-slate-700">
-                <h3 className="text-lg font-semibold text-amber-400 mb-3">Plantilla Actual ({team.players.length}/16)</h3>
+                <h3 className="text-lg font-semibold text-amber-400 mb-3">
+                    Plantilla Actual ({team.players.length}/16)
+                    <span className={`ml-4 text-base ${starterCount > 11 ? 'text-red-400' : 'text-slate-400'}`}>
+                        (Titulares: {starterCount}/11)
+                    </span>
+                </h3>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm whitespace-nowrap">
                         <thead className="bg-slate-700 text-amber-300">
                             <tr>
                                 <th className="p-2">Nombre</th>
                                 <th className="p-2">Posición</th>
-                                <th className="p-2 text-center">MV</th>
-                                <th className="p-2 text-center">FU</th>
-                                <th className="p-2 text-center">AG</th>
-                                <th className="p-2 text-center">PS</th>
-                                <th className="p-2 text-center">AR</th>
+                                <th className="p-2">Alineación</th>
                                 <th className="p-2 text-center">PE</th>
                                 <th className="p-2">Habilidades Adquiridas</th>
                                 <th className="p-2">Lesiones Permanentes</th>
@@ -446,7 +523,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onTeamUpdate
                         </thead>
                         <tbody className="divide-y divide-slate-700">
                             {team.players.map(p => (
-                                <tr key={p.id}>
+                                <tr key={p.id} className={p.isBenched ? 'opacity-60' : ''}>
                                     <td className="p-2 font-bold text-white min-w-[150px]" onDoubleClick={() => handleNameDoubleClick(p)}>
                                         {editingPlayerId === p.id ? (
                                             <input
@@ -463,11 +540,14 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onTeamUpdate
                                         )}
                                     </td>
                                     <td className="p-2">{p.position}</td>
-                                    <td className="p-2 text-center">{p.stats.MV}</td>
-                                    <td className="p-2 text-center">{p.stats.FU}</td>
-                                    <td className="p-2 text-center">{p.stats.AG}</td>
-                                    <td className="p-2 text-center">{p.stats.PS}</td>
-                                    <td className="p-2 text-center">{p.stats.AR}</td>
+                                    <td className="p-2">
+                                        <button 
+                                            onClick={() => togglePlayerBenched(p.id)}
+                                            className={`text-xs font-bold py-1 px-3 rounded-full ${p.isBenched ? 'bg-slate-600 text-slate-200 hover:bg-slate-500' : 'bg-green-600 text-white hover:bg-green-500'}`}
+                                        >
+                                            {p.isBenched ? 'Banquillo' : 'Titular'}
+                                        </button>
+                                    </td>
                                     <td className="p-2 text-center">{p.spp}</td>
                                     <td className="p-2 text-xs">
                                         {p.gainedSkills.length > 0 ? (
@@ -509,6 +589,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onTeamUpdate
 
             {editingPlayer && <PlayerModal player={editingPlayer} allSkills={skillsData} onSave={handleSavePlayer} onClose={() => setEditingPlayer(null)} />}
             {selectedSkillForModal && <SkillModal skill={selectedSkillForModal} onClose={() => setSelectedSkillForModal(null)} />}
+            {isCrestModalOpen && team.crestImage && <ImageModal src={team.crestImage} alt={`Escudo de ${team.name}`} onClose={() => setIsCrestModalOpen(false)} />}
 
 
             {showQr && (

@@ -2,6 +2,8 @@
 
 
 
+
+
 import React, { useState, useRef, useEffect } from 'react';
 import type { ManagedTeam } from '../types';
 import TeamCreator from './TeamCreator';
@@ -9,6 +11,7 @@ import TeamCreator from './TeamCreator';
 import { TeamDashboard } from './TeamDashboard';
 import UploadIcon from './icons/UploadIcon';
 import DownloadIcon from './icons/DownloadIcon';
+import ShieldCheckIcon from './icons/ShieldCheckIcon';
 
 interface TeamManagerProps {
     teams: ManagedTeam[];
@@ -225,9 +228,19 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamsUpdate, request
                         <button 
                             key={team.name}
                             onClick={() => setSelectedTeamName(team.name)}
-                            className="w-full bg-slate-700/50 text-slate-200 font-semibold p-4 rounded-lg shadow-md hover:bg-slate-700 hover:text-white transition-all duration-200"
+                            className="w-full bg-slate-700/50 text-slate-200 p-4 rounded-lg shadow-md hover:bg-slate-700 hover:text-white transition-all duration-200 flex items-center gap-4 text-left"
                         >
-                            {team.name} <span className="text-xs text-slate-400">({team.rosterName})</span>
+                            {team.crestImage ? (
+                                <img src={team.crestImage} alt="Escudo del equipo" className="w-10 h-10 rounded-full object-cover flex-shrink-0 bg-slate-900" />
+                            ) : (
+                                <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center flex-shrink-0">
+                                    <ShieldCheckIcon className="w-6 h-6 text-slate-600" />
+                                </div>
+                            )}
+                            <div className="flex-grow min-w-0">
+                                <p className="font-semibold truncate">{team.name}</p>
+                                <p className="text-xs text-slate-400 truncate">{team.rosterName}</p>
+                            </div>
                         </button>
                     ))}
                 </div>

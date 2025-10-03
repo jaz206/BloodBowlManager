@@ -1,6 +1,8 @@
 
 
 
+
+
 export interface User {
   id: string;
   name: string;
@@ -137,6 +139,7 @@ export interface ManagedPlayer extends Player {
   sppActions?: Partial<Record<SppActionType, number>>;
   isJourneyman?: boolean;
   missNextGame?: number;
+  isBenched?: boolean;
 }
 
 export interface ManagedTeam {
@@ -149,6 +152,7 @@ export interface ManagedTeam {
   assistantCoaches: number;
   apothecary: boolean;
   players: ManagedPlayer[];
+  crestImage?: string; // Base64 data URL for the team crest
   // Live game specific, optional
   liveRerolls?: number;
   tempBribes?: number;
@@ -157,6 +161,25 @@ export interface ManagedTeam {
   coachExpelled?: boolean;
   apothecaryUsedOnKO?: boolean;
 }
+
+// Competition Types
+export interface Matchup {
+  team1: string;
+  team2: string;
+  winner?: string | null;
+  score1?: number;
+  score2?: number;
+}
+
+export interface Competition {
+  id: string;
+  name: string;
+  format: 'Liguilla' | 'Torneo';
+  teams: string[];
+  schedule?: Matchup[][]; // For Liguilla (round-robin)
+  bracket?: Matchup[][];  // For Torneo (knockout)
+}
+
 
 // Live Game Types
 export type GameEventType = 'INFO' | 'KICKOFF' | 'TOUCHDOWN' | 'INJURY' | 'FOUL' | 'WEATHER' | 'OTHER' | 'TURNOVER';

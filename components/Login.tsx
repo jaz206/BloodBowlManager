@@ -10,6 +10,17 @@ const Login: React.FC = () => {
     const [clientIdInput, setClientIdInput] = useState('');
     const [showInstructions, setShowInstructions] = useState(false);
     const [gsiRenderFailed, setGsiRenderFailed] = useState(false);
+    const [copied, setCopied] = useState(false);
+
+    const handleCopyOrigin = () => {
+        navigator.clipboard.writeText(window.location.origin).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        }, (err) => {
+            console.error('Could not copy text: ', err);
+            alert('No se pudo copiar la URL.');
+        });
+    };
 
     useEffect(() => {
         if (isGsiInitialized && googleButtonRef.current) {
@@ -86,7 +97,12 @@ const Login: React.FC = () => {
                       <li>Elige <strong className="text-slate-200">"Aplicación web"</strong>.</li>
                       <li>
                         En <strong className="text-slate-200">"Orígenes de JavaScript autorizados"</strong>, añade la siguiente URL:
-                        <strong className="block text-center text-amber-300 bg-slate-700 p-2 rounded-md my-2 font-mono text-base">{window.location.origin}</strong>
+                        <div className="flex items-center justify-center bg-slate-700 p-2 rounded-md my-2 gap-4">
+                            <strong className="text-amber-300 font-mono text-base">{window.location.origin}</strong>
+                            <button type="button" onClick={handleCopyOrigin} className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-1 px-3 rounded-md text-xs">
+                                {copied ? '¡Copiado!' : 'Copiar'}
+                            </button>
+                        </div>
                       </li>
                       <li>Haz clic en <strong className="text-slate-200">"Crear"</strong> y copia el <strong className="text-slate-200">"ID de cliente"</strong>.</li>
                     </ol>
@@ -128,14 +144,20 @@ const Login: React.FC = () => {
                     
                     {gsiRenderFailed && (
                         <div className="p-4 bg-red-900/50 border border-red-700 rounded-lg text-red-300 text-sm space-y-3">
-                            <p className="font-bold">Error al iniciar sesión con Google</p>
-                            <p>Esto suele ocurrir por un ID de Cliente mal configurado (<code className="bg-red-800/50 p-1 rounded font-mono">origin_mismatch</code>).</p>
-                            <p>Asegúrate de que la URL <strong className="text-amber-300">{window.location.origin}</strong> está en los "Orígenes de JavaScript autorizados" de tu Google Cloud Console.</p>
+                            <p className="font-bold">¡Error de Configuración de Google!</p>
+                            <p>La aplicación no puede mostrar el botón de Google. Esto es un <strong className="text-amber-300">problema de configuración externo</strong>, no un error del código de la aplicación.</p>
+                            <p>La causa más común es un error de <code className="bg-red-800/50 p-1 rounded font-mono">origin_mismatch</code>. Para solucionarlo, copia la siguiente URL y añádela a los "Orígenes de JavaScript autorizados" en tu Google Cloud Console:</p>
+                            <div className="flex items-center justify-center bg-slate-700 p-2 rounded-md my-2 gap-4">
+                                <strong className="text-amber-300 font-mono text-base">{window.location.origin}</strong>
+                                <button type="button" onClick={handleCopyOrigin} className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-1 px-3 rounded-md text-xs">
+                                    {copied ? '¡Copiado!' : 'Copiar'}
+                                </button>
+                            </div>
                             <button 
                                 onClick={() => setIsConfigModalOpen(true)} 
                                 className="w-full bg-red-600 hover:bg-red-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors mt-2"
                             >
-                                Solucionar Problema de Configuración
+                                Abrir Guía de Configuración
                             </button>
                         </div>
                     )}

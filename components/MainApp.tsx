@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import QuickGuide from './QuickGuide';
 import TeamsAndSkills from './TeamsAndSkills';
@@ -17,8 +16,11 @@ import type { ManagedTeam } from '../types';
 import PostGameWizard from './PostGameWizard';
 import { useAuth } from '../hooks/useAuth';
 import UserProfile from './UserProfile';
+import TrophyIcon from './icons/TrophyIcon';
+import Leagues from './Leagues';
+import CalendarIcon from './icons/CalendarIcon';
 
-type View = 'guide' | 'teams' | 'plays' | 'generators' | 'manager' | 'live';
+type View = 'guide' | 'teams' | 'plays' | 'generators' | 'manager' | 'live' | 'leagues';
 
 const MainApp: React.FC = () => {
   const [activeView, setActiveView] = useState<View>('guide');
@@ -79,9 +81,11 @@ const MainApp: React.FC = () => {
     );
   };
 
+  const mainClasses = activeView === 'leagues' ? '' : 'container mx-auto max-w-7xl p-2 sm:p-6';
+
   return (
     <div className="min-h-screen bg-slate-900 text-slate-200 font-sans antialiased">
-      <main className="container mx-auto max-w-7xl p-2 sm:p-6">
+      <main className={mainClasses}>
         <header className="text-center mb-6 relative">
           <h1 className="text-4xl sm:text-5xl font-bold text-amber-400 tracking-wider" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>
             Asistente de Blood Bowl
@@ -100,16 +104,18 @@ const MainApp: React.FC = () => {
             <NavButton view="generators" label="Tablas y Generadores" icon={<CubeIcon />} />
             <NavButton view="manager" label="Gestor de Equipo" icon={<ShieldCheckIcon />} />
             <NavButton view="live" label="Directo" icon={<StopwatchIcon />} />
+            <NavButton view="leagues" label="Ligas y Torneos" icon={<TrophyIcon />} />
           </div>
         </nav>
         
-        <div className="bg-slate-800/50 rounded-lg p-1 sm:p-2">
+        <div className="bg-slate-800/50 rounded-lg">
             {activeView === 'guide' && <QuickGuide />}
             {activeView === 'teams' && <TeamsAndSkills onRequestTeamCreation={handleRequestTeamCreation} />}
             {activeView === 'plays' && <Plays managedTeams={managedTeams} />}
             {activeView === 'generators' && <Generators />}
             {activeView === 'manager' && !loading && <TeamManager teams={managedTeams} onTeamsUpdate={handleTeamsUpdate} requestedRoster={requestedRoster} onRosterRequestHandled={() => setRequestedRoster(null)} />}
             {activeView === 'live' && !loading && <LiveGame managedTeams={managedTeams} onTeamsUpdate={handleTeamsUpdate} />}
+            {activeView === 'leagues' && !loading && <Leagues managedTeams={managedTeams} />}
         </div>
 
         <footer className="text-center mt-12 text-slate-500 text-sm">
