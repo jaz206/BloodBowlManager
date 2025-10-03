@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 const UserIcon: React.FC<{ className?: string }> = ({ className = 'w-5 h-5' }) => (

@@ -4,12 +4,11 @@ import QuestionMarkCircleIcon from './icons/QuestionMarkCircleIcon';
 import UserIcon from './icons/UserIcon';
 
 const Login: React.FC = () => {
-    const { loginAsGuest, isGsiInitialized, setAndStoreGoogleClientId } = useAuth();
+    const { loginAsGuest, isGsiInitialized, gsiError, setAndStoreGoogleClientId, googleClientId } = useAuth();
     const googleButtonRef = useRef<HTMLDivElement>(null);
     const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
-    const [clientIdInput, setClientIdInput] = useState('');
+    const [clientIdInput, setClientIdInput] = useState(googleClientId || '');
     const [showInstructions, setShowInstructions] = useState(false);
-    const [gsiRenderFailed, setGsiRenderFailed] = useState(false);
     const [copied, setCopied] = useState(false);
 
     const handleCopyOrigin = () => {
@@ -23,28 +22,14 @@ const Login: React.FC = () => {
     };
 
     useEffect(() => {
-        if (isGsiInitialized && googleButtonRef.current) {
-            // If GSI is initialized, we try to render the button
-            if (window.google && window.google.accounts && window.google.accounts.id) {
-                setGsiRenderFailed(false);
-
-                if (googleButtonRef.current.childElementCount === 0) {
-                    window.google.accounts.id.renderButton(
-                        googleButtonRef.current,
-                        { theme: 'filled_black', size: 'large', type: 'standard', text: 'signin_with', shape: 'pill', logo_alignment: 'left' }
-                    );
-                }
-                window.google.accounts.id.prompt();
-                
-                // After a delay, check if the button actually rendered.
-                // The GSI library fails silently on origin_mismatch by not rendering the button.
-                const timeoutId = setTimeout(() => {
-                    if (googleButtonRef.current && googleButtonRef.current.childElementCount === 0) {
-                        setGsiRenderFailed(true);
-                    }
-                }, 2500);
-
-                return () => clearTimeout(timeoutId);
+        if (isGsiInitialized && googleButtonRef.current && googleButtonRef.current.childElementCount === 0) {
+            try {
+                window.google.accounts.id.renderButton(
+                    googleButtonRef.current,
+                    { theme: 'filled_black', size: 'large', type: 'standard', text: 'signin_with', shape: 'pill', logo_alignment: 'left', width: '300' }
+                );
+            } catch (e) {
+                console.error("Failed to render GSI button:", e);
             }
         }
     }, [isGsiInitialized]);
@@ -66,7 +51,7 @@ const Login: React.FC = () => {
       >
         <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-2xl w-full transform animate-slide-in-up" onClick={e => e.stopPropagation()}>
           <div className="p-4 border-b border-slate-700 flex justify-between items-center">
-            <h2 className="text-xl font-bold text-amber-400">Conectar con Google</h2>
+            <h2 className="text-xl font-bold text-amber-400">Configuración de Google</h2>
             <button onClick={() => setIsConfigModalOpen(false)} className="text-slate-400 hover:text-white">&times;</button>
           </div>
           <div className="p-5 max-h-[70vh] overflow-y-auto text-slate-300 space-y-4 text-sm">
@@ -84,7 +69,7 @@ const Login: React.FC = () => {
               </div>
                <button onClick={() => setShowInstructions(!showInstructions)} className="text-xs text-sky-400 hover:underline flex items-center gap-1">
                   <QuestionMarkCircleIcon className="w-4 h-4" />
-                  {showInstructions ? 'Ocultar instrucciones' : '¿Cómo obtengo un ID de cliente?'}
+                  {showInstructions ? 'Ocultar instrucciones' : '¿Cómo obtengo y configuro un ID de cliente?'}
               </button>
   
               {showInstructions && (
@@ -96,7 +81,7 @@ const Login: React.FC = () => {
                       <li>Haz clic en <strong className="text-slate-200">"+ CREAR CREDENCIALES"</strong> y elige <strong className="text-slate-200">"ID de cliente de OAuth"</strong>.</li>
                       <li>Elige <strong className="text-slate-200">"Aplicación web"</strong>.</li>
                       <li>
-                        En <strong className="text-slate-200">"Orígenes de JavaScript autorizados"</strong>, añade la siguiente URL:
+                        En <strong className="text-slate-200">"Orígenes de JavaScript autorizados"</strong>, haz clic en <strong className="text-slate-200">"+ AÑADIR URI"</strong> y pega la siguiente URL:
                         <div className="flex items-center justify-center bg-slate-700 p-2 rounded-md my-2 gap-4">
                             <strong className="text-amber-300 font-mono text-base">{window.location.origin}</strong>
                             <button type="button" onClick={handleCopyOrigin} className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-1 px-3 rounded-md text-xs">
@@ -104,7 +89,7 @@ const Login: React.FC = () => {
                             </button>
                         </div>
                       </li>
-                      <li>Haz clic en <strong className="text-slate-200">"Crear"</strong> y copia el <strong className="text-slate-200">"ID de cliente"</strong>.</li>
+                      <li>Haz clic en <strong className="text-slate-200">"Crear"</strong> y, en la pantalla siguiente, copia el <strong className="text-slate-200">"ID de cliente"</strong>. Pégalo en el campo de arriba.</li>
                     </ol>
                 </div>
               )}
@@ -116,6 +101,50 @@ const Login: React.FC = () => {
         </div>
       </div>
     );
+    
+    const renderGoogleSignIn = () => {
+        if (!googleClientId) {
+            return (
+                <div className="p-4 bg-sky-900/50 border border-sky-700 rounded-lg text-sky-300 text-sm space-y-3 animate-fade-in-fast">
+                    <p className="font-bold">Habilitar inicio de sesión con Google</p>
+                    <p>Para sincronizar tus datos de forma segura, necesitas proporcionar un ID de cliente de Google.</p>
+                    <button 
+                        onClick={() => setIsConfigModalOpen(true)} 
+                        className="w-full bg-sky-600 hover:bg-sky-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors mt-2"
+                    >
+                        Configurar ID de Cliente
+                    </button>
+                </div>
+            );
+        }
+        
+        if (gsiError) {
+             return (
+                <div className="p-4 bg-red-900/50 border border-red-700 rounded-lg text-red-300 text-sm space-y-3 animate-fade-in-fast">
+                    <p className="font-bold">Error de Google Sign-In</p>
+                    <p>{gsiError}</p>
+                    <button 
+                        onClick={() => setIsConfigModalOpen(true)} 
+                        className="w-full bg-red-600 hover:bg-red-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors mt-2"
+                    >
+                        Abrir Guía de Configuración
+                    </button>
+                </div>
+             );
+        }
+
+        if (!isGsiInitialized) {
+            return (
+                <div className="w-full flex items-center justify-center gap-3 bg-slate-700 text-slate-400 font-semibold py-3 px-4 rounded-lg text-lg">
+                    <svg className="animate-spin h-5 w-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <span>Inicializando Google...</span>
+                </div>
+            );
+        }
+
+        return <div ref={googleButtonRef} id="google-signin-button" className="flex justify-center min-h-[44px]"></div>;
+    }
+
 
     return (
         <div 
@@ -142,50 +171,17 @@ const Login: React.FC = () => {
                         <div className="flex-grow border-t border-slate-600"></div>
                     </div>
                     
-                    {gsiRenderFailed && (
-                        <div className="p-4 bg-red-900/50 border border-red-700 rounded-lg text-red-300 text-sm space-y-3">
-                            <p className="font-bold">¡Error de Configuración de Google!</p>
-                            <p>La aplicación no puede mostrar el botón de Google. Esto es un <strong className="text-amber-300">problema de configuración externo</strong>, no un error del código de la aplicación.</p>
-                            <p>La causa más común es un error de <code className="bg-red-800/50 p-1 rounded font-mono">origin_mismatch</code>. Para solucionarlo, copia la siguiente URL y añádela a los "Orígenes de JavaScript autorizados" en tu Google Cloud Console:</p>
-                            <div className="flex items-center justify-center bg-slate-700 p-2 rounded-md my-2 gap-4">
-                                <strong className="text-amber-300 font-mono text-base">{window.location.origin}</strong>
-                                <button type="button" onClick={handleCopyOrigin} className="bg-sky-600 hover:bg-sky-500 text-white font-bold py-1 px-3 rounded-md text-xs">
-                                    {copied ? '¡Copiado!' : 'Copiar'}
-                                </button>
-                            </div>
-                            <button 
-                                onClick={() => setIsConfigModalOpen(true)} 
-                                className="w-full bg-red-600 hover:bg-red-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors mt-2"
-                            >
-                                Abrir Guía de Configuración
-                            </button>
-                        </div>
-                    )}
-            
-                    {!isGsiInitialized && !gsiRenderFailed && (
-                         <div className="p-4 bg-sky-900/50 border border-sky-700 rounded-lg text-sky-300 text-sm space-y-3">
-                            <p className="font-bold">Configuración de Google Sign-In</p>
-                            <p>Para habilitar el inicio de sesión con Google, necesitas proporcionar un ID de cliente válido.</p>
-                            <button 
-                                onClick={() => setIsConfigModalOpen(true)} 
-                                className="w-full bg-sky-600 hover:bg-sky-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors mt-2"
-                            >
-                                Configurar ID de Cliente
-                            </button>
-                        </div>
-                    )}
+                    <div className="min-h-[68px]">
+                       {renderGoogleSignIn()}
+                    </div>
+                </div>
 
-                    <div ref={googleButtonRef} id="google-signin-button" className={`flex justify-center min-h-[44px] ${gsiRenderFailed || !isGsiInitialized ? 'hidden' : ''}`}></div>
-                    
-                    {isGsiInitialized && !gsiRenderFailed && (
-                        <button 
-                            onClick={() => setIsConfigModalOpen(true)} 
-                            className="text-xs text-slate-400 hover:text-slate-200 hover:underline pt-1 flex items-center justify-center gap-1 w-full"
-                        >
-                            <QuestionMarkCircleIcon className="w-4 h-4" />
-                            <span>Reconfigurar ID de Cliente de Google</span>
-                        </button>
-                    )}
+                <div className="mt-8 text-xs text-slate-500 border-t border-slate-700 pt-4">
+                    <p className="font-bold text-slate-400">¿Problemas para iniciar sesión con Google?</p>
+                    <p className="mt-1">Si ves un error como <code className="bg-slate-700 px-1 rounded">origin_mismatch</code>, significa que la configuración de tu ID de cliente de Google necesita una actualización.</p>
+                    <button onClick={() => setIsConfigModalOpen(true)} className="mt-2 text-sm text-sky-400 hover:underline">
+                        Abrir guía de configuración
+                    </button>
                 </div>
             </main>
 

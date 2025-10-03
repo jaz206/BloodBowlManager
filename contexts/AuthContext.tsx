@@ -15,7 +15,9 @@ interface AuthContextType {
   loginAsGuest: () => void;
   isLoading: boolean;
   isGsiInitialized: boolean;
+  gsiError: string | null;
   setAndStoreGoogleClientId: (id: string) => void;
+  googleClientId: string | null;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -43,15 +45,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isLoading, setIsLoading] = useState(true);
   const [isGsiInitialized, setIsGsiInitialized] = useState(false);
   const [googleClientId, setGoogleClientId] = useState<string | null>(null);
+  const [gsiError, setGsiError] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
     setIsLoading(true);
 
-    // 1. Load user from storage
+    // Load user from storage
     try {
       const savedUser = localStorage.getItem('bloodbowl-user');
-      if (savedUser && isMounted) {
+      if (savedUser) {
         setUser(JSON.parse(savedUser));
       }
     } catch (error) {
@@ -59,74 +62,69 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         localStorage.removeItem('bloodbowl-user');
     }
 
-    // 2. Determine Client ID (localStorage > meta tag)
-    const storedClientId = localStorage.getItem(GOOGLE_CLIENT_ID_STORAGE_KEY);
-    if (storedClientId) {
-      setGoogleClientId(storedClientId);
-    } else {
-      const clientIdMeta = document.querySelector<HTMLMetaElement>('meta[name="google-signin-client_id"]');
-      const metaClientId = clientIdMeta ? clientIdMeta.content : null;
-      if (metaClientId) {
-        setGoogleClientId(metaClientId);
-      }
-    }
+    const finalClientId = localStorage.getItem(GOOGLE_CLIENT_ID_STORAGE_KEY) || document.querySelector<HTMLMetaElement>('meta[name="google-signin-client_id"]')?.content || null;
+    setGoogleClientId(finalClientId);
 
-    // 3. Initialize GSI if Client ID is present
-    const initializeGsi = () => {
-      if (!isMounted) return;
-
-      if (!googleClientId) {
-        console.warn("Google Sign-In disabled: client_id not configured.");
+    if (!finalClientId) {
+      console.warn("Google Sign-In disabled: client_id not configured.");
+      if (isMounted) {
         setIsGsiInitialized(false);
         setIsLoading(false);
-        return;
       }
+      return;
+    }
 
-      if (window.google && window.google.accounts) {
-        try {
-            window.google.accounts.id.initialize({
-              client_id: googleClientId,
-              callback: handleCredentialResponse,
-              use_fedcm_for_prompt: false,
-            });
-            setIsGsiInitialized(true);
-        } catch(e) {
-            console.error("Error initializing GSI:", e);
-            setIsGsiInitialized(false);
-        }
-      } else {
-        console.error("Google Identity Services script not loaded.");
-        setIsGsiInitialized(false);
-      }
-      setIsLoading(false);
-    };
-    
-    // The GSI script is loaded asynchronously, so we need to wait for it.
-    const script = document.querySelector<HTMLScriptElement>('script[src="https://accounts.google.com/gsi/client"]');
-    if (script) {
-        // If the script is already loaded, window.google will exist.
-        if (window.google) {
-            initializeGsi();
-        } else {
-            script.onload = initializeGsi;
-            script.onerror = () => {
-                console.error("Failed to load Google GSI script.");
-                if (isMounted) {
-                    setIsGsiInitialized(false);
-                    setIsLoading(false);
-                }
-            };
-        }
-    } else {
-        console.error("Google GSI script tag not found.");
+    const script = document.getElementById('gsi-client-script') as HTMLScriptElement | null;
+    if (!script) {
         if (isMounted) {
-            setIsGsiInitialized(false);
+            setGsiError("Error crítico: No se encontró la etiqueta del script de Google GSI.");
             setIsLoading(false);
         }
+        return;
+    }
+
+    const initializeGsi = () => {
+        if (!isMounted) return;
+
+        if (!window.google?.accounts?.id) {
+            setGsiError("La librería de Google Identity Services no se cargó correctamente.");
+            setIsLoading(false);
+            return;
+        }
+
+        try {
+            window.google.accounts.id.initialize({
+                client_id: finalClientId,
+                callback: handleCredentialResponse,
+                error_callback: (error: any) => {
+                  console.error("GSI Error Callback:", error);
+                  if (error?.type === 'popup_closed') return; // Ignore user closing the popup
+                  setGsiError(`Error de Google Sign-In: ${error.type || 'desconocido'}. Consulta la consola para más detalles.`);
+                }
+            });
+            setIsGsiInitialized(true);
+        } catch (e: any) {
+            console.error("Error initializing GSI:", e);
+            setGsiError(`Error al inicializar GSI: ${e.message || 'Error desconocido'}`);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    
+    if (window.google) {
+        initializeGsi();
+    } else {
+        script.onload = initializeGsi;
+        script.onerror = () => {
+            if (isMounted) {
+                setGsiError("No se pudo cargar el script de inicio de sesión de Google.");
+                setIsLoading(false);
+            }
+        };
     }
     
     return () => { isMounted = false; };
-  }, [googleClientId]); // Re-run effect if client ID changes
+  }, []);
 
   const handleCredentialResponse = (response: any) => {
     login(response.credential);
@@ -158,8 +156,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const logout = () => {
-    // Prevent Google's One Tap prompt on next visit
-    if (window.google && window.google.accounts) {
+    if (window.google?.accounts?.id) {
         window.google.accounts.id.disableAutoSelect();
     }
     localStorage.removeItem('bloodbowl-user');
@@ -168,12 +165,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const setAndStoreGoogleClientId = (id: string) => {
     localStorage.setItem(GOOGLE_CLIENT_ID_STORAGE_KEY, id);
-    setGoogleClientId(id);
-    // Reload to ensure GSI script initializes with the new ID correctly.
     window.location.reload();
   };
 
-  const value = { user, login, logout, loginAsGuest, isLoading, isGsiInitialized, setAndStoreGoogleClientId };
+  const value = { user, login, logout, loginAsGuest, isLoading, isGsiInitialized, gsiError, setAndStoreGoogleClientId, googleClientId };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
