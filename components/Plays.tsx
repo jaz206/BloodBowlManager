@@ -1,8 +1,8 @@
 
 
+
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import type { Token, Play, PlayerPosition, ManagedTeam, ManagedPlayer } from '../types';
-import { useAuth } from '../hooks/useAuth';
 
 const MAX_TOKENS = 11;
 const GRID_COLS = 15;
@@ -22,54 +22,47 @@ interface BoardToken extends Token {
 
 interface PlaysProps {
   managedTeams: ManagedTeam[];
+  plays: Play[];
+  onSavePlay: (play: Play) => void;
+  onDeletePlay: (playId: string) => void;
 }
 
-const Plays: React.FC<PlaysProps> = ({ managedTeams }) => {
-  const { user } = useAuth();
-  const PLAYS_STORAGE_KEY = useMemo(() => user ? `bb-plays-${user.id}` : 'bloodbowl-plays', [user]);
-
+const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDeletePlay }) => {
   const [tokens, setTokens] = useState<BoardToken[]>([]);
-  const [savedPlays, setSavedPlays] = useState<Play[]>([]);
   const [playName, setPlayName] = useState('');
-  const [selectedPlay, setSelectedPlay] = useState('');
+  const [selectedPlayId, setSelectedPlayId] = useState<string | undefined>(plays.length > 0 ? plays[0].id : undefined);
   const [teamToLoad, setTeamToLoad] = useState('');
   const [selectedPlayer, setSelectedPlayer] = useState<ManagedPlayer | null>(null);
   
   const fieldRef = useRef<HTMLDivElement>(null);
   const draggedTokenRef = useRef<{ id: number } | null>(null);
-
+  
+  // When available plays change (e.g., after deleting one), make sure the selection is still valid.
   useEffect(() => {
-    try {
-      const storedPlays = localStorage.getItem(PLAYS_STORAGE_KEY);
-      if (storedPlays) {
-        const parsedPlays: Play[] = JSON.parse(storedPlays);
-        setSavedPlays(parsedPlays);
-        if (parsedPlays.length > 0) {
-            setSelectedPlay(parsedPlays[0].name);
-        } else {
-            setSelectedPlay('');
-        }
-      } else {
-        setSavedPlays([]);
-        setSelectedPlay('');
-      }
-    } catch (error) {
-      console.error("Failed to load plays from localStorage", error);
-      setSavedPlays([]);
-      setSelectedPlay('');
+    if (plays.length > 0 && !plays.find(p => p.id === selectedPlayId)) {
+        setSelectedPlayId(plays[0].id);
+    } else if (plays.length === 0) {
+        setSelectedPlayId(undefined);
     }
-  }, [PLAYS_STORAGE_KEY]);
+  }, [plays, selectedPlayId]);
 
   // Effect to clean up event listeners on unmount
   useEffect(() => {
-    const cleanup = () => {
-        document.removeEventListener('mousemove', handleDragMove);
-        document.removeEventListener('mouseup', handleDragEnd);
-        document.removeEventListener('touchmove', handleDragMove as any);
-        document.removeEventListener('touchend', handleDragEnd);
+    const handleGlobalDragMove = (e: MouseEvent | TouchEvent) => handleDragMove(e);
+    const handleGlobalDragEnd = () => handleDragEnd();
+
+    document.addEventListener('mousemove', handleGlobalDragMove);
+    document.addEventListener('mouseup', handleGlobalDragEnd);
+    document.addEventListener('touchmove', handleGlobalDragMove as any, { passive: false });
+    document.addEventListener('touchend', handleGlobalDragEnd);
+
+    return () => {
+        document.removeEventListener('mousemove', handleGlobalDragMove);
+        document.removeEventListener('mouseup', handleGlobalDragEnd);
+        document.removeEventListener('touchmove', handleGlobalDragMove as any);
+        document.removeEventListener('touchend', handleGlobalDragEnd);
     };
-    return cleanup;
-  }, []);
+  }, []); // Empty dependency array ensures this runs only once on mount/unmount
 
   const mapPositionToType = (position: string): PlayerPosition => {
       const lowerPos = position.toLowerCase();
@@ -96,28 +89,27 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams }) => {
       alert('Por favor, introduce un nombre para la jugada y añade al menos un jugador.');
       return;
     }
-    const newPlay = { name: playName, tokens: tokens.map(({playerData, ...token}) => token) }; // Don't save playerData
-    const existingPlayIndex = savedPlays.findIndex(p => p.name === playName);
     
-    let updatedPlays;
-    if (existingPlayIndex > -1) {
-        updatedPlays = [...savedPlays];
-        updatedPlays[existingPlayIndex] = newPlay;
-    } else {
-        updatedPlays = [...savedPlays, newPlay];
-    }
+    // Check if we are updating an existing play by name
+    const existingPlay = plays.find(p => p.name.toLowerCase() === playName.trim().toLowerCase());
+
+    const newPlay: Play = { 
+        id: existingPlay?.id, // Keep the id if it's an update
+        name: playName.trim(), 
+        tokens: tokens.map(({playerData, ...token}) => token) // Don't save playerData
+    };
     
-    setSavedPlays(updatedPlays);
-    localStorage.setItem(PLAYS_STORAGE_KEY, JSON.stringify(updatedPlays));
+    onSavePlay(newPlay);
     setPlayName('');
-    setSelectedPlay(newPlay.name);
+    // The selection will be updated via useEffect when props change
   };
 
   const handleLoadPlay = () => {
-    if (!selectedPlay) return;
-    const playToLoad = savedPlays.find(p => p.name === selectedPlay);
+    if (!selectedPlayId) return;
+    const playToLoad = plays.find(p => p.id === selectedPlayId);
     if (playToLoad) {
       setTokens(playToLoad.tokens);
+      setPlayName(playToLoad.name); // Pre-fill name for easy re-saving
       setSelectedPlayer(null);
     }
   };
@@ -139,16 +131,10 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams }) => {
   };
 
   const handleDeletePlay = () => {
-     if (!selectedPlay) return;
-     if (confirm(`¿Estás seguro de que quieres borrar la jugada "${selectedPlay}"?`)) {
-        const updatedPlays = savedPlays.filter(p => p.name !== selectedPlay);
-        setSavedPlays(updatedPlays);
-        localStorage.setItem(PLAYS_STORAGE_KEY, JSON.stringify(updatedPlays));
-        if (updatedPlays.length > 0) {
-            setSelectedPlay(updatedPlays[0].name);
-        } else {
-            setSelectedPlay('');
-        }
+     if (!selectedPlayId) return;
+     const playToDelete = plays.find(p => p.id === selectedPlayId);
+     if (playToDelete && confirm(`¿Estás seguro de que quieres borrar la jugada "${playToDelete.name}"?`)) {
+        onDeletePlay(selectedPlayId);
      }
   };
 
@@ -158,31 +144,16 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams }) => {
     if (clickedToken) {
         setSelectedPlayer(clickedToken.playerData || null);
     }
-    
     draggedTokenRef.current = { id };
-    
-    document.addEventListener('mousemove', handleDragMove);
-    document.addEventListener('mouseup', handleDragEnd);
-    document.addEventListener('touchmove', handleDragMove as any, { passive: false });
-    document.addEventListener('touchend', handleDragEnd);
   };
 
   const handleDragMove = (e: MouseEvent | TouchEvent) => {
     if (!draggedTokenRef.current || !fieldRef.current) return;
     
-    // Prevent scrolling on touch devices
-    if (e.cancelable) {
-      e.preventDefault();
-    }
+    if (e.cancelable) e.preventDefault();
 
-    let clientX, clientY;
-    if ('touches' in e) {
-        clientX = e.touches[0].clientX;
-        clientY = e.touches[0].clientY;
-    } else {
-        clientX = e.clientX;
-        clientY = e.clientY;
-    }
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
 
     const fieldRect = fieldRef.current.getBoundingClientRect();
     const x = clientX - fieldRect.left;
@@ -204,10 +175,6 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams }) => {
   
   const handleDragEnd = () => {
     draggedTokenRef.current = null;
-    document.removeEventListener('mousemove', handleDragMove);
-    document.removeEventListener('mouseup', handleDragEnd);
-    document.removeEventListener('touchmove', handleDragMove as any);
-    document.removeEventListener('touchend', handleDragEnd);
   };
 
   return (
@@ -313,7 +280,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams }) => {
                         className="flex-grow bg-slate-800 border border-slate-600 rounded-md py-2 px-3 text-white focus:ring-amber-500 focus:border-amber-500"
                     >
                         <option value="">Seleccionar equipo...</option>
-                        {managedTeams.map(team => <option key={team.name} value={team.name}>{team.name}</option>)}
+                        {managedTeams.map(team => <option key={team.id || team.name} value={team.name}>{team.name}</option>)}
                     </select>
                     <button onClick={handleLoadTeam} className="bg-teal-600 text-white font-bold py-2 px-6 rounded-md shadow-md hover:bg-teal-500 transition-colors">Cargar Equipo</button>
                 </div>
@@ -343,10 +310,10 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams }) => {
         
          <div className="bg-slate-900/70 p-4 rounded-lg border border-slate-700">
             <h3 className="text-lg font-semibold text-amber-400 mb-4">Mis Jugadas</h3>
-            {savedPlays.length > 0 ? (
+            {plays.length > 0 ? (
             <div className="space-y-3">
-                 <select value={selectedPlay} onChange={e => setSelectedPlay(e.target.value)} className="w-full bg-slate-800 border border-slate-600 rounded-md py-2 px-3 text-white focus:ring-amber-500 focus:border-amber-500">
-                    {savedPlays.map(play => <option key={play.name} value={play.name}>{play.name}</option>)}
+                 <select value={selectedPlayId} onChange={e => setSelectedPlayId(e.target.value)} className="w-full bg-slate-800 border border-slate-600 rounded-md py-2 px-3 text-white focus:ring-amber-500 focus:border-amber-500">
+                    {plays.map(play => <option key={play.id} value={play.id}>{play.name}</option>)}
                 </select>
                 <div className="flex flex-wrap gap-2">
                     <button onClick={handleLoadPlay} className="flex-1 bg-sky-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-sky-500 transition-colors">Cargar</button>

@@ -18,10 +18,11 @@ interface TeamDashboardProps {
     onUpdate: (team: ManagedTeam) => void;
     onDelete: () => void;
     onBack: () => void;
+    isGuest: boolean;
 }
 
 // FIX: Changed to a named export as it is not a default export.
-export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, onDelete, onBack }) => {
+export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, onDelete, onBack, isGuest }) => {
     const [editingPlayer, setEditingPlayer] = useState<ManagedPlayer | null>(null);
     const [showQr, setShowQr] = useState(false);
     const [confirmation, setConfirmation] = useState<{ message: string; onConfirm: () => void; } | null>(null);
@@ -379,10 +380,12 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                 <button onClick={onBack} className="text-amber-400 hover:underline text-sm">
                     &larr; Volver a la lista de equipos
                 </button>
-                 <button onClick={() => setShowQr(true)} className="flex items-center gap-2 bg-slate-700 text-slate-200 font-bold py-2 px-4 rounded-lg shadow-md hover:bg-slate-600 transition-colors">
-                    <QrCodeIcon />
-                    Generar QR
-                </button>
+                {!isGuest && (
+                    <button onClick={() => setShowQr(true)} className="flex items-center gap-2 bg-slate-700 text-slate-200 font-bold py-2 px-4 rounded-lg shadow-md hover:bg-slate-600 transition-colors">
+                        <QrCodeIcon />
+                        Generar QR
+                    </button>
+                )}
             </div>
             {/* Team Info Header */}
             <div className="bg-slate-900/70 p-4 rounded-lg border border-slate-700">

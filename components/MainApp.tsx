@@ -1,4 +1,6 @@
 
+
+
 import React, { useState, useEffect, useMemo } from 'react';
 import QuickGuide from './QuickGuide';
 import TeamsAndSkills from './TeamsAndSkills';
@@ -17,7 +19,8 @@ import type { ManagedTeam } from '../types';
 import { useAuth } from '../hooks/useAuth';
 import UserProfile from './UserProfile';
 import TrophyIcon from './icons/TrophyIcon';
-import Leagues from './Leagues';
+// FIX: Changed import to a named import as Leagues is not a default export.
+import { Leagues } from './Leagues';
 import { db } from '../App';
 import { collection, getDocs, addDoc, doc, setDoc, deleteDoc } from "firebase/firestore";
 

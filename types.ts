@@ -62,6 +62,7 @@ export interface Token {
 }
 
 export interface Play {
+  id?: string;
   name: string;
   tokens: Token[];
 }

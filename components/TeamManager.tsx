@@ -4,6 +4,8 @@
 
 
 
+
+
 import React, { useState, useRef, useEffect } from 'react';
 import type { ManagedTeam } from '../types';
 import TeamCreator from './TeamCreator';
@@ -20,9 +22,10 @@ interface TeamManagerProps {
     onTeamDelete: (teamId: string) => void;
     requestedRoster?: string | null;
     onRosterRequestHandled?: () => void;
+    isGuest: boolean;
 }
 
-const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUpdate, onTeamDelete, requestedRoster, onRosterRequestHandled = () => {} }) => {
+const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUpdate, onTeamDelete, requestedRoster, onRosterRequestHandled = () => {}, isGuest }) => {
     const [selectedTeam, setSelectedTeam] = useState<ManagedTeam | null>(null);
     const [isCreating, setIsCreating] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -46,8 +49,6 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
         }
         const { id, ...teamData } = newTeam;
         onTeamCreate(teamData);
-        // Find the newly created team (or assume last one) to select it. This is tricky without waiting for ID.
-        // For now, just go back to list. A better UX would be to get the created team back.
         setIsCreating(false);
     };
 
@@ -116,24 +117,24 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
         reader.readAsText(file);
     };
 
-    const handleExportSelectionChange = (teamName: string) => {
+    const handleExportSelectionChange = (teamId: string) => {
         setSelectedTeamsForExport(prev => 
-            prev.includes(teamName) 
-                ? prev.filter(name => name !== teamName) 
-                : [...prev, teamName]
+            prev.includes(teamId) 
+                ? prev.filter(id => id !== teamId) 
+                : [...prev, teamId]
         );
     };
 
     const handleSelectAllForExport = (select: boolean) => {
         if (select) {
-            setSelectedTeamsForExport(teams.map(t => t.name));
+            setSelectedTeamsForExport(teams.map(t => t.id!).filter(Boolean));
         } else {
             setSelectedTeamsForExport([]);
         }
     };
 
     const triggerExport = () => {
-        const teamsToExport = teams.filter(team => selectedTeamsForExport.includes(team.name));
+        const teamsToExport = teams.filter(team => team.id && selectedTeamsForExport.includes(team.id));
         
         if (teamsToExport.length === 0) {
             alert("Selecciona al menos un equipo para exportar.");
@@ -172,6 +173,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                     onUpdate={onTeamUpdate}
                     onDelete={handleTeamDelete}
                     onBack={() => setSelectedTeam(null)}
+                    isGuest={isGuest}
                 />
                  <style>{`
                     @keyframes fade-in-slow {
@@ -249,7 +251,9 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                  <div className="flex flex-col sm:flex-row gap-4">
                     <button
                         onClick={handleImportClick}
-                        className="flex-1 flex items-center justify-center gap-2 bg-slate-600 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-slate-500 transition-colors"
+                        disabled={isGuest}
+                        className="flex-1 flex items-center justify-center gap-2 bg-slate-600 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-slate-500 transition-colors disabled:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        title={isGuest ? "Función deshabilitada en modo invitado" : "Importar equipos desde un archivo .json"}
                     >
                         <UploadIcon />
                         Importar Equipos
@@ -257,7 +261,9 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                     <input type="file" accept=".json" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
                     <button
                         onClick={() => teams.length > 0 ? setIsExportModalOpen(true) : alert("No hay equipos para exportar.")}
-                        className="flex-1 flex items-center justify-center gap-2 bg-sky-700 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-sky-600 transition-colors"
+                        disabled={isGuest}
+                        className="flex-1 flex items-center justify-center gap-2 bg-sky-700 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-sky-600 transition-colors disabled:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        title={isGuest ? "Función deshabilitada en modo invitado" : "Exportar equipos a un archivo .json"}
                     >
                        <DownloadIcon />
                         Exportar Equipos
@@ -290,15 +296,15 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                             </div>
                             <div className="space-y-2">
                                 {teams.map(team => (
-                                    <div key={team.name} className="flex items-center bg-slate-700/50 p-3 rounded-md">
+                                    <div key={team.id} className="flex items-center bg-slate-700/50 p-3 rounded-md">
                                         <input 
                                             type="checkbox"
-                                            id={`export-${team.name}`}
+                                            id={`export-${team.id}`}
                                             className="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"
-                                            checked={selectedTeamsForExport.includes(team.name)}
-                                            onChange={() => handleExportSelectionChange(team.name)}
+                                            checked={selectedTeamsForExport.includes(team.id!)}
+                                            onChange={() => handleExportSelectionChange(team.id!)}
                                         />
-                                        <label htmlFor={`export-${team.name}`} className="ml-3 block text-sm font-medium text-slate-200">
+                                        <label htmlFor={`export-${team.id}`} className="ml-3 block text-sm font-medium text-slate-200">
                                             {team.name}
                                         </label>
                                     </div>

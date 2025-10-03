@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import type { ManagedTeam, Competition, Matchup } from '../types';
+// FIX: Import useAuth to resolve 'Cannot find name 'useAuth'' error.
 import { useAuth } from '../hooks/useAuth';
 import PencilIcon from './icons/PencilIcon';
 import CalendarIcon from './icons/CalendarIcon';
@@ -120,7 +121,8 @@ interface LeaguesProps {
     managedTeams: ManagedTeam[];
 }
 
-const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
+// FIX: Changed to a named export to resolve 'no default export' error in importing file.
+export const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
     const { user } = useAuth();
     const COMPETITIONS_STORAGE_KEY = useMemo(() => user ? `bb-competitions-${user.id}` : 'bloodbowl-competitions', [user]);
 
@@ -819,4 +821,3 @@ const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
     );
 };
 
-export default Leagues;
