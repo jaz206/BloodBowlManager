@@ -156,54 +156,69 @@ const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
     };
     
     const handleAddToCalendar = (matchup: Matchup, competitionName: string, matchKey: string) => {
-        if (!window.gapi || !window.google) {
+        if (!window.gapi || !window.google?.accounts) {
             alert("El cliente de la API de Google aún no se ha cargado. Por favor, espera un momento y vuelve a intentarlo.");
             return;
         }
-
+    
         const clientId = document.querySelector<HTMLMetaElement>('meta[name="google-signin-client_id"]')?.content;
         if (!clientId) {
             alert("Falta el ID de cliente de Google para la configuración del calendario.");
             return;
         }
         
-        const tokenClient = window.google.accounts.oauth2.initTokenClient({
-            client_id: clientId,
-            scope: 'https://www.googleapis.com/auth/calendar.events',
-            callback: (tokenResponse: any) => {
-                if (tokenResponse && tokenResponse.access_token) {
-                    window.gapi.client.setToken(tokenResponse);
-                    window.gapi.client.load('calendar', 'v3', () => {
-                        const event = {
-                            'summary': `Blood Bowl: ${matchup.team1} vs ${matchup.team2}`,
-                            'description': `Partido de la competición "${competitionName}".`,
-                            'start': {
-                                'date': new Date().toISOString().split('T')[0], // All-day event for today
-                            },
-                            'end': {
-                                'date': new Date().toISOString().split('T')[0],
-                            },
-                        };
-
-                        const request = window.gapi.client.calendar.events.insert({
-                            'calendarId': 'primary',
-                            'resource': event,
+        // Ensure the GAPI client library is loaded before proceeding.
+        window.gapi.load('client', () => {
+            // Now that gapi.client is available, initialize the token client to get user consent and an access token.
+            const tokenClient = window.google.accounts.oauth2.initTokenClient({
+                client_id: clientId,
+                scope: 'https://www.googleapis.com/auth/calendar.events',
+                callback: (tokenResponse: any) => {
+                    // This callback is executed after the user interacts with the OAuth consent screen.
+                    if (tokenResponse && tokenResponse.access_token) {
+                        window.gapi.client.setToken(tokenResponse);
+                        
+                        // Load the specific API (Calendar API) and its discovery document.
+                        window.gapi.client.load('calendar', 'v3', () => {
+                            const event = {
+                                'summary': `Blood Bowl: ${matchup.team1} vs ${matchup.team2}`,
+                                'description': `Partido de la competición "${competitionName}".`,
+                                'start': {
+                                    'date': new Date().toISOString().split('T')[0], // All-day event for today
+                                },
+                                'end': {
+                                    'date': new Date().toISOString().split('T')[0],
+                                },
+                            };
+    
+                            const request = window.gapi.client.calendar.events.insert({
+                                'calendarId': 'primary',
+                                'resource': event,
+                            });
+    
+                            // Execute the request and handle the single response object.
+                            request.execute((response: any) => {
+                                if (response.error) {
+                                     console.error("Error from Calendar API:", response.error);
+                                     setFeedback({ message: `Error: ${response.error.message}`, matchKey, success: false });
+                                } else {
+                                     setFeedback({ message: "Evento creado", matchKey, success: true });
+                                }
+                                setTimeout(() => setFeedback(null), 3000);
+                            });
                         });
-
-                        request.execute((event: any) => {
-                            setFeedback({ message: "Evento creado", matchKey, success: true });
-                            setTimeout(() => setFeedback(null), 3000);
-                        }, (error: any) => {
-                            console.error("Error creating event:", error);
-                            setFeedback({ message: "Error", matchKey, success: false });
-                            setTimeout(() => setFeedback(null), 3000);
-                        });
-                    });
-                }
-            },
+                    } else if (tokenResponse.error) {
+                        // Handle cases where the user denies consent or another OAuth error occurs.
+                        console.error('Error getting access token', tokenResponse);
+                        setFeedback({ message: "Permiso denegado", matchKey, success: false });
+                        setTimeout(() => setFeedback(null), 3000);
+                    }
+                },
+            });
+            
+            // Trigger the OAuth flow.
+            tokenClient.requestAccessToken();
         });
-        
-        tokenClient.requestAccessToken();
     };
 
 
@@ -530,7 +545,7 @@ const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
                         .bracket-team { padding: 0.5rem 0.75rem; color: #cbd5e1; font-size: 0.875rem; min-height: 2.5rem; display: flex; align-items: center; justify-content: space-between; line-height: 1.2; width: 100%; text-align: left; cursor: pointer; transition: background-color 0.2s; }
                         .bracket-team:disabled { cursor: not-allowed; }
                         .bracket-team-placeholder { color: #64748b; font-style: italic; }
-                        .bracket-vs-section { display: flex; justify-center; align-items: center; border-top: 1px solid #475569; border-bottom: 1px solid #475569; padding: 2px 0.75rem; min-height: 24px; }
+                        .bracket-vs-section { display: flex; justify-content: center; align-items: center; border-top: 1px solid #475569; border-bottom: 1px solid #475569; padding: 2px 0.75rem; min-height: 24px; }
                         .bracket-score { font-weight: bold; min-width: 1.5rem; text-align: right; }
                         .score-edit-btn { padding: 0.25rem; border-radius: 9999px; line-height: 0; transition: background-color 0.2s; }
                         .score-edit-btn:hover { background-color: #334155; }
