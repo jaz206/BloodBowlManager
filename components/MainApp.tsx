@@ -13,12 +13,12 @@ import CubeIcon from './icons/CubeIcon';
 import ShieldCheckIcon from './icons/ShieldCheckIcon';
 import StopwatchIcon from './icons/StopwatchIcon';
 import type { ManagedTeam } from '../types';
-import PostGameWizard from './PostGameWizard';
 import { useAuth } from '../hooks/useAuth';
 import UserProfile from './UserProfile';
 import TrophyIcon from './icons/TrophyIcon';
 import Leagues from './Leagues';
-import CalendarIcon from './icons/CalendarIcon';
+import { db } from '../App';
+import { collection, getDocs, addDoc, doc, setDoc, deleteDoc } from "firebase/firestore";
 
 type View = 'guide' | 'teams' | 'plays' | 'generators' | 'manager' | 'live' | 'leagues';
 
@@ -29,30 +29,105 @@ const MainApp: React.FC = () => {
   const [requestedRoster, setRequestedRoster] = useState<string | null>(null);
   const { user } = useAuth();
 
-  const TEAMS_STORAGE_KEY = useMemo(() => user ? `bb-teams-${user.id}` : 'bloodbowl-managed-teams', [user]);
+  const TEAMS_STORAGE_KEY = useMemo(() => user ? `bb-teams-${user.id}` : null, [user]);
 
   useEffect(() => {
     setLoading(true);
-    try {
-        const storedTeams = localStorage.getItem(TEAMS_STORAGE_KEY);
-        if (storedTeams) {
-            setManagedTeams(JSON.parse(storedTeams));
-        } else {
-            setManagedTeams([]); // Clear teams when user changes and no data is found
-        }
-    } catch (error) {
-        console.error("Failed to load teams from localStorage", error);
+    if (!user || !TEAMS_STORAGE_KEY) {
         setManagedTeams([]);
-    } finally {
         setLoading(false);
+        return;
     }
-  }, [TEAMS_STORAGE_KEY]);
 
-  const handleTeamsUpdate = (updatedTeams: ManagedTeam[]) => {
-      setManagedTeams(updatedTeams);
-      localStorage.setItem(TEAMS_STORAGE_KEY, JSON.stringify(updatedTeams));
+    if (user.id.startsWith('guest-')) {
+        // Guest mode - use localStorage
+        try {
+            const storedTeams = localStorage.getItem(TEAMS_STORAGE_KEY);
+            setManagedTeams(storedTeams ? JSON.parse(storedTeams) : []);
+        } catch (error) {
+            console.error("Failed to load guest teams from localStorage", error);
+            setManagedTeams([]);
+        } finally {
+            setLoading(false);
+        }
+    } else {
+        // Firebase user - fetch from Firestore
+        const fetchTeams = async () => {
+            try {
+                const teamsCollectionRef = collection(db, 'users', user.id, 'teams');
+                const querySnapshot = await getDocs(teamsCollectionRef);
+                const teamsFromFirestore = querySnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                })) as ManagedTeam[];
+                setManagedTeams(teamsFromFirestore);
+            } catch (error) {
+                console.error("Error fetching teams from Firestore:", error);
+                setManagedTeams([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchTeams();
+    }
+  }, [user, TEAMS_STORAGE_KEY]);
+
+  const handleTeamCreate = async (newTeamData: Omit<ManagedTeam, 'id'>) => {
+    if (!user || !TEAMS_STORAGE_KEY) return;
+    
+    if (user.id.startsWith('guest-')) {
+        const teamWithId = { ...newTeamData, id: Date.now().toString() };
+        const updatedTeams = [...managedTeams, teamWithId];
+        setManagedTeams(updatedTeams);
+        localStorage.setItem(TEAMS_STORAGE_KEY, JSON.stringify(updatedTeams));
+    } else {
+        try {
+            const teamsCollectionRef = collection(db, 'users', user.id, 'teams');
+            const docRef = await addDoc(teamsCollectionRef, newTeamData);
+            setManagedTeams(prev => [...prev, { ...newTeamData, id: docRef.id }]);
+        } catch (error) {
+            console.error("Error creating team in Firestore:", error);
+        }
+    }
   };
 
+  const handleTeamUpdate = async (updatedTeam: ManagedTeam) => {
+    if (!user || !updatedTeam.id || !TEAMS_STORAGE_KEY) return;
+    
+    setManagedTeams(prev => prev.map(t => t.id === updatedTeam.id ? updatedTeam : t));
+
+    if (user.id.startsWith('guest-')) {
+        const updatedTeams = managedTeams.map(t => t.id === updatedTeam.id ? updatedTeam : t);
+        localStorage.setItem(TEAMS_STORAGE_KEY, JSON.stringify(updatedTeams));
+    } else {
+        try {
+            const teamDocRef = doc(db, 'users', user.id, 'teams', updatedTeam.id);
+            const { id, ...teamData } = updatedTeam;
+            await setDoc(teamDocRef, teamData);
+        } catch (error) {
+            console.error("Error updating team in Firestore:", error);
+        }
+    }
+  };
+
+  const handleTeamDelete = async (teamId: string) => {
+    if (!user || !TEAMS_STORAGE_KEY) return;
+    
+    setManagedTeams(prev => prev.filter(t => t.id !== teamId));
+
+    if (user.id.startsWith('guest-')) {
+        const updatedTeams = managedTeams.filter(t => t.id !== teamId);
+        localStorage.setItem(TEAMS_STORAGE_KEY, JSON.stringify(updatedTeams));
+    } else {
+        try {
+            const teamDocRef = doc(db, 'users', user.id, 'teams', teamId);
+            await deleteDoc(teamDocRef);
+        } catch (error) {
+            console.error("Error deleting team from Firestore:", error);
+        }
+    }
+  };
+  
   const handleRequestTeamCreation = (rosterName: string) => {
     setRequestedRoster(rosterName);
     setActiveView('manager');
@@ -113,8 +188,8 @@ const MainApp: React.FC = () => {
             {activeView === 'teams' && <TeamsAndSkills onRequestTeamCreation={handleRequestTeamCreation} />}
             {activeView === 'plays' && <Plays managedTeams={managedTeams} />}
             {activeView === 'generators' && <Generators />}
-            {activeView === 'manager' && !loading && <TeamManager teams={managedTeams} onTeamsUpdate={handleTeamsUpdate} requestedRoster={requestedRoster} onRosterRequestHandled={() => setRequestedRoster(null)} />}
-            {activeView === 'live' && !loading && <LiveGame managedTeams={managedTeams} onTeamsUpdate={handleTeamsUpdate} />}
+            {activeView === 'manager' && !loading && <TeamManager teams={managedTeams} onTeamCreate={handleTeamCreate} onTeamUpdate={handleTeamUpdate} onTeamDelete={handleTeamDelete} requestedRoster={requestedRoster} onRosterRequestHandled={() => setRequestedRoster(null)} />}
+            {activeView === 'live' && !loading && <LiveGame managedTeams={managedTeams} onTeamsUpdate={() => { /* This needs refactoring if live game edits teams */ }} />}
             {activeView === 'leagues' && !loading && <Leagues managedTeams={managedTeams} />}
         </div>
 

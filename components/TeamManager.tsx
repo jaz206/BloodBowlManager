@@ -15,13 +15,15 @@ import ShieldCheckIcon from './icons/ShieldCheckIcon';
 
 interface TeamManagerProps {
     teams: ManagedTeam[];
-    onTeamsUpdate: (teams: ManagedTeam[]) => void;
+    onTeamCreate: (team: Omit<ManagedTeam, 'id'>) => void;
+    onTeamUpdate: (team: ManagedTeam) => void;
+    onTeamDelete: (teamId: string) => void;
     requestedRoster?: string | null;
     onRosterRequestHandled?: () => void;
 }
 
-const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamsUpdate, requestedRoster, onRosterRequestHandled = () => {} }) => {
-    const [selectedTeamName, setSelectedTeamName] = useState<string | null>(null);
+const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUpdate, onTeamDelete, requestedRoster, onRosterRequestHandled = () => {} }) => {
+    const [selectedTeam, setSelectedTeam] = useState<ManagedTeam | null>(null);
     const [isCreating, setIsCreating] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -42,20 +44,17 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamsUpdate, request
             alert('Ya existe un equipo con este nombre. Por favor, elige otro.');
             return;
         }
-        const updatedTeams = [...teams, newTeam];
-        onTeamsUpdate(updatedTeams);
-        setSelectedTeamName(newTeam.name);
+        const { id, ...teamData } = newTeam;
+        onTeamCreate(teamData);
+        // Find the newly created team (or assume last one) to select it. This is tricky without waiting for ID.
+        // For now, just go back to list. A better UX would be to get the created team back.
         setIsCreating(false);
     };
 
-    const handleTeamUpdate = (updatedTeam: ManagedTeam | null) => {
-        if (updatedTeam) {
-            const updatedTeams = teams.map(team => team.name === selectedTeamName ? updatedTeam : team);
-            onTeamsUpdate(updatedTeams);
-        } else { // Team deletion
-            const updatedTeams = teams.filter(team => team.name !== selectedTeamName);
-            onTeamsUpdate(updatedTeams);
-            setSelectedTeamName(null);
+    const handleTeamDelete = () => {
+        if (selectedTeam && selectedTeam.id) {
+            onTeamDelete(selectedTeam.id);
+            setSelectedTeam(null);
         }
     };
     
@@ -79,34 +78,22 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamsUpdate, request
                 }
                 
                 const existingTeamNames = new Set(teams.map(t => t.name.toLowerCase()));
-                const newTeams: ManagedTeam[] = [];
+                let newTeamsCount = 0;
                 const skippedTeams: string[] = [];
 
                 for (const importedTeam of importedTeams as ManagedTeam[]) {
                     if (existingTeamNames.has(importedTeam.name.toLowerCase())) {
                         skippedTeams.push(importedTeam.name);
                     } else {
-                        const teamWithDefaults: ManagedTeam = {
-                            ...importedTeam,
-                            rerolls: importedTeam.rerolls || 0,
-                            dedicatedFans: importedTeam.dedicatedFans || 1,
-                            cheerleaders: importedTeam.cheerleaders || 0,
-                            assistantCoaches: importedTeam.assistantCoaches || 0,
-                            apothecary: importedTeam.apothecary || false,
-                            players: importedTeam.players || [],
-                        };
-                        newTeams.push(teamWithDefaults);
-                        existingTeamNames.add(importedTeam.name.toLowerCase());
+                        const { id, ...teamData } = importedTeam;
+                        onTeamCreate(teamData);
+                        newTeamsCount++;
                     }
                 }
                 
-                if (newTeams.length > 0) {
-                    onTeamsUpdate([...teams, ...newTeams]);
-                }
-
                 let alertMessage = '';
-                if (newTeams.length > 0) {
-                    alertMessage += `${newTeams.length} equipos importados con éxito.\n`;
+                if (newTeamsCount > 0) {
+                    alertMessage += `${newTeamsCount} equipos importados con éxito.\n`;
                 }
                 if (skippedTeams.length > 0) {
                     alertMessage += `${skippedTeams.length} equipos omitidos por tener nombres duplicados: ${skippedTeams.join(', ')}.`;
@@ -172,8 +159,6 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamsUpdate, request
         setSelectedTeamsForExport([]);
     };
 
-    const selectedTeam = teams.find(team => team.name === selectedTeamName);
-
     const handleCancelCreation = () => {
         setIsCreating(false);
         setInitialRosterForCreation(null);
@@ -184,8 +169,9 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamsUpdate, request
             <div className="p-2 sm:p-4 animate-fade-in-slow">
                 <TeamDashboard 
                     team={selectedTeam} 
-                    onTeamUpdate={handleTeamUpdate}
-                    onBack={() => setSelectedTeamName(null)}
+                    onUpdate={onTeamUpdate}
+                    onDelete={handleTeamDelete}
+                    onBack={() => setSelectedTeam(null)}
                 />
                  <style>{`
                     @keyframes fade-in-slow {
@@ -226,8 +212,8 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamsUpdate, request
                 <div className="space-y-3 mb-6">
                     {teams.map(team => (
                         <button 
-                            key={team.name}
-                            onClick={() => setSelectedTeamName(team.name)}
+                            key={team.id || team.name}
+                            onClick={() => setSelectedTeam(team)}
                             className="w-full bg-slate-700/50 text-slate-200 p-4 rounded-lg shadow-md hover:bg-slate-700 hover:text-white transition-all duration-200 flex items-center gap-4 text-left"
                         >
                             {team.crestImage ? (

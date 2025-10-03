@@ -3,6 +3,25 @@ import React from 'react';
 import { useAuth } from './hooks/useAuth';
 import Login from './components/Login';
 import MainApp from './components/MainApp';
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyAIHG1HLEdt-kVtYrtPdOopr5RrQha1CTs",
+  authDomain: "asistente-blood-bowl.firebaseapp.com",
+  projectId: "asistente-blood-bowl",
+  storageBucket: "asistente-blood-bowl.firebasestorage.app",
+  messagingSenderId: "789696388629",
+  appId: "1:789696388629:web:e856e15e3f33a78045b81c"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+
 
 const App: React.FC = () => {
     const { user, isLoading } = useAuth();

@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import type { ManagedTeam, Competition, Matchup } from '../types';
 import { useAuth } from '../hooks/useAuth';
 import PencilIcon from './icons/PencilIcon';
 import CalendarIcon from './icons/CalendarIcon';
+import QrCodeIcon from './icons/QrCodeIcon';
 
 // FIX: Declare gapi and google on the window object for TypeScript.
 declare global {
@@ -11,6 +12,8 @@ declare global {
     google: any;
   }
 }
+declare const QRCode: any;
+declare const Html5Qrcode: any;
 
 const trophyImageUrl = 'https://i.pinimg.com/736x/95/dc/9a/95dc9a37df924d550e9922dbf37b9089.jpg';
 
@@ -122,7 +125,7 @@ const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
     const COMPETITIONS_STORAGE_KEY = useMemo(() => user ? `bb-competitions-${user.id}` : 'bloodbowl-competitions', [user]);
 
     const [competitions, setCompetitions] = useState<Competition[]>([]);
-    const [view, setView] = useState<'list' | 'create' | 'detail'>('list');
+    const [view, setView] = useState<'list' | 'create' | 'detail' | 'scan'>('list');
     const [selectedCompetition, setSelectedCompetition] = useState<Competition | null>(null);
     
     const [newCompetitionName, setNewCompetitionName] = useState('');
@@ -143,6 +146,11 @@ const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
         competitionName: string | null;
         matchKey: string | null;
     }>({ isOpen: false, matchup: null, competitionName: null, matchKey: null });
+    const [isQrExportModalOpen, setIsQrExportModalOpen] = useState(false);
+    const [scanError, setScanError] = useState<string | null>(null);
+    const qrCanvasRef = useRef<HTMLCanvasElement>(null);
+    const scannerContainerRef = useRef<HTMLDivElement>(null);
+    const scannerRef = useRef<any>(null);
 
 
     useEffect(() => {
@@ -153,6 +161,59 @@ const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
             console.error("Failed to load competitions from localStorage", error);
         }
     }, [COMPETITIONS_STORAGE_KEY]);
+    
+    useEffect(() => {
+        if (isQrExportModalOpen && qrCanvasRef.current && selectedCompetition) {
+            const compJson = JSON.stringify(selectedCompetition);
+            QRCode.toCanvas(qrCanvasRef.current, compJson, { width: 256, margin: 2, errorCorrectionLevel: 'L' }, function (error: any) {
+              if (error) {
+                  console.error(error);
+                  alert('Error al generar el QR: los datos de la competición son demasiado grandes.');
+                  setIsQrExportModalOpen(false);
+              }
+            })
+        }
+    }, [isQrExportModalOpen, selectedCompetition]);
+    
+    useEffect(() => {
+        if (view === 'scan' && scannerContainerRef.current) {
+            scannerRef.current = new Html5Qrcode(scannerContainerRef.current.id);
+            scannerRef.current.start(
+                { facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } },
+                (decodedText: string) => {
+                    scannerRef.current.stop();
+                    try {
+                        const importedComp = JSON.parse(decodedText) as Competition;
+                        if (!importedComp.id || !importedComp.name || !importedComp.format || !importedComp.teams) {
+                            throw new Error("El código QR no contiene una competición válida.");
+                        }
+
+                        const existingIndex = competitions.findIndex(c => c.id === importedComp.id);
+                        if (existingIndex > -1) {
+                            if (window.confirm(`Ya existe una competición llamada "${importedComp.name}". ¿Quieres sobrescribirla con los datos importados?`)) {
+                                const newComps = [...competitions];
+                                newComps[existingIndex] = importedComp;
+                                setCompetitions(newComps);
+                                localStorage.setItem(COMPETITIONS_STORAGE_KEY, JSON.stringify(newComps));
+                            }
+                        } else {
+                            const newComps = [...competitions, importedComp];
+                            setCompetitions(newComps);
+                            localStorage.setItem(COMPETITIONS_STORAGE_KEY, JSON.stringify(newComps));
+                        }
+                        setView('list');
+
+                    } catch (e: any) {
+                        setScanError(`Error al procesar el código QR: ${e.message}`);
+                    }
+                }, () => {} 
+            ).catch((err: any) => {
+                console.error("Error al iniciar escáner", err);
+                setScanError(`Error al iniciar la cámara: ${err}. Es posible que necesites dar permisos en tu navegador.`);
+            });
+        }
+        return () => { if (scannerRef.current && scannerRef.current.isScanning) { scannerRef.current.stop().catch((e:any) => console.warn("Error al detener escáner.", e)); }};
+    }, [view, competitions, COMPETITIONS_STORAGE_KEY]);
 
     const updateCompetition = (updatedCompetition: Competition) => {
         const updatedCompetitions = competitions.map(c => c.id === updatedCompetition.id ? updatedCompetition : c);
@@ -173,25 +234,21 @@ const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
             return;
         }
         
-        // Ensure the GAPI client library is loaded before proceeding.
         window.gapi.load('client', () => {
-            // Now that gapi.client is available, initialize the token client to get user consent and an access token.
             const tokenClient = window.google.accounts.oauth2.initTokenClient({
                 client_id: clientId,
                 scope: 'https://www.googleapis.com/auth/calendar.events',
                 callback: (tokenResponse: any) => {
                     setCalendarModalState({ isOpen: false, matchup: null, competitionName: null, matchKey: null });
-                    // This callback is executed after the user interacts with the OAuth consent screen.
                     if (tokenResponse && tokenResponse.access_token) {
                         window.gapi.client.setToken(tokenResponse);
                         
-                        // Load the specific API (Calendar API) and its discovery document.
                         window.gapi.client.load('calendar', 'v3', () => {
                             const event = {
                                 'summary': `Blood Bowl: ${matchup.team1} vs ${matchup.team2}`,
                                 'description': `Partido de la competición "${competitionName}".`,
                                 'start': {
-                                    'date': date.toISOString().split('T')[0], // All-day event for today
+                                    'date': date.toISOString().split('T')[0],
                                 },
                                 'end': {
                                     'date': date.toISOString().split('T')[0],
@@ -203,7 +260,6 @@ const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
                                 'resource': event,
                             });
     
-                            // Execute the request and handle the single response object.
                             request.execute((response: any) => {
                                 if (response.error) {
                                      console.error("Error from Calendar API:", response.error);
@@ -215,7 +271,6 @@ const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
                             });
                         });
                     } else if (tokenResponse.error) {
-                        // Handle cases where the user denies consent or another OAuth error occurs.
                         console.error('Error getting access token', tokenResponse);
                         setFeedback({ message: "Permiso denegado", matchKey, success: false });
                         setTimeout(() => setFeedback(null), 3000);
@@ -223,7 +278,6 @@ const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
                 },
             });
             
-            // Trigger the OAuth flow.
             tokenClient.requestAccessToken();
         });
     };
@@ -477,9 +531,25 @@ const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
             ) : (
                 <p className="text-slate-400 mb-6">Aún no has creado ninguna competición.</p>
             )}
-            <button onClick={() => setView('create')} className="bg-amber-500 text-slate-900 font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-amber-400 transform hover:scale-105">
-                Crear Competición
-            </button>
+             <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button onClick={() => setView('scan')} className="flex-1 max-w-xs mx-auto flex items-center justify-center gap-2 bg-slate-600 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-slate-500 transition-colors">
+                    <QrCodeIcon />
+                    Importar con QR
+                </button>
+                <button onClick={() => setView('create')} className="flex-1 max-w-xs mx-auto bg-amber-500 text-slate-900 font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-amber-400 transform hover:scale-105">
+                    Crear Competición
+                </button>
+            </div>
+        </div>
+    );
+    
+    const renderScannerView = () => (
+        <div className="text-center p-4">
+            <button onClick={() => setView('list')} className="text-amber-400 hover:underline mb-4 text-sm">&larr; Volver</button>
+            <h2 className="text-3xl font-bold text-amber-400 mb-4">Importar Competición</h2>
+            <p className="text-slate-400 mb-6 max-w-lg mx-auto">Apunta la cámara al código QR de la competición que quieres importar.</p>
+            <div id="qr-reader" ref={scannerContainerRef} className="max-w-sm mx-auto aspect-square bg-slate-900 rounded-lg overflow-hidden border-2 border-slate-700"></div>
+            {scanError && <p className="mt-4 text-red-400">{scanError}</p>}
         </div>
     );
 
@@ -701,7 +771,13 @@ const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
         
         return (
             <div>
-                <button onClick={() => { setSelectedCompetition(null); setView('list'); }} className="text-amber-400 hover:underline mb-4 text-sm px-4 sm:px-0">&larr; Volver a Competiciones</button>
+                 <div className="flex justify-between items-center px-4 sm:px-0 mb-4">
+                    <button onClick={() => { setSelectedCompetition(null); setView('list'); }} className="text-amber-400 hover:underline text-sm">&larr; Volver</button>
+                    <button onClick={() => setIsQrExportModalOpen(true)} className="flex items-center gap-2 bg-slate-700 text-slate-200 font-bold py-2 px-4 rounded-lg shadow-md hover:bg-slate-600 transition-colors">
+                        <QrCodeIcon />
+                        Compartir
+                    </button>
+                </div>
                 <h2 className="text-3xl font-bold text-amber-400 mb-2 text-center">{selectedCompetition.name}</h2>
                 <p className="text-slate-400 text-center mb-6">{selectedCompetition.format === 'Liguilla' ? 'Calendario de Partidos' : 'Cuadro del Torneo'}</p>
                 {selectedCompetition.format === 'Liguilla' && selectedCompetition.schedule && <div className="p-4">{renderSchedule(selectedCompetition.schedule)}</div>}
@@ -715,6 +791,7 @@ const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
             {view === 'list' && renderListView()}
             {view === 'create' && renderCreateView()}
             {view === 'detail' && renderDetailView()}
+            {view === 'scan' && renderScannerView()}
             <ScoreModal />
             <CalendarModal 
                 isOpen={calendarModalState.isOpen}
@@ -726,6 +803,18 @@ const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
                 }}
                 matchup={calendarModalState.matchup}
             />
+            {isQrExportModalOpen && selectedCompetition && (
+                <div 
+                    className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" 
+                    onClick={() => setIsQrExportModalOpen(false)}
+                >
+                    <div className="bg-slate-800 p-4 rounded-lg shadow-xl border border-slate-700" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-xl font-bold text-amber-400 mb-4 text-center">Compartir {selectedCompetition.name}</h3>
+                        <canvas ref={qrCanvasRef}></canvas>
+                        <p className="text-xs text-slate-400 mt-2 text-center">Otro entrenador puede escanear este código para importar la competición.</p>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

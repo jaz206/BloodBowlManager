@@ -3,6 +3,7 @@
 
 
 
+
 export interface User {
   id: string;
   name: string;
@@ -143,6 +144,7 @@ export interface ManagedPlayer extends Player {
 }
 
 export interface ManagedTeam {
+  id?: string; // For Firestore document ID
   name: string;
   rosterName: string;
   treasury: number;

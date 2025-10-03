@@ -15,12 +15,13 @@ declare const QRCode: any;
 
 interface TeamDashboardProps {
     team: ManagedTeam;
-    onTeamUpdate: (team: ManagedTeam | null) => void;
+    onUpdate: (team: ManagedTeam) => void;
+    onDelete: () => void;
     onBack: () => void;
 }
 
 // FIX: Changed to a named export as it is not a default export.
-export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onTeamUpdate, onBack }) => {
+export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, onDelete, onBack }) => {
     const [editingPlayer, setEditingPlayer] = useState<ManagedPlayer | null>(null);
     const [showQr, setShowQr] = useState(false);
     const [confirmation, setConfirmation] = useState<{ message: string; onConfirm: () => void; } | null>(null);
@@ -120,7 +121,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onTeamUpdate
                 p.id === editingPlayerId ? { ...p, customName: newName } : p
             ),
         };
-        onTeamUpdate(updatedTeam);
+        onUpdate(updatedTeam);
         setEditingPlayerId(null);
         setEditingName('');
     };
@@ -163,7 +164,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onTeamUpdate
                 canvas.height = height;
                 const ctx = canvas.getContext('2d');
                 ctx?.drawImage(img, 0, 0, width, height);
-                onTeamUpdate({ ...team, crestImage: canvas.toDataURL('image/png') });
+                onUpdate({ ...team, crestImage: canvas.toDataURL('image/png') });
             };
             img.src = e.target?.result as string;
         };
@@ -180,7 +181,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onTeamUpdate
             return;
         }
         if (team.treasury >= baseRoster.rerollCost) {
-            onTeamUpdate({
+            onUpdate({
                 ...team,
                 treasury: team.treasury - baseRoster.rerollCost,
                 rerolls: team.rerolls + 1,
@@ -194,7 +195,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onTeamUpdate
         if (team.rerolls > 0) {
             setConfirmation({
                 message: '¿Seguro que quieres vender una Segunda Oportunidad por la mitad de su precio?',
-                onConfirm: () => onTeamUpdate({
+                onConfirm: () => onUpdate({
                     ...team,
                     treasury: team.treasury + (baseRoster.rerollCost / 2),
                     rerolls: team.rerolls - 1,
@@ -205,7 +206,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onTeamUpdate
 
     const handleBuyApothecary = () => {
         if (team.treasury >= 50000 && !team.apothecary) {
-            onTeamUpdate({
+            onUpdate({
                 ...team,
                 treasury: team.treasury - 50000,
                 apothecary: true,
@@ -221,7 +222,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onTeamUpdate
         if (team.apothecary) {
             setConfirmation({
                 message: '¿Seguro que quieres despedir al boticario por la mitad de su precio?',
-                onConfirm: () => onTeamUpdate({
+                onConfirm: () => onUpdate({
                     ...team,
                     treasury: team.treasury + 25000,
                     apothecary: false,
@@ -236,7 +237,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onTeamUpdate
             return;
         }
         if (team.treasury >= 10000) {
-            onTeamUpdate({ ...team, treasury: team.treasury - 10000, dedicatedFans: team.dedicatedFans + 1 });
+            onUpdate({ ...team, treasury: team.treasury - 10000, dedicatedFans: team.dedicatedFans + 1 });
         } else {
             alert('¡No tienes suficiente dinero!');
         }
@@ -246,7 +247,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onTeamUpdate
         if (team.dedicatedFans > 1) {
             setConfirmation({
                 message: '¿Seguro que quieres perder un Hincha por la mitad de su coste? (Recibirás 5,000 M.O.)',
-                onConfirm: () => onTeamUpdate({ ...team, treasury: team.treasury + 5000, dedicatedFans: team.dedicatedFans - 1 })
+                onConfirm: () => onUpdate({ ...team, treasury: team.treasury + 5000, dedicatedFans: team.dedicatedFans - 1 })
             });
         }
     };
@@ -257,7 +258,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onTeamUpdate
             return;
         }
         if (team.treasury >= 10000) {
-            onTeamUpdate({ ...team, treasury: team.treasury - 10000, cheerleaders: team.cheerleaders + 1 });
+            onUpdate({ ...team, treasury: team.treasury - 10000, cheerleaders: team.cheerleaders + 1 });
         } else {
             alert('¡No tienes suficiente dinero!');
         }
@@ -267,7 +268,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onTeamUpdate
         if (team.cheerleaders > 0) {
             setConfirmation({
                 message: '¿Seguro que quieres despedir a una animadora por la mitad de su precio?',
-                onConfirm: () => onTeamUpdate({ ...team, treasury: team.treasury + 5000, cheerleaders: team.cheerleaders - 1 })
+                onConfirm: () => onUpdate({ ...team, treasury: team.treasury + 5000, cheerleaders: team.cheerleaders - 1 })
             });
         }
     };
@@ -278,7 +279,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onTeamUpdate
             return;
         }
         if (team.treasury >= 10000) {
-            onTeamUpdate({ ...team, treasury: team.treasury - 10000, assistantCoaches: team.assistantCoaches + 1 });
+            onUpdate({ ...team, treasury: team.treasury - 10000, assistantCoaches: team.assistantCoaches + 1 });
         } else {
             alert('¡No tienes suficiente dinero!');
         }
@@ -288,7 +289,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onTeamUpdate
         if (team.assistantCoaches > 0) {
             setConfirmation({
                 message: '¿Seguro que quieres despedir a un ayudante por la mitad de su precio?',
-                onConfirm: () => onTeamUpdate({ ...team, treasury: team.treasury + 5000, assistantCoaches: team.assistantCoaches - 1 })
+                onConfirm: () => onUpdate({ ...team, treasury: team.treasury + 5000, assistantCoaches: team.assistantCoaches - 1 })
             });
         }
     };
@@ -324,7 +325,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onTeamUpdate
                 lastingInjuries: [],
                 isBenched: false, // Default to starter
             };
-            onTeamUpdate({
+            onUpdate({
                 ...team,
                 treasury: team.treasury - player.cost,
                 players: [...team.players, newPlayer],
@@ -338,7 +339,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onTeamUpdate
         const updatedPlayers = team.players.map(p => 
             p.id === playerId ? { ...p, isBenched: !(p.isBenched ?? false) } : p
         );
-        onTeamUpdate({ ...team, players: updatedPlayers });
+        onUpdate({ ...team, players: updatedPlayers });
     };
 
     const handleFirePlayer = (playerId: number) => {
@@ -346,7 +347,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onTeamUpdate
         if (playerToFire) {
             setConfirmation({
                 message: `¿Seguro que quieres despedir a ${playerToFire.customName}?`,
-                onConfirm: () => onTeamUpdate({
+                onConfirm: () => onUpdate({
                     ...team,
                     treasury: team.treasury + (playerToFire.cost / 2),
                     players: team.players.filter(p => p.id !== playerId),
@@ -356,7 +357,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onTeamUpdate
     };
     
     const handleSavePlayer = (updatedPlayer: ManagedPlayer) => {
-        onTeamUpdate({
+        onUpdate({
             ...team,
             players: team.players.map(p => p.id === updatedPlayer.id ? updatedPlayer : p)
         });
@@ -366,7 +367,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onTeamUpdate
     const handleDeleteTeam = () => {
         setConfirmation({
             message: '¿Estás seguro de que quieres disolver este equipo? Esta acción no se puede deshacer.',
-            onConfirm: () => onTeamUpdate(null)
+            onConfirm: () => onDelete()
         });
     };
 

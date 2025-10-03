@@ -1,48 +1,49 @@
 <!DOCTYPE html>
-<html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="google-signin-client_id" content="275571763243-q0p0v11vi6d2bn28l3pe3dglfa9j2mcs.apps.googleusercontent.com" />
-    <title>Asistente de Blood Bowl</title>
-    <meta name="theme-color" content="#0f172a" />
-    <link rel="manifest" href="/manifest.json" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script id="gsi-client-script" src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="https://apis.google.com/js/api.js" async defer></script>
-    <style>
-      body {
-        -webkit-tap-highlight-color: transparent;
-      }
-    </style>
-  <script type="importmap">
+    <html lang="es">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Asistente de Blood Bowl</title>
+        <meta name="theme-color" content="#0f172a" />
+        <link rel="manifest" href="/manifest.json" />
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+        <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+        <style>
+          body {
+            -webkit-tap-highlight-color: transparent;
+          }
+        </style>
+      <script type="importmap">
 {
   "imports": {
     "react/": "https://aistudiocdn.com/react@^19.1.1/",
     "react": "https://aistudiocdn.com/react@^19.1.1",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.21.0"
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.21.0",
+    "firebase/app": "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js",
+    "firebase/auth": "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js",
+    "firebase/firestore": "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js",
+    "firebase/": "https://aistudiocdn.com/firebase@^12.3.0/"
   }
 }
 </script>
-</head>
-  <body class="bg-slate-900">
-    <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          const swUrl = `${window.location.origin}/sw.js`;
-          navigator.serviceWorker.register(swUrl).then(registration => {
-            console.log('ServiceWorker registration successful with scope: ', registration.scope);
-          }, err => {
-            console.log('ServiceWorker registration failed: ', err);
-          });
-        });
-      }
-    </script>
-  </body>
-</html>
+    </head>
+      <body class="bg-slate-900">
+        <div id="root"></div>
+        <script type="module" src="/index.tsx"></script>
+        <script>
+          if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+              const swUrl = `${window.location.origin}/sw.js`;
+              navigator.serviceWorker.register(swUrl).then(registration => {
+                console.log('ServiceWorker registration successful with scope: ', registration.scope);
+              }, err => {
+                console.log('ServiceWorker registration failed: ', err);
+              });
+            });
+          }
+        </script>
+      </body>
+    </html>
