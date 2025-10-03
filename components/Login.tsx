@@ -17,7 +17,7 @@ const Login: React.FC = () => {
             console.error("Google login failed", err);
             if (err.code === 'auth/unauthorized-domain') {
                 const domain = window.location.hostname;
-                setError(`Error de autorización: El dominio de esta aplicación ('${domain}') no está autorizado. Ve a tu Consola de Firebase -> Authentication -> Configuración -> Dominios autorizados y añade este dominio para permitir el inicio de sesión.`);
+                setError(`Error de dominio no autorizado: El dominio '${domain}' no está permitido. Ve a tu Consola de Firebase > Authentication > Pestaña 'Sign-in method' (Método de inicio de sesión) > Dominios autorizados, y añade '${domain}' a la lista.`);
             } else if (err.code === 'auth/auth-domain-config-required') {
                 setError("Error de configuración de Firebase: Falta el 'authDomain'. Por favor, verifica la configuración de Firebase en el código de la aplicación.");
             } else {

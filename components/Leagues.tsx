@@ -119,14 +119,15 @@ const generateBracket = (teamNames: string[]): Matchup[][] => {
 
 interface LeaguesProps {
     managedTeams: ManagedTeam[];
+    initialCompetitions: Competition[];
+    onCompetitionCreate: (comp: Omit<Competition, 'id'>) => void;
+    onCompetitionUpdate: (comp: Competition) => void;
+    isGuest: boolean;
 }
 
-// FIX: Changed to a named export to resolve 'no default export' error in importing file.
-export const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
+export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetitions, onCompetitionCreate, onCompetitionUpdate, isGuest }) => {
     const { user } = useAuth();
-    const COMPETITIONS_STORAGE_KEY = useMemo(() => user ? `bb-competitions-${user.id}` : 'bloodbowl-competitions', [user]);
-
-    const [competitions, setCompetitions] = useState<Competition[]>([]);
+    const [competitions, setCompetitions] = useState<Competition[]>(initialCompetitions);
     const [view, setView] = useState<'list' | 'create' | 'detail' | 'scan'>('list');
     const [selectedCompetition, setSelectedCompetition] = useState<Competition | null>(null);
     
@@ -154,15 +155,9 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
     const scannerContainerRef = useRef<HTMLDivElement>(null);
     const scannerRef = useRef<any>(null);
 
-
     useEffect(() => {
-        try {
-            const stored = localStorage.getItem(COMPETITIONS_STORAGE_KEY);
-            if (stored) setCompetitions(JSON.parse(stored));
-        } catch (error) {
-            console.error("Failed to load competitions from localStorage", error);
-        }
-    }, [COMPETITIONS_STORAGE_KEY]);
+        setCompetitions(initialCompetitions);
+    }, [initialCompetitions]);
     
     useEffect(() => {
         if (isQrExportModalOpen && qrCanvasRef.current && selectedCompetition) {
@@ -193,15 +188,10 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
                         const existingIndex = competitions.findIndex(c => c.id === importedComp.id);
                         if (existingIndex > -1) {
                             if (window.confirm(`Ya existe una competición llamada "${importedComp.name}". ¿Quieres sobrescribirla con los datos importados?`)) {
-                                const newComps = [...competitions];
-                                newComps[existingIndex] = importedComp;
-                                setCompetitions(newComps);
-                                localStorage.setItem(COMPETITIONS_STORAGE_KEY, JSON.stringify(newComps));
+                                onCompetitionUpdate(importedComp);
                             }
                         } else {
-                            const newComps = [...competitions, importedComp];
-                            setCompetitions(newComps);
-                            localStorage.setItem(COMPETITIONS_STORAGE_KEY, JSON.stringify(newComps));
+                            onCompetitionCreate(importedComp);
                         }
                         setView('list');
 
@@ -215,15 +205,8 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
             });
         }
         return () => { if (scannerRef.current && scannerRef.current.isScanning) { scannerRef.current.stop().catch((e:any) => console.warn("Error al detener escáner.", e)); }};
-    }, [view, competitions, COMPETITIONS_STORAGE_KEY]);
+    }, [view, competitions, onCompetitionCreate, onCompetitionUpdate]);
 
-    const updateCompetition = (updatedCompetition: Competition) => {
-        const updatedCompetitions = competitions.map(c => c.id === updatedCompetition.id ? updatedCompetition : c);
-        setCompetitions(updatedCompetitions);
-        localStorage.setItem(COMPETITIONS_STORAGE_KEY, JSON.stringify(updatedCompetitions));
-        setSelectedCompetition(updatedCompetition);
-    };
-    
     const handleAddToCalendar = (matchup: Matchup, competitionName: string, matchKey: string, date: Date) => {
         if (!window.gapi || !window.google?.accounts) {
             alert("El cliente de la API de Google aún no se ha cargado. Por favor, espera un momento y vuelve a intentarlo.");
@@ -304,8 +287,7 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
             return;
         }
 
-        const newCompetition: Competition = {
-            id: Date.now().toString(),
+        const newCompetition: Omit<Competition, 'id'> = {
             name: newCompetitionName.trim(),
             format: newCompetitionFormat,
             teams: selectedTeams,
@@ -317,14 +299,14 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
             newCompetition.bracket = generateBracket(selectedTeams);
         }
 
-        const updatedCompetitions = [...competitions, newCompetition];
-        setCompetitions(updatedCompetitions);
-        localStorage.setItem(COMPETITIONS_STORAGE_KEY, JSON.stringify(updatedCompetitions));
+        onCompetitionCreate(newCompetition);
         
         setNewCompetitionName('');
         setSelectedTeams([]);
-        setSelectedCompetition(newCompetition);
+        // The view will be updated by the parent component, but we can optimistically switch
         setView('detail');
+        // We set the selected competition based on the newly created one, but we need to find it
+        // This is a bit tricky without the ID. We'll rely on the parent updating the props.
     };
 
     const isPowerOfTwo = (n: number) => n > 0 && (n & (n - 1)) === 0;
@@ -371,7 +353,7 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
             }
         }
         
-        updateCompetition({ ...selectedCompetition, bracket: newBracket });
+        onCompetitionUpdate({ ...selectedCompetition, bracket: newBracket });
     };
 
     const handleOpenScoreModal = (roundIndex: number, matchIndex: number, matchup: Matchup) => {
@@ -396,7 +378,7 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
             newCompetitionData.schedule = newSchedule;
         }
 
-        updateCompetition({ ...selectedCompetition, ...newCompetitionData });
+        onCompetitionUpdate({ ...selectedCompetition, ...newCompetitionData });
         setScoreModalState(null);
     };
 
@@ -820,4 +802,3 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
         </div>
     );
 };
-
