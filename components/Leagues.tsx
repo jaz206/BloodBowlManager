@@ -137,6 +137,12 @@ const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
     } | null>(null);
     const [isTrophyModalOpen, setIsTrophyModalOpen] = useState(false);
     const [feedback, setFeedback] = useState<{ message: string; matchKey: string; success: boolean } | null>(null);
+    const [calendarModalState, setCalendarModalState] = useState<{
+        isOpen: boolean;
+        matchup: Matchup | null;
+        competitionName: string | null;
+        matchKey: string | null;
+    }>({ isOpen: false, matchup: null, competitionName: null, matchKey: null });
 
 
     useEffect(() => {
@@ -155,7 +161,7 @@ const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
         setSelectedCompetition(updatedCompetition);
     };
     
-    const handleAddToCalendar = (matchup: Matchup, competitionName: string, matchKey: string) => {
+    const handleAddToCalendar = (matchup: Matchup, competitionName: string, matchKey: string, date: Date) => {
         if (!window.gapi || !window.google?.accounts) {
             alert("El cliente de la API de Google aún no se ha cargado. Por favor, espera un momento y vuelve a intentarlo.");
             return;
@@ -174,6 +180,7 @@ const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
                 client_id: clientId,
                 scope: 'https://www.googleapis.com/auth/calendar.events',
                 callback: (tokenResponse: any) => {
+                    setCalendarModalState({ isOpen: false, matchup: null, competitionName: null, matchKey: null });
                     // This callback is executed after the user interacts with the OAuth consent screen.
                     if (tokenResponse && tokenResponse.access_token) {
                         window.gapi.client.setToken(tokenResponse);
@@ -184,10 +191,10 @@ const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
                                 'summary': `Blood Bowl: ${matchup.team1} vs ${matchup.team2}`,
                                 'description': `Partido de la competición "${competitionName}".`,
                                 'start': {
-                                    'date': new Date().toISOString().split('T')[0], // All-day event for today
+                                    'date': date.toISOString().split('T')[0], // All-day event for today
                                 },
                                 'end': {
-                                    'date': new Date().toISOString().split('T')[0],
+                                    'date': date.toISOString().split('T')[0],
                                 },
                             };
     
@@ -218,6 +225,15 @@ const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
             
             // Trigger the OAuth flow.
             tokenClient.requestAccessToken();
+        });
+    };
+    
+    const openCalendarModal = (matchup: Matchup, competitionName: string, matchKey: string) => {
+        setCalendarModalState({
+            isOpen: true,
+            matchup,
+            competitionName,
+            matchKey
         });
     };
 
@@ -359,6 +375,90 @@ const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
         );
     }
     
+    const CalendarModal = ({ isOpen, onClose, onConfirm, matchup }: { isOpen: boolean, onClose: () => void, onConfirm: (date: Date) => void, matchup: Matchup | null }) => {
+        if (!isOpen || !matchup) return null;
+
+        const [currentDate, setCurrentDate] = useState(new Date());
+        const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+
+        const changeMonth = (offset: number) => {
+            setCurrentDate(prev => {
+                const newDate = new Date(prev);
+                newDate.setMonth(newDate.getMonth() + offset);
+                return newDate;
+            });
+        };
+
+        const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+        const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay(); // 0=Sun, 1=Mon...
+        const startingDayIndex = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1; // 0=Mon, 1=Tue...
+
+        const monthDays: (number | null)[] = [];
+        for (let i = 0; i < startingDayIndex; i++) {
+            monthDays.push(null);
+        }
+        for (let i = 1; i <= daysInMonth; i++) {
+            monthDays.push(i);
+        }
+
+        const handleDateSelect = (day: number) => {
+            const newSelectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+            setSelectedDate(newSelectedDate);
+        };
+
+        return (
+            <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[60] p-4" onClick={onClose}>
+                <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-sm w-full" onClick={e => e.stopPropagation()}>
+                    <h3 className="text-xl font-bold text-amber-400 p-4 border-b border-slate-700">Seleccionar Fecha del Partido</h3>
+                    <div className="p-4">
+                        <div className="flex justify-between items-center mb-4">
+                            <button onClick={() => changeMonth(-1)} className="p-2 rounded-full hover:bg-slate-700">&lt;</button>
+                            <span className="font-semibold text-white capitalize">
+                                {currentDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' })}
+                            </span>
+                            <button onClick={() => changeMonth(1)} className="p-2 rounded-full hover:bg-slate-700">&gt;</button>
+                        </div>
+                        <div className="grid grid-cols-7 gap-1 text-center text-xs text-slate-400 mb-2">
+                            <span>Lu</span><span>Ma</span><span>Mi</span><span>Ju</span><span>Vi</span><span>Sá</span><span>Do</span>
+                        </div>
+                        <div className="grid grid-cols-7 gap-1">
+                            {monthDays.map((day, index) => {
+                                if (!day) return <div key={`empty-${index}`}></div>;
+                                
+                                const isSelected = selectedDate &&
+                                    selectedDate.getDate() === day &&
+                                    selectedDate.getMonth() === currentDate.getMonth() &&
+                                    selectedDate.getFullYear() === currentDate.getFullYear();
+                                
+                                return (
+                                    <button
+                                        key={day}
+                                        onClick={() => handleDateSelect(day)}
+                                        className={`py-2 rounded-md transition-colors text-sm ${
+                                            isSelected ? 'bg-amber-500 text-slate-900 font-bold' : 'hover:bg-slate-700 text-white'
+                                        }`}
+                                    >
+                                        {day}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                    <div className="p-4 bg-slate-900/50 border-t border-slate-700 flex justify-end gap-3">
+                        <button onClick={onClose} className="bg-slate-600 text-white font-bold py-2 px-4 rounded-md">Cancelar</button>
+                        <button 
+                            onClick={() => selectedDate && onConfirm(selectedDate)}
+                            disabled={!selectedDate}
+                            className="bg-green-600 text-white font-bold py-2 px-4 rounded-md disabled:bg-slate-500 disabled:cursor-not-allowed"
+                        >
+                            Añadir al Calendario
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     const renderListView = () => (
         <div className="text-center p-4">
             <h2 className="text-3xl font-bold text-amber-400 mb-6">Competiciones</h2>
@@ -461,7 +561,7 @@ const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
                                         <button onClick={() => handleOpenScoreModal(index, matchIndex, matchup)} className="p-1 rounded-full hover:bg-slate-700"><PencilIcon className="w-4 h-4 text-slate-400" /></button>
                                         {isGoogleUser && (
                                             <div className="relative">
-                                                <button onClick={() => handleAddToCalendar(matchup, selectedCompetition.name, matchKey)} className="p-1 rounded-full hover:bg-slate-700"><CalendarIcon className="w-4 h-4 text-slate-400" /></button>
+                                                <button onClick={() => openCalendarModal(matchup, selectedCompetition.name, matchKey)} className="p-1 rounded-full hover:bg-slate-700"><CalendarIcon className="w-4 h-4 text-slate-400" /></button>
                                                 {feedback?.matchKey === matchKey && <span className={`absolute -top-6 right-0 text-xs px-2 py-1 rounded-md ${feedback.success ? 'bg-green-600' : 'bg-red-600'} text-white`}>{feedback.message}</span>}
                                             </div>
                                         )}
@@ -515,7 +615,7 @@ const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
                         <div className="bracket-vs-section">
                             {feedback?.matchKey === matchKey ? <span className={`text-xs px-1 rounded ${feedback.success ? 'bg-green-600' : 'bg-red-600'} text-white`}>{feedback.message}</span> : <button onClick={() => handleOpenScoreModal(roundIndex, matchIndex, matchup)} className="score-edit-btn"><PencilIcon className="w-3 h-3 text-slate-400 hover:text-white" /></button>}
                             {isGoogleUser && matchup.team1 !== 'Por determinar' && matchup.team1 !== 'BYE' && matchup.team2 !== 'Por determinar' && matchup.team2 !== 'BYE' &&
-                              <button onClick={() => handleAddToCalendar(matchup, selectedCompetition.name, matchKey)} className="score-edit-btn ml-2"><CalendarIcon className="w-3.5 h-3.5 text-slate-400 hover:text-white"/></button>
+                              <button onClick={() => openCalendarModal(matchup, selectedCompetition.name, matchKey)} className="score-edit-btn ml-2"><CalendarIcon className="w-3.5 h-3.5 text-slate-400 hover:text-white"/></button>
                             }
                         </div>
                         <button 
@@ -616,6 +716,16 @@ const Leagues: React.FC<LeaguesProps> = ({ managedTeams }) => {
             {view === 'create' && renderCreateView()}
             {view === 'detail' && renderDetailView()}
             <ScoreModal />
+            <CalendarModal 
+                isOpen={calendarModalState.isOpen}
+                onClose={() => setCalendarModalState({ isOpen: false, matchup: null, competitionName: null, matchKey: null })}
+                onConfirm={(date) => {
+                    if (calendarModalState.matchup && calendarModalState.competitionName && calendarModalState.matchKey) {
+                        handleAddToCalendar(calendarModalState.matchup, calendarModalState.competitionName, calendarModalState.matchKey, date);
+                    }
+                }}
+                matchup={calendarModalState.matchup}
+            />
         </div>
     );
 };
