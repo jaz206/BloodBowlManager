@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import type { ManagedTeam, Competition, Matchup } from '../types';
-// FIX: Import useAuth to resolve 'Cannot find name 'useAuth'' error.
 import { useAuth } from '../hooks/useAuth';
 import PencilIcon from './icons/PencilIcon';
 import CalendarIcon from './icons/CalendarIcon';
@@ -505,297 +504,282 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
                     {competitions.map(comp => (
                         <button key={comp.id} onClick={() => { setSelectedCompetition(comp); setView('detail'); }} className="w-full max-w-md mx-auto bg-slate-700/50 p-4 rounded-lg shadow-md hover:bg-slate-700 transition-colors">
                             <div className="flex justify-between items-center">
-                                <p className="font-semibold text-white">{comp.name}</p>
-                                <span className={`text-xs font-bold px-2 py-1 rounded-full ${comp.format === 'Liguilla' ? 'bg-sky-700 text-sky-200' : 'bg-purple-700 text-purple-200'}`}>{comp.format}</span>
+                                <span className="font-semibold text-white">{comp.name}</span>
+                                <span className="text-xs bg-slate-600 text-slate-300 px-2 py-1 rounded-full">{comp.format}</span>
                             </div>
-                            <p className="text-xs text-slate-400 text-left mt-1">{comp.teams.length} equipos</p>
                         </button>
                     ))}
                 </div>
             ) : (
-                <p className="text-slate-400 mb-6">Aún no has creado ninguna competición.</p>
+                <p className="text-slate-400 mb-6">No has creado ninguna competición.</p>
             )}
-             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button onClick={() => setView('scan')} className="flex-1 max-w-xs mx-auto flex items-center justify-center gap-2 bg-slate-600 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-slate-500 transition-colors">
-                    <QrCodeIcon />
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button onClick={() => setView('create')} className="bg-amber-500 text-slate-900 font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-500/50 transform hover:scale-105">
+                    Crear Nueva Competición
+                </button>
+                <button
+                    onClick={() => setView('scan')}
+                    disabled={isGuest}
+                    className="bg-sky-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-sky-500 focus:outline-none focus:ring-4 focus:ring-sky-500/50 transform hover:scale-105 disabled:bg-slate-600 disabled:cursor-not-allowed"
+                    title={isGuest ? "No disponible para invitados" : "Importar competición escaneando un código QR"}
+                >
                     Importar con QR
                 </button>
-                <button onClick={() => setView('create')} className="flex-1 max-w-xs mx-auto bg-amber-500 text-slate-900 font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-amber-400 transform hover:scale-105">
-                    Crear Competición
-                </button>
             </div>
-        </div>
-    );
-    
-    const renderScannerView = () => (
-        <div className="text-center p-4">
-            <button onClick={() => setView('list')} className="text-amber-400 hover:underline mb-4 text-sm">&larr; Volver</button>
-            <h2 className="text-3xl font-bold text-amber-400 mb-4">Importar Competición</h2>
-            <p className="text-slate-400 mb-6 max-w-lg mx-auto">Apunta la cámara al código QR de la competición que quieres importar.</p>
-            <div id="qr-reader" ref={scannerContainerRef} className="max-w-sm mx-auto aspect-square bg-slate-900 rounded-lg overflow-hidden border-2 border-slate-700"></div>
-            {scanError && <p className="mt-4 text-red-400">{scanError}</p>}
         </div>
     );
 
     const renderCreateView = () => (
-        <div className="max-w-3xl mx-auto p-4">
-            <button onClick={() => setView('list')} className="text-amber-400 hover:underline mb-4 text-sm">&larr; Volver</button>
-            <h2 className="text-3xl font-bold text-amber-400 mb-6 text-center">Crear Nueva Competición</h2>
-            <div className="space-y-6 bg-slate-900/50 p-6 rounded-lg border border-slate-700">
+        <div className="p-4 max-w-2xl mx-auto">
+            <h2 className="text-2xl font-bold text-amber-400 mb-4">Nueva Competición</h2>
+            <div className="space-y-4">
                 <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">Nombre de la Competición</label>
-                    <input type="text" value={newCompetitionName} onChange={e => setNewCompetitionName(e.target.value)} className="w-full bg-slate-900 border-2 border-slate-600 rounded-lg py-2 px-3 text-white focus:ring-amber-500 focus:border-amber-500" placeholder="Ej: Torneo del Cráneo Roto" />
+                    <label htmlFor="compName" className="block text-sm font-medium text-slate-300 mb-1">Nombre de la Competición</label>
+                    <input id="compName" type="text" value={newCompetitionName} onChange={e => setNewCompetitionName(e.target.value)} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white"/>
                 </div>
-                 <div>
-                    <p className="text-sm font-medium text-slate-300 mb-2">Formato</p>
-                    <div className="flex gap-4 p-2 bg-slate-900 rounded-lg">
-                        {(['Liguilla', 'Torneo'] as const).map(format => (
-                             <button key={format} onClick={() => setNewCompetitionFormat(format)} className={`flex-1 py-2 rounded-md text-sm font-bold transition-colors ${newCompetitionFormat === format ? 'bg-amber-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}>
-                                {format === 'Torneo' ? 'Torneo (Eliminatoria)' : format}
-                            </button>
+                <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-1">Formato</label>
+                    <select value={newCompetitionFormat} onChange={e => setNewCompetitionFormat(e.target.value as any)} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white">
+                        <option>Liguilla</option>
+                        <option>Torneo</option>
+                    </select>
+                     {newCompetitionFormat === 'Torneo' && !isPowerOfTwo(selectedTeams.length) && selectedTeams.length > 0 && (
+                        <p className="text-xs text-yellow-400 mt-2">
+                            Aviso: Los torneos funcionan mejor con un número de equipos que sea una potencia de 2 (2, 4, 8, 16...). Con {selectedTeams.length} equipos, se añadirán rondas de clasificación o "BYEs" automáticamente.
+                        </p>
+                    )}
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-1">Equipos Participantes ({selectedTeams.length})</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto bg-slate-900/50 p-2 rounded-md border border-slate-700">
+                        {managedTeams.map(team => (
+                            <div key={team.id} className="flex items-center bg-slate-700/50 p-2 rounded-md">
+                                <input type="checkbox" id={`team-${team.id}`} checked={selectedTeams.includes(team.name)} onChange={() => handleTeamSelection(team.name)} className="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"/>
+                                <label htmlFor={`team-${team.id}`} className="ml-3 block text-sm font-medium text-slate-200">{team.name}</label>
+                            </div>
                         ))}
                     </div>
                 </div>
-                <div>
-                    <div className="flex justify-between items-center mb-2">
-                        <label className="block text-sm font-medium text-slate-300">Selecciona los Equipos ({selectedTeams.length})</label>
-                        {managedTeams.length > 0 && (
-                            <button
-                                onClick={() => {
-                                    if (selectedTeams.length === managedTeams.length) {
-                                        setSelectedTeams([]);
-                                    } else {
-                                        setSelectedTeams(managedTeams.map(t => t.name));
-                                    }
-                                }}
-                                className="text-xs text-amber-400 hover:underline"
-                            >
-                                {selectedTeams.length === managedTeams.length ? 'Deseleccionar Todos' : 'Seleccionar Todos'}
-                            </button>
-                        )}
-                    </div>
-                    {newCompetitionFormat === 'Torneo' && !isPowerOfTwo(selectedTeams.length) && selectedTeams.length > 1 && (
-                         <p className="text-xs text-yellow-400 mb-2">Consejo: Los torneos funcionan mejor con un número de equipos que sea potencia de 2 (2, 4, 8...).</p>
-                    )}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto p-2 bg-slate-900 rounded-lg">
-                        {managedTeams.length > 0 ? managedTeams.map(team => (
-                            <div key={team.name} className={`p-3 rounded-md cursor-pointer transition-colors ${selectedTeams.includes(team.name) ? 'bg-amber-600/80 text-white' : 'bg-slate-700/50 hover:bg-slate-700 text-slate-200'}`} onClick={() => handleTeamSelection(team.name)}>
-                                <span className="font-semibold">{team.name}</span>
-                            </div>
-                        )) : <p className="text-slate-500 p-2">No hay equipos creados en el Gestor.</p>}
-                    </div>
-                </div>
-                <div className="text-center pt-4">
-                    <button onClick={handleCreateCompetition} className="bg-green-600 text-white font-bold py-3 px-12 rounded-lg shadow-lg hover:bg-green-500">
-                        Generar Competición
-                    </button>
+                <div className="flex justify-between items-center pt-4">
+                    <button onClick={() => setView('list')} className="text-amber-400 hover:underline">Cancelar</button>
+                    <button onClick={handleCreateCompetition} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">Crear</button>
                 </div>
             </div>
         </div>
     );
-    
+
     const renderDetailView = () => {
         if (!selectedCompetition) return null;
-        const isGoogleUser = user && !user.id.startsWith('guest-');
-        
-        const renderSchedule = (schedule: Matchup[][]) => (
-             <div className="space-y-6">
-                {schedule.map((round, index) => (
-                    <div key={index} className="bg-slate-900/50 p-4 rounded-lg border border-slate-700">
-                        <h3 className="text-xl font-semibold text-amber-300 mb-3">Ronda {index + 1}</h3>
-                        <div className="space-y-2">
-                            {round.map((matchup, matchIndex) => {
-                                const matchKey = `${index}-${matchIndex}`;
-                                return (
-                                <div key={matchIndex} className="flex justify-center items-center gap-2 p-2 bg-slate-800/70 rounded-md">
-                                    <span className="font-semibold text-white text-right w-2/5 truncate">{matchup.team1}</span>
-                                    <span className="text-slate-400 font-bold">vs</span>
-                                    <span className="font-semibold text-white text-left w-2/5 truncate">{matchup.team2}</span>
-                                    <div className="flex items-center gap-2">
-                                        <button onClick={() => handleOpenScoreModal(index, matchIndex, matchup)} className="p-1 rounded-full hover:bg-slate-700"><PencilIcon className="w-4 h-4 text-slate-400" /></button>
-                                        {isGoogleUser && (
-                                            <div className="relative">
-                                                <button onClick={() => openCalendarModal(matchup, selectedCompetition.name, matchKey)} className="p-1 rounded-full hover:bg-slate-700"><CalendarIcon className="w-4 h-4 text-slate-400" /></button>
-                                                {feedback?.matchKey === matchKey && <span className={`absolute -top-6 right-0 text-xs px-2 py-1 rounded-md ${feedback.success ? 'bg-green-600' : 'bg-red-600'} text-white`}>{feedback.message}</span>}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )})}
-                        </div>
-                    </div>
-                ))}
-            </div>
-        );
 
-        const renderBracket = (bracket: Matchup[][]) => {
-            if (!bracket || bracket.length === 0) return null;
-        
-            const allRounds = JSON.parse(JSON.stringify(bracket));
-            const finalRound = allRounds.length > 1 ? allRounds.pop() : null;
-            const finalMatchup = finalRound ? finalRound[0] : allRounds[0][0];
-            const semifinalRounds = finalRound ? allRounds : [];
-        
-            const midPointOfFirstRound = semifinalRounds.length > 0 ? Math.ceil(semifinalRounds[0].length / 2) : 0;
-        
-            const leftRounds = semifinalRounds.map(round => round.slice(0, midPointOfFirstRound));
-            const rightRounds = semifinalRounds.map(round => round.slice(midPointOfFirstRound));
-            const rightSideMatchIndexOffset = leftRounds.length > 0 ? leftRounds[0].length : 0;
-        
-            const TrophyModal = () => (
-                <div 
-                    className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[100] p-4 animate-fade-in-fast"
-                    onClick={() => setIsTrophyModalOpen(false)}
-                >
-                    <img src={trophyImageUrl} alt="Trofeo del Torneo Ampliado" className="w-64 h-64 sm:w-96 sm:h-96 object-contain trophy-modal-icon" />
-                </div>
-            );
-        
-            const MatchupComponent = ({ matchup, roundIndex, matchIndex, isFinal = false }: { matchup: Matchup, roundIndex: number, matchIndex: number, isFinal?: boolean }) => {
-                const isTeam1Winner = matchup.winner === matchup.team1 && matchup.team1 !== 'Por determinar' && matchup.team1 !== 'BYE';
-                const isTeam2Winner = matchup.winner === matchup.team2 && matchup.team2 !== 'Por determinar' && matchup.team2 !== 'BYE';
-                const matchKey = `${roundIndex}-${matchIndex}`;
-            
-                return (
-                    <div className={`bracket-matchup ${isFinal ? 'final' : ''}`}>
-                        <button 
-                            onClick={() => handleWinnerSelect(roundIndex, matchIndex, matchup.team1)} 
-                            disabled={matchup.team1 === 'Por determinar' || matchup.team1 === 'BYE'} 
-                            className={`bracket-team ${matchup.team1 === 'Por determinar' || matchup.team1 === 'BYE' ? 'bracket-team-placeholder' : 'hover:bg-slate-700'}`}
-                        >
-                            <span className={`truncate ${isTeam1Winner ? 'text-amber-400 font-semibold' : ''}`}>{matchup.team1}</span>
-                            <span className={`bracket-score ${isTeam1Winner ? 'text-amber-400' : 'text-white'}`}>{matchup.score1 ?? ''}</span>
-                        </button>
-                        <div className="bracket-vs-section">
-                            {feedback?.matchKey === matchKey ? <span className={`text-xs px-1 rounded ${feedback.success ? 'bg-green-600' : 'bg-red-600'} text-white`}>{feedback.message}</span> : <button onClick={() => handleOpenScoreModal(roundIndex, matchIndex, matchup)} className="score-edit-btn"><PencilIcon className="w-3 h-3 text-slate-400 hover:text-white" /></button>}
-                            {isGoogleUser && matchup.team1 !== 'Por determinar' && matchup.team1 !== 'BYE' && matchup.team2 !== 'Por determinar' && matchup.team2 !== 'BYE' &&
-                              <button onClick={() => openCalendarModal(matchup, selectedCompetition.name, matchKey)} className="score-edit-btn ml-2"><CalendarIcon className="w-3.5 h-3.5 text-slate-400 hover:text-white"/></button>
+        const standings = selectedCompetition.format === 'Liguilla' ? 
+            selectedCompetition.teams.map(teamName => {
+                let played = 0, wins = 0, losses = 0, draws = 0, tdFor = 0, tdAgainst = 0;
+                selectedCompetition.schedule?.forEach(round => {
+                    round.forEach(match => {
+                        if (match.team1 === teamName || match.team2 === teamName) {
+                            if (match.score1 !== undefined && match.score2 !== undefined) {
+                                played++;
+                                const isTeam1 = match.team1 === teamName;
+                                const scoreFor = isTeam1 ? match.score1 : match.score2;
+                                const scoreAgainst = isTeam1 ? match.score2 : match.score1;
+                                tdFor += scoreFor;
+                                tdAgainst += scoreAgainst;
+                                if (scoreFor > scoreAgainst) wins++;
+                                else if (scoreFor < scoreAgainst) losses++;
+                                else draws++;
                             }
-                        </div>
-                        <button 
-                            onClick={() => handleWinnerSelect(roundIndex, matchIndex, matchup.team2)} 
-                            disabled={matchup.team2 === 'Por determinar' || matchup.team2 === 'BYE'} 
-                            className={`bracket-team ${matchup.team2 === 'Por determinar' || matchup.team2 === 'BYE' ? 'bracket-team-placeholder' : 'hover:bg-slate-700'}`}
-                        >
-                            <span className={`truncate ${isTeam2Winner ? 'text-amber-400 font-semibold' : ''}`}>{matchup.team2}</span>
-                            <span className={`bracket-score ${isTeam2Winner ? 'text-amber-400' : 'text-white'}`}>{matchup.score2 ?? ''}</span>
+                        }
+                    });
+                });
+                return { name: teamName, p: played, w: wins, d: draws, l: losses, tdFor, tdAgainst, pts: wins * 3 + draws };
+            }).sort((a, b) => b.pts - a.pts || (b.tdFor - b.tdAgainst) - (a.tdFor - a.tdAgainst) || b.tdFor - a.tdFor)
+            : [];
+            
+        const finalWinner = selectedCompetition.format === 'Torneo' && selectedCompetition.bracket && selectedCompetition.bracket[selectedCompetition.bracket.length - 1]?.[0]?.winner;
+
+        return (
+            <div className="p-4">
+                <div className="flex justify-between items-center mb-4">
+                    <button onClick={() => setView('list')} className="text-amber-400 hover:underline">&larr; Volver a la lista</button>
+                    {!isGuest && (
+                        <button onClick={() => setIsQrExportModalOpen(true)} className="flex items-center gap-2 bg-slate-700 text-slate-200 font-bold py-2 px-4 rounded-lg shadow-md hover:bg-slate-600 transition-colors">
+                            <QrCodeIcon /> Exportar
                         </button>
+                    )}
+                </div>
+                <h2 className="text-2xl font-bold text-amber-400 text-center">{selectedCompetition.name}</h2>
+                <p className="text-center text-slate-400 mb-6">{selectedCompetition.format}</p>
+
+                {finalWinner && finalWinner !== 'Por determinar' && (
+                     <div className="text-center p-6 mb-6 bg-gradient-to-br from-amber-900 via-amber-800 to-amber-900 rounded-lg border-2 border-amber-600 shadow-xl relative overflow-hidden">
+                        <img src={trophyImageUrl} alt="Trophy" className="absolute -left-16 -top-16 w-48 h-48 opacity-10 filter grayscale" />
+                        <h3 className="text-2xl font-bold text-amber-300">¡Campeón del Torneo!</h3>
+                        <p className="text-4xl font-extrabold text-white mt-2">{finalWinner}</p>
                     </div>
-                );
-            };
-        
-            return (
-                <div className="bracket-container">
-                    {isTrophyModalOpen && <TrophyModal />}
-                     <style>{`
-                        .bracket-container { overflow-x: auto; padding: 2rem 0.5rem; scrollbar-width: thin; scrollbar-color: #475569 #1e293b; }
-                        .bracket-main { display: flex; justify-content: center; align-items: stretch; min-width: max-content; }
-                        .bracket-side { display: flex; flex-direction: row; flex: 1; }
-                        .bracket-side.right { flex-direction: row-reverse; }
-                        .bracket-round { display: flex; flex-direction: column; justify-content: space-around; flex-grow: 1; min-width: 14rem; padding: 0 1rem; }
-                        .bracket-matchup { position: relative; background-color: #1e293b; border: 1px solid #334155; border-radius: 0.375rem; margin: 1.5rem 0; display: flex; flex-direction: column; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); }
-                        .bracket-round > div:first-child .bracket-matchup { margin-top: 0; }
-                        .bracket-round > div:last-child .bracket-matchup { margin-bottom: 0; }
-                        .bracket-team { padding: 0.5rem 0.75rem; color: #cbd5e1; font-size: 0.875rem; min-height: 2.5rem; display: flex; align-items: center; justify-content: space-between; line-height: 1.2; width: 100%; text-align: left; cursor: pointer; transition: background-color 0.2s; }
-                        .bracket-team:disabled { cursor: not-allowed; }
-                        .bracket-team-placeholder { color: #64748b; font-style: italic; }
-                        .bracket-vs-section { display: flex; justify-content: center; align-items: center; border-top: 1px solid #475569; border-bottom: 1px solid #475569; padding: 2px 0.75rem; min-height: 24px; }
-                        .bracket-score { font-weight: bold; min-width: 1.5rem; text-align: right; }
-                        .score-edit-btn { padding: 0.25rem; border-radius: 9999px; line-height: 0; transition: background-color 0.2s; }
-                        .score-edit-btn:hover { background-color: #334155; }
-                        .bracket-matchup:not(.final)::after { content: ''; position: absolute; top: 50%; width: 1rem; height: 2px; background-color: #475569; }
-                        .bracket-side.left .bracket-matchup:not(.final)::after { right: -1rem; }
-                        .bracket-side.right .bracket-matchup:not(.final)::after { left: -1rem; }
-                        .bracket-round > div:nth-of-type(2n-1) .bracket-matchup::before { content: ''; position: absolute; top: 50%; height: calc(100% + 3rem); width: 2px; background-color: #475569; z-index: -1; }
-                        .bracket-side.left .bracket-round > div:nth-of-type(2n-1) .bracket-matchup::before { right: -1rem; border-top-right-radius: 0.375rem; border-bottom-right-radius: 0.375rem;}
-                        .bracket-side.right .bracket-round > div:nth-of-type(2n-1) .bracket-matchup::before { left: -1rem; border-top-left-radius: 0.375rem; border-bottom-left-radius: 0.375rem;}
-                        .bracket-final-column { display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 0 1rem; }
-                        .bracket-final-column .bracket-matchup { margin: 0; min-width: 14rem; }
-                        .bracket-final-column .bracket-matchup::before, .bracket-final-column .bracket-matchup::after { content: ''; position: absolute; top: 50%; width: 1rem; height: 2px; background-color: #475569; }
-                        .bracket-final-column .bracket-matchup::before { left: -1rem; }
-                        .bracket-final-column .bracket-matchup::after { display: none; }
-                        .champion-display { text-align: center; margin-top: 1.5rem; }
-                        .champion-title { font-size: 0.875rem; color: #94a3b8; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
-                        .champion-name { font-size: 1.875rem; font-weight: 800; color: #f59e0b; line-height: 1; }
-                        @keyframes trophy-glow-animation { 0%, 100% { filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.4)); } 50% { filter: drop-shadow(0 0 12px rgba(251, 191, 36, 0.8)); } }
-                        .trophy-display-icon { animation: trophy-glow-animation 3s infinite ease-in-out; }
-                        .trophy-modal-icon { filter: drop-shadow(0 0 25px rgba(251, 191, 36, 0.8)); }
-                    `}</style>
-                    <div className="bracket-main">
-                        <div className="bracket-side left">
-                            {leftRounds.map((round, i) => (
-                                <div key={`left-round-${i}`} className="bracket-round">
-                                    {round.map((matchup, j) => (<div key={`left-match-${i}-${j}`}><MatchupComponent matchup={matchup} roundIndex={i} matchIndex={j} /></div>))}
+                )}
+
+                {selectedCompetition.format === 'Liguilla' && (
+                    <>
+                        <h3 className="text-xl font-semibold text-amber-300 mb-2">Clasificación</h3>
+                        <div className="overflow-x-auto mb-6">
+                            <table className="w-full text-left text-sm whitespace-nowrap">
+                                <thead className="bg-slate-700 text-amber-300">
+                                    <tr>
+                                        <th className="p-2">Equipo</th>
+                                        <th className="p-2 text-center">PJ</th>
+                                        <th className="p-2 text-center">G</th>
+                                        <th className="p-2 text-center">E</th>
+                                        <th className="p-2 text-center">P</th>
+                                        <th className="p-2 text-center">TD+</th>
+                                        <th className="p-2 text-center">TD-</th>
+                                        <th className="p-2 text-center">+/-</th>
+                                        <th className="p-2 text-center">Pts</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {standings.map(team => (
+                                        <tr key={team.name} className="border-b border-slate-700">
+                                            <td className="p-2 font-semibold text-white">{team.name}</td>
+                                            <td className="p-2 text-center">{team.p}</td>
+                                            <td className="p-2 text-center">{team.w}</td>
+                                            <td className="p-2 text-center">{team.d}</td>
+                                            <td className="p-2 text-center">{team.l}</td>
+                                            <td className="p-2 text-center">{team.tdFor}</td>
+                                            <td className="p-2 text-center">{team.tdAgainst}</td>
+                                            <td className="p-2 text-center">{team.tdFor - team.tdAgainst}</td>
+                                            <td className="p-2 text-center font-bold">{team.pts}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h3 className="text-xl font-semibold text-amber-300 mb-2">Partidos</h3>
+                        <div className="space-y-4">
+                            {selectedCompetition.schedule?.map((round, roundIndex) => (
+                                <div key={roundIndex}>
+                                    <h4 className="font-bold text-slate-300 mb-2">Jornada {roundIndex + 1}</h4>
+                                    <div className="space-y-2">
+                                        {round.map((match, matchIndex) => {
+                                            const matchKey = `l-${roundIndex}-${matchIndex}`;
+                                            return(
+                                            <div key={matchIndex} className="bg-slate-700/50 p-3 rounded-md flex items-center justify-between">
+                                                <span className="flex-1 text-right truncate pr-2">{match.team1}</span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className={`font-bold text-lg px-2 rounded ${match.score1 !== undefined ? 'bg-slate-800' : 'bg-slate-600'}`}>
+                                                        {match.score1 ?? '-'}
+                                                    </span>
+                                                    <span>vs</span>
+                                                    <span className={`font-bold text-lg px-2 rounded ${match.score2 !== undefined ? 'bg-slate-800' : 'bg-slate-600'}`}>
+                                                        {match.score2 ?? '-'}
+                                                    </span>
+                                                    <button onClick={() => handleOpenScoreModal(roundIndex, matchIndex, match)} className="text-slate-400 hover:text-white"><PencilIcon/></button>
+                                                </div>
+                                                <span className="flex-1 text-left truncate pl-2">{match.team2}</span>
+                                                <button onClick={() => openCalendarModal(match, selectedCompetition.name, matchKey)} className="text-slate-400 hover:text-white ml-auto" title="Añadir al Calendario de Google">
+                                                    <CalendarIcon />
+                                                </button>
+                                                {feedback && feedback.matchKey === matchKey && (
+                                                     <span className={`text-xs ml-2 ${feedback.success ? 'text-green-400' : 'text-red-400'}`}>{feedback.message}</span>
+                                                )}
+                                            </div>
+                                        )})}
+                                    </div>
                                 </div>
                             ))}
                         </div>
-                        <div className="bracket-final-column">
-                            <button onClick={() => setIsTrophyModalOpen(true)} className="focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-amber-400 rounded-full mb-6">
-                                <img src={trophyImageUrl} alt="Trofeo del Torneo" className="w-24 h-24 sm:w-32 sm:h-32 object-contain trophy-display-icon"/>
-                            </button>
-                            {finalMatchup && <MatchupComponent matchup={finalMatchup} roundIndex={semifinalRounds.length} matchIndex={0} isFinal={true} />}
-                            {finalMatchup?.winner && finalMatchup.winner !== 'Por determinar' && (
-                                <div className="champion-display">
-                                    <p className="champion-title">Campeón</p>
-                                    <p className="champion-name">{finalMatchup.winner}</p>
+                    </>
+                )}
+
+                {selectedCompetition.format === 'Torneo' && selectedCompetition.bracket && (
+                    <div className="flex flex-col md:flex-row gap-4 overflow-x-auto p-4 bg-slate-900/50 rounded-lg">
+                        {selectedCompetition.bracket.map((round, roundIndex) => (
+                            <div key={roundIndex} className="flex flex-col justify-around min-w-[250px]">
+                                <h3 className="text-lg font-semibold text-amber-300 text-center mb-4">
+                                    {roundIndex === 0 ? 'Primera Ronda' : roundIndex === selectedCompetition.bracket!.length -1 ? 'Final' : `Ronda ${roundIndex + 1}`}
+                                </h3>
+                                <div className="space-y-4">
+                                    {round.map((match, matchIndex) => {
+                                        const matchKey = `b-${roundIndex}-${matchIndex}`;
+                                        return (
+                                        <div key={matchIndex} className="bg-slate-800 p-3 rounded-lg relative">
+                                            <div className="flex flex-col gap-2">
+                                                <button 
+                                                    onClick={() => (match.team1 !== 'BYE' && match.team1 !== 'Por determinar') && handleWinnerSelect(roundIndex, matchIndex, match.team1)}
+                                                    className={`w-full text-left p-2 rounded transition-colors ${match.winner === match.team1 ? 'bg-green-700 font-bold text-white' : 'bg-slate-700 hover:bg-slate-600'}`}
+                                                    disabled={match.team1 === 'BYE' || match.team1 === 'Por determinar'}
+                                                >
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="truncate">{match.team1}</span>
+                                                        <span className="font-mono text-sm">{match.score1 ?? ''}</span>
+                                                    </div>
+                                                </button>
+                                                <button 
+                                                    onClick={() => (match.team2 !== 'BYE' && match.team2 !== 'Por determinar') && handleWinnerSelect(roundIndex, matchIndex, match.team2)}
+                                                    className={`w-full text-left p-2 rounded transition-colors ${match.winner === match.team2 ? 'bg-green-700 font-bold text-white' : 'bg-slate-700 hover:bg-slate-600'}`}
+                                                    disabled={match.team2 === 'BYE' || match.team2 === 'Por determinar'}
+                                                >
+                                                     <div className="flex justify-between items-center">
+                                                        <span className="truncate">{match.team2}</span>
+                                                        <span className="font-mono text-sm">{match.score2 ?? ''}</span>
+                                                    </div>
+                                                </button>
+                                            </div>
+                                            <div className="absolute top-1 right-1 flex gap-1">
+                                                <button onClick={() => handleOpenScoreModal(roundIndex, matchIndex, match)} className="text-slate-400 hover:text-white p-1"><PencilIcon className="w-3 h-3"/></button>
+                                                <button onClick={() => openCalendarModal(match, selectedCompetition.name, matchKey)} className="text-slate-400 hover:text-white p-1" title="Añadir al Calendario"><CalendarIcon className="w-3 h-3"/></button>
+                                            </div>
+                                            {feedback && feedback.matchKey === matchKey && (
+                                                <span className={`absolute bottom-0 right-1 text-xs ${feedback.success ? 'text-green-400' : 'text-red-400'}`}>{feedback.message}</span>
+                                            )}
+                                        </div>
+                                    )})}
                                 </div>
-                            )}
-                        </div>
-                        <div className="bracket-side right">
-                            {rightRounds.map((round, i) => (
-                                <div key={`right-round-${i}`} className="bracket-round">
-                                    {round.map((matchup, j) => (<div key={`right-match-${i}-${j}`}><MatchupComponent matchup={matchup} roundIndex={i} matchIndex={rightSideMatchIndexOffset + j} /></div>))}
-                                </div>
-                            )).reverse()}
-                        </div>
+                            </div>
+                        ))}
                     </div>
-                </div>
-            );
-        };
-        
-        return (
-            <div>
-                 <div className="flex justify-between items-center px-4 sm:px-0 mb-4">
-                    <button onClick={() => { setSelectedCompetition(null); setView('list'); }} className="text-amber-400 hover:underline text-sm">&larr; Volver</button>
-                    <button onClick={() => setIsQrExportModalOpen(true)} className="flex items-center gap-2 bg-slate-700 text-slate-200 font-bold py-2 px-4 rounded-lg shadow-md hover:bg-slate-600 transition-colors">
-                        <QrCodeIcon />
-                        Compartir
-                    </button>
-                </div>
-                <h2 className="text-3xl font-bold text-amber-400 mb-2 text-center">{selectedCompetition.name}</h2>
-                <p className="text-slate-400 text-center mb-6">{selectedCompetition.format === 'Liguilla' ? 'Calendario de Partidos' : 'Cuadro del Torneo'}</p>
-                {selectedCompetition.format === 'Liguilla' && selectedCompetition.schedule && <div className="p-4">{renderSchedule(selectedCompetition.schedule)}</div>}
-                {selectedCompetition.format === 'Torneo' && selectedCompetition.bracket && renderBracket(selectedCompetition.bracket)}
+                )}
             </div>
         );
     };
 
+    const renderScanView = () => (
+        <div className="p-4 text-center">
+            <button onClick={() => setView('list')} className="text-amber-400 hover:underline mb-4">&larr; Volver</button>
+            <h2 className="text-2xl font-bold text-amber-400 mb-4">Importar Competición</h2>
+            <p className="text-slate-400 mb-6">Escanea el código QR de una competición para añadirla a tu lista.</p>
+            {scanError && <p className="text-red-400 bg-red-900/50 p-3 rounded-md mb-4">{scanError}</p>}
+            <div id="comp-qr-reader" ref={scannerContainerRef} className="max-w-sm mx-auto aspect-square bg-slate-900 rounded-lg overflow-hidden border-2 border-slate-700"></div>
+        </div>
+    );
+    
     return (
-        <div className="animate-fade-in-slow">
+        <div className="min-h-screen">
             {view === 'list' && renderListView()}
             {view === 'create' && renderCreateView()}
             {view === 'detail' && renderDetailView()}
-            {view === 'scan' && renderScannerView()}
+            {view === 'scan' && renderScanView()}
+            
             <ScoreModal />
             <CalendarModal 
                 isOpen={calendarModalState.isOpen}
                 onClose={() => setCalendarModalState({ isOpen: false, matchup: null, competitionName: null, matchKey: null })}
-                onConfirm={(date) => {
-                    if (calendarModalState.matchup && calendarModalState.competitionName && calendarModalState.matchKey) {
-                        handleAddToCalendar(calendarModalState.matchup, calendarModalState.competitionName, calendarModalState.matchKey, date);
-                    }
-                }}
+                onConfirm={(date) => calendarModalState.matchup && calendarModalState.competitionName && calendarModalState.matchKey && handleAddToCalendar(calendarModalState.matchup, calendarModalState.competitionName, calendarModalState.matchKey, date)}
                 matchup={calendarModalState.matchup}
             />
-            {isQrExportModalOpen && selectedCompetition && (
-                <div 
-                    className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" 
-                    onClick={() => setIsQrExportModalOpen(false)}
-                >
+
+            {isTrophyModalOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={() => setIsTrophyModalOpen(false)}>
+                    <img src={trophyImageUrl} alt="Trophy" className="max-w-full max-h-[80vh] rounded-lg shadow-2xl" />
+                </div>
+            )}
+            
+             {isQrExportModalOpen && selectedCompetition && (
+                <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={() => setIsQrExportModalOpen(false)}>
                     <div className="bg-slate-800 p-4 rounded-lg shadow-xl border border-slate-700" onClick={e => e.stopPropagation()}>
-                        <h3 className="text-xl font-bold text-amber-400 mb-4 text-center">Compartir {selectedCompetition.name}</h3>
+                        <h3 className="text-xl font-bold text-amber-400 mb-4 text-center">QR de {selectedCompetition.name}</h3>
                         <canvas ref={qrCanvasRef}></canvas>
-                        <p className="text-xs text-slate-400 mt-2 text-center">Otro entrenador puede escanear este código para importar la competición.</p>
+                        <p className="text-xs text-slate-400 mt-2 text-center">Escanea para importar la competición.</p>
                     </div>
                 </div>
             )}

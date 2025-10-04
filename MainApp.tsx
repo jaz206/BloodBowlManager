@@ -1,6 +1,3 @@
-
-
-
 import React, { useState, useEffect, useMemo } from 'react';
 import QuickGuide from './QuickGuide';
 import TeamsAndSkills from './TeamsAndSkills';
@@ -18,7 +15,8 @@ import type { ManagedTeam, Competition, Play } from '../types';
 import { useAuth } from '../hooks/useAuth';
 import UserProfile from './UserProfile';
 import TrophyIcon from './icons/TrophyIcon';
-import Leagues from './Leagues';
+// FIX: Changed default import of 'Leagues' to a named import to match its export.
+import { Leagues } from './Leagues';
 import { db } from '../App';
 import { collection, getDocs, addDoc, doc, setDoc, deleteDoc, query, where, writeBatch } from "firebase/firestore";
 
@@ -117,7 +115,7 @@ const MainApp: React.FC = () => {
   };
 
   const handleCompetitionUpdate = async (updatedComp: Competition) => {
-    if (!user) return;
+    if (!user || !updatedComp.id) return;
     setCompetitions(prev => prev.map(c => c.id === updatedComp.id ? updatedComp : c));
     if (!isGuest && db) {
         const { id, ...compData } = updatedComp;

@@ -1,10 +1,7 @@
 
-
-
 import React, { useState, useRef } from 'react';
 import { teamsData } from '../data/teams';
 import type { ManagedTeam } from '../types';
-import { GoogleGenAI } from "@google/genai";
 import SparklesIcon from './icons/SparklesIcon';
 import { generateRandomName as generateRandomNameLocally } from '../data/randomNames';
 import UploadIcon from './icons/UploadIcon';
@@ -28,16 +25,22 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
         }
         setIsGenerating(true);
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-            const prompt = `Por favor, actúa como un generador de nombres para un juego de mesa de fútbol fantástico llamado 'Blood Bowl'. Necesito un nombre para un equipo de la facción '${rosterName}'. El nombre debe ser creativo y temático, pero no debe contener lenguaje ofensivo. Devuelve únicamente el nombre del equipo, sin comillas ni texto introductorio.`;
-            
-            const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: prompt,
+            const response = await fetch('/api/generate-name', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ rosterName }),
             });
 
-            const generatedName = response.text.trim().replace(/"/g, '');
+            if (!response.ok) {
+                // Si la API falla, lanzamos un error para que el 'catch' lo recoja
+                throw new Error(`API request failed with status ${response.status}`);
+            }
 
+            const data = await response.json();
+            const generatedName = data.name;
+            
             if (!generatedName) {
                 throw new Error("La IA no generó un nombre válido.");
             }
@@ -46,6 +49,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
 
         } catch (error) {
             console.error("Error generating AI team name, using local fallback:", error);
+            // Si la API segura falla, usamos el generador local como respaldo
             const fallbackName = generateRandomNameLocally(rosterName);
             setTeamName(fallbackName);
         } finally {

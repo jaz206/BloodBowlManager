@@ -1,11 +1,4 @@
 
-
-
-
-
-
-
-
 import React, { useState, useRef, useEffect } from 'react';
 import type { ManagedTeam } from '../types';
 import TeamCreator from './TeamCreator';

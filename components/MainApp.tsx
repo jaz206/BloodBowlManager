@@ -15,10 +15,9 @@ import type { ManagedTeam, Competition, Play } from '../types';
 import { useAuth } from '../hooks/useAuth';
 import UserProfile from './UserProfile';
 import TrophyIcon from './icons/TrophyIcon';
-// FIX: Changed default import of 'Leagues' to a named import to match its export type.
 import { Leagues } from './Leagues';
 import { db } from '../App';
-import { collection, getDocs, addDoc, doc, setDoc, deleteDoc, query, where, writeBatch } from "firebase/firestore";
+import { collection, getDocs, addDoc, doc, setDoc, deleteDoc, writeBatch } from "firebase/firestore";
 
 type View = 'guide' | 'teams' | 'plays' | 'generators' | 'manager' | 'live' | 'leagues';
 
@@ -156,18 +155,18 @@ const MainApp: React.FC = () => {
 
   const handleCompetitionCreate = async (newCompData: Omit<Competition, 'id'>) => {
     if (!user) return;
-    const newId = Date.now().toString();
-    const newComp = { ...newCompData, id: newId };
-    setCompetitions(prev => [...prev, newComp]);
-    if (!isGuest && db) {
-        await setDoc(doc(db, 'users', user.id, 'competitions', newId), newCompData);
+    if (isGuest) {
+        setCompetitions(prev => [...prev, { ...newCompData, id: Date.now().toString() }]);
+    } else if (db) {
+        const docRef = await addDoc(collection(db, 'users', user.id, 'competitions'), newCompData);
+        setCompetitions(prev => [...prev, { ...newCompData, id: docRef.id }]);
     }
   };
 
   const handleCompetitionUpdate = async (updatedComp: Competition) => {
-    if (!user) return;
+    if (!user || !updatedComp.id) return;
     setCompetitions(prev => prev.map(c => c.id === updatedComp.id ? updatedComp : c));
-    if (!isGuest && db && updatedComp.id) {
+    if (!isGuest && db) {
         const { id, ...compData } = updatedComp;
         await setDoc(doc(db, 'users', user.id, 'competitions', id), compData);
     }

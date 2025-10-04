@@ -2,7 +2,7 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import type { User } from '../types';
 import { auth } from '../App';
-import { GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
+import { GoogleAuthProvider, signInWithRedirect, signOut, onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
 
 interface AuthContextType {
   user: User | null;
@@ -84,20 +84,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
     const provider = new GoogleAuthProvider();
     try {
-        const result = await signInWithPopup(auth, provider);
-        const firebaseUser = result.user;
-        if (firebaseUser) {
-            const newUser: User = {
-              id: firebaseUser.uid,
-              name: firebaseUser.displayName || 'Entrenador',
-              email: firebaseUser.email || '',
-              picture: firebaseUser.photoURL || '',
-            };
-            localStorage.setItem('bloodbowl-user', JSON.stringify(newUser));
-            setUser(newUser);
-        }
+        await signInWithRedirect(auth, provider);
+        // After this call, the page will redirect to Google's sign-in page.
+        // The user state will be updated by the onAuthStateChanged listener
+        // when they are redirected back to the app.
     } catch (error) {
-        console.error("Google login with popup failed:", error);
+        console.error("Google login with redirect failed to initiate:", error);
         // Re-throw the error so the calling component (Login.tsx) can handle it.
         throw error;
     }
