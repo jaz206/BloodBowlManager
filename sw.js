@@ -5,6 +5,7 @@ const URLS_TO_CACHE = [
   '/index.tsx',
   '/App.tsx',
   '/types.ts',
+  '/firebaseConfig.ts',
   '/data/gameSequence.ts',
   '/data/weather.ts',
   '/data/kickoffEvents.ts',

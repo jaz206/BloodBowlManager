@@ -4,39 +4,7 @@ import React from 'react';
 import { useAuth } from './hooks/useAuth';
 import Login from './components/Login';
 import MainApp from './components/MainApp';
-import { initializeApp, FirebaseApp } from "firebase/app";
-import { getAuth, Auth } from "firebase/auth";
-import { getFirestore, Firestore } from "firebase/firestore";
-
-// Your web app's Firebase configuration is now hardcoded as per your request
-const firebaseConfig = {
-  apiKey: "AIzaSyAiHG1HLEdt-kVtYrtPdOopr5RrQha1cTs",
-  authDomain: "asistente-blood-bowl.firebaseapp.com",
-  projectId: "asistente-blood-bowl",
-  storageBucket: "asistente-blood-bowl.firebasestorage.app",
-  messagingSenderId: "789696388629",
-  appId: "1:789696388629:web:e856e15e3f33a78045b81c"
-};
-
-// Initialize Firebase
-let app: FirebaseApp | null = null;
-export let auth: Auth | null = null;
-export let db: Firestore | null = null;
-
-let firebaseError: string | null = null;
-
-if (!firebaseConfig.apiKey) {
-    firebaseError = "La configuración de Firebase es inválida o no está presente. Asegúrate de que las credenciales de Firebase estén configuradas correctamente en el entorno de la aplicación.";
-} else {
-    try {
-        app = initializeApp(firebaseConfig);
-        auth = getAuth(app);
-        db = getFirestore(app);
-    } catch (e: any) {
-        console.error("Firebase initialization failed:", e);
-        firebaseError = `Error al inicializar Firebase: ${e.message}. Revisa la configuración de tus credenciales.`;
-    }
-}
+import { firebaseError } from './firebaseConfig';
 
 
 const App: React.FC = () => {
