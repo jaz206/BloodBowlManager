@@ -216,7 +216,7 @@ const MainApp: React.FC = () => {
         setPlays(prev => prev.map(p => p.id === playToSave.id ? playToSave : p));
     } else {
         tempId = `temp_${Date.now()}`;
-        setPlays(prev => [...prev, { ...playToSave, id: tempId }]);
+        setPlays(prev => [...prev.filter(p => p.name.toLowerCase() !== playToSave.name.toLowerCase()), { ...playToSave, id: tempId }]);
     }
 
     if (isGuest) return;
