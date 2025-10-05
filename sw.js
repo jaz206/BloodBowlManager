@@ -89,6 +89,7 @@ const URLS_TO_CACHE = [
   'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
   'https://aistudiocdn.com/react@^19.1.1',
   'https://aistudiocdn.com/react-dom@^19.1.1/',
+  'https://apis.google.com/js/api.js',
   'https://accounts.google.com/gsi/client'
 ];
 

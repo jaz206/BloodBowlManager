@@ -89,11 +89,19 @@ const MainApp: React.FC = () => {
 
   const handleTeamCreate = async (newTeamData: Omit<ManagedTeam, 'id'>) => {
     if (!user) return;
-    if (isGuest) {
-        setManagedTeams(prev => [...prev, { ...newTeamData, id: Date.now().toString() }]);
-    } else if (db) {
-        const docRef = await addDoc(collection(db, 'users', user.id, 'teams'), newTeamData);
-        setManagedTeams(prev => [...prev, { ...newTeamData, id: docRef.id }]);
+    try {
+        if (isGuest) {
+            const newTeam = { ...newTeamData, id: Date.now().toString() };
+            setManagedTeams(prev => [...prev, newTeam]);
+        } else if (db) {
+            const newDocRef = doc(collection(db, 'users', user.id, 'teams'));
+            await setDoc(newDocRef, newTeamData);
+            const newTeam = { ...newTeamData, id: newDocRef.id };
+            setManagedTeams(prev => [...prev, newTeam]);
+        }
+    } catch (error) {
+        console.error("Error creating team:", error);
+        alert(`No se pudo crear el equipo. Error: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 
@@ -113,7 +121,6 @@ const MainApp: React.FC = () => {
   
     setManagedTeams(prev => prev.filter(t => t.id !== teamId));
     
-    // Also remove team from any competitions it's in
     const updatedCompetitions = competitions.map(comp => {
         const teamIsIncluded = comp.teams.includes(teamToDelete.name);
         if (!teamIsIncluded) return comp;
@@ -156,11 +163,19 @@ const MainApp: React.FC = () => {
 
   const handleCompetitionCreate = async (newCompData: Omit<Competition, 'id'>) => {
     if (!user) return;
-    if (isGuest) {
-        setCompetitions(prev => [...prev, { ...newCompData, id: Date.now().toString() }]);
-    } else if (db) {
-        const docRef = await addDoc(collection(db, 'users', user.id, 'competitions'), newCompData);
-        setCompetitions(prev => [...prev, { ...newCompData, id: docRef.id }]);
+    try {
+        if (isGuest) {
+            const newComp = { ...newCompData, id: Date.now().toString() };
+            setCompetitions(prev => [...prev, newComp]);
+        } else if (db) {
+            const newDocRef = doc(collection(db, 'users', user.id, 'competitions'));
+            await setDoc(newDocRef, newCompData);
+            const newComp = { ...newCompData, id: newDocRef.id };
+            setCompetitions(prev => [...prev, newComp]);
+        }
+    } catch (error) {
+        console.error("Error creating competition:", error);
+        alert(`No se pudo crear la competición. Error: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 
@@ -175,22 +190,29 @@ const MainApp: React.FC = () => {
   
   const handlePlaySave = async (playToSave: Play) => {
       if (!user) return;
-      if (isGuest) {
-          if (playToSave.id) { // Update existing play
-              setPlays(prev => prev.map(p => p.id === playToSave.id ? playToSave : p));
-          } else { // Create new play
-              setPlays(prev => [...prev, { ...playToSave, id: Date.now().toString() }]);
+      try {
+          if (isGuest) {
+              if (playToSave.id) {
+                  setPlays(prev => prev.map(p => p.id === playToSave.id ? playToSave : p));
+              } else {
+                  setPlays(prev => [...prev, { ...playToSave, id: Date.now().toString() }]);
+              }
+          } else if (db) {
+              if (playToSave.id) { // Update
+                  const { id, ...playData } = playToSave;
+                  await setDoc(doc(db, 'users', user.id, 'plays', id), playData);
+                  setPlays(prev => prev.map(p => p.id === id ? playToSave : p));
+              } else { // Create
+                  const newDocRef = doc(collection(db, 'users', user.id, 'plays'));
+                  const { id, ...playData } = playToSave;
+                  await setDoc(newDocRef, playData);
+                  const newPlay = { ...playToSave, id: newDocRef.id };
+                  setPlays(prev => [...prev, newPlay]);
+              }
           }
-      } else if (db) {
-          if (playToSave.id) { // Update
-              const { id, ...playData } = playToSave;
-              await setDoc(doc(db, 'users', user.id, 'plays', id), playData);
-              setPlays(prev => prev.map(p => p.id === id ? playToSave : p));
-          } else { // Create
-              const { id, ...playData } = playToSave;
-              const docRef = await addDoc(collection(db, 'users', user.id, 'plays'), playData);
-              setPlays(prev => [...prev, { ...playToSave, id: docRef.id }]);
-          }
+      } catch (error) {
+          console.error("Error saving play:", error);
+          alert(`No se pudo guardar la jugada. Error: ${error instanceof Error ? error.message : String(error)}`);
       }
   };
 
