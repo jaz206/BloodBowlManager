@@ -17,7 +17,7 @@ import UserProfile from './UserProfile';
 import TrophyIcon from './icons/TrophyIcon';
 import { Leagues } from './Leagues';
 import { db } from '../firebaseConfig';
-import { collection, getDocs, addDoc, doc, setDoc, deleteDoc, writeBatch } from "firebase/firestore";
+import { collection, onSnapshot, addDoc, doc, setDoc, deleteDoc, writeBatch } from "firebase/firestore";
 
 type View = 'guide' | 'teams' | 'plays' | 'generators' | 'manager' | 'live' | 'leagues';
 
@@ -41,47 +41,48 @@ const MainApp: React.FC = () => {
   const [requestedRoster, setRequestedRoster] = useState<string | null>(null);
 
   useEffect(() => {
-    setLoading(true);
-    if (!user) {
-        setLoading(false);
-        return;
-    }
-
-    if (isGuest) {
-        // Guest mode: clear all state, no persistence
+    if (isGuest || !user || !db) {
+        // Guest mode or no user/db: clear all state, no persistence
         setManagedTeams([]);
         setCompetitions([]);
         setPlays([]);
         setLoading(false);
-    } else {
-        // Firebase user: fetch all data from Firestore
-        if (!db) {
-            console.error("Firestore is not initialized.");
-            setLoading(false);
-            return;
-        }
-        const fetchAllData = async () => {
-            try {
-                const teamsRef = collection(db, 'users', user.id, 'teams');
-                const teamsSnap = await getDocs(teamsRef);
-                setManagedTeams(teamsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ManagedTeam[]);
-
-                const compsRef = collection(db, 'users', user.id, 'competitions');
-                const compsSnap = await getDocs(compsRef);
-                setCompetitions(compsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Competition[]);
-
-                const playsRef = collection(db, 'users', user.id, 'plays');
-                const playsSnap = await getDocs(playsRef);
-                setPlays(playsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Play[]);
-
-            } catch (error) {
-                console.error("Error fetching data from Firestore:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchAllData();
+        return;
     }
+
+    setLoading(true); // Show loader for the very first data fetch
+
+    const teamsUnsub = onSnapshot(collection(db, 'users', user.id, 'teams'), 
+        (snapshot) => {
+            setManagedTeams(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ManagedTeam[]);
+            if (loading) setLoading(false); // Stop loading after first data arrives
+        }, 
+        (error) => {
+            console.error("Error fetching teams:", error);
+            setLoading(false);
+        }
+    );
+
+    const compsUnsub = onSnapshot(collection(db, 'users', user.id, 'competitions'), 
+        (snapshot) => {
+            setCompetitions(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Competition[]);
+        },
+        (error) => console.error("Error fetching competitions:", error)
+    );
+
+    const playsUnsub = onSnapshot(collection(db, 'users', user.id, 'plays'), 
+        (snapshot) => {
+            setPlays(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Play[]);
+        },
+        (error) => console.error("Error fetching plays:", error)
+    );
+
+    // Cleanup subscriptions on component unmount or user change
+    return () => {
+        teamsUnsub();
+        compsUnsub();
+        playsUnsub();
+    };
   }, [user, isGuest]);
 
   // --- Data Handlers with Optimistic UI ---
@@ -89,18 +90,17 @@ const MainApp: React.FC = () => {
   const handleTeamCreate = async (newTeamData: Omit<ManagedTeam, 'id'>) => {
     if (!user) return;
 
-    const tempId = Date.now().toString();
+    const tempId = `temp_${Date.now()}`;
     const newTeam = { ...newTeamData, id: tempId };
     setManagedTeams(prev => [...prev, newTeam]);
     
+    if (isGuest) return;
+    
     try {
-        if (isGuest) return; // For guests, the local update is all that's needed.
-        
-        if (db) {
-            const newDocRef = doc(collection(db, 'users', user.id, 'teams'));
-            await setDoc(newDocRef, newTeamData);
-            setManagedTeams(prev => prev.map(t => (t.id === tempId ? { ...t, id: newDocRef.id } : t)));
-        }
+        if (!db) throw new Error("Database not connected.");
+        const docRef = await addDoc(collection(db, 'users', user.id, 'teams'), newTeamData);
+        // onSnapshot will handle the update, but we can swap the ID to be safe
+        setManagedTeams(prev => prev.map(t => (t.id === tempId ? { ...t, id: docRef.id } : t)));
     } catch (error) {
         console.error("Error creating team:", error);
         alert(`Error al sincronizar el equipo con la nube: ${error instanceof Error ? error.message : String(error)}. El equipo no se ha guardado.`);
@@ -114,12 +114,12 @@ const MainApp: React.FC = () => {
     const originalTeams = managedTeams;
     setManagedTeams(prev => prev.map(t => t.id === updatedTeam.id ? updatedTeam : t));
 
+    if (isGuest) return;
+    
     try {
-        if (isGuest) return;
-        if (db) {
-            const { id, ...teamData } = updatedTeam;
-            await setDoc(doc(db, 'users', user.id, 'teams', id), teamData);
-        }
+        if (!db) throw new Error("Database not connected.");
+        const { id, ...teamData } = updatedTeam;
+        await setDoc(doc(db, 'users', user.id, 'teams', id), teamData, { merge: true });
     } catch (error) {
         console.error("Error updating team:", error);
         alert(`Error al actualizar el equipo en la nube: ${error instanceof Error ? error.message : String(error)}. Los cambios no se han guardado.`);
@@ -147,20 +147,19 @@ const MainApp: React.FC = () => {
     });
     setCompetitions(updatedCompetitions);
 
-    try {
-        if (isGuest) return;
+    if (isGuest) return;
 
-        if (db) {
-            const batch = writeBatch(db);
-            batch.delete(doc(db, 'users', user.id, 'teams', teamId));
-            updatedCompetitions.forEach(comp => {
-                if (comp.id && originalCompetitions.find(oc => oc.id === comp.id) !== comp) {
-                    const { id, ...compData } = comp;
-                    batch.set(doc(db, 'users', user.id, 'competitions', id), compData);
-                }
-            });
-            await batch.commit();
-        }
+    try {
+        if (!db) throw new Error("Database not connected.");
+        const batch = writeBatch(db);
+        batch.delete(doc(db, 'users', user.id, 'teams', teamId));
+        updatedCompetitions.forEach(comp => {
+            if (comp.id && originalCompetitions.find(oc => oc.id === comp.id) !== comp) {
+                const { id, ...compData } = comp;
+                batch.set(doc(db, 'users', user.id, 'competitions', id), compData);
+            }
+        });
+        await batch.commit();
     } catch (error) {
         console.error("Error deleting team:", error);
         alert(`Error al borrar el equipo de la nube: ${error instanceof Error ? error.message : String(error)}. Deshaciendo cambios.`);
@@ -171,17 +170,16 @@ const MainApp: React.FC = () => {
 
   const handleCompetitionCreate = async (newCompData: Omit<Competition, 'id'>) => {
     if (!user) return;
-    const tempId = Date.now().toString();
+    const tempId = `temp_${Date.now()}`;
     const newComp = { ...newCompData, id: tempId };
     setCompetitions(prev => [...prev, newComp]);
 
+    if (isGuest) return;
+
     try {
-        if (isGuest) return;
-        if (db) {
-            const newDocRef = doc(collection(db, 'users', user.id, 'competitions'));
-            await setDoc(newDocRef, newCompData);
-            setCompetitions(prev => prev.map(c => (c.id === tempId ? { ...c, id: newDocRef.id } : c)));
-        }
+        if (!db) throw new Error("Database not connected.");
+        const docRef = await addDoc(collection(db, 'users', user.id, 'competitions'), newCompData);
+        setCompetitions(prev => prev.map(c => (c.id === tempId ? { ...c, id: docRef.id } : c)));
     } catch (error) {
         console.error("Error creating competition:", error);
         alert(`Error al crear la competición en la nube: ${error instanceof Error ? error.message : String(error)}.`);
@@ -195,12 +193,12 @@ const MainApp: React.FC = () => {
     const originalCompetitions = competitions;
     setCompetitions(prev => prev.map(c => c.id === updatedComp.id ? updatedComp : c));
     
+    if (isGuest) return;
+
     try {
-        if (isGuest) return;
-        if (db) {
-            const { id, ...compData } = updatedComp;
-            await setDoc(doc(db, 'users', user.id, 'competitions', id), compData);
-        }
+        if (!db) throw new Error("Database not connected.");
+        const { id, ...compData } = updatedComp;
+        await setDoc(doc(db, 'users', user.id, 'competitions', id), compData, { merge: true });
     } catch (error) {
         console.error("Error updating competition:", error);
         alert(`Error al actualizar la competición en la nube: ${error instanceof Error ? error.message : String(error)}.`);
@@ -214,25 +212,24 @@ const MainApp: React.FC = () => {
     const originalPlays = plays;
     let tempId: string | undefined;
 
-    if (playToSave.id) {
+    if (playToSave.id && !playToSave.id.startsWith('temp_')) {
         setPlays(prev => prev.map(p => p.id === playToSave.id ? playToSave : p));
     } else {
-        tempId = Date.now().toString();
+        tempId = `temp_${Date.now()}`;
         setPlays(prev => [...prev, { ...playToSave, id: tempId }]);
     }
 
+    if (isGuest) return;
+    
     try {
-        if (isGuest) return;
-        if (db) {
-            if (playToSave.id) {
-                const { id, ...playData } = playToSave;
-                await setDoc(doc(db, 'users', user.id, 'plays', id), playData);
-            } else {
-                const newDocRef = doc(collection(db, 'users', user.id, 'plays'));
-                const { id, ...playData } = playToSave;
-                await setDoc(newDocRef, playData);
-                if (tempId) setPlays(prev => prev.map(p => (p.id === tempId ? { ...p, id: newDocRef.id } : p)));
-            }
+        if (!db) throw new Error("Database not connected.");
+        if (playToSave.id && !playToSave.id.startsWith('temp_')) {
+            const { id, ...playData } = playToSave;
+            await setDoc(doc(db, 'users', user.id, 'plays', id), playData);
+        } else {
+            const { id, ...playData } = playToSave;
+            const docRef = await addDoc(collection(db, 'users', user.id, 'plays'), playData);
+            if (tempId) setPlays(prev => prev.map(p => (p.id === tempId ? { ...p, id: docRef.id } : p)));
         }
     } catch (error) {
         console.error("Error saving play:", error);
@@ -247,11 +244,11 @@ const MainApp: React.FC = () => {
     const originalPlays = plays;
     setPlays(prev => prev.filter(p => p.id !== playId));
 
+    if (isGuest) return;
+
     try {
-        if (isGuest) return;
-        if (db) {
-            await deleteDoc(doc(db, 'users', user.id, 'plays', playId));
-        }
+        if (!db) throw new Error("Database not connected.");
+        await deleteDoc(doc(db, 'users', user.id, 'plays', playId));
     } catch (error) {
         console.error("Error deleting play:", error);
         alert(`Error al borrar la jugada de la nube: ${error instanceof Error ? error.message : String(error)}.`);
@@ -316,13 +313,25 @@ const MainApp: React.FC = () => {
         </nav>
         
         <div className="bg-slate-800/50 rounded-lg">
-            {activeView === 'guide' && <QuickGuide />}
-            {activeView === 'teams' && <TeamsAndSkills onRequestTeamCreation={handleRequestTeamCreation} />}
-            {activeView === 'plays' && <Plays managedTeams={managedTeams} plays={plays} onSavePlay={handlePlaySave} onDeletePlay={handlePlayDelete} />}
-            {activeView === 'generators' && <Generators />}
-            {activeView === 'manager' && !loading && <TeamManager teams={managedTeams} onTeamCreate={handleTeamCreate} onTeamUpdate={handleTeamUpdate} onTeamDelete={handleTeamDelete} requestedRoster={requestedRoster} onRosterRequestHandled={() => setRequestedRoster(null)} isGuest={isGuest} />}
-            {activeView === 'live' && !loading && <LiveGame managedTeams={managedTeams} onTeamUpdate={handleTeamUpdate} />}
-            {activeView === 'leagues' && !loading && <Leagues managedTeams={managedTeams} initialCompetitions={competitions} onCompetitionCreate={handleCompetitionCreate} onCompetitionUpdate={handleCompetitionUpdate} isGuest={isGuest} />}
+            {loading ? (
+                 <div className="flex flex-col items-center justify-center text-white p-10">
+                    <svg className="animate-spin -ml-1 mr-3 h-10 w-10 text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p className="text-lg mt-4">Sincronizando datos...</p>
+                </div>
+            ) : (
+                <>
+                    {activeView === 'guide' && <QuickGuide />}
+                    {activeView === 'teams' && <TeamsAndSkills onRequestTeamCreation={handleRequestTeamCreation} />}
+                    {activeView === 'plays' && <Plays managedTeams={managedTeams} plays={plays} onSavePlay={handlePlaySave} onDeletePlay={handlePlayDelete} />}
+                    {activeView === 'generators' && <Generators />}
+                    {activeView === 'manager' && <TeamManager teams={managedTeams} onTeamCreate={handleTeamCreate} onTeamUpdate={handleTeamUpdate} onTeamDelete={handleTeamDelete} requestedRoster={requestedRoster} onRosterRequestHandled={() => setRequestedRoster(null)} isGuest={isGuest} />}
+                    {activeView === 'live' && <LiveGame managedTeams={managedTeams} onTeamUpdate={handleTeamUpdate} />}
+                    {activeView === 'leagues' && <Leagues managedTeams={managedTeams} initialCompetitions={competitions} onCompetitionCreate={handleCompetitionCreate} onCompetitionUpdate={handleCompetitionUpdate} isGuest={isGuest} />}
+                </>
+            )}
         </div>
 
         <footer className="text-center mt-12 text-slate-500 text-sm">
