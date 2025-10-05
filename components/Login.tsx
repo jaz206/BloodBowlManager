@@ -65,6 +65,10 @@ const Login: React.FC = () => {
                         <span>{isLoggingIn ? 'Iniciando sesión...' : 'Iniciar con Google'}</span>
                     </button>
                 </div>
+                
+                <p className="text-slate-500 text-xs mt-8">
+                    Version: V. {new Date().getFullYear()} {new Date().toLocaleTimeString('es-ES')}
+                </p>
 
                 {error && <p className="mt-6 text-red-400 bg-red-900/50 border border-red-700 p-3 rounded-lg text-sm">{error}</p>}
             </main>
