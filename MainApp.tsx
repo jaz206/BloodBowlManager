@@ -17,7 +17,8 @@ import UserProfile from './UserProfile';
 import TrophyIcon from './icons/TrophyIcon';
 // FIX: Changed default import of 'Leagues' to a named import to match its export.
 import { Leagues } from './Leagues';
-import { db } from '../App';
+// FIX: The `db` object is exported from `firebaseConfig`, not `App`.
+import { db } from '../firebaseConfig';
 import { collection, getDocs, addDoc, doc, setDoc, deleteDoc, query, where, writeBatch } from "firebase/firestore";
 
 type View = 'guide' | 'teams' | 'plays' | 'generators' | 'manager' | 'live' | 'leagues';

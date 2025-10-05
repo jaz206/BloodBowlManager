@@ -5,7 +5,6 @@ import PencilIcon from './icons/PencilIcon';
 import CalendarIcon from './icons/CalendarIcon';
 import QrCodeIcon from './icons/QrCodeIcon';
 
-// FIX: Declare gapi and google on the window object for TypeScript.
 declare global {
   interface Window {
     gapi: any;

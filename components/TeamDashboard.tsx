@@ -10,7 +10,6 @@ import ShieldCheckIcon from './icons/ShieldCheckIcon';
 import ImageModal from './ImageModal';
 import UploadIcon from './icons/UploadIcon';
 
-// FIX: Declare QRCode as it is loaded from a script tag and available globally.
 declare const QRCode: any;
 
 interface TeamDashboardProps {
@@ -21,7 +20,6 @@ interface TeamDashboardProps {
     isGuest: boolean;
 }
 
-// FIX: Changed to a named export as it is not a default export.
 export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, onDelete, onBack, isGuest }) => {
     const [editingPlayer, setEditingPlayer] = useState<ManagedPlayer | null>(null);
     const [showQr, setShowQr] = useState(false);

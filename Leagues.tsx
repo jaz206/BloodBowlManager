@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import type { ManagedTeam, Competition, Matchup } from '../types';
-import { useAuth } from './hooks/useAuth';
+// FIX: Corrected the import path for useAuth.
+import { useAuth } from '../hooks/useAuth';
 import PencilIcon from './icons/PencilIcon';
 import CalendarIcon from './icons/CalendarIcon';
 import QrCodeIcon from './icons/QrCodeIcon';

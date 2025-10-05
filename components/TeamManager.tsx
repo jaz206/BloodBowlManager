@@ -2,7 +2,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { ManagedTeam } from '../types';
 import TeamCreator from './TeamCreator';
-// FIX: Changed import to a named import as TeamDashboard is not a default export.
 import { TeamDashboard } from './TeamDashboard';
 import UploadIcon from './icons/UploadIcon';
 import DownloadIcon from './icons/DownloadIcon';

@@ -1,4 +1,4 @@
-import { initializeApp, FirebaseApp } from "firebase/app";
+import { initializeApp, FirebaseApp, getApps, getApp } from "firebase/app";
 import { getAuth, Auth } from "firebase/auth";
 import { getFirestore, Firestore } from "firebase/firestore";
 
@@ -21,7 +21,11 @@ if (!firebaseConfig.apiKey) {
     firebaseError = "La configuración de Firebase es inválida o no está presente. Asegúrate de que las credenciales de Firebase estén configuradas correctamente en el entorno de la aplicación.";
 } else {
     try {
-        app = initializeApp(firebaseConfig);
+        if (!getApps().length) {
+            app = initializeApp(firebaseConfig);
+        } else {
+            app = getApp();
+        }
         auth = getAuth(app);
         db = getFirestore(app);
     } catch (e: any) {

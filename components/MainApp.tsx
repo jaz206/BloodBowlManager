@@ -17,7 +17,6 @@ import { useAuth } from '../hooks/useAuth';
 import UserProfile from './UserProfile';
 import TrophyIcon from './icons/TrophyIcon';
 import { Leagues } from './Leagues';
-// FIX: The `db` object is exported from `firebaseConfig`, not `App`.
 import { db } from '../firebaseConfig';
 import { collection, getDocs, addDoc, doc, setDoc, deleteDoc, writeBatch } from "firebase/firestore";
 
