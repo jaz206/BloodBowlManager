@@ -3,7 +3,7 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import type { User } from '../types';
 import { auth } from '../firebaseConfig';
-import { GoogleAuthProvider, signInWithRedirect, signOut, onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
+import { GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
 
 interface AuthContextType {
   user: User | null;
@@ -75,10 +75,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
     const provider = new GoogleAuthProvider();
     try {
-        await signInWithRedirect(auth, provider);
+        await signInWithPopup(auth, provider);
+        // The onAuthStateChanged listener will automatically handle the user state update.
     } catch (error) {
-        console.error("Google login with redirect failed to initiate:", error);
-        throw error;
+        console.error("Google login with popup failed:", error);
+        throw error; // Re-throw to be caught by the UI component
     }
   };
 
