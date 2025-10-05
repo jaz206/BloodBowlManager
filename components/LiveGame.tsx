@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import type { ManagedTeam, GameEvent, GameEventType, ManagedPlayer, WeatherCondition, KickoffEvent, PlayerStatus, StarPlayer, SppActionType, Team, Skill } from '../types';
 import { weatherConditions } from '../data/weather';
 import { kickoffEvents } from '../data/kickoffEvents';
@@ -225,6 +225,19 @@ const MiniField: React.FC<{ players: ManagedPlayer[]; teamColor: string }> = ({ 
     );
 };
 
+const cloneLiveTeam = (team: ManagedTeam): ManagedTeam => {
+    return {
+        ...team,
+        players: team.players.map(p => ({
+            ...p,
+            stats: { ...p.stats },
+            gainedSkills: [...p.gainedSkills],
+            lastingInjuries: [...p.lastingInjuries],
+            sppActions: p.sppActions ? { ...p.sppActions } : undefined,
+        })),
+    };
+};
+
 export const LiveGame = ({ managedTeams, onTeamUpdate }: LiveGameProps): React.ReactElement => {
     const [gameState, setGameState] = useState<GameState>('setup');
     const [hasCamera, setHasCamera] = useState<boolean | null>(null);
@@ -310,7 +323,7 @@ export const LiveGame = ({ managedTeams, onTeamUpdate }: LiveGameProps): React.R
 
     useEffect(() => { 
         if (homeTeam) { 
-            const liveTeam = JSON.parse(JSON.stringify(homeTeam)); 
+            const liveTeam = cloneLiveTeam(homeTeam); 
             liveTeam.players.forEach((p: ManagedPlayer) => { 
                 p.status = p.isBenched ? 'Reserva' : 'Activo'; 
                 if (!p.sppActions) p.sppActions = {}; 
@@ -322,7 +335,7 @@ export const LiveGame = ({ managedTeams, onTeamUpdate }: LiveGameProps): React.R
     
     useEffect(() => { 
         if (opponentTeam) { 
-            const liveTeam = JSON.parse(JSON.stringify(opponentTeam)); 
+            const liveTeam = cloneLiveTeam(opponentTeam); 
             liveTeam.players.forEach((p: ManagedPlayer) => { 
                 if (!p.status) p.status = 'Reserva'; 
                 if (!p.sppActions) p.sppActions = {}; 
@@ -406,7 +419,7 @@ export const LiveGame = ({ managedTeams, onTeamUpdate }: LiveGameProps): React.R
     const logEvent = (type: GameEventType, description: string) => { setGameLog(prev => [{ id: Date.now(), timestamp: new Date().toLocaleTimeString('es-ES'), turn, half, type, description }, ...prev]); };
     const handleHalftime = () => { setTurn(0); setHalf(2); logEvent('INFO', 'Fin de la primera parte. Comienza la segunda parte.'); setGameStatus(prev => ({...prev, kickoffEvent: null})); if (firstHalfReceiver) { const secondHalfReceiver = firstHalfReceiver === 'home' ? 'opponent' : 'home'; setGameStatus(prev => ({ ...prev, receivingTeam: secondHalfReceiver })); logEvent('INFO', `Recibe en la segunda parte ${secondHalfReceiver === 'home' ? homeTeam?.name : opponentTeam?.name}.`); setGameState('pre_game'); setPreGameStep(7); } else { setGameState('pre_game'); setPreGameStep(6); } };
     const handleConfirmJourneymen = () => { if (pendingJourneymen.home.length > 0 && liveHomeTeam) { setLiveHomeTeam(prev => prev ? ({...prev, players: [...prev.players, ...pendingJourneymen.home]}) : null); logEvent('INFO', `${liveHomeTeam.name} añade ${pendingJourneymen.home.length} Sustituto(s).`); } if (pendingJourneymen.opponent.length > 0 && liveOpponentTeam) { setLiveOpponentTeam(prev => prev ? ({...prev, players: [...prev.players, ...pendingJourneymen.opponent]}) : null); logEvent('INFO', `${liveOpponentTeam.name} añade ${pendingJourneymen.opponent.length} Sustituto(s).`); } setJourneymenNotification(null); setPendingJourneymen({ home: [], opponent: [] }); setPreGameStep(1); };
-    const handleSkillClick = (skillName: string) => { const cleanedName = skillName.split('(')[0].trim(); const foundSkill = skillsData.find(s => s.name.toLowerCase().startsWith(cleanedName.toLowerCase())); if (foundSkill) setSelectedSkillForModal(foundSkill); else console.warn(`Skill not found: ${cleanedName}`); };
+    const handleSkillClick = useCallback((skillName: string) => { const cleanedName = skillName.split('(')[0].trim(); const foundSkill = skillsData.find(s => s.name.toLowerCase().startsWith(cleanedName.toLowerCase())); if (foundSkill) setSelectedSkillForModal(foundSkill); else console.warn(`Skill not found: ${cleanedName}`); }, []);
     const updatePlayerSppAndAction = (player: ManagedPlayer, teamId: 'home' | 'opponent', spp: number, action: SppActionType, description: string) => { const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam; setTeam(prev => { if (!prev) return null; return { ...prev, players: prev.players.map(p => { if (p.id === player.id) { const newActions = { ...(p.sppActions || {}) }; newActions[action] = (newActions[action] || 0) + 1; return { ...p, spp: p.spp + spp, sppActions: newActions }; } return p; }) }; }); logEvent('INFO', `${player.customName} gana ${spp} PE por ${description}.`); setSppModalState({ isOpen: false, type: null, step: 'select_team', teamId: null, selectedPlayer: null }); };
     const updatePlayerStatus = (playerId: number, teamId: 'home' | 'opponent', status: PlayerStatus, statusDetail?: string) => { const setTeamToUpdate = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam; setTeamToUpdate(prevTeam => { if (!prevTeam) return null; return { ...prevTeam, players: prevTeam.players.map(p => p.id === playerId ? { ...p, status, statusDetail: statusDetail || '' } : p) }; }); };
     

@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 import type { ManagedPlayer, PlayerStatus, SppActionType } from '../types';
 import TdIcon from './icons/TdIcon';
@@ -105,4 +104,4 @@ const PlayerStatusCard: React.FC<PlayerStatusCardProps> = ({ player, onViewPlaye
     );
 };
 
-export default PlayerStatusCard;
+export default React.memo(PlayerStatusCard);
