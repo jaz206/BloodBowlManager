@@ -17,21 +17,25 @@ let auth: Auth;
 let db: Firestore;
 let firebaseError: string | null = null;
 
-if (!firebaseConfig.apiKey) {
-    firebaseError = "La configuración de Firebase es inválida o no está presente. Asegúrate de que las credenciales de Firebase estén configuradas correctamente en el entorno de la aplicación.";
-} else {
-    try {
-        if (!getApps().length) {
-            app = initializeApp(firebaseConfig);
-        } else {
-            app = getApp();
-        }
-        auth = getAuth(app);
-        db = getFirestore(app);
-    } catch (e: any) {
-        console.error("Firebase initialization failed:", e);
-        firebaseError = `Error al inicializar Firebase: ${e.message}. Revisa la configuración de tus credenciales.`;
+try {
+    if (!firebaseConfig.apiKey) {
+        throw new Error("La configuración de Firebase es inválida o no está presente.");
     }
+
+    // Este patrón robusto (singleton) previene la reinicialización en entornos HMR (Hot Module Replacement)
+    // que a veces pueden causar problemas con los listeners de estado de autenticación.
+    if (!getApps().length) {
+        app = initializeApp(firebaseConfig);
+    } else {
+        app = getApp();
+    }
+    
+    auth = getAuth(app);
+    db = getFirestore(app);
+
+} catch (e: any) {
+    console.error("Firebase initialization failed:", e);
+    firebaseError = `Error al inicializar Firebase: ${e.message}. Revisa la configuración de tus credenciales.`;
 }
 
 export { app, auth, db, firebaseError };
