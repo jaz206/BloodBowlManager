@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import QuickGuide from './QuickGuide';
 import TeamsAndSkills from './TeamsAndSkills';
@@ -85,32 +84,46 @@ const MainApp: React.FC = () => {
     }
   }, [user, isGuest]);
 
-  // --- Data Handlers ---
+  // --- Data Handlers with Optimistic UI ---
 
   const handleTeamCreate = async (newTeamData: Omit<ManagedTeam, 'id'>) => {
     if (!user) return;
+
+    const tempId = Date.now().toString();
+    const newTeam = { ...newTeamData, id: tempId };
+    setManagedTeams(prev => [...prev, newTeam]);
+    
     try {
-        if (isGuest) {
-            const newTeam = { ...newTeamData, id: Date.now().toString() };
-            setManagedTeams(prev => [...prev, newTeam]);
-        } else if (db) {
+        if (isGuest) return; // For guests, the local update is all that's needed.
+        
+        if (db) {
             const newDocRef = doc(collection(db, 'users', user.id, 'teams'));
             await setDoc(newDocRef, newTeamData);
-            const newTeam = { ...newTeamData, id: newDocRef.id };
-            setManagedTeams(prev => [...prev, newTeam]);
+            setManagedTeams(prev => prev.map(t => (t.id === tempId ? { ...t, id: newDocRef.id } : t)));
         }
     } catch (error) {
         console.error("Error creating team:", error);
-        alert(`No se pudo crear el equipo. Error: ${error instanceof Error ? error.message : String(error)}`);
+        alert(`Error al sincronizar el equipo con la nube: ${error instanceof Error ? error.message : String(error)}. El equipo no se ha guardado.`);
+        setManagedTeams(prev => prev.filter(t => t.id !== tempId));
     }
   };
 
   const handleTeamUpdate = async (updatedTeam: ManagedTeam) => {
     if (!user || !updatedTeam.id) return;
+    
+    const originalTeams = managedTeams;
     setManagedTeams(prev => prev.map(t => t.id === updatedTeam.id ? updatedTeam : t));
-    if (!isGuest && db) {
-        const { id, ...teamData } = updatedTeam;
-        await setDoc(doc(db, 'users', user.id, 'teams', id), teamData);
+
+    try {
+        if (isGuest) return;
+        if (db) {
+            const { id, ...teamData } = updatedTeam;
+            await setDoc(doc(db, 'users', user.id, 'teams', id), teamData);
+        }
+    } catch (error) {
+        console.error("Error updating team:", error);
+        alert(`Error al actualizar el equipo en la nube: ${error instanceof Error ? error.message : String(error)}. Los cambios no se han guardado.`);
+        setManagedTeams(originalTeams);
     }
   };
 
@@ -118,110 +131,132 @@ const MainApp: React.FC = () => {
     if (!user) return;
     const teamToDelete = managedTeams.find(t => t.id === teamId);
     if (!teamToDelete) return;
-  
+
+    const originalTeams = managedTeams;
+    const originalCompetitions = competitions;
+
     setManagedTeams(prev => prev.filter(t => t.id !== teamId));
     
     const updatedCompetitions = competitions.map(comp => {
-        const teamIsIncluded = comp.teams.includes(teamToDelete.name);
-        if (!teamIsIncluded) return comp;
+        if (!comp.teams.includes(teamToDelete.name)) return comp;
         
-        const newComp = { ...comp };
-        newComp.teams = newComp.teams.filter(tName => tName !== teamToDelete.name);
-
-        if (newComp.schedule) {
-            newComp.schedule = newComp.schedule.map(round => 
-                round.filter(match => match.team1 !== teamToDelete.name && match.team2 !== teamToDelete.name)
-            ).filter(round => round.length > 0);
-        }
-        if (newComp.bracket) {
-            newComp.bracket = newComp.bracket.map(round => 
-                round.map(match => {
-                    if (match.team1 === teamToDelete.name) match.team1 = 'EQUIPO ELIMINADO';
-                    if (match.team2 === teamToDelete.name) match.team2 = 'EQUIPO ELIMINADO';
-                    if (match.winner === teamToDelete.name) match.winner = null;
-                    return match;
-                })
-            );
-        }
+        const newComp = { ...comp, teams: comp.teams.filter(tName => tName !== teamToDelete.name) };
+        if (newComp.schedule) newComp.schedule = newComp.schedule.map(round => round.filter(match => match.team1 !== teamToDelete.name && match.team2 !== teamToDelete.name)).filter(round => round.length > 0);
+        if (newComp.bracket) newComp.bracket = newComp.bracket.map(round => round.map(match => ({ ...match, team1: match.team1 === teamToDelete.name ? 'EQUIPO ELIMINADO' : match.team1, team2: match.team2 === teamToDelete.name ? 'EQUIPO ELIMINADO' : match.team2, winner: match.winner === teamToDelete.name ? null : match.winner })));
         return newComp;
     });
     setCompetitions(updatedCompetitions);
 
+    try {
+        if (isGuest) return;
 
-    if (!isGuest && db) {
-        const batch = writeBatch(db);
-        batch.delete(doc(db, 'users', user.id, 'teams', teamId));
-        updatedCompetitions.forEach(comp => {
-            if (comp.id) {
-                const { id, ...compData } = comp;
-                batch.set(doc(db, 'users', user.id, 'competitions', id), compData);
-            }
-        });
-        await batch.commit().catch(err => console.error("Error deleting team and updating competitions:", err));
+        if (db) {
+            const batch = writeBatch(db);
+            batch.delete(doc(db, 'users', user.id, 'teams', teamId));
+            updatedCompetitions.forEach(comp => {
+                if (comp.id && originalCompetitions.find(oc => oc.id === comp.id) !== comp) {
+                    const { id, ...compData } = comp;
+                    batch.set(doc(db, 'users', user.id, 'competitions', id), compData);
+                }
+            });
+            await batch.commit();
+        }
+    } catch (error) {
+        console.error("Error deleting team:", error);
+        alert(`Error al borrar el equipo de la nube: ${error instanceof Error ? error.message : String(error)}. Deshaciendo cambios.`);
+        setManagedTeams(originalTeams);
+        setCompetitions(originalCompetitions);
     }
   };
 
   const handleCompetitionCreate = async (newCompData: Omit<Competition, 'id'>) => {
     if (!user) return;
+    const tempId = Date.now().toString();
+    const newComp = { ...newCompData, id: tempId };
+    setCompetitions(prev => [...prev, newComp]);
+
     try {
-        if (isGuest) {
-            const newComp = { ...newCompData, id: Date.now().toString() };
-            setCompetitions(prev => [...prev, newComp]);
-        } else if (db) {
+        if (isGuest) return;
+        if (db) {
             const newDocRef = doc(collection(db, 'users', user.id, 'competitions'));
             await setDoc(newDocRef, newCompData);
-            const newComp = { ...newCompData, id: newDocRef.id };
-            setCompetitions(prev => [...prev, newComp]);
+            setCompetitions(prev => prev.map(c => (c.id === tempId ? { ...c, id: newDocRef.id } : c)));
         }
     } catch (error) {
         console.error("Error creating competition:", error);
-        alert(`No se pudo crear la competición. Error: ${error instanceof Error ? error.message : String(error)}`);
+        alert(`Error al crear la competición en la nube: ${error instanceof Error ? error.message : String(error)}.`);
+        setCompetitions(prev => prev.filter(c => c.id !== tempId));
     }
   };
 
   const handleCompetitionUpdate = async (updatedComp: Competition) => {
     if (!user || !updatedComp.id) return;
+    
+    const originalCompetitions = competitions;
     setCompetitions(prev => prev.map(c => c.id === updatedComp.id ? updatedComp : c));
-    if (!isGuest && db) {
-        const { id, ...compData } = updatedComp;
-        await setDoc(doc(db, 'users', user.id, 'competitions', id), compData);
+    
+    try {
+        if (isGuest) return;
+        if (db) {
+            const { id, ...compData } = updatedComp;
+            await setDoc(doc(db, 'users', user.id, 'competitions', id), compData);
+        }
+    } catch (error) {
+        console.error("Error updating competition:", error);
+        alert(`Error al actualizar la competición en la nube: ${error instanceof Error ? error.message : String(error)}.`);
+        setCompetitions(originalCompetitions);
     }
   };
   
   const handlePlaySave = async (playToSave: Play) => {
-      if (!user) return;
-      try {
-          if (isGuest) {
-              if (playToSave.id) {
-                  setPlays(prev => prev.map(p => p.id === playToSave.id ? playToSave : p));
-              } else {
-                  setPlays(prev => [...prev, { ...playToSave, id: Date.now().toString() }]);
-              }
-          } else if (db) {
-              if (playToSave.id) { // Update
-                  const { id, ...playData } = playToSave;
-                  await setDoc(doc(db, 'users', user.id, 'plays', id), playData);
-                  setPlays(prev => prev.map(p => p.id === id ? playToSave : p));
-              } else { // Create
-                  const newDocRef = doc(collection(db, 'users', user.id, 'plays'));
-                  const { id, ...playData } = playToSave;
-                  await setDoc(newDocRef, playData);
-                  const newPlay = { ...playToSave, id: newDocRef.id };
-                  setPlays(prev => [...prev, newPlay]);
-              }
-          }
-      } catch (error) {
-          console.error("Error saving play:", error);
-          alert(`No se pudo guardar la jugada. Error: ${error instanceof Error ? error.message : String(error)}`);
-      }
+    if (!user) return;
+    
+    const originalPlays = plays;
+    let tempId: string | undefined;
+
+    if (playToSave.id) {
+        setPlays(prev => prev.map(p => p.id === playToSave.id ? playToSave : p));
+    } else {
+        tempId = Date.now().toString();
+        setPlays(prev => [...prev, { ...playToSave, id: tempId }]);
+    }
+
+    try {
+        if (isGuest) return;
+        if (db) {
+            if (playToSave.id) {
+                const { id, ...playData } = playToSave;
+                await setDoc(doc(db, 'users', user.id, 'plays', id), playData);
+            } else {
+                const newDocRef = doc(collection(db, 'users', user.id, 'plays'));
+                const { id, ...playData } = playToSave;
+                await setDoc(newDocRef, playData);
+                if (tempId) setPlays(prev => prev.map(p => (p.id === tempId ? { ...p, id: newDocRef.id } : p)));
+            }
+        }
+    } catch (error) {
+        console.error("Error saving play:", error);
+        alert(`Error al guardar la jugada en la nube: ${error instanceof Error ? error.message : String(error)}.`);
+        setPlays(originalPlays);
+    }
   };
 
   const handlePlayDelete = async (playId: string) => {
-      if (!user) return;
-      setPlays(prev => prev.filter(p => p.id !== playId));
-      if (!isGuest && db) {
-          await deleteDoc(doc(db, 'users', user.id, 'plays', playId));
-      }
+    if (!user) return;
+    
+    const originalPlays = plays;
+    setPlays(prev => prev.filter(p => p.id !== playId));
+
+    try {
+        if (isGuest) return;
+        if (db) {
+            await deleteDoc(doc(db, 'users', user.id, 'plays', playId));
+        }
+    } catch (error) {
+        console.error("Error deleting play:", error);
+        alert(`Error al borrar la jugada de la nube: ${error instanceof Error ? error.message : String(error)}.`);
+        setPlays(originalPlays);
+    }
   };
 
 
