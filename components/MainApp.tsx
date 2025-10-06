@@ -70,48 +70,57 @@ const MainApp: React.FC = () => {
         }
     );
 
-    const compsUnsub = onSnapshot(collection(db, 'users', user.id, 'competitions'), 
-        (snapshot) => {
-            const migratedCompetitions: Competition[] = snapshot.docs.map(doc => {
-                const data = doc.data();
-                
-                let schedule = data.schedule;
-                if (schedule && Array.isArray(schedule)) {
-                    schedule = schedule.reduce((acc: Record<string, Matchup[]>, round: any, index: number) => {
-                        if (Array.isArray(round)) { // Safety check
-                            acc[index.toString()] = round as Matchup[];
-                        }
-                        return acc;
-                    }, {});
-                }
-
-                let bracket = data.bracket;
-                if (bracket && Array.isArray(bracket)) {
-                    bracket = bracket.reduce((acc: Record<string, Matchup[]>, round: any, index: number) => {
-                         if (Array.isArray(round)) { // Safety check
-                            acc[index.toString()] = round as Matchup[];
-                        }
-                        return acc;
-                    }, {});
-                }
-
-                // Reconstruct the object safely to ensure type correctness
-                return { 
-                    id: doc.id, 
-                    name: data.name || 'Sin Nombre',
-                    format: data.format || 'Liguilla',
-                    teams: data.teams || [],
-                    schedule: schedule,
-                    bracket: bracket,
-                } as Competition;
-            });
-            setCompetitions(migratedCompetitions);
-            setSyncState('synced');
-        },
-        (error) => {
-            console.error("Error fetching competitions:", error);
-            setSyncState('error');
-        }
+    const compsUnsub = onSnapshot(collection(db, 'users', user.id, 'competitions'),
+      (snapshot) => {
+          const competitionsFromDb: Competition[] = snapshot.docs.map(doc => {
+              const data = doc.data();
+              
+              const newComp: Competition = { 
+                  id: doc.id, 
+                  name: data.name || 'Sin Nombre',
+                  format: data.format || 'Liguilla',
+                  teams: data.teams || [],
+              };
+  
+              if (data.schedule) {
+                  if (Array.isArray(data.schedule)) {
+                      // MIGRATION: Old array format to new object format
+                      newComp.schedule = {};
+                      (data.schedule as any[]).forEach((round, index) => {
+                          if (Array.isArray(round)) {
+                              newComp.schedule![index.toString()] = round as Matchup[];
+                          }
+                      });
+                  } else {
+                      // Assume it's the correct object format
+                      newComp.schedule = data.schedule;
+                  }
+              }
+  
+              if (data.bracket) {
+                  if (Array.isArray(data.bracket)) {
+                      // MIGRATION: Old array format to new object format
+                      newComp.bracket = {};
+                      (data.bracket as any[]).forEach((round, index) => {
+                          if (Array.isArray(round)) {
+                              newComp.bracket![index.toString()] = round as Matchup[];
+                          }
+                      });
+                  } else {
+                      // Assume it's the correct object format
+                      newComp.bracket = data.bracket;
+                  }
+              }
+              
+              return newComp;
+          });
+          setCompetitions(competitionsFromDb);
+          setSyncState('synced');
+      },
+      (error) => {
+          console.error("Error fetching competitions:", error);
+          setSyncState('error');
+      }
     );
 
     const playsUnsub = onSnapshot(collection(db, 'users', user.id, 'plays'), 
@@ -189,7 +198,6 @@ const MainApp: React.FC = () => {
             if (newComp.schedule) {
                 const newSchedule: Record<string, Matchup[]> = {};
                 Object.entries(newComp.schedule).forEach(([roundKey, round]) => {
-                    // @FIX: Cast `round` to `Matchup[]` to resolve 'unknown' type error.
                     const newRound = (round as Matchup[]).filter(match => match.team1 !== teamToDelete.name && match.team2 !== teamToDelete.name);
                     if (newRound.length > 0) {
                         newSchedule[roundKey] = newRound;
@@ -200,7 +208,6 @@ const MainApp: React.FC = () => {
             if (newComp.bracket) {
                 const newBracket: Record<string, Matchup[]> = {};
                 Object.entries(newComp.bracket).forEach(([roundKey, round]) => {
-                    // @FIX: Cast `round` to `Matchup[]` to resolve 'unknown' type error.
                     newBracket[roundKey] = (round as Matchup[]).map(match => ({
                         ...match,
                         team1: match.team1 === teamToDelete.name ? 'EQUIPO ELIMINADO' : match.team1,
@@ -228,7 +235,6 @@ const MainApp: React.FC = () => {
                 if (newComp.schedule) {
                     const newSchedule: Record<string, Matchup[]> = {};
                     Object.entries(newComp.schedule).forEach(([roundKey, round]) => {
-                        // @FIX: Cast `round` to `Matchup[]` to resolve 'unknown' type error.
                         const newRound = (round as Matchup[]).filter(match => match.team1 !== teamToDelete.name && match.team2 !== teamToDelete.name);
                         if (newRound.length > 0) {
                             newSchedule[roundKey] = newRound;
@@ -239,7 +245,6 @@ const MainApp: React.FC = () => {
                 if (newComp.bracket) {
                     const newBracket: Record<string, Matchup[]> = {};
                     Object.entries(newComp.bracket).forEach(([roundKey, round]) => {
-                        // @FIX: Cast `round` to `Matchup[]` to resolve 'unknown' type error.
                         newBracket[roundKey] = (round as Matchup[]).map(match => ({
                             ...match,
                             team1: match.team1 === teamToDelete.name ? 'EQUIPO ELIMINADO' : match.team1,
