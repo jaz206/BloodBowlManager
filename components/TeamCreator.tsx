@@ -7,7 +7,7 @@ import { generateRandomName as generateRandomNameLocally } from '../data/randomN
 import UploadIcon from './icons/UploadIcon';
 
 interface TeamCreatorProps {
-    onTeamCreate: (team: ManagedTeam) => void;
+    onTeamCreate: (team: Omit<ManagedTeam, 'id'>) => void;
     initialRosterName?: string | null;
 }
 
@@ -100,7 +100,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
             return;
         }
 
-        const newTeam: ManagedTeam = {
+        const newTeam: Omit<ManagedTeam, 'id' | 'crestImage'> & { crestImage?: string } = {
             name: teamName.trim(),
             rosterName,
             treasury: 1000000,
@@ -110,8 +110,12 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
             assistantCoaches: 0,
             apothecary: false,
             players: [],
-            crestImage: crestPreview || undefined,
         };
+
+        if (crestPreview) {
+            newTeam.crestImage = crestPreview;
+        }
+
         onTeamCreate(newTeam);
     };
 

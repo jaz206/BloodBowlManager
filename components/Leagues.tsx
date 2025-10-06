@@ -306,7 +306,7 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
         {activeTab === 'join' && (
             <div className="text-center">
                 {joinableCompetitions.length > 0 ? (
-                    <div className="space-y-3 max-w-lg mx-auto">{joinableCompetitions.map(c => <div key={c.id} className="w-full bg-slate-700/50 p-4 rounded-lg shadow-md text-left flex justify-between items-center"><div className="flex-grow"><p className="font-semibold text-white">{c.name}</p><p className="text-xs text-slate-400">{c.ownerName}</p></div><button onClick={() => setJoinModalState({comp: c, teamToJoin: managedTeams[0]?.id || ''})} className="bg-sky-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-sky-500">Unirse</button></div>)}</div>
+                    <div className="space-y-3 max-w-lg mx-auto">{joinableCompetitions.map(c => <div key={c.id} className="w-full bg-slate-700/50 p-4 rounded-lg shadow-md text-left flex justify-between items-center"><div className="flex-grow"><p className="font-semibold text-white">{c.name}</p><p className="text-xs text-slate-400">{c.ownerName}</p></div><button onClick={() => setJoinModalState({comp: c, teamToJoin: managedTeams[0]?.name || ''})} className="bg-sky-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-sky-500">Unirse</button></div>)}</div>
                 ) : <p className="text-slate-400">No hay competiciones abiertas para unirse.</p>}
             </div>
         )}
