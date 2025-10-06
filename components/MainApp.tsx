@@ -37,7 +37,7 @@ const MainApp: React.FC = () => {
   const [competitions, setCompetitions] = useState<Competition[]>([]);
   const [plays, setPlays] = useState<Play[]>([]);
   
-  const [loading, setLoading] = useState(true);
+  const [dataInitiallyLoaded, setDataInitiallyLoaded] = useState(false);
   const [requestedRoster, setRequestedRoster] = useState<string | null>(null);
 
   useEffect(() => {
@@ -46,20 +46,20 @@ const MainApp: React.FC = () => {
         setManagedTeams([]);
         setCompetitions([]);
         setPlays([]);
-        setLoading(false);
+        setDataInitiallyLoaded(true); // Nothing to load, so we're ready
         return;
     }
 
-    setLoading(true); // Show loader for the very first data fetch
+    setDataInitiallyLoaded(false); // Show loader for new user login
 
     const teamsUnsub = onSnapshot(collection(db, 'users', user.id, 'teams'), 
         (snapshot) => {
             setManagedTeams(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ManagedTeam[]);
-            if (loading) setLoading(false); // Stop loading after first data arrives
+            if (!dataInitiallyLoaded) setDataInitiallyLoaded(true); // Stop loading after first data arrives
         }, 
         (error) => {
             console.error("Error fetching teams:", error);
-            setLoading(false);
+            setDataInitiallyLoaded(true); // Unlock UI even on error
         }
     );
 
@@ -99,7 +99,7 @@ const MainApp: React.FC = () => {
     try {
         if (!db) throw new Error("Database not connected.");
         const docRef = await addDoc(collection(db, 'users', user.id, 'teams'), newTeamData);
-        // onSnapshot will handle the update, but we can swap the ID to be safe
+        // onSnapshot will handle the final update, but we can swap the ID to be safe
         setManagedTeams(prev => prev.map(t => (t.id === tempId ? { ...t, id: docRef.id } : t)));
     } catch (error) {
         console.error("Error creating team:", error);
@@ -313,7 +313,7 @@ const MainApp: React.FC = () => {
         </nav>
         
         <div className="bg-slate-800/50 rounded-lg">
-            {loading ? (
+            {!dataInitiallyLoaded ? (
                  <div className="flex flex-col items-center justify-center text-white p-10">
                     <svg className="animate-spin -ml-1 mr-3 h-10 w-10 text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
