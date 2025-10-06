@@ -1,7 +1,7 @@
 
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import type { ManagedTeam, Competition, Matchup } from '../types';
+import type { ManagedTeam, Competition, Matchup, CompetitionTeam } from './types';
 import { useAuth } from './hooks/useAuth';
 import PencilIcon from './icons/PencilIcon';
 import CalendarIcon from './icons/CalendarIcon';
@@ -287,33 +287,47 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
         setSelectedTeams(prev => prev.includes(teamName) ? prev.filter(name => name !== teamName) : [...prev, teamName]);
     };
 
-    const handleCreateCompetition = () => {
-        if (!newCompetitionName.trim() || selectedTeams.length < 2) {
-            alert("Por favor, pon un nombre a la competición y selecciona al menos 2 equipos.");
-            return;
-        }
+// @FIX: Correctly create Competition object with all required properties.
+  const handleCreateCompetition = () => {
+    if (!newCompetitionName.trim() || selectedTeams.length < 2) {
+      alert("Por favor, pon un nombre a la competición y selecciona al menos 2 equipos.");
+      return;
+    }
+    if (!user) {
+        alert("Debes iniciar sesión para crear una competición.");
+        return;
+    }
 
-        const newCompetition: Omit<Competition, 'id'> = {
-            name: newCompetitionName.trim(),
-            format: newCompetitionFormat,
-            teams: selectedTeams,
-        };
+    const competitionTeams: CompetitionTeam[] = selectedTeams.map(teamName => ({
+        teamName: teamName,
+        ownerId: user.id,
+        ownerName: user.name
+    }));
 
-        if (newCompetitionFormat === 'Liguilla') {
-            newCompetition.schedule = generateSchedule(selectedTeams);
-        } else {
-            newCompetition.bracket = generateBracket(selectedTeams);
-        }
-
-        onCompetitionCreate(newCompetition);
-        
-        setNewCompetitionName('');
-        setSelectedTeams([]);
-        // The view will be updated by the parent component, but we can optimistically switch
-        setView('detail');
-        // We set the selected competition based on the newly created one, but we need to find it
-        // This is a bit tricky without the ID. We'll rely on the parent updating the props.
+    const newCompetition: Omit<Competition, 'id'> = {
+      name: newCompetitionName.trim(),
+      format: newCompetitionFormat,
+      teams: competitionTeams,
+      ownerId: user.id,
+      ownerName: user.name,
+      status: 'Open',
     };
+
+    if (newCompetitionFormat === 'Liguilla') {
+      (newCompetition as Competition).schedule = generateSchedule(selectedTeams);
+    } else {
+      (newCompetition as Competition).bracket = generateBracket(selectedTeams);
+    }
+
+    onCompetitionCreate(newCompetition);
+    
+    setNewCompetitionName('');
+    setSelectedTeams([]);
+    // The view will be updated by the parent component, but we can optimistically switch
+    setView('detail');
+    // We set the selected competition based on the newly created one, but we need to find it
+    // This is a bit tricky without the ID. We'll rely on the parent updating the props.
+  };
 
     const isPowerOfTwo = (n: number) => n > 0 && (n & (n - 1)) === 0;
 

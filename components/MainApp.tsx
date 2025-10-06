@@ -11,7 +11,7 @@ import ClipboardListIcon from './icons/ClipboardListIcon';
 import CubeIcon from './icons/CubeIcon';
 import ShieldCheckIcon from './icons/ShieldCheckIcon';
 import StopwatchIcon from './icons/StopwatchIcon';
-import type { ManagedTeam, Competition, Play, Matchup } from '../types';
+import type { ManagedTeam, Competition, Play, Matchup, CompetitionTeam } from '../types';
 import { useAuth } from '../hooks/useAuth';
 import UserProfile from './UserProfile';
 import TrophyIcon from './icons/TrophyIcon';
@@ -46,106 +46,65 @@ const MainApp: React.FC = () => {
   useEffect(() => {
     if (isGuest || !user || !db) {
         setManagedTeams([]);
-        setCompetitions([]);
         setPlays([]);
         setDataInitiallyLoaded(true);
         setSyncState('synced');
-        return;
+    } else {
+        setDataInitiallyLoaded(false);
+
+        const teamsUnsub = onSnapshot(collection(db, 'users', user.id, 'teams'), 
+            (snapshot) => {
+                setManagedTeams(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ManagedTeam[]);
+                if(!dataInitiallyLoaded) setDataInitiallyLoaded(true);
+                setSyncState('synced');
+            }, 
+            (error) => {
+                console.error("Error fetching teams:", error);
+                setDataInitiallyLoaded(true);
+                setSyncState('error');
+            }
+        );
+
+        const playsUnsub = onSnapshot(collection(db, 'users', user.id, 'plays'), 
+            (snapshot) => {
+                setPlays(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Play[]);
+                setSyncState('synced');
+            },
+            (error) => {
+                 console.error("Error fetching plays:", error);
+                 setSyncState('error');
+            }
+        );
+        
+        return () => {
+            teamsUnsub();
+            playsUnsub();
+        };
     }
+  }, [user, isGuest]);
 
-    setDataInitiallyLoaded(false);
-
-    const teamsUnsub = onSnapshot(collection(db, 'users', user.id, 'teams'), 
-        (snapshot) => {
-            setManagedTeams(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ManagedTeam[]);
-            setDataInitiallyLoaded(true);
-            setSyncState('synced');
-        }, 
-        (error) => {
-            console.error("Error fetching teams:", error);
-            setDataInitiallyLoaded(true);
-            setSyncState('error');
-        }
-    );
-
-    const compsUnsub = onSnapshot(collection(db, 'users', user.id, 'competitions'),
-      (snapshot) => {
-          const competitionsFromDb: Competition[] = snapshot.docs.map(doc => {
-              const data = doc.data();
-              
-              const newComp: Competition = { 
-                  id: doc.id, 
-                  name: data.name || 'Sin Nombre',
-                  format: data.format === 'Liguilla' || data.format === 'Torneo' ? data.format : 'Liguilla',
-                  teams: Array.isArray(data.teams) ? data.teams : [],
-              };
-  
-              if (data.schedule) {
-                  const scheduleObject: Record<string, Matchup[]> = {};
-                  if (Array.isArray(data.schedule)) {
-                      data.schedule.forEach((round, index) => {
-                          if (Array.isArray(round)) {
-                              scheduleObject[index.toString()] = round;
-                          }
-                      });
-                  } else if (typeof data.schedule === 'object' && data.schedule !== null) {
-                      Object.entries(data.schedule).forEach(([key, value]) => {
-                          if (Array.isArray(value)) {
-                              scheduleObject[key] = value;
-                          }
-                      });
-                  }
-                  newComp.schedule = scheduleObject;
-              }
-  
-              if (data.bracket) {
-                  const bracketObject: Record<string, Matchup[]> = {};
-                  if (Array.isArray(data.bracket)) {
-                      data.bracket.forEach((round, index) => {
-                          if (Array.isArray(round)) {
-                              bracketObject[index.toString()] = round;
-                          }
-                      });
-                  } else if (typeof data.bracket === 'object' && data.bracket !== null) {
-                      Object.entries(data.bracket).forEach(([key, value]) => {
-                          if (Array.isArray(value)) {
-                              bracketObject[key] = value;
-                          }
-                      });
-                  }
-                  newComp.bracket = bracketObject;
-              }
-              
-              return newComp;
-          });
-          setCompetitions(competitionsFromDb);
-          setSyncState('synced');
-      },
-      (error) => {
-          console.error("Error fetching competitions:", error);
-          setSyncState('error');
+  useEffect(() => {
+      if (!db) {
+        setCompetitions([]);
+        return;
       }
-    );
-
-    const playsUnsub = onSnapshot(collection(db, 'users', user.id, 'plays'), 
+      const compsUnsub = onSnapshot(collection(db, 'competitions'),
         (snapshot) => {
-            setPlays(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Play[]);
+            const competitionsFromDb: Competition[] = snapshot.docs.map(doc => {
+                const data = doc.data();
+                return { id: doc.id, ...data } as Competition;
+            });
+            setCompetitions(competitionsFromDb);
             setSyncState('synced');
         },
         (error) => {
-             console.error("Error fetching plays:", error);
-             setSyncState('error');
+            console.error("Error fetching competitions:", error);
+            setSyncState('error');
         }
-    );
+      );
+      return () => compsUnsub();
+  }, [db]);
 
-    return () => {
-        teamsUnsub();
-        compsUnsub();
-        playsUnsub();
-    };
-  }, [user, isGuest]);
-
-  // --- Data Handlers with Robust Sync State ---
 
   const handleTeamCreate = async (newTeamData: Omit<ManagedTeam, 'id'>) => {
     if (!user) return;
@@ -159,7 +118,6 @@ const MainApp: React.FC = () => {
     try {
         if (!db) throw new Error("Database not connected.");
         await addDoc(collection(db, 'users', user.id, 'teams'), newTeamData);
-        // onSnapshot will set state to 'synced' upon confirmation
     } catch (error) {
         console.error("Error creating team:", error);
         alert(`Error al sincronizar el equipo con la nube: ${error instanceof Error ? error.message : String(error)}. El equipo no se ha guardado.`);
@@ -180,7 +138,6 @@ const MainApp: React.FC = () => {
         if (!db) throw new Error("Database not connected.");
         const { id, ...teamData } = updatedTeam;
         await setDoc(doc(db, 'users', user.id, 'teams', id), teamData, { merge: true });
-        // onSnapshot will set state to 'synced'
     } catch (error) {
         console.error("Error updating team:", error);
         alert(`Error al actualizar el equipo en la nube: ${error instanceof Error ? error.message : String(error)}. Los cambios no se han guardado.`);
@@ -196,34 +153,6 @@ const MainApp: React.FC = () => {
 
     if (isGuest) {
         setManagedTeams(prev => prev.filter(t => t.id !== teamId));
-        const updatedCompetitions = competitions.map(comp => {
-            if (!comp.teams.includes(teamToDelete.name)) return comp;
-            const newComp = { ...comp, teams: comp.teams.filter(tName => tName !== teamToDelete.name) };
-            if (newComp.schedule) {
-                const newSchedule: Record<string, Matchup[]> = {};
-                Object.entries(newComp.schedule).forEach(([roundKey, round]) => {
-                    const newRound = (round as Matchup[]).filter(match => match.team1 !== teamToDelete.name && match.team2 !== teamToDelete.name);
-                    if (newRound.length > 0) {
-                        newSchedule[roundKey] = newRound;
-                    }
-                });
-                newComp.schedule = newSchedule;
-            }
-            if (newComp.bracket) {
-                const newBracket: Record<string, Matchup[]> = {};
-                Object.entries(newComp.bracket).forEach(([roundKey, round]) => {
-                    newBracket[roundKey] = (round as Matchup[]).map(match => ({
-                        ...match,
-                        team1: match.team1 === teamToDelete.name ? 'EQUIPO ELIMINADO' : match.team1,
-                        team2: match.team2 === teamToDelete.name ? 'EQUIPO ELIMINADO' : match.team2,
-                        winner: match.winner === teamToDelete.name ? null : match.winner,
-                    }));
-                });
-                newComp.bracket = newBracket;
-            }
-            return newComp;
-        });
-        setCompetitions(updatedCompetitions);
         setTimeout(() => setSyncState('synced'), 500);
         return;
     }
@@ -234,40 +163,17 @@ const MainApp: React.FC = () => {
         batch.delete(doc(db, 'users', user.id, 'teams', teamId));
         
         competitions.forEach(comp => {
-            if (comp.id && comp.teams.includes(teamToDelete.name)) {
-                const newComp = { ...comp, teams: comp.teams.filter(tName => tName !== teamToDelete.name) };
-                if (newComp.schedule) {
-                    const newSchedule: Record<string, Matchup[]> = {};
-                    Object.entries(newComp.schedule).forEach(([roundKey, round]) => {
-                        const newRound = (round as Matchup[]).filter(match => match.team1 !== teamToDelete.name && match.team2 !== teamToDelete.name);
-                        if (newRound.length > 0) {
-                            newSchedule[roundKey] = newRound;
-                        }
-                    });
-                    newComp.schedule = newSchedule;
-                }
-                if (newComp.bracket) {
-                    const newBracket: Record<string, Matchup[]> = {};
-                    Object.entries(newComp.bracket).forEach(([roundKey, round]) => {
-                        newBracket[roundKey] = (round as Matchup[]).map(match => ({
-                            ...match,
-                            team1: match.team1 === teamToDelete.name ? 'EQUIPO ELIMINADO' : match.team1,
-                            team2: match.team2 === teamToDelete.name ? 'EQUIPO ELIMINADO' : match.team2,
-                            winner: match.winner === teamToDelete.name ? null : match.winner,
-                        }));
-                    });
-                    newComp.bracket = newBracket;
-                }
+            if (comp.id && comp.teams.some(t => t.teamName === teamToDelete.name && t.ownerId === user.id)) {
+                const newComp = { ...comp, teams: comp.teams.filter(t => t.teamName !== teamToDelete.name || t.ownerId !== user.id) };
                 const { id, ...compData } = newComp;
-                batch.set(doc(db, 'users', user.id, 'competitions', id), compData);
+                batch.set(doc(db, 'competitions', id), compData);
             }
         });
 
         await batch.commit();
-        // onSnapshot will set state to 'synced'
     } catch (error) {
         console.error("Error deleting team and updating competitions:", error);
-        alert(`Error al borrar el equipo de la nube: ${error instanceof Error ? error.message : String(error)}. Es posible que deba actualizar las competiciones manualmente.`);
+        alert(`Error al borrar el equipo de la nube: ${error instanceof Error ? error.message : String(error)}.`);
         setSyncState('error');
     }
   };
@@ -282,8 +188,7 @@ const MainApp: React.FC = () => {
     }
     try {
         if (!db) throw new Error("Database not connected.");
-        await addDoc(collection(db, 'users', user.id, 'competitions'), newCompData);
-        // onSnapshot will set state to 'synced'
+        await addDoc(collection(db, 'competitions'), newCompData);
     } catch (error) {
         console.error("Error creating competition:", error);
         alert(`Error al crear la competición en la nube: ${error instanceof Error ? error.message : String(error)}.`);
@@ -302,8 +207,7 @@ const MainApp: React.FC = () => {
     try {
         if (!db) throw new Error("Database not connected.");
         const { id, ...compData } = updatedComp;
-        await setDoc(doc(db, 'users', user.id, 'competitions', id), compData, { merge: true });
-        // onSnapshot will set state to 'synced'
+        await setDoc(doc(db, 'competitions', id), compData, { merge: true });
     } catch (error) {
         console.error("Error updating competition:", error);
         alert(`Error al actualizar la competición en la nube: ${error instanceof Error ? error.message : String(error)}.`);
@@ -321,7 +225,7 @@ const MainApp: React.FC = () => {
     }
     try {
       if (!db) throw new Error("Database not connected.");
-      await deleteDoc(doc(db, 'users', user.id, 'competitions', compId));
+      await deleteDoc(doc(db, 'competitions', compId));
     } catch (error) {
       console.error("Error deleting competition:", error);
       alert(`Error al eliminar la competición: ${error instanceof Error ? error.message : String(error)}`);
@@ -351,7 +255,6 @@ const MainApp: React.FC = () => {
             const { id, ...playData } = playToSave;
             await addDoc(collection(db, 'users', user.id, 'plays'), playData);
         }
-        // onSnapshot will set state to 'synced'
     } catch (error) {
         console.error("Error saving play:", error);
         alert(`Error al guardar la jugada en la nube: ${error instanceof Error ? error.message : String(error)}.`);
@@ -370,7 +273,6 @@ const MainApp: React.FC = () => {
     try {
         if (!db) throw new Error("Database not connected.");
         await deleteDoc(doc(db, 'users', user.id, 'plays', playId));
-        // onSnapshot will set state to 'synced'
     } catch (error) {
         console.error("Error deleting play:", error);
         alert(`Error al borrar la jugada de la nube: ${error instanceof Error ? error.message : String(error)}.`);

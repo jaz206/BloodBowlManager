@@ -1,4 +1,5 @@
 
+
 export interface User {
   id: string;
   name: string;
@@ -169,13 +170,22 @@ export interface Matchup {
   score2?: number;
 }
 
+export interface CompetitionTeam {
+  teamName: string;
+  ownerId: string;
+  ownerName: string;
+}
+
 export interface Competition {
   id: string;
   name: string;
   format: 'Liguilla' | 'Torneo';
-  teams: string[];
+  teams: CompetitionTeam[];
   schedule?: Record<string, Matchup[]>; // For Liguilla (round-robin)
   bracket?: Record<string, Matchup[]>;  // For Torneo (knockout)
+  ownerId: string;
+  ownerName: string;
+  status: 'Open' | 'In Progress' | 'Finished';
 }
 
 
