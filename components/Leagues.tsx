@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import type { ManagedTeam, Competition, Matchup, CompetitionTeam } from '../types';
 import { useAuth } from '../hooks/useAuth';
@@ -87,6 +86,32 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
 
   const myCompetitions = useMemo(() => initialCompetitions.filter(c => c.ownerId === user?.id || c.teams.some(t => t.ownerId === user?.id)), [initialCompetitions, user]);
   const joinableCompetitions = useMemo(() => initialCompetitions.filter(c => c.status === 'Open' && c.ownerId !== user?.id && !c.teams.some(t => t.ownerId === user?.id)), [initialCompetitions, user]);
+
+  const standings = useMemo(() => {
+    if (!selectedCompetition || selectedCompetition.format !== 'Liguilla' || !selectedCompetition.schedule) return [];
+    return selectedCompetition.teams.map(({teamName}) => {
+        let p=0, w=0, l=0, d=0, tdF=0, tdA=0;
+        Object.values(selectedCompetition.schedule!).forEach(round => {
+            (round as Matchup[]).forEach(match => {
+                if ((match.team1 === teamName || match.team2 === teamName) && match.score1 !== undefined && match.score2 !== undefined) {
+                    p++;
+                    const isTeam1 = match.team1 === teamName;
+                    const sF = isTeam1 ? match.score1 : match.score2;
+                    const sA = isTeam1 ? match.score2 : match.score1;
+                    tdF += sF; tdA += sA;
+                    if (sF > sA) w++; else if (sA > sF) l++; else d++;
+                }
+            });
+        });
+        return { name: teamName, p, w, d, l, tdF, tdA, pts: w*3+d };
+    }).sort((a,b) => b.pts - a.pts || (b.tdF-b.tdA) - (a.tdF-a.tdA) || b.tdF-a.tdF);
+  }, [selectedCompetition]);
+
+  const finalWinner = useMemo(() => {
+      if (!selectedCompetition || selectedCompetition.format !== 'Torneo' || !selectedCompetition.bracket) return null;
+      const finalRoundKey = Math.max(...Object.keys(selectedCompetition.bracket).map(Number)).toString();
+      return selectedCompetition.bracket[finalRoundKey]?.[0]?.winner;
+  }, [selectedCompetition]);
 
   const handleCreateCompetition = () => {
     if (!newCompetitionName.trim() || !user) {
@@ -214,33 +239,6 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
   const renderDetailView = () => {
     if (!selectedCompetition) return null;
 
-    const standings = useMemo(() => {
-        if (selectedCompetition.format !== 'Liguilla' || !selectedCompetition.schedule) return [];
-        return selectedCompetition.teams.map(({teamName}) => {
-            let p=0, w=0, l=0, d=0, tdF=0, tdA=0;
-            Object.values(selectedCompetition.schedule!).forEach(round => {
-// @FIX: Cast `round` to `Matchup[]` as TypeScript infers it as 'unknown'.
-                (round as Matchup[]).forEach(match => {
-                    if ((match.team1 === teamName || match.team2 === teamName) && match.score1 !== undefined && match.score2 !== undefined) {
-                        p++;
-                        const isTeam1 = match.team1 === teamName;
-                        const sF = isTeam1 ? match.score1 : match.score2;
-                        const sA = isTeam1 ? match.score2 : match.score1;
-                        tdF += sF; tdA += sA;
-                        if (sF > sA) w++; else if (sA > sF) l++; else d++;
-                    }
-                });
-            });
-            return { name: teamName, p, w, d, l, tdF, tdA, pts: w*3+d };
-        }).sort((a,b) => b.pts - a.pts || (b.tdF-b.tdA) - (a.tdF-a.tdA) || b.tdF-a.tdF);
-    }, [selectedCompetition]);
-
-    const finalWinner = useMemo(() => {
-        if (selectedCompetition.format !== 'Torneo' || !selectedCompetition.bracket) return null;
-        const finalRoundKey = Math.max(...Object.keys(selectedCompetition.bracket).map(Number)).toString();
-        return selectedCompetition.bracket[finalRoundKey]?.[0]?.winner;
-    }, [selectedCompetition]);
-
     return (
       <div className="p-2 sm:p-4">
         <button onClick={() => { setView('list'); setSelectedCompetition(null); }} className="text-amber-400 hover:underline mb-4">&larr; Volver a la lista</button>
@@ -279,11 +277,11 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
                 {selectedCompetition.format === 'Liguilla' && (
                     <>
                         <div className="overflow-x-auto mb-6"><table className="w-full text-left text-sm whitespace-nowrap"><thead className="bg-slate-700 text-amber-300"><tr><th className="p-2">Equipo</th><th className="p-2 text-center">PJ</th><th className="p-2 text-center">G</th><th className="p-2 text-center">E</th><th className="p-2 text-center">P</th><th className="p-2 text-center">TD+</th><th className="p-2 text-center">TD-</th><th className="p-2 text-center">+/-</th><th className="p-2 text-center">Pts</th></tr></thead><tbody>{standings.map(t => <tr key={t.name} className="border-b border-slate-700"><td className="p-2 font-semibold text-white">{t.name}</td><td className="p-2 text-center">{t.p}</td><td className="p-2 text-center">{t.w}</td><td className="p-2 text-center">{t.d}</td><td className="p-2 text-center">{t.l}</td><td className="p-2 text-center">{t.tdF}</td><td className="p-2 text-center">{t.tdA}</td><td className="p-2 text-center">{t.tdF - t.tdA}</td><td className="p-2 text-center font-bold">{t.pts}</td></tr>)}</tbody></table></div>
-                        <div className="space-y-4">{Object.entries(selectedCompetition.schedule!).map(([roundIdx, round]) => <div key={roundIdx}><h4 className="font-bold text-slate-300 mb-2">Jornada {parseInt(roundIdx) + 1}</h4><div className="space-y-2">{/* @FIX: Cast `round` to `Matchup[]` as TypeScript infers it as 'unknown'. */(round as Matchup[]).map((match, matchIdx) => <div key={matchIdx} className="bg-slate-700/50 p-3 rounded-md flex items-center justify-between gap-2"><span className="flex-1 text-right truncate">{match.team1}</span><div className="flex items-center gap-2"><span className={`font-bold text-lg px-2 rounded ${match.score1!==undefined?'bg-slate-800':'bg-slate-600'}`}>{match.score1??'-'}</span><span>vs</span><span className={`font-bold text-lg px-2 rounded ${match.score2!==undefined?'bg-slate-800':'bg-slate-600'}`}>{match.score2??'-'}</span><button onClick={()=>setScoreModalState({isOpen:true, roundIndex:roundIdx, matchIndex:matchIdx, matchup:match})} className="text-slate-400 hover:text-white"><PencilIcon/></button></div><span className="flex-1 text-left truncate">{match.team2}</span></div>)}</div></div>)}</div>
+                        <div className="space-y-4">{Object.entries(selectedCompetition.schedule!).map(([roundIdx, round]) => <div key={roundIdx}><h4 className="font-bold text-slate-300 mb-2">Jornada {parseInt(roundIdx) + 1}</h4><div className="space-y-2">{(round as Matchup[]).map((match, matchIdx) => <div key={matchIdx} className="bg-slate-700/50 p-3 rounded-md flex items-center justify-between gap-2"><span className="flex-1 text-right truncate">{match.team1}</span><div className="flex items-center gap-2"><span className={`font-bold text-lg px-2 rounded ${match.score1!==undefined?'bg-slate-800':'bg-slate-600'}`}>{match.score1??'-'}</span><span>vs</span><span className={`font-bold text-lg px-2 rounded ${match.score2!==undefined?'bg-slate-800':'bg-slate-600'}`}>{match.score2??'-'}</span><button onClick={()=>setScoreModalState({isOpen:true, roundIndex:roundIdx, matchIndex:matchIdx, matchup:match})} className="text-slate-400 hover:text-white"><PencilIcon/></button></div><span className="flex-1 text-left truncate">{match.team2}</span></div>)}</div></div>)}</div>
                     </>
                 )}
                 {selectedCompetition.format === 'Torneo' && selectedCompetition.bracket && (
-                    <div className="flex gap-4 overflow-x-auto p-4 bg-slate-900/50 rounded-lg">{Object.entries(selectedCompetition.bracket).map(([roundIdx, round]) => <div key={roundIdx} className="flex flex-col justify-around min-w-[250px]"><h3 className="text-lg font-semibold text-amber-300 text-center mb-4">{parseInt(roundIdx)===0?'Ronda Inicial':Object.keys(selectedCompetition.bracket!).length-1 === parseInt(roundIdx)?'Final':`Ronda ${parseInt(roundIdx)+1}`}</h3><div className="space-y-4">{/* @FIX: Cast `round` to `Matchup[]` as TypeScript infers it as 'unknown'. */(round as Matchup[]).map((match,matchIdx)=><div key={matchIdx} className="bg-slate-800 p-3 rounded-lg relative"><div className="flex flex-col gap-2"><button onClick={()=>handleWinnerSelect(roundIdx,matchIdx,match.team1)} className={`w-full text-left p-2 rounded transition-colors ${match.winner===match.team1?'bg-green-700 font-bold text-white':'bg-slate-700 hover:bg-slate-600'}`} disabled={match.team1==='BYE'||match.team1==='Por determinar'}><div className="flex justify-between items-center"><span className="truncate">{match.team1}</span><span className="font-mono text-sm">{match.score1??''}</span></div></button><button onClick={()=>handleWinnerSelect(roundIdx,matchIdx,match.team2)} className={`w-full text-left p-2 rounded transition-colors ${match.winner===match.team2?'bg-green-700 font-bold text-white':'bg-slate-700 hover:bg-slate-600'}`} disabled={match.team2==='BYE'||match.team2==='Por determinar'}><div className="flex justify-between items-center"><span className="truncate">{match.team2}</span><span className="font-mono text-sm">{match.score2??''}</span></div></button></div><button onClick={()=>setScoreModalState({isOpen:true,roundIndex:roundIdx,matchIndex:matchIdx,matchup:match})} className="absolute top-1 right-1 text-slate-400 hover:text-white p-1"><PencilIcon className="w-3 h-3"/></button></div>)}</div></div>)}</div>
+                    <div className="flex gap-4 overflow-x-auto p-4 bg-slate-900/50 rounded-lg">{Object.entries(selectedCompetition.bracket).map(([roundIdx, round]) => <div key={roundIdx} className="flex flex-col justify-around min-w-[250px]"><h3 className="text-lg font-semibold text-amber-300 text-center mb-4">{parseInt(roundIdx)===0?'Ronda Inicial':Object.keys(selectedCompetition.bracket!).length-1 === parseInt(roundIdx)?'Final':`Ronda ${parseInt(roundIdx)+1}`}</h3><div className="space-y-4">{(round as Matchup[]).map((match,matchIdx)=><div key={matchIdx} className="bg-slate-800 p-3 rounded-lg relative"><div className="flex flex-col gap-2"><button onClick={()=>handleWinnerSelect(roundIdx,matchIdx,match.team1)} className={`w-full text-left p-2 rounded transition-colors ${match.winner===match.team1?'bg-green-700 font-bold text-white':'bg-slate-700 hover:bg-slate-600'}`} disabled={match.team1==='BYE'||match.team1==='Por determinar'}><div className="flex justify-between items-center"><span className="truncate">{match.team1}</span><span className="font-mono text-sm">{match.score1??''}</span></div></button><button onClick={()=>handleWinnerSelect(roundIdx,matchIdx,match.team2)} className={`w-full text-left p-2 rounded transition-colors ${match.winner===match.team2?'bg-green-700 font-bold text-white':'bg-slate-700 hover:bg-slate-600'}`} disabled={match.team2==='BYE'||match.team2==='Por determinar'}><div className="flex justify-between items-center"><span className="truncate">{match.team2}</span><span className="font-mono text-sm">{match.score2??''}</span></div></button></div><button onClick={()=>setScoreModalState({isOpen:true,roundIndex:roundIdx,matchIndex:matchIdx,matchup:match})} className="absolute top-1 right-1 text-slate-400 hover:text-white p-1"><PencilIcon className="w-3 h-3"/></button></div>)}</div></div>)}</div>
                 )}
              </>
         )}
