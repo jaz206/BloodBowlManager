@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import QuickGuide from './QuickGuide';
 import TeamsAndSkills from './TeamsAndSkills';

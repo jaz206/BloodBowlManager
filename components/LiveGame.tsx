@@ -958,7 +958,6 @@ export const LiveGame = ({ managedTeams, onTeamUpdate }: LiveGameProps): React.R
                         <div className="p-5">
                             {sppModalState.step === 'select_team' && <div className="space-y-3"><h3 className="text-lg text-slate-300 mb-4">¿De qué equipo es el jugador?</h3> <button onClick={() => setSppModalState(p => ({...p, step: 'select_player', teamId: 'home'}))} className="w-full bg-slate-700/50 p-4 rounded-md hover:bg-slate-700 font-semibold">{liveHomeTeam.name}</button> <button onClick={() => setSppModalState(p => ({...p, step: 'select_player', teamId: 'opponent'}))} className="w-full bg-slate-700/50 p-4 rounded-md hover:bg-slate-700 font-semibold">{liveOpponentTeam.name}</button> </div>}
                             {sppModalState.step === 'select_player' && <div className="space-y-2 max-h-[60vh] overflow-y-auto"><h3 className="text-lg text-slate-300 mb-4">¿Qué jugador?</h3> {(sppModalState.teamId === 'home' ? liveHomeTeam : liveOpponentTeam).players.filter(p => p.status === 'Activo').map(p => <PlayerButton key={p.id} player={p} onSelect={pl => {
-                                // FIX: Added a check for sppModalState.type to prevent potential null access. This also makes the description more user-friendly.
                                 if (sppModalState.type === 'interference') {
                                     setSppModalState(s => ({...s, selectedPlayer: pl, step: 'interference_type'}));
                                 } else if (sppModalState.type) {

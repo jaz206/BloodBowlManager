@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import type { ManagedTeam, Competition, Matchup } from '../types';
 import { useAuth } from '../hooks/useAuth';
 import PencilIcon from './icons/PencilIcon';
 import CalendarIcon from './icons/CalendarIcon';
 import QrCodeIcon from './icons/QrCodeIcon';
+import TrashIcon from './icons/TrashIcon';
 
 declare global {
   interface Window {
@@ -153,6 +153,7 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
     }>({ isOpen: false, matchup: null, competitionName: null, matchKey: null });
     const [isQrExportModalOpen, setIsQrExportModalOpen] = useState(false);
     const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
+    const [deletingCompetitionId, setDeletingCompetitionId] = useState<string | null>(null);
     const [scanError, setScanError] = useState<string | null>(null);
     const qrCanvasRef = useRef<HTMLCanvasElement>(null);
     const scannerContainerRef = useRef<HTMLDivElement>(null);
@@ -214,6 +215,38 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
         }
         return () => { if (scannerRef.current && scannerRef.current.isScanning) { scannerRef.current.stop().catch((e:any) => console.warn("Error al detener escáner.", e)); }};
     }, [view, competitions, onCompetitionCreate, onCompetitionUpdate]);
+
+    const standings = useMemo(() => {
+        if (!selectedCompetition || selectedCompetition.format !== 'Liguilla' || !selectedCompetition.schedule) return [];
+        return selectedCompetition.teams.map(teamName => {
+            let played = 0, wins = 0, losses = 0, draws = 0, tdFor = 0, tdAgainst = 0;
+            Object.values(selectedCompetition.schedule!).forEach(round => {
+                (round as Matchup[]).forEach(match => {
+                    if (match.team1 === teamName || match.team2 === teamName) {
+                        if (match.score1 !== undefined && match.score2 !== undefined) {
+                            played++;
+                            const isTeam1 = match.team1 === teamName;
+                            const scoreFor = isTeam1 ? match.score1 : match.score2;
+                            const scoreAgainst = isTeam1 ? match.score2 : match.score1;
+                            tdFor += scoreFor;
+                            tdAgainst += scoreAgainst;
+                            if (scoreFor > scoreAgainst) wins++;
+                            else if (scoreFor < scoreAgainst) losses++;
+                            else draws++;
+                        }
+                    }
+                });
+            });
+            return { name: teamName, p: played, w: wins, d: draws, l: losses, tdFor, tdAgainst, pts: wins * 3 + draws };
+        }).sort((a, b) => b.pts - a.pts || (b.tdFor - b.tdAgainst) - (a.tdFor - a.tdAgainst) || b.tdFor - a.tdFor);
+    }, [selectedCompetition]);
+        
+    const finalWinner = useMemo(() => {
+        if (!selectedCompetition || selectedCompetition.format !== 'Torneo' || !selectedCompetition.bracket) return null;
+        const roundKeys = Object.keys(selectedCompetition.bracket);
+        const finalRoundKey = roundKeys[roundKeys.length - 1];
+        return selectedCompetition.bracket[finalRoundKey]?.[0]?.winner;
+    }, [selectedCompetition]);
 
     const handleAddToCalendar = (matchup: Matchup, competitionName: string, matchKey: string, date: Date) => {
         if (!window.google?.accounts) {
@@ -408,6 +441,13 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
         }
         setIsConfirmDeleteOpen(false);
     };
+    
+    const confirmDeleteFromListAction = () => {
+        if (deletingCompetitionId) {
+            onCompetitionDelete(deletingCompetitionId);
+        }
+        setDeletingCompetitionId(null);
+    };
 
     const ScoreModal = () => {
         if (!scoreModalState?.isOpen) return null;
@@ -530,12 +570,21 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
             {competitions.length > 0 ? (
                 <div className="space-y-3 mb-6">
                     {competitions.map(comp => (
-                        <button key={comp.id} onClick={() => { setSelectedCompetition(comp); setView('detail'); }} className="w-full max-w-md mx-auto bg-slate-700/50 p-4 rounded-lg shadow-md hover:bg-slate-700 transition-colors">
-                            <div className="flex justify-between items-center">
-                                <span className="font-semibold text-white">{comp.name}</span>
-                                <span className="text-xs bg-slate-600 text-slate-300 px-2 py-1 rounded-full">{comp.format}</span>
-                            </div>
-                        </button>
+                        <div key={comp.id} className="w-full max-w-md mx-auto flex items-center gap-2">
+                            <button onClick={() => { setSelectedCompetition(comp); setView('detail'); }} className="flex-grow bg-slate-700/50 p-4 rounded-lg shadow-md hover:bg-slate-700 transition-colors text-left">
+                                <div className="flex justify-between items-center">
+                                    <span className="font-semibold text-white truncate">{comp.name}</span>
+                                    <span className="text-xs bg-slate-600 text-slate-300 px-2 py-1 rounded-full flex-shrink-0">{comp.format}</span>
+                                </div>
+                            </button>
+                            <button 
+                                onClick={() => setDeletingCompetitionId(comp.id)} 
+                                className="p-3 bg-red-800/50 rounded-lg hover:bg-red-700 transition-colors flex-shrink-0"
+                                aria-label={`Eliminar competición ${comp.name}`}
+                            >
+                                <TrashIcon />
+                            </button>
+                        </div>
                     ))}
                 </div>
             ) : (
@@ -603,38 +652,6 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
 
     const renderDetailView = () => {
         if (!selectedCompetition) return null;
-
-        const standings = useMemo(() => {
-            if (selectedCompetition.format !== 'Liguilla' || !selectedCompetition.schedule) return [];
-            return selectedCompetition.teams.map(teamName => {
-                let played = 0, wins = 0, losses = 0, draws = 0, tdFor = 0, tdAgainst = 0;
-                Object.values(selectedCompetition.schedule!).forEach(round => {
-                    (round as Matchup[]).forEach(match => {
-                        if (match.team1 === teamName || match.team2 === teamName) {
-                            if (match.score1 !== undefined && match.score2 !== undefined) {
-                                played++;
-                                const isTeam1 = match.team1 === teamName;
-                                const scoreFor = isTeam1 ? match.score1 : match.score2;
-                                const scoreAgainst = isTeam1 ? match.score2 : match.score1;
-                                tdFor += scoreFor;
-                                tdAgainst += scoreAgainst;
-                                if (scoreFor > scoreAgainst) wins++;
-                                else if (scoreFor < scoreAgainst) losses++;
-                                else draws++;
-                            }
-                        }
-                    });
-                });
-                return { name: teamName, p: played, w: wins, d: draws, l: losses, tdFor, tdAgainst, pts: wins * 3 + draws };
-            }).sort((a, b) => b.pts - a.pts || (b.tdFor - b.tdAgainst) - (a.tdFor - a.tdAgainst) || b.tdFor - a.tdFor);
-        }, [selectedCompetition]);
-            
-        const finalWinner = useMemo(() => {
-            if (selectedCompetition.format !== 'Torneo' || !selectedCompetition.bracket) return null;
-            const roundKeys = Object.keys(selectedCompetition.bracket);
-            const finalRoundKey = roundKeys[roundKeys.length - 1];
-            return selectedCompetition.bracket[finalRoundKey]?.[0]?.winner;
-        }, [selectedCompetition]);
 
         return (
             <div className="p-4">
@@ -826,6 +843,21 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
                         <h3 className="text-xl font-bold text-amber-400 mb-4 text-center">QR de {selectedCompetition.name}</h3>
                         <canvas ref={qrCanvasRef}></canvas>
                         <p className="text-xs text-slate-400 mt-2 text-center">Escanea para importar la competición.</p>
+                    </div>
+                </div>
+            )}
+
+            {deletingCompetitionId && (
+                <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={() => setDeletingCompetitionId(null)}>
+                    <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-sm w-full" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-xl font-bold text-amber-400 p-4 border-b border-slate-700">Confirmar Eliminación</h3>
+                        <div className="p-5">
+                            <p className="text-slate-300">¿Estás seguro de que quieres eliminar la competición "{competitions.find(c => c.id === deletingCompetitionId)?.name}"? Esta acción no se puede deshacer.</p>
+                        </div>
+                        <div className="p-4 bg-slate-900/50 border-t border-slate-700 flex justify-end gap-3">
+                            <button onClick={() => setDeletingCompetitionId(null)} className="bg-slate-600 text-white font-bold py-2 px-4 rounded-md">Cancelar</button>
+                            <button onClick={confirmDeleteFromListAction} className="bg-red-600 text-white font-bold py-2 px-4 rounded-md">Eliminar</button>
+                        </div>
                     </div>
                 </div>
             )}
