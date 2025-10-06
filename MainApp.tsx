@@ -15,11 +15,9 @@ import type { ManagedTeam, Competition, Play } from '../types';
 import { useAuth } from '../hooks/useAuth';
 import UserProfile from './UserProfile';
 import TrophyIcon from './icons/TrophyIcon';
-// FIX: Changed default import of 'Leagues' to a named import to match its export.
 import { Leagues } from './Leagues';
-// FIX: The `db` object is exported from `firebaseConfig`, not `App`.
 import { db } from '../firebaseConfig';
-import { collection, getDocs, addDoc, doc, setDoc, deleteDoc, query, where, writeBatch } from "firebase/firestore";
+import { collection, onSnapshot, addDoc, doc, setDoc, deleteDoc, writeBatch } from "firebase/firestore";
 
 type View = 'guide' | 'teams' | 'plays' | 'generators' | 'manager' | 'live' | 'leagues';
 
@@ -39,127 +37,223 @@ const MainApp: React.FC = () => {
   const [competitions, setCompetitions] = useState<Competition[]>([]);
   const [plays, setPlays] = useState<Play[]>([]);
   
-  const [loading, setLoading] = useState(true);
+  const [dataInitiallyLoaded, setDataInitiallyLoaded] = useState(false);
   const [requestedRoster, setRequestedRoster] = useState<string | null>(null);
 
   useEffect(() => {
-    setLoading(true);
-    if (!user) {
-        setLoading(false);
-        return;
-    }
-
-    if (isGuest) {
-        // Guest mode: clear all state, no persistence
+    if (isGuest || !user || !db) {
+        // Guest mode or no user/db: clear all state, no persistence
         setManagedTeams([]);
         setCompetitions([]);
         setPlays([]);
-        setLoading(false);
-    } else {
-        // Firebase user: fetch all data from Firestore
-        if (!db) {
-            console.error("Firestore is not initialized.");
-            setLoading(false);
-            return;
-        }
-        const fetchAllData = async () => {
-            try {
-                const teamsRef = collection(db, 'users', user.id, 'teams');
-                const teamsSnap = await getDocs(teamsRef);
-                setManagedTeams(teamsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ManagedTeam[]);
-
-                const compsRef = collection(db, 'users', user.id, 'competitions');
-                const compsSnap = await getDocs(compsRef);
-                setCompetitions(compsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Competition[]);
-
-                const playsRef = collection(db, 'users', user.id, 'plays');
-                const playsSnap = await getDocs(playsRef);
-                setPlays(playsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Play[]);
-
-            } catch (error) {
-                console.error("Error fetching data from Firestore:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchAllData();
+        setDataInitiallyLoaded(true); // Nothing to load, so we're ready
+        return;
     }
-  }, [user, isGuest]);
 
-  // --- Data Handlers ---
+    setDataInitiallyLoaded(false); // Show loader for new user login
+
+    const teamsUnsub = onSnapshot(collection(db, 'users', user.id, 'teams'), 
+        (snapshot) => {
+            setManagedTeams(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ManagedTeam[]);
+            if (!dataInitiallyLoaded) setDataInitiallyLoaded(true); // Stop loading after first data arrives
+        }, 
+        (error) => {
+            console.error("Error fetching teams:", error);
+            setDataInitiallyLoaded(true); // Unlock UI even on error
+        }
+    );
+
+    const compsUnsub = onSnapshot(collection(db, 'users', user.id, 'competitions'), 
+        (snapshot) => {
+            setCompetitions(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Competition[]);
+        },
+        (error) => console.error("Error fetching competitions:", error)
+    );
+
+    const playsUnsub = onSnapshot(collection(db, 'users', user.id, 'plays'), 
+        (snapshot) => {
+            setPlays(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Play[]);
+        },
+        (error) => console.error("Error fetching plays:", error)
+    );
+
+    // Cleanup subscriptions on component unmount or user change
+    return () => {
+        teamsUnsub();
+        compsUnsub();
+        playsUnsub();
+    };
+  }, [user, isGuest, dataInitiallyLoaded]);
+
+  // --- Data Handlers with Optimistic UI ---
 
   const handleTeamCreate = async (newTeamData: Omit<ManagedTeam, 'id'>) => {
     if (!user) return;
-    if (isGuest) {
-        setManagedTeams(prev => [...prev, { ...newTeamData, id: Date.now().toString() }]);
-    } else if (db) {
+
+    const tempId = `temp_${Date.now()}`;
+    const newTeam = { ...newTeamData, id: tempId };
+    setManagedTeams(prev => [...prev, newTeam]);
+    
+    if (isGuest) return;
+    
+    try {
+        if (!db) throw new Error("Database not connected.");
         const docRef = await addDoc(collection(db, 'users', user.id, 'teams'), newTeamData);
-        setManagedTeams(prev => [...prev, { ...newTeamData, id: docRef.id }]);
+        // onSnapshot will handle the final update, but we can swap the ID to be safe
+        setManagedTeams(prev => prev.map(t => (t.id === tempId ? { ...t, id: docRef.id } : t)));
+    } catch (error) {
+        console.error("Error creating team:", error);
+        alert(`Error al sincronizar el equipo con la nube: ${error instanceof Error ? error.message : String(error)}. El equipo no se ha guardado.`);
+        setManagedTeams(prev => prev.filter(t => t.id !== tempId));
     }
   };
 
   const handleTeamUpdate = async (updatedTeam: ManagedTeam) => {
     if (!user || !updatedTeam.id) return;
+    
+    const originalTeams = managedTeams;
     setManagedTeams(prev => prev.map(t => t.id === updatedTeam.id ? updatedTeam : t));
-    if (!isGuest && db) {
+
+    if (isGuest) return;
+    
+    try {
+        if (!db) throw new Error("Database not connected.");
         const { id, ...teamData } = updatedTeam;
-        await setDoc(doc(db, 'users', user.id, 'teams', id), teamData);
+        await setDoc(doc(db, 'users', user.id, 'teams', id), teamData, { merge: true });
+    } catch (error) {
+        console.error("Error updating team:", error);
+        alert(`Error al actualizar el equipo en la nube: ${error instanceof Error ? error.message : String(error)}. Los cambios no se han guardado.`);
+        setManagedTeams(originalTeams);
     }
   };
 
   const handleTeamDelete = async (teamId: string) => {
     if (!user) return;
-    setManagedTeams(prev => prev.filter(t => t.id !== teamId));
-    if (!isGuest && db) {
-        await deleteDoc(doc(db, 'users', user.id, 'teams', teamId));
-    }
-  };
+    const teamToDelete = managedTeams.find(t => t.id === teamId);
+    if (!teamToDelete) return;
 
-  const handleCompetitionUpdate = async (updatedComp: Competition) => {
-    if (!user || !updatedComp.id) return;
-    setCompetitions(prev => prev.map(c => c.id === updatedComp.id ? updatedComp : c));
-    if (!isGuest && db) {
-        const { id, ...compData } = updatedComp;
-        await setDoc(doc(db, 'users', user.id, 'competitions', id), compData);
+    const originalTeams = managedTeams;
+    const originalCompetitions = competitions;
+
+    setManagedTeams(prev => prev.filter(t => t.id !== teamId));
+    
+    const updatedCompetitions = competitions.map(comp => {
+        if (!comp.teams.includes(teamToDelete.name)) return comp;
+        
+        const newComp = { ...comp, teams: comp.teams.filter(tName => tName !== teamToDelete.name) };
+        if (newComp.schedule) newComp.schedule = newComp.schedule.map(round => round.filter(match => match.team1 !== teamToDelete.name && match.team2 !== teamToDelete.name)).filter(round => round.length > 0);
+        if (newComp.bracket) newComp.bracket = newComp.bracket.map(round => round.map(match => ({ ...match, team1: match.team1 === teamToDelete.name ? 'EQUIPO ELIMINADO' : match.team1, team2: match.team2 === teamToDelete.name ? 'EQUIPO ELIMINADO' : match.team2, winner: match.winner === teamToDelete.name ? null : match.winner })));
+        return newComp;
+    });
+    setCompetitions(updatedCompetitions);
+
+    if (isGuest) return;
+
+    try {
+        if (!db) throw new Error("Database not connected.");
+        const batch = writeBatch(db);
+        batch.delete(doc(db, 'users', user.id, 'teams', teamId));
+        updatedCompetitions.forEach(comp => {
+            if (comp.id && originalCompetitions.find(oc => oc.id === comp.id) !== comp) {
+                const { id, ...compData } = comp;
+                batch.set(doc(db, 'users', user.id, 'competitions', id), compData);
+            }
+        });
+        await batch.commit();
+    } catch (error) {
+        console.error("Error deleting team:", error);
+        alert(`Error al borrar el equipo de la nube: ${error instanceof Error ? error.message : String(error)}. Deshaciendo cambios.`);
+        setManagedTeams(originalTeams);
+        setCompetitions(originalCompetitions);
     }
   };
 
   const handleCompetitionCreate = async (newCompData: Omit<Competition, 'id'>) => {
     if (!user) return;
-    const newId = Date.now().toString();
-    const newComp = { ...newCompData, id: newId };
+    const tempId = `temp_${Date.now()}`;
+    const newComp = { ...newCompData, id: tempId };
     setCompetitions(prev => [...prev, newComp]);
-    if (!isGuest && db) {
-        await setDoc(doc(db, 'users', user.id, 'competitions', newId), newCompData);
+
+    if (isGuest) return;
+
+    try {
+        if (!db) throw new Error("Database not connected.");
+        const docRef = await addDoc(collection(db, 'users', user.id, 'competitions'), newCompData);
+        setCompetitions(prev => prev.map(c => (c.id === tempId ? { ...c, id: docRef.id } : c)));
+    } catch (error) {
+        console.error("Error creating competition:", error);
+        alert(`Error al crear la competición en la nube: ${error instanceof Error ? error.message : String(error)}.`);
+        setCompetitions(prev => prev.filter(c => c.id !== tempId));
+    }
+  };
+
+  const handleCompetitionUpdate = async (updatedComp: Competition) => {
+    if (!user || !updatedComp.id) return;
+    
+    const originalCompetitions = competitions;
+    setCompetitions(prev => prev.map(c => c.id === updatedComp.id ? updatedComp : c));
+    
+    if (isGuest) return;
+
+    try {
+        if (!db) throw new Error("Database not connected.");
+        const { id, ...compData } = updatedComp;
+        await setDoc(doc(db, 'users', user.id, 'competitions', id), compData, { merge: true });
+    } catch (error) {
+        console.error("Error updating competition:", error);
+        alert(`Error al actualizar la competición en la nube: ${error instanceof Error ? error.message : String(error)}.`);
+        setCompetitions(originalCompetitions);
     }
   };
   
   const handlePlaySave = async (playToSave: Play) => {
-      if (!user) return;
-      if (isGuest) {
-          if (playToSave.id) { // Update existing play
-              setPlays(prev => prev.map(p => p.id === playToSave.id ? playToSave : p));
-          } else { // Create new play
-              setPlays(prev => [...prev, { ...playToSave, id: Date.now().toString() }]);
-          }
-      } else if (db) {
-          if (playToSave.id) { // Update
-              const { id, ...playData } = playToSave;
-              await setDoc(doc(db, 'users', user.id, 'plays', id), playData);
-              setPlays(prev => prev.map(p => p.id === id ? playToSave : p));
-          } else { // Create
-              const docRef = await addDoc(collection(db, 'users', user.id, 'plays'), playToSave);
-              setPlays(prev => [...prev, { ...playToSave, id: docRef.id }]);
-          }
-      }
+    if (!user) return;
+    
+    const originalPlays = plays;
+    let tempId: string | undefined;
+
+    if (playToSave.id && !playToSave.id.startsWith('temp_')) {
+        setPlays(prev => prev.map(p => p.id === playToSave.id ? playToSave : p));
+    } else {
+        tempId = `temp_${Date.now()}`;
+        setPlays(prev => [...prev.filter(p => p.name.toLowerCase() !== playToSave.name.toLowerCase()), { ...playToSave, id: tempId }]);
+    }
+
+    if (isGuest) return;
+    
+    try {
+        if (!db) throw new Error("Database not connected.");
+        if (playToSave.id && !playToSave.id.startsWith('temp_')) {
+            const { id, ...playData } = playToSave;
+            await setDoc(doc(db, 'users', user.id, 'plays', id), playData);
+        } else {
+            const { id, ...playData } = playToSave;
+            const docRef = await addDoc(collection(db, 'users', user.id, 'plays'), playData);
+            if (tempId) setPlays(prev => prev.map(p => (p.id === tempId ? { ...p, id: docRef.id } : p)));
+        }
+    } catch (error) {
+        console.error("Error saving play:", error);
+        alert(`Error al guardar la jugada en la nube: ${error instanceof Error ? error.message : String(error)}.`);
+        setPlays(originalPlays);
+    }
   };
 
   const handlePlayDelete = async (playId: string) => {
-      if (!user) return;
-      setPlays(prev => prev.filter(p => p.id !== playId));
-      if (!isGuest && db) {
-          await deleteDoc(doc(db, 'users', user.id, 'plays', playId));
-      }
+    if (!user) return;
+    
+    const originalPlays = plays;
+    setPlays(prev => prev.filter(p => p.id !== playId));
+
+    if (isGuest) return;
+
+    try {
+        if (!db) throw new Error("Database not connected.");
+        await deleteDoc(doc(db, 'users', user.id, 'plays', playId));
+    } catch (error) {
+        console.error("Error deleting play:", error);
+        alert(`Error al borrar la jugada de la nube: ${error instanceof Error ? error.message : String(error)}.`);
+        setPlays(originalPlays);
+    }
   };
 
 
@@ -219,13 +313,25 @@ const MainApp: React.FC = () => {
         </nav>
         
         <div className="bg-slate-800/50 rounded-lg">
-            {activeView === 'guide' && <QuickGuide />}
-            {activeView === 'teams' && <TeamsAndSkills onRequestTeamCreation={handleRequestTeamCreation} />}
-            {activeView === 'plays' && <Plays managedTeams={managedTeams} plays={plays} onSavePlay={handlePlaySave} onDeletePlay={handlePlayDelete} />}
-            {activeView === 'generators' && <Generators />}
-            {activeView === 'manager' && !loading && <TeamManager teams={managedTeams} onTeamCreate={handleTeamCreate} onTeamUpdate={handleTeamUpdate} onTeamDelete={handleTeamDelete} requestedRoster={requestedRoster} onRosterRequestHandled={() => setRequestedRoster(null)} isGuest={isGuest} />}
-            {activeView === 'live' && !loading && <LiveGame managedTeams={managedTeams} onTeamUpdate={handleTeamUpdate} />}
-            {activeView === 'leagues' && !loading && <Leagues managedTeams={managedTeams} initialCompetitions={competitions} onCompetitionCreate={handleCompetitionCreate} onCompetitionUpdate={handleCompetitionUpdate} isGuest={isGuest} />}
+            {!dataInitiallyLoaded ? (
+                 <div className="flex flex-col items-center justify-center text-white p-10">
+                    <svg className="animate-spin -ml-1 mr-3 h-10 w-10 text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p className="text-lg mt-4">Sincronizando datos...</p>
+                </div>
+            ) : (
+                <>
+                    {activeView === 'guide' && <QuickGuide />}
+                    {activeView === 'teams' && <TeamsAndSkills onRequestTeamCreation={handleRequestTeamCreation} />}
+                    {activeView === 'plays' && <Plays managedTeams={managedTeams} plays={plays} onSavePlay={handlePlaySave} onDeletePlay={handlePlayDelete} />}
+                    {activeView === 'generators' && <Generators />}
+                    {activeView === 'manager' && <TeamManager teams={managedTeams} onTeamCreate={handleTeamCreate} onTeamUpdate={handleTeamUpdate} onTeamDelete={handleTeamDelete} requestedRoster={requestedRoster} onRosterRequestHandled={() => setRequestedRoster(null)} isGuest={isGuest} />}
+                    {activeView === 'live' && <LiveGame managedTeams={managedTeams} onTeamUpdate={handleTeamUpdate} />}
+                    {activeView === 'leagues' && <Leagues managedTeams={managedTeams} initialCompetitions={competitions} onCompetitionCreate={handleCompetitionCreate} onCompetitionUpdate={handleCompetitionUpdate} isGuest={isGuest} />}
+                </>
+            )}
         </div>
 
         <footer className="text-center mt-12 text-slate-500 text-sm">

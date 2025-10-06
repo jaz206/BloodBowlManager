@@ -83,7 +83,7 @@ const MainApp: React.FC = () => {
         compsUnsub();
         playsUnsub();
     };
-  }, [user, isGuest]);
+  }, [user, isGuest, dataInitiallyLoaded]);
 
   // --- Data Handlers with Optimistic UI ---
 
