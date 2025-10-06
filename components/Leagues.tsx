@@ -151,9 +151,18 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
     const updatedComp: Competition = {
         ...comp,
         status: 'In Progress',
-        schedule: comp.format === 'Liguilla' ? generateSchedule(teamNames) : undefined,
-        bracket: comp.format === 'Torneo' ? generateBracket(teamNames) : undefined,
+        schedule: comp.format === 'Liguilla' ? generateSchedule(teamNames) : comp.schedule,
+        bracket: comp.format === 'Torneo' ? generateBracket(teamNames) : comp.bracket,
     };
+    
+    // Ensure schedule/bracket are not undefined
+    if (comp.format === 'Liguilla' && !updatedComp.schedule) {
+      updatedComp.schedule = {};
+    }
+    if (comp.format === 'Torneo' && !updatedComp.bracket) {
+      updatedComp.bracket = {};
+    }
+
     onCompetitionUpdate(updatedComp);
     setSelectedCompetition(updatedComp);
   };
