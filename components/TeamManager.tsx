@@ -1,4 +1,5 @@
 
+
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import type { ManagedTeam } from '../types';
 import TeamCreator from './TeamCreator';
@@ -248,9 +249,8 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                  <div className="flex flex-col sm:flex-row gap-4">
                     <button
                         onClick={handleImportClick}
-                        disabled={isGuest}
-                        className="flex-1 flex items-center justify-center gap-2 bg-slate-600 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-slate-500 transition-colors disabled:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
-                        title={isGuest ? "Función deshabilitada en modo invitado" : "Importar equipos desde un archivo .json"}
+                        className="flex-1 flex items-center justify-center gap-2 bg-slate-600 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-slate-500 transition-colors"
+                        title="Importar equipos desde un archivo .json"
                     >
                         <UploadIcon />
                         Importar Equipos
@@ -258,9 +258,8 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                     <input type="file" accept=".json" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
                     <button
                         onClick={() => teams.length > 0 ? setIsExportModalOpen(true) : alert("No hay equipos para exportar.")}
-                        disabled={isGuest}
-                        className="flex-1 flex items-center justify-center gap-2 bg-sky-700 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-sky-600 transition-colors disabled:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
-                        title={isGuest ? "Función deshabilitada en modo invitado" : "Exportar equipos a un archivo .json"}
+                        className="flex-1 flex items-center justify-center gap-2 bg-sky-700 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-sky-600 transition-colors"
+                        title="Exportar equipos a un archivo .json"
                     >
                        <DownloadIcon />
                         Exportar Equipos

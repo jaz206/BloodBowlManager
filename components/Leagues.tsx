@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import type { ManagedTeam, Competition, Matchup } from '../types';
 import { useAuth } from '../hooks/useAuth';
@@ -124,10 +123,11 @@ interface LeaguesProps {
     initialCompetitions: Competition[];
     onCompetitionCreate: (comp: Omit<Competition, 'id'>) => void;
     onCompetitionUpdate: (comp: Competition) => void;
+    onCompetitionDelete: (id: string) => void;
     isGuest: boolean;
 }
 
-export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetitions, onCompetitionCreate, onCompetitionUpdate, isGuest }) => {
+export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetitions, onCompetitionCreate, onCompetitionUpdate, onCompetitionDelete, isGuest }) => {
     const { user } = useAuth();
     const [competitions, setCompetitions] = useState<Competition[]>(initialCompetitions);
     const [view, setView] = useState<'list' | 'create' | 'detail' | 'scan'>('list');
@@ -152,6 +152,7 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
         matchKey: string | null;
     }>({ isOpen: false, matchup: null, competitionName: null, matchKey: null });
     const [isQrExportModalOpen, setIsQrExportModalOpen] = useState(false);
+    const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
     const [scanError, setScanError] = useState<string | null>(null);
     const qrCanvasRef = useRef<HTMLCanvasElement>(null);
     const scannerContainerRef = useRef<HTMLDivElement>(null);
@@ -280,9 +281,16 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
         });
     };
 
-
     const handleTeamSelection = (teamName: string) => {
         setSelectedTeams(prev => prev.includes(teamName) ? prev.filter(name => name !== teamName) : [...prev, teamName]);
+    };
+
+    const handleSelectAllTeams = () => {
+        if (selectedTeams.length === managedTeams.length) {
+            setSelectedTeams([]);
+        } else {
+            setSelectedTeams(managedTeams.map(t => t.name));
+        }
     };
 
     const handleCreateCompetition = () => {
@@ -307,10 +315,7 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
         
         setNewCompetitionName('');
         setSelectedTeams([]);
-        // The view will be updated by the parent component, but we can optimistically switch
-        setView('detail');
-        // We set the selected competition based on the newly created one, but we need to find it
-        // This is a bit tricky without the ID. We'll rely on the parent updating the props.
+        setView('list');
     };
 
     const isPowerOfTwo = (n: number) => n > 0 && (n & (n - 1)) === 0;
@@ -390,6 +395,15 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
         onCompetitionUpdate(updatedComp);
         setSelectedCompetition(updatedComp); // Optimistic update
         setScoreModalState(null);
+    };
+
+    const confirmDeleteAction = () => {
+        if (selectedCompetition) {
+            onCompetitionDelete(selectedCompetition.id);
+            setView('list');
+            setSelectedCompetition(null);
+        }
+        setIsConfirmDeleteOpen(false);
     };
 
     const ScoreModal = () => {
@@ -561,7 +575,12 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
                     )}
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Equipos Participantes ({selectedTeams.length})</label>
+                    <div className="flex justify-between items-center mb-1">
+                        <label className="block text-sm font-medium text-slate-300">Equipos Participantes ({selectedTeams.length})</label>
+                        <button type="button" onClick={handleSelectAllTeams} className="text-xs text-amber-400 hover:underline">
+                            {selectedTeams.length === managedTeams.length ? 'Deseleccionar Todos' : 'Seleccionar Todos'}
+                        </button>
+                    </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto bg-slate-900/50 p-2 rounded-md border border-slate-700">
                         {managedTeams.map(team => (
                             <div key={team.id} className="flex items-center bg-slate-700/50 p-2 rounded-md">
@@ -587,7 +606,6 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
             return selectedCompetition.teams.map(teamName => {
                 let played = 0, wins = 0, losses = 0, draws = 0, tdFor = 0, tdAgainst = 0;
                 Object.values(selectedCompetition.schedule!).forEach(round => {
-                    // @FIX: Cast `round` to `Matchup[]` to resolve 'unknown' type error.
                     (round as Matchup[]).forEach(match => {
                         if (match.team1 === teamName || match.team2 === teamName) {
                             if (match.score1 !== undefined && match.score2 !== undefined) {
@@ -617,13 +635,18 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
 
         return (
             <div className="p-4">
-                <div className="flex justify-between items-center mb-4">
+                <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
                     <button onClick={() => setView('list')} className="text-amber-400 hover:underline">&larr; Volver a la lista</button>
-                    {!isGuest && (
-                        <button onClick={() => setIsQrExportModalOpen(true)} className="flex items-center gap-2 bg-slate-700 text-slate-200 font-bold py-2 px-4 rounded-lg shadow-md hover:bg-slate-600 transition-colors">
-                            <QrCodeIcon /> Exportar
+                     <div className="flex gap-2">
+                        {!isGuest && (
+                            <button onClick={() => setIsQrExportModalOpen(true)} className="flex items-center gap-2 bg-slate-700 text-slate-200 font-bold py-2 px-3 rounded-lg shadow-md hover:bg-slate-600 transition-colors text-sm">
+                                <QrCodeIcon className="w-4 h-4" /> Exportar
+                            </button>
+                        )}
+                        <button onClick={() => setIsConfirmDeleteOpen(true)} className="bg-red-600 text-white font-bold py-2 px-3 rounded-md shadow-md hover:bg-red-500 transition-colors text-sm">
+                            Eliminar Competición
                         </button>
-                    )}
+                    </div>
                 </div>
                 <h2 className="text-2xl font-bold text-amber-400 text-center">{selectedCompetition.name}</h2>
                 <p className="text-center text-slate-400 mb-6">{selectedCompetition.format}</p>
@@ -678,7 +701,6 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
                                 <div key={roundIndex}>
                                     <h4 className="font-bold text-slate-300 mb-2">Jornada {parseInt(roundIndex, 10) + 1}</h4>
                                     <div className="space-y-2">
-                                        {/* @FIX: Cast `round` to `Matchup[]` to resolve 'unknown' type error. */}
                                         {(round as Matchup[]).map((match, matchIndex) => {
                                             const matchKey = `l-${roundIndex}-${matchIndex}`;
                                             return(
@@ -720,7 +742,6 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
                                     {parseInt(roundIndex, 10) === 0 ? 'Primera Ronda' : parseInt(roundIndex, 10) === numRounds - 1 ? 'Final' : `Ronda ${parseInt(roundIndex, 10) + 1}`}
                                 </h3>
                                 <div className="space-y-4">
-                                    {/* @FIX: Cast `round` to `Matchup[]` to resolve 'unknown' type error. */}
                                     {(round as Matchup[]).map((match, matchIndex) => {
                                         const matchKey = `b-${roundIndex}-${matchIndex}`;
                                         return (
@@ -802,6 +823,21 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
                         <h3 className="text-xl font-bold text-amber-400 mb-4 text-center">QR de {selectedCompetition.name}</h3>
                         <canvas ref={qrCanvasRef}></canvas>
                         <p className="text-xs text-slate-400 mt-2 text-center">Escanea para importar la competición.</p>
+                    </div>
+                </div>
+            )}
+
+            {isConfirmDeleteOpen && selectedCompetition && (
+                <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={() => setIsConfirmDeleteOpen(false)}>
+                    <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-sm w-full" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-xl font-bold text-amber-400 p-4 border-b border-slate-700">Confirmar Eliminación</h3>
+                        <div className="p-5">
+                            <p className="text-slate-300">¿Estás seguro de que quieres eliminar la competición "{selectedCompetition.name}"? Esta acción no se puede deshacer.</p>
+                        </div>
+                        <div className="p-4 bg-slate-900/50 border-t border-slate-700 flex justify-end gap-3">
+                            <button onClick={() => setIsConfirmDeleteOpen(false)} className="bg-slate-600 text-white font-bold py-2 px-4 rounded-md">Cancelar</button>
+                            <button onClick={confirmDeleteAction} className="bg-red-600 text-white font-bold py-2 px-4 rounded-md">Eliminar</button>
+                        </div>
                     </div>
                 </div>
             )}

@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect, useMemo } from 'react';
 import QuickGuide from './QuickGuide';
 import TeamsAndSkills from './TeamsAndSkills';
@@ -306,6 +305,24 @@ const MainApp: React.FC = () => {
         setSyncState('error');
     }
   };
+
+  const handleCompetitionDelete = async (compId: string) => {
+    if (!user) return;
+    setSyncState('syncing');
+    if (isGuest) {
+      setCompetitions(prev => prev.filter(c => c.id !== compId));
+      setTimeout(() => setSyncState('synced'), 500);
+      return;
+    }
+    try {
+      if (!db) throw new Error("Database not connected.");
+      await deleteDoc(doc(db, 'users', user.id, 'competitions', compId));
+    } catch (error) {
+      console.error("Error deleting competition:", error);
+      alert(`Error al eliminar la competición: ${error instanceof Error ? error.message : String(error)}`);
+      setSyncState('error');
+    }
+  };
   
   const handlePlaySave = async (playToSave: Play) => {
     if (!user) return;
@@ -430,7 +447,7 @@ const MainApp: React.FC = () => {
                     {activeView === 'generators' && <Generators />}
                     {activeView === 'manager' && <TeamManager teams={managedTeams} onTeamCreate={handleTeamCreate} onTeamUpdate={handleTeamUpdate} onTeamDelete={handleTeamDelete} requestedRoster={requestedRoster} onRosterRequestHandled={() => setRequestedRoster(null)} isGuest={isGuest} />}
                     {activeView === 'live' && <LiveGame managedTeams={managedTeams} onTeamUpdate={handleTeamUpdate} />}
-                    {activeView === 'leagues' && <Leagues managedTeams={managedTeams} initialCompetitions={competitions} onCompetitionCreate={handleCompetitionCreate} onCompetitionUpdate={handleCompetitionUpdate} isGuest={isGuest} />}
+                    {activeView === 'leagues' && <Leagues managedTeams={managedTeams} initialCompetitions={competitions} onCompetitionCreate={handleCompetitionCreate} onCompetitionUpdate={handleCompetitionUpdate} onCompetitionDelete={handleCompetitionDelete} isGuest={isGuest} />}
                 </>
             )}
         </div>
