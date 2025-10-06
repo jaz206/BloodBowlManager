@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import type { ManagedTeam, Competition, Matchup } from '../types';
 import { useAuth } from '../hooks/useAuth';
@@ -207,7 +208,7 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
     }, [view, competitions, onCompetitionCreate, onCompetitionUpdate]);
 
     const handleAddToCalendar = (matchup: Matchup, competitionName: string, matchKey: string, date: Date) => {
-        if (!window.gapi || !window.google?.accounts) {
+        if (!window.google?.accounts) {
             alert("El cliente de la API de Google aún no se ha cargado. Por favor, espera un momento y vuelve a intentarlo.");
             return;
         }
@@ -218,13 +219,13 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
             return;
         }
         
-        window.gapi.load('client', () => {
-            const tokenClient = window.google.accounts.oauth2.initTokenClient({
-                client_id: clientId,
-                scope: 'https://www.googleapis.com/auth/calendar.events',
-                callback: (tokenResponse: any) => {
-                    setCalendarModalState({ isOpen: false, matchup: null, competitionName: null, matchKey: null });
-                    if (tokenResponse && tokenResponse.access_token) {
+        const tokenClient = window.google.accounts.oauth2.initTokenClient({
+            client_id: clientId,
+            scope: 'https://www.googleapis.com/auth/calendar.events',
+            callback: (tokenResponse: any) => {
+                setCalendarModalState({ isOpen: false, matchup: null, competitionName: null, matchKey: null });
+                if (tokenResponse && tokenResponse.access_token) {
+                     window.gapi.load('client', () => {
                         window.gapi.client.setToken(tokenResponse);
                         
                         window.gapi.client.load('calendar', 'v3', () => {
@@ -254,16 +255,16 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
                                 setTimeout(() => setFeedback(null), 3000);
                             });
                         });
-                    } else if (tokenResponse.error) {
-                        console.error('Error getting access token', tokenResponse);
-                        setFeedback({ message: "Permiso denegado", matchKey, success: false });
-                        setTimeout(() => setFeedback(null), 3000);
-                    }
-                },
-            });
-            
-            tokenClient.requestAccessToken();
+                     });
+                } else if (tokenResponse.error) {
+                    console.error('Error getting access token', tokenResponse);
+                    setFeedback({ message: "Permiso denegado", matchKey, success: false });
+                    setTimeout(() => setFeedback(null), 3000);
+                }
+            },
         });
+            
+        tokenClient.requestAccessToken();
     };
     
     const openCalendarModal = (matchup: Matchup, competitionName: string, matchKey: string) => {
