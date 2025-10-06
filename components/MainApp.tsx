@@ -55,7 +55,7 @@ const MainApp: React.FC = () => {
     const teamsUnsub = onSnapshot(collection(db, 'users', user.id, 'teams'), 
         (snapshot) => {
             setManagedTeams(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ManagedTeam[]);
-            if (!dataInitiallyLoaded) setDataInitiallyLoaded(true); // Stop loading after first data arrives
+            setDataInitiallyLoaded(true); // Stop loading after first data arrives
         }, 
         (error) => {
             console.error("Error fetching teams:", error);
@@ -83,7 +83,7 @@ const MainApp: React.FC = () => {
         compsUnsub();
         playsUnsub();
     };
-  }, [user, isGuest, dataInitiallyLoaded]);
+  }, [user, isGuest]);
 
   // --- Data Handlers with Optimistic UI ---
 

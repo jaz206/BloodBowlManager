@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import type { ManagedTeam, Competition, Matchup } from '../types';
 import { useAuth } from '../hooks/useAuth';
@@ -222,40 +220,42 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
         const tokenClient = window.google.accounts.oauth2.initTokenClient({
             client_id: clientId,
             scope: 'https://www.googleapis.com/auth/calendar.events',
-            callback: (tokenResponse: any) => {
+            callback: async (tokenResponse: any) => {
                 setCalendarModalState({ isOpen: false, matchup: null, competitionName: null, matchKey: null });
                 if (tokenResponse && tokenResponse.access_token) {
-                     window.gapi.load('client', () => {
-                        window.gapi.client.setToken(tokenResponse);
-                        
-                        window.gapi.client.load('calendar', 'v3', () => {
-                            const event = {
-                                'summary': `Blood Bowl: ${matchup.team1} vs ${matchup.team2}`,
-                                'description': `Partido de la competición "${competitionName}".`,
-                                'start': {
-                                    'date': date.toISOString().split('T')[0],
-                                },
-                                'end': {
-                                    'date': date.toISOString().split('T')[0],
-                                },
-                            };
-    
-                            const request = window.gapi.client.calendar.events.insert({
-                                'calendarId': 'primary',
-                                'resource': event,
-                            });
-    
-                            request.execute((response: any) => {
-                                if (response.error) {
-                                     console.error("Error from Calendar API:", response.error);
-                                     setFeedback({ message: `Error: ${response.error.message}`, matchKey, success: false });
-                                } else {
-                                     setFeedback({ message: "Evento creado", matchKey, success: true });
-                                }
-                                setTimeout(() => setFeedback(null), 3000);
-                            });
+                     try {
+                        const event = {
+                            'summary': `Blood Bowl: ${matchup.team1} vs ${matchup.team2}`,
+                            'description': `Partido de la competición "${competitionName}".`,
+                            'start': { 'date': date.toISOString().split('T')[0] },
+                            'end': { 'date': date.toISOString().split('T')[0] },
+                        };
+
+                        const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${tokenResponse.access_token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(event)
                         });
-                     });
+
+                        const data = await response.json();
+
+                        if (!response.ok) {
+                            console.error("Error from Calendar API:", data.error);
+                            throw new Error(data.error?.message || 'Error al crear el evento.');
+                        }
+                        
+                        setFeedback({ message: "Evento creado", matchKey, success: true });
+
+                    } catch (error) {
+                        console.error("Error creating calendar event:", error);
+                        const errorMessage = error instanceof Error ? error.message : 'Error de red.';
+                        setFeedback({ message: `Error: ${errorMessage}`, matchKey, success: false });
+                    } finally {
+                        setTimeout(() => setFeedback(null), 3000);
+                    }
                 } else if (tokenResponse.error) {
                     console.error('Error getting access token', tokenResponse);
                     setFeedback({ message: "Permiso denegado", matchKey, success: false });
