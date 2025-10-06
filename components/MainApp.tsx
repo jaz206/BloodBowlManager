@@ -77,38 +77,44 @@ const MainApp: React.FC = () => {
               const newComp: Competition = { 
                   id: doc.id, 
                   name: data.name || 'Sin Nombre',
-                  format: data.format || 'Liguilla',
-                  teams: data.teams || [],
+                  format: data.format === 'Liguilla' || data.format === 'Torneo' ? data.format : 'Liguilla',
+                  teams: Array.isArray(data.teams) ? data.teams : [],
               };
   
               if (data.schedule) {
+                  const scheduleObject: Record<string, Matchup[]> = {};
                   if (Array.isArray(data.schedule)) {
-                      // MIGRATION: Old array format to new object format
-                      newComp.schedule = {};
-                      (data.schedule as any[]).forEach((round, index) => {
+                      data.schedule.forEach((round, index) => {
                           if (Array.isArray(round)) {
-                              newComp.schedule![index.toString()] = round as Matchup[];
+                              scheduleObject[index.toString()] = round;
                           }
                       });
-                  } else {
-                      // Assume it's the correct object format
-                      newComp.schedule = data.schedule;
+                  } else if (typeof data.schedule === 'object' && data.schedule !== null) {
+                      Object.entries(data.schedule).forEach(([key, value]) => {
+                          if (Array.isArray(value)) {
+                              scheduleObject[key] = value;
+                          }
+                      });
                   }
+                  newComp.schedule = scheduleObject;
               }
   
               if (data.bracket) {
+                  const bracketObject: Record<string, Matchup[]> = {};
                   if (Array.isArray(data.bracket)) {
-                      // MIGRATION: Old array format to new object format
-                      newComp.bracket = {};
-                      (data.bracket as any[]).forEach((round, index) => {
+                      data.bracket.forEach((round, index) => {
                           if (Array.isArray(round)) {
-                              newComp.bracket![index.toString()] = round as Matchup[];
+                              bracketObject[index.toString()] = round;
                           }
                       });
-                  } else {
-                      // Assume it's the correct object format
-                      newComp.bracket = data.bracket;
+                  } else if (typeof data.bracket === 'object' && data.bracket !== null) {
+                      Object.entries(data.bracket).forEach(([key, value]) => {
+                          if (Array.isArray(value)) {
+                              bracketObject[key] = value;
+                          }
+                      });
                   }
+                  newComp.bracket = bracketObject;
               }
               
               return newComp;

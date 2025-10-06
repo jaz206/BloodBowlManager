@@ -160,7 +160,12 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
 
     useEffect(() => {
         setCompetitions(initialCompetitions);
-    }, [initialCompetitions]);
+        // If a competition was just deleted, ensure we are not viewing a non-existent one
+        if (selectedCompetition && !initialCompetitions.some(c => c.id === selectedCompetition.id)) {
+            setSelectedCompetition(null);
+            setView('list');
+        }
+    }, [initialCompetitions, selectedCompetition]);
     
     useEffect(() => {
         if (isQrExportModalOpen && qrCanvasRef.current && selectedCompetition) {
@@ -400,8 +405,6 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
     const confirmDeleteAction = () => {
         if (selectedCompetition) {
             onCompetitionDelete(selectedCompetition.id);
-            setView('list');
-            setSelectedCompetition(null);
         }
         setIsConfirmDeleteOpen(false);
     };
@@ -701,7 +704,7 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
                                 <div key={roundIndex}>
                                     <h4 className="font-bold text-slate-300 mb-2">Jornada {parseInt(roundIndex, 10) + 1}</h4>
                                     <div className="space-y-2">
-                                        {(round as Matchup[]).map((match, matchIndex) => {
+                                        {(Array.isArray(round) ? round : []).map((match, matchIndex) => {
                                             const matchKey = `l-${roundIndex}-${matchIndex}`;
                                             return(
                                             <div key={matchIndex} className="bg-slate-700/50 p-3 rounded-md flex items-center justify-between">
@@ -742,7 +745,7 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
                                     {parseInt(roundIndex, 10) === 0 ? 'Primera Ronda' : parseInt(roundIndex, 10) === numRounds - 1 ? 'Final' : `Ronda ${parseInt(roundIndex, 10) + 1}`}
                                 </h3>
                                 <div className="space-y-4">
-                                    {(round as Matchup[]).map((match, matchIndex) => {
+                                    {(Array.isArray(round) ? round : []).map((match, matchIndex) => {
                                         const matchKey = `b-${roundIndex}-${matchIndex}`;
                                         return (
                                         <div key={matchIndex} className="bg-slate-800 p-3 rounded-lg relative">
