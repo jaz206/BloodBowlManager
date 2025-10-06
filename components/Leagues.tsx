@@ -17,15 +17,15 @@ declare const Html5Qrcode: any;
 const trophyImageUrl = 'https://i.pinimg.com/736x/95/dc/9a/95dc9a37df924d550e9922dbf37b9089.jpg';
 
 // Helper to generate a round-robin schedule
-// FIX: Updated function to return Matchup[][] to align with type definitions and usage.
-const generateSchedule = (teamNames: string[]): Matchup[][] => {
+// FIX: Changed return type to Record<string, Matchup[]> and implementation to match.
+const generateSchedule = (teamNames: string[]): Record<string, Matchup[]> => {
   const teams = [...teamNames];
   if (teams.length % 2 !== 0) {
     teams.push('BYE'); // Add a bye if odd number of teams
   }
 
   const numTeams = teams.length;
-  const rounds: Matchup[][] = [];
+  const rounds: Record<string, Matchup[]> = {};
   const teamIndices = teams.map((_, i) => i);
 
   for (let r = 0; r < numTeams - 1; r++) {
@@ -37,7 +37,7 @@ const generateSchedule = (teamNames: string[]): Matchup[][] => {
         round.push({ team1: teams[team1Index], team2: teams[team2Index] });
       }
     }
-    rounds.push(round);
+    rounds[r.toString()] = round;
 
     // Rotate team indices, keeping the first one fixed
     const last = teamIndices.pop()!;
@@ -47,8 +47,8 @@ const generateSchedule = (teamNames: string[]): Matchup[][] => {
 };
 
 // Helper to generate a single-elimination tournament bracket
-// FIX: Updated function to return Matchup[][] to align with type definitions and usage.
-const generateBracket = (teamNames: string[]): Matchup[][] => {
+// FIX: Changed return type to Record<string, Matchup[]> and implementation to match.
+const generateBracket = (teamNames: string[]): Record<string, Matchup[]> => {
     const shuffledTeams = [...teamNames].sort(() => 0.5 - Math.random());
     let numTeams = shuffledTeams.length;
     
@@ -62,7 +62,7 @@ const generateBracket = (teamNames: string[]): Matchup[][] => {
         numTeams = nextPowerOfTwo;
     }
 
-    const bracket: Matchup[][] = [];
+    const bracket: Record<string, Matchup[]> = {};
 
     const firstRound: Matchup[] = [];
     for (let i = 0; i < numTeams; i += 2) {
@@ -82,9 +82,10 @@ const generateBracket = (teamNames: string[]): Matchup[][] => {
         }
     });
     
-    bracket.push(firstRound);
+    bracket['0'] = firstRound;
 
     let currentRoundSize = Math.ceil(numTeams / 2);
+    let roundIndex = 1;
     while (currentRoundSize > 1) {
         currentRoundSize /= 2;
         const nextRound: Matchup[] = [];
@@ -96,19 +97,20 @@ const generateBracket = (teamNames: string[]): Matchup[][] => {
             });
         }
         if (nextRound.length > 0) {
-          bracket.push(nextRound);
+          bracket[roundIndex.toString()] = nextRound;
         }
+        roundIndex++;
     }
 
     // Propagate winners from BYE matches in the first round to the second round
-    if (bracket.length > 1) {
-        for (let i = 0; i < bracket[0].length; i++) {
-            const winner = bracket[0][i].winner;
+    if (bracket['1']) {
+        for (let i = 0; i < bracket['0'].length; i++) {
+            const winner = bracket['0'][i].winner;
             if (winner) {
                 const nextMatchIndex = Math.floor(i / 2);
                 const teamPosition = i % 2 === 0 ? 'team1' : 'team2';
-                if (bracket[1][nextMatchIndex]) {
-                    bracket[1][nextMatchIndex][teamPosition] = winner;
+                if (bracket['1'][nextMatchIndex]) {
+                    (bracket['1'][nextMatchIndex] as any)[teamPosition] = winner;
                 }
             }
         }
@@ -137,7 +139,7 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
     
     const [scoreModalState, setScoreModalState] = useState<{
         isOpen: boolean;
-        roundIndex: number;
+        roundIndex: string;
         matchIndex: number;
         matchup: Matchup;
     } | null>(null);
@@ -208,7 +210,7 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
     }, [view, competitions, onCompetitionCreate, onCompetitionUpdate]);
 
     const handleAddToCalendar = (matchup: Matchup, competitionName: string, matchKey: string, date: Date) => {
-        if (!window.gapi || !window.google?.accounts) {
+        if (!window.google?.accounts) {
             alert("El cliente de la API de Google aún no se ha cargado. Por favor, espera un momento y vuelve a intentarlo.");
             return;
         }
@@ -219,52 +221,54 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
             return;
         }
         
-        window.gapi.load('client', () => {
-            const tokenClient = window.google.accounts.oauth2.initTokenClient({
-                client_id: clientId,
-                scope: 'https://www.googleapis.com/auth/calendar.events',
-                callback: (tokenResponse: any) => {
-                    setCalendarModalState({ isOpen: false, matchup: null, competitionName: null, matchKey: null });
-                    if (tokenResponse && tokenResponse.access_token) {
-                        window.gapi.client.setToken(tokenResponse);
-                        
-                        window.gapi.client.load('calendar', 'v3', () => {
-                            const event = {
-                                'summary': `Blood Bowl: ${matchup.team1} vs ${matchup.team2}`,
-                                'description': `Partido de la competición "${competitionName}".`,
-                                'start': {
-                                    'date': date.toISOString().split('T')[0],
-                                },
-                                'end': {
-                                    'date': date.toISOString().split('T')[0],
-                                },
-                            };
-    
-                            const request = window.gapi.client.calendar.events.insert({
-                                'calendarId': 'primary',
-                                'resource': event,
-                            });
-    
-                            request.execute((response: any) => {
-                                if (response.error) {
-                                     console.error("Error from Calendar API:", response.error);
-                                     setFeedback({ message: `Error: ${response.error.message}`, matchKey, success: false });
-                                } else {
-                                     setFeedback({ message: "Evento creado", matchKey, success: true });
-                                }
-                                setTimeout(() => setFeedback(null), 3000);
-                            });
+        const tokenClient = window.google.accounts.oauth2.initTokenClient({
+            client_id: clientId,
+            scope: 'https://www.googleapis.com/auth/calendar.events',
+            callback: async (tokenResponse: any) => {
+                setCalendarModalState({ isOpen: false, matchup: null, competitionName: null, matchKey: null });
+                if (tokenResponse && tokenResponse.access_token) {
+                     try {
+                        const event = {
+                            'summary': `Blood Bowl: ${matchup.team1} vs ${matchup.team2}`,
+                            'description': `Partido de la competición "${competitionName}".`,
+                            'start': { 'date': date.toISOString().split('T')[0] },
+                            'end': { 'date': date.toISOString().split('T')[0] },
+                        };
+
+                        const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${tokenResponse.access_token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(event)
                         });
-                    } else if (tokenResponse.error) {
-                        console.error('Error getting access token', tokenResponse);
-                        setFeedback({ message: "Permiso denegado", matchKey, success: false });
+
+                        const data = await response.json();
+
+                        if (!response.ok) {
+                            console.error("Error from Calendar API:", data.error);
+                            throw new Error(data.error?.message || 'Error al crear el evento.');
+                        }
+                        
+                        setFeedback({ message: "Evento creado", matchKey, success: true });
+
+                    } catch (error) {
+                        console.error("Error creating calendar event:", error);
+                        const errorMessage = error instanceof Error ? error.message : 'Error de red.';
+                        setFeedback({ message: `Error: ${errorMessage}`, matchKey, success: false });
+                    } finally {
                         setTimeout(() => setFeedback(null), 3000);
                     }
-                },
-            });
-            
-            tokenClient.requestAccessToken();
+                } else if (tokenResponse.error) {
+                    console.error('Error getting access token', tokenResponse);
+                    setFeedback({ message: "Permiso denegado", matchKey, success: false });
+                    setTimeout(() => setFeedback(null), 3000);
+                }
+            },
         });
+            
+        tokenClient.requestAccessToken();
     };
     
     const openCalendarModal = (matchup: Matchup, competitionName: string, matchKey: string) => {
@@ -311,13 +315,13 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
 
     const isPowerOfTwo = (n: number) => n > 0 && (n & (n - 1)) === 0;
 
-    const handleWinnerSelect = (roundIndex: number, matchIndex: number, winnerTeam: string) => {
+    const handleWinnerSelect = (roundIndexStr: string, matchIndex: number, winnerTeam: string) => {
         if (!selectedCompetition || !selectedCompetition.bracket) return;
-
+        
+        const roundIndex = parseInt(roundIndexStr, 10);
         const newBracket = JSON.parse(JSON.stringify(selectedCompetition.bracket));
-        const currentMatch = newBracket[roundIndex][matchIndex];
-        // FIX: Use .length for arrays instead of Object.keys
-        const numRounds = newBracket.length;
+        const currentMatch = newBracket[roundIndexStr][matchIndex];
+        const numRounds = Object.keys(newBracket).length;
 
         const isDeselecting = currentMatch.winner === winnerTeam;
 
@@ -331,10 +335,10 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
                 const nextMatchIdx = Math.floor(currentMatchIdx / 2);
                 const teamPosInNextMatch = currentMatchIdx % 2 === 0 ? 'team1' : 'team2';
                 
-                const nextMatch = newBracket[nextRoundIdx][nextMatchIdx];
+                const nextMatch = newBracket[nextRoundIdx.toString()][nextMatchIdx];
                 
-                if (nextMatch[teamPosInNextMatch] === winnerTeam) {
-                    nextMatch[teamPosInNextMatch] = 'Por determinar';
+                if ((nextMatch as any)[teamPosInNextMatch] === winnerTeam) {
+                    (nextMatch as any)[teamPosInNextMatch] = 'Por determinar';
                     if (nextMatch.winner === winnerTeam) {
                         nextMatch.winner = null;
                     }
@@ -351,14 +355,14 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
                 const nextRoundIndex = roundIndex + 1;
                 const nextMatchIndex = Math.floor(matchIndex / 2);
                 const teamPosition = matchIndex % 2 === 0 ? 'team1' : 'team2';
-                newBracket[nextRoundIndex][nextMatchIndex][teamPosition] = winnerTeam;
+                (newBracket[nextRoundIndex.toString()][nextMatchIndex] as any)[teamPosition] = winnerTeam;
             }
         }
         
         onCompetitionUpdate({ ...selectedCompetition, bracket: newBracket });
     };
 
-    const handleOpenScoreModal = (roundIndex: number, matchIndex: number, matchup: Matchup) => {
+    const handleOpenScoreModal = (roundIndex: string, matchIndex: number, matchup: Matchup) => {
         setScoreModalState({ isOpen: true, roundIndex, matchIndex, matchup });
     };
 
@@ -574,34 +578,37 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
     const renderDetailView = () => {
         if (!selectedCompetition) return null;
 
-        const standings = selectedCompetition.format === 'Liguilla' ? 
-            selectedCompetition.teams.map(teamName => {
+        const standings = useMemo(() => {
+            if (selectedCompetition.format !== 'Liguilla' || !selectedCompetition.schedule) return [];
+            return selectedCompetition.teams.map(teamName => {
                 let played = 0, wins = 0, losses = 0, draws = 0, tdFor = 0, tdAgainst = 0;
-                if (selectedCompetition.schedule) {
-                    // FIX: Iterate over schedule as an array of arrays.
-                    selectedCompetition.schedule.forEach(round => {
-                        round.forEach(match => {
-                            if (match.team1 === teamName || match.team2 === teamName) {
-                                if (match.score1 !== undefined && match.score2 !== undefined) {
-                                    played++;
-                                    const isTeam1 = match.team1 === teamName;
-                                    const scoreFor = isTeam1 ? match.score1 : match.score2;
-                                    const scoreAgainst = isTeam1 ? match.score2 : match.score1;
-                                    tdFor += scoreFor;
-                                    tdAgainst += scoreAgainst;
-                                    if (scoreFor > scoreAgainst) wins++;
-                                    else if (scoreFor < scoreAgainst) losses++;
-                                    else draws++;
-                                }
+                Object.values(selectedCompetition.schedule!).forEach(round => {
+                    round.forEach(match => {
+                        if (match.team1 === teamName || match.team2 === teamName) {
+                            if (match.score1 !== undefined && match.score2 !== undefined) {
+                                played++;
+                                const isTeam1 = match.team1 === teamName;
+                                const scoreFor = isTeam1 ? match.score1 : match.score2;
+                                const scoreAgainst = isTeam1 ? match.score2 : match.score1;
+                                tdFor += scoreFor;
+                                tdAgainst += scoreAgainst;
+                                if (scoreFor > scoreAgainst) wins++;
+                                else if (scoreFor < scoreAgainst) losses++;
+                                else draws++;
                             }
-                        });
+                        }
                     });
-                }
+                });
                 return { name: teamName, p: played, w: wins, d: draws, l: losses, tdFor, tdAgainst, pts: wins * 3 + draws };
-            }).sort((a, b) => b.pts - a.pts || (b.tdFor - b.tdAgainst) - (a.tdFor - a.tdAgainst) || b.tdFor - a.tdFor)
-            : [];
+            }).sort((a, b) => b.pts - a.pts || (b.tdFor - b.tdAgainst) - (a.tdFor - a.tdAgainst) || b.tdFor - a.tdFor);
+        }, [selectedCompetition]);
             
-        const finalWinner = selectedCompetition.format === 'Torneo' && selectedCompetition.bracket && selectedCompetition.bracket[selectedCompetition.bracket.length - 1]?.[0]?.winner;
+        const finalWinner = useMemo(() => {
+            if (selectedCompetition.format !== 'Torneo' || !selectedCompetition.bracket) return null;
+            const roundKeys = Object.keys(selectedCompetition.bracket);
+            const finalRoundKey = roundKeys[roundKeys.length - 1];
+            return selectedCompetition.bracket[finalRoundKey]?.[0]?.winner;
+        }, [selectedCompetition]);
 
         return (
             <div className="p-4">
@@ -662,10 +669,9 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
 
                         <h3 className="text-xl font-semibold text-amber-300 mb-2">Partidos</h3>
                         <div className="space-y-4">
-                            {/* FIX: Iterate over schedule as an array. */}
-                            {selectedCompetition.schedule?.map((round, roundIndex) => (
+                            {selectedCompetition.schedule && Object.entries(selectedCompetition.schedule).map(([roundIndex, round]) => (
                                 <div key={roundIndex}>
-                                    <h4 className="font-bold text-slate-300 mb-2">Jornada {roundIndex + 1}</h4>
+                                    <h4 className="font-bold text-slate-300 mb-2">Jornada {parseInt(roundIndex, 10) + 1}</h4>
                                     <div className="space-y-2">
                                         {round.map((match, matchIndex) => {
                                             const matchKey = `l-${roundIndex}-${matchIndex}`;
@@ -700,13 +706,12 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
 
                 {selectedCompetition.format === 'Torneo' && selectedCompetition.bracket && (
                     <div className="flex flex-col md:flex-row gap-4 overflow-x-auto p-4 bg-slate-900/50 rounded-lg">
-                        {/* FIX: Iterate over bracket as an array. */}
-                        {selectedCompetition.bracket.map((round, roundIndex) => {
-                            const numRounds = selectedCompetition.bracket!.length;
+                        {Object.entries(selectedCompetition.bracket).map(([roundIndex, round]) => {
+                            const numRounds = Object.keys(selectedCompetition.bracket!).length;
                             return (
                             <div key={roundIndex} className="flex flex-col justify-around min-w-[250px]">
                                 <h3 className="text-lg font-semibold text-amber-300 text-center mb-4">
-                                    {roundIndex === 0 ? 'Primera Ronda' : roundIndex === numRounds - 1 ? 'Final' : `Ronda ${roundIndex + 1}`}
+                                    {parseInt(roundIndex, 10) === 0 ? 'Primera Ronda' : parseInt(roundIndex, 10) === numRounds - 1 ? 'Final' : `Ronda ${parseInt(roundIndex, 10) + 1}`}
                                 </h3>
                                 <div className="space-y-4">
                                     {round.map((match, matchIndex) => {

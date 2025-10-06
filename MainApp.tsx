@@ -11,7 +11,7 @@ import ClipboardListIcon from './icons/ClipboardListIcon';
 import CubeIcon from './icons/CubeIcon';
 import ShieldCheckIcon from './icons/ShieldCheckIcon';
 import StopwatchIcon from './icons/StopwatchIcon';
-import type { ManagedTeam, Competition, Play } from '../types';
+import type { ManagedTeam, Competition, Play, Matchup } from '../types';
 import { useAuth } from '../hooks/useAuth';
 import UserProfile from './UserProfile';
 import TrophyIcon from './icons/TrophyIcon';
@@ -141,8 +141,29 @@ const MainApp: React.FC = () => {
         if (!comp.teams.includes(teamToDelete.name)) return comp;
         
         const newComp = { ...comp, teams: comp.teams.filter(tName => tName !== teamToDelete.name) };
-        if (newComp.schedule) newComp.schedule = newComp.schedule.map(round => round.filter(match => match.team1 !== teamToDelete.name && match.team2 !== teamToDelete.name)).filter(round => round.length > 0);
-        if (newComp.bracket) newComp.bracket = newComp.bracket.map(round => round.map(match => ({ ...match, team1: match.team1 === teamToDelete.name ? 'EQUIPO ELIMINADO' : match.team1, team2: match.team2 === teamToDelete.name ? 'EQUIPO ELIMINADO' : match.team2, winner: match.winner === teamToDelete.name ? null : match.winner })));
+        // FIX: Correctly handle Record<string, Matchup[]> for schedule and bracket
+        if (newComp.schedule) {
+            const newSchedule: Record<string, Matchup[]> = {};
+            Object.entries(newComp.schedule).forEach(([roundKey, round]) => {
+                const newRound = round.filter(match => match.team1 !== teamToDelete.name && match.team2 !== teamToDelete.name);
+                if (newRound.length > 0) {
+                    newSchedule[roundKey] = newRound;
+                }
+            });
+            newComp.schedule = newSchedule;
+        }
+        if (newComp.bracket) {
+            const newBracket: Record<string, Matchup[]> = {};
+            Object.entries(newComp.bracket).forEach(([roundKey, round]) => {
+                newBracket[roundKey] = round.map(match => ({
+                    ...match,
+                    team1: match.team1 === teamToDelete.name ? 'EQUIPO ELIMINADO' : match.team1,
+                    team2: match.team2 === teamToDelete.name ? 'EQUIPO ELIMINADO' : match.team2,
+                    winner: match.winner === teamToDelete.name ? null : match.winner,
+                }));
+            });
+            newComp.bracket = newBracket;
+        }
         return newComp;
     });
     setCompetitions(updatedCompetitions);
