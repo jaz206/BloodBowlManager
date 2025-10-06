@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import type { ManagedTeam } from '../types';
 import TeamCreator from './TeamCreator';
 import { TeamDashboard } from './TeamDashboard';
@@ -18,12 +18,17 @@ interface TeamManagerProps {
 }
 
 const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUpdate, onTeamDelete, requestedRoster, onRosterRequestHandled = () => {}, isGuest }) => {
-    const [selectedTeam, setSelectedTeam] = useState<ManagedTeam | null>(null);
+    const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
     const [isCreating, setIsCreating] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
     const [selectedTeamsForExport, setSelectedTeamsForExport] = useState<string[]>([]);
     const [initialRosterForCreation, setInitialRosterForCreation] = useState<string | null>(null);
+
+    const selectedTeam = useMemo(() => {
+        if (!selectedTeamId) return null;
+        return teams.find(t => t.id === selectedTeamId) || null;
+    }, [selectedTeamId, teams]);
 
     useEffect(() => {
         if (requestedRoster) {
@@ -47,7 +52,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
     const handleTeamDelete = () => {
         if (selectedTeam && selectedTeam.id) {
             onTeamDelete(selectedTeam.id);
-            setSelectedTeam(null);
+            setSelectedTeamId(null);
         }
     };
     
@@ -164,7 +169,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                     team={selectedTeam} 
                     onUpdate={onTeamUpdate}
                     onDelete={handleTeamDelete}
-                    onBack={() => setSelectedTeam(null)}
+                    onBack={() => setSelectedTeamId(null)}
                     isGuest={isGuest}
                 />
                  <style>{`
@@ -207,7 +212,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                     {teams.map(team => (
                         <button 
                             key={team.id || team.name}
-                            onClick={() => setSelectedTeam(team)}
+                            onClick={() => setSelectedTeamId(team.id!)}
                             className="w-full bg-slate-700/50 text-slate-200 p-4 rounded-lg shadow-md hover:bg-slate-700 hover:text-white transition-all duration-200 flex items-center gap-4 text-left"
                         >
                             {team.crestImage ? (
