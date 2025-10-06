@@ -1,4 +1,4 @@
-const CACHE_NAME = 'blood-bowl-guide-v26';
+const CACHE_NAME = 'blood-bowl-guide-v27';
 const URLS_TO_CACHE = [
   '/',
   '/index.html',
@@ -56,6 +56,7 @@ const URLS_TO_CACHE = [
   '/components/ImageModal.tsx',
   '/components/UserProfile.tsx',
   '/components/Leagues.tsx',
+  '/components/SyncStatusIndicator.tsx',
   '/components/icons/ChevronDownIcon.tsx',
   '/components/icons/ChevronUpIcon.tsx',
   '/components/icons/DiceIcon.tsx',
@@ -83,6 +84,8 @@ const URLS_TO_CACHE = [
   '/components/icons/GoogleIcon.tsx',
   '/components/icons/TrophyIcon.tsx',
   '/components/icons/PencilIcon.tsx',
+  '/components/icons/CheckCircleIcon.tsx',
+  '/components/icons/ExclamationCircleIcon.tsx',
   'https://cdn.tailwindcss.com',
   'https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js',
   'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js',
