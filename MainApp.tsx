@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import QuickGuide from './QuickGuide';
 import TeamsAndSkills from './TeamsAndSkills';
@@ -12,11 +13,11 @@ import CubeIcon from './icons/CubeIcon';
 import ShieldCheckIcon from './icons/ShieldCheckIcon';
 import StopwatchIcon from './icons/StopwatchIcon';
 import type { ManagedTeam, Competition, Play, Matchup } from '../types';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from './hooks/useAuth';
 import UserProfile from './UserProfile';
 import TrophyIcon from './icons/TrophyIcon';
 import { Leagues } from './Leagues';
-import { db } from '../firebaseConfig';
+import { db } from './firebaseConfig';
 import { collection, onSnapshot, addDoc, doc, setDoc, deleteDoc, writeBatch } from "firebase/firestore";
 
 type View = 'guide' | 'teams' | 'plays' | 'generators' | 'manager' | 'live' | 'leagues';
@@ -141,11 +142,11 @@ const MainApp: React.FC = () => {
         if (!comp.teams.includes(teamToDelete.name)) return comp;
         
         const newComp = { ...comp, teams: comp.teams.filter(tName => tName !== teamToDelete.name) };
-        // FIX: Correctly handle Record<string, Matchup[]> for schedule and bracket
+        // @FIX: Correctly handle Record<string, Matchup[]> for schedule and bracket
         if (newComp.schedule) {
             const newSchedule: Record<string, Matchup[]> = {};
             Object.entries(newComp.schedule).forEach(([roundKey, round]) => {
-                const newRound = round.filter(match => match.team1 !== teamToDelete.name && match.team2 !== teamToDelete.name);
+                const newRound = (round as Matchup[]).filter(match => match.team1 !== teamToDelete.name && match.team2 !== teamToDelete.name);
                 if (newRound.length > 0) {
                     newSchedule[roundKey] = newRound;
                 }
@@ -155,7 +156,7 @@ const MainApp: React.FC = () => {
         if (newComp.bracket) {
             const newBracket: Record<string, Matchup[]> = {};
             Object.entries(newComp.bracket).forEach(([roundKey, round]) => {
-                newBracket[roundKey] = round.map(match => ({
+                newBracket[roundKey] = (round as Matchup[]).map(match => ({
                     ...match,
                     team1: match.team1 === teamToDelete.name ? 'EQUIPO ELIMINADO' : match.team1,
                     team2: match.team2 === teamToDelete.name ? 'EQUIPO ELIMINADO' : match.team2,

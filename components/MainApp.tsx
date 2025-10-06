@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import QuickGuide from './QuickGuide';
 import TeamsAndSkills from './TeamsAndSkills';
@@ -70,7 +71,26 @@ const MainApp: React.FC = () => {
 
     const compsUnsub = onSnapshot(collection(db, 'users', user.id, 'competitions'), 
         (snapshot) => {
-            setCompetitions(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Competition[]);
+            const migratedCompetitions = snapshot.docs.map(doc => {
+                const data = doc.data();
+                
+                // On-the-fly migration for old array-based competition schedules/brackets
+                if (data.schedule && Array.isArray(data.schedule)) {
+                    data.schedule = data.schedule.reduce((acc: Record<string, Matchup[]>, round: Matchup[], index: number) => {
+                        acc[index.toString()] = round;
+                        return acc;
+                    }, {});
+                }
+                if (data.bracket && Array.isArray(data.bracket)) {
+                    data.bracket = data.bracket.reduce((acc: Record<string, Matchup[]>, round: Matchup[], index: number) => {
+                        acc[index.toString()] = round;
+                        return acc;
+                    }, {});
+                }
+
+                return { id: doc.id, ...data } as Competition;
+            });
+            setCompetitions(migratedCompetitions);
             setSyncState('synced');
         },
         (error) => {
@@ -193,7 +213,8 @@ const MainApp: React.FC = () => {
                 if (newComp.schedule) {
                     const newSchedule: Record<string, Matchup[]> = {};
                     Object.entries(newComp.schedule).forEach(([roundKey, round]) => {
-                        const newRound = round.filter(match => match.team1 !== teamToDelete.name && match.team2 !== teamToDelete.name);
+// @FIX: Add type assertion to resolve 'unknown' type error on `filter`.
+                        const newRound = (round as Matchup[]).filter(match => match.team1 !== teamToDelete.name && match.team2 !== teamToDelete.name);
                         if (newRound.length > 0) {
                             newSchedule[roundKey] = newRound;
                         }
@@ -203,7 +224,8 @@ const MainApp: React.FC = () => {
                 if (newComp.bracket) {
                     const newBracket: Record<string, Matchup[]> = {};
                     Object.entries(newComp.bracket).forEach(([roundKey, round]) => {
-                        newBracket[roundKey] = round.map(match => ({
+// @FIX: Add type assertion to resolve 'unknown' type error on `map`.
+                        newBracket[roundKey] = (round as Matchup[]).map(match => ({
                             ...match,
                             team1: match.team1 === teamToDelete.name ? 'EQUIPO ELIMINADO' : match.team1,
                             team2: match.team2 === teamToDelete.name ? 'EQUIPO ELIMINADO' : match.team2,
@@ -270,9 +292,11 @@ const MainApp: React.FC = () => {
     setSyncState('syncing');
     if (isGuest) {
         if (playToSave.id) {
-             setPlays(prev => prev.map(p => p.id === playToSave.id ? playToSave : p));
+// @FIX: Add type assertion to resolve 'unknown' type error on `map`.
+             setPlays(prev => (prev as Play[]).map(p => p.id === playToSave.id ? playToSave : p));
         } else {
-             setPlays(prev => [...prev.filter(p => p.name.toLowerCase() !== playToSave.name.toLowerCase()), { ...playToSave, id: `temp_${Date.now()}` }]);
+// @FIX: Add type assertion to resolve 'unknown' type error on `filter`.
+             setPlays(prev => [...(prev as Play[]).filter(p => p.name.toLowerCase() !== playToSave.name.toLowerCase()), { ...playToSave, id: `temp_${Date.now()}` }]);
         }
         setTimeout(() => setSyncState('synced'), 500);
         return;
