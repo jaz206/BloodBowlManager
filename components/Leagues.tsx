@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import type { ManagedTeam, Competition, Matchup, CompetitionTeam } from '../types';
 import { useAuth } from '../hooks/useAuth';
@@ -308,7 +309,25 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
             <div className="text-center">
                 <button onClick={() => setView('create')} className="bg-amber-500 text-slate-900 font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-amber-400 mb-6">Crear Competición</button>
                 {myCompetitions.length > 0 ? (
-                    <div className="space-y-3 max-w-lg mx-auto">{myCompetitions.map(c => <button key={c.id} onClick={() => { setSelectedCompetition(c); setView('detail');}} className="w-full bg-slate-700/50 p-4 rounded-lg shadow-md hover:bg-slate-700 transition-colors text-left flex justify-between items-center"><span className="font-semibold text-white truncate">{c.name}</span><span className={`text-xs px-2 py-1 rounded-full ${c.status==='Open'?'bg-green-800 text-green-300':'bg-yellow-800 text-yellow-300'}`}>{c.status}</span></button>)}</div>
+                    <div className="space-y-3 max-w-lg mx-auto">{myCompetitions.map(c => (
+                        <div key={c.id} className="w-full bg-slate-700/50 p-4 rounded-lg shadow-md flex justify-between items-center gap-4">
+                            <button onClick={() => { setSelectedCompetition(c); setView('detail');}} className="flex-grow text-left min-w-0 group">
+                                <span className="font-semibold text-white truncate block group-hover:underline">{c.name}</span>
+                                <span className="text-xs text-slate-400">{c.ownerId === user?.id ? 'Organizador: Tú' : `Organizador: ${c.ownerName}`}</span>
+                            </button>
+                            <div className="flex-shrink-0 flex items-center gap-2">
+                                <span className={`text-xs px-2 py-1 rounded-full ${c.status === 'Open' ? 'bg-green-800 text-green-300' : (c.status === 'In Progress' ? 'bg-yellow-800 text-yellow-300' : 'bg-slate-600 text-slate-300')}`}>{c.status}</span>
+                                {c.status === 'Open' && !c.teams.some(t => t.ownerId === user?.id) && managedTeams.length > 0 && (
+                                    <button
+                                        onClick={() => setJoinModalState({ comp: c, teamToJoin: managedTeams[0]?.name || '' })}
+                                        className="bg-sky-600 text-white font-bold py-1 px-3 rounded-md text-xs shadow-md hover:bg-sky-500"
+                                    >
+                                        Unirse
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    ))}</div>
                 ) : <p className="text-slate-400">No estás en ninguna competición.</p>}
             </div>
         )}
