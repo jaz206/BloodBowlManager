@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useMemo } from 'react';
 import QuickGuide from './QuickGuide';
 import TeamsAndSkills from './TeamsAndSkills';
@@ -146,6 +147,7 @@ const MainApp: React.FC = () => {
         if (newComp.schedule) {
             const newSchedule: Record<string, Matchup[]> = {};
             Object.entries(newComp.schedule).forEach(([roundKey, round]) => {
+                // @FIX: Cast `round` to `Matchup[]` to resolve 'unknown' type error.
                 const newRound = (round as Matchup[]).filter(match => match.team1 !== teamToDelete.name && match.team2 !== teamToDelete.name);
                 if (newRound.length > 0) {
                     newSchedule[roundKey] = newRound;
@@ -156,6 +158,7 @@ const MainApp: React.FC = () => {
         if (newComp.bracket) {
             const newBracket: Record<string, Matchup[]> = {};
             Object.entries(newComp.bracket).forEach(([roundKey, round]) => {
+                // @FIX: Cast `round` to `Matchup[]` to resolve 'unknown' type error.
                 newBracket[roundKey] = (round as Matchup[]).map(match => ({
                     ...match,
                     team1: match.team1 === teamToDelete.name ? 'EQUIPO ELIMINADO' : match.team1,

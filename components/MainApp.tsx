@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useMemo } from 'react';
 import QuickGuide from './QuickGuide';
 import TeamsAndSkills from './TeamsAndSkills';
@@ -71,24 +72,38 @@ const MainApp: React.FC = () => {
 
     const compsUnsub = onSnapshot(collection(db, 'users', user.id, 'competitions'), 
         (snapshot) => {
-            const migratedCompetitions = snapshot.docs.map(doc => {
+            const migratedCompetitions: Competition[] = snapshot.docs.map(doc => {
                 const data = doc.data();
                 
-                // On-the-fly migration for old array-based competition schedules/brackets
-                if (data.schedule && Array.isArray(data.schedule)) {
-                    data.schedule = data.schedule.reduce((acc: Record<string, Matchup[]>, round: Matchup[], index: number) => {
-                        acc[index.toString()] = round;
-                        return acc;
-                    }, {});
-                }
-                if (data.bracket && Array.isArray(data.bracket)) {
-                    data.bracket = data.bracket.reduce((acc: Record<string, Matchup[]>, round: Matchup[], index: number) => {
-                        acc[index.toString()] = round;
+                let schedule = data.schedule;
+                if (schedule && Array.isArray(schedule)) {
+                    schedule = schedule.reduce((acc: Record<string, Matchup[]>, round: any, index: number) => {
+                        if (Array.isArray(round)) { // Safety check
+                            acc[index.toString()] = round as Matchup[];
+                        }
                         return acc;
                     }, {});
                 }
 
-                return { id: doc.id, ...data } as Competition;
+                let bracket = data.bracket;
+                if (bracket && Array.isArray(bracket)) {
+                    bracket = bracket.reduce((acc: Record<string, Matchup[]>, round: any, index: number) => {
+                         if (Array.isArray(round)) { // Safety check
+                            acc[index.toString()] = round as Matchup[];
+                        }
+                        return acc;
+                    }, {});
+                }
+
+                // Reconstruct the object safely to ensure type correctness
+                return { 
+                    id: doc.id, 
+                    name: data.name || 'Sin Nombre',
+                    format: data.format || 'Liguilla',
+                    teams: data.teams || [],
+                    schedule: schedule,
+                    bracket: bracket,
+                } as Competition;
             });
             setCompetitions(migratedCompetitions);
             setSyncState('synced');
@@ -171,11 +186,11 @@ const MainApp: React.FC = () => {
         const updatedCompetitions = competitions.map(comp => {
             if (!comp.teams.includes(teamToDelete.name)) return comp;
             const newComp = { ...comp, teams: comp.teams.filter(tName => tName !== teamToDelete.name) };
-            // FIX: Correctly handle Record<string, Matchup[]> for schedule and bracket
             if (newComp.schedule) {
                 const newSchedule: Record<string, Matchup[]> = {};
                 Object.entries(newComp.schedule).forEach(([roundKey, round]) => {
-                    const newRound = round.filter(match => match.team1 !== teamToDelete.name && match.team2 !== teamToDelete.name);
+                    // @FIX: Cast `round` to `Matchup[]` to resolve 'unknown' type error.
+                    const newRound = (round as Matchup[]).filter(match => match.team1 !== teamToDelete.name && match.team2 !== teamToDelete.name);
                     if (newRound.length > 0) {
                         newSchedule[roundKey] = newRound;
                     }
@@ -185,7 +200,8 @@ const MainApp: React.FC = () => {
             if (newComp.bracket) {
                 const newBracket: Record<string, Matchup[]> = {};
                 Object.entries(newComp.bracket).forEach(([roundKey, round]) => {
-                    newBracket[roundKey] = round.map(match => ({
+                    // @FIX: Cast `round` to `Matchup[]` to resolve 'unknown' type error.
+                    newBracket[roundKey] = (round as Matchup[]).map(match => ({
                         ...match,
                         team1: match.team1 === teamToDelete.name ? 'EQUIPO ELIMINADO' : match.team1,
                         team2: match.team2 === teamToDelete.name ? 'EQUIPO ELIMINADO' : match.team2,
@@ -209,11 +225,10 @@ const MainApp: React.FC = () => {
         competitions.forEach(comp => {
             if (comp.id && comp.teams.includes(teamToDelete.name)) {
                 const newComp = { ...comp, teams: comp.teams.filter(tName => tName !== teamToDelete.name) };
-                // FIX: Correctly handle Record<string, Matchup[]> for schedule and bracket
                 if (newComp.schedule) {
                     const newSchedule: Record<string, Matchup[]> = {};
                     Object.entries(newComp.schedule).forEach(([roundKey, round]) => {
-// @FIX: Add type assertion to resolve 'unknown' type error on `filter`.
+                        // @FIX: Cast `round` to `Matchup[]` to resolve 'unknown' type error.
                         const newRound = (round as Matchup[]).filter(match => match.team1 !== teamToDelete.name && match.team2 !== teamToDelete.name);
                         if (newRound.length > 0) {
                             newSchedule[roundKey] = newRound;
@@ -224,7 +239,7 @@ const MainApp: React.FC = () => {
                 if (newComp.bracket) {
                     const newBracket: Record<string, Matchup[]> = {};
                     Object.entries(newComp.bracket).forEach(([roundKey, round]) => {
-// @FIX: Add type assertion to resolve 'unknown' type error on `map`.
+                        // @FIX: Cast `round` to `Matchup[]` to resolve 'unknown' type error.
                         newBracket[roundKey] = (round as Matchup[]).map(match => ({
                             ...match,
                             team1: match.team1 === teamToDelete.name ? 'EQUIPO ELIMINADO' : match.team1,
@@ -292,11 +307,9 @@ const MainApp: React.FC = () => {
     setSyncState('syncing');
     if (isGuest) {
         if (playToSave.id) {
-// @FIX: Add type assertion to resolve 'unknown' type error on `map`.
-             setPlays(prev => (prev as Play[]).map(p => p.id === playToSave.id ? playToSave : p));
+             setPlays(prev => prev.map(p => p.id === playToSave.id ? playToSave : p));
         } else {
-// @FIX: Add type assertion to resolve 'unknown' type error on `filter`.
-             setPlays(prev => [...(prev as Play[]).filter(p => p.name.toLowerCase() !== playToSave.name.toLowerCase()), { ...playToSave, id: `temp_${Date.now()}` }]);
+             setPlays(prev => [...prev.filter(p => p.name.toLowerCase() !== playToSave.name.toLowerCase()), { ...playToSave, id: `temp_${Date.now()}` }]);
         }
         setTimeout(() => setSyncState('synced'), 500);
         return;

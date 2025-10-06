@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import type { ManagedTeam, Competition, Matchup } from '../types';
 import { useAuth } from '../hooks/useAuth';
@@ -17,7 +19,6 @@ declare const Html5Qrcode: any;
 const trophyImageUrl = 'https://i.pinimg.com/736x/95/dc/9a/95dc9a37df924d550e9922dbf37b9089.jpg';
 
 // Helper to generate a round-robin schedule
-// FIX: Changed return type to Record<string, Matchup[]> and implementation to match.
 const generateSchedule = (teamNames: string[]): Record<string, Matchup[]> => {
   const teams = [...teamNames];
   if (teams.length % 2 !== 0) {
@@ -47,7 +48,6 @@ const generateSchedule = (teamNames: string[]): Record<string, Matchup[]> => {
 };
 
 // Helper to generate a single-elimination tournament bracket
-// FIX: Changed return type to Record<string, Matchup[]> and implementation to match.
 const generateBracket = (teamNames: string[]): Record<string, Matchup[]> => {
     const shuffledTeams = [...teamNames].sort(() => 0.5 - Math.random());
     let numTeams = shuffledTeams.length;
@@ -359,7 +359,9 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
             }
         }
         
-        onCompetitionUpdate({ ...selectedCompetition, bracket: newBracket });
+        const updatedComp = { ...selectedCompetition, bracket: newBracket };
+        onCompetitionUpdate(updatedComp);
+        setSelectedCompetition(updatedComp); // Optimistic update
     };
 
     const handleOpenScoreModal = (roundIndex: string, matchIndex: number, matchup: Matchup) => {
@@ -384,7 +386,9 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
             newCompetitionData.schedule = newSchedule;
         }
 
-        onCompetitionUpdate({ ...selectedCompetition, ...newCompetitionData });
+        const updatedComp = { ...selectedCompetition, ...newCompetitionData };
+        onCompetitionUpdate(updatedComp);
+        setSelectedCompetition(updatedComp); // Optimistic update
         setScoreModalState(null);
     };
 
@@ -583,7 +587,8 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
             return selectedCompetition.teams.map(teamName => {
                 let played = 0, wins = 0, losses = 0, draws = 0, tdFor = 0, tdAgainst = 0;
                 Object.values(selectedCompetition.schedule!).forEach(round => {
-                    round.forEach(match => {
+                    // @FIX: Cast `round` to `Matchup[]` to resolve 'unknown' type error.
+                    (round as Matchup[]).forEach(match => {
                         if (match.team1 === teamName || match.team2 === teamName) {
                             if (match.score1 !== undefined && match.score2 !== undefined) {
                                 played++;
@@ -673,7 +678,8 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
                                 <div key={roundIndex}>
                                     <h4 className="font-bold text-slate-300 mb-2">Jornada {parseInt(roundIndex, 10) + 1}</h4>
                                     <div className="space-y-2">
-                                        {round.map((match, matchIndex) => {
+                                        {/* @FIX: Cast `round` to `Matchup[]` to resolve 'unknown' type error. */}
+                                        {(round as Matchup[]).map((match, matchIndex) => {
                                             const matchKey = `l-${roundIndex}-${matchIndex}`;
                                             return(
                                             <div key={matchIndex} className="bg-slate-700/50 p-3 rounded-md flex items-center justify-between">
@@ -714,7 +720,8 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
                                     {parseInt(roundIndex, 10) === 0 ? 'Primera Ronda' : parseInt(roundIndex, 10) === numRounds - 1 ? 'Final' : `Ronda ${parseInt(roundIndex, 10) + 1}`}
                                 </h3>
                                 <div className="space-y-4">
-                                    {round.map((match, matchIndex) => {
+                                    {/* @FIX: Cast `round` to `Matchup[]` to resolve 'unknown' type error. */}
+                                    {(round as Matchup[]).map((match, matchIndex) => {
                                         const matchKey = `b-${roundIndex}-${matchIndex}`;
                                         return (
                                         <div key={matchIndex} className="bg-slate-800 p-3 rounded-lg relative">

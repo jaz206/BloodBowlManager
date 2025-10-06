@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import type { ManagedTeam, Competition, Matchup } from '../types';
 import { useAuth } from './hooks/useAuth';
@@ -299,10 +300,8 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
         };
 
         if (newCompetitionFormat === 'Liguilla') {
-// @FIX: Assign result of generateSchedule to schedule property. The function now returns Record<string, Matchup[]>.
             newCompetition.schedule = generateSchedule(selectedTeams);
         } else {
-// @FIX: Assign result of generateBracket to bracket property. The function now returns Record<string, Matchup[]>.
             newCompetition.bracket = generateBracket(selectedTeams);
         }
 
@@ -355,14 +354,16 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
         } else {
             currentMatch.winner = winnerTeam;
             if (roundIndex < numRounds - 1) {
-                const nextRoundIndex = (roundIndex + 1).toString();
+                const nextRoundIndex = roundIndex + 1;
                 const nextMatchIndex = Math.floor(matchIndex / 2);
                 const teamPosition = matchIndex % 2 === 0 ? 'team1' : 'team2';
-                (newBracket[nextRoundIndex][nextMatchIndex] as any)[teamPosition] = winnerTeam;
+                (newBracket[nextRoundIndex.toString()][nextMatchIndex] as any)[teamPosition] = winnerTeam;
             }
         }
         
-        onCompetitionUpdate({ ...selectedCompetition, bracket: newBracket });
+        const updatedComp = { ...selectedCompetition, bracket: newBracket };
+        onCompetitionUpdate(updatedComp);
+        setSelectedCompetition(updatedComp); // Optimistic update
     };
 
     const handleOpenScoreModal = (roundIndex: string, matchIndex: number, matchup: Matchup) => {
@@ -387,7 +388,9 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
             newCompetitionData.schedule = newSchedule;
         }
 
-        onCompetitionUpdate({ ...selectedCompetition, ...newCompetitionData });
+        const updatedComp = { ...selectedCompetition, ...newCompetitionData };
+        onCompetitionUpdate(updatedComp);
+        setSelectedCompetition(updatedComp); // Optimistic update
         setScoreModalState(null);
     };
 
@@ -585,9 +588,9 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
             if (selectedCompetition.format !== 'Liguilla' || !selectedCompetition.schedule) return [];
             return selectedCompetition.teams.map(teamName => {
                 let played = 0, wins = 0, losses = 0, draws = 0, tdFor = 0, tdAgainst = 0;
-// @FIX: Use Object.values to iterate over the schedule object, as it's not an array.
                 Object.values(selectedCompetition.schedule!).forEach(round => {
-                    round.forEach(match => {
+                    // @FIX: Cast `round` to `Matchup[]` to resolve 'unknown' type error.
+                    (round as Matchup[]).forEach(match => {
                         if (match.team1 === teamName || match.team2 === teamName) {
                             if (match.score1 !== undefined && match.score2 !== undefined) {
                                 played++;
@@ -673,12 +676,12 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
 
                         <h3 className="text-xl font-semibold text-amber-300 mb-2">Partidos</h3>
                         <div className="space-y-4">
-{/* @FIX: Use Object.entries to iterate over the schedule object and pass string index. */}
                             {selectedCompetition.schedule && Object.entries(selectedCompetition.schedule).map(([roundIndex, round]) => (
                                 <div key={roundIndex}>
                                     <h4 className="font-bold text-slate-300 mb-2">Jornada {parseInt(roundIndex, 10) + 1}</h4>
                                     <div className="space-y-2">
-                                        {round.map((match, matchIndex) => {
+                                        {/* @FIX: Cast `round` to `Matchup[]` to resolve 'unknown' type error. */}
+                                        {(round as Matchup[]).map((match, matchIndex) => {
                                             const matchKey = `l-${roundIndex}-${matchIndex}`;
                                             return(
                                             <div key={matchIndex} className="bg-slate-700/50 p-3 rounded-md flex items-center justify-between">
@@ -711,7 +714,6 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
 
                 {selectedCompetition.format === 'Torneo' && selectedCompetition.bracket && (
                     <div className="flex flex-col md:flex-row gap-4 overflow-x-auto p-4 bg-slate-900/50 rounded-lg">
-{/* @FIX: Use Object.entries to iterate over the bracket object and pass string index. */}
                         {Object.entries(selectedCompetition.bracket).map(([roundIndex, round]) => {
                             const numRounds = Object.keys(selectedCompetition.bracket!).length;
                             return (
@@ -720,7 +722,8 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
                                     {parseInt(roundIndex, 10) === 0 ? 'Primera Ronda' : parseInt(roundIndex, 10) === numRounds - 1 ? 'Final' : `Ronda ${parseInt(roundIndex, 10) + 1}`}
                                 </h3>
                                 <div className="space-y-4">
-                                    {round.map((match, matchIndex) => {
+                                    {/* @FIX: Cast `round` to `Matchup[]` to resolve 'unknown' type error. */}
+                                    {(round as Matchup[]).map((match, matchIndex) => {
                                         const matchKey = `b-${roundIndex}-${matchIndex}`;
                                         return (
                                         <div key={matchIndex} className="bg-slate-800 p-3 rounded-lg relative">

@@ -153,7 +153,7 @@ export const teamsData: Team[] = [
       { qty: "0-2", position: "Imperial Throwers", cost: 75000, stats: { MV: 6, FU: "3", AG: "3+", PS: "3+", AR: "9+" }, skills: "Pasar, Pase a la carrera", primary: "GP", secondary: "AF" },
       { qty: "0-2", position: "Noble Blitzers", cost: 105000, stats: { MV: 7, FU: "3", AG: "3+", PS: "4+", AR: "9+" }, skills: "Atrapar, Placar", primary: "AG", secondary: "FP" },
       { qty: "0-4", position: "Bodyguards", cost: 90000, stats: { MV: 6, FU: "3", AG: "3+", PS: "5+", AR: "9+" }, skills: "Mantenerse firme, Forcejear", primary: "FG", secondary: "A" },
-      { qty: "0-1", position: "Ogre", cost: 140000, stats: { MV: 5, FU: "5", AG: "4+", PS: "5+", AR: "10+" }, skills: "Cabeza dura, Estúpido, Golpe mortífero (+1), Lanzar compañero, Solitario (4+)", primary: "F", secondary: "AG" },
+      { qty: "0-1", position: "Ogre", cost: 140000, stats: { MV: 5, FU: "5", AG: "4+", PS: "5+", AR: "10+" }, skills: "Cabeza dura, Estúpido, Golpe mortífero (+1), Lanzar compañero, Solitario (4+)", primary: "F", secondary: "AG" }
     ],
   },
   {
