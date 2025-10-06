@@ -17,6 +17,7 @@ declare const Html5Qrcode: any;
 const trophyImageUrl = 'https://i.pinimg.com/736x/95/dc/9a/95dc9a37df924d550e9922dbf37b9089.jpg';
 
 // Helper to generate a round-robin schedule
+// FIX: Updated function to return Matchup[][] to align with type definitions and usage.
 const generateSchedule = (teamNames: string[]): Matchup[][] => {
   const teams = [...teamNames];
   if (teams.length % 2 !== 0) {
@@ -46,6 +47,7 @@ const generateSchedule = (teamNames: string[]): Matchup[][] => {
 };
 
 // Helper to generate a single-elimination tournament bracket
+// FIX: Updated function to return Matchup[][] to align with type definitions and usage.
 const generateBracket = (teamNames: string[]): Matchup[][] => {
     const shuffledTeams = [...teamNames].sort(() => 0.5 - Math.random());
     let numTeams = shuffledTeams.length;
@@ -206,7 +208,7 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
     }, [view, competitions, onCompetitionCreate, onCompetitionUpdate]);
 
     const handleAddToCalendar = (matchup: Matchup, competitionName: string, matchKey: string, date: Date) => {
-        if (!window.google?.accounts) {
+        if (!window.gapi || !window.google?.accounts) {
             alert("El cliente de la API de Google aún no se ha cargado. Por favor, espera un momento y vuelve a intentarlo.");
             return;
         }
@@ -217,54 +219,52 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
             return;
         }
         
-        const tokenClient = window.google.accounts.oauth2.initTokenClient({
-            client_id: clientId,
-            scope: 'https://www.googleapis.com/auth/calendar.events',
-            callback: async (tokenResponse: any) => {
-                setCalendarModalState({ isOpen: false, matchup: null, competitionName: null, matchKey: null });
-                if (tokenResponse && tokenResponse.access_token) {
-                     try {
-                        const event = {
-                            'summary': `Blood Bowl: ${matchup.team1} vs ${matchup.team2}`,
-                            'description': `Partido de la competición "${competitionName}".`,
-                            'start': { 'date': date.toISOString().split('T')[0] },
-                            'end': { 'date': date.toISOString().split('T')[0] },
-                        };
-
-                        const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
-                            method: 'POST',
-                            headers: {
-                                'Authorization': `Bearer ${tokenResponse.access_token}`,
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify(event)
-                        });
-
-                        const data = await response.json();
-
-                        if (!response.ok) {
-                            console.error("Error from Calendar API:", data.error);
-                            throw new Error(data.error?.message || 'Error al crear el evento.');
-                        }
+        window.gapi.load('client', () => {
+            const tokenClient = window.google.accounts.oauth2.initTokenClient({
+                client_id: clientId,
+                scope: 'https://www.googleapis.com/auth/calendar.events',
+                callback: (tokenResponse: any) => {
+                    setCalendarModalState({ isOpen: false, matchup: null, competitionName: null, matchKey: null });
+                    if (tokenResponse && tokenResponse.access_token) {
+                        window.gapi.client.setToken(tokenResponse);
                         
-                        setFeedback({ message: "Evento creado", matchKey, success: true });
-
-                    } catch (error) {
-                        console.error("Error creating calendar event:", error);
-                        const errorMessage = error instanceof Error ? error.message : 'Error de red.';
-                        setFeedback({ message: `Error: ${errorMessage}`, matchKey, success: false });
-                    } finally {
+                        window.gapi.client.load('calendar', 'v3', () => {
+                            const event = {
+                                'summary': `Blood Bowl: ${matchup.team1} vs ${matchup.team2}`,
+                                'description': `Partido de la competición "${competitionName}".`,
+                                'start': {
+                                    'date': date.toISOString().split('T')[0],
+                                },
+                                'end': {
+                                    'date': date.toISOString().split('T')[0],
+                                },
+                            };
+    
+                            const request = window.gapi.client.calendar.events.insert({
+                                'calendarId': 'primary',
+                                'resource': event,
+                            });
+    
+                            request.execute((response: any) => {
+                                if (response.error) {
+                                     console.error("Error from Calendar API:", response.error);
+                                     setFeedback({ message: `Error: ${response.error.message}`, matchKey, success: false });
+                                } else {
+                                     setFeedback({ message: "Evento creado", matchKey, success: true });
+                                }
+                                setTimeout(() => setFeedback(null), 3000);
+                            });
+                        });
+                    } else if (tokenResponse.error) {
+                        console.error('Error getting access token', tokenResponse);
+                        setFeedback({ message: "Permiso denegado", matchKey, success: false });
                         setTimeout(() => setFeedback(null), 3000);
                     }
-                } else if (tokenResponse.error) {
-                    console.error('Error getting access token', tokenResponse);
-                    setFeedback({ message: "Permiso denegado", matchKey, success: false });
-                    setTimeout(() => setFeedback(null), 3000);
-                }
-            },
-        });
+                },
+            });
             
-        tokenClient.requestAccessToken();
+            tokenClient.requestAccessToken();
+        });
     };
     
     const openCalendarModal = (matchup: Matchup, competitionName: string, matchKey: string) => {
@@ -316,6 +316,8 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
 
         const newBracket = JSON.parse(JSON.stringify(selectedCompetition.bracket));
         const currentMatch = newBracket[roundIndex][matchIndex];
+        // FIX: Use .length for arrays instead of Object.keys
+        const numRounds = newBracket.length;
 
         const isDeselecting = currentMatch.winner === winnerTeam;
 
@@ -324,7 +326,7 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
             let currentRoundIdx = roundIndex;
             let currentMatchIdx = matchIndex;
 
-            while (currentRoundIdx < newBracket.length - 1) {
+            while (currentRoundIdx < numRounds - 1) {
                 const nextRoundIdx = currentRoundIdx + 1;
                 const nextMatchIdx = Math.floor(currentMatchIdx / 2);
                 const teamPosInNextMatch = currentMatchIdx % 2 === 0 ? 'team1' : 'team2';
@@ -345,7 +347,7 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
             }
         } else {
             currentMatch.winner = winnerTeam;
-            if (roundIndex < newBracket.length - 1) {
+            if (roundIndex < numRounds - 1) {
                 const nextRoundIndex = roundIndex + 1;
                 const nextMatchIndex = Math.floor(matchIndex / 2);
                 const teamPosition = matchIndex % 2 === 0 ? 'team1' : 'team2';
@@ -575,23 +577,26 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
         const standings = selectedCompetition.format === 'Liguilla' ? 
             selectedCompetition.teams.map(teamName => {
                 let played = 0, wins = 0, losses = 0, draws = 0, tdFor = 0, tdAgainst = 0;
-                selectedCompetition.schedule?.forEach(round => {
-                    round.forEach(match => {
-                        if (match.team1 === teamName || match.team2 === teamName) {
-                            if (match.score1 !== undefined && match.score2 !== undefined) {
-                                played++;
-                                const isTeam1 = match.team1 === teamName;
-                                const scoreFor = isTeam1 ? match.score1 : match.score2;
-                                const scoreAgainst = isTeam1 ? match.score2 : match.score1;
-                                tdFor += scoreFor;
-                                tdAgainst += scoreAgainst;
-                                if (scoreFor > scoreAgainst) wins++;
-                                else if (scoreFor < scoreAgainst) losses++;
-                                else draws++;
+                if (selectedCompetition.schedule) {
+                    // FIX: Iterate over schedule as an array of arrays.
+                    selectedCompetition.schedule.forEach(round => {
+                        round.forEach(match => {
+                            if (match.team1 === teamName || match.team2 === teamName) {
+                                if (match.score1 !== undefined && match.score2 !== undefined) {
+                                    played++;
+                                    const isTeam1 = match.team1 === teamName;
+                                    const scoreFor = isTeam1 ? match.score1 : match.score2;
+                                    const scoreAgainst = isTeam1 ? match.score2 : match.score1;
+                                    tdFor += scoreFor;
+                                    tdAgainst += scoreAgainst;
+                                    if (scoreFor > scoreAgainst) wins++;
+                                    else if (scoreFor < scoreAgainst) losses++;
+                                    else draws++;
+                                }
                             }
-                        }
+                        });
                     });
-                });
+                }
                 return { name: teamName, p: played, w: wins, d: draws, l: losses, tdFor, tdAgainst, pts: wins * 3 + draws };
             }).sort((a, b) => b.pts - a.pts || (b.tdFor - b.tdAgainst) - (a.tdFor - a.tdAgainst) || b.tdFor - a.tdFor)
             : [];
@@ -657,6 +662,7 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
 
                         <h3 className="text-xl font-semibold text-amber-300 mb-2">Partidos</h3>
                         <div className="space-y-4">
+                            {/* FIX: Iterate over schedule as an array. */}
                             {selectedCompetition.schedule?.map((round, roundIndex) => (
                                 <div key={roundIndex}>
                                     <h4 className="font-bold text-slate-300 mb-2">Jornada {roundIndex + 1}</h4>
@@ -694,10 +700,13 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
 
                 {selectedCompetition.format === 'Torneo' && selectedCompetition.bracket && (
                     <div className="flex flex-col md:flex-row gap-4 overflow-x-auto p-4 bg-slate-900/50 rounded-lg">
-                        {selectedCompetition.bracket.map((round, roundIndex) => (
+                        {/* FIX: Iterate over bracket as an array. */}
+                        {selectedCompetition.bracket.map((round, roundIndex) => {
+                            const numRounds = selectedCompetition.bracket!.length;
+                            return (
                             <div key={roundIndex} className="flex flex-col justify-around min-w-[250px]">
                                 <h3 className="text-lg font-semibold text-amber-300 text-center mb-4">
-                                    {roundIndex === 0 ? 'Primera Ronda' : roundIndex === selectedCompetition.bracket!.length -1 ? 'Final' : `Ronda ${roundIndex + 1}`}
+                                    {roundIndex === 0 ? 'Primera Ronda' : roundIndex === numRounds - 1 ? 'Final' : `Ronda ${roundIndex + 1}`}
                                 </h3>
                                 <div className="space-y-4">
                                     {round.map((match, matchIndex) => {
@@ -737,7 +746,7 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
                                     )})}
                                 </div>
                             </div>
-                        ))}
+                        )})}
                     </div>
                 )}
             </div>

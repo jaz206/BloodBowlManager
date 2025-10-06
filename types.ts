@@ -1,9 +1,4 @@
 
-
-
-
-
-
 export interface User {
   id: string;
   name: string;
@@ -179,6 +174,7 @@ export interface Competition {
   name: string;
   format: 'Liguilla' | 'Torneo';
   teams: string[];
+  // FIX: Changed schedule and bracket to be arrays of arrays of Matchups.
   schedule?: Matchup[][]; // For Liguilla (round-robin)
   bracket?: Matchup[][];  // For Torneo (knockout)
 }
