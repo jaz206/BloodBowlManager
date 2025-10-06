@@ -166,8 +166,8 @@ export interface Matchup {
   team1: string;
   team2: string;
   winner?: string | null;
-  score1?: number;
-  score2?: number;
+  score1?: number | null;
+  score2?: number | null;
 }
 
 export interface CompetitionTeam {
@@ -181,8 +181,8 @@ export interface Competition {
   name: string;
   format: 'Liguilla' | 'Torneo';
   teams: CompetitionTeam[];
-  schedule?: Record<string, Matchup[]>; // For Liguilla (round-robin)
-  bracket?: Record<string, Matchup[]>;  // For Torneo (knockout)
+  schedule?: Record<string, Matchup[]> | null; // For Liguilla (round-robin)
+  bracket?: Record<string, Matchup[]> | null;  // For Torneo (knockout)
   ownerId: string;
   ownerName: string;
   status: 'Open' | 'In Progress' | 'Finished';

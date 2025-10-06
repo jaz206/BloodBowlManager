@@ -94,13 +94,14 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
         let p=0, w=0, l=0, d=0, tdF=0, tdA=0;
         Object.values(selectedCompetition.schedule!).forEach(round => {
             (round as Matchup[]).forEach(match => {
-                if ((match.team1 === teamName || match.team2 === teamName) && match.score1 !== undefined && match.score2 !== undefined) {
+                if ((match.team1 === teamName || match.team2 === teamName) && match.score1 != null && match.score2 != null) {
                     p++;
                     const isTeam1 = match.team1 === teamName;
                     const sF = isTeam1 ? match.score1 : match.score2;
                     const sA = isTeam1 ? match.score2 : match.score1;
-                    tdF += sF; tdA += sA;
-                    if (sF > sA) w++; else if (sA > sF) l++; else d++;
+                    tdF += sF!; 
+                    tdA += sA!;
+                    if (sF! > sA!) w++; else if (sA! > sF!) l++; else d++;
                 }
             });
         });
@@ -135,9 +136,10 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
 
   const handleJoinCompetition = () => {
     if (!joinModalState.comp || !joinModalState.teamToJoin || !user) return;
+    const cleanComp = JSON.parse(JSON.stringify(joinModalState.comp));
     const updatedComp = {
-      ...joinModalState.comp,
-      teams: [...joinModalState.comp.teams, { teamName: joinModalState.teamToJoin, ownerId: user.id, ownerName: user.name }]
+      ...cleanComp,
+      teams: [...cleanComp.teams, { teamName: joinModalState.teamToJoin, ownerId: user.id, ownerName: user.name }]
     };
     onCompetitionUpdate(updatedComp);
     setJoinModalState({ comp: null, teamToJoin: '' });
@@ -149,19 +151,24 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
         return;
     }
     const teamNames = comp.teams.map(t => t.teamName);
-    const updatedComp: Competition = {
-        ...comp,
-        status: 'In Progress',
-        schedule: comp.format === 'Liguilla' ? generateSchedule(teamNames) : comp.schedule,
-        bracket: comp.format === 'Torneo' ? generateBracket(teamNames) : comp.bracket,
-    };
+    const cleanComp = JSON.parse(JSON.stringify(comp));
     
-    // Ensure schedule/bracket are not undefined
-    if (comp.format === 'Liguilla' && !updatedComp.schedule) {
-      updatedComp.schedule = {};
-    }
-    if (comp.format === 'Torneo' && !updatedComp.bracket) {
-      updatedComp.bracket = {};
+    let updatedComp: Competition;
+
+    if (comp.format === 'Liguilla') {
+        updatedComp = {
+            ...cleanComp,
+            status: 'In Progress',
+            schedule: generateSchedule(teamNames),
+            bracket: null,
+        };
+    } else { // Torneo
+        updatedComp = {
+            ...cleanComp,
+            status: 'In Progress',
+            bracket: generateBracket(teamNames),
+            schedule: null,
+        };
     }
 
     onCompetitionUpdate(updatedComp);
@@ -170,17 +177,20 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
 
   const handleSaveScore = (score1: string, score2: string) => {
     if (!selectedCompetition || !scoreModalState) return;
-    let updatedComp = { ...selectedCompetition };
-    const s1 = score1 === '' ? undefined : parseInt(score1, 10);
-    const s2 = score2 === '' ? undefined : parseInt(score2, 10);
+    const updatedComp = JSON.parse(JSON.stringify(selectedCompetition));
+    const s1_val = parseInt(score1, 10);
+    const s2_val = parseInt(score2, 10);
+    const s1 = isNaN(s1_val) ? null : s1_val;
+    const s2 = isNaN(s2_val) ? null : s2_val;
+
     if (updatedComp.format === 'Liguilla' && updatedComp.schedule) {
-        const newSchedule = { ...updatedComp.schedule };
-        newSchedule[scoreModalState.roundIndex][scoreModalState.matchIndex] = { ...scoreModalState.matchup, score1: s1, score2: s2 };
-        updatedComp.schedule = newSchedule;
+        const match = updatedComp.schedule[scoreModalState.roundIndex][scoreModalState.matchIndex];
+        match.score1 = s1;
+        match.score2 = s2;
     } else if (updatedComp.format === 'Torneo' && updatedComp.bracket) {
-        const newBracket = { ...updatedComp.bracket };
-        newBracket[scoreModalState.roundIndex][scoreModalState.matchIndex] = { ...scoreModalState.matchup, score1: s1, score2: s2 };
-        updatedComp.bracket = newBracket;
+        const match = updatedComp.bracket[scoreModalState.roundIndex][scoreModalState.matchIndex];
+        match.score1 = s1;
+        match.score2 = s2;
     }
     onCompetitionUpdate(updatedComp);
     setSelectedCompetition(updatedComp);
@@ -190,7 +200,8 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
     const handleWinnerSelect = (roundIndexStr: string, matchIndex: number, winnerTeam: string) => {
         if (!selectedCompetition || !selectedCompetition.bracket) return;
         
-        let newBracket = JSON.parse(JSON.stringify(selectedCompetition.bracket));
+        const cleanComp = JSON.parse(JSON.stringify(selectedCompetition));
+        let newBracket = cleanComp.bracket;
         const currentMatch = newBracket[roundIndexStr][matchIndex];
         
         if (currentMatch.winner === winnerTeam) { // Deselecting
@@ -218,7 +229,7 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
             }
         }
 
-        const updatedComp = { ...selectedCompetition, bracket: newBracket };
+        const updatedComp = { ...cleanComp, bracket: newBracket };
         onCompetitionUpdate(updatedComp);
         setSelectedCompetition(updatedComp);
     };
@@ -287,7 +298,7 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
                 {selectedCompetition.format === 'Liguilla' && (
                     <>
                         <div className="overflow-x-auto mb-6"><table className="w-full text-left text-sm whitespace-nowrap"><thead className="bg-slate-700 text-amber-300"><tr><th className="p-2">Equipo</th><th className="p-2 text-center">PJ</th><th className="p-2 text-center">G</th><th className="p-2 text-center">E</th><th className="p-2 text-center">P</th><th className="p-2 text-center">TD+</th><th className="p-2 text-center">TD-</th><th className="p-2 text-center">+/-</th><th className="p-2 text-center">Pts</th></tr></thead><tbody>{standings.map(t => <tr key={t.name} className="border-b border-slate-700"><td className="p-2 font-semibold text-white">{t.name}</td><td className="p-2 text-center">{t.p}</td><td className="p-2 text-center">{t.w}</td><td className="p-2 text-center">{t.d}</td><td className="p-2 text-center">{t.l}</td><td className="p-2 text-center">{t.tdF}</td><td className="p-2 text-center">{t.tdA}</td><td className="p-2 text-center">{t.tdF - t.tdA}</td><td className="p-2 text-center font-bold">{t.pts}</td></tr>)}</tbody></table></div>
-                        <div className="space-y-4">{Object.entries(selectedCompetition.schedule!).map(([roundIdx, round]) => <div key={roundIdx}><h4 className="font-bold text-slate-300 mb-2">Jornada {parseInt(roundIdx) + 1}</h4><div className="space-y-2">{(round as Matchup[]).map((match, matchIdx) => <div key={matchIdx} className="bg-slate-700/50 p-3 rounded-md flex items-center justify-between gap-2"><span className="flex-1 text-right truncate">{match.team1}</span><div className="flex items-center gap-2"><span className={`font-bold text-lg px-2 rounded ${match.score1!==undefined?'bg-slate-800':'bg-slate-600'}`}>{match.score1??'-'}</span><span>vs</span><span className={`font-bold text-lg px-2 rounded ${match.score2!==undefined?'bg-slate-800':'bg-slate-600'}`}>{match.score2??'-'}</span><button onClick={()=>setScoreModalState({isOpen:true, roundIndex:roundIdx, matchIndex:matchIdx, matchup:match})} className="text-slate-400 hover:text-white"><PencilIcon/></button></div><span className="flex-1 text-left truncate">{match.team2}</span></div>)}</div></div>)}</div>
+                        <div className="space-y-4">{Object.entries(selectedCompetition.schedule!).map(([roundIdx, round]) => <div key={roundIdx}><h4 className="font-bold text-slate-300 mb-2">Jornada {parseInt(roundIdx) + 1}</h4><div className="space-y-2">{(round as Matchup[]).map((match, matchIdx) => <div key={matchIdx} className="bg-slate-700/50 p-3 rounded-md flex items-center justify-between gap-2"><span className="flex-1 text-right truncate">{match.team1}</span><div className="flex items-center gap-2"><span className={`font-bold text-lg px-2 rounded ${match.score1!=null?'bg-slate-800':'bg-slate-600'}`}>{match.score1??'-'}</span><span>vs</span><span className={`font-bold text-lg px-2 rounded ${match.score2!=null?'bg-slate-800':'bg-slate-600'}`}>{match.score2??'-'}</span><button onClick={()=>setScoreModalState({isOpen:true, roundIndex:roundIdx, matchIndex:matchIdx, matchup:match})} className="text-slate-400 hover:text-white"><PencilIcon/></button></div><span className="flex-1 text-left truncate">{match.team2}</span></div>)}</div></div>)}</div>
                     </>
                 )}
                 {selectedCompetition.format === 'Torneo' && selectedCompetition.bracket && (
@@ -317,7 +328,7 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
                             </button>
                             <div className="flex-shrink-0 flex items-center gap-2">
                                 <span className={`text-xs px-2 py-1 rounded-full ${c.status === 'Open' ? 'bg-green-800 text-green-300' : (c.status === 'In Progress' ? 'bg-yellow-800 text-yellow-300' : 'bg-slate-600 text-slate-300')}`}>{c.status}</span>
-                                {c.status === 'Open' && !c.teams.some(t => t.ownerId === user?.id) && managedTeams.length > 0 && (
+                                {c.ownerId === user?.id && c.status === 'Open' && !c.teams.some(t => t.ownerId === user?.id) && managedTeams.length > 0 && (
                                     <button
                                         onClick={() => setJoinModalState({ comp: c, teamToJoin: managedTeams[0]?.name || '' })}
                                         className="bg-sky-600 text-white font-bold py-1 px-3 rounded-md text-xs shadow-md hover:bg-sky-500"
@@ -369,20 +380,22 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
             <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={() => setScoreModalState(null)}>
                 <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-sm w-full" onClick={e => e.stopPropagation()}>
                     <h3 className="text-xl font-bold text-amber-400 p-4 border-b border-slate-700">Editar Resultado</h3>
-                    <div className="p-5 space-y-4">
-                        <div className="flex items-center justify-between gap-4">
-                            <label htmlFor="score1" className="flex-1 text-slate-300 text-right truncate">{scoreModalState.matchup.team1}</label>
-                            <input id="score1" type="number" defaultValue={scoreModalState.matchup.score1} onBlur={e => setScoreModalState(s => s ? {...s, matchup: {...s.matchup, score1: parseInt(e.target.value) || undefined}} : null)} className="w-20 bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white text-center"/>
+                    <form onSubmit={(e) => { e.preventDefault(); const s1 = (document.getElementById('score1') as HTMLInputElement).value; const s2 = (document.getElementById('score2') as HTMLInputElement).value; handleSaveScore(s1,s2); }}>
+                        <div className="p-5 space-y-4">
+                            <div className="flex items-center justify-between gap-4">
+                                <label htmlFor="score1" className="flex-1 text-slate-300 text-right truncate">{scoreModalState.matchup.team1}</label>
+                                <input id="score1" type="number" defaultValue={scoreModalState.matchup.score1 ?? ''} className="w-20 bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white text-center"/>
+                            </div>
+                            <div className="flex items-center justify-between gap-4">
+                                <label htmlFor="score2" className="flex-1 text-slate-300 text-right truncate">{scoreModalState.matchup.team2}</label>
+                                <input id="score2" type="number" defaultValue={scoreModalState.matchup.score2 ?? ''} className="w-20 bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white text-center" />
+                            </div>
                         </div>
-                        <div className="flex items-center justify-between gap-4">
-                            <label htmlFor="score2" className="flex-1 text-slate-300 text-right truncate">{scoreModalState.matchup.team2}</label>
-                             <input id="score2" type="number" defaultValue={scoreModalState.matchup.score2} onBlur={e => setScoreModalState(s => s ? {...s, matchup: {...s.matchup, score2: parseInt(e.target.value) || undefined}} : null)} className="w-20 bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white text-center" />
+                        <div className="p-4 bg-slate-900/50 border-t border-slate-700 flex justify-end gap-3">
+                            <button type="button" onClick={() => setScoreModalState(null)} className="bg-slate-600 text-white font-bold py-2 px-4 rounded-md">Cancelar</button>
+                            <button type="submit" className="bg-amber-500 text-slate-900 font-bold py-2 px-4 rounded-md">Guardar</button>
                         </div>
-                    </div>
-                    <div className="p-4 bg-slate-900/50 border-t border-slate-700 flex justify-end gap-3">
-                        <button onClick={() => setScoreModalState(null)} className="bg-slate-600 text-white font-bold py-2 px-4 rounded-md">Cancelar</button>
-                        <button onClick={() => { const form = document.querySelector('form'); const s1 = (document.getElementById('score1') as HTMLInputElement).value; const s2 = (document.getElementById('score2') as HTMLInputElement).value; handleSaveScore(s1,s2); }} className="bg-amber-500 text-slate-900 font-bold py-2 px-4 rounded-md">Guardar</button>
-                    </div>
+                    </form>
                 </div>
             </div>
         )}

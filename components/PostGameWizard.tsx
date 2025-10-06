@@ -77,16 +77,7 @@ const getLevelFromSpp = (spp: number) => {
     return sppLevels.find(level => spp >= level.threshold);
 };
 
-const cloneTeamForPostGame = (team: ManagedTeam): ManagedTeam => ({
-    ...team,
-    players: team.players.map(p => ({
-        ...p,
-        stats: { ...p.stats },
-        gainedSkills: [...(p.gainedSkills || [])],
-        lastingInjuries: [...(p.lastingInjuries || [])],
-        sppActions: p.sppActions ? { ...p.sppActions } : {},
-    })),
-});
+const cloneTeamForPostGame = (team: ManagedTeam): ManagedTeam => JSON.parse(JSON.stringify(team));
 
 const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, opponentTeam, score, fame, onConfirm }) => {
     const [step, setStep] = useState(0);

@@ -226,16 +226,8 @@ const MiniField: React.FC<{ players: ManagedPlayer[]; teamColor: string }> = ({ 
 };
 
 const cloneLiveTeam = (team: ManagedTeam): ManagedTeam => {
-    return {
-        ...team,
-        players: team.players.map(p => ({
-            ...p,
-            stats: { ...p.stats },
-            gainedSkills: [...p.gainedSkills],
-            lastingInjuries: [...p.lastingInjuries],
-            sppActions: p.sppActions ? { ...p.sppActions } : undefined,
-        })),
-    };
+    // Deep clone to prevent mutations and strip any non-serializable properties
+    return JSON.parse(JSON.stringify(team));
 };
 
 export const LiveGame = ({ managedTeams, onTeamUpdate }: LiveGameProps): React.ReactElement => {
