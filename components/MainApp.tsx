@@ -49,6 +49,7 @@ const MainApp: React.FC = () => {
         setCompetitions([]);
         setPlays([]);
         setDataInitiallyLoaded(true);
+        setSyncState('synced');
         return;
     }
 
@@ -58,6 +59,7 @@ const MainApp: React.FC = () => {
         (snapshot) => {
             setManagedTeams(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ManagedTeam[]);
             setDataInitiallyLoaded(true);
+            setSyncState('synced');
         }, 
         (error) => {
             console.error("Error fetching teams:", error);
@@ -69,6 +71,7 @@ const MainApp: React.FC = () => {
     const compsUnsub = onSnapshot(collection(db, 'users', user.id, 'competitions'), 
         (snapshot) => {
             setCompetitions(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Competition[]);
+            setSyncState('synced');
         },
         (error) => {
             console.error("Error fetching competitions:", error);
@@ -79,6 +82,7 @@ const MainApp: React.FC = () => {
     const playsUnsub = onSnapshot(collection(db, 'users', user.id, 'plays'), 
         (snapshot) => {
             setPlays(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Play[]);
+            setSyncState('synced');
         },
         (error) => {
              console.error("Error fetching plays:", error);
@@ -93,21 +97,21 @@ const MainApp: React.FC = () => {
     };
   }, [user, isGuest]);
 
-  // --- Data Handlers with Optimistic UI & Sync State ---
+  // --- Data Handlers with Robust Sync State ---
 
   const handleTeamCreate = async (newTeamData: Omit<ManagedTeam, 'id'>) => {
     if (!user) return;
     setSyncState('syncing');
     if (isGuest) {
         setManagedTeams(prev => [...prev, { ...newTeamData, id: `temp_${Date.now()}` }]);
-        setTimeout(() => setSyncState('synced'), 500); // Simulate sync for guest
+        setTimeout(() => setSyncState('synced'), 500);
         return;
     }
     
     try {
         if (!db) throw new Error("Database not connected.");
         await addDoc(collection(db, 'users', user.id, 'teams'), newTeamData);
-        setSyncState('synced');
+        // onSnapshot will set state to 'synced' upon confirmation
     } catch (error) {
         console.error("Error creating team:", error);
         alert(`Error al sincronizar el equipo con la nube: ${error instanceof Error ? error.message : String(error)}. El equipo no se ha guardado.`);
@@ -128,7 +132,7 @@ const MainApp: React.FC = () => {
         if (!db) throw new Error("Database not connected.");
         const { id, ...teamData } = updatedTeam;
         await setDoc(doc(db, 'users', user.id, 'teams', id), teamData, { merge: true });
-        setSyncState('synced');
+        // onSnapshot will set state to 'synced'
     } catch (error) {
         console.error("Error updating team:", error);
         alert(`Error al actualizar el equipo en la nube: ${error instanceof Error ? error.message : String(error)}. Los cambios no se han guardado.`);
@@ -144,7 +148,6 @@ const MainApp: React.FC = () => {
 
     if (isGuest) {
         setManagedTeams(prev => prev.filter(t => t.id !== teamId));
-        // Also update competitions locally for guest
         const updatedCompetitions = competitions.map(comp => {
             if (!comp.teams.includes(teamToDelete.name)) return comp;
             const newComp = { ...comp, teams: comp.teams.filter(tName => tName !== teamToDelete.name) };
@@ -173,7 +176,7 @@ const MainApp: React.FC = () => {
         });
 
         await batch.commit();
-        setSyncState('synced');
+        // onSnapshot will set state to 'synced'
     } catch (error) {
         console.error("Error deleting team and updating competitions:", error);
         alert(`Error al borrar el equipo de la nube: ${error instanceof Error ? error.message : String(error)}. Es posible que deba actualizar las competiciones manualmente.`);
@@ -192,7 +195,7 @@ const MainApp: React.FC = () => {
     try {
         if (!db) throw new Error("Database not connected.");
         await addDoc(collection(db, 'users', user.id, 'competitions'), newCompData);
-        setSyncState('synced');
+        // onSnapshot will set state to 'synced'
     } catch (error) {
         console.error("Error creating competition:", error);
         alert(`Error al crear la competición en la nube: ${error instanceof Error ? error.message : String(error)}.`);
@@ -212,7 +215,7 @@ const MainApp: React.FC = () => {
         if (!db) throw new Error("Database not connected.");
         const { id, ...compData } = updatedComp;
         await setDoc(doc(db, 'users', user.id, 'competitions', id), compData, { merge: true });
-        setSyncState('synced');
+        // onSnapshot will set state to 'synced'
     } catch (error) {
         console.error("Error updating competition:", error);
         alert(`Error al actualizar la competición en la nube: ${error instanceof Error ? error.message : String(error)}.`);
@@ -242,7 +245,7 @@ const MainApp: React.FC = () => {
             const { id, ...playData } = playToSave;
             await addDoc(collection(db, 'users', user.id, 'plays'), playData);
         }
-        setSyncState('synced');
+        // onSnapshot will set state to 'synced'
     } catch (error) {
         console.error("Error saving play:", error);
         alert(`Error al guardar la jugada en la nube: ${error instanceof Error ? error.message : String(error)}.`);
@@ -261,7 +264,7 @@ const MainApp: React.FC = () => {
     try {
         if (!db) throw new Error("Database not connected.");
         await deleteDoc(doc(db, 'users', user.id, 'plays', playId));
-        setSyncState('synced');
+        // onSnapshot will set state to 'synced'
     } catch (error) {
         console.error("Error deleting play:", error);
         alert(`Error al borrar la jugada de la nube: ${error instanceof Error ? error.message : String(error)}.`);
