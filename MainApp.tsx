@@ -1,23 +1,21 @@
-
-
 import React, { useState, useEffect, useMemo } from 'react';
-import QuickGuide from './QuickGuide';
-import TeamsAndSkills from './TeamsAndSkills';
-import Plays from './Plays';
-import Generators from './Generators';
-import TeamManager from './TeamManager';
-import { LiveGame } from './LiveGame';
-import BookOpenIcon from './icons/BookOpenIcon';
-import UsersIcon from './icons/UsersIcon';
-import ClipboardListIcon from './icons/ClipboardListIcon';
-import CubeIcon from './icons/CubeIcon';
-import ShieldCheckIcon from './icons/ShieldCheckIcon';
-import StopwatchIcon from './icons/StopwatchIcon';
-import type { ManagedTeam, Competition, Play, Matchup } from '../types';
+import QuickGuide from './components/QuickGuide';
+import TeamsAndSkills from './components/TeamsAndSkills';
+import Plays from './components/Plays';
+import Generators from './components/Generators';
+import TeamManager from './components/TeamManager';
+import { LiveGame } from './components/LiveGame';
+import BookOpenIcon from './components/icons/BookOpenIcon';
+import UsersIcon from './components/icons/UsersIcon';
+import ClipboardListIcon from './components/icons/ClipboardListIcon';
+import CubeIcon from './components/icons/CubeIcon';
+import ShieldCheckIcon from './components/icons/ShieldCheckIcon';
+import StopwatchIcon from './components/icons/StopwatchIcon';
+import type { ManagedTeam, Competition, Play, Matchup } from './types';
 import { useAuth } from './hooks/useAuth';
-import UserProfile from './UserProfile';
-import TrophyIcon from './icons/TrophyIcon';
-import { Leagues } from './Leagues';
+import UserProfile from './components/UserProfile';
+import TrophyIcon from './components/icons/TrophyIcon';
+import { Leagues } from './components/Leagues';
 import { db } from './firebaseConfig';
 import { collection, onSnapshot, addDoc, doc, setDoc, deleteDoc, writeBatch } from "firebase/firestore";
 

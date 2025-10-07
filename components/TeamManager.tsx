@@ -9,6 +9,24 @@ import DownloadIcon from './icons/DownloadIcon';
 import ShieldCheckIcon from './icons/ShieldCheckIcon';
 import TrashIcon from './icons/TrashIcon';
 
+// Helper to create a plain JS object from a ManagedTeam, suitable for JSON stringification.
+// This prevents "circular structure" errors from Firestore objects.
+const sanitizeTeamForExport = (team: ManagedTeam): Omit<ManagedTeam, 'id'> => {
+    return {
+        name: team.name,
+        rosterName: team.rosterName,
+        treasury: team.treasury,
+        rerolls: team.rerolls,
+        dedicatedFans: team.dedicatedFans,
+        cheerleaders: team.cheerleaders,
+        assistantCoaches: team.assistantCoaches,
+        apothecary: team.apothecary,
+        crestImage: team.crestImage,
+        players: team.players.map(p => ({ ...p })) // Shallow copy of players is enough
+    };
+};
+
+
 interface TeamManagerProps {
     teams: ManagedTeam[];
     onTeamCreate: (team: Omit<ManagedTeam, 'id'>) => void;
@@ -149,7 +167,10 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
             alert("Selecciona al menos un equipo para exportar.");
             return;
         }
-        const dataStr = JSON.stringify(teamsToExport, null, 2);
+        
+        const sanitizedData = teamsToExport.map(sanitizeTeamForExport);
+        const dataStr = JSON.stringify(sanitizedData, null, 2);
+
         const blob = new Blob([dataStr], {type : 'application/json'});
         const url = URL.createObjectURL(blob);
         
