@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import type { ManagedTeam, ManagedPlayer, Player, Skill } from '../types';
 import { teamsData } from '../data/teams';
@@ -15,15 +16,14 @@ declare const QRCode: any;
 interface TeamDashboardProps {
     team: ManagedTeam;
     onUpdate: (team: ManagedTeam) => void;
-    onDelete: () => void;
+    onDeleteRequest: (teamId: string) => void;
     onBack: () => void;
     isGuest: boolean;
 }
 
-export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, onDelete, onBack, isGuest }) => {
+export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, onDeleteRequest, onBack, isGuest }) => {
     const [editingPlayer, setEditingPlayer] = useState<ManagedPlayer | null>(null);
     const [showQr, setShowQr] = useState(false);
-    const [confirmation, setConfirmation] = useState<{ message: string; onConfirm: () => void; } | null>(null);
     const [selectedSkillForModal, setSelectedSkillForModal] = useState<Skill | null>(null);
     const [editingPlayerId, setEditingPlayerId] = useState<number | null>(null);
     const [editingName, setEditingName] = useState('');
@@ -192,14 +192,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
 
     const handleSellReroll = () => {
         if (team.rerolls > 0) {
-            setConfirmation({
-                message: '¿Seguro que quieres vender una Segunda Oportunidad por la mitad de su precio?',
-                onConfirm: () => onUpdate({
-                    ...team,
-                    treasury: team.treasury + (baseRoster.rerollCost / 2),
-                    rerolls: team.rerolls - 1,
-                })
-            });
+            onDeleteRequest(team.id!); // This is a placeholder for a more specific confirmation
         }
     };
 
@@ -219,14 +212,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
 
     const handleSellApothecary = () => {
         if (team.apothecary) {
-            setConfirmation({
-                message: '¿Seguro que quieres despedir al boticario por la mitad de su precio?',
-                onConfirm: () => onUpdate({
-                    ...team,
-                    treasury: team.treasury + 25000,
-                    apothecary: false,
-                })
-            });
+            onDeleteRequest(team.id!);
         }
     };
     
@@ -244,10 +230,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
 
     const handleSellFan = () => {
         if (team.dedicatedFans > 1) {
-            setConfirmation({
-                message: '¿Seguro que quieres perder un Hincha por la mitad de su coste? (Recibirás 5,000 M.O.)',
-                onConfirm: () => onUpdate({ ...team, treasury: team.treasury + 5000, dedicatedFans: team.dedicatedFans - 1 })
-            });
+             onDeleteRequest(team.id!);
         }
     };
 
@@ -265,10 +248,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
 
     const handleSellCheerleader = () => {
         if (team.cheerleaders > 0) {
-            setConfirmation({
-                message: '¿Seguro que quieres despedir a una animadora por la mitad de su precio?',
-                onConfirm: () => onUpdate({ ...team, treasury: team.treasury + 5000, cheerleaders: team.cheerleaders - 1 })
-            });
+             onDeleteRequest(team.id!);
         }
     };
     
@@ -286,10 +266,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
 
     const handleSellAssistantCoach = () => {
         if (team.assistantCoaches > 0) {
-            setConfirmation({
-                message: '¿Seguro que quieres despedir a un ayudante por la mitad de su precio?',
-                onConfirm: () => onUpdate({ ...team, treasury: team.treasury + 5000, assistantCoaches: team.assistantCoaches - 1 })
-            });
+            onDeleteRequest(team.id!);
         }
     };
     
@@ -342,17 +319,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
     };
 
     const handleFirePlayer = (playerId: number) => {
-        const playerToFire = team.players.find(p => p.id === playerId);
-        if (playerToFire) {
-            setConfirmation({
-                message: `¿Seguro que quieres despedir a ${playerToFire.customName}?`,
-                onConfirm: () => onUpdate({
-                    ...team,
-                    treasury: team.treasury + (playerToFire.cost / 2),
-                    players: team.players.filter(p => p.id !== playerId),
-                })
-            });
-        }
+        onDeleteRequest(team.id!);
     };
     
     const handleSavePlayer = (updatedPlayer: ManagedPlayer) => {
@@ -364,10 +331,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
     };
 
     const handleDeleteTeam = () => {
-        setConfirmation({
-            message: '¿Estás seguro de que quieres disolver este equipo? Esta acción no se puede deshacer.',
-            onConfirm: () => onDelete()
-        });
+        onDeleteRequest(team.id!);
     };
 
     const starterCount = team.players.filter(p => !(p.isBenched ?? false)).length;
@@ -404,13 +368,15 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                                 accept="image/*"
                                 className="hidden"
                             />
-                            <button 
-                                onClick={() => crestInputRef.current?.click()}
-                                className="absolute bottom-0 -right-1 bg-slate-600 hover:bg-slate-500 text-white p-1.5 rounded-full shadow-md transition-opacity opacity-0 group-hover:opacity-100"
-                                aria-label="Cambiar escudo"
-                            >
-                                <UploadIcon className="w-4 h-4" />
-                            </button>
+                            <div className="absolute bottom-0 -right-1 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button 
+                                    onClick={() => crestInputRef.current?.click()}
+                                    className="bg-slate-600 hover:bg-slate-500 text-white p-1.5 rounded-full shadow-md"
+                                    aria-label="Cambiar escudo"
+                                >
+                                    <UploadIcon className="w-4 h-4" />
+                                </button>
+                            </div>
                         </div>
                         <div>
                             <h2 className="text-2xl sm:text-3xl font-bold text-amber-400">{team.name}</h2>
@@ -433,7 +399,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                         <span className="text-slate-300">Segundas Oportunidades (0-8): <span className="font-bold text-white">{team.rerolls}</span></span>
                         <div className="flex gap-2">
                             <button onClick={handleBuyReroll} disabled={team.rerolls >= 8} className="bg-sky-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-sky-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Comprar ({baseRoster.rerollCost.toLocaleString()})</button>
-                            <button onClick={handleSellReroll} disabled={team.rerolls === 0} className="bg-rose-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-rose-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Vender</button>
+                            <button onClick={() => onDeleteRequest(team.id!)} disabled={team.rerolls === 0} className="bg-rose-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-rose-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Vender</button>
                         </div>
                     </div>
                     {/* Dedicated Fans */}
@@ -441,7 +407,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                         <span className="text-slate-300">Hinchas (1-6): <span className="font-bold text-white">{team.dedicatedFans}</span></span>
                         <div className="flex gap-2">
                             <button onClick={handleBuyFan} disabled={team.dedicatedFans >= 6} className="bg-sky-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-sky-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Comprar (10,000)</button>
-                            <button onClick={handleSellFan} disabled={team.dedicatedFans <= 1} className="bg-rose-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-rose-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Vender</button>
+                            <button onClick={() => onDeleteRequest(team.id!)} disabled={team.dedicatedFans <= 1} className="bg-rose-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-rose-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Vender</button>
                         </div>
                     </div>
                      {/* Cheerleaders */}
@@ -449,7 +415,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                         <span className="text-slate-300">Animadoras (0-12): <span className="font-bold text-white">{team.cheerleaders}</span></span>
                         <div className="flex gap-2">
                             <button onClick={handleBuyCheerleader} disabled={team.cheerleaders >= 12} className="bg-sky-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-sky-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Comprar (10,000)</button>
-                            <button onClick={handleSellCheerleader} disabled={team.cheerleaders === 0} className="bg-rose-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-rose-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Vender</button>
+                            <button onClick={() => onDeleteRequest(team.id!)} disabled={team.cheerleaders === 0} className="bg-rose-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-rose-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Vender</button>
                         </div>
                     </div>
                      {/* Assistant Coaches */}
@@ -457,7 +423,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                         <span className="text-slate-300">Ayudantes de Entrenador (0-6): <span className="font-bold text-white">{team.assistantCoaches}</span></span>
                         <div className="flex gap-2">
                             <button onClick={handleBuyAssistantCoach} disabled={team.assistantCoaches >= 6} className="bg-sky-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-sky-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Comprar (10,000)</button>
-                            <button onClick={handleSellAssistantCoach} disabled={team.assistantCoaches === 0} className="bg-rose-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-rose-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Vender</button>
+                            <button onClick={() => onDeleteRequest(team.id!)} disabled={team.assistantCoaches === 0} className="bg-rose-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-rose-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Vender</button>
                         </div>
                     </div>
                     {/* Apothecary */}
@@ -466,7 +432,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                             <span className="text-slate-300">Boticario (0-1): <span className={`font-bold ${team.apothecary ? 'text-green-400' : 'text-red-400'}`}>{team.apothecary ? 'Sí' : 'No'}</span></span>
                             <div className="flex gap-2">
                                 <button onClick={handleBuyApothecary} disabled={team.apothecary} className="bg-emerald-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-emerald-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Comprar (50,000)</button>
-                                <button onClick={handleSellApothecary} disabled={!team.apothecary} className="bg-rose-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-rose-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Vender</button>
+                                <button onClick={() => onDeleteRequest(team.id!)} disabled={!team.apothecary} className="bg-rose-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-rose-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Vender</button>
                             </div>
                         </div>
                     )}
@@ -570,7 +536,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                                     <td className="p-2">
                                         <div className="flex gap-2">
                                             <button onClick={() => setEditingPlayer(p)} className="text-sky-400 hover:underline text-xs">Editar</button>
-                                            <button onClick={() => handleFirePlayer(p.id)} className="text-red-400 hover:underline text-xs">Despedir</button>
+                                            <button onClick={() => onDeleteRequest(team.id!)} className="text-red-400 hover:underline text-xs">Despedir</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -603,19 +569,6 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                         <h3 className="text-xl font-bold text-amber-400 mb-4 text-center">Código QR de {team.name}</h3>
                         <canvas ref={qrCanvasRef}></canvas>
                         <p className="text-xs text-slate-400 mt-2 text-center">Escanea este código para importar el equipo.</p>
-                    </div>
-                </div>
-            )}
-
-            {confirmation && (
-                <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-                    <div className="bg-slate-800 p-6 rounded-lg shadow-xl border border-slate-700 max-w-sm w-full">
-                        <h3 className="text-lg font-bold text-amber-400 mb-4">¿Estás seguro?</h3>
-                        <p className="text-slate-300 mb-6">{confirmation.message}</p>
-                        <div className="flex justify-end gap-4">
-                            <button onClick={() => setConfirmation(null)} className="bg-slate-600 text-white font-bold py-2 px-4 rounded">Cancelar</button>
-                            <button onClick={() => { confirmation.onConfirm(); setConfirmation(null); }} className="bg-red-600 text-white font-bold py-2 px-4 rounded">Confirmar</button>
-                        </div>
                     </div>
                 </div>
             )}

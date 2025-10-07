@@ -1,10 +1,53 @@
-
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import type { ManagedTeam, Competition, Matchup, CompetitionTeam } from '../types';
 import { useAuth } from '../hooks/useAuth';
 import PencilIcon from './icons/PencilIcon';
+import CalendarIcon from './icons/CalendarIcon';
+import QrCodeIcon from './icons/QrCodeIcon';
+
+declare global {
+  interface Window {
+    gapi: any;
+    google: any;
+  }
+}
+declare const QRCode: any;
+declare const Html5Qrcode: any;
 
 const trophyImageUrl = 'https://i.pinimg.com/736x/95/dc/9a/95dc9a37df924d550e9922dbf37b9089.jpg';
+
+const cloneCompetition = (comp: Competition): Competition => {
+    const newComp: Competition = {
+        id: comp.id,
+        name: comp.name,
+        format: comp.format,
+        teams: comp.teams.map(t => ({...t})),
+        ownerId: comp.ownerId,
+        ownerName: comp.ownerName,
+        status: comp.status,
+    };
+    if (comp.schedule) {
+        newComp.schedule = {};
+        for (const round in comp.schedule) {
+            if (Object.prototype.hasOwnProperty.call(comp.schedule, round)) {
+                newComp.schedule[round] = comp.schedule[round].map(matchup => ({...matchup}));
+            }
+        }
+    } else {
+        newComp.schedule = null;
+    }
+    if (comp.bracket) {
+        newComp.bracket = {};
+        for (const round in comp.bracket) {
+            if (Object.prototype.hasOwnProperty.call(comp.bracket, round)) {
+                newComp.bracket[round] = comp.bracket[round].map(matchup => ({...matchup}));
+            }
+        }
+    } else {
+        newComp.bracket = null;
+    }
+    return newComp;
+};
 
 const generateSchedule = (teamNames: string[]): Record<string, Matchup[]> => {
   const teams = [...teamNames];
@@ -106,7 +149,7 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
             });
         });
         return { name: teamName, p, w, d, l, tdF, tdA, pts: w*3+d };
-    }).sort((a,b) => b.pts - a.pts || (b.tdF-b.tdA) - (a.tdF-a.tdA) || b.tdF-a.tdF);
+    }).sort((a,b) => b.pts - a.pts || (b.tdF-b.tdA) - (a.tdF-a.tdF) || b.tdF-a.tdF);
   }, [selectedCompetition]);
 
   const finalWinner = useMemo(() => {
@@ -136,7 +179,7 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
 
   const handleJoinCompetition = () => {
     if (!joinModalState.comp || !joinModalState.teamToJoin || !user) return;
-    const cleanComp = JSON.parse(JSON.stringify(joinModalState.comp));
+    const cleanComp = cloneCompetition(joinModalState.comp);
     const updatedComp = {
       ...cleanComp,
       teams: [...cleanComp.teams, { teamName: joinModalState.teamToJoin, ownerId: user.id, ownerName: user.name }]
@@ -151,7 +194,7 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
         return;
     }
     const teamNames = comp.teams.map(t => t.teamName);
-    const cleanComp = JSON.parse(JSON.stringify(comp));
+    const cleanComp = cloneCompetition(comp);
     
     let updatedComp: Competition;
 
@@ -177,7 +220,7 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
 
   const handleSaveScore = (score1: string, score2: string) => {
     if (!selectedCompetition || !scoreModalState) return;
-    const updatedComp = JSON.parse(JSON.stringify(selectedCompetition));
+    const updatedComp = cloneCompetition(selectedCompetition);
     const s1_val = parseInt(score1, 10);
     const s2_val = parseInt(score2, 10);
     const s1 = isNaN(s1_val) ? null : s1_val;
@@ -200,8 +243,8 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
     const handleWinnerSelect = (roundIndexStr: string, matchIndex: number, winnerTeam: string) => {
         if (!selectedCompetition || !selectedCompetition.bracket) return;
         
-        const cleanComp = JSON.parse(JSON.stringify(selectedCompetition));
-        let newBracket = cleanComp.bracket;
+        const cleanComp = cloneCompetition(selectedCompetition);
+        let newBracket = cleanComp.bracket!;
         const currentMatch = newBracket[roundIndexStr][matchIndex];
         
         if (currentMatch.winner === winnerTeam) { // Deselecting

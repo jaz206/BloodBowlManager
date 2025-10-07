@@ -77,7 +77,44 @@ const getLevelFromSpp = (spp: number) => {
     return sppLevels.find(level => spp >= level.threshold);
 };
 
-const cloneTeamForPostGame = (team: ManagedTeam): ManagedTeam => JSON.parse(JSON.stringify(team));
+const cloneTeamForPostGame = (team: ManagedTeam): ManagedTeam => {
+    // Safe deep clone to prevent circular reference errors with Firestore objects
+    const clonedPlayers = team.players.map(p => {
+        const clonedPlayer = { ...p };
+        // Deep copy nested objects/arrays inside player
+        clonedPlayer.gainedSkills = [...p.gainedSkills];
+        clonedPlayer.lastingInjuries = [...p.lastingInjuries];
+        if (p.sppActions) {
+            clonedPlayer.sppActions = { ...p.sppActions };
+        }
+        return clonedPlayer;
+    });
+
+    const clonedTeam: ManagedTeam = {
+        name: team.name,
+        rosterName: team.rosterName,
+        treasury: team.treasury,
+        rerolls: team.rerolls,
+        dedicatedFans: team.dedicatedFans,
+        cheerleaders: team.cheerleaders,
+        assistantCoaches: team.assistantCoaches,
+        apothecary: team.apothecary,
+        players: clonedPlayers,
+    };
+
+    // Copy optional properties from ManagedTeam type
+    if (team.id) clonedTeam.id = team.id;
+    if (team.crestImage) clonedTeam.crestImage = team.crestImage;
+    if (team.liveRerolls !== undefined) clonedTeam.liveRerolls = team.liveRerolls;
+    if (team.tempBribes !== undefined) clonedTeam.tempBribes = team.tempBribes;
+    if (team.tempCheerleaders !== undefined) clonedTeam.tempCheerleaders = team.tempCheerleaders;
+    if (team.tempAssistantCoaches !== undefined) clonedTeam.tempAssistantCoaches = team.tempAssistantCoaches;
+    if (team.coachExpelled !== undefined) clonedTeam.coachExpelled = team.coachExpelled;
+    if (team.apothecaryUsedOnKO !== undefined) clonedTeam.apothecaryUsedOnKO = team.apothecaryUsedOnKO;
+    
+    return clonedTeam;
+};
+
 
 const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, opponentTeam, score, fame, onConfirm }) => {
     const [step, setStep] = useState(0);

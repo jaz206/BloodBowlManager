@@ -7,6 +7,7 @@ import { TeamDashboard } from './TeamDashboard';
 import UploadIcon from './icons/UploadIcon';
 import DownloadIcon from './icons/DownloadIcon';
 import ShieldCheckIcon from './icons/ShieldCheckIcon';
+import TrashIcon from './icons/TrashIcon';
 
 interface TeamManagerProps {
     teams: ManagedTeam[];
@@ -25,6 +26,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
     const [selectedTeamsForExport, setSelectedTeamsForExport] = useState<string[]>([]);
     const [initialRosterForCreation, setInitialRosterForCreation] = useState<string | null>(null);
+    const [confirmation, setConfirmation] = useState<{ message: string; onConfirm: () => void; } | null>(null);
 
     const selectedTeam = useMemo(() => {
         if (!selectedTeamId) return null;
@@ -50,10 +52,19 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
         setIsCreating(false);
     };
 
-    const handleTeamDelete = () => {
-        if (selectedTeam && selectedTeam.id) {
-            onTeamDelete(selectedTeam.id);
-            setSelectedTeamId(null);
+    const requestTeamDelete = (teamId: string) => {
+        const teamToDelete = teams.find(t => t.id === teamId);
+        if (teamToDelete) {
+            setConfirmation({
+                message: `¿Estás seguro de que quieres disolver el equipo "${teamToDelete.name}"? Esta acción no se puede deshacer.`,
+                onConfirm: () => {
+                    onTeamDelete(teamId);
+                    setConfirmation(null);
+                    if (selectedTeamId === teamId) {
+                        setSelectedTeamId(null);
+                    }
+                }
+            });
         }
     };
     
@@ -169,7 +180,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                 <TeamDashboard 
                     team={selectedTeam} 
                     onUpdate={onTeamUpdate}
-                    onDelete={handleTeamDelete}
+                    onDeleteRequest={requestTeamDelete}
                     onBack={() => setSelectedTeamId(null)}
                     isGuest={isGuest}
                 />
@@ -211,23 +222,31 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
             {teams.length > 0 ? (
                 <div className="space-y-3 mb-6">
                     {teams.map(team => (
-                        <button 
-                            key={team.id || team.name}
-                            onClick={() => setSelectedTeamId(team.id!)}
-                            className="w-full bg-slate-700/50 text-slate-200 p-4 rounded-lg shadow-md hover:bg-slate-700 hover:text-white transition-all duration-200 flex items-center gap-4 text-left"
-                        >
-                            {team.crestImage ? (
-                                <img src={team.crestImage} alt="Escudo del equipo" className="w-10 h-10 rounded-full object-cover flex-shrink-0 bg-slate-900" />
-                            ) : (
-                                <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center flex-shrink-0">
-                                    <ShieldCheckIcon className="w-6 h-6 text-slate-600" />
+                        <div key={team.id || team.name} className="w-full flex items-center gap-2">
+                            <button 
+                                onClick={() => setSelectedTeamId(team.id!)}
+                                className="flex-grow bg-slate-700/50 text-slate-200 p-4 rounded-lg shadow-md hover:bg-slate-700 hover:text-white transition-all duration-200 flex items-center gap-4 text-left"
+                            >
+                                {team.crestImage ? (
+                                    <img src={team.crestImage} alt="Escudo del equipo" className="w-10 h-10 rounded-full object-cover flex-shrink-0 bg-slate-900" />
+                                ) : (
+                                    <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center flex-shrink-0">
+                                        <ShieldCheckIcon className="w-6 h-6 text-slate-600" />
+                                    </div>
+                                )}
+                                <div className="flex-grow min-w-0">
+                                    <p className="font-semibold truncate">{team.name}</p>
+                                    <p className="text-xs text-slate-400 truncate">{team.rosterName}</p>
                                 </div>
-                            )}
-                            <div className="flex-grow min-w-0">
-                                <p className="font-semibold truncate">{team.name}</p>
-                                <p className="text-xs text-slate-400 truncate">{team.rosterName}</p>
-                            </div>
-                        </button>
+                            </button>
+                             <button 
+                                onClick={() => requestTeamDelete(team.id!)}
+                                className="flex-shrink-0 bg-red-800/50 text-red-400 p-4 rounded-lg shadow-md hover:bg-red-800 hover:text-white transition-colors"
+                                aria-label={`Eliminar equipo ${team.name}`}
+                             >
+                                <TrashIcon className="w-6 h-6" />
+                             </button>
+                        </div>
                     ))}
                 </div>
             ) : (
@@ -314,6 +333,19 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                             <button type="button" onClick={triggerExport} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400 transition-colors">
                                 Exportar
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            
+            {confirmation && (
+                <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+                    <div className="bg-slate-800 p-6 rounded-lg shadow-xl border border-slate-700 max-w-sm w-full">
+                        <h3 className="text-lg font-bold text-amber-400 mb-4">¿Estás seguro?</h3>
+                        <p className="text-slate-300 mb-6">{confirmation.message}</p>
+                        <div className="flex justify-end gap-4">
+                            <button onClick={() => setConfirmation(null)} className="bg-slate-600 text-white font-bold py-2 px-4 rounded">Cancelar</button>
+                            <button onClick={confirmation.onConfirm} className="bg-red-600 text-white font-bold py-2 px-4 rounded">Confirmar</button>
                         </div>
                     </div>
                 </div>

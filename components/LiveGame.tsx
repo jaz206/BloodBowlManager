@@ -226,8 +226,41 @@ const MiniField: React.FC<{ players: ManagedPlayer[]; teamColor: string }> = ({ 
 };
 
 const cloneLiveTeam = (team: ManagedTeam): ManagedTeam => {
-    // Deep clone to prevent mutations and strip any non-serializable properties
-    return JSON.parse(JSON.stringify(team));
+    // Safe deep clone to prevent circular reference errors with Firestore objects
+    const clonedPlayers = team.players.map(p => {
+        const clonedPlayer = { ...p };
+        // Deep copy nested objects/arrays inside player
+        clonedPlayer.gainedSkills = [...p.gainedSkills];
+        clonedPlayer.lastingInjuries = [...p.lastingInjuries];
+        if (p.sppActions) {
+            clonedPlayer.sppActions = { ...p.sppActions };
+        }
+        return clonedPlayer;
+    });
+
+    const clonedTeam: ManagedTeam = {
+        name: team.name,
+        rosterName: team.rosterName,
+        treasury: team.treasury,
+        rerolls: team.rerolls,
+        dedicatedFans: team.dedicatedFans,
+        cheerleaders: team.cheerleaders,
+        assistantCoaches: team.assistantCoaches,
+        apothecary: team.apothecary,
+        players: clonedPlayers,
+    };
+
+    // Copy optional properties
+    if (team.id) clonedTeam.id = team.id;
+    if (team.crestImage) clonedTeam.crestImage = team.crestImage;
+    if (team.liveRerolls !== undefined) clonedTeam.liveRerolls = team.liveRerolls;
+    if (team.tempBribes !== undefined) clonedTeam.tempBribes = team.tempBribes;
+    if (team.tempCheerleaders !== undefined) clonedTeam.tempCheerleaders = team.tempCheerleaders;
+    if (team.tempAssistantCoaches !== undefined) clonedTeam.tempAssistantCoaches = team.tempAssistantCoaches;
+    if (team.coachExpelled !== undefined) clonedTeam.coachExpelled = team.coachExpelled;
+    if (team.apothecaryUsedOnKO !== undefined) clonedTeam.apothecaryUsedOnKO = team.apothecaryUsedOnKO;
+    
+    return clonedTeam;
 };
 
 export const LiveGame = ({ managedTeams, onTeamUpdate }: LiveGameProps): React.ReactElement => {
