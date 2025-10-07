@@ -53,7 +53,7 @@ export type PlayerPosition = 'Blitzer' | 'Lanzador' | 'Corredor' | 'Línea' | 'R
 export interface Token {
   id: number;
   x: number; // grid x (0-14)
-  y: number; // grid y (0-12)
+  y: number; // grid y (0-12 for tactics, 0-25 for game)
   position: PlayerPosition;
 }
 

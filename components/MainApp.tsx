@@ -5,12 +5,14 @@ import Plays from './Plays';
 import Generators from './Generators';
 import TeamManager from './TeamManager';
 import { LiveGame } from './LiveGame';
+import GameBoard from './GameBoard'; // Import new component
 import BookOpenIcon from './icons/BookOpenIcon';
 import UsersIcon from './icons/UsersIcon';
 import ClipboardListIcon from './icons/ClipboardListIcon';
 import CubeIcon from './icons/CubeIcon';
 import ShieldCheckIcon from './icons/ShieldCheckIcon';
 import StopwatchIcon from './icons/StopwatchIcon';
+import StadiumIcon from './icons/StadiumIcon'; // Import new icon
 import type { ManagedTeam, Competition, Play, Matchup, CompetitionTeam } from '../types';
 import { useAuth } from '../hooks/useAuth';
 import UserProfile from './UserProfile';
@@ -20,7 +22,7 @@ import { db } from '../firebaseConfig';
 import { collection, onSnapshot, addDoc, doc, setDoc, deleteDoc, writeBatch } from "firebase/firestore";
 import SyncStatusIndicator from './SyncStatusIndicator';
 
-type View = 'guide' | 'teams' | 'plays' | 'generators' | 'manager' | 'live' | 'leagues';
+type View = 'guide' | 'teams' | 'plays' | 'generators' | 'manager' | 'live' | 'leagues' | 'game';
 type SyncStatus = 'synced' | 'syncing' | 'error';
 
 const GuestWarningBanner = () => (
@@ -333,6 +335,7 @@ const MainApp: React.FC = () => {
             <NavButton view="generators" label="Tablas y Generadores" icon={<CubeIcon />} />
             <NavButton view="manager" label="Gestor de Equipo" icon={<ShieldCheckIcon />} />
             <NavButton view="live" label="Directo" icon={<StopwatchIcon />} />
+            <NavButton view="game" label="Partido" icon={<StadiumIcon />} />
             <NavButton view="leagues" label="Ligas y Torneos" icon={<TrophyIcon />} />
           </div>
         </nav>
@@ -354,6 +357,7 @@ const MainApp: React.FC = () => {
                     {activeView === 'generators' && <Generators />}
                     {activeView === 'manager' && <TeamManager teams={managedTeams} onTeamCreate={handleTeamCreate} onTeamUpdate={handleTeamUpdate} onTeamDelete={handleTeamDelete} requestedRoster={requestedRoster} onRosterRequestHandled={() => setRequestedRoster(null)} isGuest={isGuest} />}
                     {activeView === 'live' && <LiveGame managedTeams={managedTeams} onTeamUpdate={handleTeamUpdate} />}
+                    {activeView === 'game' && <GameBoard managedTeams={managedTeams} />}
                     {activeView === 'leagues' && <Leagues managedTeams={managedTeams} initialCompetitions={competitions} onCompetitionCreate={handleCompetitionCreate} onCompetitionUpdate={handleCompetitionUpdate} onCompetitionDelete={handleCompetitionDelete} isGuest={isGuest} />}
                 </>
             )}
