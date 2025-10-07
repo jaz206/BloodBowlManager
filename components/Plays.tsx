@@ -3,6 +3,7 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import type { Token, Play, PlayerPosition, ManagedTeam, ManagedPlayer } from '../types';
+import { fieldImage } from '../data/fieldImage';
 
 const MAX_TOKENS = 11;
 const GRID_COLS = 15;
@@ -186,33 +187,33 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
 
       <div 
         ref={fieldRef}
-        className="relative w-full aspect-[15/13] bg-green-900/70 overflow-hidden rounded-lg shadow-xl border-2 border-slate-700 select-none"
+        className="relative w-full aspect-[15/13] bg-slate-900 overflow-hidden rounded-lg shadow-xl border-2 border-slate-700 select-none"
       >
-        {/* Grid Background */}
-        <div 
-            className="absolute inset-0 grid" 
-            style={{ gridTemplateColumns: 'repeat(15, 1fr)', gridTemplateRows: 'repeat(13, 1fr)' }}
-        >
-            {Array.from({ length: GRID_ROWS * GRID_COLS }).map((_, i) => {
-                const row = Math.floor(i / GRID_COLS);
-                const col = i % GRID_COLS;
-                const isLight = (row + col) % 2 === 0;
-                return (
-                    <div
-                        key={i}
-                        className={`w-full h-full ${isLight ? 'bg-green-800/40' : 'bg-green-900/40'}`}
-                    ></div>
-                );
-            })}
+        {/* Full field image container, positioned to show bottom half */}
+        <div className="absolute bottom-0 left-0 w-full h-[200%]">
+          <div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform rotate-90"
+            style={{
+              width: `${(26 / 15) * 100}%`,
+              height: `${(15 / 26) * 100}%`,
+            }}
+          >
+            <img src={fieldImage} alt="Campo de Blood Bowl" className="w-full h-full object-cover"/>
+          </div>
         </div>
-
-        {/* Field Lines */}
-        <div className="absolute left-0 right-0 h-px bg-white/50" style={{ top: `calc(100% * 3 / 13)` }}></div>
-        <div className="absolute top-0 bottom-0 w-px bg-white/50" style={{ left: `calc(100% * 4 / 15)` }}></div>
-        <div className="absolute top-0 bottom-0 w-px bg-white/50" style={{ left: `calc(100% * 11 / 15)` }}></div>
         
-        {/* Touchdown Zone (first row) */}
-        <div className="absolute top-0 left-0 right-0 bg-red-800/20" style={{ height: `calc(100% / 13)`}}></div>
+        {/* Grid Overlay */}
+        <div 
+            className="absolute inset-0 grid pointer-events-none" 
+            style={{ 
+                gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`, 
+                gridTemplateRows: `repeat(${GRID_ROWS}, 1fr)` 
+            }}
+        >
+            {Array.from({ length: GRID_ROWS * GRID_COLS }).map((_, i) => (
+                <div key={i} className="w-full h-full border border-white/10"></div>
+            ))}
+        </div>
 
         {tokens.map((token, index) => (
           <div
