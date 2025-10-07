@@ -11,7 +11,7 @@ import ClipboardListIcon from './components/icons/ClipboardListIcon';
 import CubeIcon from './components/icons/CubeIcon';
 import ShieldCheckIcon from './components/icons/ShieldCheckIcon';
 import StopwatchIcon from './components/icons/StopwatchIcon';
-import type { ManagedTeam, Competition, Play, Matchup } from './types';
+import type { ManagedTeam, Competition, Play, Matchup, CompetitionTeam } from './types';
 import { useAuth } from './hooks/useAuth';
 import UserProfile from './components/UserProfile';
 import TrophyIcon from './components/icons/TrophyIcon';
@@ -138,9 +138,11 @@ const MainApp: React.FC = () => {
     setManagedTeams(prev => prev.filter(t => t.id !== teamId));
     
     const updatedCompetitions = competitions.map(comp => {
-        if (!comp.teams.includes(teamToDelete.name)) return comp;
+        // FIX: Check if team is in competition by looking at the teamName property
+        if (!comp.teams.some(t => t.teamName === teamToDelete.name)) return comp;
         
-        const newComp = { ...comp, teams: comp.teams.filter(tName => tName !== teamToDelete.name) };
+        // FIX: Filter teams array based on teamName property of the team object
+        const newComp = { ...comp, teams: comp.teams.filter(t => t.teamName !== teamToDelete.name) };
         // @FIX: Correctly handle Record<string, Matchup[]> for schedule and bracket
         if (newComp.schedule) {
             const newSchedule: Record<string, Matchup[]> = {};
@@ -226,6 +228,22 @@ const MainApp: React.FC = () => {
         console.error("Error updating competition:", error);
         alert(`Error al actualizar la competición en la nube: ${error instanceof Error ? error.message : String(error)}.`);
         setCompetitions(originalCompetitions);
+    }
+  };
+
+  // FIX: Add handleCompetitionDelete function
+  const handleCompetitionDelete = async (compId: string) => {
+    if (!user) return;
+    if (isGuest) {
+        setCompetitions(prev => prev.filter(c => c.id !== compId));
+        return;
+    }
+    try {
+      if (!db) throw new Error("Database not connected.");
+      await deleteDoc(doc(db, 'competitions', compId));
+    } catch (error) {
+      console.error("Error deleting competition:", error);
+      alert(`Error al eliminar la competición: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
   
@@ -352,7 +370,8 @@ const MainApp: React.FC = () => {
                     {activeView === 'generators' && <Generators />}
                     {activeView === 'manager' && <TeamManager teams={managedTeams} onTeamCreate={handleTeamCreate} onTeamUpdate={handleTeamUpdate} onTeamDelete={handleTeamDelete} requestedRoster={requestedRoster} onRosterRequestHandled={() => setRequestedRoster(null)} isGuest={isGuest} />}
                     {activeView === 'live' && <LiveGame managedTeams={managedTeams} onTeamUpdate={handleTeamUpdate} />}
-                    {activeView === 'leagues' && <Leagues managedTeams={managedTeams} initialCompetitions={competitions} onCompetitionCreate={handleCompetitionCreate} onCompetitionUpdate={handleCompetitionUpdate} isGuest={isGuest} />}
+                    {/* FIX: Add onCompetitionDelete to Leagues component */}
+                    {activeView === 'leagues' && <Leagues managedTeams={managedTeams} initialCompetitions={competitions} onCompetitionCreate={handleCompetitionCreate} onCompetitionUpdate={handleCompetitionUpdate} onCompetitionDelete={handleCompetitionDelete} isGuest={isGuest} />}
                 </>
             )}
         </div>
