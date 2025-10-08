@@ -81,7 +81,10 @@ const cloneTeamForPostGame = (team: ManagedTeam): ManagedTeam => {
     // Safe deep clone to prevent circular reference errors with Firestore objects
     const clonedPlayers = team.players.map(p => {
         const clonedPlayer = { ...p };
-        // Deep copy nested objects/arrays inside player
+        // Explicitly deep copy nested objects/arrays inside player
+        if (p.stats) {
+            clonedPlayer.stats = { ...p.stats };
+        }
         clonedPlayer.gainedSkills = [...p.gainedSkills];
         clonedPlayer.lastingInjuries = [...p.lastingInjuries];
         if (p.sppActions) {
@@ -309,7 +312,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, oppone
             )}
             <style>{`
                 @keyframes fade-in-fast { from { opacity: 0; } to { opacity: 1; } }
-                @keyframes slide-in-up { from { transform: translateY(20px) scale(0.98); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+                @keyframes slide-in-up { from { transform: translateY(20px) scale(0.98); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
                 .animate-fade-in-fast { animation: fade-in-fast 0.2s ease-out forwards; }
                 .animate-slide-in-up { animation: slide-in-up 0.3s ease-out forwards; }
             `}</style>

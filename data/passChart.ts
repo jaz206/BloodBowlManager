@@ -1,4 +1,3 @@
-
 export type PassType = 'Jugador que pasa' | 'Pase rápido' | 'Pase corto' | 'Pase largo' | 'Bomba larga';
 
 interface PassInfo {

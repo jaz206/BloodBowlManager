@@ -229,7 +229,10 @@ const cloneLiveTeam = (team: ManagedTeam): ManagedTeam => {
     // Safe deep clone to prevent circular reference errors with Firestore objects
     const clonedPlayers = team.players.map(p => {
         const clonedPlayer = { ...p };
-        // Deep copy nested objects/arrays inside player
+        // Explicitly deep copy nested objects/arrays inside player
+        if (p.stats) {
+            clonedPlayer.stats = { ...p.stats };
+        }
         clonedPlayer.gainedSkills = [...p.gainedSkills];
         clonedPlayer.lastingInjuries = [...p.lastingInjuries];
         if (p.sppActions) {
