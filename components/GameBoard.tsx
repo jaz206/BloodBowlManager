@@ -128,6 +128,46 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
   const scannerContainerRef = useRef<HTMLDivElement>(null);
   const scannerRef = useRef<any>(null);
 
+  const mapPositionToType = (position: string): PlayerPosition => {
+      const lowerPos = position.toLowerCase();
+      if (lowerPos.includes('blitzer') || lowerPos.includes('wardancer') || lowerPos.includes('witch') || lowerPos.includes('assassin') || lowerPos.includes('slayer')) return 'Blitzer';
+      if (lowerPos.includes('thrower') || lowerPos.includes('lanzador')) return 'Lanzador';
+      if (lowerPos.includes('runner') || lowerPos.includes('corredor')) return 'Corredor';
+      if (lowerPos.includes('catcher') || lowerPos.includes('receptor')) return 'Receptor';
+      return 'Línea';
+  };
+
+  const generateTokensForTeam = (team: ManagedTeam, teamId: 'home' | 'away'): BoardToken[] => {
+    const playersOnField = team.players.filter(p => !(p.isBenched ?? false));
+    return playersOnField.map((player, index) => {
+        const yPos = teamId === 'home' 
+            ? GRID_ROWS - 5 - Math.floor(index / (Math.floor(GRID_COLS/2)-1))
+            : 4 + Math.floor(index / (Math.floor(GRID_COLS/2)-1));
+        return {
+            id: player.id + (teamId === 'away' ? 999999 : 0),
+            position: mapPositionToType(player.position),
+            x: 2 + (index % (Math.floor(GRID_COLS/2)-1)) * 2,
+            y: yPos,
+            playerData: player,
+            teamId: teamId
+        };
+    });
+  };
+
+  const handleStartGame = () => {
+    if (!homeTeam || !awayTeam) return;
+    const homeTokens = generateTokensForTeam(homeTeam, 'home');
+    const awayTokens = generateTokensForTeam(awayTeam, 'away');
+    setTokens([...homeTokens, ...awayTokens]);
+    setGameState('playing');
+  };
+
+  useEffect(() => {
+    if ((gameState === 'select_away' || gameState === 'scanning_qr') && homeTeam && awayTeam) {
+        handleStartGame();
+    }
+  }, [gameState, homeTeam, awayTeam]);
+
   useEffect(() => {
     if (isInviteModalOpen && qrCanvasRef.current && homeTeam) {
         const shareableTeam = {
@@ -153,12 +193,6 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
         });
     }
   }, [isInviteModalOpen, homeTeam]);
-  
-  const handleStartGame = (hTeam: ManagedTeam, aTeam: ManagedTeam) => {
-    loadTeamToBoard(hTeam, 'home');
-    loadTeamToBoard(aTeam, 'away');
-    setGameState('playing');
-  };
   
   useEffect(() => {
     if (gameState === 'scanning_qr' && scannerContainerRef.current) {
@@ -214,13 +248,9 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
                     };
                     
                     const importedTeamWithId = { ...importedTeam, id: `imported_${Date.now()}`};
-                    if (homeTeam) {
-                        setImportedAwayTeam(importedTeamWithId);
-                        setSelectedAwayId(importedTeamWithId.id);
-                        handleStartGame(homeTeam, importedTeamWithId);
-                    } else {
-                        throw new Error("No se ha seleccionado equipo local.");
-                    }
+                    setImportedAwayTeam(importedTeamWithId);
+                    setSelectedAwayId(importedTeamWithId.id);
+                    // The useEffect will handle starting the game now
                 } catch (e: any) {
                     setScanError(`Error al procesar el código QR: ${e.message}`);
                     setGameState('select_away');
@@ -232,7 +262,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
         });
     }
     return () => { if (scannerRef.current?.isScanning) { scannerRef.current.stop().catch((e:any) => {}); }};
-  }, [gameState, homeTeam]);
+  }, [gameState]);
 
   useEffect(() => {
     const handleGlobalDragMove = (e: MouseEvent | TouchEvent) => handleDragMove(e);
@@ -255,33 +285,6 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
         document.removeEventListener('click', handleGlobalClick);
     };
   }, [contextMenu.visible, ballCarrierId, ballPosition.x, ballPosition.y]);
-
-  const mapPositionToType = (position: string): PlayerPosition => {
-      const lowerPos = position.toLowerCase();
-      if (lowerPos.includes('blitzer') || lowerPos.includes('wardancer') || lowerPos.includes('witch') || lowerPos.includes('assassin') || lowerPos.includes('slayer')) return 'Blitzer';
-      if (lowerPos.includes('thrower') || lowerPos.includes('lanzador')) return 'Lanzador';
-      if (lowerPos.includes('runner') || lowerPos.includes('corredor')) return 'Corredor';
-      if (lowerPos.includes('catcher') || lowerPos.includes('receptor')) return 'Receptor';
-      return 'Línea';
-  };
-
-  const loadTeamToBoard = (team: ManagedTeam, teamId: 'home' | 'away') => {
-    const playersOnField = team.players.filter(p => !(p.isBenched ?? false));
-    const newTokens: BoardToken[] = playersOnField.map((player, index) => {
-        const yPos = teamId === 'home' 
-            ? GRID_ROWS - 5 - Math.floor(index / (Math.floor(GRID_COLS/2)-1))
-            : 4 + Math.floor(index / (Math.floor(GRID_COLS/2)-1));
-        return {
-            id: player.id + (teamId === 'away' ? 999999 : 0),
-            position: mapPositionToType(player.position),
-            x: 2 + (index % (Math.floor(GRID_COLS/2)-1)) * 2,
-            y: yPos,
-            playerData: player,
-            teamId: teamId
-        }
-    });
-    setTokens(prev => [...prev.filter(t => t.teamId !== teamId), ...newTokens]);
-  };
 
   const handleDragStart = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>, id: number) => { 
     e.preventDefault(); 
@@ -609,12 +612,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
                           {availableOpponents.map(team => (
                                <button 
                                   key={team.id} 
-                                  onClick={() => {
-                                      if (homeTeam) {
-                                          setSelectedAwayId(team.id!);
-                                          handleStartGame(homeTeam, team);
-                                      }
-                                  }}
+                                  onClick={() => setSelectedAwayId(team.id!)}
                                   className="w-full text-left bg-slate-700/50 p-3 rounded-md hover:bg-slate-700 transition-colors"
                               >
                                 <p className="font-semibold text-white">{team.name}</p>
