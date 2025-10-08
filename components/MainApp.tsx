@@ -108,11 +108,11 @@ const MainApp: React.FC = () => {
   }, [db]);
 
 
-  const handleTeamCreate = async (newTeamData: Omit<ManagedTeam, 'id'>) => {
+  const handleTeamCreate = async (newTeamData: Omit<ManagedTeam, 'id'>, index?: number) => {
     if (!user) return;
     setSyncState('syncing');
     if (isGuest) {
-        setManagedTeams(prev => [...prev, { ...newTeamData, id: `temp_${Date.now()}` }]);
+        setManagedTeams(prev => [...prev, { ...newTeamData, id: `temp_${Date.now()}_${index || 0}` }]);
         setTimeout(() => setSyncState('synced'), 500);
         return;
     }

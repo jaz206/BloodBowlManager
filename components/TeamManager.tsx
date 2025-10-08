@@ -22,14 +22,23 @@ const sanitizeTeamForExport = (team: ManagedTeam): Omit<ManagedTeam, 'id'> => {
         assistantCoaches: team.assistantCoaches,
         apothecary: team.apothecary,
         crestImage: team.crestImage,
-        players: team.players.map(p => ({ ...p })) // Shallow copy of players is enough
+        players: team.players.map(p => {
+            const { stats, sppActions, gainedSkills, lastingInjuries, ...rest } = p;
+            return {
+                ...rest,
+                stats: { ...stats },
+                sppActions: sppActions ? { ...sppActions } : undefined,
+                gainedSkills: [...gainedSkills],
+                lastingInjuries: [...lastingInjuries]
+            };
+        })
     };
 };
 
 
 interface TeamManagerProps {
     teams: ManagedTeam[];
-    onTeamCreate: (team: Omit<ManagedTeam, 'id'>) => void;
+    onTeamCreate: (team: Omit<ManagedTeam, 'id'>, index?: number) => void;
     onTeamUpdate: (team: ManagedTeam) => void;
     onTeamDelete: (teamId: string) => void;
     requestedRoster?: string | null;
@@ -109,12 +118,12 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                 let newTeamsCount = 0;
                 const skippedTeams: string[] = [];
 
-                for (const importedTeam of importedTeams as ManagedTeam[]) {
+                for (const [index, importedTeam] of (importedTeams as ManagedTeam[]).entries()) {
                     if (existingTeamNames.has(importedTeam.name.toLowerCase())) {
                         skippedTeams.push(importedTeam.name);
                     } else {
                         const { id, ...teamData } = importedTeam;
-                        onTeamCreate(teamData);
+                        onTeamCreate(teamData, index);
                         newTeamsCount++;
                     }
                 }

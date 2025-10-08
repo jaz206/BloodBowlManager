@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import type { ManagedTeam, ManagedPlayer, Player, Skill } from '../types';
 import { teamsData } from '../data/teams';
@@ -33,7 +32,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
     const baseRoster = useMemo(() => teamsData.find(t => t.name === team.rosterName), [team.rosterName]);
 
     useEffect(() => {
-        if (showQr && qrCanvasRef.current) {
+        if (showQr && qrCanvasRef.current && team) {
             // Use shortened keys to reduce QR code data size
             const shareableTeam = {
                 n: team.name,
@@ -192,7 +191,11 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
 
     const handleSellReroll = () => {
         if (team.rerolls > 0) {
-            onDeleteRequest(team.id!); // This is a placeholder for a more specific confirmation
+            onUpdate({
+                ...team,
+                treasury: team.treasury + (baseRoster.rerollCost / 2),
+                rerolls: team.rerolls - 1,
+            });
         }
     };
 
@@ -212,7 +215,11 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
 
     const handleSellApothecary = () => {
         if (team.apothecary) {
-            onDeleteRequest(team.id!);
+             onUpdate({
+                ...team,
+                treasury: team.treasury + 25000,
+                apothecary: false,
+            });
         }
     };
     
@@ -230,7 +237,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
 
     const handleSellFan = () => {
         if (team.dedicatedFans > 1) {
-             onDeleteRequest(team.id!);
+             onUpdate({ ...team, treasury: team.treasury + 5000, dedicatedFans: team.dedicatedFans - 1 });
         }
     };
 
@@ -248,7 +255,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
 
     const handleSellCheerleader = () => {
         if (team.cheerleaders > 0) {
-             onDeleteRequest(team.id!);
+             onUpdate({ ...team, treasury: team.treasury + 5000, cheerleaders: team.cheerleaders - 1 });
         }
     };
     
@@ -266,7 +273,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
 
     const handleSellAssistantCoach = () => {
         if (team.assistantCoaches > 0) {
-            onDeleteRequest(team.id!);
+            onUpdate({ ...team, treasury: team.treasury + 5000, assistantCoaches: team.assistantCoaches - 1 });
         }
     };
     
@@ -319,7 +326,16 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
     };
 
     const handleFirePlayer = (playerId: number) => {
-        onDeleteRequest(team.id!);
+        const playerToFire = team.players.find(p => p.id === playerId);
+        if (!playerToFire) return;
+
+        if (confirm(`¿Estás seguro de que quieres despedir a ${playerToFire.customName}? Recibirás la mitad de su coste (${(playerToFire.cost / 2).toLocaleString()} M.O.) de vuelta a tu tesorería.`)) {
+            onUpdate({
+                ...team,
+                treasury: team.treasury + (playerToFire.cost / 2),
+                players: team.players.filter(p => p.id !== playerId)
+            });
+        }
     };
     
     const handleSavePlayer = (updatedPlayer: ManagedPlayer) => {
@@ -399,7 +415,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                         <span className="text-slate-300">Segundas Oportunidades (0-8): <span className="font-bold text-white">{team.rerolls}</span></span>
                         <div className="flex gap-2">
                             <button onClick={handleBuyReroll} disabled={team.rerolls >= 8} className="bg-sky-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-sky-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Comprar ({baseRoster.rerollCost.toLocaleString()})</button>
-                            <button onClick={() => onDeleteRequest(team.id!)} disabled={team.rerolls === 0} className="bg-rose-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-rose-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Vender</button>
+                            <button onClick={handleSellReroll} disabled={team.rerolls === 0} className="bg-rose-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-rose-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Vender</button>
                         </div>
                     </div>
                     {/* Dedicated Fans */}
@@ -407,7 +423,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                         <span className="text-slate-300">Hinchas (1-6): <span className="font-bold text-white">{team.dedicatedFans}</span></span>
                         <div className="flex gap-2">
                             <button onClick={handleBuyFan} disabled={team.dedicatedFans >= 6} className="bg-sky-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-sky-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Comprar (10,000)</button>
-                            <button onClick={() => onDeleteRequest(team.id!)} disabled={team.dedicatedFans <= 1} className="bg-rose-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-rose-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Vender</button>
+                            <button onClick={handleSellFan} disabled={team.dedicatedFans <= 1} className="bg-rose-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-rose-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Vender</button>
                         </div>
                     </div>
                      {/* Cheerleaders */}
@@ -415,7 +431,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                         <span className="text-slate-300">Animadoras (0-12): <span className="font-bold text-white">{team.cheerleaders}</span></span>
                         <div className="flex gap-2">
                             <button onClick={handleBuyCheerleader} disabled={team.cheerleaders >= 12} className="bg-sky-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-sky-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Comprar (10,000)</button>
-                            <button onClick={() => onDeleteRequest(team.id!)} disabled={team.cheerleaders === 0} className="bg-rose-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-rose-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Vender</button>
+                            <button onClick={handleSellCheerleader} disabled={team.cheerleaders === 0} className="bg-rose-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-rose-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Vender</button>
                         </div>
                     </div>
                      {/* Assistant Coaches */}
@@ -423,7 +439,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                         <span className="text-slate-300">Ayudantes de Entrenador (0-6): <span className="font-bold text-white">{team.assistantCoaches}</span></span>
                         <div className="flex gap-2">
                             <button onClick={handleBuyAssistantCoach} disabled={team.assistantCoaches >= 6} className="bg-sky-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-sky-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Comprar (10,000)</button>
-                            <button onClick={() => onDeleteRequest(team.id!)} disabled={team.assistantCoaches === 0} className="bg-rose-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-rose-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Vender</button>
+                            <button onClick={handleSellAssistantCoach} disabled={team.assistantCoaches === 0} className="bg-rose-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-rose-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Vender</button>
                         </div>
                     </div>
                     {/* Apothecary */}
@@ -432,7 +448,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                             <span className="text-slate-300">Boticario (0-1): <span className={`font-bold ${team.apothecary ? 'text-green-400' : 'text-red-400'}`}>{team.apothecary ? 'Sí' : 'No'}</span></span>
                             <div className="flex gap-2">
                                 <button onClick={handleBuyApothecary} disabled={team.apothecary} className="bg-emerald-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-emerald-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Comprar (50,000)</button>
-                                <button onClick={() => onDeleteRequest(team.id!)} disabled={!team.apothecary} className="bg-rose-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-rose-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Vender</button>
+                                <button onClick={handleSellApothecary} disabled={!team.apothecary} className="bg-rose-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-rose-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Vender</button>
                             </div>
                         </div>
                     )}
@@ -482,15 +498,25 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                             <tr>
                                 <th className="p-2">Nombre</th>
                                 <th className="p-2">Posición</th>
+                                <th className="p-2 text-center">MV</th>
+                                <th className="p-2 text-center">FU</th>
+                                <th className="p-2 text-center">AG</th>
+                                <th className="p-2 text-center">PS</th>
+                                <th className="p-2 text-center">AR</th>
                                 <th className="p-2">Alineación</th>
                                 <th className="p-2 text-center">PE</th>
-                                <th className="p-2">Habilidades Adquiridas</th>
-                                <th className="p-2">Lesiones Permanentes</th>
+                                <th className="p-2">Habilidades</th>
+                                <th className="p-2">Lesiones Perm.</th>
                                 <th className="p-2">Acciones</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-700">
-                            {team.players.map(p => (
+                            {team.players.map(p => {
+                                const allSkills = [
+                                    ...(p.skills && p.skills.toLowerCase() !== 'ninguna' ? p.skills.split(', ').map(s => s.trim()) : []),
+                                    ...p.gainedSkills
+                                ];
+                                return (
                                 <tr key={p.id} className={p.isBenched ? 'opacity-60' : ''}>
                                     <td className="p-2 font-bold text-white min-w-[150px]" onDoubleClick={() => handleNameDoubleClick(p)}>
                                         {editingPlayerId === p.id ? (
@@ -508,6 +534,11 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                                         )}
                                     </td>
                                     <td className="p-2">{p.position}</td>
+                                    <td className="p-2 text-center">{p.stats.MV}</td>
+                                    <td className="p-2 text-center">{p.stats.FU}</td>
+                                    <td className="p-2 text-center">{p.stats.AG}</td>
+                                    <td className="p-2 text-center">{p.stats.PS}</td>
+                                    <td className="p-2 text-center">{p.stats.AR}</td>
                                     <td className="p-2">
                                         <button 
                                             onClick={() => togglePlayerBenched(p.id)}
@@ -517,17 +548,17 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                                         </button>
                                     </td>
                                     <td className="p-2 text-center">{p.spp}</td>
-                                    <td className="p-2 text-xs">
-                                        {p.gainedSkills.length > 0 ? (
-                                            p.gainedSkills.map((skill, index) => (
-                                                <React.Fragment key={skill}>
+                                    <td className="p-2 text-xs min-w-[250px]">
+                                        {allSkills.length > 0 ? (
+                                            allSkills.map((skill, index) => (
+                                                <React.Fragment key={`${p.id}-${skill}`}>
                                                     <button
                                                         onClick={() => handleSkillClick(skill)}
                                                         className="text-sky-400 hover:text-sky-300 hover:underline focus:outline-none"
                                                     >
                                                         {skill}
                                                     </button>
-                                                    {index < p.gainedSkills.length - 1 && ', '}
+                                                    {index < allSkills.length - 1 && ', '}
                                                 </React.Fragment>
                                             ))
                                         ) : 'Ninguna'}
@@ -536,11 +567,11 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                                     <td className="p-2">
                                         <div className="flex gap-2">
                                             <button onClick={() => setEditingPlayer(p)} className="text-sky-400 hover:underline text-xs">Editar</button>
-                                            <button onClick={() => onDeleteRequest(team.id!)} className="text-red-400 hover:underline text-xs">Despedir</button>
+                                            <button onClick={() => handleFirePlayer(p.id)} className="text-red-400 hover:underline text-xs">Despedir</button>
                                         </div>
                                     </td>
                                 </tr>
-                            ))}
+                            )})}
                         </tbody>
                     </table>
                 </div>
