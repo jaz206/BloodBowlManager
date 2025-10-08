@@ -1,7 +1,7 @@
 
 
 
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import type { Token, Play, PlayerPosition, ManagedTeam, ManagedPlayer } from '../types';
 import { fieldImage } from '../data/fieldImage';
 
@@ -47,23 +47,50 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     }
   }, [plays, selectedPlayId]);
 
+  const handleDragMove = useCallback((e: MouseEvent | TouchEvent) => {
+    if (!draggedTokenRef.current || !fieldRef.current) return;
+    
+    if (e.cancelable) e.preventDefault();
+
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+
+    const fieldRect = fieldRef.current.getBoundingClientRect();
+    const x = clientX - fieldRect.left;
+    const y = clientY - fieldRect.top;
+
+    const colWidth = fieldRect.width / GRID_COLS;
+    const rowHeight = fieldRect.height / GRID_ROWS;
+
+    let gridX = Math.floor(x / colWidth);
+    let gridY = Math.floor(y / rowHeight);
+
+    gridX = Math.max(0, Math.min(GRID_COLS - 1, gridX));
+    gridY = Math.max(0, Math.min(GRID_ROWS - 1, gridY));
+
+    setTokens(currentTokens => currentTokens.map(token => 
+        token.id === draggedTokenRef.current?.id ? { ...token, x: gridX, y: gridY } : token
+    ));
+  }, []);
+  
+  const handleDragEnd = useCallback(() => {
+    draggedTokenRef.current = null;
+  }, []);
+
   // Effect to clean up event listeners on unmount
   useEffect(() => {
-    const handleGlobalDragMove = (e: MouseEvent | TouchEvent) => handleDragMove(e);
-    const handleGlobalDragEnd = () => handleDragEnd();
-
-    document.addEventListener('mousemove', handleGlobalDragMove);
-    document.addEventListener('mouseup', handleGlobalDragEnd);
-    document.addEventListener('touchmove', handleGlobalDragMove as any, { passive: false });
-    document.addEventListener('touchend', handleGlobalDragEnd);
+    document.addEventListener('mousemove', handleDragMove);
+    document.addEventListener('mouseup', handleDragEnd);
+    document.addEventListener('touchmove', handleDragMove as any, { passive: false });
+    document.addEventListener('touchend', handleDragEnd);
 
     return () => {
-        document.removeEventListener('mousemove', handleGlobalDragMove);
-        document.removeEventListener('mouseup', handleGlobalDragEnd);
-        document.removeEventListener('touchmove', handleGlobalDragMove as any);
-        document.removeEventListener('touchend', handleGlobalDragEnd);
+        document.removeEventListener('mousemove', handleDragMove);
+        document.removeEventListener('mouseup', handleDragEnd);
+        document.removeEventListener('touchmove', handleDragMove as any);
+        document.removeEventListener('touchend', handleDragEnd);
     };
-  }, []); // Empty dependency array ensures this runs only once on mount/unmount
+  }, [handleDragMove, handleDragEnd]);
 
   const mapPositionToType = (position: string): PlayerPosition => {
       const lowerPos = position.toLowerCase();
@@ -146,36 +173,6 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
         setSelectedPlayer(clickedToken.playerData || null);
     }
     draggedTokenRef.current = { id };
-  };
-
-  const handleDragMove = (e: MouseEvent | TouchEvent) => {
-    if (!draggedTokenRef.current || !fieldRef.current) return;
-    
-    if (e.cancelable) e.preventDefault();
-
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-
-    const fieldRect = fieldRef.current.getBoundingClientRect();
-    const x = clientX - fieldRect.left;
-    const y = clientY - fieldRect.top;
-
-    const colWidth = fieldRect.width / GRID_COLS;
-    const rowHeight = fieldRect.height / GRID_ROWS;
-
-    let gridX = Math.floor(x / colWidth);
-    let gridY = Math.floor(y / rowHeight);
-
-    gridX = Math.max(0, Math.min(GRID_COLS - 1, gridX));
-    gridY = Math.max(0, Math.min(GRID_ROWS - 1, gridY));
-
-    setTokens(currentTokens => currentTokens.map(token => 
-        token.id === draggedTokenRef.current?.id ? { ...token, x: gridX, y: gridY } : token
-    ));
-  };
-  
-  const handleDragEnd = () => {
-    draggedTokenRef.current = null;
   };
 
   return (

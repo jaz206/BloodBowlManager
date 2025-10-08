@@ -1,10 +1,12 @@
 
 
+
 import React from 'react';
 import { useAuth } from './hooks/useAuth';
 import Login from './components/Login';
 import MainApp from './components/MainApp';
 import { firebaseError } from './firebaseConfig';
+import ErrorBoundary from './components/ErrorBoundary';
 
 
 const App: React.FC = () => {
@@ -35,7 +37,11 @@ const App: React.FC = () => {
         );
     }
     
-    return user ? <MainApp /> : <Login />;
+    return user ? (
+        <ErrorBoundary>
+            <MainApp />
+        </ErrorBoundary>
+    ) : <Login />;
 }
 
 export default App;

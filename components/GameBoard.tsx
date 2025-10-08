@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import type { Token, PlayerPosition, ManagedTeam, ManagedPlayer } from '../types';
 import { fieldImage } from '../data/fieldImage';
 import QrCodeIcon from './icons/QrCodeIcon';
@@ -96,13 +96,23 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
 
   const homeTeam = useMemo(() => {
     const team = managedTeams.find(t => t.id === selectedHomeId);
-    return team ? cloneTeamForGame(team) : null;
+    if (!team) return null;
+    console.log("Found home team, cloning...", team);
+    return cloneTeamForGame(team);
   }, [selectedHomeId, managedTeams]);
   
   const awayTeam = useMemo(() => {
-    const team = managedTeams.find(t => t.id === selectedAwayId);
-    if (team) return cloneTeamForGame(team);
-    return (importedAwayTeam?.id === selectedAwayId ? importedAwayTeam : null);
+    const localTeam = managedTeams.find(t => t.id === selectedAwayId);
+    if (localTeam) {
+        console.log("Found local away team, cloning...", localTeam);
+        return cloneTeamForGame(localTeam);
+    }
+    const imported = (importedAwayTeam?.id === selectedAwayId ? importedAwayTeam : null);
+    if (imported) {
+        console.log("Found imported away team, cloning...", imported);
+        return cloneTeamForGame(imported);
+    }
+    return null;
   }, [selectedAwayId, managedTeams, importedAwayTeam]);
 
   const [tokens, setTokens] = useState<BoardToken[]>([]);
@@ -127,6 +137,28 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
   const qrCanvasRef = useRef<HTMLCanvasElement>(null);
   const scannerContainerRef = useRef<HTMLDivElement>(null);
   const scannerRef = useRef<any>(null);
+
+  const activePlayer = useMemo(() => tokens.find(t => t.id === activePlayerId), [activePlayerId, tokens]);
+
+  const validBlockTargets = useMemo(() => {
+      if (actionMode !== 'blocking' || !activePlayer) return [];
+      
+      const targets: {x: number, y: number}[] = [];
+      const { x, y } = activePlayer;
+      const adjacentCoords = [
+          { x: x - 1, y: y - 1 }, { x, y: y - 1 }, { x: x + 1, y: y - 1 },
+          { x: x - 1, y },                     { x: x + 1, y },
+          { x: x - 1, y: y + 1 }, { x, y: y + 1 }, { x: x + 1, y: y + 1 },
+      ];
+
+      for (const coord of adjacentCoords) {
+          const opponent = tokens.find(t => t.x === coord.x && t.y === coord.y && t.teamId !== activePlayer.teamId);
+          if (opponent) {
+              targets.push(coord);
+          }
+      }
+      return targets;
+  }, [actionMode, activePlayer, tokens]);
 
   const mapPositionToType = (position: string): PlayerPosition => {
       const lowerPos = position.toLowerCase();
@@ -155,18 +187,30 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
   };
 
   const handleStartGame = () => {
-    if (!homeTeam || !awayTeam) return;
-    const homeTokens = generateTokensForTeam(homeTeam, 'home');
-    const awayTokens = generateTokensForTeam(awayTeam, 'away');
-    setTokens([...homeTokens, ...awayTokens]);
-    setGameState('playing');
-  };
+    console.log('Attempting to start game...');
+    try {
+        if (!homeTeam || !awayTeam) {
+            console.error("Start game failed: One or both teams are not defined.", { homeTeam, awayTeam });
+            alert("Error: No se han podido cargar los datos de uno o ambos equipos.");
+            return;
+        }
+        
+        console.log('Starting game with:', { homeTeam, awayTeam });
 
-  useEffect(() => {
-    if ((gameState === 'select_away' || gameState === 'scanning_qr') && homeTeam && awayTeam) {
-        handleStartGame();
+        const homeTokens = generateTokensForTeam(homeTeam, 'home');
+        console.log('Generated home tokens:', homeTokens);
+
+        const awayTokens = generateTokensForTeam(awayTeam, 'away');
+        console.log('Generated away tokens:', awayTokens);
+
+        setTokens([...homeTokens, ...awayTokens]);
+        setGameState('playing');
+        console.log('Game state set to "playing".');
+    } catch (error) {
+        console.error("CRITICAL ERROR in handleStartGame:", error);
+        alert(`Se ha producido un error crítico al iniciar el partido: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     }
-  }, [gameState, homeTeam, awayTeam]);
+  };
 
   useEffect(() => {
     if (isInviteModalOpen && qrCanvasRef.current && homeTeam) {
@@ -250,7 +294,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
                     const importedTeamWithId = { ...importedTeam, id: `imported_${Date.now()}`};
                     setImportedAwayTeam(importedTeamWithId);
                     setSelectedAwayId(importedTeamWithId.id);
-                    // The useEffect will handle starting the game now
+                    setGameState('select_away');
                 } catch (e: any) {
                     setScanError(`Error al procesar el código QR: ${e.message}`);
                     setGameState('select_away');
@@ -264,47 +308,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
     return () => { if (scannerRef.current?.isScanning) { scannerRef.current.stop().catch((e:any) => {}); }};
   }, [gameState]);
 
-  useEffect(() => {
-    const handleGlobalDragMove = (e: MouseEvent | TouchEvent) => handleDragMove(e);
-    const handleGlobalDragEnd = (e: MouseEvent | TouchEvent) => handleDragEnd(e);
-    const handleGlobalClick = () => setContextMenu(prev => ({ ...prev, visible: false }));
-
-    document.addEventListener('mousemove', handleGlobalDragMove);
-    document.addEventListener('mouseup', handleGlobalDragEnd);
-    document.addEventListener('touchmove', handleGlobalDragMove as any, { passive: false });
-    document.addEventListener('touchend', handleGlobalDragEnd);
-    if (contextMenu.visible) {
-        document.addEventListener('click', handleGlobalClick);
-    }
-    
-    return () => {
-        document.removeEventListener('mousemove', handleGlobalDragMove);
-        document.removeEventListener('mouseup', handleGlobalDragEnd);
-        document.removeEventListener('touchmove', handleGlobalDragMove as any);
-        document.removeEventListener('touchend', handleGlobalDragEnd);
-        document.removeEventListener('click', handleGlobalClick);
-    };
-  }, [contextMenu.visible, ballCarrierId, ballPosition.x, ballPosition.y]);
-
-  const handleDragStart = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>, id: number) => { 
-    e.preventDefault(); 
-    setContextMenu(prev => ({...prev, visible: false}));
-    const clickedToken = tokens.find(t => t.id === id); 
-    if (clickedToken) {
-        setSelectedPlayer(clickedToken.playerData || null);
-    }
-    draggedItemRef.current = { type: 'token', id }; 
-  };
-  
-  const handleBallDragStart = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setContextMenu(prev => ({...prev, visible: false}));
-    if (ballCarrierId) setBallCarrierId(null);
-    draggedItemRef.current = { type: 'ball', id: null };
-  };
-
-  const handleDragMove = (e: MouseEvent | TouchEvent) => { 
+  const handleDragMove = useCallback((e: MouseEvent | TouchEvent) => { 
     if (!draggedItemRef.current.type || !fieldRef.current) return; 
     if (e.cancelable) e.preventDefault(); 
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX; 
@@ -324,9 +328,9 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
     } else if (draggedItemRef.current.type === 'ball') {
         setBallPosition({ x: gridX, y: gridY });
     }
-  };
+  }, []);
 
-  const handleDragEnd = (e: MouseEvent | TouchEvent) => {
+  const handleDragEnd = useCallback((e: MouseEvent | TouchEvent) => {
     const { type, id } = draggedItemRef.current;
     const fieldNode = fieldRef.current;
   
@@ -371,6 +375,51 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
     }
   
     draggedItemRef.current = { type: null, id: null };
+  }, [tokens, ballCarrierId, ballPosition.x, ballPosition.y]);
+
+  useEffect(() => {
+    document.addEventListener('mousemove', handleDragMove);
+    document.addEventListener('mouseup', handleDragEnd);
+    document.addEventListener('touchmove', handleDragMove as any, { passive: false });
+    document.addEventListener('touchend', handleDragEnd);
+
+    return () => {
+      document.removeEventListener('mousemove', handleDragMove);
+      document.removeEventListener('mouseup', handleDragEnd);
+      document.removeEventListener('touchmove', handleDragMove as any);
+      document.removeEventListener('touchend', handleDragEnd);
+    };
+  }, [handleDragMove, handleDragEnd]);
+
+  useEffect(() => {
+    const handleGlobalClick = () => {
+        setContextMenu(prev => ({ ...prev, visible: false }));
+    };
+
+    if (contextMenu.visible) {
+      document.addEventListener('click', handleGlobalClick);
+    }
+    return () => {
+      document.removeEventListener('click', handleGlobalClick);
+    };
+  }, [contextMenu.visible]);
+
+  const handleDragStart = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>, id: number) => { 
+    e.preventDefault(); 
+    setContextMenu(prev => ({...prev, visible: false}));
+    const clickedToken = tokens.find(t => t.id === id); 
+    if (clickedToken) {
+        setSelectedPlayer(clickedToken.playerData || null);
+    }
+    draggedItemRef.current = { type: 'token', id }; 
+  };
+  
+  const handleBallDragStart = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setContextMenu(prev => ({...prev, visible: false}));
+    if (ballCarrierId) setBallCarrierId(null);
+    draggedItemRef.current = { type: 'ball', id: null };
   };
 
   const handleContextMenu = (e: React.MouseEvent, id: number) => {
@@ -571,6 +620,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
                 <button 
                     key={team.id} 
                     onClick={() => { 
+                        console.log('Home team selected:', team.name, team);
                         setSelectedHomeId(team.id!); 
                         setGameState('select_away'); 
                     }} 
@@ -599,39 +649,67 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
       return (
           <div className="p-4 max-w-2xl mx-auto space-y-6">
               <button onClick={() => { setSelectedHomeId(null); setSelectedAwayId(null); setImportedAwayTeam(null); setGameState('select_home'); }} className="text-amber-400 hover:underline text-sm">&larr; Cambiar equipo local</button>
-              <h2 className="text-2xl font-bold text-amber-400 text-center">Paso 2: Elige al Oponente</h2>
-              <div className="bg-slate-900/70 p-4 rounded-lg border border-sky-500 text-center">
-                  <p className="text-slate-400">Equipo Local</p>
-                  <p className="font-bold text-lg text-sky-400">{homeTeam?.name}</p>
-              </div>
-
-              <div className="bg-slate-900/70 p-4 rounded-lg border border-red-500">
-                  <h3 className="text-lg font-semibold text-red-400 mb-4">Oponente Local</h3>
-                  {availableOpponents.length > 0 ? (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          {availableOpponents.map(team => (
-                               <button 
-                                  key={team.id} 
-                                  onClick={() => setSelectedAwayId(team.id!)}
-                                  className="w-full text-left bg-slate-700/50 p-3 rounded-md hover:bg-slate-700 transition-colors"
-                              >
-                                <p className="font-semibold text-white">{team.name}</p>
-                                <p className="text-xs text-slate-400">{team.rosterName}</p>
-                              </button>
-                          ))}
+              <h2 className="text-2xl font-bold text-amber-400 text-center">Paso 2: Configurar Oponente</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-slate-900/70 p-4 rounded-lg border border-sky-500 text-center">
+                      <p className="text-slate-400">Equipo Local</p>
+                      <p className="font-bold text-lg text-sky-400">{homeTeam?.name}</p>
+                  </div>
+                  {awayTeam ? (
+                       <div className="bg-slate-900/70 p-4 rounded-lg border border-red-500 text-center">
+                          <p className="text-slate-400">Equipo Visitante</p>
+                          <p className="font-bold text-lg text-red-400">{awayTeam.name}</p>
+                          <button onClick={() => { setSelectedAwayId(null); setImportedAwayTeam(null); }} className="text-xs text-slate-400 hover:underline mt-2">Cambiar</button>
                       </div>
                   ) : (
-                      <p className="text-slate-400 text-sm text-center">No tienes otros equipos locales para seleccionar.</p>
+                      <div className="bg-slate-900/70 p-4 rounded-lg border border-dashed border-slate-600 text-center flex items-center justify-center">
+                          <p className="text-slate-500">Esperando oponente...</p>
+                      </div>
                   )}
               </div>
 
-              <div className="bg-slate-900/70 p-4 rounded-lg border border-slate-600">
-                  <h3 className="text-lg font-semibold text-slate-300 mb-4 text-center">Oponente Remoto</h3>
-                  <div className="flex justify-center gap-4">
-                      <button onClick={() => setIsInviteModalOpen(true)} className="bg-teal-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-teal-500 text-sm">Invitar (Mostrar QR)</button>
-                      <button onClick={() => setGameState('scanning_qr')} className="bg-sky-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-sky-500 text-sm">Unirse (Escanear QR)</button>
+              {!awayTeam && (
+                  <>
+                      <div className="bg-slate-900/70 p-4 rounded-lg border border-slate-600">
+                          <h3 className="text-lg font-semibold text-slate-300 mb-4">Oponente Local</h3>
+                          {availableOpponents.length > 0 ? (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                  {availableOpponents.map(team => (
+                                      <button 
+                                          key={team.id} 
+                                          onClick={() => {
+                                            console.log('Away team selected (local):', team.name, team);
+                                            setSelectedAwayId(team.id!)
+                                          }}
+                                          className="w-full text-left bg-slate-700/50 p-3 rounded-md hover:bg-slate-700 transition-colors"
+                                      >
+                                        <p className="font-semibold text-white">{team.name}</p>
+                                        <p className="text-xs text-slate-400">{team.rosterName}</p>
+                                      </button>
+                                  ))}
+                              </div>
+                          ) : (
+                              <p className="text-slate-400 text-sm text-center">No tienes otros equipos locales para seleccionar.</p>
+                          )}
+                      </div>
+                      <div className="bg-slate-900/70 p-4 rounded-lg border border-slate-600">
+                          <h3 className="text-lg font-semibold text-slate-300 mb-4 text-center">Oponente Remoto</h3>
+                          <div className="flex justify-center gap-4">
+                              <button onClick={() => setIsInviteModalOpen(true)} className="bg-teal-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-teal-500 text-sm">Invitar (Mostrar QR)</button>
+                              <button onClick={() => setGameState('scanning_qr')} className="bg-sky-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-sky-500 text-sm">Unirse (Escanear QR)</button>
+                          </div>
+                      </div>
+                  </>
+              )}
+              
+              {homeTeam && awayTeam && (
+                  <div className="text-center pt-4">
+                      <button onClick={handleStartGame} className="w-full max-w-sm mx-auto bg-green-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-green-500 transition-colors animate-pulse">
+                          ¡Iniciar Partido!
+                      </button>
                   </div>
-              </div>
+              )}
           </div>
       );
   };
@@ -656,28 +734,6 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
           height: ballCarrier ? '2%' : '2.3%',
           zIndex: 20,
       };
-      
-      const activePlayer = useMemo(() => tokens.find(t => t.id === activePlayerId), [activePlayerId, tokens]);
-
-      const validBlockTargets = useMemo(() => {
-          if (actionMode !== 'blocking' || !activePlayer) return [];
-          
-          const targets: {x: number, y: number}[] = [];
-          const { x, y } = activePlayer;
-          const adjacentCoords = [
-              { x: x - 1, y: y - 1 }, { x, y: y - 1 }, { x: x + 1, y: y - 1 },
-              { x: x - 1, y },                     { x: x + 1, y },
-              { x: x - 1, y: y + 1 }, { x, y: y + 1 }, { x: x + 1, y: y + 1 },
-          ];
-
-          for (const coord of adjacentCoords) {
-              const opponent = tokens.find(t => t.x === coord.x && t.y === coord.y && t.teamId !== activePlayer.teamId);
-              if (opponent) {
-                  targets.push(coord);
-              }
-          }
-          return targets;
-      }, [actionMode, activePlayer, tokens]);
 
       return (
         <div className="space-y-6">
@@ -876,7 +932,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
       )}
 
       <style>{`
-      @keyframes fade-in-slow { from { opacity: 0; } to { opacity: 1; } } 
+      @keyfreames fade-in-slow { from { opacity: 0; } to { opacity: 1; } } 
       .animate-fade-in-slow { animation: fade-in-slow 0.5s ease-out forwards; }
       @keyframes fade-in-fast { from { opacity: 0; } to { opacity: 1; } }
       .animate-fade-in-fast { animation: fade-in-fast 0.3s ease-out forwards; }
