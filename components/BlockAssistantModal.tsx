@@ -1,5 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import type { BoardToken } from './GameBoard';
+// FIX: BoardToken is defined in types.ts, not GameBoard.tsx. BlockResolution is exported from GameBoard.
+import type { BlockResolution } from './GameBoard';
+import type { BoardToken } from '../types';
 import BlockDiceSkullIcon from './icons/BlockDiceSkullIcon';
 import BlockDiceBothDownIcon from './icons/BlockDiceBothDownIcon';
 import BlockDicePushIcon from './icons/BlockDicePushIcon';
@@ -10,7 +12,9 @@ interface BlockAssistantModalProps {
   attacker: BoardToken;
   defender: BoardToken;
   allTokens: BoardToken[];
+  ballCarrierId: number | null;
   onClose: () => void;
+  onBlockResolved: (outcome: BlockResolution) => void;
 }
 
 const isAdjacent = (token1: {x:number, y:number}, token2: {x:number, y:number}): boolean => {
@@ -21,14 +25,19 @@ const calculateAssists = (playerToAssist: BoardToken, opponent: BoardToken, allT
     const potentialAssisters = allTokens.filter(t =>
         t.teamId === playerToAssist.teamId &&
         t.id !== playerToAssist.id &&
-        isAdjacent(t, opponent)
+        isAdjacent(t, opponent) &&
+        !t.isDown
     );
 
     const validAssisters = potentialAssisters.filter(assister => {
+        const hasTackleZoneSkill = (assister.playerData?.skills?.includes('Luchador') || assister.playerData?.gainedSkills?.includes('Luchador'));
+        if (hasTackleZoneSkill) return true;
+
         const isMarkedByOtherOpponent = allTokens.some(otherToken =>
             otherToken.teamId !== assister.teamId &&
             otherToken.id !== opponent.id &&
-            isAdjacent(assister, otherToken)
+            isAdjacent(assister, otherToken) &&
+            !otherToken.isDown
         );
         return !isMarkedByOtherOpponent;
     });
@@ -37,10 +46,12 @@ const calculateAssists = (playerToAssist: BoardToken, opponent: BoardToken, allT
 };
 
 
-const BlockAssistantModal: React.FC<BlockAssistantModalProps> = ({ attacker, defender, allTokens, onClose }) => {
+const BlockAssistantModal: React.FC<BlockAssistantModalProps> = ({ attacker, defender, allTokens, ballCarrierId, onClose, onBlockResolved }) => {
   const [attackerAssists, setAttackerAssists] = useState(0);
   const [defenderAssists, setDefenderAssists] = useState(0);
   const [rolledDice, setRolledDice] = useState<string[] | null>(null);
+  const [selectedDie, setSelectedDie] = useState<string | null>(null);
+  const [useBlockSkill, setUseBlockSkill] = useState(true);
 
   useEffect(() => {
     if (attacker && defender && allTokens) {
@@ -61,24 +72,73 @@ const BlockAssistantModal: React.FC<BlockAssistantModalProps> = ({ attacker, def
     if (finalAttackerStrength > finalDefenderStrength * 2) return { text: "3 DADOS A TU FAVOR", color: "text-green-400", diceCount: 3 };
     if (finalAttackerStrength > finalDefenderStrength) return { text: "2 DADOS A TU FAVOR", color: "text-green-400", diceCount: 2 };
     if (finalAttackerStrength === finalDefenderStrength) return { text: "1 DADO", color: "text-yellow-400", diceCount: 1 };
-    if (finalDefenderStrength > finalAttackerStrength * 2) return { text: "3 DADOS EN TU CONTRA", color: "text-red-400", diceCount: 3 };
-    if (finalDefenderStrength > finalAttackerStrength) return { text: "2 DADOS EN TU CONTRA", color: "text-red-400", diceCount: 2 };
+    if (finalDefenderStrength > finalAttackerStrength * 2) return { text: "3 DADOS EN TU CONTRA", color: "text-red-400", diceCount: -3 };
+    if (finalDefenderStrength > finalAttackerStrength) return { text: "2 DADOS EN TU CONTRA", color: "text-red-400", diceCount: -2 };
     return { text: "Resultado no válido", color: "text-gray-400", diceCount: 0 };
   }, [finalAttackerStrength, finalDefenderStrength]);
 
-  const relevantSkills = useMemo(() => {
-    const skills: { player: string, name: string, description: string }[] = [];
-    const attackerSkills = (attacker.playerData?.skills || '') + ',' + (attacker.playerData?.gainedSkills.join(',') || '');
-    const defenderSkills = (defender.playerData?.skills || '') + ',' + (defender.playerData?.gainedSkills.join(',') || '');
+  const attackerSkills = useMemo(() => (attacker.playerData?.skills || '') + ',' + (attacker.playerData?.gainedSkills.join(',') || ''), [attacker]);
+  const defenderSkills = useMemo(() => (defender.playerData?.skills || '') + ',' + (defender.playerData?.gainedSkills.join(',') || ''), [defender]);
 
-    if (attackerSkills.includes('Placar')) skills.push({ player: attacker.playerData!.customName, name: 'Placar', description: 'Puede repetir un resultado de "Ambos Derribados".' });
-    if (defenderSkills.includes('Placaje defensivo')) skills.push({ player: defender.playerData!.customName, name: 'Placaje Defensivo', description: 'Cancela la habilidad "Esquivar" del oponente.' });
-    if (defenderSkills.includes('Esquivar') && !attackerSkills.includes('Placaje defensivo')) skills.push({ player: defender.playerData!.customName, name: 'Esquivar', description: 'Trata un "Empujón y Caída" como un simple "Empujón".' });
-    if (attackerSkills.includes('Lucha') || defenderSkills.includes('Lucha')) skills.push({ player: 'Ambos', name: 'Lucha', description: 'En un "Ambos Derribados", ambos jugadores caen bocarriba sin cambio de turno.' });
-    if (attackerSkills.includes('Furia')) skills.push({ player: attacker.playerData!.customName, name: 'Furia', description: 'Debe seguir al oponente si es empujado y realizar otro placaje si es posible.' });
+  const outcome = useMemo((): (BlockResolution & { summary: string[] }) | null => {
+    if (!selectedDie) return null;
+    
+    const hasBlock = attackerSkills.includes('Placar');
+    const hasWrestle = attackerSkills.includes('Lucha') || defenderSkills.includes('Lucha');
+    const hasDodge = defenderSkills.includes('Esquivar') && !attackerSkills.includes('Placaje defensivo');
+    const hasStripBall = attackerSkills.includes('Robar balón');
 
-    return skills;
-  }, [attacker, defender]);
+    let knockDowns: { id: number; isTurnoverSource: boolean }[] = [];
+    let ballBecomesLoose = false;
+    let summary: string[] = [];
+
+    switch (selectedDie) {
+        case 'Derribado':
+            knockDowns.push({ id: attacker.id, isTurnoverSource: true });
+            summary.push(`¡${attacker.playerData?.customName} es derribado!`, `¡CAMBIO DE TURNO!`);
+            break;
+        case 'Ambos Derribados':
+            if (hasWrestle) {
+                knockDowns.push({ id: attacker.id, isTurnoverSource: false }, { id: defender.id, isTurnoverSource: false });
+                summary.push(`Ambos jugadores usan Lucha. Son colocados boca arriba, sin cambio de turno.`);
+            } else if (hasBlock && useBlockSkill) {
+                knockDowns.push({ id: defender.id, isTurnoverSource: false });
+                summary.push(`${attacker.playerData?.customName} usa Placar para permanecer en pie.`);
+                summary.push(`${defender.playerData?.customName} es derribado.`);
+            } else {
+                knockDowns.push({ id: attacker.id, isTurnoverSource: true }, { id: defender.id, isTurnoverSource: false });
+                summary.push(`Ambos jugadores son derribados.`, `¡CAMBIO DE TURNO por el atacante!`);
+            }
+            break;
+        case 'Empujón y Caída':
+            if (hasDodge) {
+                summary.push(`${defender.playerData?.customName} usa Esquivar. El resultado se trata como un Empujón.`);
+            } else {
+                knockDowns.push({ id: defender.id, isTurnoverSource: false });
+                summary.push(`${defender.playerData?.customName} es derribado.`);
+            }
+            break;
+        case '¡Placaje!':
+            knockDowns.push({ id: defender.id, isTurnoverSource: false });
+            summary.push(`¡${defender.playerData?.customName} es derribado con violencia!`);
+            break;
+        case 'Empujón':
+            summary.push(`${defender.playerData?.customName} es empujado.`);
+            break;
+    }
+
+    const defenderIsCarrier = defender.id === ballCarrierId;
+    const defenderKnockedDown = knockDowns.some(kd => kd.id === defender.id);
+    const isPushed = ['Empujón', 'Empujón y Caída', '¡Placaje!'].includes(selectedDie) || (selectedDie === 'Ambos Derribados' && hasBlock && useBlockSkill);
+
+    if (defenderIsCarrier && (defenderKnockedDown || (isPushed && hasStripBall))) {
+        ballBecomesLoose = true;
+        summary.push("¡El balón queda suelto!");
+    }
+
+    return { knockDowns, ballBecomesLoose, summary };
+  }, [selectedDie, attacker, defender, ballCarrierId, attackerSkills, defenderSkills, useBlockSkill]);
+
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) onClose();
@@ -96,98 +156,110 @@ const BlockAssistantModal: React.FC<BlockAssistantModalProps> = ({ attacker, def
   const handleRollDice = () => {
     const { diceCount } = blockDiceResult;
     if (diceCount === 0) return;
+    const absDiceCount = Math.abs(diceCount);
     
     const results: string[] = [];
-    for (let i = 0; i < diceCount; i++) {
+    for (let i = 0; i < absDiceCount; i++) {
         results.push(diceFaceNames[Math.floor(Math.random() * diceFaceNames.length)]);
     }
     setRolledDice(results);
   };
   
-
-  const DiceResultDisplay = ({ Icon, name }: { Icon: React.FC, name: string }) => (
-    <div className="flex items-center gap-2 bg-slate-700/50 p-2 rounded">
-        <Icon />
-        <span className="text-sm font-semibold">{name}</span>
-    </div>
-  );
+  const handleConfirm = () => {
+    if (outcome) {
+        onBlockResolved(outcome);
+        onClose();
+    }
+  };
+  
+  const handleReset = () => {
+    setRolledDice(null);
+    setSelectedDie(null);
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[60] p-4" onClick={handleBackdropClick}>
-      <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-3xl w-full" onClick={e => e.stopPropagation()}>
+      <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-lg w-full" onClick={e => e.stopPropagation()}>
         <div className="p-4 border-b border-slate-700">
           <h2 className="text-2xl font-bold text-amber-400 text-center">Asistente de Placaje</h2>
         </div>
-        <div className="p-5 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-                {/* Attacker */}
-                <div className="bg-slate-900/70 p-4 rounded-lg border border-sky-500">
-                    <h3 className="font-bold text-sky-400 text-lg">Atacante: {attacker.playerData?.customName}</h3>
-                    <p>Fuerza Base: <span className="font-bold">{attackerStrength}</span></p>
-                    <div className="flex items-center gap-2 mt-2">
-                        <label>Apoyos:</label>
-                        <input type="number" min="0" max="10" value={attackerAssists} onChange={e => setAttackerAssists(parseInt(e.target.value) || 0)} className="w-16 bg-slate-700 p-1 rounded text-center" />
+        {!rolledDice ? (
+            <div className="p-5 space-y-4">
+                {/* Pre-roll view */}
+                <div className="grid grid-cols-2 gap-4 items-start">
+                    <div className="bg-slate-900/70 p-3 rounded-lg border border-sky-500">
+                        <h3 className="font-bold text-sky-400">Atacante: {attacker.playerData?.customName}</h3>
+                        <p>Fuerza Base: <span className="font-bold">{attackerStrength}</span></p>
+                        <p>Apoyos: <span className="font-bold">{attackerAssists}</span></p>
+                        <p className="mt-1 text-lg">Fuerza Final: <span className="font-bold text-white">{finalAttackerStrength}</span></p>
                     </div>
-                    <p className="mt-2 text-xl">Fuerza Final: <span className="font-bold text-white">{finalAttackerStrength}</span></p>
+                    <div className="bg-slate-900/70 p-3 rounded-lg border border-red-500">
+                        <h3 className="font-bold text-red-400">Defensor: {defender.playerData?.customName}</h3>
+                        <p>Fuerza Base: <span className="font-bold">{defenderStrength}</span></p>
+                        <p>Apoyos: <span className="font-bold">{defenderAssists}</span></p>
+                        <p className="mt-1 text-lg">Fuerza Final: <span className="font-bold text-white">{finalDefenderStrength}</span></p>
+                    </div>
                 </div>
-                {/* Defender */}
-                <div className="bg-slate-900/70 p-4 rounded-lg border border-red-500">
-                    <h3 className="font-bold text-red-400 text-lg">Defensor: {defender.playerData?.customName}</h3>
-                    <p>Fuerza Base: <span className="font-bold">{defenderStrength}</span></p>
-                     <div className="flex items-center gap-2 mt-2">
-                        <label>Apoyos:</label>
-                        <input type="number" min="0" max="10" value={defenderAssists} onChange={e => setDefenderAssists(parseInt(e.target.value) || 0)} className="w-16 bg-slate-700 p-1 rounded text-center" />
-                    </div>
-                     <p className="mt-2 text-xl">Fuerza Final: <span className="font-bold text-white">{finalDefenderStrength}</span></p>
+                <div className="text-center bg-slate-900 p-3 rounded-lg">
+                    <h3 className="text-lg font-bold">Resultado</h3>
+                    <p className={`text-xl font-extrabold ${blockDiceResult.color}`}>{blockDiceResult.text}</p>
                 </div>
             </div>
-            
-            <div className="text-center bg-slate-900 p-4 rounded-lg">
-                <h3 className="text-xl font-bold">Resultado</h3>
-                <p className={`text-2xl font-extrabold ${blockDiceResult.color}`}>{blockDiceResult.text}</p>
-            </div>
-
-            {rolledDice ? (
-                 <div className="text-center bg-slate-900 p-4 rounded-lg">
-                    <h3 className="text-xl font-bold mb-4">Tirada</h3>
-                    <div className="flex justify-center items-center gap-4">
-                        {rolledDice.map((result, index) => {
-                            const Icon = diceFaceMap[result];
-                            return <div key={index} className="flex flex-col items-center gap-1"><Icon /><span className="text-xs">{result}</span></div>;
-                        })}
+        ) : !selectedDie ? (
+             <div className="p-5 text-center">
+                 <h3 className="text-xl font-bold mb-4">Selecciona el resultado del dado</h3>
+                 <div className="flex justify-center items-center gap-4 flex-wrap">
+                     {rolledDice.map((result, index) => {
+                         const Icon = diceFaceMap[result];
+                         return (
+                            <button key={index} onClick={() => setSelectedDie(result)} className="flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-slate-700 transition-colors">
+                                <Icon />
+                                <span className="text-xs">{result}</span>
+                            </button>
+                         );
+                     })}
+                 </div>
+             </div>
+        ) : (
+             <div className="p-5 space-y-4">
+                <h3 className="text-xl font-bold text-center">Consecuencias</h3>
+                <div className="bg-slate-900/50 p-3 rounded-lg">
+                    <h4 className="font-semibold text-amber-300 mb-2">Resultado seleccionado:</h4>
+                    <div className="flex items-center gap-2">
+                        {React.createElement(diceFaceMap[selectedDie], {className: "w-8 h-8"})}
+                        <span className="font-bold text-lg">{selectedDie}</span>
                     </div>
                 </div>
-            ) : (
-                <div className="space-y-3">
-                    <h4 className="font-semibold text-amber-300">Resultados Posibles del Dado:</h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        <DiceResultDisplay Icon={BlockDiceSkullIcon} name="Derribado" />
-                        <DiceResultDisplay Icon={BlockDiceBothDownIcon} name="Ambos Derribados" />
-                        <DiceResultDisplay Icon={BlockDicePushIcon} name="Empujón" />
-                        <DiceResultDisplay Icon={BlockDiceStumbleIcon} name="Empujón y Caída" />
-                        <DiceResultDisplay Icon={BlockDicePowIcon} name="¡Placaje!" />
-                    </div>
-                </div>
-            )}
 
-            {relevantSkills.length > 0 && (
-                <div className="space-y-2">
-                    <h4 className="font-semibold text-amber-300">Habilidades Relevantes:</h4>
-                    <ul className="list-disc list-inside text-sm text-slate-300">
-                        {relevantSkills.map(skill => <li key={skill.name}><strong>{skill.name}</strong> ({skill.player}): {skill.description}</li>)}
-                    </ul>
-                </div>
-            )}
-        </div>
+                {selectedDie === 'Ambos Derribados' && attackerSkills.includes('Placar') && !attackerSkills.includes('Lucha') && (
+                    <div className="flex items-center gap-2 p-2 bg-slate-700 rounded-md">
+                        <input id="useBlock" type="checkbox" checked={useBlockSkill} onChange={() => setUseBlockSkill(!useBlockSkill)} className="h-4 w-4 rounded text-amber-500 focus:ring-amber-400" />
+                        <label htmlFor="useBlock" className="text-sm">Usar habilidad <strong>Placar</strong> para permanecer en pie</label>
+                    </div>
+                )}
+                
+                {outcome && (
+                    <div className="bg-slate-900/50 p-3 rounded-lg space-y-1">
+                        <h4 className="font-semibold text-amber-300 mb-2">Lo que sucede:</h4>
+                        {outcome.summary.map((line, i) => <p key={i} className="text-sm">{line}</p>)}
+                    </div>
+                )}
+
+                 <div className="flex justify-between items-center pt-4">
+                     <button onClick={() => setSelectedDie(null)} className="text-sm text-sky-400 hover:underline">Elegir otro dado</button>
+                     <button onClick={handleConfirm} className="bg-green-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-green-500 transition-colors">Confirmar y Aplicar</button>
+                 </div>
+             </div>
+        )}
         <div className="p-4 bg-slate-900/50 border-t border-slate-700 flex justify-between items-center">
             <button onClick={onClose} className="bg-slate-600 text-white font-bold py-2 px-6 rounded-md shadow-md hover:bg-slate-500 transition-colors">Cerrar</button>
-            {rolledDice ? (
-                <button onClick={() => setRolledDice(null)} className="bg-sky-600 text-white font-bold py-2 px-6 rounded-md shadow-md hover:bg-sky-500 transition-colors">
-                    Reiniciar Tirada
-                </button>
-            ) : (
+            {!rolledDice ? (
                 <button onClick={handleRollDice} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400 transition-colors">
                     Lanzar Dados
+                </button>
+            ) : (
+                <button onClick={handleReset} className="bg-sky-600 text-white font-bold py-2 px-6 rounded-md shadow-md hover:bg-sky-500 transition-colors">
+                    Volver a Tirar
                 </button>
             )}
         </div>

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import type { Token, PlayerPosition, ManagedTeam, ManagedPlayer } from '../types';
+// FIX: Imported BoardToken from types.ts to make it globally available.
+import type { Token, PlayerPosition, ManagedTeam, ManagedPlayer, PlayerStatus, BoardToken } from '../types';
 import { fieldImage } from '../data/fieldImage';
 import QrCodeIcon from './icons/QrCodeIcon';
 import { teamsData } from '../data/teams';
@@ -8,6 +9,10 @@ import BallIcon from './icons/BallIcon';
 import { passChartGrid, passTypeDetails } from '../data/passChart';
 import PassRuleModal from './PassRuleModal';
 import BlockAssistantModal from './BlockAssistantModal';
+import ZoomInIcon from './icons/ZoomInIcon';
+import ZoomOutIcon from './icons/ZoomOutIcon';
+import ChevronDownIcon from './icons/ChevronDownIcon';
+import PlayerDetailPanel from './PlayerDetailPanel';
 
 
 declare const QRCode: any;
@@ -33,10 +38,14 @@ const awayPositionConfig: Record<PlayerPosition, { color: string; }> = {
   Receptor: { color: 'bg-pink-600' },
 };
 
-export interface BoardToken extends Token {
-    teamId: 'home' | 'away';
-    playerData?: ManagedPlayer;
+// FIX: Removed local BoardToken definition, it is now in types.ts
+
+export interface BlockResolution {
+    knockDowns: { id: number; isTurnoverSource: boolean }[];
+    ballBecomesLoose: boolean;
+    pushes?: any[]; // For future implementation
 }
+
 
 interface GameBoardProps {
   managedTeams: ManagedTeam[];
@@ -44,6 +53,11 @@ interface GameBoardProps {
 
 type GameState = 'setup' | 'select_home' | 'select_away' | 'scanning_qr' | 'playing';
 type ActionMode = null | 'passing' | 'blocking';
+
+// FIX: Defined the missing `isAdjacent` utility function to check if two tokens are adjacent on the grid. This resolves the 'Cannot find name' error.
+const isAdjacent = (token1: {x:number, y:number}, token2: {x:number, y:number}): boolean => {
+    return Math.abs(token1.x - token2.x) <= 1 && Math.abs(token1.y - token2.y) <= 1 && (token1.x !== token2.x || token1.y !== token2.y);
+};
 
 const cloneTeamForGame = (team: ManagedTeam): ManagedTeam => {
     // Robust deep-clone to create plain JS objects and prevent circular reference errors from Firestore objects.
@@ -61,7 +75,7 @@ const cloneTeamForGame = (team: ManagedTeam): ManagedTeam => {
             spp: p.spp,
             gainedSkills: [...p.gainedSkills],
             lastingInjuries: [...p.lastingInjuries],
-            status: p.status,
+            status: p.status || 'Reserva',
             statusDetail: p.statusDetail,
             isStarPlayer: p.isStarPlayer,
             sppActions: p.sppActions ? { ...p.sppActions } : {},
@@ -87,36 +101,40 @@ const cloneTeamForGame = (team: ManagedTeam): ManagedTeam => {
     };
 };
 
+const passOverlayColors: Record<string, string> = {
+  G: 'bg-green-600/30',
+  Y: 'bg-yellow-500/30',
+  O: 'bg-orange-600/30',
+  B: 'bg-red-800/30',
+};
+
 const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
   const [gameState, setGameState] = useState<GameState>('setup');
   
   const [selectedHomeId, setSelectedHomeId] = useState<string | null>(null);
   const [selectedAwayId, setSelectedAwayId] = useState<string | null>(null);
   const [importedAwayTeam, setImportedAwayTeam] = useState<ManagedTeam | null>(null);
+  const [selectedPlayerToken, setSelectedPlayerToken] = useState<BoardToken | null>(null);
 
   const homeTeam = useMemo(() => {
     const team = managedTeams.find(t => t.id === selectedHomeId);
     if (!team) return null;
-    console.log("Found home team, cloning...", team);
     return cloneTeamForGame(team);
   }, [selectedHomeId, managedTeams]);
   
   const awayTeam = useMemo(() => {
     const localTeam = managedTeams.find(t => t.id === selectedAwayId);
     if (localTeam) {
-        console.log("Found local away team, cloning...", localTeam);
         return cloneTeamForGame(localTeam);
     }
     const imported = (importedAwayTeam?.id === selectedAwayId ? importedAwayTeam : null);
     if (imported) {
-        console.log("Found imported away team, cloning...", imported);
         return cloneTeamForGame(imported);
     }
     return null;
   }, [selectedAwayId, managedTeams, importedAwayTeam]);
 
   const [tokens, setTokens] = useState<BoardToken[]>([]);
-  const [selectedPlayer, setSelectedPlayer] = useState<ManagedPlayer | null>(null);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
 
@@ -130,6 +148,15 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
   const [isPassRuleModalVisible, setIsPassRuleModalVisible] = useState(false);
   const [passResult, setPassResult] = useState<string | null>(null);
   const [blockModalState, setBlockModalState] = useState<{ isOpen: boolean; attacker: BoardToken | null; defender: BoardToken | null }>({ isOpen: false, attacker: null, defender: null });
+  const [turnoverMessage, setTurnoverMessage] = useState<string | null>(null);
+  
+  // New UI states
+  const [score, setScore] = useState({ home: 0, away: 0 });
+  const [rerolls, setRerolls] = useState({ home: 0, away: 0 });
+  const [turn, setTurn] = useState(1);
+  const [half, setHalf] = useState(1);
+  const [isZoomedOut, setIsZoomedOut] = useState(false);
+  const [dugoutsVisible, setDugoutsVisible] = useState({ home: true, away: true });
 
 
   const fieldRef = useRef<HTMLDivElement>(null);
@@ -137,8 +164,28 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
   const qrCanvasRef = useRef<HTMLCanvasElement>(null);
   const scannerContainerRef = useRef<HTMLDivElement>(null);
   const scannerRef = useRef<any>(null);
+  const isDraggingRef = useRef(false);
 
   const activePlayer = useMemo(() => tokens.find(t => t.id === activePlayerId), [activePlayerId, tokens]);
+
+  const resetActionMode = useCallback(() => {
+    setActionMode(null);
+    setActivePlayerId(null);
+    setPassTargetInfo(null);
+    setIsPassRuleModalVisible(false);
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+            resetActionMode();
+        }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [resetActionMode]);
 
   const validBlockTargets = useMemo(() => {
       if (actionMode !== 'blocking' || !activePlayer) return [];
@@ -187,25 +234,18 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
   };
 
   const handleStartGame = () => {
-    console.log('Attempting to start game...');
     try {
         if (!homeTeam || !awayTeam) {
-            console.error("Start game failed: One or both teams are not defined.", { homeTeam, awayTeam });
             alert("Error: No se han podido cargar los datos de uno o ambos equipos.");
             return;
         }
         
-        console.log('Starting game with:', { homeTeam, awayTeam });
-
         const homeTokens = generateTokensForTeam(homeTeam, 'home');
-        console.log('Generated home tokens:', homeTokens);
-
         const awayTokens = generateTokensForTeam(awayTeam, 'away');
-        console.log('Generated away tokens:', awayTokens);
 
         setTokens([...homeTokens, ...awayTokens]);
+        setRerolls({ home: homeTeam.rerolls, away: awayTeam.rerolls });
         setGameState('playing');
-        console.log('Game state set to "playing".');
     } catch (error) {
         console.error("CRITICAL ERROR in handleStartGame:", error);
         alert(`Se ha producido un error crítico al iniciar el partido: ${error instanceof Error ? error.message : 'Error desconocido'}`);
@@ -276,6 +316,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
                             spp: (isNewFormat ? p.s : p.spp) || 0,
                             gainedSkills: (isNewFormat ? p.gS : p.gainedSkills) || [],
                             lastingInjuries: (isNewFormat ? p.lI : p.lastingInjuries) || [],
+                            status: 'Reserva',
                         };
                     });
 
@@ -310,6 +351,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
 
   const handleDragMove = useCallback((e: MouseEvent | TouchEvent) => { 
     if (!draggedItemRef.current.type || !fieldRef.current) return; 
+    isDraggingRef.current = true;
     if (e.cancelable) e.preventDefault(); 
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX; 
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY; 
@@ -375,6 +417,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
     }
   
     draggedItemRef.current = { type: null, id: null };
+    setTimeout(() => { isDraggingRef.current = false; }, 100);
   }, [tokens, ballCarrierId, ballPosition.x, ballPosition.y]);
 
   useEffect(() => {
@@ -406,17 +449,15 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
 
   const handleDragStart = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>, id: number) => { 
     e.preventDefault(); 
+    isDraggingRef.current = false;
     setContextMenu(prev => ({...prev, visible: false}));
-    const clickedToken = tokens.find(t => t.id === id); 
-    if (clickedToken) {
-        setSelectedPlayer(clickedToken.playerData || null);
-    }
     draggedItemRef.current = { type: 'token', id }; 
   };
   
   const handleBallDragStart = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
+    isDraggingRef.current = false;
     setContextMenu(prev => ({...prev, visible: false}));
     if (ballCarrierId) setBallCarrierId(null);
     draggedItemRef.current = { type: 'ball', id: null };
@@ -425,6 +466,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
   const handleContextMenu = (e: React.MouseEvent, id: number) => {
     e.preventDefault();
     e.stopPropagation();
+    if (actionMode) return;
     setContextMenu({ visible: true, x: e.clientX, y: e.clientY, playerId: id });
   };
   const closeContextMenu = () => setContextMenu(prev => ({...prev, visible: false}));
@@ -432,11 +474,12 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
   const handleMenuAction = (action: string) => {
     closeContextMenu();
     if (contextMenu.playerId) {
+        setTokens(prev => prev.map(t => t.id === contextMenu.playerId ? { ...t, isDown: false } : t));
+        
         setActivePlayerId(contextMenu.playerId);
         if (action === "Pasar") {
             if (contextMenu.playerId === ballCarrierId) {
                 setActionMode('passing');
-                setIsPassRuleModalVisible(true);
             } else {
                 alert("Este jugador no tiene el balón para pasar.");
                 setActivePlayerId(null);
@@ -478,28 +521,58 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
     setPassTargetInfo({ x: gridX, y: gridY, type: info.name, modifier });
   };
   
+  const getGridCoordsFromClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const fieldRect = fieldRef.current!.getBoundingClientRect();
+    const x = e.clientX - fieldRect.left;
+    const y = e.clientY - fieldRect.top;
+    const colWidth = fieldRect.width / GRID_COLS;
+    const rowHeight = fieldRect.height / GRID_ROWS;
+    let gridX = Math.floor(x / colWidth);
+    let gridY = Math.floor(y / rowHeight);
+    gridX = Math.max(0, Math.min(GRID_COLS - 1, gridX));
+    gridY = Math.max(0, Math.min(GRID_ROWS - 1, gridY));
+    return { gridX, gridY };
+  };
+
   const handleGridClick = (e: React.MouseEvent<HTMLDivElement>) => {
-      setContextMenu(prev => ({ ...prev, visible: false }));
+    closeContextMenu();
+    if (isDraggingRef.current) return;
 
-      if (!activePlayerId || !actionMode) return;
-      e.stopPropagation();
+    const targetElement = e.target as HTMLElement;
+    const tokenElement = targetElement.closest('[data-token-id]');
+    const clickedTokenId = tokenElement ? parseInt(tokenElement.getAttribute('data-token-id')!, 10) : null;
+    const { gridX, gridY } = getGridCoordsFromClick(e);
 
-      const fieldRect = fieldRef.current!.getBoundingClientRect();
-      const x = e.clientX - fieldRect.left;
-      const y = e.clientY - fieldRect.top;
-      const colWidth = fieldRect.width / GRID_COLS;
-      const rowHeight = fieldRect.height / GRID_ROWS;
-      const gridX = Math.max(0, Math.min(GRID_COLS - 1, Math.floor(x / colWidth)));
-      const gridY = Math.max(0, Math.min(GRID_ROWS - 1, Math.floor(y / rowHeight)));
+    if (actionMode && activePlayerId) {
+        e.stopPropagation();
+        
+        if (clickedTokenId === activePlayerId) {
+            resetActionMode();
+            return;
+        }
+        
+        const activePlayer = tokens.find(t => t.id === activePlayerId);
+        if (!activePlayer) {
+            resetActionMode();
+            return;
+        }
 
-      const activePlayer = tokens.find(t => t.id === activePlayerId);
-      if (!activePlayer) return;
-
-      if (actionMode === 'passing') {
-          handlePassAction(activePlayer, gridX, gridY);
-      } else if (actionMode === 'blocking') {
-          handleBlockAction(activePlayer, gridX, gridY);
-      }
+        if (actionMode === 'passing') {
+            handlePassAction(activePlayer, gridX, gridY);
+        } else if (actionMode === 'blocking') {
+            if (clickedTokenId) {
+                handleBlockAction(activePlayer, gridX, gridY);
+            }
+        }
+    } else {
+        if (clickedTokenId) {
+            e.stopPropagation();
+            const token = tokens.find(t => t.id === clickedTokenId)!;
+            setSelectedPlayerToken(current => current?.id === token.id ? null : token);
+        } else {
+            setSelectedPlayerToken(null);
+        }
+    }
   };
 
   const handlePassAction = (passer: BoardToken, gridX: number, gridY: number) => {
@@ -579,18 +652,27 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
   const handleBlockAction = (attacker: BoardToken, gridX: number, gridY: number) => {
     const defender = tokens.find(t => t.x === gridX && t.y === gridY);
     
-    if (defender && defender.teamId !== attacker.teamId && Math.abs(attacker.x - gridX) <= 1 && Math.abs(attacker.y - gridY) <= 1) {
+    if (defender && defender.teamId !== attacker.teamId && isAdjacent(attacker, defender)) {
         setBlockModalState({ isOpen: true, attacker, defender });
-    } else {
-        alert("Selecciona un oponente adyacente para placar.");
     }
-    resetActionMode();
   };
 
-  const resetActionMode = () => {
-    setActionMode(null);
-    setActivePlayerId(null);
-    setPassTargetInfo(null);
+  const handleBlockResolved = (outcome: BlockResolution) => {
+    const knockDownIds = new Set(outcome.knockDowns.map(kd => kd.id));
+    setTokens(prev => prev.map(t => knockDownIds.has(t.id) ? { ...t, isDown: true } : t));
+
+    if (outcome.ballBecomesLoose) {
+        setBallCarrierId(null);
+    }
+    
+    const turnoverSource = outcome.knockDowns.find(kd => kd.isTurnoverSource);
+    if (turnoverSource) {
+        const turnoverPlayer = tokens.find(t => t.id === turnoverSource.id);
+        const message = `¡TURNOVER! ${turnoverPlayer?.playerData?.customName || 'Un jugador'} ha sido derribado.`;
+        setTurnoverMessage(message);
+        setTimeout(() => setTurnoverMessage(null), 4000);
+    }
+    resetActionMode();
   };
 
   const renderSetup = () => (
@@ -620,7 +702,6 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
                 <button 
                     key={team.id} 
                     onClick={() => { 
-                        console.log('Home team selected:', team.name, team);
                         setSelectedHomeId(team.id!); 
                         setGameState('select_away'); 
                     }} 
@@ -674,18 +755,24 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
                       <div className="bg-slate-900/70 p-4 rounded-lg border border-slate-600">
                           <h3 className="text-lg font-semibold text-slate-300 mb-4">Oponente Local</h3>
                           {availableOpponents.length > 0 ? (
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                   {availableOpponents.map(team => (
-                                      <button 
-                                          key={team.id} 
-                                          onClick={() => {
-                                            console.log('Away team selected (local):', team.name, team);
-                                            setSelectedAwayId(team.id!)
-                                          }}
-                                          className="w-full text-left bg-slate-700/50 p-3 rounded-md hover:bg-slate-700 transition-colors"
+                                      <button
+                                          key={team.id}
+                                          onClick={() => setSelectedAwayId(team.id!)}
+                                          className="w-full flex items-center gap-4 text-left bg-slate-700/50 p-3 rounded-lg shadow-md hover:bg-slate-700 hover:text-white transition-colors"
                                       >
-                                        <p className="font-semibold text-white">{team.name}</p>
-                                        <p className="text-xs text-slate-400">{team.rosterName}</p>
+                                          {team.crestImage ? (
+                                              <img src={team.crestImage} alt="Escudo" className="w-10 h-10 rounded-full object-cover bg-slate-900 flex-shrink-0" />
+                                          ) : (
+                                              <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center flex-shrink-0">
+                                                  <ShieldCheckIcon className="w-6 h-6 text-slate-600" />
+                                              </div>
+                                          )}
+                                          <div className="flex-grow min-w-0">
+                                              <p className="font-semibold text-white truncate">{team.name}</p>
+                                              <p className="text-xs text-slate-400 truncate">{team.rosterName}</p>
+                                          </div>
                                       </button>
                                   ))}
                               </div>
@@ -725,6 +812,72 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
   );
 
   const renderPlaying = () => {
+      if (!homeTeam || !awayTeam) return null;
+
+      const Scoreboard = () => (
+        <div className="flex-shrink-0 bg-slate-800/70 p-2 border-b-2 border-slate-700 shadow-md">
+            <div className="max-w-7xl mx-auto flex justify-between items-center">
+                <div className="flex items-center gap-3 w-1/3">
+                    {homeTeam.crestImage ? <img src={homeTeam.crestImage} className="w-12 h-12 rounded-full object-cover"/> : <ShieldCheckIcon className="w-12 h-12 text-slate-600"/>}
+                    <h3 className="text-lg font-bold text-sky-400 hidden md:block truncate">{homeTeam.name}</h3>
+                </div>
+                <div className="text-center">
+                    <div className="text-4xl font-black text-white">{score.home} - {score.away}</div>
+                    <div className="text-xs text-amber-400">Parte {half} - Turno {turn}</div>
+                </div>
+                <div className="flex items-center gap-3 w-1/3 justify-end">
+                    <h3 className="text-lg font-bold text-red-400 hidden md:block truncate text-right">{awayTeam.name}</h3>
+                    {awayTeam.crestImage ? <img src={awayTeam.crestImage} className="w-12 h-12 rounded-full object-cover"/> : <ShieldCheckIcon className="w-12 h-12 text-slate-600"/>}
+                </div>
+            </div>
+            <div className="flex justify-between items-center max-w-3xl mx-auto mt-2 px-4 text-xs">
+                <div className="flex gap-2"><span>Rerolls:</span> {Array(rerolls.home).fill(0).map((_,i) => <div key={i} className="w-3 h-3 rounded-full bg-sky-400"/>)}</div>
+                <div className="flex gap-2"><span>Rerolls:</span> {Array(rerolls.away).fill(0).map((_,i) => <div key={i} className="w-3 h-3 rounded-full bg-red-400"/>)}</div>
+            </div>
+        </div>
+      );
+
+      const Dugout = ({ team, teamId }: {team: ManagedTeam, teamId: 'home' | 'away'}) => {
+        const { reserves, kos, casualties } = useMemo(() => {
+            const players = teamId === 'home' ? (homeTeam?.players || []) : (awayTeam?.players || []);
+            return {
+                reserves: players.filter(p => p.status === 'Reserva'),
+                kos: players.filter(p => p.status === 'KO'),
+                casualties: players.filter(p => ['Lesionado', 'Expulsado', 'Muerto'].includes(p.status!)),
+            };
+        }, [teamId, homeTeam?.players, awayTeam?.players]);
+        
+        const isVisible = dugoutsVisible[teamId];
+
+        return (
+            <div className={`flex-shrink-0 bg-slate-800/50 rounded-lg shadow-lg h-full flex transition-all duration-300 ease-in-out ${isVisible ? 'w-48 p-2' : 'w-8'}`}>
+                <button 
+                    onClick={() => setDugoutsVisible(p => ({...p, [teamId]: !p[teamId]}))} 
+                    className="h-full w-8 bg-slate-700/50 hover:bg-slate-700 rounded-md flex items-center justify-center"
+                    aria-label={`${isVisible ? 'Ocultar' : 'Mostrar'} banquillo ${teamId === 'home' ? 'local' : 'visitante'}`}
+                >
+                    <ChevronDownIcon className={`w-5 h-5 transition-transform duration-300 ${teamId === 'home' ? 'transform -rotate-90' : 'transform rotate-90'} ${isVisible ? 'rotate-180' : ''}`} />
+                </button>
+                <div className={`flex-grow overflow-hidden transition-opacity ${isVisible ? 'opacity-100 delay-200' : 'opacity-0'}`}>
+                    <div className="h-full overflow-y-auto px-2 space-y-3">
+                        <div>
+                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Reservas ({reserves.length})</h4>
+                            {reserves.map(p => <div key={p.id} className="text-xs p-1 bg-slate-700/50 rounded mt-1">{p.customName}</div>)}
+                        </div>
+                        <div>
+                            <h4 className="text-xs font-bold text-yellow-400 uppercase tracking-wider">KO ({kos.length})</h4>
+                            {kos.map(p => <div key={p.id} className="text-xs p-1 bg-yellow-800/50 rounded mt-1">{p.customName}</div>)}
+                        </div>
+                        <div>
+                            <h4 className="text-xs font-bold text-red-400 uppercase tracking-wider">Bajas ({casualties.length})</h4>
+                            {casualties.map(p => <div key={p.id} className="text-xs p-1 bg-red-800/50 rounded mt-1">{p.customName} ({p.status})</div>)}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+      };
+
       const ballCarrier = tokens.find(t => t.id === ballCarrierId);
       const ballStyle = {
           left: ballCarrier ? `${((ballCarrier.x + 0.5) / GRID_COLS) * 100}%` : `${((ballPosition.x + 0.5) / GRID_COLS) * 100}%`,
@@ -736,135 +889,102 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
       };
 
       return (
-        <div className="space-y-6">
-          <div className="text-center">
-            <h2 className="text-2xl font-semibold text-amber-400 mb-2">Campo de Juego</h2>
-            <div className="flex justify-center items-center gap-4 text-sm">
-                <span className="text-sky-400 font-bold">{homeTeam?.name || 'Local'}</span>
-                <span className="text-slate-400">vs</span>
-                <span className="text-red-400 font-bold">{awayTeam?.name || 'Visitante'}</span>
-            </div>
-          </div>
+        <div className="w-full h-[calc(100vh-80px)] flex flex-col bg-slate-900 text-white">
+          <Scoreboard />
+          <div className="flex-grow flex items-center justify-center p-2 sm:p-4 overflow-hidden relative">
+             <Dugout team={homeTeam} teamId="home" />
 
-          <div ref={fieldRef} 
-            className="relative w-full max-w-4xl mx-auto aspect-[15/26] bg-slate-900 rounded-lg shadow-xl border-2 border-slate-700 select-none overflow-hidden"
-            onMouseMove={handleGridMouseMove}
-            onClick={handleGridClick}
-          >
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform rotate-90" style={{ width: '173.33%', height: '57.7%' }}><img src={fieldImage} alt="Campo de Blood Bowl" className="w-full h-full object-cover"/></div>
-            <div className="absolute inset-0 grid pointer-events-none" style={{ gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`, gridTemplateRows: `repeat(${GRID_ROWS}, 1fr)` }}>
-                {Array.from({ length: GRID_ROWS * GRID_COLS }).map((_, i) => (<div key={i} className="w-full h-full border border-black/20"></div>))}
-            </div>
-
-            <div className="absolute inset-0 grid pointer-events-none" style={{ gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`, gridTemplateRows: `repeat(${GRID_ROWS}, 1fr)` }}>
-                {Array.from({ length: GRID_ROWS * GRID_COLS }).map((_, i) => {
-                    const row = Math.floor(i / GRID_COLS);
-                    const col = i % GRID_COLS;
-                    if (actionMode === 'passing' && passTargetInfo && col === passTargetInfo.x && row === passTargetInfo.y) {
-                      return <div key={i} className="bg-white/30 border border-white"></div>;
-                    }
-                    if (actionMode === 'blocking' && validBlockTargets.some(t => t.x === col && t.y === row)) {
-                      return <div key={i} className="bg-red-500/40 border-2 border-red-500 animate-pulse"></div>;
-                    }
-                    return <div key={i} />;
-                })}
-            </div>
-            
-            {actionMode === 'blocking' && activePlayerId && (
-                <div className="absolute top-0 left-0 right-0 p-1 bg-red-800/90 text-white text-center font-bold text-sm animate-pulse z-30">
-                    MODO PLACAJE: Selecciona una víctima adyacente
-                </div>
-            )}
-
-            {tokens.map((token) => {
-                const config = token.teamId === 'home' ? homePositionConfig : awayPositionConfig;
-                const borderColor = token.teamId === 'home' ? 'border-sky-400' : 'border-red-500';
-                
-                const getPlayerNumber = () => {
-                    if (!token.playerData) return '?';
-                    const team = token.teamId === 'home' ? homeTeam : awayTeam;
-                    const index = team?.players.findIndex(p => p.id === token.playerData!.id);
-                    return (index !== undefined && index > -1) ? index + 1 : '?';
-                };
-                const playerNumber = getPlayerNumber();
-
-                return (
-                  <div 
-                    key={token.id} 
-                    onMouseDown={(e) => handleDragStart(e, token.id)} 
-                    onTouchStart={(e) => handleDragStart(e, token.id)}
-                    onContextMenu={(e) => handleContextMenu(e, token.id)}
-                    className={`absolute flex flex-col items-center justify-center w-[6.66%] h-[3.84%] p-0.5 ${config[token.position]?.color || 'bg-gray-400'} text-white border-2 ${borderColor} rounded-full shadow-lg cursor-grab active:cursor-grabbing`} 
-                    style={{ left: `${((token.x + 0.5) / GRID_COLS) * 100}%`, top: `${((token.y + 0.5) / GRID_ROWS) * 100}%`, transform: 'translate(-50%, -50%)', touchAction: 'none' }}
-                  >
-                    <div className="text-center leading-tight">
-                        <div className="font-bold text-[10px]">#{playerNumber}</div>
-                        <div className="text-[7px] truncate w-full px-1">{token.playerData?.customName}</div>
+            <div className="flex-grow h-full flex items-center justify-center">
+                <div className={`relative transition-transform duration-500 ease-in-out h-full ${isZoomedOut ? 'scale-[0.6]' : 'scale-100'}`}>
+                    <div ref={fieldRef} 
+                        className="relative w-full h-full aspect-[15/26] bg-slate-900 rounded-lg shadow-xl border-2 border-slate-700 select-none overflow-hidden"
+                        onMouseMove={handleGridMouseMove}
+                        onClick={handleGridClick}
+                    >
+                        {actionMode && activePlayer && (
+                            <div className="absolute top-0 left-0 right-0 bg-black/70 p-2 flex justify-between items-center z-30 animate-fade-in-fast">
+                                <p className="text-amber-400 font-bold flex items-center gap-2">
+                                    <span className={`w-3 h-3 rounded-full ${actionMode === 'passing' ? 'bg-sky-400' : 'bg-red-500'} animate-pulse`}></span>
+                                    {actionMode === 'passing' ? 'Pase en curso' : 'Placar en curso'}: Selecciona un objetivo
+                                </p>
+                                <button onClick={resetActionMode} className="bg-red-600 text-white font-bold py-1 px-3 rounded text-sm hover:bg-red-500">
+                                    Cancelar Acción
+                                </button>
+                            </div>
+                        )}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform rotate-90" style={{ width: '173.33%', height: '57.7%' }}><img src={fieldImage} alt="Campo de Blood Bowl" className="w-full h-full object-cover"/></div>
+                        <div className="absolute inset-0 grid pointer-events-none" style={{ gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`, gridTemplateRows: `repeat(${GRID_ROWS}, 1fr)` }}>
+                            {Array.from({ length: GRID_ROWS * GRID_COLS }).map((_, i) => (<div key={i} className="w-full h-full border border-black/20"></div>))}
+                        </div>
+                        {actionMode === 'passing' && activePlayer && (
+                            <div className="absolute inset-0 grid pointer-events-none" style={{ gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`, gridTemplateRows: `repeat(${GRID_ROWS}, 1fr)` }}>
+                                {Array.from({ length: GRID_ROWS }).map((_, y) =>
+                                    Array.from({ length: GRID_COLS }).map((_, x) => {
+                                        const dx = Math.abs(x - activePlayer.x);
+                                        const dy = Math.abs(y - activePlayer.y);
+                                        if ((dx === 0 && dy === 0) || dx >= 14 || dy >= 14) return null;
+                                        const typeKey = passChartGrid[dy][dx];
+                                        const colorClass = passOverlayColors[typeKey];
+                                        return <div key={`${x}-${y}`} className={`w-full h-full ${colorClass || ''}`}></div>;
+                                    })
+                                )}
+                            </div>
+                        )}
+                         {tokens.map((token) => {
+                            const config = token.teamId === 'home' ? homePositionConfig : awayPositionConfig;
+                            const borderColor = token.teamId === 'home' ? 'border-sky-400' : 'border-red-500';
+                             const getPlayerNumber = () => {
+                                if (!token.playerData) return '?';
+                                const team = token.teamId === 'home' ? homeTeam : awayTeam;
+                                const index = team?.players.findIndex(p => p.id === token.playerData!.id);
+                                return (index !== undefined && index > -1) ? index + 1 : '?';
+                            };
+                            const isActive = token.id === activePlayerId;
+                            return (
+                              <div 
+                                key={token.id} 
+                                data-token-id={token.id}
+                                onMouseDown={(e) => handleDragStart(e, token.id)} 
+                                onTouchStart={(e) => handleDragStart(e, token.id)}
+                                onContextMenu={(e) => handleContextMenu(e, token.id)}
+                                className={`absolute flex items-center justify-center w-[6.66%] h-[3.84%] ${config[token.position]?.color} text-white font-bold text-[10px] border-2 ${borderColor} rounded-full shadow-lg cursor-grab active:cursor-grabbing transition-all duration-300 ${token.isDown ? 'opacity-60' : ''} ${isActive ? 'ring-4 ring-amber-400 ring-offset-2 ring-offset-slate-900' : ''}`} 
+                                style={{ left: `${((token.x + 0.5) / GRID_COLS) * 100}%`, top: `${((token.y + 0.5) / GRID_ROWS) * 100}%`, transform: `translate(-50%, -50%) ${token.isDown ? 'rotate(90deg)' : ''}`, touchAction: 'none' }}
+                              >
+                                {getPlayerNumber()}
+                              </div>
+                            );
+                        })}
+                         <div onMouseDown={handleBallDragStart} onTouchStart={handleBallDragStart} className="absolute cursor-grab active:cursor-grabbing" style={ballStyle}><BallIcon className="w-full h-full" /></div>
+                          {passTargetInfo && actionMode !== 'passing' && (
+                            <div
+                                className="absolute w-[6.66%] h-[3.84%] bg-white/20 border-2 border-dashed border-white/50 rounded-lg pointer-events-none z-20"
+                                style={{
+                                    left: `${((passTargetInfo.x + 0.5) / GRID_COLS) * 100}%`,
+                                    top: `${((passTargetInfo.y + 0.5) / GRID_ROWS) * 100}%`,
+                                    transform: 'translate(-50%, -50%)',
+                                }}
+                            >
+                                <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-slate-900 text-xs px-2 py-0.5 rounded shadow-lg whitespace-nowrap">
+                                    {passTargetInfo.type}
+                                </div>
+                            </div>
+                        )}
                     </div>
-                  </div>
-                );
-            })}
-             <div
-                onMouseDown={handleBallDragStart}
-                onTouchStart={handleBallDragStart}
-                className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing transition-all duration-100 ease-out"
-                style={{ ...ballStyle }}
-            >
-                <BallIcon className="w-full h-full" />
-            </div>
-            {actionMode === 'passing' && passTargetInfo && (
-                <div 
-                    className="absolute pointer-events-none p-2 bg-black/70 text-white text-xs rounded-md"
-                    style={{
-                        left: `${(passTargetInfo.x + 0.5) / GRID_COLS * 100}%`,
-                        top: `${(passTargetInfo.y + 0.5) / GRID_ROWS * 100}%`,
-                        transform: 'translate(-50%, -120%)',
-                    }}
-                >
-                    <div>{passTargetInfo.type}</div>
-                    <div>Modificador: {passTargetInfo.modifier}</div>
                 </div>
-            )}
-          </div>
-           {selectedPlayer && (
-            <div className="mt-6 bg-slate-900/70 p-4 rounded-lg border border-slate-700 animate-fade-in max-w-4xl mx-auto">
-              <div className="flex justify-between items-start">
-                  <div>
-                      <h3 className="text-xl font-bold text-amber-400">{selectedPlayer.customName}</h3>
-                      <p className="text-slate-400 text-sm">{selectedPlayer.position}</p>
-                  </div>
-                  <button onClick={() => setSelectedPlayer(null)} className="text-slate-400 hover:text-white p-1 rounded-full" aria-label="Cerrar detalles del jugador">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                  </button>
-              </div>
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
-                  <div className="col-span-1 sm:col-span-3">
-                      <h4 className="font-semibold text-slate-300 mb-2">Estadísticas</h4>
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 bg-slate-800 p-2 rounded-md text-slate-200">
-                          <span className="font-mono">MV: {selectedPlayer.stats.MV}</span>
-                          <span className="font-mono">FU: {selectedPlayer.stats.FU}</span>
-                          <span className="font-mono">AG: {selectedPlayer.stats.AG}</span>
-                          <span className="font-mono">PS: {selectedPlayer.stats.PS}</span>
-                          <span className="font-mono">AR: {selectedPlayer.stats.AR}</span>
-                          <span className="font-bold text-amber-300 font-mono">PE: {selectedPlayer.spp}</span>
-                      </div>
-                  </div>
-                  <div className="col-span-1 sm:col-span-3">
-                      <h4 className="font-semibold text-slate-300 mb-2">Habilidades (Base y Adquiridas)</h4>
-                      <p className="text-slate-300">
-                          {selectedPlayer.skills}, {selectedPlayer.gainedSkills.join(', ')}
-                      </p>
-                  </div>
-                  {selectedPlayer.lastingInjuries.length > 0 && (
-                      <div className="col-span-1 sm:col-span-3">
-                          <h4 className="font-semibold text-slate-300 mb-2">Lesiones Permanentes</h4>
-                          <p className="text-red-400">{selectedPlayer.lastingInjuries.join(', ')}</p>
-                      </div>
-                  )}
-              </div>
             </div>
-          )}
-          <div className="text-center"><button onClick={() => { setGameState('setup'); setSelectedHomeId(null); setSelectedAwayId(null); setTokens([]); setImportedAwayTeam(null); setBallCarrierId(null); setBallPosition({ x: Math.floor(GRID_COLS / 2), y: Math.floor(GRID_ROWS / 2) }); }} className="text-amber-400 hover:underline mt-4">Reiniciar Partida</button></div>
+
+            <Dugout team={awayTeam} teamId="away" />
+            
+            {selectedPlayerToken && <PlayerDetailPanel playerToken={selectedPlayerToken} onClose={() => setSelectedPlayerToken(null)} />}
+            
+            <button
+                onClick={() => setIsZoomedOut(!isZoomedOut)}
+                className="absolute bottom-4 right-4 bg-slate-700 text-white p-3 rounded-full shadow-lg hover:bg-slate-600 transition-colors"
+                aria-label={isZoomedOut ? "Acercar" : "Alejar"}
+            >
+                {isZoomedOut ? <ZoomInIcon /> : <ZoomOutIcon />}
+            </button>
+          </div>
         </div>
       );
   };
@@ -927,7 +1047,12 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
               attacker={blockModalState.attacker}
               defender={blockModalState.defender}
               allTokens={tokens}
-              onClose={() => setBlockModalState({isOpen: false, attacker: null, defender: null})}
+              ballCarrierId={ballCarrierId}
+              onBlockResolved={handleBlockResolved}
+              onClose={() => {
+                  setBlockModalState({isOpen: false, attacker: null, defender: null});
+                  resetActionMode();
+              }}
           />
       )}
 

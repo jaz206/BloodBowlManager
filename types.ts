@@ -57,6 +57,13 @@ export interface Token {
   position: PlayerPosition;
 }
 
+// FIX: Added BoardToken interface for use in GameBoard and related components.
+export interface BoardToken extends Token {
+    teamId: 'home' | 'away';
+    playerData?: ManagedPlayer;
+    isDown?: boolean;
+}
+
 export interface Play {
   id?: string;
   name: string;

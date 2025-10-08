@@ -27,6 +27,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
     const [editingPlayerId, setEditingPlayerId] = useState<number | null>(null);
     const [editingName, setEditingName] = useState('');
     const [isCrestModalOpen, setIsCrestModalOpen] = useState(false);
+    const [fireConfirmation, setFireConfirmation] = useState<ManagedPlayer | null>(null);
     const qrCanvasRef = useRef<HTMLCanvasElement>(null);
     const crestInputRef = useRef<HTMLInputElement>(null);
     const baseRoster = useMemo(() => teamsData.find(t => t.name === team.rosterName), [team.rosterName]);
@@ -325,17 +326,21 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
         onUpdate({ ...team, players: updatedPlayers });
     };
 
-    const handleFirePlayer = (playerId: number) => {
+    const requestFirePlayer = (playerId: number) => {
         const playerToFire = team.players.find(p => p.id === playerId);
-        if (!playerToFire) return;
-
-        if (confirm(`¿Estás seguro de que quieres despedir a ${playerToFire.customName}? Recibirás la mitad de su coste (${(playerToFire.cost / 2).toLocaleString()} M.O.) de vuelta a tu tesorería.`)) {
-            onUpdate({
-                ...team,
-                treasury: team.treasury + (playerToFire.cost / 2),
-                players: team.players.filter(p => p.id !== playerId)
-            });
+        if (playerToFire) {
+            setFireConfirmation(playerToFire);
         }
+    };
+    
+    const confirmFirePlayer = () => {
+        if (!fireConfirmation) return;
+        onUpdate({
+            ...team,
+            treasury: team.treasury + (fireConfirmation.cost / 2),
+            players: team.players.filter(p => p.id !== fireConfirmation.id),
+        });
+        setFireConfirmation(null);
     };
     
     const handleSavePlayer = (updatedPlayer: ManagedPlayer) => {
@@ -464,7 +469,13 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                             <tr>
                                 <th className="p-2">Posición</th>
                                 <th className="p-2">Coste</th>
-                                <th className="p-2">Plantilla</th>
+                                <th className="p-2 text-center">MV</th>
+                                <th className="p-2 text-center">FU</th>
+                                <th className="p-2 text-center">AG</th>
+                                <th className="p-2 text-center">PS</th>
+                                <th className="p-2 text-center">AR</th>
+                                <th className="p-2">Habilidades</th>
+                                <th className="p-2 text-center">Plantilla</th>
                                 <th className="p-2">Acción</th>
                             </tr>
                         </thead>
@@ -473,7 +484,26 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                                 <tr key={p.position}>
                                     <td className="p-2 font-semibold text-slate-200">{p.position}</td>
                                     <td className="p-2">{p.cost.toLocaleString()}</td>
-                                    <td className="p-2">{countPlayersByPosition(p.position)}/{p.qty.split('-')[1]}</td>
+                                    <td className="p-2 text-center">{p.stats.MV}</td>
+                                    <td className="p-2 text-center">{p.stats.FU}</td>
+                                    <td className="p-2 text-center">{p.stats.AG}</td>
+                                    <td className="p-2 text-center">{p.stats.PS}</td>
+                                    <td className="p-2 text-center">{p.stats.AR}</td>
+                                    <td className="p-2 text-xs whitespace-normal min-w-[200px]">
+                                        {p.skills.split(', ').map((skill, index, arr) => {
+                                            const cleanSkillName = skill.trim();
+                                            if (cleanSkillName && cleanSkillName.toLowerCase() !== 'ninguna') {
+                                                return (
+                                                    <React.Fragment key={skill}>
+                                                        <button onClick={() => handleSkillClick(cleanSkillName)} className="text-sky-400 hover:text-sky-300 hover:underline">{cleanSkillName}</button>
+                                                        {index < arr.length - 1 && ', '}
+                                                    </React.Fragment>
+                                                );
+                                            }
+                                            return cleanSkillName + (index < arr.length - 1 ? ', ' : '');
+                                        })}
+                                    </td>
+                                    <td className="p-2 text-center">{countPlayersByPosition(p.position)}/{p.qty.split('-')[1]}</td>
                                     <td className="p-2">
                                         <button onClick={() => handleHirePlayer(p)} className="bg-green-600 text-white font-bold py-1 px-3 rounded shadow hover:bg-green-500 transition-colors">Fichar</button>
                                     </td>
@@ -567,7 +597,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                                     <td className="p-2">
                                         <div className="flex gap-2">
                                             <button onClick={() => setEditingPlayer(p)} className="text-sky-400 hover:underline text-xs">Editar</button>
-                                            <button onClick={() => handleFirePlayer(p.id)} className="text-red-400 hover:underline text-xs">Despedir</button>
+                                            <button onClick={() => requestFirePlayer(p.id)} className="text-red-400 hover:underline text-xs">Despedir</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -589,7 +619,21 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
             {editingPlayer && <PlayerModal player={editingPlayer} allSkills={skillsData} onSave={handleSavePlayer} onClose={() => setEditingPlayer(null)} />}
             {selectedSkillForModal && <SkillModal skill={selectedSkillForModal} onClose={() => setSelectedSkillForModal(null)} />}
             {isCrestModalOpen && team.crestImage && <ImageModal src={team.crestImage} alt={`Escudo de ${team.name}`} onClose={() => setIsCrestModalOpen(false)} />}
-
+            {fireConfirmation && (
+                <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 animate-fade-in-fast" onClick={() => setFireConfirmation(null)}>
+                    <div className="bg-slate-800 p-6 rounded-lg shadow-xl border border-slate-700 max-w-sm w-full" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-amber-400 mb-4">Confirmar Despido</h3>
+                        <p className="text-slate-300 mb-6">
+                            ¿Estás seguro de que quieres despedir a <span className="font-bold text-white">{fireConfirmation.customName}</span>?
+                            Recibirás la mitad de su coste (<span className="font-bold text-green-400">{(fireConfirmation.cost / 2).toLocaleString()} M.O.</span>) de vuelta.
+                        </p>
+                        <div className="flex justify-end gap-4">
+                            <button onClick={() => setFireConfirmation(null)} className="bg-slate-600 text-white font-bold py-2 px-4 rounded">Cancelar</button>
+                            <button onClick={confirmFirePlayer} className="bg-red-600 text-white font-bold py-2 px-4 rounded">Confirmar</button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {showQr && (
                 <div 
@@ -603,6 +647,10 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                     </div>
                 </div>
             )}
+             <style>{`
+                @keyframes fade-in-fast { from { opacity: 0; } to { opacity: 1; } }
+                .animate-fade-in-fast { animation: fade-in-fast 0.2s ease-out forwards; }
+            `}</style>
         </div>
     );
 };
