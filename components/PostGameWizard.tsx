@@ -78,10 +78,8 @@ const getLevelFromSpp = (spp: number) => {
 };
 
 const cloneTeamForPostGame = (team: ManagedTeam): ManagedTeam => {
-    // Safe deep clone to prevent circular reference errors with Firestore objects
     const clonedPlayers = team.players.map(p => {
         const clonedPlayer = { ...p };
-        // Explicitly deep copy nested objects/arrays inside player
         if (p.stats) {
             clonedPlayer.stats = { ...p.stats };
         }
@@ -94,6 +92,7 @@ const cloneTeamForPostGame = (team: ManagedTeam): ManagedTeam => {
     });
 
     const clonedTeam: ManagedTeam = {
+        id: team.id,
         name: team.name,
         rosterName: team.rosterName,
         treasury: team.treasury,
@@ -103,17 +102,8 @@ const cloneTeamForPostGame = (team: ManagedTeam): ManagedTeam => {
         assistantCoaches: team.assistantCoaches,
         apothecary: team.apothecary,
         players: clonedPlayers,
+        crestImage: team.crestImage,
     };
-
-    // Copy optional properties from ManagedTeam type
-    if (team.id) clonedTeam.id = team.id;
-    if (team.crestImage) clonedTeam.crestImage = team.crestImage;
-    if (team.liveRerolls !== undefined) clonedTeam.liveRerolls = team.liveRerolls;
-    if (team.tempBribes !== undefined) clonedTeam.tempBribes = team.tempBribes;
-    if (team.tempCheerleaders !== undefined) clonedTeam.tempCheerleaders = team.tempCheerleaders;
-    if (team.tempAssistantCoaches !== undefined) clonedTeam.tempAssistantCoaches = team.tempAssistantCoaches;
-    if (team.coachExpelled !== undefined) clonedTeam.coachExpelled = team.coachExpelled;
-    if (team.apothecaryUsedOnKO !== undefined) clonedTeam.apothecaryUsedOnKO = team.apothecaryUsedOnKO;
     
     return clonedTeam;
 };
@@ -312,7 +302,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, oppone
             )}
             <style>{`
                 @keyframes fade-in-fast { from { opacity: 0; } to { opacity: 1; } }
-                @keyframes slide-in-up { from { transform: translateY(20px) scale(0.98); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+                @keyframes slide-in-up { from { transform: translateY(20px) scale(0.98); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
                 .animate-fade-in-fast { animation: fade-in-fast 0.2s ease-out forwards; }
                 .animate-slide-in-up { animation: slide-in-up 0.3s ease-out forwards; }
             `}</style>
