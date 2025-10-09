@@ -5,12 +5,14 @@ import Plays from './components/Plays';
 import Generators from './components/Generators';
 import TeamManager from './components/TeamManager';
 import { LiveGame } from './components/LiveGame';
+import GameBoard from './components/GameBoard'; // Import new component
 import BookOpenIcon from './components/icons/BookOpenIcon';
 import UsersIcon from './components/icons/UsersIcon';
 import ClipboardListIcon from './components/icons/ClipboardListIcon';
 import CubeIcon from './components/icons/CubeIcon';
 import ShieldCheckIcon from './components/icons/ShieldCheckIcon';
 import StopwatchIcon from './components/icons/StopwatchIcon';
+import StadiumIcon from './components/icons/StadiumIcon'; // Import new icon
 import type { ManagedTeam, Competition, Play, Matchup, CompetitionTeam } from './types';
 import { useAuth } from './hooks/useAuth';
 import UserProfile from './components/UserProfile';
@@ -18,8 +20,10 @@ import TrophyIcon from './components/icons/TrophyIcon';
 import { Leagues } from './components/Leagues';
 import { db } from './firebaseConfig';
 import { collection, onSnapshot, addDoc, doc, setDoc, deleteDoc, writeBatch } from "firebase/firestore";
+import SyncStatusIndicator from './components/SyncStatusIndicator';
 
-type View = 'guide' | 'teams' | 'plays' | 'generators' | 'manager' | 'live' | 'leagues';
+type View = 'guide' | 'teams' | 'plays' | 'generators' | 'manager' | 'live' | 'leagues' | 'game';
+type SyncStatus = 'synced' | 'syncing' | 'error';
 
 const GuestWarningBanner = () => (
     <div className="bg-yellow-900/50 border-b-2 border-yellow-700 text-yellow-300 text-center p-2 text-sm sticky top-0 z-20">
@@ -29,7 +33,7 @@ const GuestWarningBanner = () => (
 
 
 const MainApp: React.FC = () => {
-  const [activeView, setActiveView] = useState<View>('guide');
+  const [activeView, setActiveView] = useState<View>('game');
   const { user } = useAuth();
   const isGuest = useMemo(() => user?.id.startsWith('guest-'), [user]);
 
@@ -39,82 +43,98 @@ const MainApp: React.FC = () => {
   
   const [dataInitiallyLoaded, setDataInitiallyLoaded] = useState(false);
   const [requestedRoster, setRequestedRoster] = useState<string | null>(null);
+  const [syncState, setSyncState] = useState<SyncStatus>('synced');
 
   useEffect(() => {
     if (isGuest || !user || !db) {
-        // Guest mode or no user/db: clear all state, no persistence
         setManagedTeams([]);
-        setCompetitions([]);
         setPlays([]);
-        setDataInitiallyLoaded(true); // Nothing to load, so we're ready
+        setDataInitiallyLoaded(true);
+        setSyncState('synced');
+    } else {
+        setDataInitiallyLoaded(false);
+
+        const teamsUnsub = onSnapshot(collection(db, 'users', user.id, 'teams'), 
+            (snapshot) => {
+                setManagedTeams(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ManagedTeam[]);
+                if(!dataInitiallyLoaded) setDataInitiallyLoaded(true);
+                setSyncState('synced');
+            }, 
+            (error) => {
+                console.error("Error fetching teams:", error);
+                setDataInitiallyLoaded(true);
+                setSyncState('error');
+            }
+        );
+
+        const playsUnsub = onSnapshot(collection(db, 'users', user.id, 'plays'), 
+            (snapshot) => {
+                setPlays(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Play[]);
+                setSyncState('synced');
+            },
+            (error) => {
+                 console.error("Error fetching plays:", error);
+                 setSyncState('error');
+            }
+        );
+        
+        return () => {
+            teamsUnsub();
+            playsUnsub();
+        };
+    }
+  }, [user, isGuest]);
+
+  useEffect(() => {
+      if (!db) {
+        setCompetitions([]);
+        return;
+      }
+      const compsUnsub = onSnapshot(collection(db, 'competitions'),
+        (snapshot) => {
+            const competitionsFromDb: Competition[] = snapshot.docs.map(doc => {
+                const data = doc.data();
+                return { id: doc.id, ...data } as Competition;
+            });
+            setCompetitions(competitionsFromDb);
+            setSyncState('synced');
+        },
+        (error) => {
+            console.error("Error fetching competitions:", error);
+            setSyncState('error');
+        }
+      );
+      return () => compsUnsub();
+  }, [db]);
+
+
+  const handleTeamCreate = async (newTeamData: Omit<ManagedTeam, 'id'>, index?: number) => {
+    if (!user) return;
+    setSyncState('syncing');
+    if (isGuest) {
+        setManagedTeams(prev => [...prev, { ...newTeamData, id: `temp_${Date.now()}_${index || 0}` }]);
+        setTimeout(() => setSyncState('synced'), 500);
         return;
     }
-
-    setDataInitiallyLoaded(false); // Show loader for new user login
-
-    const teamsUnsub = onSnapshot(collection(db, 'users', user.id, 'teams'), 
-        (snapshot) => {
-            setManagedTeams(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ManagedTeam[]);
-            if (!dataInitiallyLoaded) setDataInitiallyLoaded(true); // Stop loading after first data arrives
-        }, 
-        (error) => {
-            console.error("Error fetching teams:", error);
-            setDataInitiallyLoaded(true); // Unlock UI even on error
-        }
-    );
-
-    const compsUnsub = onSnapshot(collection(db, 'users', user.id, 'competitions'), 
-        (snapshot) => {
-            setCompetitions(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Competition[]);
-        },
-        (error) => console.error("Error fetching competitions:", error)
-    );
-
-    const playsUnsub = onSnapshot(collection(db, 'users', user.id, 'plays'), 
-        (snapshot) => {
-            setPlays(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Play[]);
-        },
-        (error) => console.error("Error fetching plays:", error)
-    );
-
-    // Cleanup subscriptions on component unmount or user change
-    return () => {
-        teamsUnsub();
-        compsUnsub();
-        playsUnsub();
-    };
-  }, [user, isGuest, dataInitiallyLoaded]);
-
-  // --- Data Handlers with Optimistic UI ---
-
-  const handleTeamCreate = async (newTeamData: Omit<ManagedTeam, 'id'>) => {
-    if (!user) return;
-
-    const tempId = `temp_${Date.now()}`;
-    const newTeam = { ...newTeamData, id: tempId };
-    setManagedTeams(prev => [...prev, newTeam]);
-    
-    if (isGuest) return;
     
     try {
         if (!db) throw new Error("Database not connected.");
-        const docRef = await addDoc(collection(db, 'users', user.id, 'teams'), newTeamData);
-        // onSnapshot will handle the final update, but we can swap the ID to be safe
-        setManagedTeams(prev => prev.map(t => (t.id === tempId ? { ...t, id: docRef.id } : t)));
+        await addDoc(collection(db, 'users', user.id, 'teams'), newTeamData);
     } catch (error) {
         console.error("Error creating team:", error);
         alert(`Error al sincronizar el equipo con la nube: ${error instanceof Error ? error.message : String(error)}. El equipo no se ha guardado.`);
-        setManagedTeams(prev => prev.filter(t => t.id !== tempId));
+        setSyncState('error');
     }
   };
 
   const handleTeamUpdate = async (updatedTeam: ManagedTeam) => {
     if (!user || !updatedTeam.id) return;
-    
-    const originalTeams = managedTeams;
-    setManagedTeams(prev => prev.map(t => t.id === updatedTeam.id ? updatedTeam : t));
-
-    if (isGuest) return;
+    setSyncState('syncing');
+    if (isGuest) {
+        setManagedTeams(prev => prev.map(t => t.id === updatedTeam.id ? updatedTeam : t));
+        setTimeout(() => setSyncState('synced'), 500);
+        return;
+    }
     
     try {
         if (!db) throw new Error("Database not connected.");
@@ -123,7 +143,7 @@ const MainApp: React.FC = () => {
     } catch (error) {
         console.error("Error updating team:", error);
         alert(`Error al actualizar el equipo en la nube: ${error instanceof Error ? error.message : String(error)}. Los cambios no se han guardado.`);
-        setManagedTeams(originalTeams);
+        setSyncState('error');
     }
   };
 
@@ -131,112 +151,79 @@ const MainApp: React.FC = () => {
     if (!user) return;
     const teamToDelete = managedTeams.find(t => t.id === teamId);
     if (!teamToDelete) return;
+    setSyncState('syncing');
 
-    const originalTeams = managedTeams;
-    const originalCompetitions = competitions;
-
-    setManagedTeams(prev => prev.filter(t => t.id !== teamId));
-    
-    const updatedCompetitions = competitions.map(comp => {
-        // FIX: Check if team is in competition by looking at the teamName property
-        if (!comp.teams.some(t => t.teamName === teamToDelete.name)) return comp;
-        
-        // FIX: Filter teams array based on teamName property of the team object
-        const newComp = { ...comp, teams: comp.teams.filter(t => t.teamName !== teamToDelete.name) };
-        // @FIX: Correctly handle Record<string, Matchup[]> for schedule and bracket
-        if (newComp.schedule) {
-            const newSchedule: Record<string, Matchup[]> = {};
-            Object.entries(newComp.schedule).forEach(([roundKey, round]) => {
-                // @FIX: Cast `round` to `Matchup[]` to resolve 'unknown' type error.
-                const newRound = (round as Matchup[]).filter(match => match.team1 !== teamToDelete.name && match.team2 !== teamToDelete.name);
-                if (newRound.length > 0) {
-                    newSchedule[roundKey] = newRound;
-                }
-            });
-            newComp.schedule = newSchedule;
-        }
-        if (newComp.bracket) {
-            const newBracket: Record<string, Matchup[]> = {};
-            Object.entries(newComp.bracket).forEach(([roundKey, round]) => {
-                // @FIX: Cast `round` to `Matchup[]` to resolve 'unknown' type error.
-                newBracket[roundKey] = (round as Matchup[]).map(match => ({
-                    ...match,
-                    team1: match.team1 === teamToDelete.name ? 'EQUIPO ELIMINADO' : match.team1,
-                    team2: match.team2 === teamToDelete.name ? 'EQUIPO ELIMINADO' : match.team2,
-                    winner: match.winner === teamToDelete.name ? null : match.winner,
-                }));
-            });
-            newComp.bracket = newBracket;
-        }
-        return newComp;
-    });
-    setCompetitions(updatedCompetitions);
-
-    if (isGuest) return;
+    if (isGuest) {
+        setManagedTeams(prev => prev.filter(t => t.id !== teamId));
+        setTimeout(() => setSyncState('synced'), 500);
+        return;
+    }
 
     try {
         if (!db) throw new Error("Database not connected.");
         const batch = writeBatch(db);
         batch.delete(doc(db, 'users', user.id, 'teams', teamId));
-        updatedCompetitions.forEach(comp => {
-            if (comp.id && originalCompetitions.find(oc => oc.id === comp.id) !== comp) {
-                const { id, ...compData } = comp;
-                batch.set(doc(db, 'users', user.id, 'competitions', id), compData);
+        
+        competitions.forEach(comp => {
+            if (comp.id && comp.teams.some(t => t.teamName === teamToDelete.name && t.ownerId === user.id)) {
+                const newComp = { ...comp, teams: comp.teams.filter(t => t.teamName !== teamToDelete.name || t.ownerId !== user.id) };
+                const { id, ...compData } = newComp;
+                batch.set(doc(db, 'competitions', id), compData);
             }
         });
+
         await batch.commit();
     } catch (error) {
-        console.error("Error deleting team:", error);
-        alert(`Error al borrar el equipo de la nube: ${error instanceof Error ? error.message : String(error)}. Deshaciendo cambios.`);
-        setManagedTeams(originalTeams);
-        setCompetitions(originalCompetitions);
+        console.error("Error deleting team and updating competitions:", error);
+        alert(`Error al borrar el equipo de la nube: ${error instanceof Error ? error.message : String(error)}.`);
+        setSyncState('error');
     }
   };
 
   const handleCompetitionCreate = async (newCompData: Omit<Competition, 'id'>) => {
     if (!user) return;
-    const tempId = `temp_${Date.now()}`;
-    const newComp = { ...newCompData, id: tempId };
-    setCompetitions(prev => [...prev, newComp]);
-
-    if (isGuest) return;
-
+    setSyncState('syncing');
+    if (isGuest) {
+        setCompetitions(prev => [...prev, { ...newCompData, id: `temp_${Date.now()}` }]);
+        setTimeout(() => setSyncState('synced'), 500);
+        return;
+    }
     try {
         if (!db) throw new Error("Database not connected.");
-        const docRef = await addDoc(collection(db, 'users', user.id, 'competitions'), newCompData);
-        setCompetitions(prev => prev.map(c => (c.id === tempId ? { ...c, id: docRef.id } : c)));
+        await addDoc(collection(db, 'competitions'), newCompData);
     } catch (error) {
         console.error("Error creating competition:", error);
         alert(`Error al crear la competición en la nube: ${error instanceof Error ? error.message : String(error)}.`);
-        setCompetitions(prev => prev.filter(c => c.id !== tempId));
+        setSyncState('error');
     }
   };
 
   const handleCompetitionUpdate = async (updatedComp: Competition) => {
     if (!user || !updatedComp.id) return;
-    
-    const originalCompetitions = competitions;
-    setCompetitions(prev => prev.map(c => c.id === updatedComp.id ? updatedComp : c));
-    
-    if (isGuest) return;
-
+    setSyncState('syncing');
+    if (isGuest) {
+        setCompetitions(prev => prev.map(c => c.id === updatedComp.id ? updatedComp : c));
+        setTimeout(() => setSyncState('synced'), 500);
+        return;
+    }
     try {
         if (!db) throw new Error("Database not connected.");
         const { id, ...compData } = updatedComp;
-        await setDoc(doc(db, 'users', user.id, 'competitions', id), compData, { merge: true });
+        await setDoc(doc(db, 'competitions', id), compData, { merge: true });
     } catch (error) {
         console.error("Error updating competition:", error);
         alert(`Error al actualizar la competición en la nube: ${error instanceof Error ? error.message : String(error)}.`);
-        setCompetitions(originalCompetitions);
+        setSyncState('error');
     }
   };
 
-  // FIX: Add handleCompetitionDelete function
   const handleCompetitionDelete = async (compId: string) => {
     if (!user) return;
+    setSyncState('syncing');
     if (isGuest) {
-        setCompetitions(prev => prev.filter(c => c.id !== compId));
-        return;
+      setCompetitions(prev => prev.filter(c => c.id !== compId));
+      setTimeout(() => setSyncState('synced'), 500);
+      return;
     }
     try {
       if (!db) throw new Error("Database not connected.");
@@ -244,23 +231,22 @@ const MainApp: React.FC = () => {
     } catch (error) {
       console.error("Error deleting competition:", error);
       alert(`Error al eliminar la competición: ${error instanceof Error ? error.message : String(error)}`);
+      setSyncState('error');
     }
   };
   
   const handlePlaySave = async (playToSave: Play) => {
     if (!user) return;
-    
-    const originalPlays = plays;
-    let tempId: string | undefined;
-
-    if (playToSave.id && !playToSave.id.startsWith('temp_')) {
-        setPlays(prev => prev.map(p => p.id === playToSave.id ? playToSave : p));
-    } else {
-        tempId = `temp_${Date.now()}`;
-        setPlays(prev => [...prev.filter(p => p.name.toLowerCase() !== playToSave.name.toLowerCase()), { ...playToSave, id: tempId }]);
+    setSyncState('syncing');
+    if (isGuest) {
+        if (playToSave.id) {
+             setPlays(prev => prev.map(p => p.id === playToSave.id ? playToSave : p));
+        } else {
+             setPlays(prev => [...prev.filter(p => p.name.toLowerCase() !== playToSave.name.toLowerCase()), { ...playToSave, id: `temp_${Date.now()}` }]);
+        }
+        setTimeout(() => setSyncState('synced'), 500);
+        return;
     }
-
-    if (isGuest) return;
     
     try {
         if (!db) throw new Error("Database not connected.");
@@ -269,31 +255,30 @@ const MainApp: React.FC = () => {
             await setDoc(doc(db, 'users', user.id, 'plays', id), playData);
         } else {
             const { id, ...playData } = playToSave;
-            const docRef = await addDoc(collection(db, 'users', user.id, 'plays'), playData);
-            if (tempId) setPlays(prev => prev.map(p => (p.id === tempId ? { ...p, id: docRef.id } : p)));
+            await addDoc(collection(db, 'users', user.id, 'plays'), playData);
         }
     } catch (error) {
         console.error("Error saving play:", error);
         alert(`Error al guardar la jugada en la nube: ${error instanceof Error ? error.message : String(error)}.`);
-        setPlays(originalPlays);
+        setSyncState('error');
     }
   };
 
   const handlePlayDelete = async (playId: string) => {
     if (!user) return;
-    
-    const originalPlays = plays;
-    setPlays(prev => prev.filter(p => p.id !== playId));
-
-    if (isGuest) return;
-
+    setSyncState('syncing');
+    if (isGuest) {
+        setPlays(prev => prev.filter(p => p.id !== playId));
+        setTimeout(() => setSyncState('synced'), 500);
+        return;
+    }
     try {
         if (!db) throw new Error("Database not connected.");
         await deleteDoc(doc(db, 'users', user.id, 'plays', playId));
     } catch (error) {
         console.error("Error deleting play:", error);
         alert(`Error al borrar la jugada de la nube: ${error instanceof Error ? error.message : String(error)}.`);
-        setPlays(originalPlays);
+        setSyncState('error');
     }
   };
 
@@ -325,7 +310,7 @@ const MainApp: React.FC = () => {
     );
   };
 
-  const mainClasses = activeView === 'leagues' ? '' : 'container mx-auto max-w-7xl p-2 sm:p-6';
+  const mainClasses = (activeView === 'leagues' || activeView === 'game' || activeView === 'plays') ? '' : 'container mx-auto max-w-7xl p-2 sm:p-6';
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-200 font-sans antialiased">
@@ -336,7 +321,8 @@ const MainApp: React.FC = () => {
             Asistente de Blood Bowl
           </h1>
           <p className="text-slate-400 mt-2 text-lg">Tu Asistente de Entrenador</p>
-          <div className="absolute top-0 right-0 p-2">
+          <div className="absolute top-0 right-0 p-2 flex items-center gap-4">
+            {!isGuest && <SyncStatusIndicator status={syncState} />}
             <UserProfile />
           </div>
         </header>
@@ -349,6 +335,7 @@ const MainApp: React.FC = () => {
             <NavButton view="generators" label="Tablas y Generadores" icon={<CubeIcon />} />
             <NavButton view="manager" label="Gestor de Equipo" icon={<ShieldCheckIcon />} />
             <NavButton view="live" label="Directo" icon={<StopwatchIcon />} />
+            <NavButton view="game" label="Partido" icon={<StadiumIcon />} />
             <NavButton view="leagues" label="Ligas y Torneos" icon={<TrophyIcon />} />
           </div>
         </nav>
@@ -370,7 +357,7 @@ const MainApp: React.FC = () => {
                     {activeView === 'generators' && <Generators />}
                     {activeView === 'manager' && <TeamManager teams={managedTeams} onTeamCreate={handleTeamCreate} onTeamUpdate={handleTeamUpdate} onTeamDelete={handleTeamDelete} requestedRoster={requestedRoster} onRosterRequestHandled={() => setRequestedRoster(null)} isGuest={isGuest} />}
                     {activeView === 'live' && <LiveGame managedTeams={managedTeams} onTeamUpdate={handleTeamUpdate} />}
-                    {/* FIX: Add onCompetitionDelete to Leagues component */}
+                    {activeView === 'game' && <GameBoard managedTeams={managedTeams} />}
                     {activeView === 'leagues' && <Leagues managedTeams={managedTeams} initialCompetitions={competitions} onCompetitionCreate={handleCompetitionCreate} onCompetitionUpdate={handleCompetitionUpdate} onCompetitionDelete={handleCompetitionDelete} isGuest={isGuest} />}
                 </>
             )}

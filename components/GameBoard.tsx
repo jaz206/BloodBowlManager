@@ -20,14 +20,15 @@ import FireIcon from './icons/FireIcon';
 import CloudIcon from './icons/CloudIcon';
 import { weatherConditions } from '../data/weather';
 import { kickoffEvents } from '../data/kickoffEvents';
+import PlayerStatusCard from './PlayerStatusCard';
 
 
 declare const QRCode: any;
 declare const Html5Qrcode: any;
 
 
-const GRID_COLS = 15;
-const GRID_ROWS = 26;
+const GRID_COLS = 26;
+const GRID_ROWS = 15;
 
 const homePositionConfig: Record<PlayerPosition, { color: string; }> = {
   Blitzer: { color: 'bg-red-700' },
@@ -322,15 +323,29 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
   };
 
   const generateTokensForTeam = (team: ManagedTeam, teamId: 'home' | 'away'): BoardToken[] => {
-    const playersOnField = team.players.filter(p => !(p.isBenched ?? false));
+    const playersOnField = team.players.filter(p => !(p.isBenched ?? false)).slice(0, 11);
     return playersOnField.map((player, index) => {
-        const yPos = teamId === 'home' 
-            ? GRID_ROWS - 5 - Math.floor(index / (Math.floor(GRID_COLS/2)-1))
-            : 4 + Math.floor(index / (Math.floor(GRID_COLS/2)-1));
+        // Simple defensive or offensive setup
+        const isWide = index % 5 === 0 || index % 5 === 4;
+        const line = Math.floor(index / 5); // 0, 1, 2
+        
+        let yPos = Math.floor(GRID_ROWS / 2) - 2 + (index % 5);
+        let xPos = 0;
+
+        if (line === 0) { // Scrimmage line
+            xPos = teamId === 'home' ? 12 : 13;
+        } else if (line === 1) { // 2nd line
+            xPos = teamId === 'home' ? 10 : 15;
+            yPos = Math.floor(GRID_ROWS / 2) - 3 + (index % 5) * 2;
+        } else { // Backfield
+            xPos = teamId === 'home' ? 8 : 17;
+            yPos = Math.floor(GRID_ROWS / 2) - 1 + (index % 5);
+        }
+
         return {
             id: player.id + (teamId === 'away' ? 999999 : 0),
             position: mapPositionToType(player.position),
-            x: 2 + (index % (Math.floor(GRID_COLS/2)-1)) * 2,
+            x: xPos,
             y: yPos,
             playerData: player,
             teamId: teamId
@@ -1181,38 +1196,42 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
 
       const Dugout = ({ team, teamId }: {team: ManagedTeam, teamId: 'home' | 'away'}) => {
         const { reserves, kos, casualties } = useMemo(() => {
-            const players = teamId === 'home' ? (homeTeam?.players || []) : (awayTeam?.players || []);
+            const players = team.players;
             return {
                 reserves: players.filter(p => p.status === 'Reserva'),
                 kos: players.filter(p => p.status === 'KO'),
                 casualties: players.filter(p => ['Lesionado', 'Expulsado', 'Muerto'].includes(p.status!)),
             };
-        }, [teamId, homeTeam?.players, awayTeam?.players]);
+        }, [team]);
         
         const isVisible = dugoutsVisible[teamId];
 
         return (
-            <div className={`flex-shrink-0 bg-slate-800/50 rounded-lg shadow-lg h-full flex transition-all duration-300 ease-in-out ${isVisible ? 'w-48 p-2' : 'w-8'}`}>
+            <div className={`bg-slate-800/50 rounded-lg shadow-lg flex-1 flex flex-col transition-all duration-300 ease-in-out ${isVisible ? 'min-h-[12rem]' : 'min-h-0'}`}>
                 <button 
                     onClick={() => setDugoutsVisible(p => ({...p, [teamId]: !p[teamId]}))} 
-                    className="h-full w-8 bg-slate-700/50 hover:bg-slate-700 rounded-md flex items-center justify-center"
+                    className="w-full p-2 bg-slate-700/50 hover:bg-slate-700 rounded-t-lg flex justify-between items-center"
                     aria-label={`${isVisible ? 'Ocultar' : 'Mostrar'} banquillo ${teamId === 'home' ? 'local' : 'visitante'}`}
                 >
-                    <ChevronDownIcon className={`w-5 h-5 transition-transform duration-300 ${teamId === 'home' ? 'transform -rotate-90' : 'transform rotate-90'} ${isVisible ? 'rotate-180' : ''}`} />
+                    <div className="flex items-center gap-2">
+                         {team.crestImage ? <img src={team.crestImage} className="w-6 h-6 rounded-full"/> : <ShieldCheckIcon className="w-6 h-6 text-slate-500"/>}
+                         <h3 className={`font-bold ${teamId==='home'?'text-sky-400':'text-red-400'}`}>{team.name}</h3>
+                    </div>
+                    <ChevronUpIcon className={`w-5 h-5 transition-transform duration-300 ${isVisible ? '' : 'rotate-180'}`} />
                 </button>
-                <div className={`flex-grow overflow-hidden transition-opacity ${isVisible ? 'opacity-100 delay-200' : 'opacity-0'}`}>
-                    <div className="h-full overflow-y-auto px-2 space-y-3">
+                <div className={`flex-grow overflow-hidden transition-all duration-300 ease-in-out ${isVisible ? 'max-h-96' : 'max-h-0'}`}>
+                    <div className="h-full overflow-y-auto p-2 space-y-3">
                         <div>
                             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Reservas ({reserves.length})</h4>
-                            {reserves.map(p => <div key={p.id} className="text-xs p-1 bg-slate-700/50 rounded mt-1">{p.customName}</div>)}
+                            {reserves.map(p => <PlayerStatusCard key={p.id} player={p} onViewPlayer={setSelectedPlayerToken} onSkillClick={() => {}} />)}
                         </div>
                         <div>
                             <h4 className="text-xs font-bold text-yellow-400 uppercase tracking-wider">KO ({kos.length})</h4>
-                            {kos.map(p => <div key={p.id} className="text-xs p-1 bg-yellow-800/50 rounded mt-1">{p.customName}</div>)}
+                            {kos.map(p => <PlayerStatusCard key={p.id} player={p} onViewPlayer={setSelectedPlayerToken} onSkillClick={() => {}} />)}
                         </div>
                         <div>
                             <h4 className="text-xs font-bold text-red-400 uppercase tracking-wider">Bajas ({casualties.length})</h4>
-                            {casualties.map(p => <div key={p.id} className="text-xs p-1 bg-red-800/50 rounded mt-1">{p.customName} ({p.status})</div>)}
+                            {casualties.map(p => <PlayerStatusCard key={p.id} player={p} onViewPlayer={setSelectedPlayerToken} onSkillClick={() => {}} />)}
                         </div>
                     </div>
                 </div>
@@ -1225,13 +1244,13 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
           left: ballCarrier ? `${((ballCarrier.x + 0.5) / GRID_COLS) * 100}%` : `${((ballPosition.x + 0.5) / GRID_COLS) * 100}%`,
           top: ballCarrier ? `${((ballCarrier.y + 0.5) / GRID_ROWS) * 100}%` : `${((ballPosition.y + 0.5) / GRID_ROWS) * 100}%`,
           transform: ballCarrier ? 'translate(25%, -75%)' : 'translate(-50%, -50%)',
-          width: ballCarrier ? '3.5%' : '2%',
-          height: ballCarrier ? '2%' : '2.3%',
+          width: ballCarrier ? '2.5%' : '1.5%',
+          height: ballCarrier ? '4%' : '2.5%',
           zIndex: 20,
       };
 
       return (
-        <div className="w-full h-[calc(100vh-80px)] flex flex-col bg-slate-900 text-white">
+        <div className="w-full h-[calc(100vh-80px)] flex flex-col bg-slate-900 text-white p-2 sm:p-4">
           <Scoreboard />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm p-2 bg-slate-900/50">
                 {gameStatus.weather && (
@@ -1249,13 +1268,12 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
                     </div>
                 )}
             </div>
-          <div className="flex-grow flex items-center justify-center p-2 sm:p-4 overflow-hidden relative">
-             <Dugout team={homeTeam} teamId="home" />
+          <div className="flex-grow flex flex-col items-center justify-center overflow-hidden relative">
 
-            <div className="flex-grow h-full flex items-center justify-center">
-                <div className={`relative transition-transform duration-500 ease-in-out h-full ${isZoomedOut ? 'scale-[0.6]' : 'scale-100'}`}>
+            <div className="w-full flex-grow flex items-center justify-center">
+                <div className={`relative transition-transform duration-500 ease-in-out w-full ${isZoomedOut ? 'scale-[0.8]' : 'scale-100'}`}>
                     <div ref={fieldRef} 
-                        className="relative w-full h-full aspect-[15/26] bg-slate-900 rounded-lg shadow-xl border-2 border-slate-700 select-none overflow-hidden"
+                        className="relative w-full aspect-[26/15] bg-slate-900 rounded-lg shadow-xl border-2 border-slate-700 select-none overflow-hidden"
                         onMouseMove={handleGridMouseMove}
                         onClick={handleGridClick}
                     >
@@ -1270,7 +1288,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
                                 </button>
                             </div>
                         )}
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform rotate-90" style={{ width: '173.33%', height: '57.7%' }}><img src={fieldImage} alt="Campo de Blood Bowl" className="w-full h-full object-cover"/></div>
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform rotate-90" style={{ width: `${(15 / 26) * 100}%`, height: `${(26 / 15) * 100}%` }}><img src={fieldImage} alt="Campo de Blood Bowl" className="w-full h-full object-cover"/></div>
+
                         <div className="absolute inset-0 grid pointer-events-none" style={{ gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`, gridTemplateRows: `repeat(${GRID_ROWS}, 1fr)` }}>
                             {Array.from({ length: GRID_ROWS * GRID_COLS }).map((_, i) => (<div key={i} className="w-full h-full border border-black/20"></div>))}
                             {movementRange.map(({x, y}, i) => (
@@ -1309,7 +1328,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
                                 onMouseDown={(e) => handleDragStart(e, token.id)} 
                                 onTouchStart={(e) => handleDragStart(e, token.id)}
                                 onContextMenu={(e) => handleContextMenu(e, token.id)}
-                                className={`absolute flex items-center justify-center w-[6.66%] h-[3.84%] ${config[token.position]?.color} text-white font-bold text-[10px] border-2 ${borderColor} rounded-full shadow-lg cursor-grab active:cursor-grabbing transition-all duration-300 ${token.isDown ? 'opacity-60' : ''} ${isActive ? 'ring-4 ring-amber-400 ring-offset-2 ring-offset-slate-900' : ''} ${hasCompletedAction ? 'opacity-50 filter grayscale' : ''}`} 
+                                className={`absolute flex items-center justify-center w-[3.846%] h-[6.667%] ${config[token.position]?.color} text-white font-bold text-[10px] border-2 ${borderColor} rounded-full shadow-lg cursor-grab active:cursor-grabbing transition-all duration-300 ${token.isDown ? 'opacity-60' : ''} ${isActive ? 'ring-4 ring-amber-400 ring-offset-2 ring-offset-slate-900' : ''} ${hasCompletedAction ? 'opacity-50 filter grayscale' : ''}`} 
                                 style={{ left: `${((token.x + 0.5) / GRID_COLS) * 100}%`, top: `${((token.y + 0.5) / GRID_ROWS) * 100}%`, transform: `translate(-50%, -50%) ${token.isDown ? 'rotate(90deg)' : ''}`, touchAction: 'none' }}
                               >
                                 {getPlayerNumber()}
@@ -1319,7 +1338,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
                          <div onMouseDown={handleBallDragStart} onTouchStart={handleBallDragStart} className="absolute cursor-grab active:cursor-grabbing" style={ballStyle}><BallIcon className="w-full h-full" /></div>
                           {passTargetInfo && actionMode !== 'passing' && (
                             <div
-                                className="absolute w-[6.66%] h-[3.84%] bg-white/20 border-2 border-dashed border-white/50 rounded-lg pointer-events-none z-20"
+                                className="absolute w-[3.846%] h-[6.667%] bg-white/20 border-2 border-dashed border-white/50 rounded-lg pointer-events-none z-20"
                                 style={{
                                     left: `${((passTargetInfo.x + 0.5) / GRID_COLS) * 100}%`,
                                     top: `${((passTargetInfo.y + 0.5) / GRID_ROWS) * 100}%`,
@@ -1334,33 +1353,21 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
                     </div>
                 </div>
             </div>
-
-            <Dugout team={awayTeam} teamId="away" />
             
+            <div className="w-full flex-shrink-0 mt-2 flex gap-2">
+                <Dugout team={homeTeam} teamId="home" />
+                <Dugout team={awayTeam} teamId="away" />
+            </div>
+
             {selectedPlayerToken && <PlayerDetailPanel playerToken={selectedPlayerToken} onClose={() => setSelectedPlayerToken(null)} />}
             
             <button
                 onClick={() => setIsZoomedOut(!isZoomedOut)}
-                className="absolute bottom-4 right-4 bg-slate-700 text-white p-3 rounded-full shadow-lg hover:bg-slate-600 transition-colors"
+                className="absolute top-20 right-4 bg-slate-700 text-white p-3 rounded-full shadow-lg hover:bg-slate-600 transition-colors"
                 aria-label={isZoomedOut ? "Acercar" : "Alejar"}
             >
                 {isZoomedOut ? <ZoomInIcon /> : <ZoomOutIcon />}
             </button>
-
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl bg-slate-900/80 backdrop-blur-sm border-t-2 border-slate-700 z-30 rounded-t-lg">
-                <button onClick={() => setIsLogVisible(!isLogVisible)} className="w-full p-2 text-center text-amber-400 font-bold flex justify-between items-center">
-                    <span>Bitácora de Acciones</span>
-                    <ChevronUpIcon className={`w-5 h-5 transition-transform ${isLogVisible ? '' : 'rotate-180'}`} />
-                </button>
-                {isLogVisible && (
-                    <div className="h-40 overflow-y-auto p-2 text-sm font-mono bg-black/20">
-                    {actionLog.map((entry, index) => (
-                        <p key={index} className="text-slate-300 border-b border-slate-800 pb-1 mb-1">{entry}</p>
-                    ))}
-                    </div>
-                )}
-            </div>
-
           </div>
         </div>
       );

@@ -176,7 +176,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-2 sm:p-4">
       <div className="text-center">
         <h2 className="text-2xl font-semibold text-amber-400 mb-2">Pizarra Táctica</h2>
         <p className="text-slate-400 max-w-lg mx-auto">Crea, guarda y carga tus jugadas. Arrastra los jugadores para posicionarlos.</p>
@@ -184,7 +184,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
 
       <div 
         ref={fieldRef}
-        className="relative w-full aspect-[15/13] bg-slate-900 overflow-hidden rounded-lg shadow-xl border-2 border-slate-700 select-none"
+        className="relative w-full max-w-5xl mx-auto aspect-[15/13] bg-slate-900 overflow-hidden rounded-lg shadow-xl border-2 border-slate-700 select-none"
       >
         {/* Full field image container, positioned to show bottom half */}
         <div className="absolute bottom-0 left-0 w-full h-[200%]">
@@ -231,7 +231,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
       </div>
 
        {selectedPlayer && (
-        <div className="mt-6 bg-slate-900/70 p-4 rounded-lg border border-slate-700 animate-fade-in">
+        <div className="mt-6 bg-slate-900/70 p-4 rounded-lg border border-slate-700 animate-fade-in max-w-5xl mx-auto">
           <div className="flex justify-between items-start">
             <div>
               <h3 className="text-xl font-bold text-amber-400">{selectedPlayer.customName}</h3>
@@ -267,7 +267,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
         <div className="bg-slate-900/70 p-4 rounded-lg border border-slate-700 md:col-span-2">
             <h3 className="text-lg font-semibold text-amber-400 mb-4">Cargar Plantilla de Equipo</h3>
             {managedTeams.length > 0 ? (
