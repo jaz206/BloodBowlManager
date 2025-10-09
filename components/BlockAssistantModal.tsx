@@ -30,7 +30,8 @@ const calculateAssists = (playerToAssist: BoardToken, opponent: BoardToken, allT
     );
 
     const validAssisters = potentialAssisters.filter(assister => {
-        const hasTackleZoneSkill = (assister.playerData?.skills?.includes('Luchador') || assister.playerData?.gainedSkills?.includes('Luchador'));
+        const assisterSkills = (assister.playerData?.skills || '') + ',' + (assister.playerData?.gainedSkills.join(',') || '');
+        const hasTackleZoneSkill = assisterSkills.includes('Luchador');
         if (hasTackleZoneSkill) return true;
 
         const isMarkedByOtherOpponent = allTokens.some(otherToken =>
@@ -177,6 +178,15 @@ const BlockAssistantModal: React.FC<BlockAssistantModalProps> = ({ attacker, def
     setSelectedDie(null);
   }
 
+  const attackerIsHome = attacker.teamId === 'home';
+  const defenderIsHome = defender.teamId === 'home';
+
+  const attackerBorder = attackerIsHome ? 'border-sky-500' : 'border-red-500';
+  const attackerText = attackerIsHome ? 'text-sky-400' : 'text-red-400';
+
+  const defenderBorder = defenderIsHome ? 'border-sky-500' : 'border-red-500';
+  const defenderText = defenderIsHome ? 'text-sky-400' : 'text-red-400';
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[60] p-4" onClick={handleBackdropClick}>
       <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-lg w-full" onClick={e => e.stopPropagation()}>
@@ -187,14 +197,14 @@ const BlockAssistantModal: React.FC<BlockAssistantModalProps> = ({ attacker, def
             <div className="p-5 space-y-4">
                 {/* Pre-roll view */}
                 <div className="grid grid-cols-2 gap-4 items-start">
-                    <div className="bg-slate-900/70 p-3 rounded-lg border border-sky-500">
-                        <h3 className="font-bold text-sky-400">Atacante: {attacker.playerData?.customName}</h3>
+                    <div className={`bg-slate-900/70 p-3 rounded-lg border ${attackerBorder}`}>
+                        <h3 className={`font-bold ${attackerText}`}>Atacante: {attacker.playerData?.customName}</h3>
                         <p>Fuerza Base: <span className="font-bold">{attackerStrength}</span></p>
                         <p>Apoyos: <span className="font-bold">{attackerAssists}</span></p>
                         <p className="mt-1 text-lg">Fuerza Final: <span className="font-bold text-white">{finalAttackerStrength}</span></p>
                     </div>
-                    <div className="bg-slate-900/70 p-3 rounded-lg border border-red-500">
-                        <h3 className="font-bold text-red-400">Defensor: {defender.playerData?.customName}</h3>
+                    <div className={`bg-slate-900/70 p-3 rounded-lg border ${defenderBorder}`}>
+                        <h3 className={`font-bold ${defenderText}`}>Defensor: {defender.playerData?.customName}</h3>
                         <p>Fuerza Base: <span className="font-bold">{defenderStrength}</span></p>
                         <p>Apoyos: <span className="font-bold">{defenderAssists}</span></p>
                         <p className="mt-1 text-lg">Fuerza Final: <span className="font-bold text-white">{finalDefenderStrength}</span></p>
