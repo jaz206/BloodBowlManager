@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-// FIX: Imported BoardToken from types.ts to make it globally available.
-import type { Token, PlayerPosition, ManagedTeam, ManagedPlayer, PlayerStatus, BoardToken } from '../types';
+import type { Token, PlayerPosition, ManagedTeam, ManagedPlayer, PlayerStatus, BoardToken, WeatherCondition, KickoffEvent } from '../types';
 import { fieldImage } from '../data/fieldImage';
 import QrCodeIcon from './icons/QrCodeIcon';
 import { teamsData } from '../data/teams';
@@ -14,6 +13,13 @@ import ZoomOutIcon from './icons/ZoomOutIcon';
 import ChevronDownIcon from './icons/ChevronDownIcon';
 import PlayerDetailPanel from './PlayerDetailPanel';
 import ChevronUpIcon from './icons/ChevronUpIcon';
+import SunIcon from './icons/SunIcon';
+import CloudRainIcon from './icons/CloudRainIcon';
+import SnowflakeIcon from './icons/SnowflakeIcon';
+import FireIcon from './icons/FireIcon';
+import CloudIcon from './icons/CloudIcon';
+import { weatherConditions } from '../data/weather';
+import { kickoffEvents } from '../data/kickoffEvents';
 
 
 declare const QRCode: any;
@@ -51,8 +57,16 @@ interface GameBoardProps {
   managedTeams: ManagedTeam[];
 }
 
-type GameState = 'setup' | 'select_home' | 'select_away' | 'scanning_qr' | 'playing';
+type GameState = 'setup' | 'select_home' | 'select_away' | 'scanning_qr' | 'pre_game' | 'playing';
 type ActionMode = null | 'passing' | 'blocking' | 'moving' | 'blitz_move';
+type DeclaredAction = 'Mover' | 'Placar' | 'Penetrar' | 'Pasar' | 'Entregar' | 'Falta';
+
+interface ActivationState {
+    playerId: number;
+    hasMoved: boolean;
+    hasPerformedAction: boolean;
+    declaredAction: DeclaredAction | null;
+}
 
 const isAdjacent = (token1: {x:number, y:number}, token2: {x:number, y:number}): boolean => {
     return Math.abs(token1.x - token2.x) <= 1 && Math.abs(token1.y - token2.y) <= 1 && (token1.x !== token2.x || token1.y !== token2.y);
@@ -141,7 +155,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
   const [contextMenu, setContextMenu] = useState<{ visible: boolean, x: number, y: number, playerId: number | null }>({ visible: false, x: 0, y: 0, playerId: null });
   
   const [actionMode, setActionMode] = useState<ActionMode>(null);
-  const [activePlayerId, setActivePlayerId] = useState<number | null>(null);
+  const [activationState, setActivationState] = useState<ActivationState | null>(null);
+
   const [passTargetInfo, setPassTargetInfo] = useState<{ x: number, y: number, type: string, modifier: number } | null>(null);
   const [isPassRuleModalVisible, setIsPassRuleModalVisible] = useState(false);
   const [blockModalState, setBlockModalState] = useState<{ isOpen: boolean; attacker: BoardToken | null; defender: BoardToken | null }>({ isOpen: false, attacker: null, defender: null });
@@ -158,6 +173,9 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
   const [movedPlayerIds, setMovedPlayerIds] = useState(new Set<number>());
   const [movementRange, setMovementRange] = useState<{ x: number, y: number }[]>([]);
 
+  const [preGameStep, setPreGameStep] = useState(0);
+  const [gameStatus, setGameStatus] = useState<{ weather: WeatherCondition | null; kickoffEvent: KickoffEvent | null; coinTossWinner: 'home'|'away'|null, receivingTeam: 'home'|'away'|null }>({ weather: null, kickoffEvent: null, coinTossWinner: null, receivingTeam: null });
+
   const fieldRef = useRef<HTMLDivElement>(null);
   const draggedItemRef = useRef<{ type: 'ball' | 'token' | null, id: number | null }>({ type: null, id: null });
   const dragStartPosRef = useRef<{ x: number, y: number, mv: number } | null>(null);
@@ -166,25 +184,45 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
   const scannerRef = useRef<any>(null);
   const isDraggingRef = useRef(false);
 
-  const activePlayer = useMemo(() => tokens.find(t => t.id === activePlayerId), [activePlayerId, tokens]);
+  const activePlayer = useMemo(() => tokens.find(t => t.id === activationState?.playerId), [activationState, tokens]);
+  
+  const getActionModeMessage = () => {
+    if (!activationState) return '';
+    const playerName = activePlayer?.playerData?.customName || 'Jugador';
+
+    if (activationState.hasMoved && !activationState.hasPerformedAction && activationState.declaredAction === 'Penetrar') {
+        return `${playerName} ha movido. Ahora debe placar.`;
+    }
+    if (activationState.hasMoved && !activationState.hasPerformedAction) {
+        return `${playerName} ha movido. Finaliza la acción.`;
+    }
+    
+    switch(actionMode) {
+        case 'passing': return 'Pase en curso: Selecciona una casilla objetivo.';
+        case 'blocking': return 'Placar en curso: Selecciona un oponente adyacente.';
+        case 'moving': return 'Movimiento en curso: Arrastra al jugador a una nueva casilla o pulsa ESC para cancelar.';
+        case 'blitz_move': return 'Movimiento de Penetración: Arrastra para mover y luego selecciona un objetivo para placar.';
+        default: return `${playerName} activado. Elige una acción.`;
+    }
+  };
   
   const logAction = useCallback((message: string) => {
     setActionLog(prev => [`[P${half} T${turn}] ${message}`, ...prev.slice(0, 99)]);
   }, [half, turn]);
-  
-  const resetActionMode = useCallback(() => {
+
+  const resetActivation = useCallback(() => {
     setActionMode(null);
-    setActivePlayerId(null);
+    setActivationState(null);
     setPassTargetInfo(null);
     setIsPassRuleModalVisible(false);
     setMovementRange([]);
   }, []);
   
-  const endPlayerAction = useCallback((playerId: number) => {
+  const completePlayerAction = useCallback((playerId: number) => {
       setMovedPlayerIds(prev => new Set(prev).add(playerId));
-      resetActionMode();
-  }, [resetActionMode]);
-
+      resetActivation();
+  }, [resetActivation]);
+  
   const handleNextTurn = useCallback(() => {
     setTurn(currentTurn => {
         if (currentTurn >= 8) {
@@ -202,8 +240,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
         return newTurn;
     });
     setMovedPlayerIds(new Set());
-    resetActionMode();
-  }, [half, logAction, resetActionMode]);
+    resetActivation();
+  }, [half, logAction, resetActivation]);
 
   const handleTurnover = useCallback((reason: string) => {
     const message = `¡TURNOVER! ${reason}`;
@@ -242,14 +280,17 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
-            resetActionMode();
+            if (activationState) {
+                logAction(`Acción de ${activePlayer?.playerData?.customName} cancelada.`);
+                resetActivation();
+            }
         }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => {
         window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [resetActionMode]);
+  }, [resetActivation, activationState, activePlayer]);
 
   const validBlockTargets = useMemo(() => {
       if (actionMode !== 'blocking' || !activePlayer) return [];
@@ -297,19 +338,25 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
     });
   };
 
+  const handleStartPreGame = () => {
+    if (!homeTeam || !awayTeam) {
+        alert("Error: No se han podido cargar los datos de uno o ambos equipos.");
+        return;
+    }
+    setRerolls({ home: homeTeam.rerolls, away: awayTeam.rerolls });
+    logAction(`¡Preparando partido entre ${homeTeam.name} y ${awayTeam.name}!`);
+    setGameState('pre_game');
+  };
+
   const handleStartGame = () => {
     try {
-        if (!homeTeam || !awayTeam) {
-            alert("Error: No se han podido cargar los datos de uno o ambos equipos.");
-            return;
-        }
+        if (!homeTeam || !awayTeam) return;
         
         const homeTokens = generateTokensForTeam(homeTeam, 'home');
         const awayTokens = generateTokensForTeam(awayTeam, 'away');
 
         setTokens([...homeTokens, ...awayTokens]);
-        setRerolls({ home: homeTeam.rerolls, away: awayTeam.rerolls });
-        logAction(`¡Comienza el partido entre ${homeTeam.name} y ${awayTeam.name}!`);
+        logAction(`¡Comienza el partido!`);
         setGameState('playing');
     } catch (error) {
         console.error("CRITICAL ERROR in handleStartGame:", error);
@@ -414,52 +461,58 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
     return () => { if (scannerRef.current?.isScanning) { scannerRef.current.stop().catch((e:any) => {}); }};
   }, [gameState]);
 
-  const handleDragMove = useCallback((e: MouseEvent | TouchEvent) => { 
-    if (!draggedItemRef.current.type || !fieldRef.current) return; 
+  const handleDragMove = useCallback((e: MouseEvent | TouchEvent) => {
+    if (!draggedItemRef.current.type || !fieldRef.current) return;
     isDraggingRef.current = true;
-    if (e.cancelable) e.preventDefault(); 
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX; 
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY; 
-    const fieldRect = fieldRef.current.getBoundingClientRect(); 
-    const x = clientX - fieldRect.left; 
-    const y = clientY - fieldRect.top; 
-    const colWidth = fieldRect.width / GRID_COLS; 
-    const rowHeight = fieldRect.height / GRID_ROWS; 
-    let gridX = Math.floor(x / colWidth); 
-    let gridY = Math.floor(y / rowHeight); 
-    gridX = Math.max(0, Math.min(GRID_COLS - 1, gridX)); 
-    gridY = Math.max(0, Math.min(GRID_ROWS - 1, gridY)); 
-    
+    if (e.cancelable) e.preventDefault();
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    const fieldRect = fieldRef.current.getBoundingClientRect();
+    const x = clientX - fieldRect.left;
+    const y = clientY - fieldRect.top;
+    const colWidth = fieldRect.width / GRID_COLS;
+    const rowHeight = fieldRect.height / GRID_ROWS;
+    let gridX = Math.floor(x / colWidth);
+    let gridY = Math.floor(y / rowHeight);
+    gridX = Math.max(0, Math.min(GRID_COLS - 1, gridX));
+    gridY = Math.max(0, Math.min(GRID_ROWS - 1, gridY));
+
     if (draggedItemRef.current.type === 'token') {
         if (dragStartPosRef.current && (actionMode === 'moving' || actionMode === 'blitz_move')) {
             const { x: startX, y: startY, mv } = dragStartPosRef.current;
-            const dx = Math.abs(gridX - startX);
-            const dy = Math.abs(gridY - startY);
-            const distance = Math.max(dx, dy); // Use Chebyshev distance for grid
+            const distance = Math.max(Math.abs(gridX - startX), Math.abs(gridY - startY));
             if (distance > mv) {
-                return; // Do not update state if out of range
+                return;
             }
         }
-        setTokens(currentTokens => currentTokens.map(token => token.id === draggedItemRef.current.id ? { ...token, x: gridX, y: gridY } : token)); 
+        setTokens(currentTokens => currentTokens.map(token => token.id === draggedItemRef.current.id ? { ...token, x: gridX, y: gridY } : token));
     } else if (draggedItemRef.current.type === 'ball') {
         setBallPosition({ x: gridX, y: gridY });
     }
   }, [actionMode]);
 
   const handleDragEnd = useCallback((e: MouseEvent | TouchEvent) => {
+    if (!isDraggingRef.current) {
+        draggedItemRef.current = { type: null, id: null };
+        dragStartPosRef.current = null;
+        return;
+    }
+
     const { type, id } = draggedItemRef.current;
     const fieldNode = fieldRef.current;
-  
+
     if (!type || !fieldNode) {
       draggedItemRef.current = { type: null, id: null };
+      dragStartPosRef.current = null;
       return;
     }
-  
+
     const clientX = 'changedTouches' in e && e.changedTouches[0] ? e.changedTouches[0].clientX : (e as MouseEvent).clientX;
     const clientY = 'changedTouches' in e && e.changedTouches[0] ? e.changedTouches[0].clientY : (e as MouseEvent).clientY;
 
     if (clientX === undefined || clientY === undefined) {
         draggedItemRef.current = { type: null, id: null };
+        dragStartPosRef.current = null;
         return;
     }
 
@@ -470,10 +523,10 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
     const rowHeight = fieldRect.height / GRID_ROWS;
     let gridX = Math.floor(x / colWidth);
     let gridY = Math.floor(y / rowHeight);
-  
+
     gridX = Math.max(0, Math.min(GRID_COLS - 1, gridX));
     gridY = Math.max(0, Math.min(GRID_ROWS - 1, gridY));
-  
+
     if (type === 'ball') {
       const carrier = tokens.find(t => t.x === gridX && t.y === gridY);
       if (carrier) {
@@ -488,6 +541,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
             const startPos = dragStartPosRef.current;
              if (gridX !== startPos.x || gridY !== startPos.y) {
                  logAction(`${movedToken.playerData?.customName} se mueve a (${gridX}, ${gridY}).`);
+                 setActivationState(prev => prev ? { ...prev, hasMoved: true } : prev);
              }
         }
         
@@ -497,7 +551,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
         }
         
         if (actionMode === 'moving') {
-            endPlayerAction(id);
+            setActionMode(null);
+            setMovementRange([]);
         } else if (actionMode === 'blitz_move' && movedToken) {
             const canBlock = tokens.some(t => 
                 t.teamId !== movedToken.teamId && isAdjacent(movedToken, t) && !t.isDown
@@ -508,15 +563,15 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
                 setMovementRange([]);
             } else {
                 logAction(`Movimiento de Penetración completado sin objetivo de placaje.`);
-                endPlayerAction(id);
+                completePlayerAction(id);
             }
         }
     }
-  
+
     draggedItemRef.current = { type: null, id: null };
     dragStartPosRef.current = null;
-    setTimeout(() => { isDraggingRef.current = false; }, 100);
-  }, [tokens, ballCarrierId, ballPosition.x, ballPosition.y, logAction, actionMode, endPlayerAction]);
+  }, [tokens, ballCarrierId, ballPosition.x, ballPosition.y, logAction, actionMode, completePlayerAction]);
+
 
   useEffect(() => {
     document.addEventListener('mousemove', handleDragMove);
@@ -533,17 +588,18 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
   }, [handleDragMove, handleDragEnd]);
 
   useEffect(() => {
-    const handleGlobalClick = () => {
-        setContextMenu(prev => ({ ...prev, visible: false }));
+    const handleGlobalClick = (e: MouseEvent) => {
+        if (contextMenu.visible) {
+            setContextMenu(prev => ({ ...prev, visible: false }));
+        }
     };
 
-    if (contextMenu.visible) {
-      document.addEventListener('click', handleGlobalClick);
-    }
+    document.addEventListener('click', handleGlobalClick);
     return () => {
       document.removeEventListener('click', handleGlobalClick);
     };
   }, [contextMenu.visible]);
+
 
   const handleDragStart = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>, id: number) => { 
     e.preventDefault(); 
@@ -573,60 +629,51 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
   const handleContextMenu = (e: React.MouseEvent, id: number) => {
     e.preventDefault();
     e.stopPropagation();
-    if (actionMode) return;
+    if (activationState && activationState.playerId !== id) return;
     setContextMenu({ visible: true, x: e.clientX, y: e.clientY, playerId: id });
   };
   const closeContextMenu = () => setContextMenu(prev => ({...prev, visible: false}));
 
-  const handleMenuAction = (action: string) => {
+  const handleMenuAction = (action: DeclaredAction | "Finalizar Acción") => {
     closeContextMenu();
     const playerId = contextMenu.playerId;
-    if (playerId) {
-        const player = tokens.find(t => t.id === playerId);
-        if(!player) return;
+    if (!playerId) return;
 
-        setTokens(prev => prev.map(t => t.id === playerId ? { ...t, isDown: false } : t));
-        setActivePlayerId(playerId);
+    const player = tokens.find(t => t.id === playerId);
+    if (!player) return;
 
-        logAction(`${player.playerData?.customName} inicia la acción: ${action}.`);
-        
-        if (action === "Mover" || action === "Penetrar") {
-            const range = player.playerData?.stats.MV || 0;
-            const reachable: {x: number, y: number}[] = [];
-            // Simple square range for now. A proper implementation would use pathfinding.
-            for (let i = player.x - range; i <= player.x + range; i++) {
-                for (let j = player.y - range; j <= player.y + range; j++) {
-                    if (i >= 0 && i < GRID_COLS && j >= 0 && j < GRID_ROWS) {
-                        reachable.push({x: i, y: j});
-                    }
-                }
-            }
-            setMovementRange(reachable);
-        }
+    if (action === "Finalizar Acción") {
+        logAction(`${player.playerData?.customName} finaliza su acción.`);
+        completePlayerAction(playerId);
+        return;
+    }
+    
+    // Activate player if not already active
+    if (!activationState || activationState.playerId !== playerId) {
+        setActivationState({ playerId, hasMoved: false, hasPerformedAction: false, declaredAction: action });
+    } else {
+        setActivationState(prev => prev ? { ...prev, declaredAction: action } : null);
+    }
 
-        if (action === "Mover") {
-            setActionMode('moving');
-        } else if (action === "Penetrar") {
-            setActionMode('blitz_move');
-        } else if (action === "Pasar") {
-            if (playerId === ballCarrierId) {
-                setActionMode('passing');
-            } else {
-                alert("Este jugador no tiene el balón para pasar.");
-                setActivePlayerId(null);
-            }
-        } else if (action === "Placar") {
-             setActionMode('blocking');
-        } else if (action === "Terminar Movimiento") {
-            endPlayerAction(playerId);
-        }
+    logAction(`${player.playerData?.customName} declara la acción: ${action}.`);
+    
+    if (action === "Penetrar") {
+        setActionMode('blitz_move');
+        const range = player.playerData?.stats.MV || 0;
+        setMovementRange(Array.from({length: range*2+1}, (_, i) => i - range).flatMap(dx => Array.from({length: range*2+1}, (_, j) => j-range).map(dy => ({x: player.x + dx, y: player.y + dy}))).filter(({x,y})=> Math.max(Math.abs(x-player.x),Math.abs(y-player.y)) <= range));
+    } else if (action === "Mover") {
+        setActionMode('moving');
+        const range = player.playerData?.stats.MV || 0;
+        setMovementRange(Array.from({length: range*2+1}, (_, i) => i - range).flatMap(dx => Array.from({length: range*2+1}, (_, j) => j-range).map(dy => ({x: player.x + dx, y: player.y + dy}))).filter(({x,y})=> Math.max(Math.abs(x-player.x),Math.abs(y-player.y)) <= range));
+    } else if (action === "Pasar") {
+        setActionMode('passing');
+    } else if (action === "Placar") {
+        setActionMode('blocking');
     }
   };
 
   const handleGridMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (actionMode !== 'passing' || !activePlayerId || !fieldRef.current) return;
-    const passer = tokens.find(t => t.id === activePlayerId);
-    if (!passer) return;
+    if (actionMode !== 'passing' || !activePlayer || !fieldRef.current) return;
 
     const fieldRect = fieldRef.current.getBoundingClientRect();
     const x = e.clientX - fieldRect.left;
@@ -636,8 +683,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
     const gridX = Math.max(0, Math.min(GRID_COLS - 1, Math.floor(x / colWidth)));
     const gridY = Math.max(0, Math.min(GRID_ROWS - 1, Math.floor(y / rowHeight)));
 
-    const dx = Math.abs(gridX - passer.x);
-    const dy = Math.abs(gridY - passer.y);
+    const dx = Math.abs(gridX - activePlayer.x);
+    const dy = Math.abs(gridY - activePlayer.y);
 
     if (dx >= 14 || dy >= 14 || (dx === 0 && dy === 0)) {
         setPassTargetInfo(null);
@@ -668,57 +715,99 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
   };
 
   const handleGridClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    closeContextMenu();
     if (isDraggingRef.current) return;
-
+    
     const targetElement = e.target as HTMLElement;
     const tokenElement = targetElement.closest('[data-token-id]');
     const clickedTokenId = tokenElement ? parseInt(tokenElement.getAttribute('data-token-id')!, 10) : null;
     const { gridX, gridY } = getGridCoordsFromClick(e);
 
-    if (actionMode && activePlayerId) {
-        e.stopPropagation();
-        
-        if (clickedTokenId === activePlayerId) {
-            resetActionMode();
-            return;
-        }
-        
-        const activePlayer = tokens.find(t => t.id === activePlayerId);
-        if (!activePlayer) {
-            resetActionMode();
-            return;
-        }
+    if (activationState) {
+        const activePlayer = tokens.find(t => t.id === activationState.playerId);
+        if (!activePlayer) { resetActivation(); return; }
 
         if (actionMode === 'passing') {
             handlePassAction(activePlayer, gridX, gridY);
-        } else if (actionMode === 'blocking') {
+            return;
+        } 
+        if (actionMode === 'blocking') {
             if (clickedTokenId) {
                 handleBlockAction(activePlayer, gridX, gridY);
+            } else {
+                logAction(`Acción de Placar cancelada.`);
+                resetActivation();
             }
+            return;
         }
-    } else {
+        
+        if (activationState.hasMoved && !activationState.hasPerformedAction) {
+            if (activationState.declaredAction === 'Penetrar') {
+                if (clickedTokenId) {
+                     const target = tokens.find(t => t.id === clickedTokenId);
+                     if (target && target.teamId !== activePlayer.teamId && isAdjacent(activePlayer, target)) {
+                        handleBlockAction(activePlayer, gridX, gridY);
+                     } else {
+                        logAction('Debes placar a un oponente adyacente para completar la Penetración.');
+                     }
+                } else {
+                    logAction('Debes placar a un oponente adyacente para completar la Penetración.');
+                }
+            } else {
+                logAction(`${activePlayer.playerData?.customName} finaliza su acción tras moverse.`);
+                completePlayerAction(activePlayer.id);
+            }
+            return;
+        }
+
         if (clickedTokenId) {
-            e.stopPropagation();
-            const token = tokens.find(t => t.id === clickedTokenId)!;
-            setSelectedPlayerToken(current => current?.id === token.id ? null : token);
+            const clickedToken = tokens.find(t => t.id === clickedTokenId);
+            if (clickedToken && clickedToken.id === activePlayer.id) {
+                return;
+            }
+            if (clickedToken && clickedToken.teamId === activePlayer.teamId && !movedPlayerIds.has(clickedTokenId)) {
+                logAction(`Selección cambiada a ${clickedToken.playerData?.customName}.`);
+                resetActivation();
+                setActivationState({ playerId: clickedTokenId, hasMoved: false, hasPerformedAction: false, declaredAction: null });
+            } else {
+                resetActivation();
+            }
         } else {
-            setSelectedPlayerToken(null);
+            resetActivation();
         }
+        return;
     }
-  };
+
+    if (clickedTokenId) {
+        const token = tokens.find(t => t.id === clickedTokenId);
+        if (!token || !token.playerData) return;
+
+        if (movedPlayerIds.has(clickedTokenId)) {
+            logAction(`${token.playerData.customName} ya ha realizado una acción este turno.`);
+            setSelectedPlayerToken(current => current?.id === token.id ? null : token);
+            return;
+        }
+
+        logAction(`${token.playerData.customName} se activa.`);
+        setActivationState({ playerId: clickedTokenId, hasMoved: false, hasPerformedAction: false, declaredAction: null });
+        setSelectedPlayerToken(null);
+    } else {
+        setSelectedPlayerToken(null);
+        resetActivation();
+    }
+};
 
   const handlePassAction = (passer: BoardToken, gridX: number, gridY: number) => {
     if (!passer.playerData?.stats.PS || passer.playerData.stats.PS === '-') {
-        resetActionMode();
+        resetActivation();
         return;
     }
+    setActivationState(prev => prev ? { ...prev, hasPerformedAction: true } : null);
 
     const dx = Math.abs(gridX - passer.x);
     const dy = Math.abs(gridY - passer.y);
 
     if (dx >= 14 || dy >= 14 || (dx === 0 && dy === 0)) {
-        resetActionMode();
+        resetActivation();
         return;
     }
 
@@ -752,7 +841,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
             setBallCarrierId(null);
         }
         logAction(outcomeMessage);
-        endPlayerAction(passer.id);
+        completePlayerAction(passer.id);
     } else {
         if (finalResult <= 1) {
             outcomeMessage = `¡Pase MUY Impreciso! Tirada: ${roll} (Mod: ${modifier}, Final: ${finalResult}) vs PS ${targetPS}+.`;
@@ -767,11 +856,11 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
                 handleTurnover('Pase impreciso a una casilla vacía/rival.');
             } else {
                  scatterBall(gridX, gridY);
-                 endPlayerAction(passer.id);
+                 completePlayerAction(passer.id);
             }
         }
     }
-    resetActionMode();
+    setActionMode(null);
   };
   
   const handleBlockAction = (attacker: BoardToken, gridX: number, gridY: number) => {
@@ -779,6 +868,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
     
     if (defender && defender.teamId !== attacker.teamId && isAdjacent(attacker, defender)) {
         logAction(`${attacker.playerData?.customName} placa a ${defender.playerData?.customName}.`);
+        setActivationState(prev => prev ? { ...prev, hasPerformedAction: true } : null);
         setBlockModalState({ isOpen: true, attacker, defender });
     }
   };
@@ -804,8 +894,14 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
     if (turnoverSource) {
         const turnoverPlayer = tokens.find(t => t.id === turnoverSource.id);
         handleTurnover(`${turnoverPlayer?.playerData?.customName || 'Un jugador'} fue derribado.`);
-    } else if (blockModalState.attacker) {
-        endPlayerAction(blockModalState.attacker.id);
+    } else {
+        // If it was a Blitz, the player can continue moving. Otherwise, end action.
+        if (activationState?.declaredAction !== 'Penetrar' && blockModalState.attacker) {
+             completePlayerAction(blockModalState.attacker.id);
+        } else {
+            // Player is in a post-action state, waiting to finalize.
+            setActionMode(null);
+        }
     }
   };
 
@@ -926,8 +1022,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
               
               {homeTeam && awayTeam && (
                   <div className="text-center pt-4">
-                      <button onClick={handleStartGame} className="w-full max-w-sm mx-auto bg-green-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-green-500 transition-colors animate-pulse">
-                          ¡Iniciar Partido!
+                      <button onClick={handleStartPreGame} className="w-full max-w-sm mx-auto bg-green-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-green-500 transition-colors animate-pulse">
+                          Ir a la Secuencia Pre-Partido
                       </button>
                   </div>
               )}
@@ -944,6 +1040,115 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
         <div id="qr-reader" ref={scannerContainerRef} className="w-full aspect-square bg-slate-900 rounded-lg overflow-hidden border-2 border-slate-700"></div>
     </div>
   );
+
+  const renderWeatherIcon = (title: string) => {
+    const lowerTitle = title.toLowerCase();
+    if (lowerTitle.includes('calor')) return <FireIcon className="w-8 h-8 text-red-400" />;
+    if (lowerTitle.includes('soleado')) return <SunIcon className="w-8 h-8 text-yellow-300" />;
+    if (lowerTitle.includes('perfecto')) return <CloudIcon className="w-8 h-8 text-blue-300" />;
+    if (lowerTitle.includes('lluvioso')) return <CloudRainIcon className="w-8 h-8 text-cyan-300" />;
+    if (lowerTitle.includes('ventisca')) return <SnowflakeIcon className="w-8 h-8 text-white" />;
+    return null;
+  };
+  
+  const renderPreGame = () => {
+      const preGameTitles = ["El Clima", "Lanzamiento de Moneda", "Patear o Recibir", "Evento de Patada Inicial"];
+      
+      const handleGenerateWeather = () => {
+          const die1 = Math.floor(Math.random() * 6) + 1;
+          const die2 = Math.floor(Math.random() * 6) + 1;
+          const roll = die1 + die2;
+          let result: WeatherCondition | undefined;
+          if (roll === 2) result = weatherConditions.find(w => w.roll === "2");
+          else if (roll === 3) result = weatherConditions.find(w => w.roll === "3");
+          else if (roll >= 4 && roll <= 10) result = weatherConditions.find(w => w.roll === "4-10");
+          else if (roll === 11) result = weatherConditions.find(w => w.roll === "11");
+          else if (roll === 12) result = weatherConditions.find(w => w.roll === "12");
+          
+          if (result) {
+              setGameStatus(prev => ({ ...prev, weather: result }));
+              logAction(`Clima del partido (Tirada: ${roll}): ${result.title}.`);
+          }
+      };
+
+      const handleCoinToss = () => {
+        const winner = Math.random() < 0.5 ? 'home' : 'away';
+        setGameStatus(p => ({...p, coinTossWinner: winner}));
+      };
+      
+       const handleKickoffRoll = () => {
+          const die1 = Math.floor(Math.random() * 6) + 1;
+          const die2 = Math.floor(Math.random() * 6) + 1;
+          const roll = die1 + die2;
+          const event = kickoffEvents.find(e => parseInt(e.diceRoll, 10) === roll);
+          if (event) {
+              setGameStatus(prev => ({ ...prev, kickoffEvent: event }));
+              logAction(`Evento de Patada (Tirada: ${roll}): ${event.title}`);
+          }
+      };
+
+      return (
+          <div className="text-center p-8 max-w-lg mx-auto bg-slate-900/50 rounded-lg border border-slate-700">
+              <h2 className="text-2xl font-bold text-amber-400 mb-2">Secuencia Anterior al Partido</h2>
+              <h3 className="text-lg text-slate-300 mb-6">{preGameTitles[preGameStep]}</h3>
+
+              {preGameStep === 0 && (
+                  <div className="space-y-4">
+                      <p className="text-slate-400">Tira 2D6 (o deja que la app lo haga) para determinar el clima.</p>
+                      {!gameStatus.weather ? (
+                          <button onClick={handleGenerateWeather} className="bg-sky-600 text-white font-bold py-2 px-4 rounded-md">Generar Clima</button>
+                      ) : (
+                          <div className="p-4 bg-slate-800 rounded-lg">
+                              <div className="flex items-center justify-center gap-4 mb-2">{renderWeatherIcon(gameStatus.weather.title)}<span className="font-bold text-lg text-white">{gameStatus.weather.title}</span></div>
+                              <p className="text-sm text-slate-300">{gameStatus.weather.description}</p>
+                          </div>
+                      )}
+                      {gameStatus.weather && <button onClick={() => setPreGameStep(1)} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md">Siguiente</button>}
+                  </div>
+              )}
+              
+              {preGameStep === 1 && (
+                  <div className="space-y-4">
+                      <p className="text-slate-400">Lanza una moneda para ver quién patea.</p>
+                      {!gameStatus.coinTossWinner ? (
+                        <button onClick={handleCoinToss} className="bg-sky-600 text-white font-bold py-2 px-4 rounded-md">Lanzar Moneda</button>
+                      ) : (
+                        <div className="p-4 bg-slate-800 rounded-lg">
+                           <p>Gana el sorteo: <span className="font-bold text-white">{(gameStatus.coinTossWinner === 'home' ? homeTeam?.name : awayTeam?.name)}</span></p>
+                        </div>
+                      )}
+                      {gameStatus.coinTossWinner && <button onClick={() => setPreGameStep(2)} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md">Siguiente</button>}
+                  </div>
+              )}
+
+               {preGameStep === 2 && (
+                  <div className="space-y-4">
+                      <p><span className="font-bold text-white">{(gameStatus.coinTossWinner === 'home' ? homeTeam?.name : awayTeam?.name)}</span> ha ganado el sorteo. ¿Qué elige?</p>
+                       <div className="flex gap-4 justify-center">
+                          <button onClick={() => { const receiving = gameStatus.coinTossWinner === 'home' ? 'away' : 'home'; setGameStatus(p => ({...p, receivingTeam: receiving})); logAction(`${(gameStatus.coinTossWinner === 'home' ? homeTeam?.name : awayTeam?.name)} elige patear.`); setPreGameStep(3); }} className="bg-slate-600 text-white font-bold py-2 px-4 rounded-md">Patear</button>
+                          <button onClick={() => { const receiving = gameStatus.coinTossWinner; setGameStatus(p => ({...p, receivingTeam: receiving})); logAction(`${(gameStatus.coinTossWinner === 'home' ? homeTeam?.name : awayTeam?.name)} elige recibir.`); setPreGameStep(3); }} className="bg-amber-600 text-white font-bold py-2 px-4 rounded-md">Recibir</button>
+                       </div>
+                  </div>
+              )}
+
+               {preGameStep === 3 && (
+                  <div className="space-y-4">
+                      <p className="text-slate-400">Tira 2D6 para determinar el evento de patada inicial.</p>
+                      {!gameStatus.kickoffEvent ? (
+                          <button onClick={handleKickoffRoll} className="bg-sky-600 text-white font-bold py-2 px-4 rounded-md">Generar Evento</button>
+                      ) : (
+                          <div className="p-4 bg-slate-800 rounded-lg">
+                              <span className="font-bold text-lg text-white">{gameStatus.kickoffEvent.title}</span>
+                              <p className="text-sm text-slate-300 mt-2">{gameStatus.kickoffEvent.description}</p>
+                          </div>
+                      )}
+                      {gameStatus.kickoffEvent && <button onClick={handleStartGame} className="bg-green-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-green-500 transition-colors animate-pulse">¡Iniciar Partido!</button>}
+                  </div>
+              )}
+
+          </div>
+      );
+  };
 
   const renderPlaying = () => {
       if (!homeTeam || !awayTeam) return null;
@@ -1020,7 +1225,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
           left: ballCarrier ? `${((ballCarrier.x + 0.5) / GRID_COLS) * 100}%` : `${((ballPosition.x + 0.5) / GRID_COLS) * 100}%`,
           top: ballCarrier ? `${((ballCarrier.y + 0.5) / GRID_ROWS) * 100}%` : `${((ballPosition.y + 0.5) / GRID_ROWS) * 100}%`,
           transform: ballCarrier ? 'translate(25%, -75%)' : 'translate(-50%, -50%)',
-          width: ballCarrier ? '3.5%' : '4%',
+          width: ballCarrier ? '3.5%' : '2%',
           height: ballCarrier ? '2%' : '2.3%',
           zIndex: 20,
       };
@@ -1028,6 +1233,22 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
       return (
         <div className="w-full h-[calc(100vh-80px)] flex flex-col bg-slate-900 text-white">
           <Scoreboard />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm p-2 bg-slate-900/50">
+                {gameStatus.weather && (
+                    <div className="bg-slate-800/50 p-2 rounded-lg border border-slate-700">
+                        <h4 className="font-bold text-amber-300 flex items-center gap-2 mb-1 text-xs">
+                            {renderWeatherIcon(gameStatus.weather.title)} Clima: {gameStatus.weather.title}
+                        </h4>
+                        <p className="text-slate-400 text-xs">{gameStatus.weather.description}</p>
+                    </div>
+                )}
+                {gameStatus.kickoffEvent && (
+                    <div className="bg-slate-800/50 p-2 rounded-lg border border-slate-700">
+                        <h4 className="font-bold text-amber-300 mb-1 text-xs">Patada: <span className="text-white">{gameStatus.kickoffEvent.title}</span></h4>
+                        <p className="text-slate-400 text-xs">{gameStatus.kickoffEvent.description}</p>
+                    </div>
+                )}
+            </div>
           <div className="flex-grow flex items-center justify-center p-2 sm:p-4 overflow-hidden relative">
              <Dugout team={homeTeam} teamId="home" />
 
@@ -1038,14 +1259,14 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
                         onMouseMove={handleGridMouseMove}
                         onClick={handleGridClick}
                     >
-                        {actionMode && activePlayer && (
+                        {activationState && (
                             <div className="absolute top-0 left-0 right-0 bg-black/70 p-2 flex justify-between items-center z-30 animate-fade-in-fast">
                                 <p className="text-amber-400 font-bold flex items-center gap-2">
-                                    <span className={`w-3 h-3 rounded-full ${actionMode === 'passing' ? 'bg-sky-400' : 'bg-red-500'} animate-pulse`}></span>
-                                    {actionMode === 'passing' ? 'Pase en curso' : actionMode === 'blocking' ? 'Placar en curso' : 'Movimiento en curso'}: Selecciona un objetivo o mueve
+                                    <span className={`w-3 h-3 rounded-full ${actionMode ? 'bg-sky-400 animate-pulse' : 'bg-yellow-400'}`}></span>
+                                    {getActionModeMessage()}
                                 </p>
-                                <button onClick={resetActionMode} className="bg-red-600 text-white font-bold py-1 px-3 rounded text-sm hover:bg-red-500">
-                                    Cancelar Acción
+                                <button onClick={() => activationState.playerId && !actionMode ? completePlayerAction(activationState.playerId) : resetActivation()} className="bg-red-600 text-white font-bold py-1 px-3 rounded text-sm hover:bg-red-500">
+                                    {activationState.playerId && !actionMode ? 'Finalizar' : 'Cancelar'}
                                 </button>
                             </div>
                         )}
@@ -1079,8 +1300,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
                                 const index = team?.players.findIndex(p => p.id === token.playerData!.id);
                                 return (index !== undefined && index > -1) ? index + 1 : '?';
                             };
-                            const isActive = token.id === activePlayerId;
-                            const hasMoved = movedPlayerIds.has(token.id);
+                            const isActive = token.id === activationState?.playerId;
+                            const hasCompletedAction = movedPlayerIds.has(token.id);
                             return (
                               <div 
                                 key={token.id} 
@@ -1088,7 +1309,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
                                 onMouseDown={(e) => handleDragStart(e, token.id)} 
                                 onTouchStart={(e) => handleDragStart(e, token.id)}
                                 onContextMenu={(e) => handleContextMenu(e, token.id)}
-                                className={`absolute flex items-center justify-center w-[6.66%] h-[3.84%] ${config[token.position]?.color} text-white font-bold text-[10px] border-2 ${borderColor} rounded-full shadow-lg cursor-grab active:cursor-grabbing transition-all duration-300 ${token.isDown ? 'opacity-60' : ''} ${isActive ? 'ring-4 ring-amber-400 ring-offset-2 ring-offset-slate-900' : ''} ${hasMoved ? 'opacity-50 filter grayscale' : ''}`} 
+                                className={`absolute flex items-center justify-center w-[6.66%] h-[3.84%] ${config[token.position]?.color} text-white font-bold text-[10px] border-2 ${borderColor} rounded-full shadow-lg cursor-grab active:cursor-grabbing transition-all duration-300 ${token.isDown ? 'opacity-60' : ''} ${isActive ? 'ring-4 ring-amber-400 ring-offset-2 ring-offset-slate-900' : ''} ${hasCompletedAction ? 'opacity-50 filter grayscale' : ''}`} 
                                 style={{ left: `${((token.x + 0.5) / GRID_COLS) * 100}%`, top: `${((token.y + 0.5) / GRID_ROWS) * 100}%`, transform: `translate(-50%, -50%) ${token.isDown ? 'rotate(90deg)' : ''}`, touchAction: 'none' }}
                               >
                                 {getPlayerNumber()}
@@ -1151,12 +1372,13 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
       case 'select_home': return renderSelectHome();
       case 'select_away': return renderSelectAway();
       case 'scanning_qr': return renderScanningQR();
+      case 'pre_game': return renderPreGame();
       case 'playing': return renderPlaying();
       default: return renderSetup();
     }
   };
 
-  const actions = ["Mover", "Penetrar", "Placar", "Pasar", "Entregar", "Falta", "Terminar Movimiento"];
+  const menuActions: DeclaredAction[] = ["Mover", "Penetrar", "Placar", "Pasar", "Entregar", "Falta"];
 
   return (
     <div className="animate-fade-in-slow">
@@ -1178,13 +1400,23 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
             className="fixed bg-slate-900 border border-slate-700 rounded-md shadow-lg z-50 py-2 w-48"
             onClick={(e) => e.stopPropagation()}
         >
-            {actions.map(action => {
+            {activationState && activationState.playerId === contextMenu.playerId && (
+                 <button 
+                    onClick={() => handleMenuAction("Finalizar Acción")}
+                    className="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"
+                >
+                    Finalizar Acción
+                </button>
+            )}
+            {menuActions.map(action => {
+                if (!activationState || activationState.playerId !== contextMenu.playerId) return null;
+
                 const player = tokens.find(t => t.id === contextMenu.playerId);
                 const isBallCarrier = contextMenu.playerId === ballCarrierId;
                 const isDisabled = 
-                    movedPlayerIds.has(contextMenu.playerId!) ||
-                    (action === "Pasar" && !isBallCarrier) ||
-                    (action === "Entregar" && !isBallCarrier);
+                    activationState.hasPerformedAction ||
+                    (activationState.hasMoved && (action === "Mover" || action === "Penetrar")) ||
+                    ((action === "Pasar" || action === "Entregar") && !isBallCarrier);
 
                 return (
                     <button 
@@ -1217,13 +1449,13 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
               onBlockResolved={handleBlockResolved}
               onClose={() => {
                   setBlockModalState({isOpen: false, attacker: null, defender: null});
-                  resetActionMode();
+                  resetActivation();
               }}
           />
       )}
 
       <style>{`
-      @keyfreames fade-in-slow { from { opacity: 0; } to { opacity: 1; } } 
+      @keyframes fade-in-slow { from { opacity: 0; } to { opacity: 1; } } 
       .animate-fade-in-slow { animation: fade-in-slow 0.5s ease-out forwards; }
       @keyframes fade-in-fast { from { opacity: 0; } to { opacity: 1; } }
       .animate-fade-in-fast { animation: fade-in-fast 0.3s ease-out forwards; }
