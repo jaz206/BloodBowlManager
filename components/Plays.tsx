@@ -164,7 +164,10 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
   };
 
   const handleDragStart = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>, id: number) => {
-    e.preventDefault();
+    // Prevent default for mouse events to enable dragging, but not for touch, to allow scrolling.
+    if (!('touches' in e)) {
+        e.preventDefault();
+    }
     const clickedToken = tokens.find(t => t.id === id);
     if (clickedToken) {
         setSelectedPlayer(clickedToken.playerData || null);
@@ -211,7 +214,6 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
               left: `${((token.x + 0.5) / GRID_COLS) * 100}%`,
               top: `${((token.y + 0.5) / GRID_ROWS) * 100}%`,
               transform: 'translate(-50%, -50%)',
-              touchAction: 'none'
             }}
           >
             {index + 1}

@@ -26,7 +26,7 @@ const MiniField: React.FC<MiniFieldProps> = ({ players, teamColor, onPlayerMove,
     };
 
     const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>, player: ManagedPlayer) => {
-        e.preventDefault();
+        // e.preventDefault(); // Do not prevent default to allow scrolling to initiate
         const touch = e.touches[0];
         const tokenRect = e.currentTarget.getBoundingClientRect();
         draggedPlayerRef.current = {
@@ -60,7 +60,8 @@ const MiniField: React.FC<MiniFieldProps> = ({ players, teamColor, onPlayerMove,
 
     const handleMouseMove = useCallback((e: MouseEvent) => movePlayer(e.clientX, e.clientY), [movePlayer]);
     const handleTouchMove = useCallback((e: TouchEvent) => {
-        if (e.cancelable) e.preventDefault();
+        if (!draggedPlayerRef.current) return; // If not dragging, allow scroll.
+        if (e.cancelable) e.preventDefault(); // If dragging, prevent scroll.
         movePlayer(e.touches[0].clientX, e.touches[0].clientY);
     }, [movePlayer]);
 
@@ -88,7 +89,7 @@ const MiniField: React.FC<MiniFieldProps> = ({ players, teamColor, onPlayerMove,
     return (
         <div 
             ref={fieldRef}
-            className="relative w-full aspect-[15/7] bg-green-900/50 rounded-md border-2 border-green-700/50 select-none touch-none"
+            className="relative w-full aspect-[15/7] bg-green-900/50 rounded-md border-2 border-green-700/50 select-none"
         >
             {/* Grid */}
             <div className="absolute inset-0 grid" style={{gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`, gridTemplateRows: `repeat(${GRID_ROWS}, 1fr)`}}>
@@ -114,7 +115,6 @@ const MiniField: React.FC<MiniFieldProps> = ({ players, teamColor, onPlayerMove,
                         style={{ 
                             top: `${(player.fieldPosition.y + 0.5) / GRID_ROWS * 100}%`, 
                             left: `${(player.fieldPosition.x + 0.5) / GRID_COLS * 100}%`,
-                            touchAction: 'none'
                         }}
                     >
                         <div className={`w-full h-full rounded-full ${teamColor} border-2 border-white/80 shadow-lg flex items-center justify-center text-white font-bold text-xs`}>

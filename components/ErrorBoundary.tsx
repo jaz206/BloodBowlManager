@@ -10,9 +10,9 @@ interface State {
   errorInfo: ErrorInfo | null;
 }
 
-// FIX: Error boundaries in React must be class components. This component has been
-// converted to a class component that extends React.Component to enable the use of
-// error boundary lifecycle methods and fix errors where `this.props` and `this.setState` were not available.
+// FIX: An error boundary must be a class component. This component has been converted
+// to a class that extends React.Component to implement the necessary error handling
+// lifecycle methods and resolve issues with accessing `this.props` and `this.setState`.
 class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false,
