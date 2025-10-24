@@ -1,4 +1,5 @@
 
+
 import React, { useState, useRef } from 'react';
 import { teamsData } from '../data/teams';
 import type { ManagedTeam } from '../types';
@@ -15,6 +16,7 @@ interface TeamCreatorProps {
 const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterName }) => {
     const [teamName, setTeamName] = useState('');
     const [rosterName, setRosterName] = useState(initialRosterName || teamsData[0].name);
+    const [isAutoCalculating, setIsAutoCalculating] = useState(false);
     const [isGeneratingName, setIsGeneratingName] = useState(false);
     const [crestPreview, setCrestPreview] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -35,7 +37,6 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
             });
 
             if (!response.ok) {
-                // Si la API falla, lanzamos un error para que el 'catch' lo recoja
                 throw new Error(`API request failed with status ${response.status}`);
             }
 
@@ -50,7 +51,6 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
 
         } catch (error) {
             console.error("Error generating AI team name, using local fallback:", error);
-            // Si la API segura falla, usamos el generador local como respaldo
             const fallbackName = generateRandomNameLocally(rosterName);
             setTeamName(fallbackName);
         } finally {
@@ -101,21 +101,19 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
             return;
         }
 
-        const newTeam: Omit<ManagedTeam, 'id' | 'crestImage'> & { crestImage?: string } = {
+        const newTeam: Omit<ManagedTeam, 'id'> = {
             name: teamName.trim(),
             rosterName,
-            treasury: 1000000,
+            treasury: isAutoCalculating ? 0 : 1000000,
             rerolls: 0,
             dedicatedFans: 1,
             cheerleaders: 0,
             assistantCoaches: 0,
             apothecary: false,
             players: [],
+            isAutoCalculating: isAutoCalculating,
+            ...(crestPreview && { crestImage: crestPreview }),
         };
-
-        if (crestPreview) {
-            newTeam.crestImage = crestPreview;
-        }
 
         onTeamCreate(newTeam);
     };
@@ -124,10 +122,10 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
         <div className="text-center max-w-lg mx-auto p-4 sm:p-8">
             <h2 className="text-3xl font-bold text-amber-400 mb-4">Crear Nuevo Equipo</h2>
             <p className="text-slate-400 mb-8">
-                ¡Bienvenido, entrenador! Dale un nombre a tu equipo, elige tu facción y prepárate para la gloria. Empezarás con 1,000,000 M.O. para construir tu plantilla.
+                Dale un nombre a tu equipo, elige tu facción y prepárate para la gloria.
             </p>
             <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
+                 <div>
                     <label className="block text-sm font-medium text-slate-300 mb-2 text-left">Escudo del Equipo (Opcional)</label>
                     <div className="flex items-center gap-4">
                         <button
@@ -197,6 +195,28 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                         ))}
                     </select>
                 </div>
+                
+                <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700 text-left">
+                    <div className="flex items-center">
+                        <input
+                            id="auto-calculate"
+                            type="checkbox"
+                            checked={isAutoCalculating}
+                            onChange={(e) => setIsAutoCalculating(e.target.checked)}
+                            className="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                        />
+                        <label htmlFor="auto-calculate" className="ml-3 block text-sm font-medium text-slate-200">
+                           Modo Auto-cálculo (para equipos existentes)
+                        </label>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-2 ml-7">
+                        {isAutoCalculating
+                            ? "El equipo empezará con 0 M.O. y sin límite de presupuesto. El valor del equipo se calculará a medida que fiches."
+                            : "El equipo empezará con un presupuesto estándar de 1,000,000 M.O."
+                        }
+                    </p>
+                </div>
+
                 <button
                     type="submit"
                     className="w-full bg-amber-500 text-slate-900 font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-500/50 transform hover:scale-105 transition-all duration-200"

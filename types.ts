@@ -160,6 +160,7 @@ export interface ManagedTeam {
   apothecary: boolean;
   players: ManagedPlayer[];
   crestImage?: string; // Base64 data URL for the team crest
+  isAutoCalculating?: boolean; // New property for auto-calculate mode
   // Live game specific, optional
   liveRerolls?: number;
   tempBribes?: number;

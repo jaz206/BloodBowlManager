@@ -1,3 +1,5 @@
+
+
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import type { ManagedTeam, ManagedPlayer, Player, Skill } from '../types';
 import { teamsData } from '../data/teams';
@@ -9,6 +11,7 @@ import { generateRandomName } from '../data/randomNames';
 import ShieldCheckIcon from './icons/ShieldCheckIcon';
 import ImageModal from './ImageModal';
 import UploadIcon from './icons/UploadIcon';
+import PencilIcon from './icons/PencilIcon';
 
 declare const QRCode: any;
 
@@ -28,13 +31,13 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
     const [editingName, setEditingName] = useState('');
     const [isCrestModalOpen, setIsCrestModalOpen] = useState(false);
     const [fireConfirmation, setFireConfirmation] = useState<ManagedPlayer | null>(null);
+
     const qrCanvasRef = useRef<HTMLCanvasElement>(null);
     const crestInputRef = useRef<HTMLInputElement>(null);
     const baseRoster = useMemo(() => teamsData.find(t => t.name === team.rosterName), [team.rosterName]);
 
     useEffect(() => {
         if (showQr && qrCanvasRef.current && team) {
-            // Use shortened keys to reduce QR code data size
             const shareableTeam = {
                 n: team.name,
                 rN: team.rosterName,
@@ -170,6 +173,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
         reader.readAsDataURL(file);
     };
 
+
     if (!baseRoster) {
         return <div className="p-8 text-center text-red-500">Error: No se encontró la facción del equipo.</div>;
     }
@@ -179,46 +183,48 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
             alert('No puedes tener más de 8 Segundas Oportunidades.');
             return;
         }
-        if (team.treasury >= baseRoster.rerollCost) {
-            onUpdate({
-                ...team,
-                treasury: team.treasury - baseRoster.rerollCost,
-                rerolls: team.rerolls + 1,
-            });
-        } else {
+        if (!team.isAutoCalculating && team.treasury < baseRoster.rerollCost) {
             alert('¡No tienes suficiente dinero!');
+            return;
         }
+        onUpdate({
+            ...team,
+            treasury: team.isAutoCalculating ? team.treasury : team.treasury - baseRoster.rerollCost,
+            rerolls: team.rerolls + 1,
+        });
     };
 
     const handleSellReroll = () => {
         if (team.rerolls > 0) {
             onUpdate({
                 ...team,
-                treasury: team.treasury + (baseRoster.rerollCost / 2),
+                treasury: team.isAutoCalculating ? team.treasury : team.treasury + (baseRoster.rerollCost / 2),
                 rerolls: team.rerolls - 1,
             });
         }
     };
 
     const handleBuyApothecary = () => {
-        if (team.treasury >= 50000 && !team.apothecary) {
-            onUpdate({
-                ...team,
-                treasury: team.treasury - 50000,
-                apothecary: true,
-            });
-        } else if (team.apothecary) {
+         if (team.apothecary) {
             alert('¡Ya tienes un boticario!');
-        } else {
-            alert('¡No tienes suficiente dinero!');
+            return;
         }
+        if (!team.isAutoCalculating && team.treasury < 50000) {
+            alert('¡No tienes suficiente dinero!');
+            return;
+        }
+        onUpdate({
+            ...team,
+            treasury: team.isAutoCalculating ? team.treasury : team.treasury - 50000,
+            apothecary: true,
+        });
     };
 
     const handleSellApothecary = () => {
         if (team.apothecary) {
              onUpdate({
                 ...team,
-                treasury: team.treasury + 25000,
+                treasury: team.isAutoCalculating ? team.treasury : team.treasury + 25000,
                 apothecary: false,
             });
         }
@@ -229,16 +235,16 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
             alert('No puedes tener más de 6 Hinchas.');
             return;
         }
-        if (team.treasury >= 10000) {
-            onUpdate({ ...team, treasury: team.treasury - 10000, dedicatedFans: team.dedicatedFans + 1 });
-        } else {
+        if (!team.isAutoCalculating && team.treasury < 10000) {
             alert('¡No tienes suficiente dinero!');
+            return;
         }
+        onUpdate({ ...team, treasury: team.isAutoCalculating ? team.treasury : team.treasury - 10000, dedicatedFans: team.dedicatedFans + 1 });
     };
 
     const handleSellFan = () => {
         if (team.dedicatedFans > 1) {
-             onUpdate({ ...team, treasury: team.treasury + 5000, dedicatedFans: team.dedicatedFans - 1 });
+             onUpdate({ ...team, treasury: team.isAutoCalculating ? team.treasury : team.treasury + 5000, dedicatedFans: team.dedicatedFans - 1 });
         }
     };
 
@@ -247,16 +253,16 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
             alert('No puedes tener más de 12 animadoras.');
             return;
         }
-        if (team.treasury >= 10000) {
-            onUpdate({ ...team, treasury: team.treasury - 10000, cheerleaders: team.cheerleaders + 1 });
-        } else {
+        if (!team.isAutoCalculating && team.treasury < 10000) {
             alert('¡No tienes suficiente dinero!');
+            return;
         }
+        onUpdate({ ...team, treasury: team.isAutoCalculating ? team.treasury : team.treasury - 10000, cheerleaders: team.cheerleaders + 1 });
     };
 
     const handleSellCheerleader = () => {
         if (team.cheerleaders > 0) {
-             onUpdate({ ...team, treasury: team.treasury + 5000, cheerleaders: team.cheerleaders - 1 });
+             onUpdate({ ...team, treasury: team.isAutoCalculating ? team.treasury : team.treasury + 5000, cheerleaders: team.cheerleaders - 1 });
         }
     };
     
@@ -265,16 +271,16 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
             alert('No puedes tener más de 6 ayudantes de entrenador.');
             return;
         }
-        if (team.treasury >= 10000) {
-            onUpdate({ ...team, treasury: team.treasury - 10000, assistantCoaches: team.assistantCoaches + 1 });
-        } else {
+        if (!team.isAutoCalculating && team.treasury < 10000) {
             alert('¡No tienes suficiente dinero!');
+            return;
         }
+        onUpdate({ ...team, treasury: team.isAutoCalculating ? team.treasury : team.treasury - 10000, assistantCoaches: team.assistantCoaches + 1 });
     };
 
     const handleSellAssistantCoach = () => {
         if (team.assistantCoaches > 0) {
-            onUpdate({ ...team, treasury: team.treasury + 5000, assistantCoaches: team.assistantCoaches - 1 });
+            onUpdate({ ...team, treasury: team.isAutoCalculating ? team.treasury : team.treasury + 5000, assistantCoaches: team.assistantCoaches - 1 });
         }
     };
     
@@ -293,30 +299,31 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
             return;
         }
 
-        if (team.treasury >= player.cost) {
-            const existingNames = new Set(team.players.map(p => p.customName.toLowerCase()));
-            let randomName = generateRandomName(team.rosterName);
-            while (existingNames.has(randomName.toLowerCase())) {
-                randomName = generateRandomName(team.rosterName);
-            }
-
-            const newPlayer: ManagedPlayer = {
-                ...player,
-                id: Date.now(),
-                customName: randomName,
-                spp: 0,
-                gainedSkills: [],
-                lastingInjuries: [],
-                isBenched: false, // Default to starter
-            };
-            onUpdate({
-                ...team,
-                treasury: team.treasury - player.cost,
-                players: [...team.players, newPlayer],
-            });
-        } else {
+        if (!team.isAutoCalculating && team.treasury < player.cost) {
             alert('¡No tienes suficiente dinero!');
+            return;
         }
+        
+        const existingNames = new Set(team.players.map(p => p.customName.toLowerCase()));
+        let randomName = generateRandomName(team.rosterName);
+        while (existingNames.has(randomName.toLowerCase())) {
+            randomName = generateRandomName(team.rosterName);
+        }
+
+        const newPlayer: ManagedPlayer = {
+            ...player,
+            id: Date.now(),
+            customName: randomName,
+            spp: 0,
+            gainedSkills: [],
+            lastingInjuries: [],
+            isBenched: false,
+        };
+        onUpdate({
+            ...team,
+            treasury: team.isAutoCalculating ? team.treasury : team.treasury - player.cost,
+            players: [...team.players, newPlayer],
+        });
     };
     
     const togglePlayerBenched = (playerId: number) => {
@@ -337,7 +344,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
         if (!fireConfirmation) return;
         onUpdate({
             ...team,
-            treasury: team.treasury + (fireConfirmation.cost / 2),
+            treasury: team.isAutoCalculating ? team.treasury : team.treasury + (fireConfirmation.cost / 2),
             players: team.players.filter(p => p.id !== fireConfirmation.id),
         });
         setFireConfirmation(null);
@@ -405,7 +412,11 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                         </div>
                     </div>
                      <div className="text-right flex-shrink-0">
-                        <p className="text-lg font-semibold text-slate-200">Tesorería: <span className="text-green-400">{team.treasury.toLocaleString()} M.O.</span></p>
+                        {!team.isAutoCalculating && (
+                            <p className="text-lg font-semibold text-slate-200">
+                                Tesorería: <span className="text-green-400">{team.treasury.toLocaleString()} M.O.</span>
+                            </p>
+                        )}
                         <p className="text-lg font-semibold text-slate-200">Valor de Equipo (VE): <span className="text-sky-400">{teamValue.toLocaleString()}</span></p>
                     </div>
                 </div>
