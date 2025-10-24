@@ -55,6 +55,7 @@ interface PostGameWizardProps {
     opponentTeam: ManagedTeam;
     score: { home: number; opponent: number };
     fame: number;
+    playersMNG: { playerId: number }[];
     onConfirm: (finalTeam: ManagedTeam) => void;
 }
 
@@ -109,7 +110,7 @@ const cloneTeamForPostGame = (team: ManagedTeam): ManagedTeam => {
 };
 
 
-const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, opponentTeam, score, fame, onConfirm }) => {
+const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, opponentTeam, score, fame, playersMNG, onConfirm }) => {
     const [step, setStep] = useState(0);
     const [fansChange, setFansChange] = useState<number>(0);
     const [fansRoll, setFansRoll] = useState<number | null>(null);
@@ -152,12 +153,20 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, oppone
         
         tempTeam.treasury += calculatedWinnings;
 
+        // Apply Miss Next Game status
+        const mngPlayerIds = new Set(playersMNG.map(p => p.playerId));
+        tempTeam.players.forEach(player => {
+            if (mngPlayerIds.has(player.id)) {
+                player.missNextGame = (player.missNextGame || 0) + 1;
+            }
+        });
+
         setPostGameState({
             winnings: calculatedWinnings,
             mvp: mvpPlayer,
             team: tempTeam,
         });
-    }, [initialHomeTeam, opponentTeam, score, fame]);
+    }, [initialHomeTeam, opponentTeam, score, fame, playersMNG]);
 
     const handleConfirm = () => {
         if (!postGameState) return;
@@ -257,6 +266,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, oppone
                     </div>
                 );
              case 3:
+                const playersWithMNG = updatedTeam.players.filter(p => (p.missNextGame || 0) > 0);
                 return (
                      <div className="space-y-4">
                         <h3 className="text-xl font-semibold text-amber-400">Paso 4: Resumen Final</h3>
@@ -266,12 +276,20 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, oppone
                         <ul className="list-disc list-inside text-slate-400 text-sm">
                             {updatedTeam.players.filter(p => !p.isStarPlayer).map(p => {
                                 const originalPlayer = initialHomeTeam.players.find(op => op.id === p.id);
-                                if (!originalPlayer || (p.spp < originalPlayer.spp) || (p.gainedSkills.length > originalPlayer.gainedSkills.length)) {
+                                if (!originalPlayer || (p.spp > originalPlayer.spp) || (p.gainedSkills.length > originalPlayer.gainedSkills.length)) {
                                     return <li key={p.id}>{p.customName}: {p.spp} PE, Habilidades: {p.gainedSkills.join(', ') || 'Ninguna'}</li>;
                                 }
                                 return null;
                             })}
                         </ul>
+                        {playersWithMNG.length > 0 && (
+                            <div className="mt-4">
+                                <p className="font-semibold text-red-400">Se pierden el próximo partido:</p>
+                                <ul className="list-disc list-inside text-red-400 text-sm">
+                                    {playersWithMNG.map(p => <li key={p.id}>{p.customName}</li>)}
+                                </ul>
+                            </div>
+                        )}
                     </div>
                 );
             default: return null;

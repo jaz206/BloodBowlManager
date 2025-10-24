@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import type { ManagedPlayer, PlayerStatus, SppActionType } from '../types';
 import TdIcon from './icons/TdIcon';
@@ -8,6 +9,7 @@ import InterferenceIcon from './icons/InterferenceIcon';
 
 interface PlayerStatusCardProps {
     player: ManagedPlayer;
+    playerNumber?: number;
     onViewPlayer: (player: ManagedPlayer) => void;
     onSkillClick: (skillName: string) => void;
     onStatusToggle?: (player: ManagedPlayer) => void;
@@ -41,7 +43,7 @@ const SppActionIcons: React.FC<{ actions: Partial<Record<SppActionType, number>>
     );
 };
 
-const PlayerStatusCard: React.FC<PlayerStatusCardProps> = ({ player, onViewPlayer, onSkillClick, onStatusToggle, canToggleStatus }) => {
+const PlayerStatusCard: React.FC<PlayerStatusCardProps> = ({ player, playerNumber, onViewPlayer, onSkillClick, onStatusToggle, canToggleStatus }) => {
     const statusConfig: Record<PlayerStatus, { bg: string; text: string; label: string; }> = {
         Activo: { bg: 'bg-green-600/20', text: 'text-green-400', label: 'Activo' },
         Reserva: { bg: 'bg-transparent', text: 'text-slate-300', label: 'Reserva' },
@@ -65,6 +67,11 @@ const PlayerStatusCard: React.FC<PlayerStatusCardProps> = ({ player, onViewPlaye
         <div className={`p-2 rounded-md transition-colors duration-300 ${config.bg} border-b border-slate-700/50`}>
             <div className="flex justify-between items-center">
                  <div className="flex items-center gap-2 flex-grow min-w-0">
+                    {playerNumber && (
+                        <div className="flex-shrink-0 w-6 h-6 bg-slate-600 rounded-full flex items-center justify-center text-xs font-bold">
+                            {playerNumber}
+                        </div>
+                    )}
                     <div className="truncate flex items-center gap-2">
                         <button 
                             type="button"

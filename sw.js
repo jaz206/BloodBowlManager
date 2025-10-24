@@ -100,6 +100,7 @@ const URLS_TO_CACHE = [
   '/components/icons/ZoomOutIcon.tsx',
   '/components/icons/StadiumIcon.tsx',
   '/components/icons/BallIcon.tsx',
+  '/components/icons/MedicalCrossIcon.tsx',
   'https://cdn.tailwindcss.com',
   'https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js',
   'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js',

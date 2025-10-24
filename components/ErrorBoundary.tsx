@@ -1,4 +1,5 @@
-import React, { ErrorInfo, ReactNode } from 'react';
+// FIX: The component was not implemented as a valid React class component, causing 'this' context issues. It has been correctly converted to a class component to function as an error boundary.
+import React, { Component, ErrorInfo, ReactNode } from 'react';
 
 interface Props {
   children: ReactNode;
@@ -10,29 +11,23 @@ interface State {
   errorInfo: ErrorInfo | null;
 }
 
-class ErrorBoundary extends React.Component<Props, State> {
-  // FIX: Reverted to using a constructor for state initialization.
-  // The class property syntax was causing issues with the 'this' context,
-  // making `this.props` and `this.setState` unavailable.
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      hasError: false,
-      error: null,
-      errorInfo: null,
-    };
+class ErrorBoundary extends Component<Props, State> {
+  public state: State = {
+    hasError: false,
+    error: null,
+    errorInfo: null,
+  };
+
+  public static getDerivedStateFromError(error: Error): Partial<State> {
+    return { hasError: true, error };
   }
 
-  static getDerivedStateFromError(error: Error): Partial<State> {
-    return { hasError: true, error: error };
-  }
-
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("Uncaught error:", error, errorInfo);
-    this.setState({ errorInfo: errorInfo });
+    this.setState({ errorInfo });
   }
 
-  render() {
+  public render() {
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-slate-900 text-white p-8 flex flex-col items-center justify-center">

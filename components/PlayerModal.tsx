@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import type { ManagedPlayer, Skill } from '../types';
 import SkillSelectorModal from './SkillSelectorModal';
@@ -20,7 +21,7 @@ const PlayerModal: React.FC<PlayerModalProps> = ({ player, allSkills, onSave, on
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        if (name === "spp") {
+        if (name === "spp" || name === "missNextGame") {
             setEditedPlayer({ ...editedPlayer, [name]: parseInt(value) || 0 });
         } else if (name === "lastingInjuries") {
             setEditedPlayer({ ...editedPlayer, [name]: value.split(',').map(s => s.trim()).filter(Boolean) });
@@ -73,15 +74,28 @@ const PlayerModal: React.FC<PlayerModalProps> = ({ player, allSkills, onSave, on
                                     className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white"
                                 />
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1">Puntos de Estrella (PE)</label>
-                                <input
-                                    type="number"
-                                    name="spp"
-                                    value={editedPlayer.spp}
-                                    onChange={handleChange}
-                                    className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white"
-                                />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-300 mb-1">Puntos de Estrella (PE)</label>
+                                    <input
+                                        type="number"
+                                        name="spp"
+                                        value={editedPlayer.spp}
+                                        onChange={handleChange}
+                                        className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-300 mb-1">Partidos de Sanción</label>
+                                    <input
+                                        type="number"
+                                        name="missNextGame"
+                                        value={editedPlayer.missNextGame || 0}
+                                        onChange={handleChange}
+                                        className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white"
+                                        min="0"
+                                    />
+                                </div>
                             </div>
                              <div>
                                 <label className="block text-sm font-medium text-slate-300 mb-2">Habilidades Adquiridas</label>

@@ -33,7 +33,6 @@ import ShieldCheckIcon from './icons/ShieldCheckIcon';
 declare const Html5Qrcode: any;
 declare const XLSX: any;
 
-// FIX: Export the BlockResolution interface so it can be imported in other components.
 export interface BlockResolution {
   knockDowns: { id: number; isTurnoverSource: boolean }[];
   ballBecomesLoose: boolean;
@@ -192,41 +191,118 @@ const isEligibleStar = (star: StarPlayer, teamRoster: Team | undefined) => {
     });
 };
 
-const MiniField: React.FC<{ players: ManagedPlayer[]; teamColor: string }> = ({ players, teamColor }) => {
-    const positions: {x: number, y: number}[] = [];
-    let playerIndex = 0;
+const MiniField: React.FC<{
+    players: ManagedPlayer[];
+    teamColor: string;
+    teamId: 'home' | 'opponent';
+    onPlayerMove: (playerId: number, newPos: { x: number; y: number }) => void;
+}> = ({ players, teamColor, teamId, onPlayerMove }) => {
+    const GRID_COLS = 15;
+    const GRID_ROWS = 7;
+    const fieldRef = useRef<HTMLDivElement>(null);
+    const draggedPlayerRef = useRef<{ id: number; offsetX: number; offsetY: number } | null>(null);
 
-    const placeRow = (y: number, count: number, startX: number, spread: number) => {
-        const totalWidth = (count - 1) * spread;
-        let currentX = startX - totalWidth / 2;
-        for(let i = 0; i < count; i++) {
-            if (playerIndex < players.length) {
-                positions.push({ y, x: Math.round(currentX) });
-                currentX += spread;
-                playerIndex++;
-            }
-        }
+    const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>, player: ManagedPlayer) => {
+        e.preventDefault();
+        const tokenRect = e.currentTarget.getBoundingClientRect();
+        draggedPlayerRef.current = {
+            id: player.id,
+            offsetX: e.clientX - tokenRect.left,
+            offsetY: e.clientY - tokenRect.top,
+        };
+        e.currentTarget.style.cursor = 'grabbing';
     };
 
-    const onScrimmage = Math.min(3, players.length);
-    const inMidfield = Math.min(5, players.length - onScrimmage);
-    const inBackfield = players.length - onScrimmage - inMidfield;
+    const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>, player: ManagedPlayer) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const tokenRect = e.currentTarget.getBoundingClientRect();
+        draggedPlayerRef.current = {
+            id: player.id,
+            offsetX: touch.clientX - tokenRect.left,
+            offsetY: touch.clientY - tokenRect.top,
+        };
+    };
 
-    placeRow(3, onScrimmage, 7, 3);
-    placeRow(4, inMidfield, 7, 2);
-    placeRow(5, inBackfield, 7, 3);
-    
+    const movePlayer = useCallback((clientX: number, clientY: number) => {
+        if (!draggedPlayerRef.current || !fieldRef.current) return;
+
+        const fieldRect = fieldRef.current.getBoundingClientRect();
+        const x = clientX - fieldRect.left - draggedPlayerRef.current.offsetX;
+        const y = clientY - fieldRect.top - draggedPlayerRef.current.offsetY;
+
+        const cellWidth = fieldRect.width / GRID_COLS;
+        const cellHeight = fieldRect.height / GRID_ROWS;
+
+        let gridX = Math.round(x / cellWidth);
+        let gridY = Math.round(y / cellHeight);
+
+        gridX = Math.max(0, Math.min(GRID_COLS - 1, gridX));
+        gridY = Math.max(0, Math.min(GRID_ROWS - 1, gridY));
+
+        onPlayerMove(draggedPlayerRef.current.id, { x: gridX, y: gridY });
+    }, [onPlayerMove]);
+
+    const handleMouseMove = useCallback((e: MouseEvent) => movePlayer(e.clientX, e.clientY), [movePlayer]);
+    const handleTouchMove = useCallback((e: TouchEvent) => movePlayer(e.touches[0].clientX, e.touches[0].clientY), [movePlayer]);
+
+    const handleMouseUp = useCallback(() => {
+        draggedPlayerRef.current = null;
+    }, []);
+
+    useEffect(() => {
+        const upHandler = () => handleMouseUp();
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', upHandler);
+        window.addEventListener('touchmove', handleTouchMove, { passive: false });
+        window.addEventListener('touchend', upHandler);
+
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', upHandler);
+            window.removeEventListener('touchmove', handleTouchMove);
+            window.removeEventListener('touchend', upHandler);
+        };
+    }, [handleMouseMove, handleMouseUp, handleTouchMove]);
+
     return (
-        <div className="relative w-full aspect-[15/7] bg-green-900/50 rounded-md mb-2 border-2 border-green-700/50 p-1">
-            {positions.map((pos, index) => (
-                <div 
-                    key={index}
-                    className="absolute w-[6.66%] h-[14.28%] transform -translate-x-1/2 -translate-y-1/2"
-                    style={{ top: `${(pos.y + 0.5) / 7 * 100}%`, left: `${(pos.x + 0.5) / 15 * 100}%` }}
-                >
-                    <div className={`w-full h-full rounded-full ${teamColor} border border-white/50 shadow-md`}></div>
-                </div>
-            ))}
+        <div 
+            ref={fieldRef}
+            className="relative w-full aspect-[15/7] bg-green-900/50 rounded-md border-2 border-green-700/50 select-none touch-none"
+        >
+            {/* Grid */}
+            <div className="absolute inset-0 grid grid-cols-15 grid-rows-7">
+                {Array.from({ length: GRID_COLS * GRID_ROWS }).map((_, i) => (
+                    <div key={i} className="border border-green-300/10"></div>
+                ))}
+            </div>
+            {/* Field Markings */}
+            <div className="absolute top-[14.28%] left-0 w-full h-[1px] bg-white/50"></div> {/* Scrimmage Line */}
+            <div className="absolute top-0 left-[26.66%] w-[1px] h-full bg-white/30"></div> {/* Left Wide Zone */}
+            <div className="absolute top-0 right-[26.66%] w-[1px] h-full bg-white/30"></div> {/* Right Wide Zone */}
+
+            {/* Players */}
+            {players.map((player, index) => {
+                if (!player.fieldPosition) return null;
+                return (
+                    <div 
+                        key={player.id}
+                        onMouseDown={(e) => handleMouseDown(e, player)}
+                        onTouchStart={(e) => handleTouchStart(e, player)}
+                        className="absolute w-[6.66%] h-[14.28%] transform -translate-x-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing z-10"
+                        style={{ 
+                            top: `${(player.fieldPosition.y + 0.5) / GRID_ROWS * 100}%`, 
+                            left: `${(player.fieldPosition.x + 0.5) / GRID_COLS * 100}%`,
+                            touchAction: 'none' // Prevent scrolling on mobile
+                        }}
+                    >
+                        <div className={`w-full h-full rounded-full ${teamColor} border-2 border-white/80 shadow-lg flex items-center justify-center text-white font-bold text-sm`}>
+                            {index + 1}
+                        </div>
+                    </div>
+                );
+            })}
+             <style>{`.grid-cols-15 { grid-template-columns: repeat(15, minmax(0, 1fr)); } .grid-rows-7 { grid-template-rows: repeat(7, minmax(0, 1fr)); }`}</style>
         </div>
     );
 };
@@ -240,6 +316,9 @@ const cloneLiveTeam = (team: ManagedTeam): ManagedTeam => {
         clonedPlayer.lastingInjuries = [...p.lastingInjuries];
         if (p.sppActions) {
             clonedPlayer.sppActions = { ...p.sppActions };
+        }
+        if (p.fieldPosition) {
+            clonedPlayer.fieldPosition = { ...p.fieldPosition };
         }
         return clonedPlayer;
     });
@@ -312,6 +391,8 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
     const [injuryState, setInjuryState] = useState<InjuryState>(initialInjuryState);
     const [isApothecaryModalOpen, setIsApothecaryModalOpen] = useState(false);
     const [isLogVisible, setIsLogVisible] = useState(false);
+    const [playersMissingNextGame, setPlayersMissingNextGame] = useState<{playerId: number, teamId: 'home' | 'opponent'}[]>([]);
+    
     const scannerRef = useRef<any>(null);
     const scannerContainerRef = useRef<HTMLDivElement>(null);
     const homeTV = useMemo(() => calculateTeamValue(liveHomeTeam), [liveHomeTeam]);
@@ -355,10 +436,27 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
     useEffect(() => { 
         if (homeTeam) { 
             const liveTeam = cloneLiveTeam(homeTeam); 
+            const occupiedPositions = new Set<string>();
+
             liveTeam.players.forEach((p: ManagedPlayer) => { 
                 p.status = p.isBenched ? 'Reserva' : 'Activo'; 
+                p.fieldPosition = undefined;
                 if (!p.sppActions) p.sppActions = {}; 
             }); 
+            
+            const playersToPosition = liveTeam.players.filter(p => p.status === 'Activo');
+
+            playersToPosition.forEach((player) => {
+                let x = 2;
+                let y = 6;
+                while(occupiedPositions.has(`${x},${y}`)) {
+                    x++;
+                    if (x > 12) { x = 2; y--; }
+                }
+                player.fieldPosition = { x, y };
+                occupiedPositions.add(`${x},${y}`);
+            });
+
             liveTeam.liveRerolls = liveTeam.rerolls; 
             setLiveHomeTeam(liveTeam); 
         } 
@@ -369,6 +467,7 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
             const liveTeam = cloneLiveTeam(opponentTeam); 
             liveTeam.players.forEach((p: ManagedPlayer) => { 
                 if (!p.status) p.status = 'Reserva'; 
+                 p.fieldPosition = undefined;
                 if (!p.sppActions) p.sppActions = {}; 
             }); 
             liveTeam.liveRerolls = liveTeam.rerolls; 
@@ -420,33 +519,6 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
 
     useEffect(() => { if (gameState === 'pre_game' && preGameStep === 1 && liveHomeTeam && liveOpponentTeam) { const tvDiff = Math.abs(homeTV - opponentTV); const underdog = homeTV < opponentTV ? 'home' : (opponentTV < homeTV ? 'opponent' : null); if (underdog) setInducementState(prev => ({ ...prev, money: tvDiff, underdog })); else setInducementState({ money: 0, hiredStars: [], underdog: null }); } }, [gameState, preGameStep, homeTV, opponentTV]);
     
-    useEffect(() => {
-        if (preGameStep === 7) {
-            const autoDeploy = (setTeam: React.Dispatch<React.SetStateAction<ManagedTeam | null>>) => {
-                setTeam(prevTeam => {
-                    if (!prevTeam) return null;
-                    // Only deploy if no one is on the field, respecting manual pre-game lineup changes
-                    if (prevTeam.players.some(p => p.status === 'Activo')) {
-                        return prevTeam;
-                    }
-                    const availablePlayers = prevTeam.players.filter(p => p.status === 'Reserva' || !p.status);
-                    const playersToDeploy = availablePlayers.slice(0, 11);
-                    const deployedIds = new Set(playersToDeploy.map(p => p.id));
-                    const updatedPlayers = prevTeam.players.map(p => 
-                        deployedIds.has(p.id) 
-                            ? { ...p, status: 'Activo' as PlayerStatus } 
-                            : { ...p, status: p.status || 'Reserva' as PlayerStatus }
-                    );
-                    return { ...prevTeam, players: updatedPlayers };
-                });
-            };
-            // Only auto-deploy for opponent, home team lineup is set from TeamDashboard
-             if (liveOpponentTeam && !liveOpponentTeam.players.some(p => p.status === 'Activo')) {
-                autoDeploy(setLiveOpponentTeam);
-            }
-        }
-    }, [preGameStep, liveOpponentTeam]);
-    
     const logEvent = (type: GameEventType, description: string) => { setGameLog(prev => [{ id: Date.now(), timestamp: new Date().toLocaleTimeString('es-ES'), turn, half, type, description }, ...prev]); };
     const handleHalftime = () => { setTurn(0); setHalf(2); logEvent('INFO', 'Fin de la primera parte. Comienza la segunda parte.'); setGameStatus(prev => ({...prev, kickoffEvent: null})); if (firstHalfReceiver) { const secondHalfReceiver = firstHalfReceiver === 'home' ? 'opponent' : 'home'; setGameStatus(prev => ({ ...prev, receivingTeam: secondHalfReceiver })); logEvent('INFO', `Recibe en la segunda parte ${secondHalfReceiver === 'home' ? homeTeam?.name : opponentTeam?.name}.`); setGameState('pre_game'); setPreGameStep(7); } else { setGameState('pre_game'); setPreGameStep(6); } };
     const handleConfirmJourneymen = () => { if (pendingJourneymen.home.length > 0 && liveHomeTeam) { setLiveHomeTeam(prev => prev ? ({...prev, players: [...prev.players, ...pendingJourneymen.home]}) : null); logEvent('INFO', `${liveHomeTeam.name} añade ${pendingJourneymen.home.length} Sustituto(s).`); } if (pendingJourneymen.opponent.length > 0 && liveOpponentTeam) { setLiveOpponentTeam(prev => prev ? ({...prev, players: [...prev.players, ...pendingJourneymen.opponent]}) : null); logEvent('INFO', `${liveOpponentTeam.name} añade ${pendingJourneymen.opponent.length} Sustituto(s).`); } setJourneymenNotification(null); setPendingJourneymen({ home: [], opponent: [] }); setPreGameStep(1); };
@@ -497,7 +569,7 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
     const handleTurnover = (reason: string) => { logEvent('TURNOVER', `Cambio de turno: ${reason}.`); setIsTurnoverModalOpen(false); handleNextTurn(); };
     const handleConfirmPostGame = (finalTeamState: ManagedTeam) => { if (!homeTeam) return; onTeamUpdate(finalTeamState); setGameState('setup'); setHomeTeam(null); setOpponentTeam(null); setLiveHomeTeam(null); setLiveOpponentTeam(null); setGameLog([]); setScore({home: 0, opponent: 0}); setTurn(0); setHalf(1); setFame({ home: 0, opponent: 0 }); setFansRoll({ home: '', opponent: ''}); };
     const handleFoulAction = (action: 'next' | 'back') => { const { step, foulingPlayer, victimPlayer, armorRollInput, wasExpelled, log, foulingTeamId, injuryRollInput, casualtyRollInput, lastingInjuryRollInput } = foulState; if(action === 'back') { const history: FoulState['step'][] = ['select_fouler_team', 'select_fouler', 'select_victim', 'armor_roll', 'injury_roll', 'casualty_roll', 'lasting_injury_roll']; const currentStepIndex = history.indexOf(step); if (currentStepIndex > 0) setFoulState(prev => ({ ...prev, step: history[currentStepIndex - 1] })); return; } switch(step) { case 'select_victim': if (foulingPlayer && victimPlayer) setFoulState(prev => ({...prev, step: 'armor_roll'})); break; case 'armor_roll': { const die1 = parseInt(armorRollInput.die1), die2 = parseInt(armorRollInput.die2); if (isNaN(die1) || isNaN(die2)) break; const roll = die1 + die2, armorValue = parseInt(victimPlayer!.stats.AR.replace('+', '')), armorBroken = roll > armorValue, isDoubles = die1 === die2; let logMsg = `Tirada Armadura (${victimPlayer!.stats.AR}) a ${victimPlayer!.customName}: ${die1}+${die2}=${roll}.`; if (isDoubles) logMsg += " ¡Dobles!"; if(armorBroken) { logMsg += " ¡Rota!"; setFoulState(prev => ({ ...prev, armorRoll: {roll, armorBroken}, step: 'injury_roll', log: [...log, logMsg], wasExpelled: wasExpelled || isDoubles, expulsionReason: isDoubles ? `Dobles en armadura. ¡${foulingPlayer?.customName} expulsado!` : ''})); } else { logMsg += " Aguanta."; setFoulState(prev => ({ ...prev, armorRoll: {roll, armorBroken}, step: 'summary', log: [...log, logMsg], wasExpelled: wasExpelled || isDoubles, expulsionReason: isDoubles ? `Dobles en armadura. ¡${foulingPlayer?.customName} expulsado!` : ''})); } break; } case 'injury_roll': { const die1 = parseInt(injuryRollInput.die1), die2 = parseInt(injuryRollInput.die2); if (isNaN(die1) || isNaN(die2)) break; const roll = die1 + die2, isDoubles = die1 === die2; let result: PlayerStatus = roll <= 7 ? 'Activo' : roll <= 9 ? 'KO' : 'Lesionado'; let resultText = roll <= 7 ? 'Aturdido' : roll <= 9 ? 'Inconsciente (KO)' : '¡Lesionado!'; let logMsg = `Tirada Heridas: ${die1}+${die2}=${roll} -> ${resultText}.`; if(isDoubles) logMsg += " ¡Dobles!"; const newExpulsion = wasExpelled || isDoubles; const victimTeamId = foulingTeamId === 'home' ? 'opponent' : 'home'; updatePlayerStatus(victimPlayer!.id, victimTeamId, result === 'Activo' ? 'Activo' : result, resultText); if(result === 'Lesionado') setFoulState(prev => ({...prev, injuryRoll: {roll, result: resultText}, step: 'casualty_roll', log: [...log, logMsg], wasExpelled: newExpulsion, expulsionReason: isDoubles ? `Dobles en heridas. ¡${foulingPlayer?.customName} expulsado!` : prev.expulsionReason})); else setFoulState(prev => ({...prev, injuryRoll: {roll, result: resultText}, step: 'summary', log: [...log, logMsg], wasExpelled: newExpulsion, expulsionReason: isDoubles ? `Dobles en heridas. ¡${foulingPlayer?.customName} expulsado!` : prev.expulsionReason})); break; } case 'casualty_roll': { const roll = parseInt(casualtyRollInput); if (isNaN(roll) || roll < 1 || roll > 16) break; const event = casualtyResults.find(e => { const range = e.diceRoll.split('-').map(Number); return roll >= range[0] && roll <= range[1]; }); if (!event) return; let logMsg = `Tirada Lesión (D16): ${roll} -> ${event.title}. ${event.description}`; const victimTeamId = foulingTeamId === 'home' ? 'opponent' : 'home'; updatePlayerStatus(victimPlayer!.id, victimTeamId, event.title === 'Muerto' ? 'Muerto' : 'Lesionado', event.title); if (event.title === 'Lesion Permanente') setFoulState(prev => ({...prev, casualtyRoll: {roll, result: event.title}, step: 'lasting_injury_roll', log: [...log, logMsg]})); else setFoulState(prev => ({...prev, casualtyRoll: {roll, result: event.title}, step: 'summary', log: [...log, logMsg]})); break; } case 'lasting_injury_roll': { const roll = parseInt(lastingInjuryRollInput); if (isNaN(roll) || roll < 1 || roll > 6) break; const event = lastingInjuryResults.find(e => { const range = e.diceRoll.split('-').map(Number); return range.length > 1 ? (roll >= range[0] && roll <= range[1]) : roll === range[0]; }); if (!event) return; let logMsg = `Lesión Permanente (D6): ${roll} -> ${event.permanentInjury} (${event.characteristicReduction}).`; const setTeamToUpdate = foulingTeamId === 'home' ? setLiveOpponentTeam : setLiveHomeTeam; setTeamToUpdate(prev => prev ? ({ ...prev, players: prev.players.map(p => p.id === victimPlayer!.id ? {...p, lastingInjuries: [...p.lastingInjuries, `${event.permanentInjury} (${event.characteristicReduction})`]} : p)}) : null); setFoulState(prev => ({...prev, lastingInjuryRoll: {roll, result: event.permanentInjury, characteristic: event.characteristicReduction }, step: 'summary', log: [...log, logMsg]})); break; } case 'summary': { const finalLog = foulState.log.join(' '); logEvent('FOUL', `Falta de ${foulingPlayer?.customName} a ${victimPlayer?.customName}. ${finalLog}`); if (foulingPlayer && foulingTeamId && (foulState.injuryRoll?.result === '¡Lesionado!' || foulState.casualtyRoll)) updatePlayerSppAndAction(foulingPlayer, foulingTeamId, 2, 'CASUALTY', 'causar una lesión en una falta'); if (foulState.wasExpelled) { logEvent('INFO', foulState.expulsionReason || `El jugador ${foulingPlayer?.customName} ha sido expulsado.`); updatePlayerStatus(foulingPlayer!.id, foulingTeamId!, 'Expulsado'); } setIsFoulModalOpen(false); setFoulState(initialFoulState); break; } } };
-    const handleInjuryAction = (action: 'next' | 'back') => { const { step, victimPlayer, armorRollInput, log, victimTeamId, injuryRollInput, casualtyRollInput, lastingInjuryRollInput, casualtyRoll, apothecaryAction, isStunty } = injuryState; if (action === 'back') { const history: InjuryState['step'][] = ['select_victim_team', 'select_victim', 'armor_roll', 'injury_roll', 'casualty_roll', 'lasting_injury_roll']; let currentStepIndex = history.indexOf(step); if (step === 'apothecary') currentStepIndex = history.indexOf(casualtyRoll ? 'casualty_roll' : 'injury_roll'); if (currentStepIndex > 0) setInjuryState(prev => ({ ...prev, step: history[currentStepIndex - 1] })); return; } switch(step) { case 'select_victim': if (victimPlayer) { const hasStunty = victimPlayer.skills.toLowerCase().includes('escurridizo'); setInjuryState(prev => ({...prev, step: 'armor_roll', isStunty: hasStunty })); } break; case 'armor_roll': { const die1 = parseInt(armorRollInput.die1), die2 = parseInt(armorRollInput.die2); if (isNaN(die1) || isNaN(die2)) break; const roll = die1 + die2, armorValue = parseInt(victimPlayer!.stats.AR.replace('+', '')), armorBroken = roll > armorValue; let logMsg = `Tirada Armadura (${victimPlayer!.stats.AR}) a ${victimPlayer!.customName}: ${die1}+${die2}=${roll}.`; if (armorBroken) { logMsg += " ¡Rota!"; setInjuryState(prev => ({ ...prev, armorRoll: {roll, armorBroken}, step: 'injury_roll', log: [...log, logMsg]})); } else { logMsg += " Aguanta."; setInjuryState(prev => ({ ...prev, armorRoll: {roll, armorBroken}, step: 'summary', log: [...log, logMsg]})); } break; } case 'injury_roll': { const die1 = parseInt(injuryRollInput.die1), die2 = parseInt(injuryRollInput.die2); if (isNaN(die1) || isNaN(die2)) break; const roll = die1 + die2; let result: PlayerStatus = 'Activo', resultText = ''; if (isStunty) { if (roll <= 6) { result = 'Activo'; resultText = 'Aturdido'; } else if (roll <= 8) { result = 'KO'; resultText = 'Inconsciente (KO)'; } else if (roll === 9) { result = 'Lesionado'; resultText = 'Magullado (solo reservas)'; } else { result = 'Lesionado'; resultText = '¡Lesionado!'; } } else { if (roll <= 7) { result = 'Activo'; resultText = 'Aturdido'; } else if (roll <= 9) { result = 'KO'; resultText = 'Inconsciente (KO)'; } else { result = 'Lesionado'; resultText = '¡Lesionado!'; } } let logMsg = `Tirada Heridas: ${die1}+${die2}=${roll} -> ${resultText}.`; const team = victimTeamId === 'home' ? liveHomeTeam : liveOpponentTeam; if (team?.apothecary && (result === 'KO' || result === 'Lesionado')) { setIsApothecaryModalOpen(true); setInjuryState(prev => ({...prev, injuryRoll: {roll, result: resultText}, step: 'apothecary', log: [...log, logMsg]})); } else { if (result !== 'Lesionado' || resultText === 'Magullado (solo reservas)') updatePlayerStatus(victimPlayer!.id, victimTeamId!, result, resultText); setInjuryState(prev => ({...prev, injuryRoll: {roll, result: resultText}, step: result === 'Lesionado' && resultText !== 'Magullado (solo reservas)' ? 'casualty_roll' : 'summary', log: [...log, logMsg]})); } break; } case 'casualty_roll': { const roll = parseInt(casualtyRollInput); if (isNaN(roll) || roll < 1 || roll > 16) break; const event = casualtyResults.find(e => { const range = e.diceRoll.split('-').map(Number); return range.length > 1 ? (roll >= range[0] && roll <= range[1]) : roll === range[0]; }); if (!event) return; let logMsg = `Tirada Lesión (D16)${casualtyRoll?.rerolled ? ' (repetida)' : ''}: ${roll} -> ${event.title}.`; const team = victimTeamId === 'home' ? liveHomeTeam : liveOpponentTeam; if (team?.apothecary && !casualtyRoll?.rerolled && apothecaryAction !== 'patch_ko') { setIsApothecaryModalOpen(true); setInjuryState(prev => ({...prev, casualtyRoll: { roll, result: event.title, rerolled: false }, step: 'apothecary', log: [...log, logMsg]})); } else { updatePlayerStatus(victimPlayer!.id, victimTeamId!, event.title === 'Muerto' ? 'Muerto' : 'Lesionado', event.title); setInjuryState(prev => ({...prev, casualtyRoll: { ...(prev.casualtyRoll!), roll, result: event.title }, step: event.title === 'Lesion Permanente' ? 'lasting_injury_roll' : 'summary', log: [...log, logMsg]})); } break; } case 'lasting_injury_roll': { const roll = parseInt(lastingInjuryRollInput); if (isNaN(roll) || roll < 1 || roll > 6) break; const event = lastingInjuryResults.find(e => { const range = e.diceRoll.split('-').map(Number); return range.length > 1 ? (roll >= range[0] && roll <= range[1]) : roll === range[0]; }); if (!event) return; let logMsg = `Lesión Permanente (D6): ${roll} -> ${event.permanentInjury} (${event.characteristicReduction}).`; const setTeamToUpdate = victimTeamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam; setTeamToUpdate(prev => prev ? ({ ...prev, players: prev.players.map(p => p.id === victimPlayer!.id ? {...p, lastingInjuries: [...p.lastingInjuries, `${event.permanentInjury} (${event.characteristicReduction})`]} : p)}) : null); setInjuryState(prev => ({...prev, lastingInjuryRoll: {roll, result: event.permanentInjury, characteristic: event.characteristicReduction }, step: 'summary', log: [...log, logMsg]})); break; } case 'summary': { const finalLog = injuryState.log.join(' '); logEvent('INJURY', `Herida a ${victimPlayer?.customName}. ${finalLog}`); setIsInjuryModalOpen(false); setInjuryState(initialInjuryState); break; } } }
+    const handleInjuryAction = (action: 'next' | 'back') => { const { step, victimPlayer, armorRollInput, log, victimTeamId, injuryRollInput, casualtyRollInput, lastingInjuryRollInput, casualtyRoll, apothecaryAction, isStunty } = injuryState; if (action === 'back') { const history: InjuryState['step'][] = ['select_victim_team', 'select_victim', 'armor_roll', 'injury_roll', 'casualty_roll', 'lasting_injury_roll']; let currentStepIndex = history.indexOf(step); if (step === 'apothecary') currentStepIndex = history.indexOf(casualtyRoll ? 'casualty_roll' : 'injury_roll'); if (currentStepIndex > 0) setInjuryState(prev => ({ ...prev, step: history[currentStepIndex - 1] })); return; } switch(step) { case 'select_victim': if (victimPlayer) { const hasStunty = victimPlayer.skills.toLowerCase().includes('escurridizo'); setInjuryState(prev => ({...prev, step: 'armor_roll', isStunty: hasStunty })); } break; case 'armor_roll': { const die1 = parseInt(armorRollInput.die1), die2 = parseInt(armorRollInput.die2); if (isNaN(die1) || isNaN(die2)) break; const roll = die1 + die2, armorValue = parseInt(victimPlayer!.stats.AR.replace('+', '')), armorBroken = roll > armorValue; let logMsg = `Tirada Armadura (${victimPlayer!.stats.AR}) a ${victimPlayer!.customName}: ${die1}+${die2}=${roll}.`; if (armorBroken) { logMsg += " ¡Rota!"; setInjuryState(prev => ({ ...prev, armorRoll: {roll, armorBroken}, step: 'injury_roll', log: [...log, logMsg]})); } else { logMsg += " Aguanta."; setInjuryState(prev => ({ ...prev, armorRoll: {roll, armorBroken}, step: 'summary', log: [...log, logMsg]})); } break; } case 'injury_roll': { const die1 = parseInt(injuryRollInput.die1), die2 = parseInt(injuryRollInput.die2); if (isNaN(die1) || isNaN(die2)) break; const roll = die1 + die2; let result: PlayerStatus = 'Activo', resultText = ''; if (isStunty) { if (roll <= 6) { result = 'Activo'; resultText = 'Aturdido'; } else if (roll <= 8) { result = 'KO'; resultText = 'Inconsciente (KO)'; } else if (roll === 9) { result = 'Lesionado'; resultText = 'Magullado (solo reservas)'; } else { result = 'Lesionado'; resultText = '¡Lesionado!'; } } else { if (roll <= 7) { result = 'Activo'; resultText = 'Aturdido'; } else if (roll <= 9) { result = 'KO'; resultText = 'Inconsciente (KO)'; } else { result = 'Lesionado'; resultText = '¡Lesionado!'; } } let logMsg = `Tirada Heridas: ${die1}+${die2}=${roll} -> ${resultText}.`; const team = victimTeamId === 'home' ? liveHomeTeam : liveOpponentTeam; if (team?.apothecary && (result === 'KO' || result === 'Lesionado')) { setIsApothecaryModalOpen(true); setInjuryState(prev => ({...prev, injuryRoll: {roll, result: resultText}, step: 'apothecary', log: [...log, logMsg]})); } else { if (result !== 'Lesionado' || resultText === 'Magullado (solo reservas)') updatePlayerStatus(victimPlayer!.id, victimTeamId!, result, resultText); setInjuryState(prev => ({...prev, injuryRoll: {roll, result: resultText}, step: result === 'Lesionado' && resultText !== 'Magullado (solo reservas)' ? 'casualty_roll' : 'summary', log: [...log, logMsg]})); } break; } case 'casualty_roll': { const roll = parseInt(casualtyRollInput); if (isNaN(roll) || roll < 1 || roll > 16) break; const event = casualtyResults.find(e => { const range = e.diceRoll.split('-').map(Number); return range.length > 1 ? (roll >= range[0] && roll <= range[1]) : roll === range[0]; }); if (!event) return; let logMsg = `Tirada Lesión (D16)${casualtyRoll?.rerolled ? ' (repetida)' : ''}: ${roll} -> ${event.title}.`; const team = victimTeamId === 'home' ? liveHomeTeam : liveOpponentTeam; if (['Gravemente Herido', 'Lesion Seria', 'Lesion Permanente'].includes(event.title)) { setPlayersMissingNextGame(prev => [...prev, { playerId: victimPlayer!.id, teamId: victimTeamId! }]); } if (team?.apothecary && !casualtyRoll?.rerolled && apothecaryAction !== 'patch_ko') { setIsApothecaryModalOpen(true); setInjuryState(prev => ({...prev, casualtyRoll: { roll, result: event.title, rerolled: false }, step: 'apothecary', log: [...log, logMsg]})); } else { updatePlayerStatus(victimPlayer!.id, victimTeamId!, event.title === 'Muerto' ? 'Muerto' : 'Lesionado', event.title); setInjuryState(prev => ({...prev, casualtyRoll: { ...(prev.casualtyRoll!), roll, result: event.title }, step: event.title === 'Lesion Permanente' ? 'lasting_injury_roll' : 'summary', log: [...log, logMsg]})); } break; } case 'lasting_injury_roll': { const roll = parseInt(lastingInjuryRollInput); if (isNaN(roll) || roll < 1 || roll > 6) break; const event = lastingInjuryResults.find(e => { const range = e.diceRoll.split('-').map(Number); return range.length > 1 ? (roll >= range[0] && roll <= range[1]) : roll === range[0]; }); if (!event) return; let logMsg = `Lesión Permanente (D6): ${roll} -> ${event.permanentInjury} (${event.characteristicReduction}).`; const setTeamToUpdate = victimTeamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam; setTeamToUpdate(prev => prev ? ({ ...prev, players: prev.players.map(p => p.id === victimPlayer!.id ? {...p, lastingInjuries: [...p.lastingInjuries, `${event.permanentInjury} (${event.characteristicReduction})`]} : p)}) : null); setInjuryState(prev => ({...prev, lastingInjuryRoll: {roll, result: event.permanentInjury, characteristic: event.characteristicReduction }, step: 'summary', log: [...log, logMsg]})); break; } case 'summary': { const finalLog = injuryState.log.join(' '); logEvent('INJURY', `Herida a ${victimPlayer?.customName}. ${finalLog}`); setIsInjuryModalOpen(false); setInjuryState(initialInjuryState); break; } } }
     const handleManualOpponentSelect = (teamName: string) => { const selectedOpponent = managedTeams.find(t => t.name === teamName); if (selectedOpponent) { setOpponentTeam(selectedOpponent); setGameState('pre_game'); } };
     const handleExportLog = () => { if (!homeTeam || !opponentTeam) return; try { const worksheet = XLSX.utils.json_to_sheet([...gameLog].reverse().map(e => ({ 'Hora': e.timestamp, 'Parte': e.half, 'Turno': e.turn, 'Tipo': e.type, 'Descripción': e.description }))); const workbook = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(workbook, worksheet, 'Bitácora'); XLSX.writeFile(workbook, `bitacora_${homeTeam.name}_vs_${opponentTeam.name}.xlsx`); } catch (error) { console.error("Error al exportar:", error); alert("Error al exportar bitácora."); } };
     const rollKoRecovery = (player: ManagedPlayer) => { const roll = Math.floor(Math.random() * 6) + 1; const success = roll >= 4; setKoRecoveryRolls(prev => ({ ...prev, [player.id]: { roll, success } })); if (success) { const teamId = liveHomeTeam?.players.some(p => p.id === player.id) ? 'home' : 'opponent'; updatePlayerStatus(player.id, teamId, 'Reserva'); } };
@@ -566,26 +638,139 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
             logEvent('INFO', `${team.name} ha usado una Segunda Oportunidad.`);
         }
     };
+
     const handlePlayerStatusToggle = (player: ManagedPlayer, teamId: 'home' | 'opponent') => {
         const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
         setTeam(prevTeam => {
             if (!prevTeam) return null;
-            const currentStatus = player.status;
-            const newStatus: PlayerStatus = currentStatus === 'Activo' ? 'Reserva' : 'Activo';
-            if (newStatus === 'Activo') {
-                const onFieldCount = prevTeam.players.filter(p => p.status === 'Activo').length;
-                if (onFieldCount >= 11) {
-                    alert('No puedes tener más de 11 jugadores en el campo.');
-                    return prevTeam;
-                }
+            const newStatus: PlayerStatus = player.status === 'Activo' ? 'Reserva' : 'Activo';
+            
+            if (newStatus === 'Activo' && prevTeam.players.filter(p => p.status === 'Activo').length >= 11) {
+                alert('No puedes tener más de 11 jugadores en el campo.');
+                return prevTeam;
             }
-            return {
-                ...prevTeam,
-                players: prevTeam.players.map(p => p.id === player.id ? { ...p, status: newStatus } : p)
-            };
+            
+            const updatedPlayers = prevTeam.players.map(p => {
+                if (p.id === player.id) {
+                    const updatedPlayer = { ...p, status: newStatus };
+                    if (newStatus === 'Activo') {
+                        const onFieldPlayers = prevTeam.players.filter(pl => pl.status === 'Activo' && pl.id !== player.id);
+                        const occupiedPositions = new Set(onFieldPlayers.map(pl => pl.fieldPosition ? `${pl.fieldPosition.x},${pl.fieldPosition.y}` : '').filter(Boolean));
+
+                        let x = 2;
+                        let y = 6;
+                        while(occupiedPositions.has(`${x},${y}`)) {
+                            x++;
+                            if (x > 12) {
+                                x = 2;
+                                y--;
+                            }
+                        }
+                        updatedPlayer.fieldPosition = { x, y };
+                    } else if (newStatus === 'Reserva') {
+                        delete updatedPlayer.fieldPosition;
+                    }
+                    return updatedPlayer;
+                }
+                return p;
+            });
+            
+            return { ...prevTeam, players: updatedPlayers };
         });
     };
+
+    const handlePlayerMove = useCallback((teamId: 'home' | 'opponent', playerId: number, newPos: {x: number, y: number}) => {
+        const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
+        setTeam(prev => {
+            if (!prev) return null;
+            // Prevent placing multiple players on the same square
+            const isOccupied = prev.players.some(p => p.id !== playerId && p.fieldPosition?.x === newPos.x && p.fieldPosition?.y === newPos.y);
+            if (isOccupied) return prev;
+
+            return {
+                ...prev,
+                players: prev.players.map(p => p.id === playerId ? { ...p, fieldPosition: newPos } : p)
+            };
+        });
+    }, []);
+
+    const handleSuggestDeployment = () => {
+        const deployTeam = (team: ManagedPlayer[]) => {
+            if (team.length === 0) return [];
     
+            const GRID_COLS = 15;
+            const GRID_ROWS = 7;
+            const SCRIMMAGE_Y = 3; 
+            const WIDE_ZONE_X_END = 3;
+            const WIDE_ZONE_X_START_RIGHT = 11;
+    
+            let availableSquares: {x:number, y:number}[] = [];
+            for(let y = 0; y < GRID_ROWS; y++) {
+                for(let x = 0; x < GRID_COLS; x++) {
+                    availableSquares.push({x, y});
+                }
+            }
+            availableSquares.sort(() => 0.5 - Math.random());
+    
+            const newPlayers = cloneLiveTeam({ players: team } as ManagedTeam).players;
+            const deployedIds = new Set<number>();
+            let scrimmageCount = 0;
+            let wideLeftCount = 0;
+            let wideRightCount = 0;
+    
+            const assignSquare = (player: ManagedPlayer, squares: {x:number, y:number}[]) => {
+                for (let i = 0; i < squares.length; i++) {
+                    const pos = squares[i];
+                    
+                    const isWideLeft = pos.x <= WIDE_ZONE_X_END;
+                    const isWideRight = pos.x >= WIDE_ZONE_X_START_RIGHT;
+                    
+                    if (isWideLeft && wideLeftCount >= 2) continue;
+                    if (isWideRight && wideRightCount >= 2) continue;
+                    
+                    player.fieldPosition = pos;
+                    availableSquares = availableSquares.filter(s => s.x !== pos.x || s.y !== pos.y);
+                    deployedIds.add(player.id);
+
+                    if (pos.y <= SCRIMMAGE_Y) scrimmageCount++;
+                    if (isWideLeft) wideLeftCount++;
+                    if (isWideRight) wideRightCount++;
+                    
+                    return true;
+                }
+                return false;
+            };
+
+            const scrimmageSquares = availableSquares.filter(s => s.y <= SCRIMMAGE_Y);
+            for (const player of newPlayers) {
+                if (scrimmageCount < 3) {
+                    assignSquare(player, scrimmageSquares);
+                }
+            }
+
+            for (const player of newPlayers) {
+                if (!deployedIds.has(player.id)) {
+                    assignSquare(player, availableSquares);
+                }
+            }
+            
+            return newPlayers.map(p => ({ ...p, fieldPosition: p.fieldPosition || {x:0, y:6} }));
+        };
+    
+        const updateTeamDeployment = (setTeam: React.Dispatch<React.SetStateAction<ManagedTeam | null>>) => {
+            setTeam(prevTeam => {
+                if (!prevTeam) return null;
+                const activePlayers = prevTeam.players.filter(p => p.status === 'Activo');
+                const benchPlayers = prevTeam.players.filter(p => p.status !== 'Activo');
+                const deployedActivePlayers = deployTeam(activePlayers);
+                return { ...prevTeam, players: [...benchPlayers, ...deployedActivePlayers] };
+            });
+        };
+
+        updateTeamDeployment(setLiveHomeTeam);
+        updateTeamDeployment(setLiveOpponentTeam);
+    };
+
     const renderContent = () => {
         switch (gameState) {
             case 'setup': return (
@@ -670,7 +855,7 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                 };
                 
                 return (
-                    <div className="bg-slate-900/70 p-4 sm:p-6 rounded-lg border border-slate-700 max-w-4xl mx-auto space-y-6">
+                    <div className="bg-slate-900/70 p-4 sm:p-6 rounded-lg border border-slate-700 max-w-6xl mx-auto space-y-6">
                         <h2 className="text-2xl font-bold text-amber-400 text-center">{preGameTitles[preGameStep]}</h2>
                         {preGameStep === 1 && ( <div className='text-center space-y-4'> <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-center"> <p>VE {liveHomeTeam.name}: <span className='font-bold text-sky-400'>{homeTV.toLocaleString()}</span></p> <p>VE {liveOpponentTeam.name}: <span className='font-bold text-red-400'>{opponentTV.toLocaleString()}</span></p> </div> {inducementState.underdog ? (() => { const underdogTeam = inducementState.underdog === 'home' ? liveHomeTeam : liveOpponentTeam; const baseRoster = teamsData.find(t => t.name === underdogTeam.rosterName); const eligibleStars = starPlayersData.filter(star => isEligibleStar(star, baseRoster)); const bribeCost = baseRoster?.specialRules.includes("Sobornos y corrupción") ? 50000 : 100000; return ( <div className="space-y-6 text-left"> <p className="text-center">{(inducementState.underdog === 'home' ? liveHomeTeam.name : liveOpponentTeam.name)} es desvalido y recibe <span className='font-bold text-green-400'>{inducementState.money.toLocaleString()} M.O.</span> para incentivos.</p> <div className="bg-slate-800 p-4 rounded-lg"> <h4 className="font-bold text-amber-300 mb-2">Incentivos</h4> <div className="space-y-2 text-sm"> {[{name: 'reroll', label: 'Segunda Oportunidad Extra', cost: 100000, count: (underdogTeam.liveRerolls || 0) - underdogTeam.rerolls}, {name: 'bribe', label: 'Soborno', cost: bribeCost, count: underdogTeam.tempBribes || 0}, {name: 'cheerleader', label: 'Animadora', cost: 10000, count: underdogTeam.tempCheerleaders || 0}, {name: 'coach', label: 'Ayudante', cost: 10000, count: underdogTeam.tempAssistantCoaches || 0}].map(item => ( <div key={item.name} className="flex justify-between items-center"> <span>{item.label} ({item.cost/1000}k)</span> <div className="flex items-center gap-2"> <button onClick={() => handleSellInducement(item.name as any, item.cost)} className="bg-rose-600 h-6 w-6 rounded-full font-bold">-</button> <span className="font-mono w-6 text-center">{item.count}</span> <button onClick={() => handleBuyInducement(item.name as any, item.cost)} className="bg-green-600 h-6 w-6 rounded-full font-bold">+</button> </div> </div> ))} </div> </div> <div className="bg-slate-800 p-4 rounded-lg"> <h4 className="font-bold text-amber-300 mb-2">Jugadores Estrella</h4> <div className="max-h-60 overflow-y-auto space-y-2 pr-2"> {eligibleStars.map(star => ( <div key={star.name} className="flex justify-between items-center text-sm"> <button onClick={() => setSelectedStarPlayer(star)} className="text-sky-400 hover:underline">{star.name} ({star.cost/1000}k)</button> {inducementState.hiredStars.some(s => s.name === star.name) ? <button onClick={() => handleFireStar(star)} className="bg-rose-600 text-white font-bold py-1 px-2 text-xs rounded">Despedir</button> : <button onClick={() => handleHireStar(star)} disabled={inducementState.money < star.cost} className="bg-green-600 text-white font-bold py-1 px-2 text-xs rounded disabled:bg-slate-600">Contratar</button> } </div> ))} </div> </div> <div className="text-center pt-4 border-t border-slate-700"> <button onClick={() => setPreGameStep(2)} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">Confirmar y Continuar</button> </div> </div> ) })() : ( <> <p className="text-center">¡Equipos igualados! No hay incentivos.</p> <button onClick={() => setPreGameStep(2)} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">Continuar</button> </> )} </div> )}
                         {preGameStep === 2 && ( <div className='text-center space-y-4'> <p>Cada entrenador tira 2D6 y suma sus Hinchas. El más alto gana +1 FAMA (+2 si dobla o más).</p> <div className="grid grid-cols-2 gap-4"> <div> <label className='block text-sm font-medium text-slate-300 mb-1'>{liveHomeTeam.name} (Hinchas: {liveHomeTeam.dedicatedFans})</label> <input type="text" pattern="[2-9]|1[0-2]" value={fansRoll.home} onChange={e => setFansRoll(p => ({...p, home: e.target.value.replace(/[^0-9]/g, '').slice(0, 2)}))} className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-center" placeholder="2D6"/> </div> <div> <label className='block text-sm font-medium text-slate-300 mb-1'>{liveOpponentTeam.name} (Hinchas: {liveOpponentTeam.dedicatedFans})</label> <input type="text" pattern="[2-9]|1[0-2]" value={fansRoll.opponent} onChange={e => setFansRoll(p => ({...p, opponent: e.target.value.replace(/[^0-9]/g, '').slice(0, 2)}))} className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-center" placeholder="2D6"/> </div> </div> <button onClick={() => { const homeTotal = liveHomeTeam.dedicatedFans + parseInt(fansRoll.home || '0'); const oppTotal = liveOpponentTeam.dedicatedFans + parseInt(fansRoll.opponent || '0'); let homeFame = 0, oppFame = 0; if (homeTotal >= oppTotal * 2) homeFame = 2; else if (homeTotal > oppTotal) homeFame = 1; if (oppTotal >= homeTotal * 2) oppFame = 2; else if (oppTotal > homeTotal) oppFame = 1; setFame({home: homeFame, opponent: oppFame}); logEvent('INFO', `Tirada Hinchas - ${liveHomeTeam.name}: ${homeTotal}, ${liveOpponentTeam.name}: ${oppTotal}. FAMA: ${homeFame} - ${oppFame}`); setPreGameStep(3); }} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">Calcular FAMA</button> </div> )}
@@ -681,7 +866,7 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                         {preGameStep === 7 && (
                             <div className="space-y-4">
                                 <p className="text-center text-slate-300">Coloca hasta 11 jugadores en el campo. El resto quedará en el banquillo.</p>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                     {[liveHomeTeam, liveOpponentTeam].map((team, index) => {
                                         const teamId = index === 0 ? 'home' : 'opponent';
                                         const onField = team.players.filter(p => p.status === 'Activo');
@@ -694,11 +879,11 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                                                     )}
                                                     <h3 className={`font-bold text-lg ${teamId === 'home' ? 'text-sky-400' : 'text-red-400'}`}>{team.name}</h3>
                                                 </div>
-                                                <MiniField players={onField} teamColor={teamId === 'home' ? 'bg-sky-500' : 'bg-red-500'} />
-                                                <div className="space-y-2 max-h-[40vh] overflow-y-auto pr-2">
+                                                <MiniField players={onField} teamColor={teamId === 'home' ? 'bg-sky-500' : 'bg-red-500'} teamId={teamId} onPlayerMove={(playerId, pos) => handlePlayerMove(teamId, playerId, pos)} />
+                                                <div className="space-y-2 max-h-[30vh] overflow-y-auto pr-2">
                                                     <div>
                                                         <h4 className="font-semibold text-slate-400 text-sm sticky top-0 bg-slate-800 z-10 py-1 -mx-3 px-3">En el Campo ({onField.length}/11)</h4>
-                                                        {onField.length > 0 ? onField.map(p => <PlayerStatusCard key={p.id} player={p} onViewPlayer={setViewingPlayer} onSkillClick={handleSkillClick} canToggleStatus={true} onStatusToggle={() => handlePlayerStatusToggle(p, teamId)} />) : <p className="text-xs text-slate-500">Ningún jugador en el campo.</p>}
+                                                        {onField.length > 0 ? onField.map((p, idx) => <PlayerStatusCard key={p.id} player={p} playerNumber={idx + 1} onViewPlayer={setViewingPlayer} onSkillClick={handleSkillClick} canToggleStatus={true} onStatusToggle={() => handlePlayerStatusToggle(p, teamId)} />) : <p className="text-xs text-slate-500">Ningún jugador en el campo.</p>}
                                                     </div>
                                                     <div>
                                                         <h4 className="font-semibold text-slate-400 text-sm mt-3 sticky top-0 bg-slate-800 z-10 py-1 -mx-3 px-3">Banquillo ({onBench.length})</h4>
@@ -709,8 +894,13 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                                         );
                                     })}
                                 </div>
-                                <div className="text-center pt-4">
-                                    <button onClick={() => { const homeOnField = liveHomeTeam.players.filter(p => p.status === 'Activo').length; const oppOnField = liveOpponentTeam.players.filter(p => p.status === 'Activo').length; if (homeOnField === 0 || oppOnField === 0) { alert('Ambos equipos deben tener al menos un jugador en el campo para continuar.'); return; } setPreGameStep(8); }} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">Confirmar Despliegue</button>
+                                <div className="text-center pt-4 border-t border-slate-700 flex flex-wrap justify-center gap-4">
+                                    <button onClick={handleSuggestDeployment} className="bg-teal-600 text-white font-bold py-2 px-6 rounded-md shadow-md hover:bg-teal-500">
+                                        Sugerir Despliegue Aleatorio
+                                    </button>
+                                    <button onClick={() => { const homeOnField = liveHomeTeam.players.filter(p => p.status === 'Activo').length; const oppOnField = liveOpponentTeam.players.filter(p => p.status === 'Activo').length; if (homeOnField === 0 || oppOnField === 0) { alert('Ambos equipos deben tener al menos un jugador en el campo para continuar.'); return; } setPreGameStep(8); }} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">
+                                        Confirmar Despliegue
+                                    </button>
                                 </div>
                             </div>
                         )}
@@ -765,10 +955,24 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
             
             const renderPlayerGroup = (title: string, players: ManagedPlayer[], teamId: 'home' | 'opponent') => {
                 if (players.length === 0) return null;
+                const onFieldNumberOffset = teamId === 'home' 
+                    ? 0
+                    : liveHomeTeam.players.filter(p => p.status === 'Activo').length;
+
                 return (
                     <div className="mt-2">
                         <h4 className="font-bold text-xs uppercase text-slate-500 mb-1 px-2">{title}</h4>
-                        <div className="space-y-1">{players.map(p => <PlayerStatusCard key={p.id} player={p} onViewPlayer={setViewingPlayer} onSkillClick={handleSkillClick} />)}</div>
+                        <div className="space-y-1">
+                            {players.map((p, idx) => 
+                                <PlayerStatusCard 
+                                    key={p.id} 
+                                    player={p} 
+                                    playerNumber={p.status === 'Activo' ? onFieldNumberOffset + idx + 1 : undefined} 
+                                    onViewPlayer={setViewingPlayer} 
+                                    onSkillClick={handleSkillClick} 
+                                />
+                            )}
+                        </div>
                     </div>
                 );
             };
@@ -925,7 +1129,7 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                     </div>
                 </div>
             );
-            case 'post_game': if(!liveHomeTeam || !liveOpponentTeam) return <div>Cargando...</div>; return <PostGameWizard initialHomeTeam={liveHomeTeam} opponentTeam={liveOpponentTeam} score={score} fame={fame.home} onConfirm={handleConfirmPostGame} />;
+            case 'post_game': if(!liveHomeTeam || !liveOpponentTeam) return <div>Cargando...</div>; return <PostGameWizard initialHomeTeam={liveHomeTeam} opponentTeam={liveOpponentTeam} score={score} fame={fame.home} playersMNG={playersMissingNextGame.filter(p => p.teamId === 'home')} onConfirm={handleConfirmPostGame} />;
             default: return <div>Estado de juego desconocido.</div>;
         }
     };

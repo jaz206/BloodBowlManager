@@ -1,5 +1,6 @@
 
 
+
 export interface User {
   id: string;
   name: string;
@@ -146,6 +147,7 @@ export interface ManagedPlayer extends Player {
   isJourneyman?: boolean;
   missNextGame?: number;
   isBenched?: boolean;
+  fieldPosition?: { x: number; y: number; }; // For live game board
 }
 
 export interface ManagedTeam {

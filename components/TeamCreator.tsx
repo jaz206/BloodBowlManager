@@ -1,6 +1,6 @@
 
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { teamsData } from '../data/teams';
 import type { ManagedTeam } from '../types';
 import SparklesIcon from './icons/SparklesIcon';
@@ -15,11 +15,19 @@ interface TeamCreatorProps {
 
 const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterName }) => {
     const [teamName, setTeamName] = useState('');
-    const [rosterName, setRosterName] = useState(initialRosterName || teamsData[0].name);
     const [isAutoCalculating, setIsAutoCalculating] = useState(false);
     const [isGeneratingName, setIsGeneratingName] = useState(false);
     const [crestPreview, setCrestPreview] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const [previewIndex, setPreviewIndex] = useState(() => {
+        if (!initialRosterName) return 0;
+        const index = teamsData.findIndex(t => t.name === initialRosterName);
+        return index !== -1 ? index : 0;
+    });
+
+    // RosterName is now derived from the previewIndex state
+    const rosterName = teamsData[previewIndex].name;
 
     const handleGenerateName = async () => {
         if (!rosterName) {
@@ -118,13 +126,75 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
         onTeamCreate(newTeam);
     };
 
+    const handlePrevTeam = () => {
+        setPreviewIndex(prev => (prev === 0 ? teamsData.length - 1 : prev - 1));
+    };
+
+    const handleNextTeam = () => {
+        setPreviewIndex(prev => (prev === teamsData.length - 1 ? 0 : prev + 1));
+    };
+
+    const handleRosterSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const index = teamsData.findIndex(t => t.name === e.target.value);
+        if (index !== -1) {
+            setPreviewIndex(index);
+        }
+    };
+    
+    const teamToPreview = teamsData[previewIndex];
+
     return (
-        <div className="text-center max-w-lg mx-auto p-4 sm:p-8">
+        <div className="text-center max-w-4xl mx-auto p-4 sm:p-8">
             <h2 className="text-3xl font-bold text-amber-400 mb-4">Crear Nuevo Equipo</h2>
             <p className="text-slate-400 mb-8">
-                Dale un nombre a tu equipo, elige tu facción y prepárate para la gloria.
+                Explora las facciones, dale un nombre a tu equipo y prepárate para la gloria.
             </p>
-            <form onSubmit={handleSubmit} className="space-y-6">
+
+             <div className="bg-slate-900/50 p-4 sm:p-6 rounded-lg border border-slate-700 mb-8">
+                <h3 className="text-xl font-semibold text-amber-400 mb-4">Elige una Facción</h3>
+                
+                <div className="flex justify-between items-center mb-4">
+                    <button onClick={handlePrevTeam} className="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded-md transition-colors">&larr; Anterior</button>
+                    <h4 className="text-lg font-bold text-white text-center truncate px-2">{teamToPreview.name}</h4>
+                    <button onClick={handleNextTeam} className="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded-md transition-colors">Siguiente &rarr;</button>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="lg:col-span-1 flex flex-col items-center">
+                        <img src={teamToPreview.image} alt={`Arte de ${teamToPreview.name}`} className="w-full h-auto object-cover rounded-lg shadow-lg border-2 border-slate-700 mb-4" />
+                        <div className="text-sm text-slate-300 space-y-2 text-left bg-slate-800 p-3 rounded-md w-full">
+                            <p><span className='font-bold text-slate-400'>Coste Reroll:</span> {teamToPreview.rerollCost.toLocaleString()} M.O.</p>
+                            <p><span className='font-bold text-slate-400'>Rango:</span> {teamToPreview.tier}</p>
+                            <p><span className='font-bold text-slate-400'>Boticario:</span> {teamToPreview.apothecary}</p>
+                            <p><span className='font-bold text-slate-400'>Reglas:</span> {teamToPreview.specialRules}</p>
+                        </div>
+                    </div>
+                    <div className="lg:col-span-2 max-h-80 overflow-y-auto pr-2 bg-slate-800 rounded-md p-2 border border-slate-700">
+                        <table className="w-full text-left text-xs whitespace-nowrap">
+                            <thead className="bg-slate-700 text-amber-300 sticky top-0">
+                                <tr>
+                                    <th className="p-2">Posición</th>
+                                    <th className="p-2 text-center">Cant.</th>
+                                    <th className="p-2 text-center">MV/FU/AG/PS/AR</th>
+                                    <th className="p-2">Habilidades</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-700">
+                                {teamToPreview.roster.map(player => (
+                                    <tr key={player.position}>
+                                        <td className="p-2 font-semibold text-slate-200">{player.position}</td>
+                                        <td className="p-2 text-center">{player.qty}</td>
+                                        <td className="p-2 font-mono text-center">{player.stats.MV}/{player.stats.FU}/{player.stats.AG}/{player.stats.PS}/{player.stats.AR}</td>
+                                        <td className="p-2 whitespace-normal">{player.skills}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-6 max-w-lg mx-auto">
                  <div>
                     <label className="block text-sm font-medium text-slate-300 mb-2 text-left">Escudo del Equipo (Opcional)</label>
                     <div className="flex items-center gap-4">
@@ -183,11 +253,11 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                     </div>
                 </div>
                 <div>
-                    <label htmlFor="rosterName" className="block text-sm font-medium text-slate-300 mb-2 text-left">Facciones</label>
+                    <label htmlFor="rosterName" className="block text-sm font-medium text-slate-300 mb-2 text-left">Facción seleccionada</label>
                     <select
                         id="rosterName"
                         value={rosterName}
-                        onChange={(e) => setRosterName(e.target.value)}
+                        onChange={handleRosterSelectChange}
                         className="w-full bg-slate-900 border-2 border-slate-600 rounded-lg py-3 px-4 text-white focus:ring-amber-500 focus:border-amber-500 shadow-sm"
                     >
                         {teamsData.map(team => (

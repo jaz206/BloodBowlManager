@@ -11,7 +11,8 @@ import { generateRandomName } from '../data/randomNames';
 import ShieldCheckIcon from './icons/ShieldCheckIcon';
 import ImageModal from './ImageModal';
 import UploadIcon from './icons/UploadIcon';
-import PencilIcon from './icons/PencilIcon';
+import MedicalCrossIcon from './icons/MedicalCrossIcon';
+
 
 declare const QRCode: any;
 
@@ -318,6 +319,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
             gainedSkills: [],
             lastingInjuries: [],
             isBenched: false,
+            missNextGame: 0,
         };
         onUpdate({
             ...team,
@@ -560,19 +562,26 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                                 return (
                                 <tr key={p.id} className={p.isBenched ? 'opacity-60' : ''}>
                                     <td className="p-2 font-bold text-white min-w-[150px]" onDoubleClick={() => handleNameDoubleClick(p)}>
-                                        {editingPlayerId === p.id ? (
-                                            <input
-                                                type="text"
-                                                value={editingName}
-                                                onChange={handleNameChange}
-                                                onBlur={handleNameUpdate}
-                                                onKeyDown={handleNameKeyDown}
-                                                autoFocus
-                                                className="bg-slate-900 border border-amber-400 rounded px-1 w-full"
-                                            />
-                                        ) : (
-                                            <span>{p.customName}</span>
-                                        )}
+                                        <div className="flex items-center gap-2">
+                                            {p.missNextGame && p.missNextGame > 0 && (
+                                                <span title={`Se pierde ${p.missNextGame} partido(s)`}>
+                                                    <MedicalCrossIcon className="w-4 h-4 text-red-500 flex-shrink-0" />
+                                                </span>
+                                            )}
+                                            {editingPlayerId === p.id ? (
+                                                <input
+                                                    type="text"
+                                                    value={editingName}
+                                                    onChange={handleNameChange}
+                                                    onBlur={handleNameUpdate}
+                                                    onKeyDown={handleNameKeyDown}
+                                                    autoFocus
+                                                    className="bg-slate-900 border border-amber-400 rounded px-1 w-full"
+                                                />
+                                            ) : (
+                                                <span className="truncate">{p.customName}</span>
+                                            )}
+                                        </div>
                                     </td>
                                     <td className="p-2">{p.position}</td>
                                     <td className="p-2 text-center">{p.stats.MV}</td>
@@ -636,7 +645,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                         <h3 className="text-lg font-bold text-amber-400 mb-4">Confirmar Despido</h3>
                         <p className="text-slate-300 mb-6">
                             ¿Estás seguro de que quieres despedir a <span className="font-bold text-white">{fireConfirmation.customName}</span>?
-                            Recibirás la mitad de su coste (<span className="font-bold text-green-400">{(fireConfirmation.cost / 2).toLocaleString()} M.O.</span>) de vuelta.
+                            Recibirás la mitad de su coste ({!team.isAutoCalculating ? <span className="font-bold text-green-400">{(fireConfirmation.cost / 2).toLocaleString()} M.O.</span> : '0 M.O.'}) de vuelta.
                         </p>
                         <div className="flex justify-end gap-4">
                             <button onClick={() => setFireConfirmation(null)} className="bg-slate-600 text-white font-bold py-2 px-4 rounded">Cancelar</button>
