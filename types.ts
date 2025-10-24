@@ -52,16 +52,17 @@ export type PlayerPosition = 'Blitzer' | 'Lanzador' | 'Corredor' | 'Línea' | 'R
 
 export interface Token {
   id: number;
-  x: number; // grid x (0-14)
-  y: number; // grid y (0-12 for tactics, 0-25 for game)
+  x: number; // grid x
+  y: number; // grid y
   position: PlayerPosition;
 }
 
-// FIX: Added BoardToken interface for use in GameBoard and related components.
 export interface BoardToken extends Token {
     teamId: 'home' | 'away';
     playerData?: ManagedPlayer;
     isDown?: boolean;
+    hasMoved?: boolean;
+    hasActed?: boolean;
 }
 
 export interface Play {

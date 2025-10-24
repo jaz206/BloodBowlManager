@@ -1,6 +1,6 @@
 import React from 'react';
 
-const BallIcon: React.FC<{ className?: string }> = ({ className = 'w-6 h-6' }) => (
+const BallIcon: React.FC<{ className?: string }> = ({ className = 'w-full h-full' }) => (
   <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" className={className}>
     <defs>
       <radialGradient id="ballIconGradient" cx="0.3" cy="0.3" r="0.7">

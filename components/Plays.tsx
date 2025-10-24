@@ -1,6 +1,3 @@
-
-
-
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import type { Token, Play, PlayerPosition, ManagedTeam, ManagedPlayer } from '../types';
 import { fieldImage } from '../data/fieldImage';
@@ -186,19 +183,11 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
         ref={fieldRef}
         className="relative w-full max-w-5xl mx-auto aspect-[15/13] bg-slate-900 overflow-hidden rounded-lg shadow-xl border-2 border-slate-700 select-none"
       >
-        {/* Full field image container, positioned to show bottom half */}
-        <div className="absolute bottom-0 left-0 w-full h-[200%]">
-          <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform rotate-90"
-            style={{
-              width: `${(26 / 15) * 100}%`,
-              height: `${(15 / 26) * 100}%`,
-            }}
-          >
-            <img src={fieldImage} alt="Campo de Blood Bowl" className="w-full h-full object-cover"/>
-          </div>
-        </div>
+        <img src={fieldImage} alt="Campo de Blood Bowl" className="absolute inset-0 w-full h-full object-cover object-top" />
         
+        {/* Opponent's Touchdown Zone */}
+        <div className="absolute top-0 left-0 right-0 h-[calc(100%/13)] bg-red-800/40 border-b-2 border-red-500/60 pointer-events-none"></div>
+
         {/* Grid Overlay */}
         <div 
             className="absolute inset-0 grid pointer-events-none" 

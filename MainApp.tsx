@@ -4,16 +4,14 @@ import TeamsAndSkills from './components/TeamsAndSkills';
 import Plays from './components/Plays';
 import Generators from './components/Generators';
 import TeamManager from './components/TeamManager';
-import { LiveGame } from './components/LiveGame';
-import GameBoard from './components/GameBoard'; // Import new component
+import GameBoard from './components/GameBoard';
 import BookOpenIcon from './components/icons/BookOpenIcon';
 import UsersIcon from './components/icons/UsersIcon';
 import ClipboardListIcon from './components/icons/ClipboardListIcon';
 import CubeIcon from './components/icons/CubeIcon';
 import ShieldCheckIcon from './components/icons/ShieldCheckIcon';
 import StopwatchIcon from './components/icons/StopwatchIcon';
-import StadiumIcon from './components/icons/StadiumIcon'; // Import new icon
-import type { ManagedTeam, Competition, Play, Matchup, CompetitionTeam } from './types';
+import type { ManagedTeam, Competition, Play } from './types';
 import { useAuth } from './hooks/useAuth';
 import UserProfile from './components/UserProfile';
 import TrophyIcon from './components/icons/TrophyIcon';
@@ -22,7 +20,8 @@ import { db } from './firebaseConfig';
 import { collection, onSnapshot, addDoc, doc, setDoc, deleteDoc, writeBatch } from "firebase/firestore";
 import SyncStatusIndicator from './components/SyncStatusIndicator';
 
-type View = 'guide' | 'teams' | 'plays' | 'generators' | 'manager' | 'live' | 'leagues' | 'game';
+// FIX: Renamed 'live' view to 'game' to align with component changes (LiveGame -> GameBoard)
+type View = 'guide' | 'teams' | 'plays' | 'generators' | 'manager' | 'game' | 'leagues';
 type SyncStatus = 'synced' | 'syncing' | 'error';
 
 const GuestWarningBanner = () => (
@@ -33,6 +32,7 @@ const GuestWarningBanner = () => (
 
 
 const MainApp: React.FC = () => {
+  // FIX: Default view changed from 'live' to 'game'
   const [activeView, setActiveView] = useState<View>('game');
   const { user } = useAuth();
   const isGuest = useMemo(() => user?.id.startsWith('guest-'), [user]);
@@ -310,7 +310,8 @@ const MainApp: React.FC = () => {
     );
   };
 
-  const mainClasses = (activeView === 'leagues' || activeView === 'game' || activeView === 'plays') ? '' : 'container mx-auto max-w-7xl p-2 sm:p-6';
+  // FIX: Updated `live` to `game` to match the new view name
+  const mainClasses = (activeView === 'leagues' || activeView === 'plays' || activeView === 'game') ? '' : 'container mx-auto max-w-7xl p-2 sm:p-6';
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-200 font-sans antialiased">
@@ -334,8 +335,8 @@ const MainApp: React.FC = () => {
             <NavButton view="plays" label="Pizarra Táctica" icon={<ClipboardListIcon />} />
             <NavButton view="generators" label="Tablas y Generadores" icon={<CubeIcon />} />
             <NavButton view="manager" label="Gestor de Equipo" icon={<ShieldCheckIcon />} />
-            <NavButton view="live" label="Directo" icon={<StopwatchIcon />} />
-            <NavButton view="game" label="Partido" icon={<StadiumIcon />} />
+            {/* FIX: Changed view from 'live' to 'game' */}
+            <NavButton view="game" label="Partida en Vivo" icon={<StopwatchIcon />} />
             <NavButton view="leagues" label="Ligas y Torneos" icon={<TrophyIcon />} />
           </div>
         </nav>
@@ -356,8 +357,8 @@ const MainApp: React.FC = () => {
                     {activeView === 'plays' && <Plays managedTeams={managedTeams} plays={plays} onSavePlay={handlePlaySave} onDeletePlay={handlePlayDelete} />}
                     {activeView === 'generators' && <Generators />}
                     {activeView === 'manager' && <TeamManager teams={managedTeams} onTeamCreate={handleTeamCreate} onTeamUpdate={handleTeamUpdate} onTeamDelete={handleTeamDelete} requestedRoster={requestedRoster} onRosterRequestHandled={() => setRequestedRoster(null)} isGuest={isGuest} />}
-                    {activeView === 'live' && <LiveGame managedTeams={managedTeams} onTeamUpdate={handleTeamUpdate} />}
-                    {activeView === 'game' && <GameBoard managedTeams={managedTeams} />}
+                    {/* FIX: Changed from LiveGame to GameBoard and view from 'live' to 'game' */}
+                    {activeView === 'game' && <GameBoard managedTeams={managedTeams} onTeamUpdate={handleTeamUpdate} />}
                     {activeView === 'leagues' && <Leagues managedTeams={managedTeams} initialCompetitions={competitions} onCompetitionCreate={handleCompetitionCreate} onCompetitionUpdate={handleCompetitionUpdate} onCompetitionDelete={handleCompetitionDelete} isGuest={isGuest} />}
                 </>
             )}

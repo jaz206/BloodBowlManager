@@ -1,106 +1,250 @@
-import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import type { Token, PlayerPosition, ManagedTeam, ManagedPlayer, PlayerStatus, BoardToken, WeatherCondition, KickoffEvent } from '../types';
-import { fieldImage } from '../data/fieldImage';
-import QrCodeIcon from './icons/QrCodeIcon';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import type { ManagedTeam, GameEvent, GameEventType, ManagedPlayer, WeatherCondition, KickoffEvent, PlayerStatus, StarPlayer, SppActionType, Team, Skill } from '../types';
+import { weatherConditions } from '../data/weather';
+import { kickoffEvents } from '../data/kickoffEvents';
 import { teamsData } from '../data/teams';
-import ShieldCheckIcon from './icons/ShieldCheckIcon';
-import BallIcon from './icons/BallIcon';
-import { passChartGrid, passTypeDetails } from '../data/passChart';
-import PassRuleModal from './PassRuleModal';
-import BlockAssistantModal from './BlockAssistantModal';
-import ZoomInIcon from './icons/ZoomInIcon';
-import ZoomOutIcon from './icons/ZoomOutIcon';
-import ChevronDownIcon from './icons/ChevronDownIcon';
-import PlayerDetailPanel from './PlayerDetailPanel';
-import ChevronUpIcon from './icons/ChevronUpIcon';
+import { starPlayersData } from '../data/starPlayers';
+import { casualtyResults } from '../data/casualties';
+import { lastingInjuryResults } from '../data/lastingInjuries';
+import { generateRandomName } from '../data/randomNames';
 import SunIcon from './icons/SunIcon';
 import CloudRainIcon from './icons/CloudRainIcon';
 import SnowflakeIcon from './icons/SnowflakeIcon';
 import FireIcon from './icons/FireIcon';
 import CloudIcon from './icons/CloudIcon';
-import { weatherConditions } from '../data/weather';
-import { kickoffEvents } from '../data/kickoffEvents';
 import PlayerStatusCard from './PlayerStatusCard';
+import PostGameWizard from './PostGameWizard';
+import DownloadIcon from './icons/DownloadIcon';
+import StarPlayerModal from './StarPlayerModal';
+import QuestionMarkCircleIcon from './icons/QuestionMarkCircleIcon';
+import TdIcon from './icons/TdIcon';
+import PassIcon from './icons/PassIcon';
+import CasualtyIcon from './icons/CasualtyIcon';
+import InterferenceIcon from './icons/InterferenceIcon';
+import PrayersModal from './PrayersModal';
+import TurnoverModal from './TurnoverModal';
+import PlayerCardModal from './PlayerCardModal';
+import { skillsData } from '../data/skills';
+import SkillModal from './SkillModal';
+import ApothecaryModal from './ApothecaryModal';
+import ChevronDownIcon from './icons/ChevronDownIcon';
+import ShieldCheckIcon from './icons/ShieldCheckIcon';
 
-
-declare const QRCode: any;
 declare const Html5Qrcode: any;
+declare const XLSX: any;
 
-
-const GRID_COLS = 26;
-const GRID_ROWS = 15;
-
-const homePositionConfig: Record<PlayerPosition, { color: string; }> = {
-  Blitzer: { color: 'bg-red-700' },
-  Lanzador: { color: 'bg-sky-600' },
-  Corredor: { color: 'bg-emerald-600' },
-  Línea: { color: 'bg-slate-500' },
-  Receptor: { color: 'bg-amber-500' },
-};
-
-const awayPositionConfig: Record<PlayerPosition, { color: string; }> = {
-  Blitzer: { color: 'bg-purple-700' },
-  Lanzador: { color: 'bg-indigo-600' },
-  Corredor: { color: 'bg-teal-600' },
-  Línea: { color: 'bg-gray-600' },
-  Receptor: { color: 'bg-pink-600' },
-};
-
+// FIX: Export the BlockResolution interface so it can be imported in other components.
 export interface BlockResolution {
-    knockDowns: { id: number; isTurnoverSource: boolean }[];
-    ballBecomesLoose: boolean;
-    pushes?: any[]; // For future implementation
-    summary: string[];
+  knockDowns: { id: number; isTurnoverSource: boolean }[];
+  ballBecomesLoose: boolean;
 }
-
 
 interface GameBoardProps {
-  managedTeams: ManagedTeam[];
+    managedTeams: ManagedTeam[];
+    onTeamUpdate: (team: ManagedTeam) => void;
 }
 
-type GameState = 'setup' | 'select_home' | 'select_away' | 'scanning_qr' | 'pre_game' | 'playing';
-type ActionMode = null | 'passing' | 'blocking' | 'moving' | 'blitz_move';
-type DeclaredAction = 'Mover' | 'Placar' | 'Penetrar' | 'Pasar' | 'Entregar' | 'Falta';
+type GameState = 'setup' | 'scanning' | 'manual_select' | 'select_team' | 'pre_game' | 'in_progress' | 'post_game' | 'ko_recovery';
 
-interface ActivationState {
-    playerId: number;
-    hasMoved: boolean;
-    hasPerformedAction: boolean;
-    declaredAction: DeclaredAction | null;
+interface FoulState {
+    step: 'select_fouler_team' | 'select_fouler' | 'select_victim' | 'armor_roll' | 'injury_roll' | 'casualty_roll' | 'lasting_injury_roll' | 'summary';
+    foulingTeamId: 'home' | 'opponent' | null;
+    foulingPlayer: ManagedPlayer | null;
+    victimPlayer: ManagedPlayer | null;
+    armorRoll: { roll: number; armorBroken: boolean; } | null;
+    injuryRoll: { roll: number; result: string; } | null;
+    casualtyRoll: { roll: number; result: string; } | null;
+    lastingInjuryRoll: { roll: number; result: string; characteristic: string; } | null;
+    wasExpelled: boolean;
+    expulsionReason: string;
+    log: string[];
+    armorRollInput: { die1: string; die2: string; };
+    injuryRollInput: { die1: string; die2: string; };
+    casualtyRollInput: string;
+    lastingInjuryRollInput: string;
 }
 
-const isAdjacent = (token1: {x:number, y:number}, token2: {x:number, y:number}): boolean => {
-    return Math.abs(token1.x - token2.x) <= 1 && Math.abs(token1.y - token2.y) <= 1 && (token1.x !== token2.x || token1.y !== token2.y);
+interface InjuryState {
+    step: 'select_victim_team' | 'select_victim' | 'armor_roll' | 'injury_roll' | 'apothecary' | 'casualty_roll' | 'lasting_injury_roll' | 'summary';
+    victimTeamId: 'home' | 'opponent' | null;
+    victimPlayer: ManagedPlayer | null;
+    isStunty: boolean;
+    armorRoll: { roll: number; armorBroken: boolean; } | null;
+    injuryRoll: { roll: number; result: string; } | null;
+    casualtyRoll: { roll: number; result: string; rerolled: boolean } | null;
+    lastingInjuryRoll: { roll: number; result: string; characteristic: string; } | null;
+    log: string[];
+    armorRollInput: { die1: string; die2: string; };
+    injuryRollInput: { die1: string; die2: string; };
+    casualtyRollInput: string;
+    lastingInjuryRollInput: string;
+    apothecaryAction: 'reroll' | 'patch_ko' | null;
+}
+
+const PlayerButton: React.FC<{ player: ManagedPlayer, onSelect: (p: ManagedPlayer) => void, disabled?: boolean }> = ({ player, onSelect, disabled }) => (
+    <button onClick={() => onSelect(player)} className="w-full text-left bg-slate-700/50 p-3 rounded-md hover:bg-slate-700 transition-colors disabled:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50" disabled={disabled}>
+        <p className="font-bold text-white">
+            {player.isStarPlayer && <span className="text-amber-400 mr-1">★</span>}
+            {player.customName}
+            {player.isJourneyman && <span className="text-slate-400 font-normal italic ml-1">(Sustituto)</span>}
+        </p>
+        <p className="text-xs text-slate-400">{player.position}</p>
+    </button>
+);
+
+const RollInputStep = ({ title, value, onChange, onNext, onBack, label, pattern, placeholder }: { title: string, value: string, onChange: (v:string)=>void, onNext: ()=>void, onBack?: ()=>void, label: string, pattern: string, placeholder?: string }) => (
+    <>
+        <h3 className="text-lg font-bold text-amber-400 mb-4">{title}</h3>
+        <label className="block text-sm font-medium text-slate-300 mb-1">{label}</label>
+        <input
+            type="text"
+            pattern={pattern}
+            value={value}
+            onChange={e => onChange(e.target.value)}
+            className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white mb-4"
+            placeholder={placeholder || ""}
+            autoFocus
+        />
+        <div className="flex justify-between">
+            {onBack && <button onClick={onBack} className="bg-slate-600 text-white font-bold py-2 px-6 rounded-md shadow-md hover:bg-slate-500">Atrás</button>}
+            <button onClick={onNext} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400 ml-auto">Siguiente</button>
+        </div>
+    </>
+);
+
+const DoubleDiceInputStep = ({ title, value, onChange, onNext, onBack, label }: { title: string, value: { die1: string; die2: string; }, onChange: (v: { die1: string; die2: string; })=>void, onNext: ()=>void, onBack?: ()=>void, label: string }) => {
+    const die1Ref = React.useRef<HTMLInputElement>(null);
+    const die2Ref = React.useRef<HTMLInputElement>(null);
+
+    const handleDieChange = (die: 'die1' | 'die2', val: string) => {
+        const cleanVal = val.replace(/[^1-6]/g, '').slice(0, 1);
+        onChange({ ...value, [die]: cleanVal });
+
+        if (die === 'die1' && cleanVal.length === 1) {
+            die2Ref.current?.focus();
+        }
+    };
+
+    return (
+        <>
+            <h3 className="text-lg font-bold text-amber-400 mb-4">{title}</h3>
+            <label className="block text-sm font-medium text-slate-300 mb-1">{label}</label>
+            <div className="flex items-center gap-4 mb-4">
+                <input ref={die1Ref} type="text" pattern="[1-6]" value={value.die1} onChange={e => handleDieChange('die1', e.target.value)} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white text-center text-lg" placeholder="D6" autoFocus />
+                <span className="text-2xl font-bold text-slate-400">+</span>
+                <input ref={die2Ref} type="text" pattern="[1-6]" value={value.die2} onChange={e => handleDieChange('die2', e.target.value)} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white text-center text-lg" placeholder="D6" />
+            </div>
+            <div className="flex justify-between">
+                {onBack && <button onClick={onBack} className="bg-slate-600 text-white font-bold py-2 px-6 rounded-md shadow-md hover:bg-slate-500">Atrás</button>}
+                <button onClick={onNext} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400 ml-auto">Siguiente</button>
+            </div>
+        </>
+    );
 };
 
-const cloneTeamForGame = (team: ManagedTeam): ManagedTeam => {
+const calculateTeamValue = (team: ManagedTeam | null, includeInducementsForPrayers = false): number => {
+    if (!team) return 0;
+    const baseRoster = teamsData.find(t => t.name === team.rosterName);
+    if (!baseRoster) return 0;
+
+    const playersValue = team.players.reduce((sum, p) => {
+        const skillsValue = p.gainedSkills.reduce((skillSum, skillName) => {
+             if (skillName.toLowerCase().includes('secundaria')) return skillSum + 40000;
+             if(skillName.toLowerCase().includes('solitario')) return skillSum;
+             return skillSum + 20000;
+        }, 0);
+        return sum + p.cost + skillsValue;
+    }, 0);
+
+    const rerollsValue = team.rerolls * baseRoster.rerollCost;
+    const apothecaryValue = team.apothecary && baseRoster.apothecary === "Sí" ? 50000 : 0;
+    const staffValue = (team.cheerleaders + team.assistantCoaches) * 10000;
+    const fansValue = (team.dedicatedFans - 1) * 10000;
+    
+    let totalValue = playersValue + rerollsValue + apothecaryValue + staffValue + fansValue;
+
+    if (includeInducementsForPrayers) {
+        const tempStaffValue = ((team.tempCheerleaders || 0) + (team.tempAssistantCoaches || 0)) * 10000;
+        const tempBribesValue = (team.tempBribes || 0) * (baseRoster.specialRules.includes("Sobornos y corrupción") ? 50000 : 100000);
+        totalValue += tempStaffValue + tempBribesValue;
+    }
+    
+    return totalValue;
+};
+
+
+const isEligibleStar = (star: StarPlayer, teamRoster: Team | undefined) => {
+    if (!teamRoster) return false;
+    const teamRules = teamRoster.specialRules.split(', ').map((r: string) => r.trim());
+    const anyTeamRule = star.playsFor.find(r => r.startsWith("Any Team"));
+    if (anyTeamRule) {
+        if (anyTeamRule.includes("except Sylvanian Spotlight")) return !teamRules.includes("Selectiva de Sylvania");
+        return true; 
+    }
+    return star.playsFor.some(faction => {
+        if (teamRules.includes(faction)) return true;
+        if (faction.startsWith("Elegidos de")) {
+            const chaosGod = faction.replace("Elegidos de ", "").trim();
+            if (chaosGod === "...") return teamRules.some(rule => rule.startsWith("Elegidos de..."));
+            return teamRules.some(rule => rule.startsWith("Elegidos de...") && rule.includes(chaosGod));
+        }
+        return false;
+    });
+};
+
+const MiniField: React.FC<{ players: ManagedPlayer[]; teamColor: string }> = ({ players, teamColor }) => {
+    const positions: {x: number, y: number}[] = [];
+    let playerIndex = 0;
+
+    const placeRow = (y: number, count: number, startX: number, spread: number) => {
+        const totalWidth = (count - 1) * spread;
+        let currentX = startX - totalWidth / 2;
+        for(let i = 0; i < count; i++) {
+            if (playerIndex < players.length) {
+                positions.push({ y, x: Math.round(currentX) });
+                currentX += spread;
+                playerIndex++;
+            }
+        }
+    };
+
+    const onScrimmage = Math.min(3, players.length);
+    const inMidfield = Math.min(5, players.length - onScrimmage);
+    const inBackfield = players.length - onScrimmage - inMidfield;
+
+    placeRow(3, onScrimmage, 7, 3);
+    placeRow(4, inMidfield, 7, 2);
+    placeRow(5, inBackfield, 7, 3);
+    
+    return (
+        <div className="relative w-full aspect-[15/7] bg-green-900/50 rounded-md mb-2 border-2 border-green-700/50 p-1">
+            {positions.map((pos, index) => (
+                <div 
+                    key={index}
+                    className="absolute w-[6.66%] h-[14.28%] transform -translate-x-1/2 -translate-y-1/2"
+                    style={{ top: `${(pos.y + 0.5) / 7 * 100}%`, left: `${(pos.x + 0.5) / 15 * 100}%` }}
+                >
+                    <div className={`w-full h-full rounded-full ${teamColor} border border-white/50 shadow-md`}></div>
+                </div>
+            ))}
+        </div>
+    );
+};
+
+const cloneLiveTeam = (team: ManagedTeam): ManagedTeam => {
+    // Safe deep clone to prevent circular reference errors with Firestore objects
     const clonedPlayers = team.players.map(p => {
-        const cleanPlayer: ManagedPlayer = {
-            qty: p.qty,
-            position: p.position,
-            cost: p.cost,
-            stats: { ...p.stats },
-            skills: p.skills,
-            primary: p.primary,
-            secondary: p.secondary,
-            id: p.id,
-            customName: p.customName,
-            spp: p.spp,
-            gainedSkills: [...p.gainedSkills],
-            lastingInjuries: [...p.lastingInjuries],
-            status: p.status || 'Reserva',
-            statusDetail: p.statusDetail,
-            isStarPlayer: p.isStarPlayer,
-            sppActions: p.sppActions ? { ...p.sppActions } : {},
-            isJourneyman: p.isJourneyman,
-            missNextGame: p.missNextGame,
-            isBenched: p.isBenched,
-        };
-        return cleanPlayer;
+        const clonedPlayer = { ...p };
+        // Deep copy nested objects/arrays inside player
+        clonedPlayer.gainedSkills = [...p.gainedSkills];
+        clonedPlayer.lastingInjuries = [...p.lastingInjuries];
+        if (p.sppActions) {
+            clonedPlayer.sppActions = { ...p.sppActions };
+        }
+        return clonedPlayer;
     });
 
-    return {
-        id: team.id,
+    const clonedTeam: ManagedTeam = {
         name: team.name,
         rosterName: team.rosterName,
         treasury: team.treasury,
@@ -110,1365 +254,692 @@ const cloneTeamForGame = (team: ManagedTeam): ManagedTeam => {
         assistantCoaches: team.assistantCoaches,
         apothecary: team.apothecary,
         players: clonedPlayers,
-        crestImage: team.crestImage,
     };
+
+    // Copy optional properties
+    if (team.id) clonedTeam.id = team.id;
+    if (team.crestImage) clonedTeam.crestImage = team.crestImage;
+    if (team.liveRerolls !== undefined) clonedTeam.liveRerolls = team.liveRerolls;
+    if (team.tempBribes !== undefined) clonedTeam.tempBribes = team.tempBribes;
+    if (team.tempCheerleaders !== undefined) clonedTeam.tempCheerleaders = team.tempCheerleaders;
+    if (team.tempAssistantCoaches !== undefined) clonedTeam.tempAssistantCoaches = team.tempAssistantCoaches;
+    if (team.coachExpelled !== undefined) clonedTeam.coachExpelled = team.coachExpelled;
+    if (team.apothecaryUsedOnKO !== undefined) clonedTeam.apothecaryUsedOnKO = team.apothecaryUsedOnKO;
+    
+    return clonedTeam;
 };
 
-const passOverlayColors: Record<string, string> = {
-  G: 'bg-green-600/30',
-  Y: 'bg-yellow-500/30',
-  O: 'bg-orange-600/30',
-  B: 'bg-red-800/30',
-};
-
-const GameBoard: React.FC<GameBoardProps> = ({ managedTeams }) => {
-  const [gameState, setGameState] = useState<GameState>('setup');
-  
-  const [selectedHomeId, setSelectedHomeId] = useState<string | null>(null);
-  const [selectedAwayId, setSelectedAwayId] = useState<string | null>(null);
-  const [importedAwayTeam, setImportedAwayTeam] = useState<ManagedTeam | null>(null);
-  const [selectedPlayerToken, setSelectedPlayerToken] = useState<BoardToken | null>(null);
-
-  const homeTeam = useMemo(() => {
-    const team = managedTeams.find(t => t.id === selectedHomeId);
-    if (!team) return null;
-    return cloneTeamForGame(team);
-  }, [selectedHomeId, managedTeams]);
-  
-  const awayTeam = useMemo(() => {
-    const localTeam = managedTeams.find(t => t.id === selectedAwayId);
-    if (localTeam) {
-        return cloneTeamForGame(localTeam);
-    }
-    const imported = (importedAwayTeam?.id === selectedAwayId ? importedAwayTeam : null);
-    if (imported) {
-        return cloneTeamForGame(imported);
-    }
-    return null;
-  }, [selectedAwayId, managedTeams, importedAwayTeam]);
-
-  const [tokens, setTokens] = useState<BoardToken[]>([]);
-  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-  const [scanError, setScanError] = useState<string | null>(null);
-
-  const [ballPosition, setBallPosition] = useState({ x: Math.floor(GRID_COLS / 2), y: Math.floor(GRID_ROWS / 2) });
-  const [ballCarrierId, setBallCarrierId] = useState<number | null>(null);
-  const [contextMenu, setContextMenu] = useState<{ visible: boolean, x: number, y: number, playerId: number | null }>({ visible: false, x: 0, y: 0, playerId: null });
-  
-  const [actionMode, setActionMode] = useState<ActionMode>(null);
-  const [activationState, setActivationState] = useState<ActivationState | null>(null);
-
-  const [passTargetInfo, setPassTargetInfo] = useState<{ x: number, y: number, type: string, modifier: number } | null>(null);
-  const [isPassRuleModalVisible, setIsPassRuleModalVisible] = useState(false);
-  const [blockModalState, setBlockModalState] = useState<{ isOpen: boolean; attacker: BoardToken | null; defender: BoardToken | null }>({ isOpen: false, attacker: null, defender: null });
-  const [turnoverMessage, setTurnoverMessage] = useState<string | null>(null);
-  
-  const [score, setScore] = useState({ home: 0, away: 0 });
-  const [rerolls, setRerolls] = useState({ home: 0, away: 0 });
-  const [turn, setTurn] = useState(1);
-  const [half, setHalf] = useState(1);
-  const [isZoomedOut, setIsZoomedOut] = useState(false);
-  const [dugoutsVisible, setDugoutsVisible] = useState({ home: true, away: true });
-  const [actionLog, setActionLog] = useState<string[]>([]);
-  const [isLogVisible, setIsLogVisible] = useState(true);
-  const [movedPlayerIds, setMovedPlayerIds] = useState(new Set<number>());
-  const [movementRange, setMovementRange] = useState<{ x: number, y: number }[]>([]);
-
-  const [preGameStep, setPreGameStep] = useState(0);
-  const [gameStatus, setGameStatus] = useState<{ weather: WeatherCondition | null; kickoffEvent: KickoffEvent | null; coinTossWinner: 'home'|'away'|null, receivingTeam: 'home'|'away'|null }>({ weather: null, kickoffEvent: null, coinTossWinner: null, receivingTeam: null });
-
-  const fieldRef = useRef<HTMLDivElement>(null);
-  const draggedItemRef = useRef<{ type: 'ball' | 'token' | null, id: number | null }>({ type: null, id: null });
-  const dragStartPosRef = useRef<{ x: number, y: number, mv: number } | null>(null);
-  const qrCanvasRef = useRef<HTMLCanvasElement>(null);
-  const scannerContainerRef = useRef<HTMLDivElement>(null);
-  const scannerRef = useRef<any>(null);
-  const isDraggingRef = useRef(false);
-
-  const activePlayer = useMemo(() => tokens.find(t => t.id === activationState?.playerId), [activationState, tokens]);
-  
-  const getActionModeMessage = () => {
-    if (!activationState) return '';
-    const playerName = activePlayer?.playerData?.customName || 'Jugador';
-
-    if (activationState.hasMoved && !activationState.hasPerformedAction && activationState.declaredAction === 'Penetrar') {
-        return `${playerName} ha movido. Ahora debe placar.`;
-    }
-    if (activationState.hasMoved && !activationState.hasPerformedAction) {
-        return `${playerName} ha movido. Finaliza la acción.`;
-    }
+const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactElement => {
+    const [gameState, setGameState] = useState<GameState>('setup');
+    const [hasCamera, setHasCamera] = useState<boolean | null>(null);
+    const [opponentTeam, setOpponentTeam] = useState<ManagedTeam | null>(null);
+    const [homeTeam, setHomeTeam] = useState<ManagedTeam | null>(null);
+    const [liveHomeTeam, setLiveHomeTeam] = useState<ManagedTeam | null>(null);
+    const [liveOpponentTeam, setLiveOpponentTeam] = useState<ManagedTeam | null>(null);
+    const [viewingPlayer, setViewingPlayer] = useState<ManagedPlayer | null>(null);
+    const [selectedSkillForModal, setSelectedSkillForModal] = useState<Skill | null>(null);
+    const [gameLog, setGameLog] = useState<GameEvent[]>([]);
+    const [score, setScore] = useState({ home: 0, opponent: 0 });
+    const [turn, setTurn] = useState(0);
+    const [half, setHalf] = useState(1);
+    const [firstHalfReceiver, setFirstHalfReceiver] = useState<'home' | 'opponent' | null>(null);
+    const [fame, setFame] = useState({ home: 0, opponent: 0 });
+    const [fansRoll, setFansRoll] = useState({ home: '', opponent: ''});
+    const [preGameStep, setPreGameStep] = useState(0);
+    const [gameStatus, setGameStatus] = useState<{ weather: WeatherCondition | null; kickoffEvent: KickoffEvent | null; coinTossWinner: 'home'|'opponent'|null, receivingTeam: 'home'|'opponent'|null }>({ weather: null, kickoffEvent: null, coinTossWinner: null, receivingTeam: null });
+    const [inducementState, setInducementState] = useState<{ underdog: 'home' | 'opponent' | null, money: number; hiredStars: StarPlayer[] }>({ underdog: null, money: 0, hiredStars: [] });
+    const [isTdModalOpen, setIsTdModalOpen] = useState(false);
+    const [isFoulModalOpen, setIsFoulModalOpen] = useState(false);
+    const [isTurnoverModalOpen, setIsTurnoverModalOpen] = useState(false);
+    const [tdModalTeam, setTdModalTeam] = useState<'home' | 'opponent' | null>(null);
+    const [isCustomEventModalOpen, setIsCustomEventModalOpen] = useState(false);
+    const [customEventDescription, setCustomEventDescription] = useState('');
+    const [isWeatherModalOpen, setIsWeatherModalOpen] = useState(false);
+    const [isChangingWeatherModalOpen, setIsChangingWeatherModalOpen] = useState(false);
+    const [koRecoveryRolls, setKoRecoveryRolls] = useState<Record<number, {roll: number, success: boolean} | null>>({});
+    const [selectedStarPlayer, setSelectedStarPlayer] = useState<StarPlayer | null>(null);
+    const [isPrayersModalOpen, setIsPrayersModalOpen] = useState(false);
+    const [weatherRerollInput, setWeatherRerollInput] = useState('');
+    const [kickoffActionCompleted, setKickoffActionCompleted] = useState(false);
+    const [journeymenNotification, setJourneymenNotification] = useState<string | null>(null);
+    const [pendingJourneymen, setPendingJourneymen] = useState<{ home: ManagedPlayer[], opponent: ManagedPlayer[] }>({ home: [], opponent: [] });
+    type SppModalType = 'pass' | 'interference' | 'casualty';
+    const [sppModalState, setSppModalState] = useState<{ isOpen: boolean; type: SppModalType | null; step: 'select_team' | 'select_player' | 'interference_type'; teamId: 'home' | 'opponent' | null; selectedPlayer: ManagedPlayer | null; }>({ isOpen: false, type: null, step: 'select_team', teamId: null, selectedPlayer: null });
+    const initialFoulState: FoulState = { step: 'select_fouler_team', foulingTeamId: null, foulingPlayer: null, victimPlayer: null, armorRoll: null, injuryRoll: null, casualtyRoll: null, lastingInjuryRoll: null, wasExpelled: false, expulsionReason: '', log: [], armorRollInput: { die1: '', die2: '' }, injuryRollInput: { die1: '', die2: '' }, casualtyRollInput: '', lastingInjuryRollInput: '' };
+    const [foulState, setFoulState] = useState<FoulState>(initialFoulState);
+    const initialInjuryState: InjuryState = { step: 'select_victim_team', victimTeamId: null, victimPlayer: null, isStunty: false, armorRoll: null, injuryRoll: null, casualtyRoll: null, lastingInjuryRoll: null, log: [], armorRollInput: { die1: '', die2: '' }, injuryRollInput: { die1: '', die2: '' }, casualtyRollInput: '', lastingInjuryRollInput: '', apothecaryAction: null };
+    const [isInjuryModalOpen, setIsInjuryModalOpen] = useState(false);
+    const [injuryState, setInjuryState] = useState<InjuryState>(initialInjuryState);
+    const [isApothecaryModalOpen, setIsApothecaryModalOpen] = useState(false);
+    const [isLogVisible, setIsLogVisible] = useState(false);
+    const scannerRef = useRef<any>(null);
+    const scannerContainerRef = useRef<HTMLDivElement>(null);
+    const homeTV = useMemo(() => calculateTeamValue(liveHomeTeam), [liveHomeTeam]);
+    const opponentTV = useMemo(() => calculateTeamValue(liveOpponentTeam), [liveOpponentTeam]);
     
-    switch(actionMode) {
-        case 'passing': return 'Pase en curso: Selecciona una casilla objetivo.';
-        case 'blocking': return 'Placar en curso: Selecciona un oponente adyacente.';
-        case 'moving': return 'Movimiento en curso: Arrastra al jugador a una nueva casilla o pulsa ESC para cancelar.';
-        case 'blitz_move': return 'Movimiento de Penetración: Arrastra para mover y luego selecciona un objetivo para placar.';
-        default: return `${playerName} activado. Elige una acción.`;
-    }
-  };
-  
-  const logAction = useCallback((message: string) => {
-    setActionLog(prev => [`[P${half} T${turn}] ${message}`, ...prev.slice(0, 99)]);
-  }, [half, turn]);
+    useEffect(() => { Html5Qrcode.getCameras().then((d: any[]) => setHasCamera(!!(d && d.length))).catch(() => setHasCamera(false)); }, []);
+    useEffect(() => { if (gameStatus.kickoffEvent?.title === 'Clima Cambiante' && !kickoffActionCompleted) setIsChangingWeatherModalOpen(true); }, [gameStatus.kickoffEvent, kickoffActionCompleted]);
 
-  const resetActivation = useCallback(() => {
-    setActionMode(null);
-    setActivationState(null);
-    setPassTargetInfo(null);
-    setIsPassRuleModalVisible(false);
-    setMovementRange([]);
-  }, []);
-  
-  const completePlayerAction = useCallback((playerId: number) => {
-      setMovedPlayerIds(prev => new Set(prev).add(playerId));
-      resetActivation();
-  }, [resetActivation]);
-  
-  const handleNextTurn = useCallback(() => {
-    setTurn(currentTurn => {
-        if (currentTurn >= 8) {
-            if (half === 1) {
-                setHalf(2);
-                logAction('Fin de la primera parte. Comienza la segunda parte.');
-                return 1;
-            } else {
-                logAction('¡FIN DEL PARTIDO!');
-                return currentTurn;
-            }
+    useEffect(() => {
+        if (gameState === 'scanning' && scannerContainerRef.current) {
+            scannerRef.current = new Html5Qrcode(scannerContainerRef.current.id);
+            scannerRef.current.start(
+                { facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } },
+                (decodedText: string) => {
+                    try {
+                        const parsedTeam = JSON.parse(decodedText);
+                        const isNewFormat = 'n' in parsedTeam && 'rN' in parsedTeam;
+                        const teamName = isNewFormat ? parsedTeam.n : parsedTeam.name;
+                        const rosterName = isNewFormat ? parsedTeam.rN : parsedTeam.rosterName;
+                        if (!teamName || !rosterName) { alert('Código QR no válido: Faltan datos esenciales.'); return; }
+                        const baseTeam = teamsData.find(t => t.name === rosterName);
+                        if (!baseTeam) { alert(`Facción "${rosterName}" no encontrada.`); return; }
+                        const playersData = isNewFormat ? parsedTeam.pl : parsedTeam.players;
+                        const fullPlayers: ManagedPlayer[] = playersData.map((p: any, i: number) => {
+                            const position = isNewFormat ? p.p : p.position;
+                            const basePlayer = baseTeam.roster.find(bp => bp.position === position);
+                            if (!basePlayer) throw new Error(`Jugador "${position}" no encontrado.`);
+                            return { ...basePlayer, id: Date.now() + i, customName: (isNewFormat ? p.cN : p.customName) || basePlayer.position, spp: (isNewFormat ? p.s : p.spp) || 0, gainedSkills: (isNewFormat ? p.gS : p.gainedSkills) || [], lastingInjuries: (isNewFormat ? p.lI : p.lastingInjuries) || [], status: 'Reserva' };
+                        });
+                        const opponentWithDefaults: ManagedTeam = { name: teamName, rosterName: rosterName, treasury: (isNewFormat ? parsedTeam.t : parsedTeam.treasury) || 0, rerolls: (isNewFormat ? parsedTeam.rr : parsedTeam.rerolls) || 0, dedicatedFans: (isNewFormat ? parsedTeam.df : parsedTeam.dedicatedFans) || 1, cheerleaders: (isNewFormat ? parsedTeam.ch : parsedTeam.cheerleaders) || 0, assistantCoaches: (isNewFormat ? parsedTeam.ac : parsedTeam.assistantCoaches) || 0, apothecary: (isNewFormat ? parsedTeam.ap : parsedTeam.apothecary) || false, players: fullPlayers };
+                        setOpponentTeam(opponentWithDefaults);
+                        setGameState('pre_game');
+                        scannerRef.current.stop();
+                    } catch (e) { alert(`Error al procesar el código QR: ${e instanceof Error ? e.message : 'Error desconocido.'}`); }
+                }, () => {} 
+            ).catch((err: any) => { console.error("Error al iniciar escáner", err); alert(`Error al iniciar cámara: ${err}.`); setGameState('select_team'); });
         }
-        const newTurn = currentTurn + 1;
-        logAction(`Comienza el turno ${newTurn}.`);
-        return newTurn;
-    });
-    setMovedPlayerIds(new Set());
-    resetActivation();
-  }, [half, logAction, resetActivation]);
+        return () => { if (scannerRef.current && scannerRef.current.isScanning) scannerRef.current.stop().catch((e:any) => console.warn("Error al detener escáner.", e)); };
+    }, [gameState]);
 
-  const handleTurnover = useCallback((reason: string) => {
-    const message = `¡TURNOVER! ${reason}`;
-    logAction(message);
-    setTurnoverMessage(message);
-    setTimeout(() => setTurnoverMessage(null), 4000);
-    handleNextTurn();
-  }, [logAction, handleNextTurn]);
-
-  const scatterBall = useCallback((fromX: number, fromY: number) => {
-      logAction('¡El balón se dispersa!');
-      setBallCarrierId(null);
-      
-      const directions = [
-          { x: 0, y: -1 }, { x: 1, y: -1 }, { x: 1, y: 0 }, { x: 1, y: 1 },
-          { x: 0, y: 1 }, { x: -1, y: 1 }, { x: -1, y: 0 }, { x: -1, y: -1 }
-      ];
-      const directionIndex = Math.floor(Math.random() * 8);
-      
-      let newX = fromX + directions[directionIndex].x;
-      let newY = fromY + directions[directionIndex].y;
-      
-      newX = Math.max(0, Math.min(GRID_COLS - 1, newX));
-      newY = Math.max(0, Math.min(GRID_ROWS - 1, newY));
-      
-      const landingSpotPlayer = tokens.find(t => t.x === newX && t.y === newY && !t.isDown);
-      if (landingSpotPlayer) {
-        setBallCarrierId(landingSpotPlayer.id);
-        logAction(`El balón aterriza en la casilla de ${landingSpotPlayer.playerData?.customName} y lo atrapa.`);
-      } else {
-        setBallPosition({ x: newX, y: newY });
-        logAction(`El balón aterriza en (${newX}, ${newY}).`);
-      }
-  }, [tokens, logAction]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
-            if (activationState) {
-                logAction(`Acción de ${activePlayer?.playerData?.customName} cancelada.`);
-                resetActivation();
-            }
-        }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-        window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [resetActivation, activationState, activePlayer]);
-
-  const validBlockTargets = useMemo(() => {
-      if (actionMode !== 'blocking' || !activePlayer) return [];
-      
-      const targets: {x: number, y: number}[] = [];
-      const { x, y } = activePlayer;
-      const adjacentCoords = [
-          { x: x - 1, y: y - 1 }, { x, y: y - 1 }, { x: x + 1, y: y - 1 },
-          { x: x - 1, y },                     { x: x + 1, y },
-          { x: x - 1, y: y + 1 }, { x, y: y + 1 }, { x: x + 1, y: y + 1 },
-      ];
-
-      for (const coord of adjacentCoords) {
-          const opponent = tokens.find(t => t.x === coord.x && t.y === coord.y && t.teamId !== activePlayer.teamId);
-          if (opponent) {
-              targets.push(coord);
-          }
-      }
-      return targets;
-  }, [actionMode, activePlayer, tokens]);
-
-  const mapPositionToType = (position: string): PlayerPosition => {
-      const lowerPos = position.toLowerCase();
-      if (lowerPos.includes('blitzer') || lowerPos.includes('wardancer') || lowerPos.includes('witch') || lowerPos.includes('assassin') || lowerPos.includes('slayer')) return 'Blitzer';
-      if (lowerPos.includes('thrower') || lowerPos.includes('lanzador')) return 'Lanzador';
-      if (lowerPos.includes('runner') || lowerPos.includes('corredor')) return 'Corredor';
-      if (lowerPos.includes('catcher') || lowerPos.includes('receptor')) return 'Receptor';
-      return 'Línea';
-  };
-
-  const generateTokensForTeam = (team: ManagedTeam, teamId: 'home' | 'away'): BoardToken[] => {
-    const playersOnField = team.players.filter(p => !(p.isBenched ?? false)).slice(0, 11);
-    return playersOnField.map((player, index) => {
-        // Simple defensive or offensive setup
-        const isWide = index % 5 === 0 || index % 5 === 4;
-        const line = Math.floor(index / 5); // 0, 1, 2
-        
-        let yPos = Math.floor(GRID_ROWS / 2) - 2 + (index % 5);
-        let xPos = 0;
-
-        if (line === 0) { // Scrimmage line
-            xPos = teamId === 'home' ? 12 : 13;
-        } else if (line === 1) { // 2nd line
-            xPos = teamId === 'home' ? 10 : 15;
-            yPos = Math.floor(GRID_ROWS / 2) - 3 + (index % 5) * 2;
-        } else { // Backfield
-            xPos = teamId === 'home' ? 8 : 17;
-            yPos = Math.floor(GRID_ROWS / 2) - 1 + (index % 5);
-        }
-
-        return {
-            id: player.id + (teamId === 'away' ? 999999 : 0),
-            position: mapPositionToType(player.position),
-            x: xPos,
-            y: yPos,
-            playerData: player,
-            teamId: teamId
-        };
-    });
-  };
-
-  const handleStartPreGame = () => {
-    if (!homeTeam || !awayTeam) {
-        alert("Error: No se han podido cargar los datos de uno o ambos equipos.");
-        return;
-    }
-    setRerolls({ home: homeTeam.rerolls, away: awayTeam.rerolls });
-    logAction(`¡Preparando partido entre ${homeTeam.name} y ${awayTeam.name}!`);
-    setGameState('pre_game');
-  };
-
-  const handleStartGame = () => {
-    try {
-        if (!homeTeam || !awayTeam) return;
-        
-        const homeTokens = generateTokensForTeam(homeTeam, 'home');
-        const awayTokens = generateTokensForTeam(awayTeam, 'away');
-
-        setTokens([...homeTokens, ...awayTokens]);
-        logAction(`¡Comienza el partido!`);
-        setGameState('playing');
-    } catch (error) {
-        console.error("CRITICAL ERROR in handleStartGame:", error);
-        alert(`Se ha producido un error crítico al iniciar el partido: ${error instanceof Error ? error.message : 'Error desconocido'}`);
-    }
-  };
-
-  useEffect(() => {
-    if (isInviteModalOpen && qrCanvasRef.current && homeTeam) {
-        const shareableTeam = {
-            n: homeTeam.name,
-            rN: homeTeam.rosterName,
-            t: homeTeam.treasury,
-            rr: homeTeam.rerolls,
-            df: homeTeam.dedicatedFans,
-            ch: homeTeam.cheerleaders,
-            ac: homeTeam.assistantCoaches,
-            ap: homeTeam.apothecary,
-            pl: homeTeam.players.map(p => ({
-                p: p.position,
-                cN: p.customName,
-                s: p.spp,
-                gS: p.gainedSkills,
-                lI: p.lastingInjuries,
-            }))
-        };
-        const teamJson = JSON.stringify(shareableTeam);
-        QRCode.toCanvas(qrCanvasRef.current, teamJson, { width: 256, margin: 2, errorCorrectionLevel: 'L' }, (error: any) => {
-          if (error) console.error(error);
-        });
-    }
-  }, [isInviteModalOpen, homeTeam]);
-  
-  useEffect(() => {
-    if (gameState === 'scanning_qr' && scannerContainerRef.current) {
-        scannerRef.current = new Html5Qrcode(scannerContainerRef.current.id);
-        scannerRef.current.start(
-            { facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } },
-            (decodedText: string) => {
-                if (scannerRef.current?.isScanning) {
-                    scannerRef.current.stop();
-                }
-                try {
-                    const parsedTeam = JSON.parse(decodedText);
-                    const isNewFormat = 'n' in parsedTeam && 'rN' in parsedTeam;
-                    
-                    const teamName = isNewFormat ? parsedTeam.n : parsedTeam.name;
-                    const rosterName = isNewFormat ? parsedTeam.rN : parsedTeam.rosterName;
-
-                    if (!teamName || !rosterName) {
-                        throw new Error("El código QR no contiene un equipo válido.");
-                    }
-
-                    const baseTeam = teamsData.find(t => t.name === rosterName);
-                    if (!baseTeam) {
-                        throw new Error(`Facción "${rosterName}" no encontrada.`);
-                    }
-
-                    const playersData = isNewFormat ? parsedTeam.pl : parsedTeam.players;
-                    const fullPlayers: ManagedPlayer[] = playersData.map((p: any, i: number) => {
-                        const position = isNewFormat ? p.p : p.position;
-                        const basePlayer = baseTeam.roster.find(bp => bp.position === position);
-                        if (!basePlayer) throw new Error(`Jugador base para la posición "${position}" no encontrado.`);
-
-                        return {
-                            ...basePlayer,
-                            id: Date.now() + i,
-                            customName: (isNewFormat ? p.cN : p.customName) || basePlayer.position,
-                            spp: (isNewFormat ? p.s : p.spp) || 0,
-                            gainedSkills: (isNewFormat ? p.gS : p.gainedSkills) || [],
-                            lastingInjuries: (isNewFormat ? p.lI : p.lastingInjuries) || [],
-                            status: 'Reserva',
-                        };
-                    });
-
-                    const importedTeam: ManagedTeam = {
-                        name: teamName,
-                        rosterName: rosterName,
-                        treasury: (isNewFormat ? parsedTeam.t : parsedTeam.treasury) || 0,
-                        rerolls: (isNewFormat ? parsedTeam.rr : parsedTeam.rerolls) || 0,
-                        dedicatedFans: (isNewFormat ? parsedTeam.df : parsedTeam.dedicatedFans) || 1,
-                        cheerleaders: (isNewFormat ? parsedTeam.ch : parsedTeam.cheerleaders) || 0,
-                        assistantCoaches: (isNewFormat ? parsedTeam.ac : parsedTeam.assistantCoaches) || 0,
-                        apothecary: (isNewFormat ? parsedTeam.ap : parsedTeam.apothecary) || false,
-                        players: fullPlayers,
-                    };
-                    
-                    const importedTeamWithId = { ...importedTeam, id: `imported_${Date.now()}`};
-                    setImportedAwayTeam(importedTeamWithId);
-                    setSelectedAwayId(importedTeamWithId.id);
-                    setGameState('select_away');
-                } catch (e: any) {
-                    setScanError(`Error al procesar el código QR: ${e.message}`);
-                    setGameState('select_away');
-                }
-            }, () => {} 
-        ).catch((err: any) => {
-            setScanError(`Error al iniciar la cámara: ${err}. Es posible que necesites dar permisos en tu navegador.`);
-            setGameState('select_away');
-        });
-    }
-    return () => { if (scannerRef.current?.isScanning) { scannerRef.current.stop().catch((e:any) => {}); }};
-  }, [gameState]);
-
-  const handleDragMove = useCallback((e: MouseEvent | TouchEvent) => {
-    if (!draggedItemRef.current.type || !fieldRef.current) return;
-    isDraggingRef.current = true;
-    if (e.cancelable) e.preventDefault();
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-    const fieldRect = fieldRef.current.getBoundingClientRect();
-    const x = clientX - fieldRect.left;
-    const y = clientY - fieldRect.top;
-    const colWidth = fieldRect.width / GRID_COLS;
-    const rowHeight = fieldRect.height / GRID_ROWS;
-    let gridX = Math.floor(x / colWidth);
-    let gridY = Math.floor(y / rowHeight);
-    gridX = Math.max(0, Math.min(GRID_COLS - 1, gridX));
-    gridY = Math.max(0, Math.min(GRID_ROWS - 1, gridY));
-
-    if (draggedItemRef.current.type === 'token') {
-        if (dragStartPosRef.current && (actionMode === 'moving' || actionMode === 'blitz_move')) {
-            const { x: startX, y: startY, mv } = dragStartPosRef.current;
-            const distance = Math.max(Math.abs(gridX - startX), Math.abs(gridY - startY));
-            if (distance > mv) {
-                return;
-            }
-        }
-        setTokens(currentTokens => currentTokens.map(token => token.id === draggedItemRef.current.id ? { ...token, x: gridX, y: gridY } : token));
-    } else if (draggedItemRef.current.type === 'ball') {
-        setBallPosition({ x: gridX, y: gridY });
-    }
-  }, [actionMode]);
-
-  const handleDragEnd = useCallback((e: MouseEvent | TouchEvent) => {
-    if (!isDraggingRef.current) {
-        draggedItemRef.current = { type: null, id: null };
-        dragStartPosRef.current = null;
-        return;
-    }
-
-    const { type, id } = draggedItemRef.current;
-    const fieldNode = fieldRef.current;
-
-    if (!type || !fieldNode) {
-      draggedItemRef.current = { type: null, id: null };
-      dragStartPosRef.current = null;
-      return;
-    }
-
-    const clientX = 'changedTouches' in e && e.changedTouches[0] ? e.changedTouches[0].clientX : (e as MouseEvent).clientX;
-    const clientY = 'changedTouches' in e && e.changedTouches[0] ? e.changedTouches[0].clientY : (e as MouseEvent).clientY;
-
-    if (clientX === undefined || clientY === undefined) {
-        draggedItemRef.current = { type: null, id: null };
-        dragStartPosRef.current = null;
-        return;
-    }
-
-    const fieldRect = fieldNode.getBoundingClientRect();
-    const x = clientX - fieldRect.left;
-    const y = clientY - fieldRect.top;
-    const colWidth = fieldRect.width / GRID_COLS;
-    const rowHeight = fieldRect.height / GRID_ROWS;
-    let gridX = Math.floor(x / colWidth);
-    let gridY = Math.floor(y / rowHeight);
-
-    gridX = Math.max(0, Math.min(GRID_COLS - 1, gridX));
-    gridY = Math.max(0, Math.min(GRID_ROWS - 1, gridY));
-
-    if (type === 'ball') {
-      const carrier = tokens.find(t => t.x === gridX && t.y === gridY);
-      if (carrier) {
-        setBallCarrierId(carrier.id);
-        logAction(`${carrier.playerData?.customName} coge el balón.`);
-      } else {
-        setBallPosition({ x: gridX, y: gridY });
-      }
-    } else if (type === 'token' && id !== null) {
-        const movedToken = tokens.find(t => t.id === id);
-        if (movedToken && dragStartPosRef.current) {
-            const startPos = dragStartPosRef.current;
-             if (gridX !== startPos.x || gridY !== startPos.y) {
-                 logAction(`${movedToken.playerData?.customName} se mueve a (${gridX}, ${gridY}).`);
-                 setActivationState(prev => prev ? { ...prev, hasMoved: true } : prev);
-             }
-        }
-        
-        if (!ballCarrierId && gridX === ballPosition.x && gridY === ballPosition.y) {
-            setBallCarrierId(id);
-            if(movedToken) logAction(`${movedToken.playerData?.customName} recoge el balón.`);
-        }
-        
-        if (actionMode === 'moving') {
-            setActionMode(null);
-            setMovementRange([]);
-        } else if (actionMode === 'blitz_move' && movedToken) {
-            const canBlock = tokens.some(t => 
-                t.teamId !== movedToken.teamId && isAdjacent(movedToken, t) && !t.isDown
-            );
-            if (canBlock) {
-                logAction(`Movimiento de Penetración completado. Selecciona un objetivo para placar.`);
-                setActionMode('blocking');
-                setMovementRange([]);
-            } else {
-                logAction(`Movimiento de Penetración completado sin objetivo de placaje.`);
-                completePlayerAction(id);
-            }
-        }
-    }
-
-    draggedItemRef.current = { type: null, id: null };
-    dragStartPosRef.current = null;
-  }, [tokens, ballCarrierId, ballPosition.x, ballPosition.y, logAction, actionMode, completePlayerAction]);
-
-
-  useEffect(() => {
-    document.addEventListener('mousemove', handleDragMove);
-    document.addEventListener('mouseup', handleDragEnd);
-    document.addEventListener('touchmove', handleDragMove as any, { passive: false });
-    document.addEventListener('touchend', handleDragEnd);
-
-    return () => {
-      document.removeEventListener('mousemove', handleDragMove);
-      document.removeEventListener('mouseup', handleDragEnd);
-      document.removeEventListener('touchmove', handleDragMove as any);
-      document.removeEventListener('touchend', handleDragEnd);
-    };
-  }, [handleDragMove, handleDragEnd]);
-
-  useEffect(() => {
-    const handleGlobalClick = (e: MouseEvent) => {
-        if (contextMenu.visible) {
-            setContextMenu(prev => ({ ...prev, visible: false }));
-        }
-    };
-
-    document.addEventListener('click', handleGlobalClick);
-    return () => {
-      document.removeEventListener('click', handleGlobalClick);
-    };
-  }, [contextMenu.visible]);
-
-
-  const handleDragStart = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>, id: number) => { 
-    e.preventDefault(); 
-    isDraggingRef.current = false;
-    setContextMenu(prev => ({...prev, visible: false}));
-    draggedItemRef.current = { type: 'token', id }; 
-    const token = tokens.find(t => t.id === id);
-    if (token && token.playerData) {
-        dragStartPosRef.current = { x: token.x, y: token.y, mv: (actionMode === 'moving' || actionMode === 'blitz_move') ? token.playerData.stats.MV : 99 };
-    } else {
-        dragStartPosRef.current = null;
-    }
-  };
-  
-  const handleBallDragStart = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    isDraggingRef.current = false;
-    setContextMenu(prev => ({...prev, visible: false}));
-    if (ballCarrierId) {
-        logAction('El balón se suelta.');
-        setBallCarrierId(null);
-    }
-    draggedItemRef.current = { type: 'ball', id: null };
-  };
-
-  const handleContextMenu = (e: React.MouseEvent, id: number) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (activationState && activationState.playerId !== id) return;
-    setContextMenu({ visible: true, x: e.clientX, y: e.clientY, playerId: id });
-  };
-  const closeContextMenu = () => setContextMenu(prev => ({...prev, visible: false}));
-
-  const handleMenuAction = (action: DeclaredAction | "Finalizar Acción") => {
-    closeContextMenu();
-    const playerId = contextMenu.playerId;
-    if (!playerId) return;
-
-    const player = tokens.find(t => t.id === playerId);
-    if (!player) return;
-
-    if (action === "Finalizar Acción") {
-        logAction(`${player.playerData?.customName} finaliza su acción.`);
-        completePlayerAction(playerId);
-        return;
-    }
-    
-    // Activate player if not already active
-    if (!activationState || activationState.playerId !== playerId) {
-        setActivationState({ playerId, hasMoved: false, hasPerformedAction: false, declaredAction: action });
-    } else {
-        setActivationState(prev => prev ? { ...prev, declaredAction: action } : null);
-    }
-
-    logAction(`${player.playerData?.customName} declara la acción: ${action}.`);
-    
-    if (action === "Penetrar") {
-        setActionMode('blitz_move');
-        const range = player.playerData?.stats.MV || 0;
-        setMovementRange(Array.from({length: range*2+1}, (_, i) => i - range).flatMap(dx => Array.from({length: range*2+1}, (_, j) => j-range).map(dy => ({x: player.x + dx, y: player.y + dy}))).filter(({x,y})=> Math.max(Math.abs(x-player.x),Math.abs(y-player.y)) <= range));
-    } else if (action === "Mover") {
-        setActionMode('moving');
-        const range = player.playerData?.stats.MV || 0;
-        setMovementRange(Array.from({length: range*2+1}, (_, i) => i - range).flatMap(dx => Array.from({length: range*2+1}, (_, j) => j-range).map(dy => ({x: player.x + dx, y: player.y + dy}))).filter(({x,y})=> Math.max(Math.abs(x-player.x),Math.abs(y-player.y)) <= range));
-    } else if (action === "Pasar") {
-        setActionMode('passing');
-    } else if (action === "Placar") {
-        setActionMode('blocking');
-    }
-  };
-
-  const handleGridMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (actionMode !== 'passing' || !activePlayer || !fieldRef.current) return;
-
-    const fieldRect = fieldRef.current.getBoundingClientRect();
-    const x = e.clientX - fieldRect.left;
-    const y = e.clientY - fieldRect.top;
-    const colWidth = fieldRect.width / GRID_COLS;
-    const rowHeight = fieldRect.height / GRID_ROWS;
-    const gridX = Math.max(0, Math.min(GRID_COLS - 1, Math.floor(x / colWidth)));
-    const gridY = Math.max(0, Math.min(GRID_ROWS - 1, Math.floor(y / rowHeight)));
-
-    const dx = Math.abs(gridX - activePlayer.x);
-    const dy = Math.abs(gridY - activePlayer.y);
-
-    if (dx >= 14 || dy >= 14 || (dx === 0 && dy === 0)) {
-        setPassTargetInfo(null);
-        return;
-    }
-
-    const typeKey = passChartGrid[dy][dx];
-    const info = passTypeDetails[typeKey];
-    let modifier = 0;
-    if (info.name === 'Pase corto') modifier = -1;
-    if (info.name === 'Pase largo') modifier = -2;
-    if (info.name === 'Bomba larga') modifier = -3;
-
-    setPassTargetInfo({ x: gridX, y: gridY, type: info.name, modifier });
-  };
-  
-  const getGridCoordsFromClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const fieldRect = fieldRef.current!.getBoundingClientRect();
-    const x = e.clientX - fieldRect.left;
-    const y = e.clientY - fieldRect.top;
-    const colWidth = fieldRect.width / GRID_COLS;
-    const rowHeight = fieldRect.height / GRID_ROWS;
-    let gridX = Math.floor(x / colWidth);
-    let gridY = Math.floor(y / rowHeight);
-    gridX = Math.max(0, Math.min(GRID_COLS - 1, gridX));
-    gridY = Math.max(0, Math.min(GRID_ROWS - 1, gridY));
-    return { gridX, gridY };
-  };
-
-  const handleGridClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (isDraggingRef.current) return;
-    
-    const targetElement = e.target as HTMLElement;
-    const tokenElement = targetElement.closest('[data-token-id]');
-    const clickedTokenId = tokenElement ? parseInt(tokenElement.getAttribute('data-token-id')!, 10) : null;
-    const { gridX, gridY } = getGridCoordsFromClick(e);
-
-    if (activationState) {
-        const activePlayer = tokens.find(t => t.id === activationState.playerId);
-        if (!activePlayer) { resetActivation(); return; }
-
-        if (actionMode === 'passing') {
-            handlePassAction(activePlayer, gridX, gridY);
-            return;
+    useEffect(() => { 
+        if (homeTeam) { 
+            const liveTeam = cloneLiveTeam(homeTeam); 
+            liveTeam.players.forEach((p: ManagedPlayer) => { 
+                p.status = p.isBenched ? 'Reserva' : 'Activo'; 
+                if (!p.sppActions) p.sppActions = {}; 
+            }); 
+            liveTeam.liveRerolls = liveTeam.rerolls; 
+            setLiveHomeTeam(liveTeam); 
         } 
-        if (actionMode === 'blocking') {
-            if (clickedTokenId) {
-                handleBlockAction(activePlayer, gridX, gridY);
-            } else {
-                logAction(`Acción de Placar cancelada.`);
-                resetActivation();
-            }
-            return;
-        }
-        
-        if (activationState.hasMoved && !activationState.hasPerformedAction) {
-            if (activationState.declaredAction === 'Penetrar') {
-                if (clickedTokenId) {
-                     const target = tokens.find(t => t.id === clickedTokenId);
-                     if (target && target.teamId !== activePlayer.teamId && isAdjacent(activePlayer, target)) {
-                        handleBlockAction(activePlayer, gridX, gridY);
-                     } else {
-                        logAction('Debes placar a un oponente adyacente para completar la Penetración.');
-                     }
-                } else {
-                    logAction('Debes placar a un oponente adyacente para completar la Penetración.');
+    }, [homeTeam]);
+    
+    useEffect(() => { 
+        if (opponentTeam) { 
+            const liveTeam = cloneLiveTeam(opponentTeam); 
+            liveTeam.players.forEach((p: ManagedPlayer) => { 
+                if (!p.status) p.status = 'Reserva'; 
+                if (!p.sppActions) p.sppActions = {}; 
+            }); 
+            liveTeam.liveRerolls = liveTeam.rerolls; 
+            setLiveOpponentTeam(liveTeam); 
+        } 
+    }, [opponentTeam]);
+
+    useEffect(() => {
+        if (gameState === 'pre_game' && preGameStep === 0 && liveHomeTeam && liveOpponentTeam) {
+            if (journeymenNotification || (pendingJourneymen.home.length > 0 || pendingJourneymen.opponent.length > 0)) return;
+            const homeNeeded = Math.max(0, 11 - liveHomeTeam.players.length);
+            const oppNeeded = Math.max(0, 11 - liveOpponentTeam.players.length);
+            if (homeNeeded === 0 && oppNeeded === 0) { setPreGameStep(1); return; }
+            let newHomeJourneymen: ManagedPlayer[] = [], homeMsg = '';
+            if (homeNeeded > 0) {
+                const baseRoster = teamsData.find(t => t.name === liveHomeTeam.rosterName);
+                const lineman = baseRoster?.roster.find(p => p.position.toLowerCase().includes('línea') || p.position.toLowerCase().includes('lineman')) || baseRoster?.roster[0];
+                if (lineman) {
+                    const existingNames = new Set(liveHomeTeam.players.map(p => p.customName.toLowerCase()));
+                    newHomeJourneymen = Array.from({ length: homeNeeded }).map((_, i): ManagedPlayer => {
+                        let randomName = generateRandomName(liveHomeTeam.rosterName);
+                        while (existingNames.has(randomName.toLowerCase())) randomName = generateRandomName(liveHomeTeam.rosterName);
+                        existingNames.add(randomName.toLowerCase());
+                        return { ...lineman, id: Date.now() + i + 1000, customName: randomName, spp: 0, gainedSkills: ['Solitario (4+)'], lastingInjuries: [], isJourneyman: true, status: 'Reserva' };
+                    });
+                    homeMsg = `${liveHomeTeam.name} añade ${homeNeeded} Sustituto(s).`;
                 }
-            } else {
-                logAction(`${activePlayer.playerData?.customName} finaliza su acción tras moverse.`);
-                completePlayerAction(activePlayer.id);
             }
-            return;
-        }
-
-        if (clickedTokenId) {
-            const clickedToken = tokens.find(t => t.id === clickedTokenId);
-            if (clickedToken && clickedToken.id === activePlayer.id) {
-                return;
-            }
-            if (clickedToken && clickedToken.teamId === activePlayer.teamId && !movedPlayerIds.has(clickedTokenId)) {
-                logAction(`Selección cambiada a ${clickedToken.playerData?.customName}.`);
-                resetActivation();
-                setActivationState({ playerId: clickedTokenId, hasMoved: false, hasPerformedAction: false, declaredAction: null });
-            } else {
-                resetActivation();
-            }
-        } else {
-            resetActivation();
-        }
-        return;
-    }
-
-    if (clickedTokenId) {
-        const token = tokens.find(t => t.id === clickedTokenId);
-        if (!token || !token.playerData) return;
-
-        if (movedPlayerIds.has(clickedTokenId)) {
-            logAction(`${token.playerData.customName} ya ha realizado una acción este turno.`);
-            setSelectedPlayerToken(current => current?.id === token.id ? null : token);
-            return;
-        }
-
-        logAction(`${token.playerData.customName} se activa.`);
-        setActivationState({ playerId: clickedTokenId, hasMoved: false, hasPerformedAction: false, declaredAction: null });
-        setSelectedPlayerToken(null);
-    } else {
-        setSelectedPlayerToken(null);
-        resetActivation();
-    }
-};
-
-  const handlePassAction = (passer: BoardToken, gridX: number, gridY: number) => {
-    if (!passer.playerData?.stats.PS || passer.playerData.stats.PS === '-') {
-        resetActivation();
-        return;
-    }
-    setActivationState(prev => prev ? { ...prev, hasPerformedAction: true } : null);
-
-    const dx = Math.abs(gridX - passer.x);
-    const dy = Math.abs(gridY - passer.y);
-
-    if (dx >= 14 || dy >= 14 || (dx === 0 && dy === 0)) {
-        resetActivation();
-        return;
-    }
-
-    const typeKey = passChartGrid[dy][dx];
-    const info = passTypeDetails[typeKey];
-    let modifier = 0;
-    if (info.name === 'Pase corto') modifier = -1;
-    if (info.name === 'Pase largo') modifier = -2;
-    if (info.name === 'Bomba larga') modifier = -3;
-
-    const roll = Math.floor(Math.random() * 6) + 1;
-    const targetPS = parseInt(passer.playerData.stats.PS);
-    const finalResult = roll + modifier;
-    const isSuccess = finalResult >= targetPS;
-
-    let outcomeMessage = '';
-
-    if (roll === 1) {
-        outcomeMessage = `¡Balón Perdido! Tirada: 1. El balón rebota desde ${passer.playerData.customName}.`;
-        logAction(outcomeMessage);
-        scatterBall(passer.x, passer.y);
-        handleTurnover('Balón perdido en un pase.');
-    } else if (roll === 6 || isSuccess) {
-        outcomeMessage = `¡Pase Preciso! Tirada: ${roll} (Mod: ${modifier}) vs PS ${targetPS}+.`;
-        const receiver = tokens.find(t => t.x === gridX && t.y === gridY);
-        if (receiver) {
-            outcomeMessage += ` Atrapado por ${receiver.playerData?.customName}.`;
-            setBallCarrierId(receiver.id);
-        } else {
-            setBallPosition({ x: gridX, y: gridY });
-            setBallCarrierId(null);
-        }
-        logAction(outcomeMessage);
-        completePlayerAction(passer.id);
-    } else {
-        if (finalResult <= 1) {
-            outcomeMessage = `¡Pase MUY Impreciso! Tirada: ${roll} (Mod: ${modifier}, Final: ${finalResult}) vs PS ${targetPS}+.`;
-            logAction(outcomeMessage);
-            scatterBall(passer.x, passer.y);
-            handleTurnover('Pase muy impreciso.');
-        } else {
-            outcomeMessage = `¡Pase Impreciso! Tirada: ${roll} (Mod: ${modifier}, Final: ${finalResult}) vs PS ${targetPS}+.`;
-            logAction(outcomeMessage);
-            const receiver = tokens.find(t => t.x === gridX && t.y === gridY && t.teamId === passer.teamId);
-            if(!receiver) {
-                handleTurnover('Pase impreciso a una casilla vacía/rival.');
-            } else {
-                 scatterBall(gridX, gridY);
-                 completePlayerAction(passer.id);
-            }
-        }
-    }
-    setActionMode(null);
-  };
-  
-  const handleBlockAction = (attacker: BoardToken, gridX: number, gridY: number) => {
-    const defender = tokens.find(t => t.x === gridX && t.y === gridY);
-    
-    if (defender && defender.teamId !== attacker.teamId && isAdjacent(attacker, defender)) {
-        logAction(`${attacker.playerData?.customName} placa a ${defender.playerData?.customName}.`);
-        setActivationState(prev => prev ? { ...prev, hasPerformedAction: true } : null);
-        setBlockModalState({ isOpen: true, attacker, defender });
-    }
-  };
-
-  const handleBlockResolved = (outcome: BlockResolution) => {
-    const knockDownIds = new Set(outcome.knockDowns.map(kd => kd.id));
-    const wasBallCarrierKnockedDown = ballCarrierId !== null && knockDownIds.has(ballCarrierId);
-    const carrierToken = wasBallCarrierKnockedDown ? tokens.find(t => t.id === ballCarrierId) : null;
-    
-    setTokens(prev => prev.map(t => knockDownIds.has(t.id) ? { ...t, isDown: true } : t));
-
-    outcome.summary.forEach(logAction);
-
-    const defender = blockModalState.defender;
-    if (wasBallCarrierKnockedDown && carrierToken) {
-        scatterBall(carrierToken.x, carrierToken.y);
-    } else if (outcome.ballBecomesLoose && defender) {
-        const defenderToken = tokens.find(t => t.id === defender.id);
-        if(defenderToken) scatterBall(defenderToken.x, defenderToken.y);
-    }
-    
-    const turnoverSource = outcome.knockDowns.find(kd => kd.isTurnoverSource);
-    if (turnoverSource) {
-        const turnoverPlayer = tokens.find(t => t.id === turnoverSource.id);
-        handleTurnover(`${turnoverPlayer?.playerData?.customName || 'Un jugador'} fue derribado.`);
-    } else {
-        // If it was a Blitz, the player can continue moving. Otherwise, end action.
-        if (activationState?.declaredAction !== 'Penetrar' && blockModalState.attacker) {
-             completePlayerAction(blockModalState.attacker.id);
-        } else {
-            // Player is in a post-action state, waiting to finalize.
-            setActionMode(null);
-        }
-    }
-  };
-
-  const renderSetup = () => (
-    <div className="text-center p-8 max-w-md mx-auto">
-        <h2 className="text-3xl font-bold text-amber-400 mb-4">Configurar Partido</h2>
-        <p className="text-slate-400 mb-8">Selecciona tu equipo y el de tu oponente, ya sea otro de tus equipos o el de un amigo mediante código QR.</p>
-        <button 
-            onClick={() => {
-                if (managedTeams.length === 0) {
-                    alert("Debes crear al menos un equipo en el 'Gestor de Equipo' para poder jugar.");
-                    return;
+            let newOppJourneymen: ManagedPlayer[] = [], oppMsg = '';
+            if (oppNeeded > 0) {
+                const baseRoster = teamsData.find(t => t.name === liveOpponentTeam.rosterName);
+                const lineman = baseRoster?.roster.find(p => p.position.toLowerCase().includes('línea') || p.position.toLowerCase().includes('lineman')) || baseRoster?.roster[0];
+                if (lineman) {
+                    const existingNames = new Set(liveOpponentTeam.players.map(p => p.customName.toLowerCase()));
+                    newOppJourneymen = Array.from({ length: oppNeeded }).map((_, i): ManagedPlayer => {
+                        let randomName = generateRandomName(liveOpponentTeam.rosterName);
+                        while (existingNames.has(randomName.toLowerCase())) randomName = generateRandomName(liveOpponentTeam.rosterName);
+                        existingNames.add(randomName.toLowerCase());
+                        return { ...lineman, id: Date.now() - i - 1000, customName: randomName, spp: 0, gainedSkills: ['Solitario (4+)'], lastingInjuries: [], isJourneyman: true, status: 'Reserva' };
+                    });
+                    oppMsg = `${liveOpponentTeam.name} añade ${oppNeeded} Sustituto(s).`;
                 }
-                setGameState('select_home');
-            }} 
-            className="w-full bg-amber-500 text-slate-900 font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-amber-400"
-        >
-            Comenzar Configuración
-        </button>
-    </div>
-  );
+            }
+            const notification = [homeMsg, oppMsg].filter(Boolean).join('\n');
+            if (notification) { setPendingJourneymen({ home: newHomeJourneymen, opponent: newOppJourneymen }); setJourneymenNotification(notification); } 
+            else { setPreGameStep(1); }
+        }
+    }, [gameState, preGameStep, liveHomeTeam, liveOpponentTeam, journeymenNotification, pendingJourneymen]);
 
-  const renderSelectHome = () => (
-    <div className="text-center p-4 sm:p-8 max-w-md mx-auto">
-        <h2 className="text-3xl font-bold text-amber-400 mb-4">Paso 1: Elige tu Equipo</h2>
-        <div className="space-y-3">
-            {managedTeams.map(team => (
-                <button 
-                    key={team.id} 
-                    onClick={() => { 
-                        setSelectedHomeId(team.id!); 
-                        setGameState('select_away'); 
-                    }} 
-                    className="w-full flex items-center gap-4 text-left bg-slate-700/50 p-4 rounded-lg shadow-md hover:bg-slate-700 hover:text-white transition-colors"
-                >
-                    {team.crestImage ? (
-                        <img src={team.crestImage} alt="Escudo" className="w-12 h-12 rounded-full object-cover bg-slate-900" />
-                    ) : (
-                        <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center flex-shrink-0">
-                            <ShieldCheckIcon className="w-8 h-8 text-slate-600" />
-                        </div>
-                    )}
-                    <div className="flex-grow min-w-0">
-                        <p className="font-semibold truncate">{team.name}</p>
-                        <p className="text-xs text-slate-400 truncate">{team.rosterName}</p>
-                    </div>
-                </button>
-            ))}
-        </div>
-        <button onClick={() => setGameState('setup')} className="text-amber-400 hover:underline mt-6 text-sm">&larr; Volver</button>
-    </div>
-  );
-
-  const renderSelectAway = () => {
-      const availableOpponents = managedTeams.filter(t => t.id !== selectedHomeId);
-      return (
-          <div className="p-4 max-w-2xl mx-auto space-y-6">
-              <button onClick={() => { setSelectedHomeId(null); setSelectedAwayId(null); setImportedAwayTeam(null); setGameState('select_home'); }} className="text-amber-400 hover:underline text-sm">&larr; Cambiar equipo local</button>
-              <h2 className="text-2xl font-bold text-amber-400 text-center">Paso 2: Configurar Oponente</h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-slate-900/70 p-4 rounded-lg border border-sky-500 text-center">
-                      <p className="text-slate-400">Equipo Local</p>
-                      <p className="font-bold text-lg text-sky-400">{homeTeam?.name}</p>
-                  </div>
-                  {awayTeam ? (
-                       <div className="bg-slate-900/70 p-4 rounded-lg border border-red-500 text-center">
-                          <p className="text-slate-400">Equipo Visitante</p>
-                          <p className="font-bold text-lg text-red-400">{awayTeam.name}</p>
-                          <button onClick={() => { setSelectedAwayId(null); setImportedAwayTeam(null); }} className="text-xs text-slate-400 hover:underline mt-2">Cambiar</button>
-                      </div>
-                  ) : (
-                      <div className="bg-slate-900/70 p-4 rounded-lg border border-dashed border-slate-600 text-center flex items-center justify-center">
-                          <p className="text-slate-500">Esperando oponente...</p>
-                      </div>
-                  )}
-              </div>
-
-              {!awayTeam && (
-                  <>
-                      <div className="bg-slate-900/70 p-4 rounded-lg border border-slate-600">
-                          <h3 className="text-lg font-semibold text-slate-300 mb-4">Oponente Local</h3>
-                          {availableOpponents.length > 0 ? (
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                  {availableOpponents.map(team => (
-                                      <button
-                                          key={team.id}
-                                          onClick={() => setSelectedAwayId(team.id!)}
-                                          className="w-full flex items-center gap-4 text-left bg-slate-700/50 p-3 rounded-lg shadow-md hover:bg-slate-700 hover:text-white transition-colors"
-                                      >
-                                          {team.crestImage ? (
-                                              <img src={team.crestImage} alt="Escudo" className="w-10 h-10 rounded-full object-cover bg-slate-900 flex-shrink-0" />
-                                          ) : (
-                                              <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center flex-shrink-0">
-                                                  <ShieldCheckIcon className="w-6 h-6 text-slate-600" />
-                                              </div>
-                                          )}
-                                          <div className="flex-grow min-w-0">
-                                              <p className="font-semibold text-white truncate">{team.name}</p>
-                                              <p className="text-xs text-slate-400 truncate">{team.rosterName}</p>
-                                          </div>
-                                      </button>
-                                  ))}
-                              </div>
-                          ) : (
-                              <p className="text-slate-400 text-sm text-center">No tienes otros equipos locales para seleccionar.</p>
-                          )}
-                      </div>
-                      <div className="bg-slate-900/70 p-4 rounded-lg border border-slate-600">
-                          <h3 className="text-lg font-semibold text-slate-300 mb-4 text-center">Oponente Remoto</h3>
-                          <div className="flex justify-center gap-4">
-                              <button onClick={() => setIsInviteModalOpen(true)} className="bg-teal-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-teal-500 text-sm">Invitar (Mostrar QR)</button>
-                              <button onClick={() => setGameState('scanning_qr')} className="bg-sky-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-sky-500 text-sm">Unirse (Escanear QR)</button>
-                          </div>
-                      </div>
-                  </>
-              )}
-              
-              {homeTeam && awayTeam && (
-                  <div className="text-center pt-4">
-                      <button onClick={handleStartPreGame} className="w-full max-w-sm mx-auto bg-green-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-green-500 transition-colors animate-pulse">
-                          Ir a la Secuencia Pre-Partido
-                      </button>
-                  </div>
-              )}
-          </div>
-      );
-  };
-  
-  const renderScanningQR = () => (
-    <div className="p-4 max-w-md mx-auto text-center">
-        <button onClick={() => setGameState('select_away')} className="text-amber-400 hover:underline mb-4">&larr; Volver</button>
-        <h2 className="text-2xl font-bold text-amber-400 mb-4">Unirse a Partida</h2>
-        <p className="text-slate-400 mb-6">Escanea el código QR de tu amigo para cargar su equipo.</p>
-        {scanError && <p className="text-red-400 bg-red-900/50 p-3 rounded-md mb-4">{scanError}</p>}
-        <div id="qr-reader" ref={scannerContainerRef} className="w-full aspect-square bg-slate-900 rounded-lg overflow-hidden border-2 border-slate-700"></div>
-    </div>
-  );
-
-  const renderWeatherIcon = (title: string) => {
-    const lowerTitle = title.toLowerCase();
-    if (lowerTitle.includes('calor')) return <FireIcon className="w-8 h-8 text-red-400" />;
-    if (lowerTitle.includes('soleado')) return <SunIcon className="w-8 h-8 text-yellow-300" />;
-    if (lowerTitle.includes('perfecto')) return <CloudIcon className="w-8 h-8 text-blue-300" />;
-    if (lowerTitle.includes('lluvioso')) return <CloudRainIcon className="w-8 h-8 text-cyan-300" />;
-    if (lowerTitle.includes('ventisca')) return <SnowflakeIcon className="w-8 h-8 text-white" />;
-    return null;
-  };
-  
-  const renderPreGame = () => {
-      const preGameTitles = ["El Clima", "Lanzamiento de Moneda", "Patear o Recibir", "Evento de Patada Inicial"];
-      
-      const handleGenerateWeather = () => {
-          const die1 = Math.floor(Math.random() * 6) + 1;
-          const die2 = Math.floor(Math.random() * 6) + 1;
-          const roll = die1 + die2;
-          let result: WeatherCondition | undefined;
-          if (roll === 2) result = weatherConditions.find(w => w.roll === "2");
-          else if (roll === 3) result = weatherConditions.find(w => w.roll === "3");
-          else if (roll >= 4 && roll <= 10) result = weatherConditions.find(w => w.roll === "4-10");
-          else if (roll === 11) result = weatherConditions.find(w => w.roll === "11");
-          else if (roll === 12) result = weatherConditions.find(w => w.roll === "12");
-          
-          if (result) {
-              setGameStatus(prev => ({ ...prev, weather: result }));
-              logAction(`Clima del partido (Tirada: ${roll}): ${result.title}.`);
-          }
-      };
-
-      const handleCoinToss = () => {
-        const winner = Math.random() < 0.5 ? 'home' : 'away';
-        setGameStatus(p => ({...p, coinTossWinner: winner}));
-      };
-      
-       const handleKickoffRoll = () => {
-          const die1 = Math.floor(Math.random() * 6) + 1;
-          const die2 = Math.floor(Math.random() * 6) + 1;
-          const roll = die1 + die2;
-          const event = kickoffEvents.find(e => parseInt(e.diceRoll, 10) === roll);
-          if (event) {
-              setGameStatus(prev => ({ ...prev, kickoffEvent: event }));
-              logAction(`Evento de Patada (Tirada: ${roll}): ${event.title}`);
-          }
-      };
-
-      return (
-          <div className="text-center p-8 max-w-lg mx-auto bg-slate-900/50 rounded-lg border border-slate-700">
-              <h2 className="text-2xl font-bold text-amber-400 mb-2">Secuencia Anterior al Partido</h2>
-              <h3 className="text-lg text-slate-300 mb-6">{preGameTitles[preGameStep]}</h3>
-
-              {preGameStep === 0 && (
-                  <div className="space-y-4">
-                      <p className="text-slate-400">Tira 2D6 (o deja que la app lo haga) para determinar el clima.</p>
-                      {!gameStatus.weather ? (
-                          <button onClick={handleGenerateWeather} className="bg-sky-600 text-white font-bold py-2 px-4 rounded-md">Generar Clima</button>
-                      ) : (
-                          <div className="p-4 bg-slate-800 rounded-lg">
-                              <div className="flex items-center justify-center gap-4 mb-2">{renderWeatherIcon(gameStatus.weather.title)}<span className="font-bold text-lg text-white">{gameStatus.weather.title}</span></div>
-                              <p className="text-sm text-slate-300">{gameStatus.weather.description}</p>
-                          </div>
-                      )}
-                      {gameStatus.weather && <button onClick={() => setPreGameStep(1)} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md">Siguiente</button>}
-                  </div>
-              )}
-              
-              {preGameStep === 1 && (
-                  <div className="space-y-4">
-                      <p className="text-slate-400">Lanza una moneda para ver quién patea.</p>
-                      {!gameStatus.coinTossWinner ? (
-                        <button onClick={handleCoinToss} className="bg-sky-600 text-white font-bold py-2 px-4 rounded-md">Lanzar Moneda</button>
-                      ) : (
-                        <div className="p-4 bg-slate-800 rounded-lg">
-                           <p>Gana el sorteo: <span className="font-bold text-white">{(gameStatus.coinTossWinner === 'home' ? homeTeam?.name : awayTeam?.name)}</span></p>
-                        </div>
-                      )}
-                      {gameStatus.coinTossWinner && <button onClick={() => setPreGameStep(2)} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md">Siguiente</button>}
-                  </div>
-              )}
-
-               {preGameStep === 2 && (
-                  <div className="space-y-4">
-                      <p><span className="font-bold text-white">{(gameStatus.coinTossWinner === 'home' ? homeTeam?.name : awayTeam?.name)}</span> ha ganado el sorteo. ¿Qué elige?</p>
-                       <div className="flex gap-4 justify-center">
-                          <button onClick={() => { const receiving = gameStatus.coinTossWinner === 'home' ? 'away' : 'home'; setGameStatus(p => ({...p, receivingTeam: receiving})); logAction(`${(gameStatus.coinTossWinner === 'home' ? homeTeam?.name : awayTeam?.name)} elige patear.`); setPreGameStep(3); }} className="bg-slate-600 text-white font-bold py-2 px-4 rounded-md">Patear</button>
-                          <button onClick={() => { const receiving = gameStatus.coinTossWinner; setGameStatus(p => ({...p, receivingTeam: receiving})); logAction(`${(gameStatus.coinTossWinner === 'home' ? homeTeam?.name : awayTeam?.name)} elige recibir.`); setPreGameStep(3); }} className="bg-amber-600 text-white font-bold py-2 px-4 rounded-md">Recibir</button>
-                       </div>
-                  </div>
-              )}
-
-               {preGameStep === 3 && (
-                  <div className="space-y-4">
-                      <p className="text-slate-400">Tira 2D6 para determinar el evento de patada inicial.</p>
-                      {!gameStatus.kickoffEvent ? (
-                          <button onClick={handleKickoffRoll} className="bg-sky-600 text-white font-bold py-2 px-4 rounded-md">Generar Evento</button>
-                      ) : (
-                          <div className="p-4 bg-slate-800 rounded-lg">
-                              <span className="font-bold text-lg text-white">{gameStatus.kickoffEvent.title}</span>
-                              <p className="text-sm text-slate-300 mt-2">{gameStatus.kickoffEvent.description}</p>
-                          </div>
-                      )}
-                      {gameStatus.kickoffEvent && <button onClick={handleStartGame} className="bg-green-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-green-500 transition-colors animate-pulse">¡Iniciar Partido!</button>}
-                  </div>
-              )}
-
-          </div>
-      );
-  };
-
-  const renderPlaying = () => {
-      if (!homeTeam || !awayTeam) return null;
-
-      const Scoreboard = () => (
-        <div className="flex-shrink-0 bg-slate-800/70 p-2 border-b-2 border-slate-700 shadow-md">
-            <div className="max-w-7xl mx-auto flex justify-between items-center">
-                <div className="flex items-center gap-3 w-1/3">
-                    {homeTeam.crestImage ? <img src={homeTeam.crestImage} className="w-12 h-12 rounded-full object-cover"/> : <ShieldCheckIcon className="w-12 h-12 text-slate-600"/>}
-                    <h3 className="text-lg font-bold text-sky-400 hidden md:block truncate">{homeTeam.name}</h3>
-                </div>
-                <div className="text-center flex items-center gap-4">
-                    <div className="text-center">
-                        <div className="text-4xl font-black text-white">{score.home} - {score.away}</div>
-                        <div className="text-xs text-amber-400">Parte {half} - Turno {turn}</div>
-                    </div>
-                    <button onClick={handleNextTurn} className="text-sm bg-slate-600 px-3 py-2 rounded-md hover:bg-slate-500 font-semibold">Pasar Turno</button>
-                </div>
-                <div className="flex items-center gap-3 w-1/3 justify-end">
-                    <h3 className="text-lg font-bold text-red-400 hidden md:block truncate text-right">{awayTeam.name}</h3>
-                    {awayTeam.crestImage ? <img src={awayTeam.crestImage} className="w-12 h-12 rounded-full object-cover"/> : <ShieldCheckIcon className="w-12 h-12 text-slate-600"/>}
-                </div>
-            </div>
-            <div className="flex justify-between items-center max-w-3xl mx-auto mt-2 px-4 text-xs">
-                <div className="flex gap-2"><span>Rerolls:</span> {Array(rerolls.home).fill(0).map((_,i) => <div key={i} className="w-3 h-3 rounded-full bg-sky-400"/>)}</div>
-                <div className="flex gap-2"><span>Rerolls:</span> {Array(rerolls.away).fill(0).map((_,i) => <div key={i} className="w-3 h-3 rounded-full bg-red-400"/>)}</div>
-            </div>
-        </div>
-      );
-
-      const Dugout = ({ team, teamId }: {team: ManagedTeam, teamId: 'home' | 'away'}) => {
-        const { reserves, kos, casualties } = useMemo(() => {
-            const players = team.players;
-            return {
-                reserves: players.filter(p => p.status === 'Reserva'),
-                kos: players.filter(p => p.status === 'KO'),
-                casualties: players.filter(p => ['Lesionado', 'Expulsado', 'Muerto'].includes(p.status!)),
+    useEffect(() => { if (gameState === 'pre_game' && preGameStep === 1 && liveHomeTeam && liveOpponentTeam) { const tvDiff = Math.abs(homeTV - opponentTV); const underdog = homeTV < opponentTV ? 'home' : (opponentTV < homeTV ? 'opponent' : null); if (underdog) setInducementState(prev => ({ ...prev, money: tvDiff, underdog })); else setInducementState({ money: 0, hiredStars: [], underdog: null }); } }, [gameState, preGameStep, homeTV, opponentTV]);
+    
+    useEffect(() => {
+        if (preGameStep === 7) {
+            const autoDeploy = (setTeam: React.Dispatch<React.SetStateAction<ManagedTeam | null>>) => {
+                setTeam(prevTeam => {
+                    if (!prevTeam) return null;
+                    // Only deploy if no one is on the field, respecting manual pre-game lineup changes
+                    if (prevTeam.players.some(p => p.status === 'Activo')) {
+                        return prevTeam;
+                    }
+                    const availablePlayers = prevTeam.players.filter(p => p.status === 'Reserva' || !p.status);
+                    const playersToDeploy = availablePlayers.slice(0, 11);
+                    const deployedIds = new Set(playersToDeploy.map(p => p.id));
+                    const updatedPlayers = prevTeam.players.map(p => 
+                        deployedIds.has(p.id) 
+                            ? { ...p, status: 'Activo' as PlayerStatus } 
+                            : { ...p, status: p.status || 'Reserva' as PlayerStatus }
+                    );
+                    return { ...prevTeam, players: updatedPlayers };
+                });
             };
-        }, [team]);
+            // Only auto-deploy for opponent, home team lineup is set from TeamDashboard
+             if (liveOpponentTeam && !liveOpponentTeam.players.some(p => p.status === 'Activo')) {
+                autoDeploy(setLiveOpponentTeam);
+            }
+        }
+    }, [preGameStep, liveOpponentTeam]);
+    
+    const logEvent = (type: GameEventType, description: string) => { setGameLog(prev => [{ id: Date.now(), timestamp: new Date().toLocaleTimeString('es-ES'), turn, half, type, description }, ...prev]); };
+    const handleHalftime = () => { setTurn(0); setHalf(2); logEvent('INFO', 'Fin de la primera parte. Comienza la segunda parte.'); setGameStatus(prev => ({...prev, kickoffEvent: null})); if (firstHalfReceiver) { const secondHalfReceiver = firstHalfReceiver === 'home' ? 'opponent' : 'home'; setGameStatus(prev => ({ ...prev, receivingTeam: secondHalfReceiver })); logEvent('INFO', `Recibe en la segunda parte ${secondHalfReceiver === 'home' ? homeTeam?.name : opponentTeam?.name}.`); setGameState('pre_game'); setPreGameStep(7); } else { setGameState('pre_game'); setPreGameStep(6); } };
+    const handleConfirmJourneymen = () => { if (pendingJourneymen.home.length > 0 && liveHomeTeam) { setLiveHomeTeam(prev => prev ? ({...prev, players: [...prev.players, ...pendingJourneymen.home]}) : null); logEvent('INFO', `${liveHomeTeam.name} añade ${pendingJourneymen.home.length} Sustituto(s).`); } if (pendingJourneymen.opponent.length > 0 && liveOpponentTeam) { setLiveOpponentTeam(prev => prev ? ({...prev, players: [...prev.players, ...pendingJourneymen.opponent]}) : null); logEvent('INFO', `${liveOpponentTeam.name} añade ${pendingJourneymen.opponent.length} Sustituto(s).`); } setJourneymenNotification(null); setPendingJourneymen({ home: [], opponent: [] }); setPreGameStep(1); };
+    const handleSkillClick = useCallback((skillName: string) => { const cleanedName = skillName.split('(')[0].trim(); const foundSkill = skillsData.find(s => s.name.toLowerCase().startsWith(cleanedName.toLowerCase())); if (foundSkill) setSelectedSkillForModal(foundSkill); else console.warn(`Skill not found: ${cleanedName}`); }, []);
+    const updatePlayerSppAndAction = (player: ManagedPlayer, teamId: 'home' | 'opponent', spp: number, action: SppActionType, description: string) => { const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam; setTeam(prev => { if (!prev) return null; return { ...prev, players: prev.players.map(p => { if (p.id === player.id) { const newActions = { ...(p.sppActions || {}) }; newActions[action] = (newActions[action] || 0) + 1; return { ...p, spp: p.spp + spp, sppActions: newActions }; } return p; }) }; }); logEvent('INFO', `${player.customName} gana ${spp} PE por ${description}.`); setSppModalState({ isOpen: false, type: null, step: 'select_team', teamId: null, selectedPlayer: null }); };
+    const updatePlayerStatus = (playerId: number, teamId: 'home' | 'opponent', status: PlayerStatus, statusDetail?: string) => { const setTeamToUpdate = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam; setTeamToUpdate(prevTeam => { if (!prevTeam) return null; return { ...prevTeam, players: prevTeam.players.map(p => p.id === playerId ? { ...p, status, statusDetail: statusDetail || '' } : p) }; }); };
+    
+    const handleSelectTdScorer = (scorer: ManagedPlayer) => {
+        if (!tdModalTeam || !liveHomeTeam || !liveOpponentTeam) return;
+        const teamName = tdModalTeam === 'home' ? liveHomeTeam.name : liveOpponentTeam.name;
+        logEvent('TOUCHDOWN', `${scorer.customName} ha anotado un Touchdown para ${teamName}!`);
+        setScore(s => ({ ...s, [tdModalTeam]: s[tdModalTeam] + 1 }));
+        updatePlayerSppAndAction(scorer, tdModalTeam, 3, 'TD', `anotar un Touchdown para ${teamName}`);
+        setIsTdModalOpen(false);
+        setTdModalTeam(null);
         
-        const isVisible = dugoutsVisible[teamId];
+        // This logic handles advancing turn/half after a TD
+        const currentTurnForCheck = turn === 0 ? 1 : turn; // If TD happens during kickoff (turn 0), count as turn 1
+        if (currentTurnForCheck >= 8 && half === 1) {
+            handleHalftime();
+        } else if (currentTurnForCheck >= 8 && half === 2) {
+            logEvent('INFO', '¡Fin del partido!');
+            setGameState('post_game');
+        } else {
+            setGameState('ko_recovery');
+        }
+    };
+    
+    const openSppModal = (type: SppModalType) => { setSppModalState({ isOpen: true, type: type, step: 'select_team', teamId: null, selectedPlayer: null }); };
+    
+    const handleStartDrive = () => {
+        setGameState('in_progress');
+        const isFirstTurnOfHalf = turn === 0;
+        
+        if (isFirstTurnOfHalf) {
+            setTurn(1);
+            if (half === 1) {
+                logEvent('INFO', '¡Comienza el partido!');
+            } else {
+                logEvent('INFO', '¡Comienza la segunda parte!');
+            }
+        } else {
+            logEvent('INFO', `Comienza la patada del turno ${turn}.`);
+        }
+    };
 
-        return (
-            <div className={`bg-slate-800/50 rounded-lg shadow-lg flex-1 flex flex-col transition-all duration-300 ease-in-out ${isVisible ? 'min-h-[12rem]' : 'min-h-0'}`}>
-                <button 
-                    onClick={() => setDugoutsVisible(p => ({...p, [teamId]: !p[teamId]}))} 
-                    className="w-full p-2 bg-slate-700/50 hover:bg-slate-700 rounded-t-lg flex justify-between items-center"
-                    aria-label={`${isVisible ? 'Ocultar' : 'Mostrar'} banquillo ${teamId === 'home' ? 'local' : 'visitante'}`}
-                >
-                    <div className="flex items-center gap-2">
-                         {team.crestImage ? <img src={team.crestImage} className="w-6 h-6 rounded-full"/> : <ShieldCheckIcon className="w-6 h-6 text-slate-500"/>}
-                         <h3 className={`font-bold ${teamId==='home'?'text-sky-400':'text-red-400'}`}>{team.name}</h3>
+    const handleNextTurn = () => { if (turn < 8) { const newTurn = turn + 1; setTurn(newTurn); logEvent('INFO', `Comienza el turno ${newTurn} de la parte ${half}.`); } else if (half === 1) { handleHalftime(); } else { logEvent('INFO', '¡Fin del partido!'); setGameState('post_game'); } };
+    const handleTurnover = (reason: string) => { logEvent('TURNOVER', `Cambio de turno: ${reason}.`); setIsTurnoverModalOpen(false); handleNextTurn(); };
+    const handleConfirmPostGame = (finalTeamState: ManagedTeam) => { if (!homeTeam) return; onTeamUpdate(finalTeamState); setGameState('setup'); setHomeTeam(null); setOpponentTeam(null); setLiveHomeTeam(null); setLiveOpponentTeam(null); setGameLog([]); setScore({home: 0, opponent: 0}); setTurn(0); setHalf(1); setFame({ home: 0, opponent: 0 }); setFansRoll({ home: '', opponent: ''}); };
+    const handleFoulAction = (action: 'next' | 'back') => { const { step, foulingPlayer, victimPlayer, armorRollInput, wasExpelled, log, foulingTeamId, injuryRollInput, casualtyRollInput, lastingInjuryRollInput } = foulState; if(action === 'back') { const history: FoulState['step'][] = ['select_fouler_team', 'select_fouler', 'select_victim', 'armor_roll', 'injury_roll', 'casualty_roll', 'lasting_injury_roll']; const currentStepIndex = history.indexOf(step); if (currentStepIndex > 0) setFoulState(prev => ({ ...prev, step: history[currentStepIndex - 1] })); return; } switch(step) { case 'select_victim': if (foulingPlayer && victimPlayer) setFoulState(prev => ({...prev, step: 'armor_roll'})); break; case 'armor_roll': { const die1 = parseInt(armorRollInput.die1), die2 = parseInt(armorRollInput.die2); if (isNaN(die1) || isNaN(die2)) break; const roll = die1 + die2, armorValue = parseInt(victimPlayer!.stats.AR.replace('+', '')), armorBroken = roll > armorValue, isDoubles = die1 === die2; let logMsg = `Tirada Armadura (${victimPlayer!.stats.AR}) a ${victimPlayer!.customName}: ${die1}+${die2}=${roll}.`; if (isDoubles) logMsg += " ¡Dobles!"; if(armorBroken) { logMsg += " ¡Rota!"; setFoulState(prev => ({ ...prev, armorRoll: {roll, armorBroken}, step: 'injury_roll', log: [...log, logMsg], wasExpelled: wasExpelled || isDoubles, expulsionReason: isDoubles ? `Dobles en armadura. ¡${foulingPlayer?.customName} expulsado!` : ''})); } else { logMsg += " Aguanta."; setFoulState(prev => ({ ...prev, armorRoll: {roll, armorBroken}, step: 'summary', log: [...log, logMsg], wasExpelled: wasExpelled || isDoubles, expulsionReason: isDoubles ? `Dobles en armadura. ¡${foulingPlayer?.customName} expulsado!` : ''})); } break; } case 'injury_roll': { const die1 = parseInt(injuryRollInput.die1), die2 = parseInt(injuryRollInput.die2); if (isNaN(die1) || isNaN(die2)) break; const roll = die1 + die2, isDoubles = die1 === die2; let result: PlayerStatus = roll <= 7 ? 'Activo' : roll <= 9 ? 'KO' : 'Lesionado'; let resultText = roll <= 7 ? 'Aturdido' : roll <= 9 ? 'Inconsciente (KO)' : '¡Lesionado!'; let logMsg = `Tirada Heridas: ${die1}+${die2}=${roll} -> ${resultText}.`; if(isDoubles) logMsg += " ¡Dobles!"; const newExpulsion = wasExpelled || isDoubles; const victimTeamId = foulingTeamId === 'home' ? 'opponent' : 'home'; updatePlayerStatus(victimPlayer!.id, victimTeamId, result === 'Activo' ? 'Activo' : result, resultText); if(result === 'Lesionado') setFoulState(prev => ({...prev, injuryRoll: {roll, result: resultText}, step: 'casualty_roll', log: [...log, logMsg], wasExpelled: newExpulsion, expulsionReason: isDoubles ? `Dobles en heridas. ¡${foulingPlayer?.customName} expulsado!` : prev.expulsionReason})); else setFoulState(prev => ({...prev, injuryRoll: {roll, result: resultText}, step: 'summary', log: [...log, logMsg], wasExpelled: newExpulsion, expulsionReason: isDoubles ? `Dobles en heridas. ¡${foulingPlayer?.customName} expulsado!` : prev.expulsionReason})); break; } case 'casualty_roll': { const roll = parseInt(casualtyRollInput); if (isNaN(roll) || roll < 1 || roll > 16) break; const event = casualtyResults.find(e => { const range = e.diceRoll.split('-').map(Number); return roll >= range[0] && roll <= range[1]; }); if (!event) return; let logMsg = `Tirada Lesión (D16): ${roll} -> ${event.title}. ${event.description}`; const victimTeamId = foulingTeamId === 'home' ? 'opponent' : 'home'; updatePlayerStatus(victimPlayer!.id, victimTeamId, event.title === 'Muerto' ? 'Muerto' : 'Lesionado', event.title); if (event.title === 'Lesion Permanente') setFoulState(prev => ({...prev, casualtyRoll: {roll, result: event.title}, step: 'lasting_injury_roll', log: [...log, logMsg]})); else setFoulState(prev => ({...prev, casualtyRoll: {roll, result: event.title}, step: 'summary', log: [...log, logMsg]})); break; } case 'lasting_injury_roll': { const roll = parseInt(lastingInjuryRollInput); if (isNaN(roll) || roll < 1 || roll > 6) break; const event = lastingInjuryResults.find(e => { const range = e.diceRoll.split('-').map(Number); return range.length > 1 ? (roll >= range[0] && roll <= range[1]) : roll === range[0]; }); if (!event) return; let logMsg = `Lesión Permanente (D6): ${roll} -> ${event.permanentInjury} (${event.characteristicReduction}).`; const setTeamToUpdate = foulingTeamId === 'home' ? setLiveOpponentTeam : setLiveHomeTeam; setTeamToUpdate(prev => prev ? ({ ...prev, players: prev.players.map(p => p.id === victimPlayer!.id ? {...p, lastingInjuries: [...p.lastingInjuries, `${event.permanentInjury} (${event.characteristicReduction})`]} : p)}) : null); setFoulState(prev => ({...prev, lastingInjuryRoll: {roll, result: event.permanentInjury, characteristic: event.characteristicReduction }, step: 'summary', log: [...log, logMsg]})); break; } case 'summary': { const finalLog = foulState.log.join(' '); logEvent('FOUL', `Falta de ${foulingPlayer?.customName} a ${victimPlayer?.customName}. ${finalLog}`); if (foulingPlayer && foulingTeamId && (foulState.injuryRoll?.result === '¡Lesionado!' || foulState.casualtyRoll)) updatePlayerSppAndAction(foulingPlayer, foulingTeamId, 2, 'CASUALTY', 'causar una lesión en una falta'); if (foulState.wasExpelled) { logEvent('INFO', foulState.expulsionReason || `El jugador ${foulingPlayer?.customName} ha sido expulsado.`); updatePlayerStatus(foulingPlayer!.id, foulingTeamId!, 'Expulsado'); } setIsFoulModalOpen(false); setFoulState(initialFoulState); break; } } };
+    const handleInjuryAction = (action: 'next' | 'back') => { const { step, victimPlayer, armorRollInput, log, victimTeamId, injuryRollInput, casualtyRollInput, lastingInjuryRollInput, casualtyRoll, apothecaryAction, isStunty } = injuryState; if (action === 'back') { const history: InjuryState['step'][] = ['select_victim_team', 'select_victim', 'armor_roll', 'injury_roll', 'casualty_roll', 'lasting_injury_roll']; let currentStepIndex = history.indexOf(step); if (step === 'apothecary') currentStepIndex = history.indexOf(casualtyRoll ? 'casualty_roll' : 'injury_roll'); if (currentStepIndex > 0) setInjuryState(prev => ({ ...prev, step: history[currentStepIndex - 1] })); return; } switch(step) { case 'select_victim': if (victimPlayer) { const hasStunty = victimPlayer.skills.toLowerCase().includes('escurridizo'); setInjuryState(prev => ({...prev, step: 'armor_roll', isStunty: hasStunty })); } break; case 'armor_roll': { const die1 = parseInt(armorRollInput.die1), die2 = parseInt(armorRollInput.die2); if (isNaN(die1) || isNaN(die2)) break; const roll = die1 + die2, armorValue = parseInt(victimPlayer!.stats.AR.replace('+', '')), armorBroken = roll > armorValue; let logMsg = `Tirada Armadura (${victimPlayer!.stats.AR}) a ${victimPlayer!.customName}: ${die1}+${die2}=${roll}.`; if (armorBroken) { logMsg += " ¡Rota!"; setInjuryState(prev => ({ ...prev, armorRoll: {roll, armorBroken}, step: 'injury_roll', log: [...log, logMsg]})); } else { logMsg += " Aguanta."; setInjuryState(prev => ({ ...prev, armorRoll: {roll, armorBroken}, step: 'summary', log: [...log, logMsg]})); } break; } case 'injury_roll': { const die1 = parseInt(injuryRollInput.die1), die2 = parseInt(injuryRollInput.die2); if (isNaN(die1) || isNaN(die2)) break; const roll = die1 + die2; let result: PlayerStatus = 'Activo', resultText = ''; if (isStunty) { if (roll <= 6) { result = 'Activo'; resultText = 'Aturdido'; } else if (roll <= 8) { result = 'KO'; resultText = 'Inconsciente (KO)'; } else if (roll === 9) { result = 'Lesionado'; resultText = 'Magullado (solo reservas)'; } else { result = 'Lesionado'; resultText = '¡Lesionado!'; } } else { if (roll <= 7) { result = 'Activo'; resultText = 'Aturdido'; } else if (roll <= 9) { result = 'KO'; resultText = 'Inconsciente (KO)'; } else { result = 'Lesionado'; resultText = '¡Lesionado!'; } } let logMsg = `Tirada Heridas: ${die1}+${die2}=${roll} -> ${resultText}.`; const team = victimTeamId === 'home' ? liveHomeTeam : liveOpponentTeam; if (team?.apothecary && (result === 'KO' || result === 'Lesionado')) { setIsApothecaryModalOpen(true); setInjuryState(prev => ({...prev, injuryRoll: {roll, result: resultText}, step: 'apothecary', log: [...log, logMsg]})); } else { if (result !== 'Lesionado' || resultText === 'Magullado (solo reservas)') updatePlayerStatus(victimPlayer!.id, victimTeamId!, result, resultText); setInjuryState(prev => ({...prev, injuryRoll: {roll, result: resultText}, step: result === 'Lesionado' && resultText !== 'Magullado (solo reservas)' ? 'casualty_roll' : 'summary', log: [...log, logMsg]})); } break; } case 'casualty_roll': { const roll = parseInt(casualtyRollInput); if (isNaN(roll) || roll < 1 || roll > 16) break; const event = casualtyResults.find(e => { const range = e.diceRoll.split('-').map(Number); return range.length > 1 ? (roll >= range[0] && roll <= range[1]) : roll === range[0]; }); if (!event) return; let logMsg = `Tirada Lesión (D16)${casualtyRoll?.rerolled ? ' (repetida)' : ''}: ${roll} -> ${event.title}.`; const team = victimTeamId === 'home' ? liveHomeTeam : liveOpponentTeam; if (team?.apothecary && !casualtyRoll?.rerolled && apothecaryAction !== 'patch_ko') { setIsApothecaryModalOpen(true); setInjuryState(prev => ({...prev, casualtyRoll: { roll, result: event.title, rerolled: false }, step: 'apothecary', log: [...log, logMsg]})); } else { updatePlayerStatus(victimPlayer!.id, victimTeamId!, event.title === 'Muerto' ? 'Muerto' : 'Lesionado', event.title); setInjuryState(prev => ({...prev, casualtyRoll: { ...(prev.casualtyRoll!), roll, result: event.title }, step: event.title === 'Lesion Permanente' ? 'lasting_injury_roll' : 'summary', log: [...log, logMsg]})); } break; } case 'lasting_injury_roll': { const roll = parseInt(lastingInjuryRollInput); if (isNaN(roll) || roll < 1 || roll > 6) break; const event = lastingInjuryResults.find(e => { const range = e.diceRoll.split('-').map(Number); return range.length > 1 ? (roll >= range[0] && roll <= range[1]) : roll === range[0]; }); if (!event) return; let logMsg = `Lesión Permanente (D6): ${roll} -> ${event.permanentInjury} (${event.characteristicReduction}).`; const setTeamToUpdate = victimTeamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam; setTeamToUpdate(prev => prev ? ({ ...prev, players: prev.players.map(p => p.id === victimPlayer!.id ? {...p, lastingInjuries: [...p.lastingInjuries, `${event.permanentInjury} (${event.characteristicReduction})`]} : p)}) : null); setInjuryState(prev => ({...prev, lastingInjuryRoll: {roll, result: event.permanentInjury, characteristic: event.characteristicReduction }, step: 'summary', log: [...log, logMsg]})); break; } case 'summary': { const finalLog = injuryState.log.join(' '); logEvent('INJURY', `Herida a ${victimPlayer?.customName}. ${finalLog}`); setIsInjuryModalOpen(false); setInjuryState(initialInjuryState); break; } } }
+    const handleManualOpponentSelect = (teamName: string) => { const selectedOpponent = managedTeams.find(t => t.name === teamName); if (selectedOpponent) { setOpponentTeam(selectedOpponent); setGameState('pre_game'); } };
+    const handleExportLog = () => { if (!homeTeam || !opponentTeam) return; try { const worksheet = XLSX.utils.json_to_sheet([...gameLog].reverse().map(e => ({ 'Hora': e.timestamp, 'Parte': e.half, 'Turno': e.turn, 'Tipo': e.type, 'Descripción': e.description }))); const workbook = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(workbook, worksheet, 'Bitácora'); XLSX.writeFile(workbook, `bitacora_${homeTeam.name}_vs_${opponentTeam.name}.xlsx`); } catch (error) { console.error("Error al exportar:", error); alert("Error al exportar bitácora."); } };
+    const rollKoRecovery = (player: ManagedPlayer) => { const roll = Math.floor(Math.random() * 6) + 1; const success = roll >= 4; setKoRecoveryRolls(prev => ({ ...prev, [player.id]: { roll, success } })); if (success) { const teamId = liveHomeTeam?.players.some(p => p.id === player.id) ? 'home' : 'opponent'; updatePlayerStatus(player.id, teamId, 'Reserva'); } };
+    const renderWeatherIcon = (title: string) => { const lowerTitle = title.toLowerCase(); if (lowerTitle.includes('calor')) return <FireIcon className="w-5 h-5 text-red-400" />; if (lowerTitle.includes('soleado')) return <SunIcon className="w-5 h-5 text-yellow-300" />; if (lowerTitle.includes('perfecto')) return <CloudIcon className="w-5 h-5 text-blue-300" />; if (lowerTitle.includes('lluvioso')) return <CloudRainIcon className="w-5 h-5 text-cyan-300" />; if (lowerTitle.includes('ventisca')) return <SnowflakeIcon className="w-5 h-5 text-white" />; return null; };
+    const handleConfirmWeatherReroll = () => { const roll = parseInt(weatherRerollInput); if (isNaN(roll) || roll < 2 || roll > 12) { alert("Introduce un resultado de 2D6 válido (2-12)."); return; } let newWeather: WeatherCondition | undefined; if (roll === 2) newWeather = weatherConditions.find(w => w.roll === "2"); else if (roll === 3) newWeather = weatherConditions.find(w => w.roll === "3"); else if (roll >= 4 && roll <= 10) newWeather = weatherConditions.find(w => w.roll === "4-10"); else if (roll === 11) newWeather = weatherConditions.find(w => w.roll === "11"); else if (roll === 12) newWeather = weatherConditions.find(w => w.roll === "12"); if (newWeather) { setGameStatus(prev => ({ ...prev, weather: newWeather })); let logMessage = `Clima Cambiante (Tirada ${roll}): Nuevo clima es ${newWeather.title}.`; if (newWeather.title === 'Clima Perfecto') logMessage += " El balón se escorará."; logEvent('WEATHER', logMessage); } setIsChangingWeatherModalOpen(false); setKickoffActionCompleted(true); setWeatherRerollInput(''); };
+    const handleAdjustTurnCounter = (kickingTeamId: 'home' | 'opponent') => { const kickingTeam = kickingTeamId === 'home' ? liveHomeTeam : liveOpponentTeam; if (!kickingTeam) return; const isTurn6to8 = turn >= 6 && turn <= 8; if (isTurn6to8) { setTurn(t => { const newTurn = Math.max(1, t - 1); logEvent('INFO', `Tiempo Muerto: Los marcadores de turno se retrasan. Turno actual: ${newTurn}.`); return newTurn; }); } else { setTurn(t => { const newTurn = Math.min(8, t + 1); logEvent('INFO', `Tiempo Muerto: Los marcadores de turno se adelantan. Turno actual: ${newTurn}.`); return newTurn; }); } setKickoffActionCompleted(true); };
+    
+    const handleHireStar = (star: StarPlayer) => {
+        if (!inducementState.underdog) return;
+        const setUnderdogTeam = inducementState.underdog === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
+        const underdogTeam = inducementState.underdog === 'home' ? liveHomeTeam : liveOpponentTeam;
+
+        let playersToAdd: ManagedPlayer[] = [];
+        if (star.pair) {
+            playersToAdd = star.pair.map((p) => ({
+                id: Date.now() + Math.random(),
+                customName: p.name,
+                position: "Jugador Estrella",
+                cost: star.cost / 2,
+                stats: p.stats,
+                skills: p.skills,
+                primary: 'G', secondary: 'A,F,P',
+                spp: 0, gainedSkills: [], lastingInjuries: [],
+                isStarPlayer: true, qty: "0-1", status: 'Reserva',
+            }));
+        } else {
+            const newPlayer: ManagedPlayer = {
+                id: Date.now() + Math.random(),
+                customName: star.name,
+                position: "Jugador Estrella",
+                cost: star.cost,
+                stats: star.stats!,
+                skills: star.skills || '',
+                primary: 'G', secondary: 'A,F,P',
+                spp: 0, gainedSkills: [], lastingInjuries: [],
+                isStarPlayer: true, qty: "0-1", status: 'Reserva',
+            };
+            playersToAdd.push(newPlayer);
+        }
+
+        setUnderdogTeam(prev => prev ? ({ ...prev, players: [...prev.players, ...playersToAdd] }) : null);
+        setInducementState(prev => ({ ...prev, money: prev.money - star.cost, hiredStars: [...prev.hiredStars, star] }));
+        if (underdogTeam) logEvent('INFO', `${underdogTeam.name} contrata a ${star.name} por ${star.cost.toLocaleString()} M.O.`);
+    };
+
+    const handleFireStar = (star: StarPlayer) => {
+        if (!inducementState.underdog) return;
+        const setUnderdogTeam = inducementState.underdog === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
+        const underdogTeam = inducementState.underdog === 'home' ? liveHomeTeam : liveOpponentTeam;
+
+        const playerNamesToRemove = star.pair ? star.pair.map(p => p.name) : [star.name];
+
+        setUnderdogTeam(prev => prev ? ({ ...prev, players: prev.players.filter(p => !playerNamesToRemove.includes(p.customName)) }) : null);
+        setInducementState(prev => ({ ...prev, money: prev.money + star.cost, hiredStars: prev.hiredStars.filter(s => s.name !== star.name) }));
+        if (underdogTeam) logEvent('INFO', `${underdogTeam.name} despide a ${star.name} y recupera ${star.cost.toLocaleString()} M.O.`);
+    };
+
+    const handleBuyInducement = (item: 'reroll' | 'bribe' | 'cheerleader' | 'coach', cost: number) => { if (inducementState.money < cost) { alert("Fondos insuficientes."); return; } const setUnderdogTeam = inducementState.underdog === 'home' ? setLiveHomeTeam : setLiveOpponentTeam; setInducementState(prev => ({ ...prev, money: prev.money - cost })); setUnderdogTeam(prev => { if (!prev) return null; const newTeam = { ...prev }; if (item === 'reroll') newTeam.liveRerolls = (newTeam.liveRerolls || 0) + 1; if (item === 'bribe') newTeam.tempBribes = (newTeam.tempBribes || 0) + 1; if (item === 'cheerleader') newTeam.tempCheerleaders = (newTeam.tempCheerleaders || 0) + 1; if (item === 'coach') newTeam.tempAssistantCoaches = (newTeam.tempAssistantCoaches || 0) + 1; return newTeam; }); };
+    const handleSellInducement = (item: 'reroll' | 'bribe' | 'cheerleader' | 'coach', cost: number) => { const underdogTeam = inducementState.underdog === 'home' ? liveHomeTeam : liveOpponentTeam; if (!underdogTeam) return; const canSell = (item === 'reroll' && (underdogTeam.liveRerolls || 0) > underdogTeam.rerolls) || (item === 'bribe' && (underdogTeam.tempBribes || 0) > 0) || (item === 'cheerleader' && (underdogTeam.tempCheerleaders || 0) > 0) || (item === 'coach' && (underdogTeam.tempAssistantCoaches || 0) > 0); if (!canSell) { alert("No tienes de este incentivo para vender."); return; } const setUnderdogTeam = inducementState.underdog === 'home' ? setLiveHomeTeam : setLiveOpponentTeam; setInducementState(prev => ({ ...prev, money: prev.money + cost })); setUnderdogTeam(prev => { if (!prev) return null; const newTeam = { ...prev }; if (item === 'reroll') newTeam.liveRerolls = (newTeam.liveRerolls || 1) - 1; if (item === 'bribe') newTeam.tempBribes = (newTeam.tempBribes || 1) - 1; if (item === 'cheerleader') newTeam.tempCheerleaders = (newTeam.tempCheerleaders || 1) - 1; if (item === 'coach') newTeam.tempAssistantCoaches = (newTeam.tempAssistantCoaches || 1) - 1; return newTeam; }); };
+    const handleGenerateWeather = () => { const die1 = Math.floor(Math.random() * 6) + 1, die2 = Math.floor(Math.random() * 6) + 1, roll = die1 + die2; let result: WeatherCondition | undefined; if (roll === 2) result = weatherConditions.find(w => w.roll === "2"); else if (roll === 3) result = weatherConditions.find(w => w.roll === "3"); else if (roll >= 4 && roll <= 10) result = weatherConditions.find(w => w.roll === "4-10"); else if (roll === 11) result = weatherConditions.find(w => w.roll === "11"); else if (roll === 12) result = weatherConditions.find(w => w.roll === "12"); if (result) { setGameStatus(prev => ({ ...prev, weather: result })); logEvent('WEATHER', `Tirada Clima (${roll}): ${result.title}.`); } setIsWeatherModalOpen(false); };
+    const useReroll = (teamId: 'home' | 'opponent') => {
+        const team = teamId === 'home' ? liveHomeTeam : liveOpponentTeam;
+        const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
+        if (team && (team.liveRerolls || 0) > 0) {
+            setTeam(prev => prev ? ({ ...prev, liveRerolls: (prev.liveRerolls || 1) - 1 }) : null);
+            logEvent('INFO', `${team.name} ha usado una Segunda Oportunidad.`);
+        }
+    };
+    const handlePlayerStatusToggle = (player: ManagedPlayer, teamId: 'home' | 'opponent') => {
+        const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
+        setTeam(prevTeam => {
+            if (!prevTeam) return null;
+            const currentStatus = player.status;
+            const newStatus: PlayerStatus = currentStatus === 'Activo' ? 'Reserva' : 'Activo';
+            if (newStatus === 'Activo') {
+                const onFieldCount = prevTeam.players.filter(p => p.status === 'Activo').length;
+                if (onFieldCount >= 11) {
+                    alert('No puedes tener más de 11 jugadores en el campo.');
+                    return prevTeam;
+                }
+            }
+            return {
+                ...prevTeam,
+                players: prevTeam.players.map(p => p.id === player.id ? { ...p, status: newStatus } : p)
+            };
+        });
+    };
+    
+    const renderContent = () => {
+        switch (gameState) {
+            case 'setup': return (
+                <div className="text-center p-4 sm:p-8">
+                    <h2 className="text-3xl font-bold text-amber-400 mb-4">Configurar Partida</h2>
+                    <p className="text-slate-400 mb-8 max-w-lg mx-auto">Selecciona tu equipo y el del oponente para empezar.</p>
+                    {managedTeams.length > 0 ? (
+                        <button onClick={() => setGameState('select_team')} className="w-full max-w-sm mx-auto bg-amber-500 text-slate-900 font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-500/50 transform hover:scale-105">Seleccionar Equipo Local</button>
+                    ) : (
+                        <p className="text-yellow-400">Debes crear un equipo en el "Gestor de Equipo" primero.</p>
+                    )}
+                </div>
+            );
+            case 'select_team': return (
+                <div className="text-center p-4 sm:p-8 max-w-md mx-auto">
+                    <h2 className="text-3xl font-bold text-amber-400 mb-4">Elige tu Equipo</h2>
+                    <div className="space-y-3">
+                        {managedTeams.map(team => (
+                            <button key={team.name} onClick={() => { setHomeTeam(team); setGameState(hasCamera ? 'scanning' : 'manual_select'); }} className="w-full flex items-center gap-4 text-left bg-slate-700/50 p-4 rounded-lg shadow-md hover:bg-slate-700 hover:text-white transition-colors">
+                                {team.crestImage ? (
+                                    <img src={team.crestImage} alt="Escudo" className="w-12 h-12 rounded-full object-cover bg-slate-900" />
+                                ) : (
+                                    <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center flex-shrink-0">
+                                        <ShieldCheckIcon className="w-8 h-8 text-slate-600" />
+                                    </div>
+                                )}
+                                <div className="flex-grow min-w-0">
+                                    <p className="font-semibold truncate">{team.name}</p>
+                                    <p className="text-xs text-slate-400 truncate">{team.rosterName}</p>
+                                </div>
+                            </button>
+                        ))}
                     </div>
-                    <ChevronUpIcon className={`w-5 h-5 transition-transform duration-300 ${isVisible ? '' : 'rotate-180'}`} />
-                </button>
-                <div className={`flex-grow overflow-hidden transition-all duration-300 ease-in-out ${isVisible ? 'max-h-96' : 'max-h-0'}`}>
-                    <div className="h-full overflow-y-auto p-2 space-y-3">
-                        <div>
-                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Reservas ({reserves.length})</h4>
-                            {reserves.map(p => <PlayerStatusCard key={p.id} player={p} onViewPlayer={setSelectedPlayerToken} onSkillClick={() => {}} />)}
-                        </div>
-                        <div>
-                            <h4 className="text-xs font-bold text-yellow-400 uppercase tracking-wider">KO ({kos.length})</h4>
-                            {kos.map(p => <PlayerStatusCard key={p.id} player={p} onViewPlayer={setSelectedPlayerToken} onSkillClick={() => {}} />)}
-                        </div>
-                        <div>
-                            <h4 className="text-xs font-bold text-red-400 uppercase tracking-wider">Bajas ({casualties.length})</h4>
-                            {casualties.map(p => <PlayerStatusCard key={p.id} player={p} onViewPlayer={setSelectedPlayerToken} onSkillClick={() => {}} />)}
-                        </div>
+                    <button onClick={() => setGameState('setup')} className="text-amber-400 hover:underline mt-6 text-sm">&larr; Volver</button>
+                </div>
+            );
+             case 'scanning': return (
+                <div className="text-center p-4 sm:p-8">
+                    <h2 className="text-3xl font-bold text-amber-400 mb-4">Escanear QR del Oponente</h2>
+                    <p className="text-slate-400 mb-6 max-w-lg mx-auto">Usa la cámara para escanear el QR del equipo rival.</p>
+                    <div id="qr-reader" ref={scannerContainerRef} className="max-w-sm mx-auto aspect-square bg-slate-900 rounded-lg overflow-hidden border-2 border-slate-700"></div>
+                    <button onClick={() => setGameState('manual_select')} className="mt-6 text-amber-400 hover:underline">O selecciona un equipo manualmente</button>
+                </div>
+            );
+            case 'manual_select': return (
+                 <div className="text-center p-4 sm:p-8 max-w-md mx-auto">
+                    <h2 className="text-3xl font-bold text-amber-400 mb-4">Elige al Oponente</h2>
+                     <div className="space-y-3">
+                         {managedTeams.filter(t => t.name !== homeTeam?.name).map(team => (
+                            <button key={team.name} onClick={() => handleManualOpponentSelect(team.name)} className="w-full flex items-center gap-4 text-left bg-slate-700/50 p-4 rounded-lg shadow-md hover:bg-slate-700 hover:text-white transition-colors">
+                                {team.crestImage ? (
+                                    <img src={team.crestImage} alt="Escudo" className="w-12 h-12 rounded-full object-cover bg-slate-900" />
+                                ) : (
+                                    <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center flex-shrink-0">
+                                        <ShieldCheckIcon className="w-8 h-8 text-slate-600" />
+                                    </div>
+                                )}
+                                <div className="flex-grow min-w-0">
+                                    <p className="font-semibold truncate">{team.name}</p>
+                                    <p className="text-xs text-slate-400 truncate">{team.rosterName}</p>
+                                </div>
+                            </button>
+                         ))}
                     </div>
                 </div>
-            </div>
-        );
-      };
-
-      const ballCarrier = tokens.find(t => t.id === ballCarrierId);
-      const ballStyle = {
-          left: ballCarrier ? `${((ballCarrier.x + 0.5) / GRID_COLS) * 100}%` : `${((ballPosition.x + 0.5) / GRID_COLS) * 100}%`,
-          top: ballCarrier ? `${((ballCarrier.y + 0.5) / GRID_ROWS) * 100}%` : `${((ballPosition.y + 0.5) / GRID_ROWS) * 100}%`,
-          transform: ballCarrier ? 'translate(25%, -75%)' : 'translate(-50%, -50%)',
-          width: ballCarrier ? '2.5%' : '1.5%',
-          height: ballCarrier ? '4%' : '2.5%',
-          zIndex: 20,
-      };
-
-      return (
-        <div className="w-full h-[calc(100vh-80px)] flex flex-col bg-slate-900 text-white p-2 sm:p-4">
-          <Scoreboard />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm p-2 bg-slate-900/50">
-                {gameStatus.weather && (
-                    <div className="bg-slate-800/50 p-2 rounded-lg border border-slate-700">
-                        <h4 className="font-bold text-amber-300 flex items-center gap-2 mb-1 text-xs">
-                            {renderWeatherIcon(gameStatus.weather.title)} Clima: {gameStatus.weather.title}
-                        </h4>
-                        <p className="text-slate-400 text-xs">{gameStatus.weather.description}</p>
-                    </div>
-                )}
-                {gameStatus.kickoffEvent && (
-                    <div className="bg-slate-800/50 p-2 rounded-lg border border-slate-700">
-                        <h4 className="font-bold text-amber-300 mb-1 text-xs">Patada: <span className="text-white">{gameStatus.kickoffEvent.title}</span></h4>
-                        <p className="text-slate-400 text-xs">{gameStatus.kickoffEvent.description}</p>
-                    </div>
-                )}
-            </div>
-          <div className="flex-grow flex flex-col items-center justify-center overflow-hidden relative">
-
-            <div className="w-full flex-grow flex items-center justify-center">
-                <div className={`relative transition-transform duration-500 ease-in-out w-full ${isZoomedOut ? 'scale-[0.8]' : 'scale-100'}`}>
-                    <div ref={fieldRef} 
-                        className="relative w-full aspect-[26/15] bg-slate-900 rounded-lg shadow-xl border-2 border-slate-700 select-none overflow-hidden"
-                        onMouseMove={handleGridMouseMove}
-                        onClick={handleGridClick}
-                    >
-                        {activationState && (
-                            <div className="absolute top-0 left-0 right-0 bg-black/70 p-2 flex justify-between items-center z-30 animate-fade-in-fast">
-                                <p className="text-amber-400 font-bold flex items-center gap-2">
-                                    <span className={`w-3 h-3 rounded-full ${actionMode ? 'bg-sky-400 animate-pulse' : 'bg-yellow-400'}`}></span>
-                                    {getActionModeMessage()}
-                                </p>
-                                <button onClick={() => activationState.playerId && !actionMode ? completePlayerAction(activationState.playerId) : resetActivation()} className="bg-red-600 text-white font-bold py-1 px-3 rounded text-sm hover:bg-red-500">
-                                    {activationState.playerId && !actionMode ? 'Finalizar' : 'Cancelar'}
-                                </button>
-                            </div>
-                        )}
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform rotate-90" style={{ width: `${(15 / 26) * 100}%`, height: `${(26 / 15) * 100}%` }}><img src={fieldImage} alt="Campo de Blood Bowl" className="w-full h-full object-cover"/></div>
-
-                        <div className="absolute inset-0 grid pointer-events-none" style={{ gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`, gridTemplateRows: `repeat(${GRID_ROWS}, 1fr)` }}>
-                            {Array.from({ length: GRID_ROWS * GRID_COLS }).map((_, i) => (<div key={i} className="w-full h-full border border-black/20"></div>))}
-                            {movementRange.map(({x, y}, i) => (
-                                <div key={i} className="bg-yellow-400/20" style={{ gridColumn: x + 1, gridRow: y + 1 }}></div>
-                            ))}
+            );
+            case 'pre_game': {
+                if (!liveHomeTeam || !liveOpponentTeam) return <div>Cargando equipos...</div>;
+                 if (journeymenNotification) return (
+                    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+                        <div className="bg-slate-800 p-6 rounded-lg shadow-xl border border-slate-700 max-w-sm w-full text-center">
+                            <h3 className="text-lg font-bold text-amber-400 mb-4">Sustitutos Requeridos</h3>
+                            <p className="text-slate-300 mb-6 whitespace-pre-wrap">{journeymenNotification}</p>
+                            <button onClick={handleConfirmJourneymen} className="bg-amber-500 text-slate-900 font-bold py-2 px-4 rounded">Entendido</button>
                         </div>
-                        {actionMode === 'passing' && activePlayer && (
-                            <div className="absolute inset-0 grid pointer-events-none" style={{ gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`, gridTemplateRows: `repeat(${GRID_ROWS}, 1fr)` }}>
-                                {Array.from({ length: GRID_ROWS }).map((_, y) =>
-                                    Array.from({ length: GRID_COLS }).map((_, x) => {
-                                        const dx = Math.abs(x - activePlayer.x);
-                                        const dy = Math.abs(y - activePlayer.y);
-                                        if ((dx === 0 && dy === 0) || dx >= 14 || dy >= 14) return null;
-                                        const typeKey = passChartGrid[dy][dx];
-                                        const colorClass = passOverlayColors[typeKey];
-                                        return <div key={`${x}-${y}`} className={`w-full h-full ${colorClass || ''}`}></div>;
-                                    })
-                                )}
-                            </div>
-                        )}
-                         {tokens.map((token) => {
-                            const config = token.teamId === 'home' ? homePositionConfig : awayPositionConfig;
-                            const borderColor = token.teamId === 'home' ? 'border-sky-400' : 'border-red-500';
-                             const getPlayerNumber = () => {
-                                if (!token.playerData) return '?';
-                                const team = token.teamId === 'home' ? homeTeam : awayTeam;
-                                const index = team?.players.findIndex(p => p.id === token.playerData!.id);
-                                return (index !== undefined && index > -1) ? index + 1 : '?';
-                            };
-                            const isActive = token.id === activationState?.playerId;
-                            const hasCompletedAction = movedPlayerIds.has(token.id);
-                            return (
-                              <div 
-                                key={token.id} 
-                                data-token-id={token.id}
-                                onMouseDown={(e) => handleDragStart(e, token.id)} 
-                                onTouchStart={(e) => handleDragStart(e, token.id)}
-                                onContextMenu={(e) => handleContextMenu(e, token.id)}
-                                className={`absolute flex items-center justify-center w-[3.846%] h-[6.667%] ${config[token.position]?.color} text-white font-bold text-[10px] border-2 ${borderColor} rounded-full shadow-lg cursor-grab active:cursor-grabbing transition-all duration-300 ${token.isDown ? 'opacity-60' : ''} ${isActive ? 'ring-4 ring-amber-400 ring-offset-2 ring-offset-slate-900' : ''} ${hasCompletedAction ? 'opacity-50 filter grayscale' : ''}`} 
-                                style={{ left: `${((token.x + 0.5) / GRID_COLS) * 100}%`, top: `${((token.y + 0.5) / GRID_ROWS) * 100}%`, transform: `translate(-50%, -50%) ${token.isDown ? 'rotate(90deg)' : ''}`, touchAction: 'none' }}
-                              >
-                                {getPlayerNumber()}
-                              </div>
-                            );
-                        })}
-                         <div onMouseDown={handleBallDragStart} onTouchStart={handleBallDragStart} className="absolute cursor-grab active:cursor-grabbing" style={ballStyle}><BallIcon className="w-full h-full" /></div>
-                          {passTargetInfo && actionMode !== 'passing' && (
-                            <div
-                                className="absolute w-[3.846%] h-[6.667%] bg-white/20 border-2 border-dashed border-white/50 rounded-lg pointer-events-none z-20"
-                                style={{
-                                    left: `${((passTargetInfo.x + 0.5) / GRID_COLS) * 100}%`,
-                                    top: `${((passTargetInfo.y + 0.5) / GRID_ROWS) * 100}%`,
-                                    transform: 'translate(-50%, -50%)',
-                                }}
-                            >
-                                <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-slate-900 text-xs px-2 py-0.5 rounded shadow-lg whitespace-nowrap">
-                                    {passTargetInfo.type}
+                    </div>
+                 );
+                const preGameTitles = [ "Paso 1: Contratar Sustitutos", "Paso 2: Incentivos", "Paso 3: Hinchas y FAMA", "Paso 4: El Clima", "Paso 5: Plegarias a Nuffle", "Paso 6: Lanzamiento de Moneda", "Paso 7: Patada o Recepción", "Paso 8: Despliegue", "Paso 9: Evento de Patada Inicial" ];
+                const handleKickoffRoll = () => {
+                    setKickoffActionCompleted(false); // Reset before rolling for a new kickoff
+                    const die1 = Math.floor(Math.random() * 6) + 1, die2 = Math.floor(Math.random() * 6) + 1, roll = die1 + die2; const event = kickoffEvents.find(e => parseInt(e.diceRoll, 10) === roll); if (event) { setGameStatus(prev => ({ ...prev, kickoffEvent: event })); logEvent('KICKOFF', `Evento de Patada (${roll}): ${event.title}`); if (event.title !== 'Clima Cambiante' && event.title !== 'Tiempo Muerto') setKickoffActionCompleted(true); } 
+                };
+                
+                return (
+                    <div className="bg-slate-900/70 p-4 sm:p-6 rounded-lg border border-slate-700 max-w-4xl mx-auto space-y-6">
+                        <h2 className="text-2xl font-bold text-amber-400 text-center">{preGameTitles[preGameStep]}</h2>
+                        {preGameStep === 1 && ( <div className='text-center space-y-4'> <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-center"> <p>VE {liveHomeTeam.name}: <span className='font-bold text-sky-400'>{homeTV.toLocaleString()}</span></p> <p>VE {liveOpponentTeam.name}: <span className='font-bold text-red-400'>{opponentTV.toLocaleString()}</span></p> </div> {inducementState.underdog ? (() => { const underdogTeam = inducementState.underdog === 'home' ? liveHomeTeam : liveOpponentTeam; const baseRoster = teamsData.find(t => t.name === underdogTeam.rosterName); const eligibleStars = starPlayersData.filter(star => isEligibleStar(star, baseRoster)); const bribeCost = baseRoster?.specialRules.includes("Sobornos y corrupción") ? 50000 : 100000; return ( <div className="space-y-6 text-left"> <p className="text-center">{(inducementState.underdog === 'home' ? liveHomeTeam.name : liveOpponentTeam.name)} es desvalido y recibe <span className='font-bold text-green-400'>{inducementState.money.toLocaleString()} M.O.</span> para incentivos.</p> <div className="bg-slate-800 p-4 rounded-lg"> <h4 className="font-bold text-amber-300 mb-2">Incentivos</h4> <div className="space-y-2 text-sm"> {[{name: 'reroll', label: 'Segunda Oportunidad Extra', cost: 100000, count: (underdogTeam.liveRerolls || 0) - underdogTeam.rerolls}, {name: 'bribe', label: 'Soborno', cost: bribeCost, count: underdogTeam.tempBribes || 0}, {name: 'cheerleader', label: 'Animadora', cost: 10000, count: underdogTeam.tempCheerleaders || 0}, {name: 'coach', label: 'Ayudante', cost: 10000, count: underdogTeam.tempAssistantCoaches || 0}].map(item => ( <div key={item.name} className="flex justify-between items-center"> <span>{item.label} ({item.cost/1000}k)</span> <div className="flex items-center gap-2"> <button onClick={() => handleSellInducement(item.name as any, item.cost)} className="bg-rose-600 h-6 w-6 rounded-full font-bold">-</button> <span className="font-mono w-6 text-center">{item.count}</span> <button onClick={() => handleBuyInducement(item.name as any, item.cost)} className="bg-green-600 h-6 w-6 rounded-full font-bold">+</button> </div> </div> ))} </div> </div> <div className="bg-slate-800 p-4 rounded-lg"> <h4 className="font-bold text-amber-300 mb-2">Jugadores Estrella</h4> <div className="max-h-60 overflow-y-auto space-y-2 pr-2"> {eligibleStars.map(star => ( <div key={star.name} className="flex justify-between items-center text-sm"> <button onClick={() => setSelectedStarPlayer(star)} className="text-sky-400 hover:underline">{star.name} ({star.cost/1000}k)</button> {inducementState.hiredStars.some(s => s.name === star.name) ? <button onClick={() => handleFireStar(star)} className="bg-rose-600 text-white font-bold py-1 px-2 text-xs rounded">Despedir</button> : <button onClick={() => handleHireStar(star)} disabled={inducementState.money < star.cost} className="bg-green-600 text-white font-bold py-1 px-2 text-xs rounded disabled:bg-slate-600">Contratar</button> } </div> ))} </div> </div> <div className="text-center pt-4 border-t border-slate-700"> <button onClick={() => setPreGameStep(2)} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">Confirmar y Continuar</button> </div> </div> ) })() : ( <> <p className="text-center">¡Equipos igualados! No hay incentivos.</p> <button onClick={() => setPreGameStep(2)} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">Continuar</button> </> )} </div> )}
+                        {preGameStep === 2 && ( <div className='text-center space-y-4'> <p>Cada entrenador tira 2D6 y suma sus Hinchas. El más alto gana +1 FAMA (+2 si dobla o más).</p> <div className="grid grid-cols-2 gap-4"> <div> <label className='block text-sm font-medium text-slate-300 mb-1'>{liveHomeTeam.name} (Hinchas: {liveHomeTeam.dedicatedFans})</label> <input type="text" pattern="[2-9]|1[0-2]" value={fansRoll.home} onChange={e => setFansRoll(p => ({...p, home: e.target.value.replace(/[^0-9]/g, '').slice(0, 2)}))} className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-center" placeholder="2D6"/> </div> <div> <label className='block text-sm font-medium text-slate-300 mb-1'>{liveOpponentTeam.name} (Hinchas: {liveOpponentTeam.dedicatedFans})</label> <input type="text" pattern="[2-9]|1[0-2]" value={fansRoll.opponent} onChange={e => setFansRoll(p => ({...p, opponent: e.target.value.replace(/[^0-9]/g, '').slice(0, 2)}))} className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-center" placeholder="2D6"/> </div> </div> <button onClick={() => { const homeTotal = liveHomeTeam.dedicatedFans + parseInt(fansRoll.home || '0'); const oppTotal = liveOpponentTeam.dedicatedFans + parseInt(fansRoll.opponent || '0'); let homeFame = 0, oppFame = 0; if (homeTotal >= oppTotal * 2) homeFame = 2; else if (homeTotal > oppTotal) homeFame = 1; if (oppTotal >= homeTotal * 2) oppFame = 2; else if (oppTotal > homeTotal) oppFame = 1; setFame({home: homeFame, opponent: oppFame}); logEvent('INFO', `Tirada Hinchas - ${liveHomeTeam.name}: ${homeTotal}, ${liveOpponentTeam.name}: ${oppTotal}. FAMA: ${homeFame} - ${oppFame}`); setPreGameStep(3); }} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">Calcular FAMA</button> </div> )}
+                        {preGameStep === 3 && ( <div className='text-center space-y-4'> <p>Tira 2D6 para determinar el clima.</p> <button onClick={() => setIsWeatherModalOpen(true)} className="bg-sky-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-sky-500">Generar Clima</button> {gameStatus.weather && <div><p>Clima: <span className='font-bold text-white'>{gameStatus.weather.title}</span></p><p className='text-slate-400 text-sm'>{gameStatus.weather.description}</p></div>} {gameStatus.weather && <button onClick={() => setPreGameStep(4)} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">Continuar</button>} </div> )}
+                        {preGameStep === 4 && ( <div className='text-center space-y-4'> <p>Un equipo con menor VE (tras incentivos) puede tirar en la tabla de Plegarias a Nuffle.</p> <button onClick={() => setIsPrayersModalOpen(true)} className="bg-sky-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-sky-500">Ver Tabla de Plegarias</button> <button onClick={() => setPreGameStep(5)} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">Continuar</button> </div> )}
+                        {preGameStep === 5 && ( <div className='text-center space-y-4'> <p>Lanza una moneda para ver quién patea.</p> <div className="flex gap-4 justify-center"> <button onClick={() => {setGameStatus(p => ({...p, coinTossWinner: 'home'})); setPreGameStep(6)}} className="bg-sky-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-sky-500">Gana {liveHomeTeam.name}</button> <button onClick={() => {setGameStatus(p => ({...p, coinTossWinner: 'opponent'})); setPreGameStep(6)}} className="bg-red-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-red-500">Gana {liveOpponentTeam.name}</button> </div> </div> )}
+                        {preGameStep === 6 && gameStatus.coinTossWinner && ( <div className='text-center space-y-4'> <p><span className='font-bold text-white'>{(gameStatus.coinTossWinner === 'home' ? liveHomeTeam.name : liveOpponentTeam.name)}</span> gana el sorteo. ¿Elige patear o recibir?</p> <div className="flex gap-4 justify-center"> <button onClick={() => { const receiving = gameStatus.coinTossWinner === 'home' ? 'opponent' : 'home'; setGameStatus(p => ({...p, receivingTeam: receiving})); setFirstHalfReceiver(receiving); logEvent('INFO', `${(gameStatus.coinTossWinner === 'home' ? liveHomeTeam.name : liveOpponentTeam.name)} elige patear.`); setPreGameStep(7); }} className="bg-gray-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-gray-500">Patear</button> <button onClick={() => { const receiving = gameStatus.coinTossWinner; setGameStatus(p => ({...p, receivingTeam: receiving})); setFirstHalfReceiver(receiving); logEvent('INFO', `${(gameStatus.coinTossWinner === 'home' ? liveHomeTeam.name : liveOpponentTeam.name)} elige recibir.`); setPreGameStep(7); }} className="bg-amber-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-amber-500">Recibir</button> </div> </div> )}
+                        {preGameStep === 7 && (
+                            <div className="space-y-4">
+                                <p className="text-center text-slate-300">Coloca hasta 11 jugadores en el campo. El resto quedará en el banquillo.</p>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {[liveHomeTeam, liveOpponentTeam].map((team, index) => {
+                                        const teamId = index === 0 ? 'home' : 'opponent';
+                                        const onField = team.players.filter(p => p.status === 'Activo');
+                                        const onBench = team.players.filter(p => p.status === 'Reserva');
+                                        return (
+                                            <div key={teamId} className="bg-slate-800 p-3 rounded-lg flex flex-col">
+                                                <div className="flex items-center gap-3 mb-2">
+                                                    {team.crestImage && (
+                                                        <img src={team.crestImage} alt="Escudo" className="w-10 h-10 rounded-full object-cover" />
+                                                    )}
+                                                    <h3 className={`font-bold text-lg ${teamId === 'home' ? 'text-sky-400' : 'text-red-400'}`}>{team.name}</h3>
+                                                </div>
+                                                <MiniField players={onField} teamColor={teamId === 'home' ? 'bg-sky-500' : 'bg-red-500'} />
+                                                <div className="space-y-2 max-h-[40vh] overflow-y-auto pr-2">
+                                                    <div>
+                                                        <h4 className="font-semibold text-slate-400 text-sm sticky top-0 bg-slate-800 z-10 py-1 -mx-3 px-3">En el Campo ({onField.length}/11)</h4>
+                                                        {onField.length > 0 ? onField.map(p => <PlayerStatusCard key={p.id} player={p} onViewPlayer={setViewingPlayer} onSkillClick={handleSkillClick} canToggleStatus={true} onStatusToggle={() => handlePlayerStatusToggle(p, teamId)} />) : <p className="text-xs text-slate-500">Ningún jugador en el campo.</p>}
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-semibold text-slate-400 text-sm mt-3 sticky top-0 bg-slate-800 z-10 py-1 -mx-3 px-3">Banquillo ({onBench.length})</h4>
+                                                        {onBench.length > 0 ? onBench.map(p => <PlayerStatusCard key={p.id} player={p} onViewPlayer={setViewingPlayer} onSkillClick={handleSkillClick} canToggleStatus={true} onStatusToggle={() => handlePlayerStatusToggle(p, teamId)} />) : <p className="text-xs text-slate-500">Banquillo vacío.</p>}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                <div className="text-center pt-4">
+                                    <button onClick={() => { const homeOnField = liveHomeTeam.players.filter(p => p.status === 'Activo').length; const oppOnField = liveOpponentTeam.players.filter(p => p.status === 'Activo').length; if (homeOnField === 0 || oppOnField === 0) { alert('Ambos equipos deben tener al menos un jugador en el campo para continuar.'); return; } setPreGameStep(8); }} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">Confirmar Despliegue</button>
                                 </div>
                             </div>
                         )}
+                        {preGameStep === 8 && ( <div className='text-center space-y-4'> {!gameStatus.kickoffEvent ? <button onClick={handleKickoffRoll} className="bg-sky-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-sky-500">Generar Evento de Patada</button> : <div><p>Evento: <span className='font-bold text-white'>{gameStatus.kickoffEvent.title}</span></p><p className='text-slate-400 text-sm'>{gameStatus.kickoffEvent.description}</p></div>} {gameStatus.kickoffEvent && kickoffActionCompleted && <button onClick={handleStartDrive} className="bg-green-600 text-white font-bold py-2 px-6 rounded-md shadow-md hover:bg-green-500 mt-4">¡A JUGAR!</button>} </div> )}
+                    </div>
+                );
+            }
+            case 'ko_recovery': {
+                if (!liveHomeTeam || !liveOpponentTeam) return <div>Cargando...</div>;
+                const homeKOs = liveHomeTeam.players.filter(p => p.status === 'KO');
+                const oppKOs = liveOpponentTeam.players.filter(p => p.status === 'KO');
+                const handleStartNextDrive = () => { 
+                    setKoRecoveryRolls({}); 
+                    setGameStatus(prev => ({ ...prev, kickoffEvent: null, receivingTeam: prev.receivingTeam === 'home' ? 'opponent' : 'home' })); 
+                    setTurn(t => t+1);
+                    setPreGameStep(7); 
+                    setGameState('pre_game'); 
+                };
+                return (
+                    <div className="bg-slate-900/70 p-4 sm:p-6 rounded-lg border border-slate-700 max-w-3xl mx-auto space-y-6">
+                        <h2 className="text-2xl font-bold text-amber-400 text-center">Recuperación de Inconscientes</h2>
+                        <p className="text-center text-slate-400">Tira 1D6 por cada jugador KO. Con 4+, se recupera y va al banquillo.</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <div className="flex items-center gap-3 mb-2">
+                                    {liveHomeTeam.crestImage && (
+                                        <img src={liveHomeTeam.crestImage} alt="Escudo" className="w-10 h-10 rounded-full object-cover" />
+                                    )}
+                                    <h3 className="text-lg font-bold text-sky-400">{liveHomeTeam.name}</h3>
+                                </div>
+                                {homeKOs.length > 0 ? homeKOs.map(p => ( <div key={p.id} className="flex justify-between items-center p-2 bg-slate-800 rounded-md mb-2"> <span className="text-white">{p.customName}</span> {koRecoveryRolls[p.id] ? <span className={`font-bold ${koRecoveryRolls[p.id]?.success ? 'text-green-400' : 'text-red-400'}`}>Tirada {koRecoveryRolls[p.id]?.roll} - {koRecoveryRolls[p.id]?.success ? 'Recuperado' : 'KO'}</span> : <button onClick={() => rollKoRecovery(p)} className="text-xs bg-amber-500 text-slate-900 font-bold py-1 px-2 rounded">Tirar</button>} </div> )) : <p className="text-slate-400 text-sm">Sin jugadores KO.</p>} 
+                            </div>
+                             <div>
+                                <div className="flex items-center gap-3 mb-2">
+                                    {liveOpponentTeam.crestImage && (
+                                        <img src={liveOpponentTeam.crestImage} alt="Escudo" className="w-10 h-10 rounded-full object-cover" />
+                                    )}
+                                    <h3 className="text-lg font-bold text-red-400">{liveOpponentTeam.name}</h3>
+                                </div>
+                                {oppKOs.length > 0 ? oppKOs.map(p => ( <div key={p.id} className="flex justify-between items-center p-2 bg-slate-800 rounded-md mb-2"> <span className="text-white">{p.customName}</span> {koRecoveryRolls[p.id] ? <span className={`font-bold ${koRecoveryRolls[p.id]?.success ? 'text-green-400' : 'text-red-400'}`}>Tirada {koRecoveryRolls[p.id]?.roll} - {koRecoveryRolls[p.id]?.success ? 'Recuperado' : 'KO'}</span> : <button onClick={() => rollKoRecovery(p)} className="text-xs bg-amber-500 text-slate-900 font-bold py-1 px-2 rounded">Tirar</button>} </div> )) : <p className="text-slate-400 text-sm">Sin jugadores KO.</p>} 
+                            </div>
+                        </div>
+                        <div className="text-center pt-4 border-t border-slate-700"> <button onClick={handleStartNextDrive} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">Comenzar Siguiente Patada</button> </div>
+                    </div>
+                );
+            }
+            case 'in_progress':
+            if (!liveHomeTeam || !liveOpponentTeam) return <div>Cargando equipos...</div>;
+
+            const homeScorers = liveHomeTeam.players.filter(p => p.sppActions?.TD);
+            const oppScorers = liveOpponentTeam.players.filter(p => p.sppActions?.TD);
+            
+            const renderPlayerGroup = (title: string, players: ManagedPlayer[], teamId: 'home' | 'opponent') => {
+                if (players.length === 0) return null;
+                return (
+                    <div className="mt-2">
+                        <h4 className="font-bold text-xs uppercase text-slate-500 mb-1 px-2">{title}</h4>
+                        <div className="space-y-1">{players.map(p => <PlayerStatusCard key={p.id} player={p} onViewPlayer={setViewingPlayer} onSkillClick={handleSkillClick} />)}</div>
+                    </div>
+                );
+            };
+
+            return (
+                <div className="space-y-4">
+                    <div className="bg-slate-900/70 p-4 rounded-lg border border-slate-700">
+                        <div className="flex justify-around items-center">
+                            {/* Home Team */}
+                            <div className="flex flex-col items-center gap-2 w-1/3">
+                                {liveHomeTeam.crestImage ? (
+                                    <img src={liveHomeTeam.crestImage} alt="Escudo Local" className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover bg-slate-900 border-2 border-sky-500"/>
+                                ) : (
+                                     <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-slate-800 flex items-center justify-center flex-shrink-0 border-2 border-sky-500">
+                                        <ShieldCheckIcon className="w-12 sm:w-16 h-12 sm:h-16 text-slate-600" />
+                                    </div>
+                                )}
+                                 <h3 className="text-lg sm:text-xl font-bold text-sky-400 truncate text-center">{liveHomeTeam.name}</h3>
+                            </div>
+
+                            {/* Score */}
+                            <div className="text-center flex-shrink-0">
+                                <div className="text-5xl sm:text-7xl font-black text-white tracking-wider" style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.7)' }}>
+                                    {score.home} - {score.opponent}
+                                </div>
+                                 <div className="font-bold text-base text-amber-400 mt-1">Parte {half} - Turno {turn}</div>
+                            </div>
+                            
+                            {/* Opponent Team */}
+                            <div className="flex flex-col items-center gap-2 w-1/3">
+                                 {liveOpponentTeam.crestImage ? (
+                                    <img src={liveOpponentTeam.crestImage} alt="Escudo Rival" className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover bg-slate-900 border-2 border-red-500"/>
+                                ) : (
+                                    <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-slate-800 flex items-center justify-center flex-shrink-0 border-2 border-red-500">
+                                        <ShieldCheckIcon className="w-12 sm:w-16 h-12 sm:h-16 text-slate-600" />
+                                    </div>
+                                )}
+                                <h3 className="text-lg sm:text-xl font-bold text-red-400 truncate text-center">{liveOpponentTeam.name}</h3>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 text-xs text-slate-400 mt-2 min-h-[40px]">
+                          <div className="text-left pl-4">
+                            {homeScorers.map(p => <p key={p.id} className="truncate">{p.customName} {p.sppActions?.TD && p.sppActions.TD > 1 ? `(x${p.sppActions.TD})` : ''}</p>)}
+                          </div>
+                          <div className="text-right pr-4">
+                            {oppScorers.map(p => <p key={p.id} className="truncate">{p.customName} {p.sppActions?.TD && p.sppActions.TD > 1 ? `(x${p.sppActions.TD})` : ''}</p>)}
+                          </div>
+                    </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        {gameStatus.weather && (
+                            <div className="bg-slate-800/50 p-3 rounded-lg border border-slate-700">
+                                <h4 className="font-bold text-amber-300 flex items-center gap-2 mb-1">
+                                    {renderWeatherIcon(gameStatus.weather.title)} Clima: {gameStatus.weather.title}
+                                </h4>
+                                <p className="text-slate-400 text-xs">{gameStatus.weather.description}</p>
+                            </div>
+                        )}
+                        {gameStatus.kickoffEvent && (
+                            <div className="bg-slate-800/50 p-3 rounded-lg border border-slate-700">
+                                <h4 className="font-bold text-amber-300 mb-1">Patada: <span className="text-white">{gameStatus.kickoffEvent.title}</span></h4>
+                                <p className="text-slate-400 text-xs">{gameStatus.kickoffEvent.description}</p>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-slate-900/70 p-3 rounded-lg border border-slate-700 space-y-2">
+                            <div className="flex justify-between items-center">
+                                <div className="flex items-center gap-3">
+                                    {liveHomeTeam.crestImage && (
+                                        <img src={liveHomeTeam.crestImage} alt="Escudo" className="w-10 h-10 rounded-full object-cover" />
+                                    )}
+                                    <h3 className="text-lg font-bold text-sky-400">{liveHomeTeam.name}</h3>
+                                </div>
+                                <div className="text-xs text-slate-400 flex items-center gap-2">RR: <span className="font-bold text-lg text-white">{(liveHomeTeam.liveRerolls || 0)}</span> <button onClick={() => useReroll('home')} disabled={(liveHomeTeam.liveRerolls || 0) === 0} className="bg-sky-800 text-white font-bold h-6 w-6 rounded-full disabled:bg-slate-600 disabled:opacity-50">-</button></div>
+                            </div>
+                            <div className="max-h-[50vh] overflow-y-auto pr-2">
+                                {renderPlayerGroup(`En el Campo (${liveHomeTeam.players.filter(p => p.status === 'Activo').length}/11)`, liveHomeTeam.players.filter(p => p.status === 'Activo'), 'home')}
+                                {renderPlayerGroup(`Banquillo (${liveHomeTeam.players.filter(p => p.status === 'Reserva').length})`, liveHomeTeam.players.filter(p => p.status === 'Reserva'), 'home')}
+                                {renderPlayerGroup(`Inconscientes (${liveHomeTeam.players.filter(p => p.status === 'KO').length})`, liveHomeTeam.players.filter(p => p.status === 'KO'), 'home')}
+                                {renderPlayerGroup(`Bajas (${liveHomeTeam.players.filter(p => ['Lesionado', 'Expulsado', 'Muerto'].includes(p.status || '')).length})`, liveHomeTeam.players.filter(p => ['Lesionado', 'Expulsado', 'Muerto'].includes(p.status || '')), 'home')}
+                            </div>
+                        </div>
+                         <div className="bg-slate-900/70 p-3 rounded-lg border border-slate-700 space-y-2">
+                             <div className="flex justify-between items-center">
+                                <div className="flex items-center gap-3">
+                                    {liveOpponentTeam.crestImage && (
+                                        <img src={liveOpponentTeam.crestImage} alt="Escudo" className="w-10 h-10 rounded-full object-cover" />
+                                    )}
+                                    <h3 className="text-lg font-bold text-red-400">{liveOpponentTeam.name}</h3>
+                                </div>
+                                <div className="text-xs text-slate-400 flex items-center gap-2">RR: <span className="font-bold text-lg text-white">{(liveOpponentTeam.liveRerolls || 0)}</span> <button onClick={() => useReroll('opponent')} disabled={(liveOpponentTeam.liveRerolls || 0) === 0} className="bg-red-800 text-white font-bold h-6 w-6 rounded-full disabled:bg-slate-600 disabled:opacity-50">-</button></div>
+                            </div>
+                            <div className="max-h-[50vh] overflow-y-auto pr-2">
+                                {renderPlayerGroup(`En el Campo (${liveOpponentTeam.players.filter(p => p.status === 'Activo').length}/11)`, liveOpponentTeam.players.filter(p => p.status === 'Activo'), 'opponent')}
+                                {renderPlayerGroup(`Banquillo (${liveOpponentTeam.players.filter(p => p.status === 'Reserva').length})`, liveOpponentTeam.players.filter(p => p.status === 'Reserva'), 'opponent')}
+                                {renderPlayerGroup(`Inconscientes (${liveOpponentTeam.players.filter(p => p.status === 'KO').length})`, liveOpponentTeam.players.filter(p => p.status === 'KO'), 'opponent')}
+                                {renderPlayerGroup(`Bajas (${liveOpponentTeam.players.filter(p => ['Lesionado', 'Expulsado', 'Muerto'].includes(p.status || '')).length})`, liveOpponentTeam.players.filter(p => ['Lesionado', 'Expulsado', 'Muerto'].includes(p.status || '')), 'opponent')}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="bg-slate-900/70 p-3 rounded-lg border border-slate-700">
+                        <h3 className="text-lg font-semibold text-amber-400 mb-3">Acciones de Juego</h3>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
+                           <button onClick={() => setIsTdModalOpen(true)} className="bg-green-600 text-white font-bold p-2 rounded hover:bg-green-500">Anotar TD</button>
+                           <button onClick={() => setIsFoulModalOpen(true)} className="bg-yellow-600 text-slate-900 font-bold p-2 rounded hover:bg-yellow-500">Falta</button>
+                           <button onClick={() => setIsInjuryModalOpen(true)} className="bg-orange-600 text-white font-bold p-2 rounded hover:bg-orange-500">Lesión</button>
+                           <button onClick={() => setIsTurnoverModalOpen(true)} className="bg-red-600 text-white font-bold p-2 rounded hover:bg-red-500">Turnover</button>
+                           <button onClick={() => openSppModal('pass')} className="bg-sky-600 text-white font-bold p-2 rounded hover:bg-sky-500">Pase (PE)</button>
+                           <button onClick={() => openSppModal('interference')} className="bg-sky-700 text-white font-bold p-2 rounded hover:bg-sky-600">Interf. (PE)</button>
+                           <button onClick={() => openSppModal('casualty')} className="bg-rose-700 text-white font-bold p-2 rounded hover:bg-rose-600">Lesión Caus. (PE)</button>
+                           <button onClick={handleNextTurn} className="bg-amber-500 text-slate-900 font-bold p-2 rounded hover:bg-amber-400">Siguiente Turno</button>
+                        </div>
+                         <div className="mt-4 pt-4 border-t border-slate-700 flex flex-wrap gap-2">
+                             <button onClick={() => setIsCustomEventModalOpen(true)} className="text-xs bg-slate-600 text-slate-200 font-semibold py-1 px-3 rounded hover:bg-slate-500">Evento Personalizado</button>
+                             <button onClick={handleExportLog} className="text-xs bg-slate-600 text-slate-200 font-semibold py-1 px-3 rounded hover:bg-slate-500 flex items-center gap-1"><DownloadIcon className="w-4 h-4" /> Exportar Bitácora</button>
+                             <button onClick={() => setGameState('post_game')} className="text-xs bg-red-800 text-red-200 font-semibold py-1 px-3 rounded hover:bg-red-700 ml-auto">Finalizar Partido</button>
+                         </div>
+                    </div>
+
+                    <div className="bg-slate-900/70 p-3 rounded-lg border border-slate-700">
+                        <button onClick={() => setIsLogVisible(!isLogVisible)} className="w-full text-left flex justify-between items-center group">
+                            <h3 className="text-lg font-semibold text-amber-400">
+                                Bitácora del Partido
+                            </h3>
+                            <ChevronDownIcon className={`w-5 h-5 text-amber-400 transform transition-transform duration-200 group-hover:text-amber-300 ${isLogVisible ? 'rotate-180' : ''}`} />
+                        </button>
+                        {isLogVisible && (
+                            <div className="mt-3 max-h-60 overflow-y-auto space-y-2 text-sm pr-2 animate-fade-in-fast">
+                                {gameLog.map(event => (
+                                    <div key={event.id} className="border-b border-slate-800 pb-1 last:border-b-0">
+                                        <p>
+                                            <span className="text-slate-500 mr-2 font-mono text-xs">
+                                                [{event.half}-{event.turn} | {event.timestamp}]
+                                            </span>
+                                            <span className={`font-semibold ${
+                                                event.type === 'TURNOVER' ? 'text-red-400' : 
+                                                event.type === 'TOUCHDOWN' ? 'text-green-400' :
+                                                event.type === 'INJURY' || event.type === 'FOUL' ? 'text-orange-400' :
+                                                'text-slate-400'
+                                            }`}>
+                                                {event.type !== 'INFO' && `${event.type}: `}
+                                            </span>
+                                            <span className="text-slate-300">{event.description}</span>
+                                        </p>
+                                    </div>
+                                ))}
+                                {gameLog.length === 0 && <p className="text-slate-500">No hay eventos registrados.</p>}
+                            </div>
+                        )}
                     </div>
                 </div>
-            </div>
-            
-            <div className="w-full flex-shrink-0 mt-2 flex gap-2">
-                <Dugout team={homeTeam} teamId="home" />
-                <Dugout team={awayTeam} teamId="away" />
-            </div>
+            );
+            case 'post_game': if(!liveHomeTeam || !liveOpponentTeam) return <div>Cargando...</div>; return <PostGameWizard initialHomeTeam={liveHomeTeam} opponentTeam={liveOpponentTeam} score={score} fame={fame.home} onConfirm={handleConfirmPostGame} />;
+            default: return <div>Estado de juego desconocido.</div>;
+        }
+    };
 
-            {selectedPlayerToken && <PlayerDetailPanel playerToken={selectedPlayerToken} onClose={() => setSelectedPlayerToken(null)} />}
-            
-            <button
-                onClick={() => setIsZoomedOut(!isZoomedOut)}
-                className="absolute top-20 right-4 bg-slate-700 text-white p-3 rounded-full shadow-lg hover:bg-slate-600 transition-colors"
-                aria-label={isZoomedOut ? "Acercar" : "Alejar"}
-            >
-                {isZoomedOut ? <ZoomInIcon /> : <ZoomOutIcon />}
-            </button>
-          </div>
-        </div>
-      );
-  };
-
-  const renderContent = () => {
-    switch(gameState) {
-      case 'setup': return renderSetup();
-      case 'select_home': return renderSelectHome();
-      case 'select_away': return renderSelectAway();
-      case 'scanning_qr': return renderScanningQR();
-      case 'pre_game': return renderPreGame();
-      case 'playing': return renderPlaying();
-      default: return renderSetup();
-    }
-  };
-
-  const menuActions: DeclaredAction[] = ["Mover", "Penetrar", "Placar", "Pasar", "Entregar", "Falta"];
-
-  return (
-    <div className="animate-fade-in-slow">
-      {renderContent()}
-
-      {isInviteModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={() => setIsInviteModalOpen(false)}>
-            <div className="bg-slate-800 p-6 rounded-lg shadow-xl border border-slate-700" onClick={e => e.stopPropagation()}>
-                <h3 className="text-xl font-bold text-amber-400 mb-4 text-center">Invitar a Oponente</h3>
-                <canvas ref={qrCanvasRef}></canvas>
-                <p className="text-xs text-slate-400 mt-2 text-center">Pídele a tu amigo que escanee este código.</p>
-            </div>
-        </div>
-      )}
-      
-      {contextMenu.visible && contextMenu.playerId && (
-        <div 
-            style={{ top: contextMenu.y, left: contextMenu.x }}
-            className="fixed bg-slate-900 border border-slate-700 rounded-md shadow-lg z-50 py-2 w-48"
-            onClick={(e) => e.stopPropagation()}
-        >
-            {activationState && activationState.playerId === contextMenu.playerId && (
-                 <button 
-                    onClick={() => handleMenuAction("Finalizar Acción")}
-                    className="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"
-                >
-                    Finalizar Acción
-                </button>
-            )}
-            {menuActions.map(action => {
-                if (!activationState || activationState.playerId !== contextMenu.playerId) return null;
-
-                const player = tokens.find(t => t.id === contextMenu.playerId);
-                const isBallCarrier = contextMenu.playerId === ballCarrierId;
-                const isDisabled = 
-                    activationState.hasPerformedAction ||
-                    (activationState.hasMoved && (action === "Mover" || action === "Penetrar")) ||
-                    ((action === "Pasar" || action === "Entregar") && !isBallCarrier);
-
-                return (
-                    <button 
-                        key={action}
-                        onClick={() => handleMenuAction(action)}
-                        disabled={isDisabled}
-                        className="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed"
-                    >
-                        {action}
-                    </button>
-                );
-            })}
-        </div>
-      )}
-      
-      {isPassRuleModalVisible && <PassRuleModal onClose={() => setIsPassRuleModalVisible(false)} />}
-      
-      {turnoverMessage && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 bg-red-900 border-2 border-red-500 text-white p-4 rounded-lg shadow-lg z-[70] animate-fade-in-fast">
-            {turnoverMessage}
-        </div>
-      )}
-
-      {blockModalState.isOpen && blockModalState.attacker && blockModalState.defender && (
-          <BlockAssistantModal 
-              attacker={blockModalState.attacker}
-              defender={blockModalState.defender}
-              allTokens={tokens}
-              ballCarrierId={ballCarrierId}
-              onBlockResolved={handleBlockResolved}
-              onClose={() => {
-                  setBlockModalState({isOpen: false, attacker: null, defender: null});
-                  resetActivation();
-              }}
-          />
-      )}
-
-      <style>{`
-      @keyframes fade-in-slow { from { opacity: 0; } to { opacity: 1; } } 
-      .animate-fade-in-slow { animation: fade-in-slow 0.5s ease-out forwards; }
-      @keyframes fade-in-fast { from { opacity: 0; } to { opacity: 1; } }
-      .animate-fade-in-fast { animation: fade-in-fast 0.3s ease-out forwards; }
-      `}</style>
-    </div>
-  );
+    return ( <div className="animate-fade-in-slow"> <div className="p-2 sm:p-4">{renderContent()}</div> {/* Modals */} {isPrayersModalOpen && <PrayersModal onClose={() => setIsPrayersModalOpen(false)} />} {isWeatherModalOpen && ( <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={() => setIsWeatherModalOpen(false)}> <div className="bg-slate-800 p-6 rounded-lg shadow-xl border border-slate-700 max-w-sm w-full text-center" onClick={e => e.stopPropagation()}> <h3 className="text-lg font-bold text-amber-400 mb-4">Generar Clima</h3> <p className="text-slate-300 mb-6">Tira 2D6 para determinar el clima.</p> <button onClick={handleGenerateWeather} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">Tirar 2D6</button> </div> </div> )} {isChangingWeatherModalOpen && ( <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={() => setIsChangingWeatherModalOpen(false)}> <div className="bg-slate-800 p-6 rounded-lg shadow-xl border border-slate-700 max-w-sm w-full text-center" onClick={e => e.stopPropagation()}> <h3 className="text-lg font-bold text-amber-400 mb-4">¡Clima Cambiante!</h3> <p className="text-slate-300 mb-4">Haz una nueva tirada en la Tabla de Clima (2D6) e introduce el resultado.</p> <input type="text" pattern="([2-9]|1[0-2])" value={weatherRerollInput} onChange={e => setWeatherRerollInput(e.target.value.replace(/[^0-9]/g, '').slice(0, 2))} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white mb-4 text-center" placeholder="Resultado 2D6 (2-12)" autoFocus /> <button onClick={handleConfirmWeatherReroll} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">Confirmar Clima</button> </div> </div> )} {isTdModalOpen && liveHomeTeam && liveOpponentTeam && ( <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={() => setIsTdModalOpen(false)}> <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-md w-full" onClick={e => e.stopPropagation()}> <h2 className="text-xl font-bold text-amber-400 p-4 border-b border-slate-700">Anotar Touchdown</h2> {!tdModalTeam ? ( <div className="p-5 space-y-3"><h3 className="text-lg text-slate-300 mb-4">¿Qué equipo ha anotado?</h3>
+        <button onClick={() => setTdModalTeam('home')} className="w-full flex items-center gap-4 text-left bg-slate-700/50 p-4 rounded-md hover:bg-slate-700 font-semibold text-lg transition-colors">
+            {liveHomeTeam.crestImage ? <img src={liveHomeTeam.crestImage} alt="Escudo" className="w-12 h-12 rounded-full" /> : <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center flex-shrink-0"><ShieldCheckIcon className="w-8 h-8 text-slate-600" /></div>}
+            <span>{liveHomeTeam.name}</span>
+        </button>
+        <button onClick={() => setTdModalTeam('opponent')} className="w-full flex items-center gap-4 text-left bg-slate-700/50 p-4 rounded-md hover:bg-slate-700 font-semibold text-lg transition-colors">
+            {liveOpponentTeam.crestImage ? <img src={liveOpponentTeam.crestImage} alt="Escudo" className="w-12 h-12 rounded-full" /> : <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center flex-shrink-0"><ShieldCheckIcon className="w-8 h-8 text-slate-600" /></div>}
+            <span>{liveOpponentTeam.name}</span>
+        </button>
+    </div> ) : ( <div className="p-5 space-y-2 max-h-[60vh] overflow-y-auto"><h3 className="text-lg text-slate-300 mb-4">¿Qué jugador ha anotado?</h3> {(tdModalTeam === 'home' ? liveHomeTeam : liveOpponentTeam).players.filter(p => p.status === 'Activo').map(p => <PlayerButton key={p.id} player={p} onSelect={handleSelectTdScorer} />)} </div> )} </div> </div> )} {sppModalState.isOpen && liveHomeTeam && liveOpponentTeam && ( <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={() => setSppModalState({ isOpen: false, type: null, step: 'select_team', teamId: null, selectedPlayer: null })}> <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-md w-full" onClick={e => e.stopPropagation()}> <h2 className="text-xl font-bold text-amber-400 p-4 border-b border-slate-700">Añadir PE por {sppModalState.type === 'pass' ? 'Pase' : sppModalState.type === 'interference' ? 'Interferencia' : 'Lesión'}</h2> <div className="p-5"> {sppModalState.step === 'select_team' && <div className="space-y-3"><h3 className="text-lg text-slate-300 mb-4">¿De qué equipo es el jugador?</h3> <button onClick={() => setSppModalState(p => ({...p, step: 'select_player', teamId: 'home'}))} className="w-full bg-slate-700/50 p-4 rounded-md hover:bg-slate-700 font-semibold">{liveHomeTeam.name}</button> <button onClick={() => setSppModalState(p => ({...p, step: 'select_player', teamId: 'opponent'}))} className="w-full bg-slate-700/50 p-4 rounded-md hover:bg-slate-700 font-semibold">{liveOpponentTeam.name}</button> </div>} {sppModalState.step === 'select_player' && <div className="space-y-2 max-h-[60vh] overflow-y-auto"><h3 className="text-lg text-slate-300 mb-4">¿Qué jugador?</h3> {(sppModalState.teamId === 'home' ? liveHomeTeam : liveOpponentTeam).players.filter(p => p.status === 'Activo').map(p => <PlayerButton key={p.id} player={p} onSelect={pl => { if (sppModalState.type === 'interference') { setSppModalState(s => ({...s, selectedPlayer: pl, step: 'interference_type'})); } else { updatePlayerSppAndAction(pl, sppModalState.teamId!, sppModalState.type === 'pass' ? 1 : 2, sppModalState.type!.toUpperCase() as SppActionType, sppModalState.type!); } }} />)} </div>} {sppModalState.step === 'interference_type' && <div className="space-y-3"><h3 className="text-lg text-slate-300 mb-4">¿La interferencia fue exitosa?</h3> <button onClick={() => updatePlayerSppAndAction(sppModalState.selectedPlayer!, sppModalState.teamId!, 2, 'INTERFERENCE', 'interferencia exitosa')} className="w-full bg-green-600 p-4 rounded-md hover:bg-green-500 font-semibold">Sí, exitosa (2 PE)</button> <button onClick={() => updatePlayerSppAndAction(sppModalState.selectedPlayer!, sppModalState.teamId!, 1, 'INTERFERENCE', 'interferencia fallida')} className="w-full bg-rose-600 p-4 rounded-md hover:bg-rose-500 font-semibold">No, fallida (1 PE)</button> </div>} </div> </div> </div> )} {isCustomEventModalOpen && ( <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={() => setIsCustomEventModalOpen(false)}> <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-md w-full" onClick={e => e.stopPropagation()}> <h2 className="text-xl font-bold text-amber-400 p-4 border-b border-slate-700">Registrar Evento Personalizado</h2> <div className="p-5"> <textarea value={customEventDescription} onChange={e => setCustomEventDescription(e.target.value)} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white" rows={3} placeholder="Describe el evento..."></textarea> </div> <div className="p-4 bg-slate-900/50 border-t border-slate-700 flex justify-end"> <button onClick={() => { logEvent('OTHER', customEventDescription); setIsCustomEventModalOpen(false); setCustomEventDescription(''); }} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md">Guardar</button> </div> </div> </div> )} {selectedStarPlayer && <StarPlayerModal player={selectedStarPlayer} onClose={() => setSelectedStarPlayer(null)} />} {viewingPlayer && <PlayerCardModal player={viewingPlayer} onClose={() => setViewingPlayer(null)} />} {selectedSkillForModal && <SkillModal skill={selectedSkillForModal} onClose={() => setSelectedSkillForModal(null)} />} {isFoulModalOpen && ( <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={() => { setIsFoulModalOpen(false); setFoulState(initialFoulState); }}> <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-md w-full" onClick={e => e.stopPropagation()}> <div className="p-4 border-b border-slate-700 flex justify-between items-center"><h2 className="text-xl font-bold text-amber-400">Asistente de Falta</h2> <button onClick={() => { setIsFoulModalOpen(false); setFoulState(initialFoulState); }} className="text-slate-400 hover:text-white">&times;</button></div> <div className="p-5">{(() => { if (!liveHomeTeam || !liveOpponentTeam) return null; switch (foulState.step) { case 'select_fouler_team': return <><h3 className="text-lg text-slate-300 mb-4">Paso 1: ¿Qué equipo comete la falta?</h3><div className="space-y-3"><button onClick={() => setFoulState(prev => ({ ...prev, foulingTeamId: 'home', step: 'select_fouler' }))} className="w-full bg-slate-700/50 p-4 rounded-md hover:bg-slate-700 font-semibold">{liveHomeTeam.name}</button><button onClick={() => setFoulState(prev => ({ ...prev, foulingTeamId: 'opponent', step: 'select_fouler' }))} className="w-full bg-slate-700/50 p-4 rounded-md hover:bg-slate-700 font-semibold">{liveOpponentTeam.name}</button></div></>; case 'select_fouler': { const team = foulState.foulingTeamId === 'home' ? liveHomeTeam : liveOpponentTeam; return <><h3 className="text-lg text-slate-300 mb-4">Paso 2: ¿Qué jugador comete la falta?</h3><div className="max-h-[60vh] overflow-y-auto space-y-2">{team.players.filter(p => p.status === 'Activo').map(p => <PlayerButton key={p.id} player={p} onSelect={player => setFoulState(prev => ({...prev, foulingPlayer: player, step: 'select_victim'}))} />)}</div></>; } case 'select_victim': { const team = foulState.foulingTeamId === 'home' ? liveOpponentTeam : liveHomeTeam; return <><h3 className="text-lg text-slate-300 mb-4">Paso 3: ¿Quién es la víctima?</h3><div className="max-h-[60vh] overflow-y-auto space-y-2">{team.players.map(p => <PlayerButton key={p.id} player={p} onSelect={player => setFoulState(prev => ({...prev, victimPlayer: player, step: 'armor_roll'}))} />)}</div></>; } case 'armor_roll': return <DoubleDiceInputStep title="Paso 4: Tirada de Armadura" value={foulState.armorRollInput} onChange={v => setFoulState(prev => ({...prev, armorRollInput: v}))} onNext={() => handleFoulAction('next')} onBack={() => handleFoulAction('back')} label={`Introduce 2D6 contra AR ${foulState.victimPlayer?.stats.AR}`} />; case 'injury_roll': return <DoubleDiceInputStep title="Paso 5: Tirada de Heridas" value={foulState.injuryRollInput} onChange={v => setFoulState(prev => ({...prev, injuryRollInput: v}))} onNext={() => handleFoulAction('next')} onBack={() => handleFoulAction('back')} label="Introduce 2D6 para la herida" />; case 'casualty_roll': return <RollInputStep title="Paso 6: Tirada de Lesión" value={foulState.casualtyRollInput} onChange={v => setFoulState(prev => ({...prev, casualtyRollInput: v}))} onNext={() => handleFoulAction('next')} onBack={() => handleFoulAction('back')} label="Introduce D16" pattern="([1-9]|1[0-6])" placeholder="1-16" />; case 'lasting_injury_roll': return <RollInputStep title="Paso 7: Lesión Permanente" value={foulState.lastingInjuryRollInput} onChange={v => setFoulState(prev => ({...prev, lastingInjuryRollInput: v}))} onNext={() => handleFoulAction('next')} onBack={() => handleFoulAction('back')} label="Introduce D6" pattern="[1-6]" placeholder="1-6" />; case 'summary': return <><div className="space-y-2 text-sm"><p><span className="font-semibold text-slate-300">Infractor:</span> {foulState.foulingPlayer?.customName}</p><p><span className="font-semibold text-slate-300">Víctima:</span> {foulState.victimPlayer?.customName}</p><ul className="list-disc list-inside text-slate-400">{foulState.log.map((l, i) => <li key={i}>{l}</li>)}</ul>{foulState.wasExpelled && <p className="font-bold text-red-500 mt-2">{foulState.expulsionReason || `¡${foulState.foulingPlayer?.customName} expulsado!`}</p>}</div><div className="pt-4 mt-4 border-t border-slate-700 flex justify-end"><button onClick={() => handleFoulAction('next')} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md">Finalizar</button></div></>; default: return null; }})()}</div> </div> </div> )} {isInjuryModalOpen && ( <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={() => { setIsInjuryModalOpen(false); setInjuryState(initialInjuryState); }}> <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-md w-full" onClick={e => e.stopPropagation()}> <div className="p-4 border-b border-slate-700 flex justify-between items-center"><h2 className="text-xl font-bold text-amber-400">Asistente de Lesión</h2> <button onClick={() => { setIsInjuryModalOpen(false); setInjuryState(initialInjuryState); }} className="text-slate-400 hover:text-white">&times;</button></div> <div className="p-5">{(() => { if (!liveHomeTeam || !liveOpponentTeam) return null; switch (injuryState.step) { case 'select_victim_team': return <><h3 className="text-lg text-slate-300 mb-4">Paso 1: ¿Qué equipo sufre la lesión?</h3><div className="space-y-3"><button onClick={() => setInjuryState(prev => ({ ...prev, victimTeamId: 'home', step: 'select_victim' }))} className="w-full bg-slate-700/50 p-4 rounded-md hover:bg-slate-700 font-semibold">{liveHomeTeam.name}</button><button onClick={() => setInjuryState(prev => ({ ...prev, victimTeamId: 'opponent', step: 'select_victim' }))} className="w-full bg-slate-700/50 p-4 rounded-md hover:bg-slate-700 font-semibold">{liveOpponentTeam.name}</button></div></>; case 'select_victim': { const team = injuryState.victimTeamId === 'home' ? liveHomeTeam : liveOpponentTeam; return <><h3 className="text-lg text-slate-300 mb-4">Paso 2: ¿Quién es la víctima?</h3><div className="max-h-[60vh] overflow-y-auto space-y-2">{team.players.map(p => <PlayerButton key={p.id} player={p} onSelect={player => setInjuryState(prev => ({...prev, victimPlayer: player, step: 'armor_roll'}))} />)}</div></>; } case 'armor_roll': return <DoubleDiceInputStep title="Paso 3: Tirada de Armadura" value={injuryState.armorRollInput} onChange={v => setInjuryState(prev => ({...prev, armorRollInput: v}))} onNext={() => handleInjuryAction('next')} onBack={() => handleInjuryAction('back')} label={`Introduce 2D6 contra AR ${injuryState.victimPlayer?.stats.AR}`} />; case 'injury_roll': return <DoubleDiceInputStep title="Paso 4: Tirada de Heridas" value={injuryState.injuryRollInput} onChange={v => setInjuryState(prev => ({...prev, injuryRollInput: v}))} onNext={() => handleInjuryAction('next')} onBack={() => handleInjuryAction('back')} label={`Introduce 2D6 para la herida${injuryState.isStunty ? ' (Tabla Escurridizo)' : ''}`} />; case 'casualty_roll': return <RollInputStep title="Paso 5: Tirada de Lesión" value={injuryState.casualtyRollInput} onChange={v => setInjuryState(prev => ({...prev, casualtyRollInput: v}))} onNext={() => handleInjuryAction('next')} onBack={() => handleInjuryAction('back')} label="Introduce D16" pattern="([1-9]|1[0-6])" placeholder="1-16" />; case 'lasting_injury_roll': return <RollInputStep title="Paso 6: Lesión Permanente" value={injuryState.lastingInjuryRollInput} onChange={v => setInjuryState(prev => ({...prev, lastingInjuryRollInput: v}))} onNext={() => handleInjuryAction('next')} onBack={() => handleInjuryAction('back')} label="Introduce D6" pattern="[1-6]" placeholder="1-6" />; case 'summary': return <><div className="space-y-2 text-sm"><p><span className="font-semibold text-slate-300">Víctima:</span> {injuryState.victimPlayer?.customName}</p><ul className="list-disc list-inside text-slate-400">{injuryState.log.map((l, i) => <li key={i}>{l}</li>)}</ul></div><div className="pt-4 mt-4 border-t border-slate-700 flex justify-end"><button onClick={() => handleInjuryAction('next')} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md">Finalizar</button></div></>; default: return null; }})()}</div> </div> </div> )} {isTurnoverModalOpen && <TurnoverModal onClose={() => setIsTurnoverModalOpen(false)} onConfirm={handleTurnover} />} {isApothecaryModalOpen && injuryState.victimPlayer && <ApothecaryModal player={injuryState.victimPlayer} hasUsedOnKO={(injuryState.victimTeamId === 'home' ? liveHomeTeam?.apothecaryUsedOnKO : liveOpponentTeam?.apothecaryUsedOnKO) || false} onClose={() => { setIsApothecaryModalOpen(false); const nextStep = injuryState.casualtyRoll ? 'casualty_roll' : 'summary'; if(injuryState.casualtyRoll && !injuryState.casualtyRoll.rerolled) { updatePlayerStatus(injuryState.victimPlayer!.id, injuryState.victimTeamId!, 'Lesionado', injuryState.casualtyRoll.result); setInjuryState(prev => ({...prev, step: 'summary'})); } else { updatePlayerStatus(injuryState.victimPlayer!.id, injuryState.victimTeamId!, 'KO', 'Inconsciente (KO)'); setInjuryState(prev => ({...prev, step: 'summary'})); } }} onPatchUp={() => { setIsApothecaryModalOpen(false); const teamId = injuryState.victimTeamId!; const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam; setTeam(prev => prev ? ({...prev, apothecaryUsedOnKO: true}) : null); updatePlayerStatus(injuryState.victimPlayer!.id, teamId, 'Activo', 'Recuperado por Boticario'); setInjuryState(prev => ({...prev, step: 'summary', log: [...prev.log, 'Boticario lo recupera (KO -> Reservas).']})); }} onReroll={() => { setIsApothecaryModalOpen(false); const teamId = injuryState.victimTeamId!; const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam; setTeam(prev => prev ? ({...prev, apothecary: false}) : null); if (injuryState.casualtyRoll) { setInjuryState(prev => ({...prev, step: 'casualty_roll', casualtyRollInput: '', log: [...prev.log, 'Boticario repite tirada de lesión.'], casualtyRoll: {...prev.casualtyRoll!, rerolled: true}})); } else { setInjuryState(prev => ({...prev, step: 'injury_roll', injuryRollInput: { die1: '', die2: '' }, log: [...prev.log, 'Boticario repite tirada de herida.']})); } }} />} <style>{` @keyframes fade-in-slow { from { opacity: 0; } to { opacity: 1; } } .animate-fade-in-slow { animation: fade-in-slow 0.5s ease-out forwards; } @keyframes fade-in-fast { from { opacity: 0; } to { opacity: 1; } } @keyframes slide-in-up { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } } .animate-fade-in-fast { animation: fade-in-fast 0.2s ease-out forwards; } .animate-slide-in-up { animation: slide-in-up 0.3s ease-out forwards; } `}</style> </div> );
 };
 
 export default GameBoard;
