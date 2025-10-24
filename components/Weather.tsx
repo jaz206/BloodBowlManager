@@ -4,10 +4,29 @@ import type { WeatherCondition } from '../types';
 
 const Weather: React.FC = () => {
   const [currentWeather, setCurrentWeather] = useState<WeatherCondition | null>(null);
+  const [lastRoll, setLastRoll] = useState<number | null>(null);
 
   const generateWeather = () => {
-    const randomIndex = Math.floor(Math.random() * weatherConditions.length);
-    setCurrentWeather(weatherConditions[randomIndex]);
+    // Simulate a 2D6 roll
+    const die1 = Math.floor(Math.random() * 6) + 1;
+    const die2 = Math.floor(Math.random() * 6) + 1;
+    const roll = die1 + die2;
+    setLastRoll(roll);
+
+    let result: WeatherCondition | undefined;
+    if (roll === 2) {
+      result = weatherConditions.find(e => e.roll === '2');
+    } else if (roll === 3) {
+      result = weatherConditions.find(e => e.roll === '3');
+    } else if (roll >= 4 && roll <= 10) {
+      result = weatherConditions.find(e => e.roll === '4-10');
+    } else if (roll === 11) {
+      result = weatherConditions.find(e => e.roll === '11');
+    } else { // roll === 12
+      result = weatherConditions.find(e => e.roll === '12');
+    }
+    
+    setCurrentWeather(result || null);
   };
 
   return (
@@ -21,12 +40,15 @@ const Weather: React.FC = () => {
         onClick={generateWeather}
         className="bg-amber-500 text-slate-900 font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-500/50 transform hover:scale-105 transition-all duration-200"
       >
-        Generar Clima Aleatorio
+        Generar Clima Aleatorio (2D6)
       </button>
 
-      {currentWeather && (
+      {currentWeather && lastRoll !== null && (
         <div className="mt-8 p-6 bg-slate-900/70 border border-slate-700 rounded-lg shadow-xl text-left animate-fade-in">
-          <h3 className="text-xl font-bold text-amber-300 mb-2">{currentWeather.title}</h3>
+          <h3 className="text-xl font-bold text-amber-300 mb-2 flex items-center">
+            <span className="bg-slate-700 text-amber-300 text-lg font-mono px-3 py-1 rounded-md mr-4">{lastRoll} ({currentWeather.roll})</span>
+            <span>{currentWeather.title}</span>
+          </h3>
           <p className="text-slate-300">{currentWeather.description}</p>
         </div>
       )}

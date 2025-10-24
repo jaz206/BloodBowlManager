@@ -1,5 +1,3 @@
-
-
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import type { ManagedTeam, ManagedPlayer, Player, Skill } from '../types';
 import { teamsData } from '../data/teams';
@@ -12,6 +10,7 @@ import ShieldCheckIcon from './icons/ShieldCheckIcon';
 import ImageModal from './ImageModal';
 import UploadIcon from './icons/UploadIcon';
 import MedicalCrossIcon from './icons/MedicalCrossIcon';
+import MiniField from './MiniField';
 
 
 declare const QRCode: any;
@@ -89,6 +88,38 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
         return playersValue + rerollsValue + apothecaryValue + cheerleadersValue + assistantCoachesValue + dedicatedFansValue;
     }, [team, baseRoster]);
     
+    const playersForField = useMemo(() => {
+        const starters = team.players.filter(p => !(p.isBenched ?? true));
+        const playersWithPositions = [...starters]; 
+
+        const occupiedPositions = new Set(
+            playersWithPositions
+                .filter(p => p.fieldPosition)
+                .map(p => `${p.fieldPosition!.x},${p.fieldPosition!.y}`)
+        );
+
+        playersWithPositions.forEach(player => {
+            if (!player.fieldPosition) {
+                let placed = false;
+                for (let y = 6; y >= 3 && !placed; y--) {
+                    for (let x = 2; x < 13 && !placed; x++) {
+                        const posKey = `${x},${y}`;
+                        if (!occupiedPositions.has(posKey)) {
+                            player.fieldPosition = { x, y };
+                            occupiedPositions.add(posKey);
+                            placed = true;
+                        }
+                    }
+                }
+                if (!placed) {
+                    player.fieldPosition = { x: 7, y: 6 };
+                }
+            }
+        });
+
+        return playersWithPositions;
+    }, [team.players]);
+
     const handleSkillClick = (skillName: string) => {
         const cleanedName = skillName.split('(')[0].trim();
         const foundSkill = skillsData.find(s => s.name.toLowerCase().startsWith(cleanedName.toLowerCase()));
@@ -318,7 +349,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
             spp: 0,
             gainedSkills: [],
             lastingInjuries: [],
-            isBenched: false,
+            isBenched: true, // New players start on the bench
             missNextGame: 0,
         };
         onUpdate({
@@ -329,9 +360,69 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
     };
     
     const togglePlayerBenched = (playerId: number) => {
-        const updatedPlayers = team.players.map(p => 
-            p.id === playerId ? { ...p, isBenched: !(p.isBenched ?? false) } : p
+        const player = team.players.find(p => p.id === playerId);
+        if (!player) return;
+
+        const isCurrentlyBenched = player.isBenched ?? false;
+        const startersCount = team.players.filter(p => !(p.isBenched ?? false)).length;
+
+        if (isCurrentlyBenched && startersCount >= 11) {
+            alert('No puedes tener más de 11 jugadores titulares.');
+            return;
+        }
+
+        const updatedPlayers = team.players.map(p => {
+            if (p.id === playerId) {
+                const isNowBenched = !isCurrentlyBenched;
+                const updatedPlayer = { ...p, isBenched: isNowBenched };
+
+                if (isNowBenched) {
+                    delete updatedPlayer.fieldPosition;
+                } else {
+                    if (!updatedPlayer.fieldPosition) {
+                        const onFieldPlayers = team.players.filter(pl => !(pl.isBenched ?? false) && pl.id !== playerId);
+                        const occupied = new Set(onFieldPlayers.map(pl => pl.fieldPosition ? `${pl.fieldPosition.x},${pl.fieldPosition.y}` : '').filter(Boolean));
+                        let x = 7, y = 6;
+                        let attempts = 0;
+                        while(occupied.has(`${x},${y}`) && attempts < 15*4) {
+                            x = (x + 1) % 15;
+                            if (x === 0) y--;
+                            if (y < 3) { y = 6; }
+                            attempts++;
+                        }
+                        updatedPlayer.fieldPosition = { x, y };
+                    }
+                }
+                return updatedPlayer;
+            }
+            return p;
+        });
+        
+        onUpdate({ ...team, players: updatedPlayers });
+    };
+
+    const handlePlayerMoveOnField = (playerId: number, newPos: { x: number; y: number }) => {
+        const currentPlayers = team.players;
+        const playerBeingMoved = currentPlayers.find(p => p.id === playerId);
+        if (!playerBeingMoved) return;
+
+        const playerAtTarget = currentPlayers.find(p => 
+            p.id !== playerId && 
+            p.fieldPosition?.x === newPos.x && 
+            p.fieldPosition?.y === newPos.y
         );
+
+        const updatedPlayers = currentPlayers.map(p => {
+            if (p.id === playerId) {
+                return { ...p, fieldPosition: newPos };
+            }
+            // If there's a player at the target, swap positions with them
+            if (playerAtTarget && p.id === playerAtTarget.id) {
+                return { ...p, fieldPosition: playerBeingMoved.fieldPosition };
+            }
+            return p;
+        });
+
         onUpdate({ ...team, players: updatedPlayers });
     };
 
@@ -364,7 +455,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
         onDeleteRequest(team.id!);
     };
 
-    const starterCount = team.players.filter(p => !(p.isBenched ?? false)).length;
+    const starterCount = team.players.filter(p => !(p.isBenched ?? true)).length;
 
     return (
         <div className="space-y-6">
@@ -473,6 +564,21 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                 </div>
             </div>
 
+            {/* Default Deployment */}
+            <div className="bg-slate-900/70 p-4 rounded-lg border border-slate-700">
+                <h3 className="text-lg font-semibold text-amber-400 mb-3">Despliegue por Defecto</h3>
+                <p className="text-sm text-slate-400 mb-4">Arrastra a tus jugadores titulares para establecer su posición inicial en los partidos.</p>
+                <div className="max-w-xl mx-auto">
+                    <MiniField 
+                        players={playersForField}
+                        teamColor="bg-sky-500"
+                        onPlayerMove={handlePlayerMoveOnField}
+                        onPlayerClick={setEditingPlayer}
+                    />
+                </div>
+            </div>
+
+
             {/* Hire Players */}
             <div className="bg-slate-900/70 p-4 rounded-lg border border-slate-700">
                  <h3 className="text-lg font-semibold text-amber-400 mb-3">Fichar Jugadores</h3>
@@ -560,7 +666,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                                     ...p.gainedSkills
                                 ];
                                 return (
-                                <tr key={p.id} className={p.isBenched ? 'opacity-60' : ''}>
+                                <tr key={p.id} className={(p.isBenched ?? true) ? 'opacity-60' : ''}>
                                     <td className="p-2 font-bold text-white min-w-[150px]" onDoubleClick={() => handleNameDoubleClick(p)}>
                                         <div className="flex items-center gap-2">
                                             {p.missNextGame && p.missNextGame > 0 && (
@@ -592,9 +698,9 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                                     <td className="p-2">
                                         <button 
                                             onClick={() => togglePlayerBenched(p.id)}
-                                            className={`text-xs font-bold py-1 px-3 rounded-full ${p.isBenched ? 'bg-slate-600 text-slate-200 hover:bg-slate-500' : 'bg-green-600 text-white hover:bg-green-500'}`}
+                                            className={`text-xs font-bold py-1 px-3 rounded-full ${(p.isBenched ?? true) ? 'bg-slate-600 text-slate-200 hover:bg-slate-500' : 'bg-green-600 text-white hover:bg-green-500'}`}
                                         >
-                                            {p.isBenched ? 'Banquillo' : 'Titular'}
+                                            {(p.isBenched ?? true) ? 'Banquillo' : 'Titular'}
                                         </button>
                                     </td>
                                     <td className="p-2 text-center">{p.spp}</td>

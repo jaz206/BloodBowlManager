@@ -29,6 +29,8 @@ import SkillModal from './SkillModal';
 import ApothecaryModal from './ApothecaryModal';
 import ChevronDownIcon from './icons/ChevronDownIcon';
 import ShieldCheckIcon from './icons/ShieldCheckIcon';
+import MiniField from './MiniField';
+
 
 declare const Html5Qrcode: any;
 declare const XLSX: any;
@@ -191,122 +193,6 @@ const isEligibleStar = (star: StarPlayer, teamRoster: Team | undefined) => {
     });
 };
 
-const MiniField: React.FC<{
-    players: ManagedPlayer[];
-    teamColor: string;
-    teamId: 'home' | 'opponent';
-    onPlayerMove: (playerId: number, newPos: { x: number; y: number }) => void;
-}> = ({ players, teamColor, teamId, onPlayerMove }) => {
-    const GRID_COLS = 15;
-    const GRID_ROWS = 7;
-    const fieldRef = useRef<HTMLDivElement>(null);
-    const draggedPlayerRef = useRef<{ id: number; offsetX: number; offsetY: number } | null>(null);
-
-    const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>, player: ManagedPlayer) => {
-        e.preventDefault();
-        const tokenRect = e.currentTarget.getBoundingClientRect();
-        draggedPlayerRef.current = {
-            id: player.id,
-            offsetX: e.clientX - tokenRect.left,
-            offsetY: e.clientY - tokenRect.top,
-        };
-        e.currentTarget.style.cursor = 'grabbing';
-    };
-
-    const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>, player: ManagedPlayer) => {
-        e.preventDefault();
-        const touch = e.touches[0];
-        const tokenRect = e.currentTarget.getBoundingClientRect();
-        draggedPlayerRef.current = {
-            id: player.id,
-            offsetX: touch.clientX - tokenRect.left,
-            offsetY: touch.clientY - tokenRect.top,
-        };
-    };
-
-    const movePlayer = useCallback((clientX: number, clientY: number) => {
-        if (!draggedPlayerRef.current || !fieldRef.current) return;
-
-        const fieldRect = fieldRef.current.getBoundingClientRect();
-        const x = clientX - fieldRect.left - draggedPlayerRef.current.offsetX;
-        const y = clientY - fieldRect.top - draggedPlayerRef.current.offsetY;
-
-        const cellWidth = fieldRect.width / GRID_COLS;
-        const cellHeight = fieldRect.height / GRID_ROWS;
-
-        let gridX = Math.round(x / cellWidth);
-        let gridY = Math.round(y / cellHeight);
-
-        gridX = Math.max(0, Math.min(GRID_COLS - 1, gridX));
-        gridY = Math.max(0, Math.min(GRID_ROWS - 1, gridY));
-
-        onPlayerMove(draggedPlayerRef.current.id, { x: gridX, y: gridY });
-    }, [onPlayerMove]);
-
-    const handleMouseMove = useCallback((e: MouseEvent) => movePlayer(e.clientX, e.clientY), [movePlayer]);
-    const handleTouchMove = useCallback((e: TouchEvent) => movePlayer(e.touches[0].clientX, e.touches[0].clientY), [movePlayer]);
-
-    const handleMouseUp = useCallback(() => {
-        draggedPlayerRef.current = null;
-    }, []);
-
-    useEffect(() => {
-        const upHandler = () => handleMouseUp();
-        window.addEventListener('mousemove', handleMouseMove);
-        window.addEventListener('mouseup', upHandler);
-        window.addEventListener('touchmove', handleTouchMove, { passive: false });
-        window.addEventListener('touchend', upHandler);
-
-        return () => {
-            window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('mouseup', upHandler);
-            window.removeEventListener('touchmove', handleTouchMove);
-            window.removeEventListener('touchend', upHandler);
-        };
-    }, [handleMouseMove, handleMouseUp, handleTouchMove]);
-
-    return (
-        <div 
-            ref={fieldRef}
-            className="relative w-full aspect-[15/7] bg-green-900/50 rounded-md border-2 border-green-700/50 select-none touch-none"
-        >
-            {/* Grid */}
-            <div className="absolute inset-0 grid grid-cols-15 grid-rows-7">
-                {Array.from({ length: GRID_COLS * GRID_ROWS }).map((_, i) => (
-                    <div key={i} className="border border-green-300/10"></div>
-                ))}
-            </div>
-            {/* Field Markings */}
-            <div className="absolute top-[14.28%] left-0 w-full h-[1px] bg-white/50"></div> {/* Scrimmage Line */}
-            <div className="absolute top-0 left-[26.66%] w-[1px] h-full bg-white/30"></div> {/* Left Wide Zone */}
-            <div className="absolute top-0 right-[26.66%] w-[1px] h-full bg-white/30"></div> {/* Right Wide Zone */}
-
-            {/* Players */}
-            {players.map((player, index) => {
-                if (!player.fieldPosition) return null;
-                return (
-                    <div 
-                        key={player.id}
-                        onMouseDown={(e) => handleMouseDown(e, player)}
-                        onTouchStart={(e) => handleTouchStart(e, player)}
-                        className="absolute w-[6.66%] h-[14.28%] transform -translate-x-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing z-10"
-                        style={{ 
-                            top: `${(player.fieldPosition.y + 0.5) / GRID_ROWS * 100}%`, 
-                            left: `${(player.fieldPosition.x + 0.5) / GRID_COLS * 100}%`,
-                            touchAction: 'none' // Prevent scrolling on mobile
-                        }}
-                    >
-                        <div className={`w-full h-full rounded-full ${teamColor} border-2 border-white/80 shadow-lg flex items-center justify-center text-white font-bold text-sm`}>
-                            {index + 1}
-                        </div>
-                    </div>
-                );
-            })}
-             <style>{`.grid-cols-15 { grid-template-columns: repeat(15, minmax(0, 1fr)); } .grid-rows-7 { grid-template-rows: repeat(7, minmax(0, 1fr)); }`}</style>
-        </div>
-    );
-};
-
 const cloneLiveTeam = (team: ManagedTeam): ManagedTeam => {
     // Safe deep clone to prevent circular reference errors with Firestore objects
     const clonedPlayers = team.players.map(p => {
@@ -436,27 +322,10 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
     useEffect(() => { 
         if (homeTeam) { 
             const liveTeam = cloneLiveTeam(homeTeam); 
-            const occupiedPositions = new Set<string>();
-
             liveTeam.players.forEach((p: ManagedPlayer) => { 
-                p.status = p.isBenched ? 'Reserva' : 'Activo'; 
-                p.fieldPosition = undefined;
+                p.status = (p.isBenched ?? true) ? 'Reserva' : 'Activo'; 
                 if (!p.sppActions) p.sppActions = {}; 
             }); 
-            
-            const playersToPosition = liveTeam.players.filter(p => p.status === 'Activo');
-
-            playersToPosition.forEach((player) => {
-                let x = 2;
-                let y = 6;
-                while(occupiedPositions.has(`${x},${y}`)) {
-                    x++;
-                    if (x > 12) { x = 2; y--; }
-                }
-                player.fieldPosition = { x, y };
-                occupiedPositions.add(`${x},${y}`);
-            });
-
             liveTeam.liveRerolls = liveTeam.rerolls; 
             setLiveHomeTeam(liveTeam); 
         } 
@@ -657,13 +526,13 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                         const onFieldPlayers = prevTeam.players.filter(pl => pl.status === 'Activo' && pl.id !== player.id);
                         const occupiedPositions = new Set(onFieldPlayers.map(pl => pl.fieldPosition ? `${pl.fieldPosition.x},${pl.fieldPosition.y}` : '').filter(Boolean));
 
-                        let x = 2;
+                        let x = 7;
                         let y = 6;
                         while(occupiedPositions.has(`${x},${y}`)) {
-                            x++;
-                            if (x > 12) {
-                                x = 2;
-                                y--;
+                            x = (x + 1) % 15;
+                            if (x === 0) y--;
+                            if (y < 3) {
+                                x=7; y=6; break; // fallback
                             }
                         }
                         updatedPlayer.fieldPosition = { x, y };
@@ -683,9 +552,8 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
         const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
         setTeam(prev => {
             if (!prev) return null;
-            // Prevent placing multiple players on the same square
             const isOccupied = prev.players.some(p => p.id !== playerId && p.fieldPosition?.x === newPos.x && p.fieldPosition?.y === newPos.y);
-            if (isOccupied) return prev;
+            if (isOccupied) return prev; // Simple collision detection: don't move.
 
             return {
                 ...prev,
@@ -695,8 +563,8 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
     }, []);
 
     const handleSuggestDeployment = () => {
-        const deployTeam = (team: ManagedPlayer[]) => {
-            if (team.length === 0) return [];
+        const deployTeam = (players: ManagedPlayer[]) => {
+            if (players.length === 0) return players;
     
             const GRID_COLS = 15;
             const GRID_ROWS = 7;
@@ -705,56 +573,45 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
             const WIDE_ZONE_X_START_RIGHT = 11;
     
             let availableSquares: {x:number, y:number}[] = [];
-            for(let y = 0; y < GRID_ROWS; y++) {
+            for(let y = GRID_ROWS - 1; y >= SCRIMMAGE_Y; y--) {
                 for(let x = 0; x < GRID_COLS; x++) {
                     availableSquares.push({x, y});
                 }
             }
             availableSquares.sort(() => 0.5 - Math.random());
     
-            const newPlayers = cloneLiveTeam({ players: team } as ManagedTeam).players;
-            const deployedIds = new Set<number>();
+            const newPlayers = players.map(p => ({ ...p }));
+            const assignedPositions = new Set<string>();
+
             let scrimmageCount = 0;
             let wideLeftCount = 0;
             let wideRightCount = 0;
-    
-            const assignSquare = (player: ManagedPlayer, squares: {x:number, y:number}[]) => {
-                for (let i = 0; i < squares.length; i++) {
-                    const pos = squares[i];
-                    
+            
+            newPlayers.forEach(player => {
+                for (let i = 0; i < availableSquares.length; i++) {
+                    const pos = availableSquares[i];
+                    if (assignedPositions.has(`${pos.x},${pos.y}`)) continue;
+
+                    const isScrimmage = pos.y === SCRIMMAGE_Y;
                     const isWideLeft = pos.x <= WIDE_ZONE_X_END;
                     const isWideRight = pos.x >= WIDE_ZONE_X_START_RIGHT;
-                    
+
+                    if (isScrimmage && scrimmageCount >= 3) continue;
                     if (isWideLeft && wideLeftCount >= 2) continue;
                     if (isWideRight && wideRightCount >= 2) continue;
                     
                     player.fieldPosition = pos;
-                    availableSquares = availableSquares.filter(s => s.x !== pos.x || s.y !== pos.y);
-                    deployedIds.add(player.id);
+                    assignedPositions.add(`${pos.x},${pos.y}`);
 
-                    if (pos.y <= SCRIMMAGE_Y) scrimmageCount++;
+                    if (isScrimmage) scrimmageCount++;
                     if (isWideLeft) wideLeftCount++;
                     if (isWideRight) wideRightCount++;
                     
-                    return true;
+                    break;
                 }
-                return false;
-            };
-
-            const scrimmageSquares = availableSquares.filter(s => s.y <= SCRIMMAGE_Y);
-            for (const player of newPlayers) {
-                if (scrimmageCount < 3) {
-                    assignSquare(player, scrimmageSquares);
-                }
-            }
-
-            for (const player of newPlayers) {
-                if (!deployedIds.has(player.id)) {
-                    assignSquare(player, availableSquares);
-                }
-            }
+            });
             
-            return newPlayers.map(p => ({ ...p, fieldPosition: p.fieldPosition || {x:0, y:6} }));
+            return newPlayers;
         };
     
         const updateTeamDeployment = (setTeam: React.Dispatch<React.SetStateAction<ManagedTeam | null>>) => {
@@ -879,7 +736,7 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                                                     )}
                                                     <h3 className={`font-bold text-lg ${teamId === 'home' ? 'text-sky-400' : 'text-red-400'}`}>{team.name}</h3>
                                                 </div>
-                                                <MiniField players={onField} teamColor={teamId === 'home' ? 'bg-sky-500' : 'bg-red-500'} teamId={teamId} onPlayerMove={(playerId, pos) => handlePlayerMove(teamId, playerId, pos)} />
+                                                <MiniField players={onField} teamColor={teamId === 'home' ? 'bg-sky-500' : 'bg-red-500'} onPlayerMove={(playerId, pos) => handlePlayerMove(teamId, playerId, pos)} />
                                                 <div className="space-y-2 max-h-[30vh] overflow-y-auto pr-2">
                                                     <div>
                                                         <h4 className="font-semibold text-slate-400 text-sm sticky top-0 bg-slate-800 z-10 py-1 -mx-3 px-3">En el Campo ({onField.length}/11)</h4>
@@ -1129,7 +986,7 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                     </div>
                 </div>
             );
-            case 'post_game': if(!liveHomeTeam || !liveOpponentTeam) return <div>Cargando...</div>; return <PostGameWizard initialHomeTeam={liveHomeTeam} opponentTeam={liveOpponentTeam} score={score} fame={fame.home} playersMNG={playersMissingNextGame.filter(p => p.teamId === 'home')} onConfirm={handleConfirmPostGame} />;
+            case 'post_game': if(!homeTeam || !liveHomeTeam || !liveOpponentTeam) return <div>Cargando...</div>; return <PostGameWizard initialHomeTeam={homeTeam} finalHomeTeam={liveHomeTeam} opponentTeam={liveOpponentTeam} score={score} fame={fame.home} playersMNG={playersMissingNextGame.filter(p => p.teamId === 'home')} onConfirm={handleConfirmPostGame} />;
             default: return <div>Estado de juego desconocido.</div>;
         }
     };

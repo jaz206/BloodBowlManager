@@ -1,6 +1,7 @@
 
 
 
+
 export interface User {
   id: string;
   name: string;
@@ -146,8 +147,9 @@ export interface ManagedPlayer extends Player {
   sppActions?: Partial<Record<SppActionType, number>>;
   isJourneyman?: boolean;
   missNextGame?: number;
-  isBenched?: boolean;
   fieldPosition?: { x: number; y: number; }; // For live game board
+  // FIX: Added isBenched property to align with its usage in various components.
+  isBenched?: boolean;
 }
 
 export interface ManagedTeam {

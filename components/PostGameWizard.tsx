@@ -51,7 +51,8 @@ const SkillSelectionModal: React.FC<SkillSelectionModalProps> = ({ player, roste
 };
 
 interface PostGameWizardProps {
-    initialHomeTeam: ManagedTeam;
+    initialHomeTeam: ManagedTeam; // State before the game
+    finalHomeTeam: ManagedTeam; // State after the game
     opponentTeam: ManagedTeam;
     score: { home: number; opponent: number };
     fame: number;
@@ -110,7 +111,7 @@ const cloneTeamForPostGame = (team: ManagedTeam): ManagedTeam => {
 };
 
 
-const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, opponentTeam, score, fame, playersMNG, onConfirm }) => {
+const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalHomeTeam, opponentTeam, score, fame, playersMNG, onConfirm }) => {
     const [step, setStep] = useState(0);
     const [fansChange, setFansChange] = useState<number>(0);
     const [fansRoll, setFansRoll] = useState<number | null>(null);
@@ -121,7 +122,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, oppone
         const winningsRoll = Math.floor(Math.random() * 6) + 1;
         const calculatedWinnings = (winningsRoll + fame) * 10000;
 
-        const tempTeam = cloneTeamForPostGame(initialHomeTeam);
+        const tempTeam = cloneTeamForPostGame(finalHomeTeam);
         let mvpPlayer: (ManagedPlayer & { teamName: string }) | null = null;
         
         const isEligibleForMvp = (p: ManagedPlayer) => !p.isStarPlayer && !p.isJourneyman;
@@ -166,7 +167,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, oppone
             mvp: mvpPlayer,
             team: tempTeam,
         });
-    }, [initialHomeTeam, opponentTeam, score, fame, playersMNG]);
+    }, [finalHomeTeam, opponentTeam, score, fame, playersMNG]);
 
     const handleConfirm = () => {
         if (!postGameState) return;
@@ -220,7 +221,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, oppone
                 return (
                     <div className="space-y-4">
                         <h3 className="text-xl font-semibold text-amber-400">Paso 1: Ganancias y MJP</h3>
-                        <p>El equipo <span className="font-bold text-white">{initialHomeTeam.name}</span> ha ganado <span className="font-bold text-green-400">{winnings.toLocaleString()} M.O.</span> de la recaudación.</p>
+                        <p>El equipo <span className="font-bold text-white">{finalHomeTeam.name}</span> ha ganado <span className="font-bold text-green-400">{winnings.toLocaleString()} M.O.</span> de la recaudación.</p>
                         {mvp ? (
                             <p>¡<span className="font-bold text-white">{mvp.customName}</span> de {mvp.teamName} ha sido elegido Mejor Jugador del Partido y gana 4 PE!</p>
                         ) : <p>No había jugadores elegibles para ser MJP.</p>}
@@ -267,6 +268,11 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, oppone
                 );
              case 3:
                 const playersWithMNG = updatedTeam.players.filter(p => (p.missNextGame || 0) > 0);
+                const playersWithNewInjuries = updatedTeam.players.filter(p => {
+                    const originalPlayer = initialHomeTeam.players.find(op => op.id === p.id);
+                    if (!originalPlayer) return true; // It's a journeyman that got a lasting injury
+                    return p.lastingInjuries.length > originalPlayer.lastingInjuries.length;
+                });
                 return (
                      <div className="space-y-4">
                         <h3 className="text-xl font-semibold text-amber-400">Paso 4: Resumen Final</h3>
@@ -282,6 +288,18 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, oppone
                                 return null;
                             })}
                         </ul>
+                        {playersWithNewInjuries.length > 0 && (
+                            <div className="mt-4">
+                                <p className="font-semibold text-red-400">Nuevas Lesiones Permanentes:</p>
+                                <ul className="list-disc list-inside text-red-400 text-sm">
+                                    {playersWithNewInjuries.map(p => {
+                                        const originalPlayer = initialHomeTeam.players.find(op => op.id === p.id);
+                                        const newInjuries = p.lastingInjuries.filter(inj => !originalPlayer?.lastingInjuries.includes(inj));
+                                        return <li key={p.id}>{p.customName}: {newInjuries.join(', ')}</li>
+                                    })}
+                                </ul>
+                            </div>
+                        )}
                         {playersWithMNG.length > 0 && (
                             <div className="mt-4">
                                 <p className="font-semibold text-red-400">Se pierden el próximo partido:</p>

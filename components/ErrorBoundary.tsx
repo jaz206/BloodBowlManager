@@ -1,4 +1,3 @@
-// FIX: The component was not implemented as a valid React class component, causing 'this' context issues. It has been correctly converted to a class component to function as an error boundary.
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 
 interface Props {
@@ -11,6 +10,9 @@ interface State {
   errorInfo: ErrorInfo | null;
 }
 
+// FIX: Error boundaries in React must be class components. This component has been
+// converted to a class component that extends React.Component to enable the use of
+// error boundary lifecycle methods and fix errors where `this.props` and `this.setState` were not available.
 class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false,
