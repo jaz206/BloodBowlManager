@@ -8,6 +8,7 @@ export const teamsData: Team[] = [
     tier: 2,
     apothecary: "Sí",
     image: "https://i.pinimg.com/736x/01/95/95/0195951b4bb9081cf33a85740fedb59c.jpg",
+    ratings: { fuerza: 85, agilidad: 40, velocidad: 40, armadura: 90, pase: 20 },
     roster: [
       { qty: "0-12", position: "Goblin Bruiser Lineman", cost: 45000, stats: { MV: 6, FU: "2", AG: "3+", PS: "4+", AR: "8+" }, skills: "Cabeza dura, Escurridizo, Esquivar, Humanoide bala", primary: "A", secondary: "FGP" },
       { qty: "0-6", position: "Black Orc", cost: 90000, stats: { MV: 4, FU: "4", AG: "4+", PS: "5+", AR: "10+" }, skills: "Apartar, Luchador", primary: "FG", secondary: "AP" },
@@ -21,6 +22,7 @@ export const teamsData: Team[] = [
     tier: 2,
     apothecary: "Sí",
     image: "https://i.pinimg.com/736x/76/4c/a7/764ca7f2f36fbd1cd1a513191cb31c9b.jpg",
+    ratings: { fuerza: 80, agilidad: 60, velocidad: 55, armadura: 85, pase: 30 },
     roster: [
       { qty: "0-16", position: "Beastman Runner Linemen", cost: 60000, stats: { MV: 6, FU: "3", AG: "3+", PS: "4+", AR: "9+" }, skills: "Cuernos", primary: "FGM", secondary: "AP" },
       { qty: "0-4", position: "Chosen Blocker", cost: 100000, stats: { MV: 5, FU: "4", AG: "3+", PS: "4+", AR: "10+" }, skills: "Ninguna", primary: "FGM", secondary: "A" },
@@ -36,6 +38,7 @@ export const teamsData: Team[] = [
     tier: 2,
     apothecary: "Sí",
     image: "https://i.pinimg.com/736x/c3/bc/00/c3bc00232d9e1ffccb8fa176aeb236c2.jpg",
+    ratings: { fuerza: 70, agilidad: 65, velocidad: 65, armadura: 75, pase: 50 },
     roster: [
         { qty: "0-12", position: "Renegade Human Lineman", cost: 50000, stats: { MV: 6, FU: "3", AG: "3+", PS: "4+", AR: "9+" }, skills: "Animadversión (todo el equipo), Ninguna", primary: "GM", secondary: "AF" },
         { qty: "0-1", position: "Renegade Human Thrower", cost: 75000, stats: { MV: 6, FU: "3", AG: "3+", PS: "3+", AR: "9+" }, skills: "Animadversión (todo el equipo), Pasar, Manos seguras", primary: "GMP", secondary: "AF" },
@@ -56,6 +59,7 @@ export const teamsData: Team[] = [
     tier: 1,
     apothecary: "Sí",
     image: "https://i.pinimg.com/736x/05/63/62/0563628d5c3b3315c891ad4bd1970384.jpg",
+    ratings: { fuerza: 60, agilidad: 90, velocidad: 75, armadura: 70, pase: 80 },
     roster: [
       { qty: "0-12", position: "Linemen", cost: 70000, stats: { MV: 6, FU: "3", AG: "2+", PS: "4+", AR: "9+" }, skills: "Ninguna", primary: "AGP", secondary: "F" },
       { qty: "0-2", position: "Runners", cost: 80000, stats: { MV: 7, FU: "3", AG: "2+", PS: "3+", AR: "8+" }, skills: "Pase precipitado", primary: "AGP", secondary: "F" },
@@ -71,6 +75,7 @@ export const teamsData: Team[] = [
     tier: 1,
     apothecary: "Sí",
     image: "https://i.pinimg.com/736x/67/ea/e3/67eae393dea427e1f14fbeb0996567ea.jpg",
+    ratings: { fuerza: 65, agilidad: 30, velocidad: 40, armadura: 95, pase: 45 },
     roster: [
       { qty: "0-12", position: "Dwarf Blocker", cost: 70000, stats: { MV: 4, FU: "3", AG: "4+", PS: "5+", AR: "10+" }, skills: "Cabeza dura, Placaje defensivo, Placar", primary: "FG", secondary: "A" },
       { qty: "0-2", position: "Runners", cost: 85000, stats: { MV: 6, FU: "3", AG: "3+", PS: "4+", AR: "9+" }, skills: "Cabeza dura, Manos seguras", primary: "GP", secondary: "AF" },
@@ -86,6 +91,7 @@ export const teamsData: Team[] = [
     tier: 2,
     apothecary: "Sí",
     image: "https://i.pinimg.com/736x/00/92/17/0092173b8d1e26ac361e877e871a6977.jpg",
+    ratings: { fuerza: 55, agilidad: 90, velocidad: 80, armadura: 65, pase: 90 },
     roster: [
       { qty: "0-12", position: "Linemen", cost: 60000, stats: { MV: 6, FU: "3", AG: "2+", PS: "4+", AR: "8+" }, skills: "Ninguna", primary: "AG", secondary: "F" },
       { qty: "0-2", position: "Throwers", cost: 75000, stats: { MV: 6, FU: "3", AG: "2+", PS: "2+", AR: "8+" }, skills: "Pasar", primary: "AGP", secondary: "F" },
@@ -100,6 +106,7 @@ export const teamsData: Team[] = [
     tier: 3,
     apothecary: "Sí",
     image: "https://i.pinimg.com/736x/20/90/b4/2090b456fd49abe77abc7362c8181b0d.jpg",
+    ratings: { fuerza: 30, agilidad: 70, velocidad: 65, armadura: 60, pase: 15 },
     roster: [
       { qty: "0-16", position: "Lineman", cost: 40000, stats: { MV: 6, FU: "2", AG: "3+", PS: "4+", AR: "8+" }, skills: "Escurridizo, Esquivar, Humanoide bala", primary: "A", secondary: "FGP" },
       { qty: "0-1", position: "Bomma", cost: 45000, stats: { MV: 6, FU: "2", AG: "3+", PS: "4+", AR: "8+" }, skills: "Arma secreta, Bombardero, Escurridizo, Esquivar", primary: "AP", secondary: "FG" },
@@ -118,6 +125,7 @@ export const teamsData: Team[] = [
     tier: 3,
     apothecary: "Sí",
     image: "https://i.pinimg.com/736x/b2/f0/5c/b2f05c2fcd61096bbf20a2b194bad517.jpg",
+    ratings: { fuerza: 25, agilidad: 70, velocidad: 50, armadura: 55, pase: 30 },
     roster: [
       { qty: "0-16", position: "Halfling Hopeful Linemen", cost: 30000, stats: { MV: 5, FU: "2", AG: "3+", PS: "4+", AR: "7+" }, skills: "Escurridizo, Esquivar, Humanoide bala", primary: "A", secondary: "FG" },
       { qty: "0-2", position: "Halfling Heftys", cost: 50000, stats: { MV: 5, FU: "2", AG: "3+", PS: "3+", AR: "7+" }, skills: "Escurridizo, Esquivar, Furia, Placaje defensivo, Zafarse", primary: "AP", secondary: "FG" },
@@ -132,6 +140,7 @@ export const teamsData: Team[] = [
     tier: 1,
     apothecary: "Sí",
     image: "https://i.pinimg.com/736x/c2/63/6b/c2636b8d808236de876bc37716a39f49.jpg",
+    ratings: { fuerza: 65, agilidad: 70, velocidad: 70, armadura: 80, pase: 75 },
     roster: [
       { qty: "0-16", position: "Human Linemen", cost: 50000, stats: { MV: 6, FU: "3", AG: "3+", PS: "4+", AR: "9+" }, skills: "Ninguna", primary: "G", secondary: "AF" },
       { qty: "0-2", position: "Throwers", cost: 80000, stats: { MV: 6, FU: "3", AG: "3+", PS: "2+", AR: "9+" }, skills: "Manos seguras, Pasar", primary: "GP", secondary: "AF" },
@@ -148,6 +157,7 @@ export const teamsData: Team[] = [
     tier: 2,
     apothecary: "Sí",
     image: "https://i.pinimg.com/736x/ff/75/29/ff7529450d7c3b9188700a90bf07c9f4.jpg",
+    ratings: { fuerza: 65, agilidad: 65, velocidad: 70, armadura: 75, pase: 70 },
     roster: [
       { qty: "0-12", position: "Imperial Retainer Linemen", cost: 50000, stats: { MV: 6, FU: "3", AG: "4+", PS: "4+", AR: "8+" }, skills: "Zafarse", primary: "G", secondary: "AF" },
       { qty: "0-2", position: "Imperial Throwers", cost: 75000, stats: { MV: 6, FU: "3", AG: "3+", PS: "3+", AR: "9+" }, skills: "Pasar, Pase a la carrera", primary: "GP", secondary: "AF" },
@@ -163,6 +173,7 @@ export const teamsData: Team[] = [
     tier: 1,
     apothecary: "Sí",
     image: "https://i.pinimg.com/736x/b4/c1/f5/b4c1f571ca61aaba9bc450b462b1783d.jpg",
+    ratings: { fuerza: 75, agilidad: 60, velocidad: 70, armadura: 80, pase: 30 },
     roster: [
       { qty: "0-12", position: "Skink Runner", cost: 60000, stats: { MV: 8, FU: "2", AG: "3+", PS: "4+", AR: "8+" }, skills: "Escurridizo, Esquivar", primary: "A", secondary: "FG" },
       { qty: "0-2", position: "Chameleon Skinks", cost: 70000, stats: { MV: 7, FU: "2", AG: "3+", PS: "3+", AR: "8+" }, skills: "Atento al balón, Escurridizo, Esquivar, Perseguir", primary: "A", secondary: "FGP" },
@@ -177,6 +188,7 @@ export const teamsData: Team[] = [
     tier: 2,
     apothecary: "No",
     image: "https://i.pinimg.com/736x/a9/d0/c9/a9d0c9c23d2a99e34d6e0dae24ab2e1d.jpg",
+    ratings: { fuerza: 75, agilidad: 70, velocidad: 70, armadura: 80, pase: 20 },
     roster: [
       { qty: "0-16", position: "Zombie Linemen", cost: 40000, stats: { MV: 4, FU: "3", AG: "4+", PS: "4+", AR: "9+" }, skills: "Regeneración", primary: "G", secondary: "AF" },
       { qty: "0-2", position: "Ghoul Runners", cost: 75000, stats: { MV: 7, FU: "3", AG: "3+", PS: "4+", AR: "8+" }, skills: "Esquivar", primary: "AG", secondary: "FP" },
@@ -192,6 +204,7 @@ export const teamsData: Team[] = [
     tier: 2,
     apothecary: "No",
     image: "https://i.pinimg.com/736x/d3/c6/1f/d3c61fa5d46fc5872dd609282a34047d.jpg",
+    ratings: { fuerza: 75, agilidad: 40, velocidad: 45, armadura: 85, pase: 10 },
     roster: [
       { qty: "0-12", position: "Rotter Linemen", cost: 35000, stats: { MV: 5, FU: "3", AG: "4+", PS: "6+", AR: "9+" }, skills: "Descomposición, Infectado", primary: "GM", secondary: "AF" },
       { qty: "0-4", position: "Pestigors", cost: 75000, stats: { MV: 6, FU: "3", AG: "3+", PS: "4+", AR: "9+" }, skills: "Cuernos, Infectado, Regeneración", primary: "FGM", secondary: "AP" },
@@ -206,6 +219,7 @@ export const teamsData: Team[] = [
     tier: 3,
     apothecary: "Sí",
     image: "https://i.pinimg.com/736x/9b/77/bd/9b77bd2d5538a9bfd2be58af2186de82.jpg",
+    ratings: { fuerza: 95, agilidad: 40, velocidad: 50, armadura: 70, pase: 10 },
     roster: [
       { qty: "0-16", position: "Gnoblar Linemen", cost: 15000, stats: { MV: 5, FU: "1", AG: "3+", PS: "5+", AR: "6+" }, skills: "Canijo, Echarse a un lado, Escurridizo, Esquivar, Humanoide bala", primary: "A", secondary: "G" },
       { qty: "0-1", position: "Ogre Runt Punter", cost: 145000, stats: { MV: 5, FU: "5", AG: "4+", PS: "4+", AR: "10+" }, skills: "Cabeza dura, Chutar compañero, Estúpido, Golpe mortífero (+1)", primary: "FP", secondary: "AG" },
@@ -219,6 +233,7 @@ export const teamsData: Team[] = [
     tier: 2,
     apothecary: "Sí",
     image: "https://i.pinimg.com/736x/d3/a2/19/d3a219f32e89433aa05b5396f935d334.jpg",
+    ratings: { fuerza: 70, agilidad: 60, velocidad: 60, armadura: 85, pase: 60 },
     roster: [
       { qty: "0-12", position: "Old World Linemen", cost: 50000, stats: { MV: 6, FU: "3", AG: "3+", PS: "4+", AR: "9+" }, skills: "Animadversión (compañeros Dwarf y Human), Ninguna", primary: "G", secondary: "AF" },
       { qty: "0-1", position: "Old World Human Thrower", cost: 80000, stats: { MV: 6, FU: "3", AG: "3+", PS: "2+", AR: "9+" }, skills: "Animadversión (compañeros Dwarf y Halfling), Manos seguras, Pasar", primary: "GP", secondary: "AF" },
@@ -240,6 +255,7 @@ export const teamsData: Team[] = [
     tier: 1,
     apothecary: "Sí",
     image: "https://i.pinimg.com/736x/c4/15/c0/c415c0a781138589868249c294e95b4a.jpg",
+    ratings: { fuerza: 80, agilidad: 50, velocidad: 55, armadura: 90, pase: 40 },
     roster: [
       { qty: "0-16", position: "Orc Linemen", cost: 50000, stats: { MV: 5, FU: "3", AG: "3+", PS: "4+", AR: "10+" }, skills: "Animadversión (todo el equipo)", primary: "G", secondary: "AF" },
       { qty: "0-2", position: "Throwers", cost: 65000, stats: { MV: 5, FU: "3", AG: "3+", PS: "3+", AR: "9+" }, skills: "Animadversión (todo el equipo), Manos seguras, Pasar", primary: "GP", secondary: "AF" },
@@ -256,6 +272,7 @@ export const teamsData: Team[] = [
     tier: 1,
     apothecary: "No",
     image: "https://i.pinimg.com/736x/40/d3/3f/40d33f8e8aee4cc2a793df0b0f3b3619.jpg",
+    ratings: { fuerza: 85, agilidad: 60, velocidad: 60, armadura: 80, pase: 35 },
     roster: [
       { qty: "0-12", position: "Skeleton", cost: 40000, stats: { MV: 5, FU: "3", AG: "4+", PS: "6+", AR: "8+" }, skills: "Cabeza dura, Regeneración", primary: "G", secondary: "AF" },
       { qty: "0-12", position: "Zombie Linemen", cost: 40000, stats: { MV: 4, FU: "3", AG: "4+", PS: "-", AR: "9+" }, skills: "Regeneración", primary: "G", secondary: "AF" },
@@ -271,6 +288,7 @@ export const teamsData: Team[] = [
     tier: 1,
     apothecary: "Sí",
     image: "https://i.pinimg.com/736x/88/35/53/88355314bb5c808eb7dc95fac928d1e4.jpg",
+    ratings: { fuerza: 50, agilidad: 85, velocidad: 95, armadura: 65, pase: 70 },
     roster: [
         { qty: "0-16", position: "Skaven Clanrat Linemen", cost: 50000, stats: { MV: 7, FU: "3", AG: "3+", PS: "4+", AR: "8+" }, skills: "Ninguna", primary: "GP", secondary: "AFM" },
         { qty: "0-2", position: "Skaven Clanrat Throwers", cost: 85000, stats: { MV: 7, FU: "3", AG: "3+", PS: "2+", AR: "8+" }, skills: "Manos seguras, Pasar", primary: "GP", secondary: "AFM" },
@@ -286,6 +304,7 @@ export const teamsData: Team[] = [
     tier: 3,
     apothecary: "Sí",
     image: "https://i.pinimg.com/736x/85/eb/40/85eb404c109782f86e8ceec6af687db3.jpg",
+    ratings: { fuerza: 10, agilidad: 80, velocidad: 55, armadura: 40, pase: 5 },
     roster: [
       { qty: "0-16", position: "Snotling Linemen", cost: 15000, stats: { MV: 5, FU: "1", AG: "3+", PS: "5+", AR: "6+" }, skills: "Canijo, Colarse, Echarse a un lado, Escurridizo, Esquivar, Humanoide bala", primary: "A", secondary: "G" },
       { qty: "0-2", position: "Fungus Flingas", cost: 30000, stats: { MV: 5, FU: "1", AG: "3+", PS: "4+", AR: "6+" }, skills: "Arma secreta, Bombardero, Echarse a un lado, Escurridizo, Esquivar, Humanoide bala", primary: "AP", secondary: "G" },
@@ -302,6 +321,7 @@ export const teamsData: Team[] = [
     tier: 2,
     apothecary: "Sí",
     image: "https://i.pinimg.com/736x/9b/9d/7a/9b9d7a8654e0f2399fa3f70252b67098.jpg",
+    ratings: { fuerza: 60, agilidad: 80, velocidad: 80, armadura: 70, pase: 60 },
     roster: [
         { qty: "0-12", position: "Underworld Goblin Linemen", cost: 40000, stats: { MV: 6, FU: "2", AG: "3+", PS: "4+", AR: "8+" }, skills: "Escurridizo, Esquivar, Humanoide bala", primary: "AM", secondary: "FG" },
         { qty: "0-6", position: "Underworld Snotlings", cost: 15000, stats: { MV: 5, FU: "1", AG: "3+", PS: "5+", AR: "6+" }, skills: "Canijo, Colarse, Echarse a un lado, Escurridizo, Esquivar, Humanoide bala", primary: "AM", secondary: "G" },
@@ -320,6 +340,7 @@ export const teamsData: Team[] = [
     tier: 2,
     apothecary: "Sí",
     image: "https://i.pinimg.com/736x/bb/79/cb/bb79cbba0a473d353296de0a0ee989bb.jpg",
+    ratings: { fuerza: 50, agilidad: 95, velocidad: 85, armadura: 60, pase: 85 },
     roster: [
         { qty: "0-12", position: "Wood Elf Linemen", cost: 70000, stats: { MV: 7, FU: "3", AG: "2+", PS: "4+", AR: "8+" }, skills: "Ninguna", primary: "AG", secondary: "F" },
         { qty: "0-2", position: "Wood Elf Throwers", cost: 95000, stats: { MV: 7, FU: "3", AG: "2+", PS: "2+", AR: "8+" }, skills: "Pasar", primary: "AGP", secondary: "F" },

@@ -117,6 +117,13 @@ export interface Team {
   apothecary: string;
   roster: Player[];
   image?: string;
+  ratings: {
+    fuerza: number;
+    agilidad: number;
+    velocidad: number;
+    armadura: number;
+    pase: number;
+  };
 }
 
 export interface Skill {

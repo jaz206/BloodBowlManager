@@ -7,6 +7,8 @@ import SparklesIcon from './icons/SparklesIcon';
 import { generateRandomName as generateRandomNameLocally } from '../data/randomNames';
 import UploadIcon from './icons/UploadIcon';
 import ShieldCheckIcon from './icons/ShieldCheckIcon';
+import RadarChart from './RadarChart';
+import RadarChartModal from './RadarChartModal';
 
 interface TeamCreatorProps {
     onTeamCreate: (team: Omit<ManagedTeam, 'id'>) => void;
@@ -19,6 +21,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
     const [isGeneratingName, setIsGeneratingName] = useState(false);
     const [crestPreview, setCrestPreview] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [isRadarModalOpen, setIsRadarModalOpen] = useState(false);
 
     const [previewIndex, setPreviewIndex] = useState(() => {
         if (!initialRosterName) return 0;
@@ -144,6 +147,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
     const teamToPreview = teamsData[previewIndex];
 
     return (
+        <>
         <div className="text-center max-w-4xl mx-auto p-4 sm:p-8">
             <h2 className="text-3xl font-bold text-amber-400 mb-4">Crear Nuevo Equipo</h2>
             <p className="text-slate-400 mb-8">
@@ -161,7 +165,12 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-1 flex flex-col items-center">
-                        <img src={teamToPreview.image} alt={`Arte de ${teamToPreview.name}`} className="w-full h-auto object-cover rounded-lg shadow-lg border-2 border-slate-700 mb-4" />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full items-center mb-4">
+                            <img src={teamToPreview.image} alt={`Arte de ${teamToPreview.name}`} className="w-full h-auto object-cover rounded-lg shadow-lg border-2 border-slate-700" />
+                            <button onClick={() => setIsRadarModalOpen(true)} className="w-full rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-amber-400" aria-label="Ampliar gráfico de estadísticas">
+                               <RadarChart ratings={[{ data: teamToPreview.ratings, color: '#f59e0b' }]} />
+                            </button>
+                        </div>
                         <div className="text-sm text-slate-300 space-y-2 text-left bg-slate-800 p-3 rounded-md w-full">
                             <p><span className='font-bold text-slate-400'>Coste Reroll:</span> {teamToPreview.rerollCost.toLocaleString()} M.O.</p>
                             <p><span className='font-bold text-slate-400'>Rango:</span> {teamToPreview.tier}</p>
@@ -295,6 +304,8 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                 </button>
             </form>
         </div>
+        {isRadarModalOpen && <RadarChartModal team={teamToPreview} onClose={() => setIsRadarModalOpen(false)} />}
+        </>
     );
 };
 
