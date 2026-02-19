@@ -19,34 +19,34 @@ const PassChart: React.FC = () => {
 
   return (
     <div className="text-center">
-      <h2 className="text-2xl font-semibold text-amber-400 mb-3">Tabla de Pases</h2>
-      <p className="text-slate-400 mb-6 max-w-lg mx-auto">
-        Calcula la distancia horizontal (eje X) y vertical (eje Y) entre el lanzador y el receptor para encontrar el tipo de pase. Haz clic en una casilla para ver los detalles.
+      <h2 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter mb-4 shadow-xl">Tabla de Pases</h2>
+      <p className="text-[10px] font-display font-bold text-slate-500 uppercase tracking-[0.2em] mb-8 max-w-lg mx-auto leading-relaxed border-b border-white/5 pb-4">
+        Cálculo de trayectorias tácticas: cruza las distancias X e Y para determinar la dificultad del lanzamiento.
       </p>
 
-      <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 mb-6">
+      <div className="flex flex-wrap justify-center items-center gap-6 mb-8 bg-black/20 p-4 rounded-xl border border-white/5">
         {Object.values(passTypeDetails).map(({ name, color }) => (
-          <div key={name} className="flex items-center space-x-2">
-            <div className={`w-5 h-5 rounded-full ${color} border-2 border-slate-500 flex-shrink-0`}></div>
-            <span className="text-slate-300 text-sm">{name}</span>
+          <div key={name} className="flex items-center space-x-3">
+            <div className={`w-4 h-4 rounded-md ${color} shadow-[0_0_10px_rgba(255,255,255,0.1)] border border-white/10 flex-shrink-0`}></div>
+            <span className="text-white/60 text-[10px] font-display font-bold uppercase tracking-widest">{name}</span>
           </div>
         ))}
       </div>
 
-      <div className="relative mx-auto" style={{ maxWidth: 'min(70vw, 600px)'}}>
-        <div className="aspect-square">
-          <div className="grid grid-cols-15 gap-0.5 p-2 sm:p-4 bg-slate-900/70 border border-slate-700 rounded-lg">
+      <div className="relative mx-auto" style={{ maxWidth: 'min(90vw, 700px)' }}>
+        <div className="glass-panel p-3 sm:p-6 border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+          <div className="grid grid-cols-15 gap-1">
             {/* Corner */}
-            <div className="flex items-center justify-center text-slate-400 text-xs font-bold">Y\X</div>
+            <div className="flex items-center justify-center text-slate-500 text-[10px] font-display font-black tracking-tighter bg-white/5 rounded-md">Y\X</div>
             {/* X-axis labels */}
             {Array.from({ length: GRID_SIZE }).map((_, i) => (
-              <div key={`x-label-${i}`} className="flex items-center justify-center text-slate-400 text-xs sm:text-sm font-bold">{i}</div>
+              <div key={`x-label-${i}`} className="flex items-center justify-center text-premium-gold text-xs font-display font-black bg-white/5 rounded-md py-1">{i}</div>
             ))}
 
             {Array.from({ length: GRID_SIZE }).map((_, y) => (
               <React.Fragment key={`row-${y}`}>
                 {/* Y-axis label */}
-                <div className="flex items-center justify-center text-slate-400 text-xs sm:text-sm font-bold">{y}</div>
+                <div className="flex items-center justify-center text-premium-gold text-xs font-display font-black bg-white/5 rounded-md py-1">{y}</div>
                 {/* Grid cells */}
                 {Array.from({ length: GRID_SIZE }).map((_, x) => {
                   const typeKey = passChartGrid[y][x];
@@ -56,8 +56,8 @@ const PassChart: React.FC = () => {
                     <div
                       key={`${x}-${y}`}
                       onClick={() => handleCellClick(x, y)}
-                      className={`aspect-square cursor-pointer transition-all duration-150 rounded-sm ${info.color} ${info.hoverColor} ${isSelected ? 'ring-2 ring-offset-2 ring-offset-slate-800 ring-amber-400 scale-110 z-10' : 'hover:scale-105'}`}
-                      aria-label={`Distancia x: ${x}, y: ${y}. Tipo de pase: ${info.name}`}
+                      className={`aspect-square cursor-pointer transition-premium rounded-md ${info.color} ${isSelected ? 'ring-4 ring-premium-gold scale-125 z-20 shadow-2xl relative' : 'hover:scale-110 hover:z-10 opacity-80 hover:opacity-100 hover:shadow-xl'}`}
+                      title={`${info.name} (${x}, ${y})`}
                     ></div>
                   );
                 })}
@@ -66,25 +66,26 @@ const PassChart: React.FC = () => {
           </div>
         </div>
       </div>
-      
+
       {selectedCell && selectedPassTypeKey && (
-        <div className="mt-8 p-6 bg-slate-900/70 border border-slate-700 rounded-lg shadow-xl text-left animate-fade-in max-w-md mx-auto">
-          <h3 className="text-xl font-bold text-amber-300 mb-2">
-            Distancia ({selectedCell.x}, {selectedCell.y}): {passTypeDetails[selectedPassTypeKey].name}
+        <div className="mt-8 p-6 glass-panel border-premium-gold/30 bg-premium-gold/5 shadow-2xl text-left animate-slide-in-up max-w-md mx-auto relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+            <svg className="w-16 h-16 text-premium-gold" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /></svg>
+          </div>
+          <h3 className="text-xl font-display font-black text-white italic uppercase tracking-tighter mb-2 flex items-center gap-3">
+            <span className="w-8 h-8 bg-premium-gold text-black rounded-lg flex items-center justify-center text-sm not-italic shadow-lg border border-white/20">!</span>
+            {passTypeDetails[selectedPassTypeKey].name}
           </h3>
-          <p className="text-slate-300">
-            Un pase a una distancia de {selectedCell.x} casillas horizontales y {selectedCell.y} casillas verticales se considera un <span className="font-bold">{passTypeDetails[selectedPassTypeKey].name.toLowerCase()}</span>.
+          <p className="text-slate-300 font-display font-medium tracking-wide">
+            Un pase táctico a una distancia de <span className="text-premium-gold font-bold">{selectedCell.x}</span>x<span className="text-premium-gold font-bold">{selectedCell.y}</span> se clasifica estrictamente como un <span className="text-white font-black uppercase italic tracking-tighter">{passTypeDetails[selectedPassTypeKey].name}</span>.
           </p>
         </div>
       )}
 
       <style>{`
         .grid-cols-15 { grid-template-columns: repeat(15, minmax(0, 1fr)); }
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in { animation: fade-in 0.5s ease-out forwards; }
+        @keyframes slide-in-up { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .animate-slide-in-up { animation: slide-in-up 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
       `}</style>
     </div>
   );

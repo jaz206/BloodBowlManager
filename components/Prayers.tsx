@@ -10,49 +10,45 @@ const Prayers: React.FC = () => {
   const generatePrayer = () => {
     const roll = Math.floor(Math.random() * 16) + 1;
     setLastRoll(roll);
-    
+
     const prayer = prayersData.find(p => parseInt(p.diceRoll, 10) === roll);
     setCurrentPrayer(prayer || null);
   };
 
   return (
     <div className="text-center">
-      <h2 className="text-2xl font-semibold text-amber-400 mb-3">Tabla de Plegarias a Nuffle</h2>
-      <p className="text-slate-400 mb-6 max-w-md mx-auto">
-        Si tu equipo tiene un valor inferior, puedes tirar 1D16 en esta tabla. ¡O simplemente pulsa el botón para un resultado aleatorio!
+      <h2 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter mb-4">Plegarias a Nuffle</h2>
+      <p className="text-[10px] font-display font-bold text-slate-500 uppercase tracking-[0.2em] mb-8 max-w-md mx-auto leading-relaxed border-b border-white/5 pb-4">
+        Cuando la suerte te abandona, solo queda implorar clemencia al Gran Dios del Blood Bowl.
       </p>
 
       <button
         onClick={generatePrayer}
-        className="bg-amber-500 text-slate-900 font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-500/50 transform hover:scale-105 transition-all duration-200"
+        className="group relative bg-premium-gold text-black font-display font-black uppercase tracking-widest text-xs py-5 px-12 rounded-xl transition-premium hover:scale-105 active:scale-95 shadow-2xl shadow-premium-gold/30 border border-white/20 overflow-hidden"
       >
-        Generar Plegaria Aleatoria (D16)
+        <span className="relative z-10">Lanzar Plegaria (D16)</span>
+        <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
       </button>
 
       {currentPrayer && lastRoll !== null && (
-        <div className="mt-8 p-6 bg-slate-900/70 border border-slate-700 rounded-lg shadow-xl text-left animate-fade-in">
-          <h3 className="text-xl font-bold text-amber-300 mb-2 flex items-center">
-            <span className="bg-slate-700 text-amber-300 text-lg font-mono px-3 py-1 rounded-md mr-4">{lastRoll}</span>
-            <span>{currentPrayer.title}</span>
-          </h3>
-          <p className="text-slate-300 mt-4">{currentPrayer.description}</p>
+        <div className="mt-12 group">
+          <div className="glass-panel p-8 border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] text-left animate-slide-in-up relative overflow-hidden bg-white/5">
+            <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-20 transition-opacity duration-700 pointer-events-none">
+              <svg className="w-32 h-32 text-premium-gold" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l-5.5 9h11L12 2zm0 14c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5z" /></svg>
+            </div>
+
+            <h3 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter mb-4 flex items-center gap-6">
+              <span className="bg-premium-gold text-black text-2xl not-italic font-black px-4 py-1.5 rounded-xl shadow-xl border border-white/20">{lastRoll}</span>
+              <span>{currentPrayer.title}</span>
+            </h3>
+            <p className="text-white font-medium italic opacity-80 leading-relaxed max-w-2xl border-l-4 border-premium-gold/50 pl-6">{currentPrayer.description}</p>
+          </div>
         </div>
       )}
 
       <style>{`
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.5s ease-out forwards;
-        }
+        @keyframes slide-in-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-slide-in-up { animation: slide-in-up 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
       `}</style>
     </div>
   );

@@ -38,11 +38,11 @@ const SyncStatusIndicator: React.FC<SyncStatusIndicatorProps> = ({ status }) => 
   const currentStatus = statusConfig[status];
 
   return (
-    <div className={`relative group flex items-center gap-2 text-sm ${currentStatus.color}`}>
-      {currentStatus.icon}
+    <div className={`relative group flex items-center gap-2 text-[10px] font-display font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-white/5 border border-white/5 ${currentStatus.color}`}>
+      <div className="w-2 h-2 rounded-full bg-current animate-pulse shadow-[0_0_10px_currentColor]" />
       <span className="hidden md:inline">{currentStatus.text}</span>
-      <div className="absolute bottom-full right-0 mb-2 w-max max-w-xs bg-slate-900 text-white text-xs rounded-lg py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none border border-slate-700 shadow-lg z-10">
-        {currentStatus.tooltip}
+      <div className="absolute bottom-full right-0 mb-2 w-max max-w-xs glass-panel py-2 px-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-2xl z-[100]">
+        <p className="text-white normal-case tracking-normal font-sans font-medium">{currentStatus.tooltip}</p>
       </div>
     </div>
   );

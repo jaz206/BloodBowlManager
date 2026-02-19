@@ -17,22 +17,23 @@ const Section: React.FC<SectionProps> = ({ title, rules, defaultOpen = false }) 
   const toggleOpen = () => setIsOpen(!isOpen);
 
   return (
-    <div className="bg-slate-800 rounded-lg shadow-lg border border-slate-700 overflow-hidden">
+    <div className="bento-card border-white/5 overflow-hidden group/section">
       <button
         onClick={toggleOpen}
-        className="w-full flex justify-between items-center p-4 sm:p-5 text-left bg-slate-800 hover:bg-slate-700/50 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-opacity-50 transition-colors duration-200"
+        className="w-full flex justify-between items-center p-6 text-left hover:bg-white/5 transition-premium focus:outline-none"
         aria-expanded={isOpen}
       >
-        <h2 className="text-xl sm:text-2xl font-semibold text-amber-400">{title}</h2>
-        {isOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
+        <h2 className="text-xl font-display font-black text-white italic uppercase tracking-tighter group-hover/section:text-premium-gold transition-colors">{title}</h2>
+        <div className={`p-2 rounded-lg bg-white/5 border border-white/10 transition-transform duration-300 ${isOpen ? 'rotate-180 text-premium-gold border-premium-gold/30' : 'text-slate-500'}`}>
+          <ChevronDownIcon />
+        </div>
       </button>
       <div
-        className={`transition-all duration-300 ease-in-out ${
-          isOpen ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
-        } overflow-hidden`}
+        className={`transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${isOpen ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
+          } overflow-hidden bg-black/20`}
       >
-        <div className="p-4 sm:p-5 border-t border-slate-700">
-          <ul className="space-y-4 list-none">
+        <div className="p-6 border-t border-white/5">
+          <ul className="space-y-6 list-none">
             {rules.map((rule, index) => (
               <RuleItem key={index} rule={rule} listType="numeric" index={index} />
             ))}

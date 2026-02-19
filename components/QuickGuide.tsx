@@ -10,20 +10,28 @@ const QuickGuide: React.FC = () => {
     const [activeView, setActiveView] = useState<SubView>('sequence');
 
     const getButtonClass = (view: SubView) => {
-        return `flex-1 py-3 px-2 text-center text-xs sm:text-sm font-bold rounded-t-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-amber-400 transition-colors duration-200 whitespace-nowrap ${
-          activeView === view
-            ? 'bg-slate-800 text-amber-400'
-            : 'bg-slate-800/50 text-slate-400 hover:bg-slate-700/50'
-        }`;
+        return `flex-1 py-3 px-2 text-center transition-all duration-300 relative font-display uppercase tracking-widest text-xs sm:text-sm font-bold ${activeView === view
+                ? 'text-premium-gold'
+                : 'text-slate-500 hover:text-white hover:bg-white/5'
+            }`;
     };
 
     return (
         <div className="animate-fade-in-slow">
             <div className="p-2 sm:p-4">
-                <div className="flex border-b border-slate-700 mb-4">
-                    <button onClick={() => setActiveView('sequence')} className={getButtonClass('sequence')}>Secuencia de Juego</button>
-                    <button onClick={() => setActiveView('pass')} className={getButtonClass('pass')}>Tabla de Pases</button>
-                    <button onClick={() => setActiveView('prayers')} className={getButtonClass('prayers')}>Plegarias a Nuffle</button>
+                <div className="flex border-b border-white/10 mb-6 bg-black/20 rounded-t-xl overflow-hidden">
+                    <button onClick={() => setActiveView('sequence')} className={getButtonClass('sequence')}>
+                        Secuencia
+                        {activeView === 'sequence' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-premium-gold shadow-[0_0_10px_rgba(202,138,4,0.5)]" />}
+                    </button>
+                    <button onClick={() => setActiveView('pass')} className={getButtonClass('pass')}>
+                        Pases
+                        {activeView === 'pass' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-premium-gold shadow-[0_0_10px_rgba(202,138,4,0.5)]" />}
+                    </button>
+                    <button onClick={() => setActiveView('prayers')} className={getButtonClass('prayers')}>
+                        Plegarias
+                        {activeView === 'prayers' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-premium-gold shadow-[0_0_10px_rgba(202,138,4,0.5)]" />}
+                    </button>
                 </div>
 
                 <div>
@@ -32,7 +40,7 @@ const QuickGuide: React.FC = () => {
                     {activeView === 'prayers' && <Prayers />}
                 </div>
             </div>
-             <style>{`
+            <style>{`
                 @keyframes fade-in-slow {
                     from { opacity: 0; }
                     to { opacity: 1; }

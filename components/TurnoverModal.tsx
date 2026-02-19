@@ -6,13 +6,13 @@ interface TurnoverModalProps {
 }
 
 const turnoverReasons = [
-    "Fallo al placar (Derribado)",
-    "Fallo al esquivar",
-    "Fallo al recoger el balón",
-    "Fallo al pasar/atrapar",
-    "Fallo al esprintar",
-    "Falta (dobles o expulsión)",
-    "Otra causa",
+  "Fallo al placar (Derribado)",
+  "Fallo al esquivar",
+  "Fallo al recoger el balón",
+  "Fallo al pasar/atrapar",
+  "Fallo al esprintar",
+  "Falta (dobles o expulsión)",
+  "Otra causa",
 ];
 
 const TurnoverModal: React.FC<TurnoverModalProps> = ({ onClose, onConfirm }) => {
@@ -24,26 +24,36 @@ const TurnoverModal: React.FC<TurnoverModalProps> = ({ onClose, onConfirm }) => 
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 animate-fade-in-fast"
+      className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in-fast"
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"
     >
-      <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-md w-full transform animate-slide-in-up">
-        <div className="p-4 border-b border-slate-700">
-          <h2 className="text-xl font-bold text-red-500">¡TURNOVER!</h2>
-          <p className="text-sm text-slate-400">Selecciona la causa del cambio de turno.</p>
+      <div className="glass-panel max-w-md w-full transform animate-slide-in-up border-red-500/30 overflow-hidden shadow-[0_0_50px_rgba(239,68,68,0.2)]">
+        <div className="p-6 border-b border-red-500/10 bg-red-500/5">
+          <h2 className="text-4xl font-display font-black text-red-500 italic uppercase tracking-tighter text-center">¡TURNOVER!</h2>
+          <p className="text-[10px] font-display font-bold text-red-400/60 uppercase tracking-[0.2em] mt-2 text-center">Fallo crítico en el sistema de juego</p>
         </div>
-        <div className="p-5 space-y-2 max-h-[60vh] overflow-y-auto">
+        <div className="p-6 space-y-3 max-h-[60vh] overflow-y-auto scrollbar-hide">
+          <p className="text-white/70 font-display font-medium italic mb-4 text-center text-xs">Determina la causa de la interrupción:</p>
           {turnoverReasons.map(reason => (
             <button
               key={reason}
               onClick={() => onConfirm(reason)}
-              className="w-full text-left bg-slate-700/50 p-3 rounded-md hover:bg-slate-700 transition-colors font-semibold"
+              className="w-full group relative overflow-hidden rounded-xl border border-white/5 bg-white/5 p-4 transition-premium hover:border-red-500/30 hover:bg-red-500/10 text-left"
             >
-              {reason}
+              <span className="relative z-10 font-display font-black text-slate-400 uppercase tracking-widest text-[10px] group-hover:text-red-400 transition-colors">{reason}</span>
+              <div className="absolute inset-y-0 right-0 w-1 bg-red-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
             </button>
           ))}
+        </div>
+        <div className="p-4 bg-black/20 border-t border-white/5">
+          <button
+            onClick={onClose}
+            className="w-full text-[10px] font-display font-black uppercase tracking-[0.2em] text-slate-500 hover:text-white transition-premium py-2"
+          >
+            Ignorar Aviso
+          </button>
         </div>
       </div>
       <style>{`

@@ -29,15 +29,15 @@ const RuleItem: React.FC<RuleItemProps> = ({ rule, listType, index }) => {
   };
 
   return (
-    <li className="flex flex-col">
+    <li className="flex flex-col group/rule transition-premium">
       <div className="flex items-start">
-        <span className="text-amber-400 font-semibold mr-3 w-6 text-right">{getListMarker(listType, index)}</span>
-        <div className="flex-1 text-slate-300">
-          <p>
+        <span className="font-display font-black text-premium-gold mr-4 w-8 text-right italic text-lg leading-tight opacity-50 group-hover/rule:opacity-100 transition-opacity">{getListMarker(listType, index)}</span>
+        <div className="flex-1 text-white/90">
+          <p className="font-medium leading-relaxed">
             {rule.text}
             {rule.dice && (
-              <span className="inline-flex items-center ml-2 bg-slate-700 text-amber-300 text-xs font-mono px-2 py-0.5 rounded-full">
-                <DiceIcon className="w-3 h-3 mr-1.5" />
+              <span className="inline-flex items-center ml-3 bg-premium-gold/10 text-premium-gold border border-premium-gold/20 text-[10px] font-display font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg shadow-lg">
+                <DiceIcon className="w-3.5 h-3.5 mr-2 opacity-50" />
                 {rule.dice}
               </span>
             )}
@@ -45,7 +45,7 @@ const RuleItem: React.FC<RuleItemProps> = ({ rule, listType, index }) => {
         </div>
       </div>
       {rule.subRules && (
-        <ul className="mt-3 ml-8 sm:ml-12 pl-4 border-l-2 border-slate-700 space-y-3">
+        <ul className="mt-4 ml-12 pl-6 border-l border-white/10 space-y-4">
           {rule.subRules.map((subRule, subIndex) => (
             <RuleItem key={subIndex} rule={subRule} listType={getNextListType(listType)} index={subIndex} />
           ))}

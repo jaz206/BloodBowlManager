@@ -58,28 +58,28 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
             const teamJson = JSON.stringify(shareableTeam);
 
             QRCode.toCanvas(qrCanvasRef.current, teamJson, { width: 256, margin: 2, errorCorrectionLevel: 'L' }, function (error: any) {
-              if (error) {
-                  console.error(error);
-                  alert('Error al generar el QR: los datos del equipo son demasiado grandes, incluso optimizados.');
-                  setShowQr(false);
-              }
+                if (error) {
+                    console.error(error);
+                    alert('Error al generar el QR: los datos del equipo son demasiado grandes, incluso optimizados.');
+                    setShowQr(false);
+                }
             })
         }
     }, [showQr, team]);
 
     const teamValue = useMemo(() => {
         if (!baseRoster) return 0;
-        
+
         const playersValue = team.players.reduce((sum, p) => {
             const skillsValue = p.gainedSkills.reduce((skillSum, skillName) => {
-                 if (skillName.toLowerCase().includes('secundaria')) {
+                if (skillName.toLowerCase().includes('secundaria')) {
                     return skillSum + 40000;
                 }
                 return skillSum + 20000;
             }, 0);
             return sum + p.cost + skillsValue;
         }, 0);
-        
+
         const rerollsValue = team.rerolls * baseRoster.rerollCost;
         const apothecaryValue = team.apothecary && baseRoster.apothecary === "Sí" ? 50000 : 0;
         const dedicatedFansValue = (team.dedicatedFans - 1) * 10000;
@@ -87,10 +87,10 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
         const assistantCoachesValue = team.assistantCoaches * 10000;
         return playersValue + rerollsValue + apothecaryValue + cheerleadersValue + assistantCoachesValue + dedicatedFansValue;
     }, [team, baseRoster]);
-    
+
     const playersForField = useMemo(() => {
         const starters = team.players.filter(p => !(p.isBenched ?? true));
-        const playersWithPositions = [...starters]; 
+        const playersWithPositions = [...starters];
 
         const occupiedPositions = new Set(
             playersWithPositions
@@ -141,7 +141,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
 
     const handleNameUpdate = () => {
         if (editingPlayerId === null) return;
-        
+
         const newName = editingName.trim();
         if (newName === '') {
             setEditingPlayerId(null);
@@ -151,7 +151,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
 
         const updatedTeam = {
             ...team,
-            players: team.players.map(p => 
+            players: team.players.map(p =>
                 p.id === editingPlayerId ? { ...p, customName: newName } : p
             ),
         };
@@ -168,7 +168,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
             setEditingName('');
         }
     };
-    
+
     const handleCrestUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
@@ -237,7 +237,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
     };
 
     const handleBuyApothecary = () => {
-         if (team.apothecary) {
+        if (team.apothecary) {
             alert('¡Ya tienes un boticario!');
             return;
         }
@@ -254,14 +254,14 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
 
     const handleSellApothecary = () => {
         if (team.apothecary) {
-             onUpdate({
+            onUpdate({
                 ...team,
                 treasury: team.isAutoCalculating ? team.treasury : team.treasury + 25000,
                 apothecary: false,
             });
         }
     };
-    
+
     const handleBuyFan = () => {
         if (team.dedicatedFans >= 6) {
             alert('No puedes tener más de 6 Hinchas.');
@@ -276,7 +276,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
 
     const handleSellFan = () => {
         if (team.dedicatedFans > 1) {
-             onUpdate({ ...team, treasury: team.isAutoCalculating ? team.treasury : team.treasury + 5000, dedicatedFans: team.dedicatedFans - 1 });
+            onUpdate({ ...team, treasury: team.isAutoCalculating ? team.treasury : team.treasury + 5000, dedicatedFans: team.dedicatedFans - 1 });
         }
     };
 
@@ -294,10 +294,10 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
 
     const handleSellCheerleader = () => {
         if (team.cheerleaders > 0) {
-             onUpdate({ ...team, treasury: team.isAutoCalculating ? team.treasury : team.treasury + 5000, cheerleaders: team.cheerleaders - 1 });
+            onUpdate({ ...team, treasury: team.isAutoCalculating ? team.treasury : team.treasury + 5000, cheerleaders: team.cheerleaders - 1 });
         }
     };
-    
+
     const handleBuyAssistantCoach = () => {
         if (team.assistantCoaches >= 6) {
             alert('No puedes tener más de 6 ayudantes de entrenador.');
@@ -315,7 +315,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
             onUpdate({ ...team, treasury: team.isAutoCalculating ? team.treasury : team.treasury + 5000, assistantCoaches: team.assistantCoaches - 1 });
         }
     };
-    
+
     const countPlayersByPosition = (position: string) => {
         return team.players.filter(p => p.position === position).length;
     };
@@ -335,7 +335,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
             alert('¡No tienes suficiente dinero!');
             return;
         }
-        
+
         const existingNames = new Set(team.players.map(p => p.customName.toLowerCase()));
         let randomName = generateRandomName(team.rosterName);
         while (existingNames.has(randomName.toLowerCase())) {
@@ -358,7 +358,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
             players: [...team.players, newPlayer],
         });
     };
-    
+
     const togglePlayerBenched = (playerId: number) => {
         const player = team.players.find(p => p.id === playerId);
         if (!player) return;
@@ -384,7 +384,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                         const occupied = new Set(onFieldPlayers.map(pl => pl.fieldPosition ? `${pl.fieldPosition.x},${pl.fieldPosition.y}` : '').filter(Boolean));
                         let x = 7, y = 6;
                         let attempts = 0;
-                        while(occupied.has(`${x},${y}`) && attempts < 15*4) {
+                        while (occupied.has(`${x},${y}`) && attempts < 15 * 4) {
                             x = (x + 1) % 15;
                             if (x === 0) y--;
                             if (y < 3) { y = 6; }
@@ -397,7 +397,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
             }
             return p;
         });
-        
+
         onUpdate({ ...team, players: updatedPlayers });
     };
 
@@ -406,9 +406,9 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
         const playerBeingMoved = currentPlayers.find(p => p.id === playerId);
         if (!playerBeingMoved) return;
 
-        const playerAtTarget = currentPlayers.find(p => 
-            p.id !== playerId && 
-            p.fieldPosition?.x === newPos.x && 
+        const playerAtTarget = currentPlayers.find(p =>
+            p.id !== playerId &&
+            p.fieldPosition?.x === newPos.x &&
             p.fieldPosition?.y === newPos.y
         );
 
@@ -432,7 +432,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
             setFireConfirmation(playerToFire);
         }
     };
-    
+
     const confirmFirePlayer = () => {
         if (!fireConfirmation) return;
         onUpdate({
@@ -442,7 +442,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
         });
         setFireConfirmation(null);
     };
-    
+
     const handleSavePlayer = (updatedPlayer: ManagedPlayer) => {
         onUpdate({
             ...team,
@@ -459,40 +459,42 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
 
     return (
         <div className="space-y-6">
-             <div className="flex justify-between items-center">
-                <button onClick={onBack} className="text-amber-400 hover:underline text-sm">
-                    &larr; Volver a la lista de equipos
+            <div className="flex justify-between items-center px-4 pt-4">
+                <button onClick={onBack} className="group flex items-center gap-2 text-slate-400 hover:text-white transition-premium">
+                    <span className="text-premium-gold transition-transform group-hover:-translate-x-1">←</span>
+                    <span className="font-display font-bold uppercase tracking-widest text-xs">Volver</span>
                 </button>
                 {!isGuest && (
-                    <button onClick={() => setShowQr(true)} className="flex items-center gap-2 bg-slate-700 text-slate-200 font-bold py-2 px-4 rounded-lg shadow-md hover:bg-slate-600 transition-colors">
-                        <QrCodeIcon />
-                        Generar QR
+                    <button onClick={() => setShowQr(true)} className="flex items-center gap-2 bg-white/5 border border-white/10 text-white font-display font-bold uppercase tracking-widest text-xs py-2 px-4 rounded-xl hover:bg-white/10 transition-premium shadow-xl">
+                        <QrCodeIcon className="w-4 h-4 text-premium-gold" />
+                        Código QR
                     </button>
                 )}
             </div>
             {/* Team Info Header */}
-            <div className="bg-slate-900/70 p-4 rounded-lg border border-slate-700">
-                <div className="flex flex-wrap justify-between items-center gap-4">
-                    <div className="flex items-center gap-4">
-                        <div className="relative group">
-                            <button onClick={() => team.crestImage && setIsCrestModalOpen(true)} className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-slate-800 flex items-center justify-center flex-shrink-0 border-2 border-slate-600 overflow-hidden">
+            <div className="glass-panel p-6 border-white/10 relative overflow-hidden group/header">
+                <div className="absolute inset-0 bg-gradient-to-r from-premium-gold/10 to-transparent pointer-events-none"></div>
+                <div className="flex flex-wrap justify-between items-center gap-6 relative z-10">
+                    <div className="flex items-center gap-6">
+                        <div className="relative group/crest">
+                            <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl bg-black/40 flex items-center justify-center flex-shrink-0 border-2 border-white/10 overflow-hidden shadow-2xl transition-premium group-hover/crest:border-premium-gold/50">
                                 {team.crestImage ? (
                                     <img src={team.crestImage} alt="Escudo del equipo" className="w-full h-full object-cover" />
                                 ) : (
-                                    <ShieldCheckIcon className="w-10 h-10 text-slate-600" />
+                                    <ShieldCheckIcon className="w-12 h-12 text-slate-600" />
                                 )}
-                            </button>
-                             <input
+                            </div>
+                            <input
                                 type="file"
                                 ref={crestInputRef}
                                 onChange={handleCrestUpload}
                                 accept="image/*"
                                 className="hidden"
                             />
-                            <div className="absolute bottom-0 -right-1 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button 
+                            <div className="absolute -bottom-2 -right-2 flex flex-col gap-2 opacity-0 group-hover/crest:opacity-100 transition-opacity duration-300">
+                                <button
                                     onClick={() => crestInputRef.current?.click()}
-                                    className="bg-slate-600 hover:bg-slate-500 text-white p-1.5 rounded-full shadow-md"
+                                    className="bg-premium-gold text-black p-2 rounded-xl shadow-2xl hover:bg-white transition-premium"
                                     aria-label="Cambiar escudo"
                                 >
                                     <UploadIcon className="w-4 h-4" />
@@ -500,64 +502,90 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                             </div>
                         </div>
                         <div>
-                            <h2 className="text-2xl sm:text-3xl font-bold text-amber-400">{team.name}</h2>
-                            <p className="text-slate-400">{team.rosterName}</p>
+                            <h2 className="text-4xl sm:text-5xl font-display font-black text-white italic tracking-tighter uppercase leading-none drop-shadow-lg">{team.name}</h2>
+                            <p className="text-premium-gold font-display font-bold uppercase tracking-[0.2em] text-xs mt-2 opacity-80">{team.rosterName}</p>
                         </div>
                     </div>
-                     <div className="text-right flex-shrink-0">
+                    <div className="flex flex-col items-end gap-2">
                         {!team.isAutoCalculating && (
-                            <p className="text-lg font-semibold text-slate-200">
-                                Tesorería: <span className="text-green-400">{team.treasury.toLocaleString()} M.O.</span>
-                            </p>
+                            <div className="bg-black/40 border border-white/5 py-1 px-4 rounded-full">
+                                <p className="text-xs font-display font-bold text-slate-400 uppercase tracking-widest">
+                                    Tesorería: <span className="text-green-400 ml-2">{team.treasury.toLocaleString()} M.O.</span>
+                                </p>
+                            </div>
                         )}
-                        <p className="text-lg font-semibold text-slate-200">Valor de Equipo (VE): <span className="text-sky-400">{teamValue.toLocaleString()}</span></p>
+                        <div className="bg-black/40 border border-white/5 py-2 px-6 rounded-2xl">
+                            <p className="text-xs font-display font-bold text-slate-400 uppercase tracking-widest mb-1">Valor de Equipo</p>
+                            <p className="text-3xl font-display font-black text-white tracking-wider">{teamValue.toLocaleString()}</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
             {/* Team Assets */}
-            <div className="bg-slate-900/70 p-4 rounded-lg border border-slate-700">
-                <h3 className="text-lg font-semibold text-amber-400 mb-3">Activos del Equipo</h3>
-                <div className="space-y-4">
+            <div className="bento-card p-6 border-white/5">
+                <h3 className="text-xl font-display font-bold text-premium-gold mb-6 uppercase tracking-wider flex items-center gap-3">
+                    <span className="w-8 h-8 bg-premium-gold/10 rounded-lg flex items-center justify-center text-sm italic">A</span>
+                    Activos del Equipo
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Rerolls */}
-                    <div className="flex justify-between items-center flex-wrap gap-2">
-                        <span className="text-slate-300">Segundas Oportunidades (0-8): <span className="font-bold text-white">{team.rerolls}</span></span>
+                    <div className="flex justify-between items-center p-4 bg-black/20 rounded-xl border border-white/5">
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-display font-bold text-slate-500 uppercase tracking-widest">Segundas Oportunidades</span>
+                            <span className="text-2xl font-display font-black text-white">{team.rerolls}<span className="text-xs text-slate-600 ml-1">/8</span></span>
+                        </div>
                         <div className="flex gap-2">
-                            <button onClick={handleBuyReroll} disabled={team.rerolls >= 8} className="bg-sky-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-sky-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Comprar ({baseRoster.rerollCost.toLocaleString()})</button>
-                            <button onClick={handleSellReroll} disabled={team.rerolls === 0} className="bg-rose-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-rose-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Vender</button>
+                            <button onClick={handleBuyReroll} disabled={team.rerolls >= 8} className="w-10 h-10 flex items-center justify-center rounded-lg bg-premium-gold text-black transition-premium disabled:opacity-20 hover:scale-105 active:scale-95 shadow-lg shadow-premium-gold/20">+</button>
+                            <button onClick={handleSellReroll} disabled={team.rerolls === 0} className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-white transition-premium disabled:opacity-20 hover:bg-white/10 active:scale-95 text-xl">-</button>
                         </div>
                     </div>
                     {/* Dedicated Fans */}
-                    <div className="flex justify-between items-center flex-wrap gap-2">
-                        <span className="text-slate-300">Hinchas (1-6): <span className="font-bold text-white">{team.dedicatedFans}</span></span>
+                    <div className="flex justify-between items-center p-4 bg-black/20 rounded-xl border border-white/5">
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-display font-bold text-slate-500 uppercase tracking-widest">Hinchas</span>
+                            <span className="text-2xl font-display font-black text-white">{team.dedicatedFans}<span className="text-xs text-slate-600 ml-1">/6</span></span>
+                        </div>
                         <div className="flex gap-2">
-                            <button onClick={handleBuyFan} disabled={team.dedicatedFans >= 6} className="bg-sky-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-sky-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Comprar (10,000)</button>
-                            <button onClick={handleSellFan} disabled={team.dedicatedFans <= 1} className="bg-rose-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-rose-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Vender</button>
+                            <button onClick={handleBuyFan} disabled={team.dedicatedFans >= 6} className="w-10 h-10 flex items-center justify-center rounded-lg bg-premium-gold text-black transition-premium disabled:opacity-20 hover:scale-105 active:scale-95 shadow-lg shadow-premium-gold/20">+</button>
+                            <button onClick={handleSellFan} disabled={team.dedicatedFans <= 1} className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-white transition-premium disabled:opacity-20 hover:bg-white/10 active:scale-95 text-xl">-</button>
                         </div>
                     </div>
-                     {/* Cheerleaders */}
-                     <div className="flex justify-between items-center flex-wrap gap-2">
-                        <span className="text-slate-300">Animadoras (0-12): <span className="font-bold text-white">{team.cheerleaders}</span></span>
+                    {/* Cheerleaders */}
+                    <div className="flex justify-between items-center p-4 bg-black/20 rounded-xl border border-white/5">
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-display font-bold text-slate-500 uppercase tracking-widest">Animadoras</span>
+                            <span className="text-2xl font-display font-black text-white">{team.cheerleaders}</span>
+                        </div>
                         <div className="flex gap-2">
-                            <button onClick={handleBuyCheerleader} disabled={team.cheerleaders >= 12} className="bg-sky-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-sky-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Comprar (10,000)</button>
-                            <button onClick={handleSellCheerleader} disabled={team.cheerleaders === 0} className="bg-rose-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-rose-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Vender</button>
+                            <button onClick={handleBuyCheerleader} disabled={team.cheerleaders >= 12} className="w-10 h-10 flex items-center justify-center rounded-lg bg-premium-gold text-black transition-premium disabled:opacity-20 hover:scale-105 active:scale-95 shadow-lg shadow-premium-gold/20">+</button>
+                            <button onClick={handleSellCheerleader} disabled={team.cheerleaders === 0} className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-white transition-premium disabled:opacity-20 hover:bg-white/10 active:scale-95 text-xl">-</button>
                         </div>
                     </div>
-                     {/* Assistant Coaches */}
-                    <div className="flex justify-between items-center flex-wrap gap-2">
-                        <span className="text-slate-300">Ayudantes de Entrenador (0-6): <span className="font-bold text-white">{team.assistantCoaches}</span></span>
+                    {/* Assistant Coaches */}
+                    <div className="flex justify-between items-center p-4 bg-black/20 rounded-xl border border-white/5">
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-display font-bold text-slate-500 uppercase tracking-widest">Ayudantes</span>
+                            <span className="text-2xl font-display font-black text-white">{team.assistantCoaches}</span>
+                        </div>
                         <div className="flex gap-2">
-                            <button onClick={handleBuyAssistantCoach} disabled={team.assistantCoaches >= 6} className="bg-sky-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-sky-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Comprar (10,000)</button>
-                            <button onClick={handleSellAssistantCoach} disabled={team.assistantCoaches === 0} className="bg-rose-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-rose-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Vender</button>
+                            <button onClick={handleBuyAssistantCoach} disabled={team.assistantCoaches >= 6} className="w-10 h-10 flex items-center justify-center rounded-lg bg-premium-gold text-black transition-premium disabled:opacity-20 hover:scale-105 active:scale-95 shadow-lg shadow-premium-gold/20">+</button>
+                            <button onClick={handleSellAssistantCoach} disabled={team.assistantCoaches === 0} className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-white transition-premium disabled:opacity-20 hover:bg-white/10 active:scale-95 text-xl">-</button>
                         </div>
                     </div>
                     {/* Apothecary */}
                     {baseRoster.apothecary === 'Sí' && (
-                         <div className="flex justify-between items-center flex-wrap gap-2">
-                            <span className="text-slate-300">Boticario (0-1): <span className={`font-bold ${team.apothecary ? 'text-green-400' : 'text-red-400'}`}>{team.apothecary ? 'Sí' : 'No'}</span></span>
-                            <div className="flex gap-2">
-                                <button onClick={handleBuyApothecary} disabled={team.apothecary} className="bg-emerald-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-emerald-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Comprar (50,000)</button>
-                                <button onClick={handleSellApothecary} disabled={!team.apothecary} className="bg-rose-600 text-white font-bold py-1 px-3 rounded-md shadow-md hover:bg-rose-500 transition-colors text-xs disabled:bg-slate-600 disabled:cursor-not-allowed">Vender</button>
+                        <div className="flex justify-between items-center p-4 bg-black/20 rounded-xl border border-white/5 md:col-span-2">
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-display font-bold text-slate-500 uppercase tracking-widest">Boticario</span>
+                                <span className={`text-lg font-display font-black uppercase italic ${team.apothecary ? 'text-green-400' : 'text-blood-red opacity-50'}`}>{team.apothecary ? 'Contratado' : 'Sin Boticario'}</span>
+                            </div>
+                            <div className="flex gap-3">
+                                {!team.apothecary ? (
+                                    <button onClick={handleBuyApothecary} className="bg-premium-gold text-black font-display font-black uppercase tracking-widest text-[10px] py-3 px-6 rounded-lg transition-premium hover:scale-105 active:scale-95 shadow-xl">Contratar (50,000)</button>
+                                ) : (
+                                    <button onClick={handleSellApothecary} className="bg-white/5 border border-white/10 text-white font-display font-bold uppercase tracking-widest text-[10px] py-3 px-6 rounded-lg transition-premium hover:bg-white/10 active:scale-95">Despedir</button>
+                                )}
                             </div>
                         </div>
                     )}
@@ -565,13 +593,16 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
             </div>
 
             {/* Default Deployment */}
-            <div className="bg-slate-900/70 p-4 rounded-lg border border-slate-700">
-                <h3 className="text-lg font-semibold text-amber-400 mb-3">Despliegue por Defecto</h3>
-                <p className="text-sm text-slate-400 mb-4">Arrastra a tus jugadores titulares para establecer su posición inicial en los partidos.</p>
-                <div className="max-w-xl mx-auto">
-                    <MiniField 
+            <div className="bento-card p-6 border-white/5">
+                <h3 className="text-xl font-display font-bold text-premium-gold mb-2 uppercase tracking-wider flex items-center gap-3">
+                    <span className="w-8 h-8 bg-premium-gold/10 rounded-lg flex items-center justify-center text-sm italic">D</span>
+                    Despliegue Táctico
+                </h3>
+                <p className="text-[10px] font-display font-bold text-slate-500 uppercase tracking-widest mb-6">Configura la formación inicial de tus jugadores titulares.</p>
+                <div className="max-w-xl mx-auto bg-black/40 p-4 rounded-2xl border border-white/5 shadow-2xl">
+                    <MiniField
                         players={playersForField}
-                        teamColor="bg-sky-500"
+                        teamColor="bg-premium-gold"
                         onPlayerMove={handlePlayerMoveOnField}
                         onPlayerClick={setEditingPlayer}
                     />
@@ -580,51 +611,61 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
 
 
             {/* Hire Players */}
-            <div className="bg-slate-900/70 p-4 rounded-lg border border-slate-700">
-                 <h3 className="text-lg font-semibold text-amber-400 mb-3">Fichar Jugadores</h3>
-                 <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm whitespace-nowrap">
-                        <thead className="bg-slate-700 text-amber-300">
+            <div className="bento-card overflow-hidden border-white/5">
+                <div className="p-6 border-b border-white/5 bg-white/5">
+                    <h3 className="text-xl font-display font-bold text-premium-gold uppercase tracking-wider flex items-center gap-3">
+                        <span className="w-8 h-8 bg-premium-gold/10 rounded-lg flex items-center justify-center text-sm italic">F</span>
+                        Fichar Jugadores
+                    </h3>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs whitespace-nowrap">
+                        <thead className="bg-black/40 text-slate-400 font-display uppercase tracking-widest">
                             <tr>
-                                <th className="p-2">Posición</th>
-                                <th className="p-2">Coste</th>
-                                <th className="p-2 text-center">MV</th>
-                                <th className="p-2 text-center">FU</th>
-                                <th className="p-2 text-center">AG</th>
-                                <th className="p-2 text-center">PS</th>
-                                <th className="p-2 text-center">AR</th>
-                                <th className="p-2">Habilidades</th>
-                                <th className="p-2 text-center">Plantilla</th>
-                                <th className="p-2">Acción</th>
+                                <th className="p-4">Posición</th>
+                                <th className="p-4">Coste</th>
+                                <th className="p-4 text-center">MV</th>
+                                <th className="p-4 text-center">FU</th>
+                                <th className="p-4 text-center">AG</th>
+                                <th className="p-4 text-center">PS</th>
+                                <th className="p-4 text-center">AR</th>
+                                <th className="p-4">Habilidades</th>
+                                <th className="p-4 text-center">Cupo</th>
+                                <th className="p-4 text-right">Acción</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-700">
+                        <tbody className="divide-y divide-white/5">
                             {baseRoster.roster.map(p => (
-                                <tr key={p.position}>
-                                    <td className="p-2 font-semibold text-slate-200">{p.position}</td>
-                                    <td className="p-2">{p.cost.toLocaleString()}</td>
-                                    <td className="p-2 text-center">{p.stats.MV}</td>
-                                    <td className="p-2 text-center">{p.stats.FU}</td>
-                                    <td className="p-2 text-center">{p.stats.AG}</td>
-                                    <td className="p-2 text-center">{p.stats.PS}</td>
-                                    <td className="p-2 text-center">{p.stats.AR}</td>
-                                    <td className="p-2 text-xs whitespace-normal min-w-[200px]">
-                                        {p.skills.split(', ').map((skill, index, arr) => {
-                                            const cleanSkillName = skill.trim();
-                                            if (cleanSkillName && cleanSkillName.toLowerCase() !== 'ninguna') {
-                                                return (
-                                                    <React.Fragment key={skill}>
-                                                        <button onClick={() => handleSkillClick(cleanSkillName)} className="text-sky-400 hover:text-sky-300 hover:underline">{cleanSkillName}</button>
-                                                        {index < arr.length - 1 && ', '}
-                                                    </React.Fragment>
-                                                );
-                                            }
-                                            return cleanSkillName + (index < arr.length - 1 ? ', ' : '');
-                                        })}
+                                <tr key={p.position} className="hover:bg-white/5 transition-colors">
+                                    <td className="p-4 font-display font-bold text-white text-base">{p.position}</td>
+                                    <td className="p-4 font-mono text-green-400">{p.cost.toLocaleString()}</td>
+                                    <td className="p-4 text-center font-display font-black text-white text-sm bg-white/5">{p.stats.MV}</td>
+                                    <td className="p-4 text-center font-display font-black text-white text-sm">{p.stats.FU}</td>
+                                    <td className="p-4 text-center font-display font-black text-white text-sm bg-white/5">{p.stats.AG}</td>
+                                    <td className="p-4 text-center font-display font-black text-white text-sm">{p.stats.PS}</td>
+                                    <td className="p-4 text-center font-display font-black text-white text-sm bg-white/5">{p.stats.AR}</td>
+                                    <td className="p-4 whitespace-normal min-w-[200px]">
+                                        <div className="flex flex-wrap gap-1">
+                                            {p.skills.split(', ').map((skill) => {
+                                                const cleanSkillName = skill.trim();
+                                                if (cleanSkillName && cleanSkillName.toLowerCase() !== 'ninguna') {
+                                                    return (
+                                                        <button
+                                                            key={skill}
+                                                            onClick={() => handleSkillClick(cleanSkillName)}
+                                                            className="text-[10px] font-bold px-2 py-0.5 rounded bg-premium-gold/10 text-premium-gold hover:bg-premium-gold hover:text-black transition-premium"
+                                                        >
+                                                            {cleanSkillName}
+                                                        </button>
+                                                    );
+                                                }
+                                                return <span key={skill} className="text-slate-500 italic text-[10px]">{cleanSkillName}</span>;
+                                            })}
+                                        </div>
                                     </td>
-                                    <td className="p-2 text-center">{countPlayersByPosition(p.position)}/{p.qty.split('-')[1]}</td>
-                                    <td className="p-2">
-                                        <button onClick={() => handleHirePlayer(p)} className="bg-green-600 text-white font-bold py-1 px-3 rounded shadow hover:bg-green-500 transition-colors">Fichar</button>
+                                    <td className="p-4 text-center text-slate-400">{countPlayersByPosition(p.position)}<span className="text-[10px] opacity-30 mx-0.5">/</span>{p.qty.split('-')[1]}</td>
+                                    <td className="p-4 text-right">
+                                        <button onClick={() => handleHirePlayer(p)} className="bg-premium-gold text-black font-display font-black uppercase tracking-widest text-[10px] py-2 px-4 rounded-lg transition-premium hover:scale-105 shadow-xl">Contratar</button>
                                     </td>
                                 </tr>
                             ))}
@@ -632,102 +673,121 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                     </table>
                 </div>
             </div>
-            
-             {/* Current Roster */}
-            <div className="bg-slate-900/70 p-4 rounded-lg border border-slate-700">
-                <h3 className="text-lg font-semibold text-amber-400 mb-3">
-                    Plantilla Actual ({team.players.length}/16)
-                    <span className={`ml-4 text-base ${starterCount > 11 ? 'text-red-400' : 'text-slate-400'}`}>
-                        (Titulares: {starterCount}/11)
-                    </span>
-                </h3>
+
+            {/* Current Roster */}
+            <div className="bento-card overflow-hidden border-white/5">
+                <div className="p-6 border-b border-white/5 bg-white/5 flex flex-wrap justify-between items-center gap-4">
+                    <h3 className="text-xl font-display font-bold text-premium-gold uppercase tracking-wider flex items-center gap-3">
+                        <span className="w-8 h-8 bg-premium-gold/10 rounded-lg flex items-center justify-center text-sm italic">P</span>
+                        Plantilla Actual
+                        <span className="text-xs text-slate-500 font-normal">({team.players.length}/16)</span>
+                    </h3>
+                    <div className="flex items-center gap-3">
+                        <span className={`text-[10px] font-display font-black uppercase tracking-[0.2em] px-3 py-1 rounded-full ${starterCount > 11 ? 'bg-blood-red/20 text-blood-red' : 'bg-green-400/10 text-green-400 border border-green-400/20 shadow-[0_0_15px_rgba(74,222,128,0.1)]'}`}>
+                            Titulares: {starterCount}/11
+                        </span>
+                    </div>
+                </div>
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm whitespace-nowrap">
-                        <thead className="bg-slate-700 text-amber-300">
+                    <table className="w-full text-left text-xs whitespace-nowrap">
+                        <thead className="bg-black/40 text-slate-400 font-display uppercase tracking-widest">
                             <tr>
-                                <th className="p-2">Nombre</th>
-                                <th className="p-2">Posición</th>
-                                <th className="p-2 text-center">MV</th>
-                                <th className="p-2 text-center">FU</th>
-                                <th className="p-2 text-center">AG</th>
-                                <th className="p-2 text-center">PS</th>
-                                <th className="p-2 text-center">AR</th>
-                                <th className="p-2">Alineación</th>
-                                <th className="p-2 text-center">PE</th>
-                                <th className="p-2">Habilidades</th>
-                                <th className="p-2">Lesiones Perm.</th>
-                                <th className="p-2">Acciones</th>
+                                <th className="p-4">Nombre</th>
+                                <th className="p-4">Posición</th>
+                                <th className="p-4 text-center">MV</th>
+                                <th className="p-4 text-center">FU</th>
+                                <th className="p-4 text-center">AG</th>
+                                <th className="p-4 text-center">PS</th>
+                                <th className="p-4 text-center">AR</th>
+                                <th className="p-4">Titular</th>
+                                <th className="p-4 text-center">PE</th>
+                                <th className="p-4">Habilidades</th>
+                                <th className="p-4 text-right">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-700">
+                        <tbody className="divide-y divide-white/5">
                             {team.players.map(p => {
                                 const allSkills = [
                                     ...(p.skills && p.skills.toLowerCase() !== 'ninguna' ? p.skills.split(', ').map(s => s.trim()) : []),
                                     ...p.gainedSkills
                                 ];
+                                const isBenched = p.isBenched ?? true;
                                 return (
-                                <tr key={p.id} className={(p.isBenched ?? true) ? 'opacity-60' : ''}>
-                                    <td className="p-2 font-bold text-white min-w-[150px]" onDoubleClick={() => handleNameDoubleClick(p)}>
-                                        <div className="flex items-center gap-2">
-                                            {p.missNextGame && p.missNextGame > 0 && (
-                                                <span title={`Se pierde ${p.missNextGame} partido(s)`}>
-                                                    <MedicalCrossIcon className="w-4 h-4 text-red-500 flex-shrink-0" />
-                                                </span>
+                                    <tr key={p.id} className={`group/row transition-colors ${isBenched ? 'bg-black/20 opacity-60 grayscale-[0.5]' : 'hover:bg-white/5'}`}>
+                                        <td className="p-4 min-w-[150px]" onDoubleClick={() => handleNameDoubleClick(p)}>
+                                            <div className="flex items-center gap-2">
+                                                {p.missNextGame && p.missNextGame > 0 && (
+                                                    <span title={`Se pierde ${p.missNextGame} partido(s)`} className="animate-pulse">
+                                                        <MedicalCrossIcon className="w-4 h-4 text-blood-red flex-shrink-0 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+                                                    </span>
+                                                )}
+                                                {editingPlayerId === p.id ? (
+                                                    <input
+                                                        type="text"
+                                                        value={editingName}
+                                                        onChange={handleNameChange}
+                                                        onBlur={handleNameUpdate}
+                                                        onKeyDown={handleNameKeyDown}
+                                                        autoFocus
+                                                        className="bg-black border border-premium-gold text-white rounded px-2 py-1 outline-none w-full font-display font-bold uppercase italic shadow-[0_0_15px_rgba(202,138,4,0.3)]"
+                                                    />
+                                                ) : (
+                                                    <span className="font-display font-black text-white text-base uppercase italic tracking-tight group-hover/row:text-premium-gold transition-colors">{p.customName}</span>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td className="p-4 font-display font-bold text-slate-400 uppercase tracking-widest text-[10px]">{p.position}</td>
+                                        <td className="p-4 text-center font-display font-black text-white text-sm bg-white/5">{p.stats.MV}</td>
+                                        <td className="p-4 text-center font-display font-black text-white text-sm">{p.stats.FU}</td>
+                                        <td className="p-4 text-center font-display font-black text-white text-sm bg-white/5">{p.stats.AG}</td>
+                                        <td className="p-4 text-center font-display font-black text-white text-sm">{p.stats.PS}</td>
+                                        <td className="p-4 text-center font-display font-black text-white text-sm bg-white/5">{p.stats.AR}</td>
+                                        <td className="p-4">
+                                            <button
+                                                onClick={() => togglePlayerBenched(p.id)}
+                                                className={`text-[10px] font-display font-black uppercase tracking-[0.2em] py-1.5 px-4 rounded-full transition-premium ${isBenched ? 'bg-white/5 text-slate-500 border border-white/5' : 'bg-green-400 text-black shadow-[0_0_15px_rgba(74,222,128,0.3)]'}`}
+                                            >
+                                                {isBenched ? 'Banquillo' : 'Titular'}
+                                            </button>
+                                        </td>
+                                        <td className="p-4 text-center">
+                                            <span className="font-mono text-premium-gold font-bold bg-premium-gold/5 px-2 py-1 rounded border border-premium-gold/10">{p.spp}</span>
+                                        </td>
+                                        <td className="p-4 whitespace-normal min-w-[250px]">
+                                            <div className="flex flex-wrap gap-1">
+                                                {allSkills.length > 0 ? (
+                                                    allSkills.map((skill) => (
+                                                        <button
+                                                            key={`${p.id}-${skill}`}
+                                                            onClick={() => handleSkillClick(skill)}
+                                                            className="text-[10px] font-bold px-2 py-0.5 rounded bg-white/5 border border-white/5 text-slate-300 hover:bg-premium-gold hover:text-black hover:border-premium-gold transition-premium"
+                                                        >
+                                                            {skill}
+                                                        </button>
+                                                    ))
+                                                ) : <span className="text-slate-600 italic text-[10px]">Sin habilidades</span>}
+                                            </div>
+                                            {p.lastingInjuries.length > 0 && (
+                                                <div className="mt-1 flex flex-wrap gap-1">
+                                                    {p.lastingInjuries.map(injury => (
+                                                        <span key={`${p.id}-${injury}`} className="text-[9px] font-bold text-blood-red uppercase tracking-widest bg-blood-red/10 px-1.5 rounded">{injury}</span>
+                                                    ))}
+                                                </div>
                                             )}
-                                            {editingPlayerId === p.id ? (
-                                                <input
-                                                    type="text"
-                                                    value={editingName}
-                                                    onChange={handleNameChange}
-                                                    onBlur={handleNameUpdate}
-                                                    onKeyDown={handleNameKeyDown}
-                                                    autoFocus
-                                                    className="bg-slate-900 border border-amber-400 rounded px-1 w-full"
-                                                />
-                                            ) : (
-                                                <span className="truncate">{p.customName}</span>
-                                            )}
-                                        </div>
-                                    </td>
-                                    <td className="p-2">{p.position}</td>
-                                    <td className="p-2 text-center">{p.stats.MV}</td>
-                                    <td className="p-2 text-center">{p.stats.FU}</td>
-                                    <td className="p-2 text-center">{p.stats.AG}</td>
-                                    <td className="p-2 text-center">{p.stats.PS}</td>
-                                    <td className="p-2 text-center">{p.stats.AR}</td>
-                                    <td className="p-2">
-                                        <button 
-                                            onClick={() => togglePlayerBenched(p.id)}
-                                            className={`text-xs font-bold py-1 px-3 rounded-full ${(p.isBenched ?? true) ? 'bg-slate-600 text-slate-200 hover:bg-slate-500' : 'bg-green-600 text-white hover:bg-green-500'}`}
-                                        >
-                                            {(p.isBenched ?? true) ? 'Banquillo' : 'Titular'}
-                                        </button>
-                                    </td>
-                                    <td className="p-2 text-center">{p.spp}</td>
-                                    <td className="p-2 text-xs min-w-[250px]">
-                                        {allSkills.length > 0 ? (
-                                            allSkills.map((skill, index) => (
-                                                <React.Fragment key={`${p.id}-${skill}`}>
-                                                    <button
-                                                        onClick={() => handleSkillClick(skill)}
-                                                        className="text-sky-400 hover:text-sky-300 hover:underline focus:outline-none"
-                                                    >
-                                                        {skill}
-                                                    </button>
-                                                    {index < allSkills.length - 1 && ', '}
-                                                </React.Fragment>
-                                            ))
-                                        ) : 'Ninguna'}
-                                    </td>
-                                    <td className="p-2 text-xs text-red-400">{p.lastingInjuries.join(', ') || 'Ninguna'}</td>
-                                    <td className="p-2">
-                                        <div className="flex gap-2">
-                                            <button onClick={() => setEditingPlayer(p)} className="text-sky-400 hover:underline text-xs">Editar</button>
-                                            <button onClick={() => requestFirePlayer(p.id)} className="text-red-400 hover:underline text-xs">Despedir</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            )})}
+                                        </td>
+                                        <td className="p-4 text-right">
+                                            <div className="flex justify-end gap-2 opacity-0 group-hover/row:opacity-100 transition-opacity">
+                                                <button onClick={() => setEditingPlayer(p)} className="p-2 rounded-lg bg-white/5 border border-white/10 text-sky-400 hover:bg-sky-400 hover:text-black transition-premium" title="Editar Jugador">
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                                </button>
+                                                <button onClick={() => requestFirePlayer(p.id)} className="p-2 rounded-lg bg-white/5 border border-white/10 text-blood-red hover:bg-blood-red hover:text-white transition-premium" title="Despedir Jugador">
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )
+                            })}
                         </tbody>
                     </table>
                 </div>
@@ -735,10 +795,11 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
 
 
             {/* Danger Zone */}
-            <div className="bg-red-900/30 p-4 rounded-lg border border-red-700">
-                <h3 className="text-lg font-semibold text-red-400 mb-3">Zona Peligrosa</h3>
-                <button onClick={handleDeleteTeam} className="bg-red-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-red-500 transition-colors">
-                    Disolver Equipo
+            <div className="bento-card p-6 border-blood-red/20 bg-blood-red/5">
+                <h3 className="text-xl font-display font-bold text-blood-red uppercase tracking-wider mb-2">Zona Peligrosa</h3>
+                <p className="text-[10px] font-display font-bold text-slate-500 uppercase tracking-widest mb-6 border-b border-blood-red/10 pb-4">Acciones irreversibles para la gestión de la franquicia.</p>
+                <button onClick={handleDeleteTeam} className="bg-blood-red text-white font-display font-black uppercase tracking-widest text-xs py-3 px-8 rounded-lg transition-premium hover:scale-105 active:scale-95 shadow-xl shadow-blood-red/20 border border-white/10">
+                    Disolver Franquicia
                 </button>
             </div>
 
@@ -762,8 +823,8 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
             )}
 
             {showQr && (
-                <div 
-                    className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" 
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
                     onClick={() => setShowQr(false)}
                 >
                     <div className="bg-slate-800 p-4 rounded-lg shadow-xl border border-slate-700" onClick={e => e.stopPropagation()}>
@@ -773,7 +834,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                     </div>
                 </div>
             )}
-             <style>{`
+            <style>{`
                 @keyframes fade-in-fast { from { opacity: 0; } to { opacity: 1; } }
                 .animate-fade-in-fast { animation: fade-in-fast 0.2s ease-out forwards; }
             `}</style>

@@ -44,69 +44,75 @@ const SppActionIcons: React.FC<{ actions: Partial<Record<SppActionType, number>>
 };
 
 const PlayerStatusCard: React.FC<PlayerStatusCardProps> = ({ player, playerNumber, onViewPlayer, onSkillClick, onStatusToggle, canToggleStatus }) => {
-    const statusConfig: Record<PlayerStatus, { bg: string; text: string; label: string; }> = {
-        Activo: { bg: 'bg-green-600/20', text: 'text-green-400', label: 'Activo' },
-        Reserva: { bg: 'bg-transparent', text: 'text-slate-300', label: 'Reserva' },
-        KO: { bg: 'bg-yellow-600/30', text: 'text-yellow-400', label: 'KO' },
-        Lesionado: { bg: 'bg-orange-600/30', text: 'text-orange-400', label: 'Lesionado' },
-        Expulsado: { bg: 'bg-red-600/30', text: 'text-red-400', label: 'Expulsado' },
-        Muerto: { bg: 'bg-black/50 border-red-800', text: 'text-red-500 font-extrabold', label: '☠ MUERTO ☠' },
+    const statusConfig: Record<PlayerStatus, { bg: string; text: string; label: string; shadow: string }> = {
+        Activo: { bg: 'bg-green-500/10 border-green-500/20', text: 'text-green-400', label: 'Activo', shadow: 'shadow-green-500/5' },
+        Reserva: { bg: 'bg-white/5 border-white/10', text: 'text-slate-400', label: 'Reserva', shadow: 'shadow-transparent' },
+        KO: { bg: 'bg-amber-500/10 border-amber-500/20', text: 'text-amber-400', label: 'KO', shadow: 'shadow-amber-500/5' },
+        Lesionado: { bg: 'bg-orange-500/10 border-orange-500/20', text: 'text-orange-400', label: 'Lesionado', shadow: 'shadow-orange-500/5' },
+        Expulsado: { bg: 'bg-red-500/10 border-red-500/20', text: 'text-red-400', label: 'Expulsado', shadow: 'shadow-red-500/5' },
+        Muerto: { bg: 'bg-black/60 border-blood-red/40', text: 'text-blood-red font-black', label: '☠ MUERTO ☠', shadow: 'shadow-blood-red/20' },
     };
-    
+
     const status = player.status || 'Activo';
     const config = statusConfig[status];
     const displayLabel = player.statusDetail || config.label;
 
-    const nameClass = status === 'Muerto' 
-        ? 'text-red-500' 
-        : player.isJourneyman
-            ? 'text-slate-400 italic'
+    const nameClass = status === 'Muerto'
+        ? 'text-blood-red'
+        : player.isStarPlayer
+            ? 'text-premium-gold'
             : 'text-white';
 
     return (
-        <div className={`p-2 rounded-md transition-colors duration-300 ${config.bg} border-b border-slate-700/50`}>
-            <div className="flex justify-between items-center">
-                 <div className="flex items-center gap-2 flex-grow min-w-0">
+        <div className={`bento-card p-4 transition-premium border ${config.bg} ${config.shadow} group/card`}>
+            <div className="flex justify-between items-start mb-3">
+                <div className="flex items-center gap-3 flex-grow min-w-0">
                     {playerNumber && (
-                        <div className="flex-shrink-0 w-6 h-6 bg-slate-600 rounded-full flex items-center justify-center text-xs font-bold">
+                        <div className="flex-shrink-0 w-8 h-8 bg-black/40 border border-white/10 rounded-lg flex items-center justify-center text-xs font-display font-bold text-premium-gold">
                             {playerNumber}
                         </div>
                     )}
-                    <div className="truncate flex items-center gap-2">
-                        <button 
+                    <div className="truncate flex flex-col">
+                        <button
                             type="button"
                             onClick={() => onViewPlayer(player)}
-                            className="font-bold text-left hover:underline focus:outline-none focus:ring-1 focus:ring-amber-400 rounded-sm px-1 -mx-1 truncate"
+                            className="font-display font-bold text-lg text-left hover:text-premium-gold transition-colors outline-none truncate"
                         >
                             <span className={nameClass}>
-                                {player.isStarPlayer && <span className="text-amber-400 mr-1">★</span>}
                                 {player.customName}
                             </span>
                         </button>
-                        <SppActionIcons actions={player.sppActions || {}} />
+                        <div className="flex items-center gap-2">
+                            <p className="text-[10px] font-display text-slate-500 uppercase tracking-widest truncate">{player.position}</p>
+                            <SppActionIcons actions={player.sppActions || {}} />
+                        </div>
                     </div>
                 </div>
-                <p className="text-sm font-mono text-amber-300 ml-2 flex-shrink-0">{player.spp}</p>
+                <div className="text-right flex flex-col items-end">
+                    <p className="text-sm font-display font-black text-premium-gold tracking-widest">{player.spp}<span className="text-[8px] ml-0.5 opacity-50">PE</span></p>
+                    <p className={`text-[10px] font-display font-bold uppercase tracking-tighter mt-1 px-2 py-0.5 rounded ${config.bg} ${config.text}`}>
+                        {displayLabel}
+                    </p>
+                </div>
             </div>
-            <div className="flex justify-between items-center text-xs mt-1">
+
+            <div className="flex justify-between items-center pt-3 border-t border-white/5">
                 <div className="flex items-center gap-2">
-                    <p className="text-slate-400 truncate">{player.position}</p>
-                     {canToggleStatus && (player.status === 'Activo' || player.status === 'Reserva') && (
-                        <button 
+                    {canToggleStatus && (player.status === 'Activo' || player.status === 'Reserva') && (
+                        <button
                             onClick={() => onStatusToggle?.(player)}
-                            className="text-xs bg-slate-600 hover:bg-slate-500 text-white font-semibold py-0.5 px-2 rounded-full"
+                            className="text-[10px] font-display font-bold uppercase tracking-widest bg-white/5 border border-white/10 hover:bg-white/10 text-white py-1 px-3 rounded-md transition-premium"
                         >
                             {player.status === 'Activo' ? '→ Banquillo' : '→ Al Campo'}
                         </button>
                     )}
                 </div>
-                <p className={`font-semibold ${config.text}`}>{displayLabel}</p>
+                {player.lastingInjuries && player.lastingInjuries.length > 0 && (
+                    <div className="text-[10px] font-display font-bold text-blood-red uppercase tracking-tight flex items-center gap-1">
+                        <span className="animate-pulse">⚠</span> {player.lastingInjuries.join(', ')}
+                    </div>
+                )}
             </div>
-            {player.lastingInjuries && player.lastingInjuries.length > 0 && (
-                <div className="mt-1 text-xs text-red-400 font-semibold">
-                    {player.lastingInjuries.join(', ')}
-                </div>
-            )}
         </div>
     );
 };

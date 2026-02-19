@@ -1,0 +1,72 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --blood-red: #8B0000;
+  --premium-gold: #CA8A04;
+  --pitch-green: #1B4332;
+}
+
+body {
+    background-color: #0a0a0a;
+    color: #e2e8f0;
+    -webkit-tap-highlight-color: transparent;
+    font-family: 'Barlow', sans-serif;
+}
+
+h1, h2, h3, h4, .font-display {
+    font-family: 'Barlow Condensed', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Glassmorphism / Bento Defaults */
+.glass-panel {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 1.5rem;
+}
+
+.bento-card {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 1.25rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bento-card:hover {
+    border-color: rgba(202, 138, 4, 0.3);
+    transform: translateY(-2px);
+    background: rgba(0, 0, 0, 0.5);
+    box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+}
+
+/* Premium Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0a0a0a;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #1e293b;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--premium-gold);
+}
+
+/* Dynamic Transitions */
+.transition-premium {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Custom Text Shadow for Titles */
+.text-shadow-premium {
+    text-shadow: 0 0 20px rgba(202, 138, 4, 0.2);
+}
