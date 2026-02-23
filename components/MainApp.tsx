@@ -53,9 +53,6 @@ const MainApp: React.FC = () => {
       setSyncState('synced');
       console.log("MainApp: No database or user/guest mode active.");
     } else {
-      setDataInitiallyLoaded(false);
-      console.log("MainApp: Starting listeners for user:", user.id);
-
       const teamsPath = `users/${user.id}/teams`;
       console.log("MainApp: Listening to teams path:", teamsPath);
 
@@ -93,7 +90,7 @@ const MainApp: React.FC = () => {
         playsUnsub();
       };
     }
-  }, [user, isGuest, dataInitiallyLoaded]);
+  }, [user, isGuest]);
 
   useEffect(() => {
     if (!db) {
