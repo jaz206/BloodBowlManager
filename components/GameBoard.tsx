@@ -97,6 +97,15 @@ const PlayerButton: React.FC<{ player: ManagedPlayer, onSelect: (p: ManagedPlaye
     </button>
 );
 
+const DiceBulletIcon = () => (
+    <div className="grid grid-cols-2 gap-1 px-1">
+        <div className="w-1.5 h-1.5 bg-blood-red rounded-full"></div>
+        <div className="w-1.5 h-1.5 bg-blood-red rounded-full"></div>
+        <div className="w-1.5 h-1.5 bg-blood-red rounded-full"></div>
+        <div className="w-1.5 h-1.5 bg-blood-red rounded-full"></div>
+    </div>
+);
+
 const DiceRollButton = ({ onRoll, max = 6, onPlaySound }: { onRoll: (val: number) => void, max?: number, onPlaySound?: () => void }) => {
     const [isRolling, setIsRolling] = React.useState(false);
     const handleRoll = () => {
@@ -108,13 +117,26 @@ const DiceRollButton = ({ onRoll, max = 6, onPlaySound }: { onRoll: (val: number
             setIsRolling(false);
         }, 600);
     };
+
     return (
         <button
             onClick={handleRoll}
             disabled={isRolling}
-            className={`die-container ${isRolling ? 'animate-roll' : ''} bg-white border-2 border-slate-300 rounded-lg flex items-center justify-center shadow-lg hover:shadow-xl transition-all cursor-pointer group active:scale-95 w-12 h-12`}
+            className={`die-container ${isRolling ? 'animate-roll shake' : ''} bg-white rounded-lg shadow-lg flex items-center justify-center border-2 border-slate-200 hover:border-premium-gold transition-colors w-12 h-12`}
+            title={`Lanzar D${max}`}
         >
-            <div className="text-black font-black text-xl group-hover:scale-110 transition-transform">{isRolling ? '?' : max === 6 ? '🎲' : `D${max}`}</div>
+            <div className="die-face relative flex items-center justify-center w-full h-full">
+                {max === 6 ? (
+                    <DiceBulletIcon />
+                ) : (
+                    <span className="text-xl font-display font-black text-blood-red drop-shadow-sm">
+                        {max}
+                    </span>
+                )}
+                <div className="absolute -bottom-1 -right-1 text-[8px] font-bold text-slate-400 opacity-50 bg-white/80 px-0.5 rounded">
+                    D{max}
+                </div>
+            </div>
         </button>
     );
 };
