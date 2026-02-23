@@ -2,20 +2,20 @@
 import type { Prayer } from '../types';
 
 export const prayersData: Prayer[] = [
-  { diceRoll: "1", title: "Trampilla traicionera", description: "Hasta el final de esta parte del partido, cada vez que algún jugador entre en una casilla de trampilla por cualquier motivo, tira 1D6. Si sacas un 1 la trampilla se abre y el jugador es inmediatamente retirado del juego." },
-  { diceRoll: "2", title: "Amigo del árbitro", description: "Hasta el final de esta entrada, puedes tratar una tirada de 5 en la tabla de Protestar al árbitro como un resultado de “Ahora que lo dices...” en lugar de uno de “¡Me da igual!”." },
-  { diceRoll: "3", title: "¡Fanático!", description: "Elige un jugador aleatorio de tu equipo que esté disponible para jugar en esta entrada y no tenga el rasgo de Solitario (X+). Hasta el final de esta entrada, dicho jugador puede Apuntalar." },
-  { diceRoll: "4", title: "Músculos de hierro", description: "Elige un jugador de tu equipo que esté disponible para jugar en esta entrada y no tenga el rasgo de Solitario (X+). Hasta el final del partido, dicho jugador aumenta en 1 su atributo AR, hasta un máximo de 11." },
-  { diceRoll: "5", title: "Nudillos", description: "Elige un jugador de tu equipo que esté disponible para jugar en esta entrada y no tenga el rasgo de Solitario (X+). Hasta el final de esta entrada, dicho jugador obtiene la habilidad Golpe mortífero (+1)." },
-  { diceRoll: "6", title: "Malas costumbres", description: "Elige aleatoriamente a 1D3 jugadores rivales que estén disponibles para jugar en esta entrada y no tengan el rasgo de Solitario (X+). Hasta el final de esta entrada, dichos jugadores obtienen Solitario (X+)." },
-  { diceRoll: "7", title: "Tacos engrasados", description: "Elige un jugador rival aleatorio que esté disponible para jugar en esta entrada. ¡Sus botas han sido saboteadas! Hasta el final de la entrada, su atributo MV se reduce en 1." },
-  { diceRoll: "8", title: "Estatua bendita de Nuffle", description: "Elige un jugador de tu equipo que esté disponible para jugar en esta entrada y que no tenga el rasgo de Solitario (X+). Hasta el final del partido, dicho jugador obtiene la habilidad Profesional." },
-  { diceRoll: "9", title: "Topos bajo el campo", description: "Hasta el final de esta parte del partido, aplica un modificador de -1 a los intentos de forzar la marcha (o de -2 si ambos entrenadores obtienen este resultado)." },
-  { diceRoll: "10", title: "Pase perfecto", description: "Hasta el final de esta entrada, si un jugador de tu equipo que logre un Pase completo gana 2 PE en lugar de 1." },
-  { diceRoll: "11", title: "Apoyo del público", description: "Hasta el final de esta entrada, si un jugador de tu equipo deja Lesionado a un rival empujarlo fuera del campo, tu jugador gana 2 PE igual que si lo hubiera dejado Lesionado con una acción de Placaje." },
-  { diceRoll: "12", title: "Vivencias necesarias", description: "Hasta el final de esta entrada, si un jugador de tu equipo deja Lesionado a un rival mientras una acción de Falta, tu jugador gana 2 PE igual que si lo hubiera dejado Lesionado mediante una acción de Placaje." },
-  { diceRoll: "13", title: "Con faltas y a lo loco", description: "Hasta el final de esta entrada, tu jugador gana 2 PE igual que si lo hubiera dejado Lesionado mediante una acción de Falta, tu jugador gana 2 PE igual que si lo hubiera dejado Lesionado mediante una acción de Placaje." },
-  { diceRoll: "14", title: "Pedrada", description: "Hasta el final de esta entrada, si un jugador rival está reteniendo el balón, al final del turno de su equipo puedes tirar 1D6. Con un 5+, un hincha enfurecido lanza una piedra a ese jugador. El jugador es Derribado inmediatamente." },
-  { diceRoll: "15", title: "Escudo de Nuffle", description: "Hasta el final de esta parte del partido, cualquier jugador rival que cometa una acción de Falta y sea pillado por el árbitro, aunque no saque un doble natural en la tirada de Armadura, no es Expulsado." },
-  { diceRoll: "16", title: "Entrenamiento intensivo", description: "Elige aleatoriamente un jugador de tu equipo que esté disponible para jugar en esta entrada y no tenga el rasgo de Solitario (X+). Hasta el final del partido, dicho jugador obtiene una Habilidad Primaria a tu elección." }
+  { diceRoll: "1", title: "Trampilla traicionera", description: "Cualquier jugador que se coloque sobre cualquier trampilla lanza 1D6, si sale 1 el jugador es retirado como si hubiera sido retirado del campo por las bandas." },
+  { diceRoll: "2", title: "Amigo del árbitro", description: "Las tiradas de 5 al protestar contra el árbitro se toman como 6." },
+  { diceRoll: "3", title: "Puñal", description: "Elije un jugador que esté disponible este partido, ese jugador gana el rasgo Puñalar." },
+  { diceRoll: "4", title: "Músculos de hierro", description: "Elije un jugador al azar que esté disponible para jugar y no tenga Solitario, ese jugador gana +1 Armadura." },
+  { diceRoll: "5", title: "Nudilleras", description: "Elije un jugador al azar que esté disponible para jugar y no tenga Solitario, obtiene Golpe Mortífero." },
+  { diceRoll: "6", title: "Malas costumbres", description: "Elije 1D3 jugadores rivales al azar que estén disponibles para jugar y no tengan Solitario, esos jugadores obtienen Solitario +2." },
+  { diceRoll: "7", title: "Tacos engrasados", description: "Elije un jugador rival al azar que esté disponible para jugar, ese jugador reduce en 1 su Movimiento." },
+  { diceRoll: "8", title: "Bendición de Nuffle", description: "Elije un jugador al azar de tu equipo que esté disponible para jugar y no tenga Solitario, ese jugador obtiene la habilidad de Profesional." },
+  { diceRoll: "9", title: "Topos bajo el campo", description: "Hasta el final del partido, aplica un modificador de -1 a las tiradas de Forzar la Marcha." },
+  { diceRoll: "10", title: "Pase perfecto", description: "Cualquier jugador de tu equipo que logre un pase completo gana 2 PE en lugar de 1 PE." },
+  { diceRoll: "11", title: "Recepción deslumbrante", description: "Cualquier jugador de tu equipo que logre atrapar un pase gana 1 PE." },
+  { diceRoll: "12", title: "Apoyo del público", description: "Cualquier oponente queda herido por ser empujado fuera del campo, el jugador que lo empujó gana 2 PE." },
+  { diceRoll: "13", title: "Con faltas a lo loco", description: "Si un jugador de tu equipo lesiona a otro jugador obtendrá 2 PE." },
+  { diceRoll: "14", title: "Pedrada", description: "Una vez por partido, en cualquiera de tus turnos, puedes elegir al azar a un jugador oponente, tira 1D6 con 4+, el jugador es DERRIBADO." },
+  { diceRoll: "15", title: "Escrutinio arbitral", description: "Cualquier jugador rival que cometa una falta y supere la armadura será visto por el árbitro." },
+  { diceRoll: "16", title: "Entrenamiento intensivo", description: "Elije al azar un jugador de tu equipo que esté disponible para jugar y no tenga Solitario. Hasta el final del partido, ese jugador obtiene una Habilidad Primaria a tu elección." }
 ];
