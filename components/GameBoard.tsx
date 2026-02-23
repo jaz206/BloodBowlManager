@@ -547,13 +547,19 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
     const handleConfirmPostGame = (finalTeamState: ManagedTeam) => { if (!homeTeam) return; onTeamUpdate(finalTeamState); setGameState('setup'); setHomeTeam(null); setOpponentTeam(null); setLiveHomeTeam(null); setLiveOpponentTeam(null); setGameLog([]); setScore({ home: 0, opponent: 0 }); setTurn(0); setHalf(1); setFame({ home: 0, opponent: 0 }); setFansRoll({ home: '', opponent: '' }); };
     const handleFoulAction = (action: 'next' | 'back') => {
         const { step, foulingPlayer, victimPlayer, armorRollInput, wasExpelled, log, foulingTeamId, injuryRollInput, casualtyRollInput, lastingInjuryRollInput } = foulState;
-        if (action === 'back') { /* ... existing back logic ... */ return; }
+        if (action === 'back') {
+            const steps: FoulState['step'][] = ['select_fouler_team', 'select_fouler', 'select_victim', 'armor_roll', 'injury_roll', 'casualty_roll', 'lasting_injury_roll', 'summary'];
+            const currentIndex = steps.indexOf(step);
+            if (currentIndex > 0) setFoulState(prev => ({ ...prev, step: steps[currentIndex - 1] }));
+            return;
+        }
 
         const foulingTeam = foulingTeamId === 'home' ? liveHomeTeam : liveOpponentTeam;
         const setFoulingTeam = foulingTeamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
 
         switch (step) {
-            // ... (select_fouler_team, select_fouler remain same)
+            case 'select_fouler': if (foulingPlayer) setFoulState(prev => ({ ...prev, step: 'select_victim' })); break;
+            case 'select_victim': if (victimPlayer) setFoulState(prev => ({ ...prev, step: 'armor_roll' })); break;
             case 'armor_roll': {
                 const die1 = parseInt(armorRollInput.die1), die2 = parseInt(armorRollInput.die2);
                 if (isNaN(die1) || isNaN(die2)) break;
@@ -563,7 +569,6 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
 
                 let currentlyExpelled = isDoubles;
 
-                // Biased Ref Logic
                 if (isDoubles && foulingTeam?.biasedRef) {
                     const biasedRoll = Math.floor(Math.random() * 6) + 1;
                     if (biasedRoll >= 2) {
@@ -595,7 +600,6 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
 
                 let currentlyExpelled = wasExpelled || isDoubles;
 
-                // Biased Ref Logic (part 2)
                 if (isDoubles && foulingTeam?.biasedRef && !wasExpelled) {
                     const biasedRoll = Math.floor(Math.random() * 6) + 1;
                     if (biasedRoll >= 2) {
@@ -613,12 +617,46 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                 else setFoulState(prev => ({ ...prev, injuryRoll: { roll, result: resultText }, step: 'summary', log: [...log, logMsg], wasExpelled: currentlyExpelled, expulsionReason: currentlyExpelled ? `¡${foulingPlayer?.customName} expulsado por dobles!` : prev.expulsionReason }));
                 break;
             }
-            // ... (rest of foul steps remain same)
+            case 'casualty_roll': {
+                const roll = parseInt(casualtyRollInput);
+                if (isNaN(roll) || roll < 1 || roll > 16) break;
+                const event = casualtyResults.find(e => { const range = e.diceRoll.split('-').map(Number); return range.length > 1 ? (roll >= range[0] && roll <= range[1]) : roll === range[0]; });
+                if (!event) return;
+                let logMsg = `Tirada Lesión (D16): ${roll} -> ${event.title}.`;
+                const victimTeamId = foulingTeamId === 'home' ? 'opponent' : 'home';
+                if (['Gravemente Herido', 'Lesion Seria', 'Lesion Permanente'].includes(event.title)) { setPlayersMissingNextGame(prev => [...prev, { playerId: victimPlayer!.id, teamId: victimTeamId }]); }
+                updatePlayerStatus(victimPlayer!.id, victimTeamId, event.title === 'Muerto' ? 'Muerto' : 'Lesionado', event.title);
+                setFoulState(prev => ({ ...prev, casualtyRoll: { roll, result: event.title }, step: event.title === 'Lesion Permanente' ? 'lasting_injury_roll' : 'summary', log: [...log, logMsg] }));
+                break;
+            }
+            case 'lasting_injury_roll': {
+                const roll = parseInt(lastingInjuryRollInput);
+                if (isNaN(roll) || roll < 1 || roll > 6) break;
+                const event = lastingInjuryResults.find(e => { const range = e.diceRoll.split('-').map(Number); return range.length > 1 ? (roll >= range[0] && roll <= range[1]) : roll === range[0]; });
+                if (!event) return;
+                let logMsg = `Lesión Permanente (D6): ${roll} -> ${event.permanentInjury} (${event.characteristicReduction}).`;
+                const victimTeamId = foulingTeamId === 'home' ? 'opponent' : 'home';
+                const setVictimTeam = victimTeamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
+                setVictimTeam(prev => prev ? ({ ...prev, players: prev.players.map(p => p.id === victimPlayer!.id ? { ...p, lastingInjuries: [...p.lastingInjuries, `${event.permanentInjury} (${event.characteristicReduction})`] } : p) }) : null);
+                setFoulState(prev => ({ ...prev, lastingInjuryRoll: { roll, result: event.permanentInjury, characteristic: event.characteristicReduction }, step: 'summary', log: [...log, logMsg] }));
+                break;
+            }
+            case 'summary':
+                if (wasExpelled) { const victimTeamId = foulingTeamId === 'home' ? 'home' : 'opponent'; updatePlayerStatus(foulingPlayer!.id, victimTeamId, 'Expulsado', 'Expulsado por falta'); }
+                logEvent('FOUL', `Falta cometida por ${foulingPlayer?.customName} sobre ${victimPlayer?.customName}. ${foulState.log.join(' ')}`);
+                setIsFoulModalOpen(false);
+                setFoulState(initialFoulState);
+                break;
         }
     };
     const handleInjuryAction = (action: 'next' | 'back') => {
         const { step, victimPlayer, armorRollInput, log, victimTeamId, injuryRollInput, casualtyRollInput, lastingInjuryRollInput, casualtyRoll, apothecaryAction, isStunty, regenerationRollInput } = injuryState;
-        if (action === 'back') { /* ... existing back logic ... */ return; }
+        if (action === 'back') {
+            const steps: InjuryState['step'][] = ['select_victim_team', 'select_victim', 'armor_roll', 'injury_roll', 'apothecary', 'casualty_roll', 'lasting_injury_roll', 'regeneration_check', 'regeneration_roll', 'staff_reroll_choice', 'summary'];
+            const currentIndex = steps.indexOf(step);
+            if (currentIndex > 0) setInjuryState(prev => ({ ...prev, step: steps[currentIndex - 1] }));
+            return;
+        }
 
         const victimTeam = victimTeamId === 'home' ? liveHomeTeam : liveOpponentTeam;
         const setVictimTeam = victimTeamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
