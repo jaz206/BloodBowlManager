@@ -8,6 +8,8 @@ import SkillModal from './SkillModal';
 interface PlayerCardModalProps {
   player: ManagedPlayer;
   onClose: () => void;
+  isBallCarrier?: boolean;
+  onBallToggle?: () => void;
 }
 
 const SkillButton: React.FC<{ skillName: string; onSkillClick: (name: string) => void }> = ({ skillName, onSkillClick }) => {
@@ -27,7 +29,7 @@ const SkillButton: React.FC<{ skillName: string; onSkillClick: (name: string) =>
   return <span className="bg-white/5 border border-white/10 text-white/40 text-[10px] font-display font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg">{skillName}</span>;
 };
 
-const PlayerCardModal: React.FC<PlayerCardModalProps> = ({ player, onClose }) => {
+const PlayerCardModal: React.FC<PlayerCardModalProps> = ({ player, onClose, isBallCarrier, onBallToggle }) => {
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -111,6 +113,19 @@ const PlayerCardModal: React.FC<PlayerCardModalProps> = ({ player, onClose }) =>
                 </div>
               </div>
             )}
+
+            <div className="flex gap-4">
+              <button
+                onClick={onBallToggle}
+                className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl border transition-premium font-display font-black uppercase tracking-widest italic ${isBallCarrier
+                    ? 'bg-amber-500 border-amber-400 text-black shadow-[0_0_20px_rgba(251,191,36,0.4)]'
+                    : 'bg-white/5 border-white/10 text-slate-400 hover:border-amber-500/50 hover:text-amber-400'
+                  }`}
+              >
+                <span className="text-xl">{isBallCarrier ? '🏈' : '🏉'}</span>
+                {isBallCarrier ? 'Tiene el Balón' : 'Dar Balón'}
+              </button>
+            </div>
           </div>
           <div className="p-4 bg-black/20 border-t border-white/5">
             <button

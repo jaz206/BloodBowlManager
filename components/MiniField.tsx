@@ -6,9 +6,10 @@ interface MiniFieldProps {
     teamColor: string;
     onPlayerMove: (playerId: number, newPos: { x: number; y: number }) => void;
     onPlayerClick?: (player: ManagedPlayer) => void;
+    ballCarrierId?: number | null;
 }
 
-const MiniField: React.FC<MiniFieldProps> = ({ players, teamColor, onPlayerMove, onPlayerClick }) => {
+const MiniField: React.FC<MiniFieldProps> = ({ players, teamColor, onPlayerMove, onPlayerClick, ballCarrierId }) => {
     const GRID_COLS = 15;
     const GRID_ROWS = 7;
     const fieldRef = useRef<HTMLDivElement>(null);
@@ -51,7 +52,7 @@ const MiniField: React.FC<MiniFieldProps> = ({ players, teamColor, onPlayerMove,
 
         gridX = Math.max(0, Math.min(GRID_COLS - 1, gridX));
         gridY = Math.max(0, Math.min(GRID_ROWS - 1, gridY));
-        
+
         // Prevent placing on opponent's side of scrimmage (assuming this is for one team's half)
         if (gridY < 3) gridY = 3;
 
@@ -70,7 +71,7 @@ const MiniField: React.FC<MiniFieldProps> = ({ players, teamColor, onPlayerMove,
             draggedPlayerRef.current = null;
         }
     }, []);
-    
+
     useEffect(() => {
         const upHandler = () => handleMouseUp();
         window.addEventListener('mousemove', handleMouseMove);
@@ -87,12 +88,12 @@ const MiniField: React.FC<MiniFieldProps> = ({ players, teamColor, onPlayerMove,
     }, [handleMouseMove, handleMouseUp, handleTouchMove]);
 
     return (
-        <div 
+        <div
             ref={fieldRef}
             className="relative w-full aspect-[15/7] bg-green-900/50 rounded-md border-2 border-green-700/50 select-none"
         >
             {/* Grid */}
-            <div className="absolute inset-0 grid" style={{gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`, gridTemplateRows: `repeat(${GRID_ROWS}, 1fr)`}}>
+            <div className="absolute inset-0 grid" style={{ gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`, gridTemplateRows: `repeat(${GRID_ROWS}, 1fr)` }}>
                 {Array.from({ length: GRID_COLS * GRID_ROWS }).map((_, i) => (
                     <div key={i} className="border border-green-300/10"></div>
                 ))}
@@ -105,21 +106,34 @@ const MiniField: React.FC<MiniFieldProps> = ({ players, teamColor, onPlayerMove,
             {/* Players */}
             {players.map((player, index) => {
                 if (!player.fieldPosition) return null;
+                const isActive = player.status === 'Activo';
+                const isKO = player.status === 'KO';
+                const isInjured = ['Lesionado', 'Muerto', 'Expulsado'].includes(player.status || '');
+                const hasBall = ballCarrierId === player.id;
+
                 return (
-                    <div 
+                    <div
                         key={player.id}
                         onMouseDown={(e) => handleMouseDown(e, player)}
                         onTouchStart={(e) => handleTouchStart(e, player)}
                         onClick={() => onPlayerClick && onPlayerClick(player)}
-                        className="absolute w-[6.66%] h-[14.28%] transform -translate-x-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing z-10"
-                        style={{ 
-                            top: `${(player.fieldPosition.y + 0.5) / GRID_ROWS * 100}%`, 
+                        className={`absolute w-[6.66%] h-[14.28%] transform -translate-x-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing z-10 transition-premium field-node ${!isActive ? 'opacity-50 scale-90' : 'hover:scale-110'}`}
+                        style={{
+                            top: `${(player.fieldPosition.y + 0.5) / GRID_ROWS * 100}%`,
                             left: `${(player.fieldPosition.x + 0.5) / GRID_COLS * 100}%`,
                         }}
                     >
-                        <div className={`w-full h-full rounded-full ${teamColor} border-2 border-white/80 shadow-lg flex items-center justify-center text-white font-bold text-xs`}>
+                        <div className={`w-full h-full rounded-full ${teamColor} border-2 ${isKO ? 'border-yellow-400' : isInjured ? 'border-red-600' : 'border-white/80'} shadow-lg flex items-center justify-center text-white font-bold text-[10px] overflow-hidden`}>
                             {index + 1}
                         </div>
+                        {hasBall && <div className="ball-indicator animate-bounce"></div>}
+                        {!isActive && (
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <span className="text-[8px] bg-black/60 px-1 rounded text-white font-black uppercase">
+                                    {isKO ? 'KO' : isInjured ? 'OUT' : 'Zzn'}
+                                </span>
+                            </div>
+                        )}
                     </div>
                 );
             })}

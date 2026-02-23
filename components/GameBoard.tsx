@@ -97,53 +97,98 @@ const PlayerButton: React.FC<{ player: ManagedPlayer, onSelect: (p: ManagedPlaye
     </button>
 );
 
-const RollInputStep = ({ title, value, onChange, onNext, onBack, label, pattern, placeholder }: { title: string, value: string, onChange: (v: string) => void, onNext: () => void, onBack?: () => void, label: string, pattern: string, placeholder?: string }) => (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
-        <h3 className="text-2xl font-display font-bold text-premium-gold mb-4 uppercase tracking-wider underline decoration-premium-gold/30 underline-offset-8">{title}</h3>
-        <label className="block text-xs font-display font-bold text-slate-400 mb-2 uppercase tracking-widest">{label}</label>
-        <input
-            type="text"
-            pattern={pattern}
-            value={value}
-            onChange={e => onChange(e.target.value)}
-            className="w-full bg-black/40 border border-white/10 rounded-xl py-4 px-6 text-xl text-white font-display mb-6 focus:border-premium-gold/50 outline-none transition-premium"
-            placeholder={placeholder || ""}
-            autoFocus
-        />
-        <div className="flex justify-between gap-4">
-            {onBack && <button onClick={onBack} className="flex-1 font-display font-bold uppercase tracking-widest text-slate-400 py-3 px-6 rounded-xl border border-white/10 hover:bg-white/5 transition-premium">Atrás</button>}
-            <button onClick={onNext} className="flex-1 bg-premium-gold text-black font-display font-black uppercase tracking-widest py-3 px-6 rounded-xl shadow-2xl hover:bg-premium-light transition-premium">Siguiente</button>
-        </div>
-    </div>
-);
+const DiceRollButton = ({ onRoll, max = 6, onPlaySound }: { onRoll: (val: number) => void, max?: number, onPlaySound?: () => void }) => {
+    const [isRolling, setIsRolling] = React.useState(false);
+    const handleRoll = () => {
+        setIsRolling(true);
+        if (onPlaySound) onPlaySound();
+        setTimeout(() => {
+            const roll = Math.floor(Math.random() * max) + 1;
+            onRoll(roll);
+            setIsRolling(false);
+        }, 600);
+    };
+    return (
+        <button
+            onClick={handleRoll}
+            disabled={isRolling}
+            className={`die-container ${isRolling ? 'animate-roll' : ''} bg-white border-2 border-slate-300 rounded-lg flex items-center justify-center shadow-lg hover:shadow-xl transition-all cursor-pointer group active:scale-95 w-12 h-12`}
+        >
+            <div className="text-black font-black text-xl group-hover:scale-110 transition-transform">{isRolling ? '?' : max === 6 ? '🎲' : `D${max}`}</div>
+        </button>
+    );
+};
 
-const DoubleDiceInputStep = ({ title, value, onChange, onNext, onBack, label }: { title: string, value: { die1: string; die2: string; }, onChange: (v: { die1: string; die2: string; }) => void, onNext: () => void, onBack?: () => void, label: string }) => {
+const RollInputStep = ({ title, value, onChange, onNext, onBack, label, pattern, placeholder, onPlaySound }: { title: string, value: string, onChange: (v: string) => void, onNext: () => void, onBack?: () => void, label: string, pattern: string, placeholder?: string, onPlaySound?: () => void }) => {
+    const maxVal = pattern.includes('16') ? 16 : 6;
+    return (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <h3 className="text-2xl font-display font-bold text-premium-gold mb-4 uppercase tracking-wider underline decoration-premium-gold/30 underline-offset-8">{title}</h3>
+            <label className="block text-xs font-display font-bold text-slate-400 mb-2 uppercase tracking-widest">{label}</label>
+
+            <div className="flex items-center gap-6 mb-8 bg-black/20 p-6 rounded-2xl border border-white/5">
+                <input
+                    type="text"
+                    pattern={pattern}
+                    value={value}
+                    onChange={e => onChange(e.target.value)}
+                    className="flex-1 bg-black/40 border border-white/10 rounded-xl py-3 px-6 text-xl text-white font-display focus:border-premium-gold/50 outline-none transition-premium"
+                    placeholder={placeholder || ""}
+                    autoFocus
+                />
+                <div className="w-px h-12 bg-white/10"></div>
+                <DiceRollButton max={maxVal} onRoll={v => onChange(v.toString())} onPlaySound={() => onPlaySound && onPlaySound()} />
+            </div>
+
+            <div className="flex justify-between gap-4">
+                {onBack && <button onClick={onBack} className="flex-1 font-display font-bold uppercase tracking-widest text-slate-400 py-3 px-6 rounded-xl border border-white/10 hover:bg-white/5 transition-premium">Atrás</button>}
+                <button onClick={onNext} className="flex-1 bg-premium-gold text-black font-display font-black uppercase tracking-widest py-3 px-6 rounded-xl shadow-2xl hover:bg-premium-light transition-premium">Siguiente</button>
+            </div>
+        </div>
+    );
+};
+
+const DoubleDiceInputStep = ({ title, value, onChange, onNext, onBack, label, onPlaySound }: { title: string, value: { die1: string; die2: string; }, onChange: (v: { die1: string; die2: string; }) => void, onNext: () => void, onBack?: () => void, label: string, onPlaySound?: () => void }) => {
     const die1Ref = React.useRef<HTMLInputElement>(null);
     const die2Ref = React.useRef<HTMLInputElement>(null);
 
     const handleDieChange = (die: 'die1' | 'die2', val: string) => {
         const cleanVal = val.replace(/[^1-6]/g, '').slice(0, 1);
         onChange({ ...value, [die]: cleanVal });
-
-        if (die === 'die1' && cleanVal.length === 1) {
-            die2Ref.current?.focus();
-        }
+        if (die === 'die1' && cleanVal.length === 1) die2Ref.current?.focus();
     };
 
     return (
-        <>
-            <h3 className="text-lg font-bold text-amber-400 mb-4">{title}</h3>
-            <label className="block text-sm font-medium text-slate-300 mb-1">{label}</label>
-            <div className="flex items-center gap-4 mb-4">
-                <input ref={die1Ref} type="text" pattern="[1-6]" value={value.die1} onChange={e => handleDieChange('die1', e.target.value)} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white text-center text-lg" placeholder="D6" autoFocus />
-                <span className="text-2xl font-bold text-slate-400">+</span>
-                <input ref={die2Ref} type="text" pattern="[1-6]" value={value.die2} onChange={e => handleDieChange('die2', e.target.value)} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white text-center text-lg" placeholder="D6" />
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <h3 className="text-2xl font-display font-bold text-premium-gold mb-4 uppercase tracking-wider underline decoration-premium-gold/30 underline-offset-8">{title}</h3>
+            <label className="block text-xs font-display font-bold text-slate-400 mb-2 uppercase tracking-widest">{label}</label>
+
+            <div className="flex items-center gap-4 mb-8 bg-black/20 p-6 rounded-2xl border border-white/5">
+                <div className="flex-1 space-y-2">
+                    <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Manual</p>
+                    <div className="flex items-center gap-2">
+                        <input ref={die1Ref} type="text" pattern="[1-6]" value={value.die1} onChange={e => handleDieChange('die1', e.target.value)} className="w-12 bg-black/40 border border-white/10 rounded-xl py-2 text-center text-xl text-white font-display focus:border-premium-gold/50 outline-none transition-premium" placeholder="?" autoFocus />
+                        <span className="text-xl font-bold text-slate-600">+</span>
+                        <input ref={die2Ref} type="text" pattern="[1-6]" value={value.die2} onChange={e => handleDieChange('die2', e.target.value)} className="w-12 bg-black/40 border border-white/10 rounded-xl py-2 text-center text-xl text-white font-display focus:border-premium-gold/50 outline-none transition-premium" placeholder="?" />
+                    </div>
+                </div>
+
+                <div className="w-px h-12 bg-white/10"></div>
+
+                <div className="flex-1 space-y-2 flex flex-col items-center">
+                    <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Lanzar</p>
+                    <div className="flex gap-2">
+                        <DiceRollButton onRoll={v => onChange({ ...value, die1: v.toString() })} onPlaySound={() => onPlaySound && onPlaySound()} />
+                        <DiceRollButton onRoll={v => onChange({ ...value, die2: v.toString() })} onPlaySound={() => onPlaySound && onPlaySound()} />
+                    </div>
+                </div>
             </div>
-            <div className="flex justify-between">
-                {onBack && <button onClick={onBack} className="bg-slate-600 text-white font-bold py-2 px-6 rounded-md shadow-md hover:bg-slate-500">Atrás</button>}
-                <button onClick={onNext} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400 ml-auto">Siguiente</button>
+
+            <div className="flex justify-between gap-4">
+                {onBack && <button onClick={onBack} className="flex-1 font-display font-bold uppercase tracking-widest text-slate-400 py-3 px-6 rounded-xl border border-white/10 hover:bg-white/5 transition-premium">Atrás</button>}
+                <button onClick={onNext} className="flex-1 bg-premium-gold text-black font-display font-black uppercase tracking-widest py-3 px-6 rounded-xl shadow-2xl hover:bg-premium-light transition-premium">Siguiente</button>
             </div>
-        </>
+        </div>
     );
 };
 
@@ -282,6 +327,20 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
     const [isApothecaryModalOpen, setIsApothecaryModalOpen] = useState(false);
     const [isLogVisible, setIsLogVisible] = useState(false);
     const [playersMissingNextGame, setPlayersMissingNextGame] = useState<{ playerId: number, teamId: 'home' | 'opponent' }[]>([]);
+    const [ballCarrierId, setBallCarrierId] = useState<number | null>(null);
+    const [prayersAlert, setPrayersAlert] = useState<{ underdog: string, difference: number } | null>(null);
+
+    const playSound = useCallback((type: 'td' | 'injury' | 'turnover' | 'dice') => {
+        // En un entorno real, aquí cargaríamos archivos .mp3 o .wav
+        // Por ahora, simulamos con logs y preparamos la infraestructura
+        console.log(`[AUDIO] Reproduciendo: ${type}`);
+        // const audio = new Audio(`/sounds/${type}.mp3`);
+        // audio.play().catch(e => console.warn("Audio play blocked", e));
+    }, []);
+
+    const handleBallToggle = (playerId: number) => {
+        setBallCarrierId(prev => prev === playerId ? null : playerId);
+    };
 
     const scannerRef = useRef<any>(null);
     const scannerContainerRef = useRef<HTMLDivElement>(null);
@@ -390,7 +449,24 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
         }
     }, [gameState, preGameStep, liveHomeTeam, liveOpponentTeam, journeymenNotification, pendingJourneymen]);
 
-    useEffect(() => { if (gameState === 'pre_game' && preGameStep === 1 && liveHomeTeam && liveOpponentTeam) { const tvDiff = Math.abs(homeTV - opponentTV); const underdog = homeTV < opponentTV ? 'home' : (opponentTV < homeTV ? 'opponent' : null); if (underdog) setInducementState(prev => ({ ...prev, money: tvDiff, underdog })); else setInducementState({ money: 0, hiredStars: [], underdog: null }); } }, [gameState, preGameStep, homeTV, opponentTV]);
+    useEffect(() => {
+        if (gameState === 'pre_game' && preGameStep === 1 && liveHomeTeam && liveOpponentTeam) {
+            const tvDiff = Math.abs(homeTV - opponentTV);
+            const underdog = homeTV < opponentTV ? 'home' : (opponentTV < homeTV ? 'opponent' : null);
+            if (underdog) {
+                setInducementState(prev => ({ ...prev, money: tvDiff, underdog }));
+                if (tvDiff >= 50000) {
+                    setPrayersAlert({
+                        underdog: underdog === 'home' ? liveHomeTeam.name : liveOpponentTeam.name,
+                        difference: tvDiff
+                    });
+                }
+            } else {
+                setInducementState({ money: 0, hiredStars: [], underdog: null });
+                setPrayersAlert(null);
+            }
+        }
+    }, [gameState, preGameStep, homeTV, opponentTV, liveHomeTeam, liveOpponentTeam]);
 
     const logEvent = (type: GameEventType, description: string) => { setGameLog(prev => [{ id: Date.now(), timestamp: new Date().toLocaleTimeString('es-ES'), turn, half, type, description }, ...prev]); };
     const handleHalftime = () => { setTurn(0); setHalf(2); logEvent('INFO', 'Fin de la primera parte. Comienza la segunda parte.'); setGameStatus(prev => ({ ...prev, kickoffEvent: null })); if (firstHalfReceiver) { const secondHalfReceiver = firstHalfReceiver === 'home' ? 'opponent' : 'home'; setGameStatus(prev => ({ ...prev, receivingTeam: secondHalfReceiver })); logEvent('INFO', `Recibe en la segunda parte ${secondHalfReceiver === 'home' ? homeTeam?.name : opponentTeam?.name}.`); setGameState('pre_game'); setPreGameStep(7); } else { setGameState('pre_game'); setPreGameStep(6); } };
@@ -404,6 +480,7 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
         const teamName = tdModalTeam === 'home' ? liveHomeTeam.name : liveOpponentTeam.name;
         logEvent('TOUCHDOWN', `${scorer.customName} ha anotado un Touchdown para ${teamName}!`);
         setScore(s => ({ ...s, [tdModalTeam]: s[tdModalTeam] + 1 }));
+        playSound('td');
         updatePlayerSppAndAction(scorer, tdModalTeam, 3, 'TD', `anotar un Touchdown para ${teamName}`);
         setIsTdModalOpen(false);
         setTdModalTeam(null);
@@ -439,7 +516,12 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
     };
 
     const handleNextTurn = () => { if (turn < 8) { const newTurn = turn + 1; setTurn(newTurn); logEvent('INFO', `Comienza el turno ${newTurn} de la parte ${half}.`); } else if (half === 1) { handleHalftime(); } else { logEvent('INFO', '¡Fin del partido!'); setGameState('post_game'); } };
-    const handleTurnover = (reason: string) => { logEvent('TURNOVER', `Cambio de turno: ${reason}.`); setIsTurnoverModalOpen(false); handleNextTurn(); };
+    const handleTurnover = (reason: string) => {
+        logEvent('TURNOVER', `Cambio de turno: ${reason}.`);
+        playSound('turnover');
+        setIsTurnoverModalOpen(false);
+        handleNextTurn();
+    };
     const handleConfirmPostGame = (finalTeamState: ManagedTeam) => { if (!homeTeam) return; onTeamUpdate(finalTeamState); setGameState('setup'); setHomeTeam(null); setOpponentTeam(null); setLiveHomeTeam(null); setLiveOpponentTeam(null); setGameLog([]); setScore({ home: 0, opponent: 0 }); setTurn(0); setHalf(1); setFame({ home: 0, opponent: 0 }); setFansRoll({ home: '', opponent: '' }); };
     const handleFoulAction = (action: 'next' | 'back') => {
         const { step, foulingPlayer, victimPlayer, armorRollInput, wasExpelled, log, foulingTeamId, injuryRollInput, casualtyRollInput, lastingInjuryRollInput } = foulState;
@@ -543,6 +625,7 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                 if (isNaN(die1) || isNaN(die2)) break;
                 const roll = die1 + die2;
                 let result: PlayerStatus = 'Activo', resultText = '';
+
                 if (isStunty) {
                     if (roll <= 6) { result = 'Activo'; resultText = 'Aturdido'; }
                     else if (roll <= 8) { result = 'KO'; resultText = 'Inconsciente (KO)'; }
@@ -553,17 +636,26 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                     else if (roll <= 9) { result = 'KO'; resultText = 'Inconsciente (KO)'; }
                     else { result = 'Lesionado'; resultText = '¡Lesionado!'; }
                 }
-                let logMsg = `Tirada Heridas: ${die1}+${die2}=${roll} -> ${resultText}.`;
 
+                let logMsg = `Tirada Heridas: ${die1}+${die2}=${roll} -> ${resultText}.`;
                 const hasApo = victimTeam?.apothecary || (victimTeam?.wanderingApothecaries && victimTeam.wanderingApothecaries > 0);
 
                 if (hasApo && (result === 'KO' || result === 'Lesionado')) {
                     setIsApothecaryModalOpen(true);
                     setInjuryState(prev => ({ ...prev, injuryRoll: { roll, result: resultText }, step: 'apothecary', log: [...log, logMsg] }));
                 } else {
-                    if (result !== 'Lesionado' || resultText === 'Magullado (solo reservas)') updatePlayerStatus(victimPlayer!.id, victimTeamId!, result, resultText);
-                    setInjuryState(prev => ({ ...prev, injuryRoll: { roll, result: resultText }, step: result === 'Lesionado' && resultText !== 'Magullado (solo reserves)' ? 'regeneration_check' : 'summary', log: [...log, logMsg] }));
-                } break;
+                    playSound('injury');
+                    if (result !== 'Lesionado' || resultText === 'Magullado (solo reservas)') {
+                        updatePlayerStatus(victimPlayer!.id, victimTeamId!, result, resultText);
+                    }
+                    setInjuryState(prev => ({
+                        ...prev,
+                        injuryRoll: { roll, result: resultText },
+                        step: result === 'Lesionado' && resultText !== 'Magullado (solo reservas)' ? 'regeneration_check' : 'summary',
+                        log: [...log, logMsg]
+                    }));
+                }
+                break;
             }
             case 'casualty_roll': {
                 const roll = parseInt(casualtyRollInput);
@@ -961,26 +1053,41 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                 return (
                     <div className="bg-slate-900/70 p-4 sm:p-6 rounded-lg border border-slate-700 max-w-6xl mx-auto space-y-6">
                         <h2 className="text-2xl font-bold text-amber-400 text-center">{preGameTitles[preGameStep]}</h2>
-                        {preGameStep === 1 && (<div className='text-center space-y-4'> <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-center"> <p>VE {liveHomeTeam.name}: <span className='font-bold text-sky-400'>{homeTV.toLocaleString()}</span></p> <p>VE {liveOpponentTeam.name}: <span className='font-bold text-red-400'>{opponentTV.toLocaleString()}</span></p> </div> {inducementState.underdog ? (() => {
-                            const underdogTeam = inducementState.underdog === 'home' ? liveHomeTeam : liveOpponentTeam; const baseRoster = teamsData.find(t => t.name === underdogTeam.rosterName); const eligibleStars = starPlayersData.filter(star => isEligibleStar(star, baseRoster)); const bribeCost = baseRoster?.specialRules.includes("Sobornos y corrupción") ? 50000 : 100000;
-                            const isUndead = ["Nigrománticos", "No Muertos", "Khemri", "Vampiros"].includes(underdogTeam.rosterName);
-                            const isNurgle = underdogTeam.rosterName === "Nurgle";
-                            const canHaveApo = baseRoster?.apothecary === "Sí";
+                        {preGameStep === 1 && (
+                            <div className='text-center space-y-4'>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-center">
+                                    <p>VE {liveHomeTeam.name}: <span className='font-bold text-sky-400'>{homeTV.toLocaleString()}</span></p>
+                                    <p>VE {liveOpponentTeam.name}: <span className='font-bold text-red-400'>{opponentTV.toLocaleString()}</span></p>
+                                </div>
 
-                            const options = [
-                                { name: 'reroll', label: 'Segunda Oportunidad Extra', cost: 100000, count: (underdogTeam.liveRerolls || 0) - underdogTeam.rerolls },
-                                { name: 'bribe', label: 'Soborno', cost: bribeCost, count: underdogTeam.tempBribes || 0 },
-                                { name: 'cheerleader', label: 'Animadora', cost: 10000, count: underdogTeam.tempCheerleaders || 0 },
-                                { name: 'coach', label: 'Ayudante', cost: 10000, count: underdogTeam.tempAssistantCoaches || 0 },
-                                { name: 'biasedRef', label: 'Árbitro Parcial', cost: 50000, count: underdogTeam.biasedRef ? 1 : 0 },
-                            ];
+                                {prayersAlert && (
+                                    <div className="glass-panel border-premium-gold/30 p-4 animate-premium-pulse shadow-[0_0_20px_rgba(202,138,4,0.1)]">
+                                        <p className="text-premium-gold font-display font-black italic uppercase tracking-wider text-sm">
+                                            ⚠️ Sugerencia de Nuffle: {prayersAlert.underdog} tiene {Math.max(1, Math.floor(prayersAlert.difference / 100000))} Plegaria(s) disponibles por diferencia de TV.
+                                        </p>
+                                    </div>
+                                )}
 
-                            if (canHaveApo) options.push({ name: 'wanderingApothecary', label: 'Boticario Errante', cost: 100000, count: underdogTeam.wanderingApothecaries || 0 });
-                            if (isUndead) options.push({ name: 'mortuaryAssistant', label: 'Asistente de Necromantes', cost: 100000, count: underdogTeam.mortuaryAssistants || 0 });
-                            if (isNurgle) options.push({ name: 'plagueDoctor', label: 'Médico de la Peste', cost: 100000, count: underdogTeam.plagueDoctors || 0 });
+                                {inducementState.underdog ? (() => {
+                                    const underdogTeam = inducementState.underdog === 'home' ? liveHomeTeam : liveOpponentTeam; const baseRoster = teamsData.find(t => t.name === underdogTeam.rosterName); const eligibleStars = starPlayersData.filter(star => isEligibleStar(star, baseRoster)); const bribeCost = baseRoster?.specialRules.includes("Sobornos y corrupción") ? 50000 : 100000;
+                                    const isUndead = ["Nigrománticos", "No Muertos", "Khemri", "Vampiros"].includes(underdogTeam.rosterName);
+                                    const isNurgle = underdogTeam.rosterName === "Nurgle";
+                                    const canHaveApo = baseRoster?.apothecary === "Sí";
 
-                            return (<div className="space-y-6 text-left"> <p className="text-center">{(inducementState.underdog === 'home' ? liveHomeTeam.name : liveOpponentTeam.name)} es desvalido y recibe <span className='font-bold text-green-400'>{inducementState.money.toLocaleString()} M.O.</span> para incentivos.</p> <div className="bg-slate-800 p-4 rounded-lg"> <h4 className="font-bold text-amber-300 mb-2">Incentivos</h4> <div className="space-y-2 text-sm"> {options.map(item => (<div key={item.name} className="flex justify-between items-center"> <span>{item.label} ({item.cost / 1000}k)</span> <div className="flex items-center gap-2"> <button onClick={() => handleSellInducement(item.name as any, item.cost)} className="bg-rose-600 h-6 w-6 rounded-full font-bold">-</button> <span className="font-mono w-6 text-center">{item.count}</span> <button onClick={() => handleBuyInducement(item.name as any, item.cost)} className="bg-green-600 h-6 w-6 rounded-full font-bold">+</button> </div> </div>))} </div> </div> <div className="bg-slate-800 p-4 rounded-lg"> <h4 className="font-bold text-amber-300 mb-2">Jugadores Estrella</h4> <div className="max-h-60 overflow-y-auto space-y-2 pr-2"> {eligibleStars.map(star => (<div key={star.name} className="flex justify-between items-center text-sm"> <button onClick={() => setSelectedStarPlayer(star)} className="text-sky-400 hover:underline">{star.name} ({star.cost / 1000}k)</button> {inducementState.hiredStars.some(s => s.name === star.name) ? <button onClick={() => handleFireStar(star)} className="bg-rose-600 text-white font-bold py-1 px-2 text-xs rounded">Despedir</button> : <button onClick={() => handleHireStar(star)} disabled={inducementState.money < star.cost} className="bg-green-600 text-white font-bold py-1 px-2 text-xs rounded disabled:bg-slate-600">Contratar</button>} </div>))} </div> </div> <div className="text-center pt-4 border-t border-slate-700"> <button onClick={() => setPreGameStep(2)} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">Confirmar y Continuar</button> </div> </div>)
-                        })() : (<> <p className="text-center">¡Equipos igualados! No hay incentivos.</p> <button onClick={() => setPreGameStep(2)} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">Continuar</button> </>)} </div>)}
+                                    const options = [
+                                        { name: 'reroll', label: 'Segunda Oportunidad Extra', cost: 100000, count: (underdogTeam.liveRerolls || 0) - underdogTeam.rerolls },
+                                        { name: 'bribe', label: 'Soborno', cost: bribeCost, count: underdogTeam.tempBribes || 0 },
+                                        { name: 'cheerleader', label: 'Animadora', cost: 10000, count: underdogTeam.tempCheerleaders || 0 },
+                                        { name: 'coach', label: 'Ayudante', cost: 10000, count: underdogTeam.tempAssistantCoaches || 0 },
+                                        { name: 'biasedRef', label: 'Árbitro Parcial', cost: 50000, count: underdogTeam.biasedRef ? 1 : 0 },
+                                    ];
+
+                                    if (canHaveApo) options.push({ name: 'wanderingApothecary', label: 'Boticario Errante', cost: 100000, count: underdogTeam.wanderingApothecaries || 0 });
+                                    if (isUndead) options.push({ name: 'mortuaryAssistant', label: 'Asistente de Necromantes', cost: 100000, count: underdogTeam.mortuaryAssistants || 0 });
+                                    if (isNurgle) options.push({ name: 'plagueDoctor', label: 'Médico de la Peste', cost: 100000, count: underdogTeam.plagueDoctors || 0 });
+
+                                    return (<div className="space-y-6 text-left"> <p className="text-center">{(inducementState.underdog === 'home' ? liveHomeTeam.name : liveOpponentTeam.name)} es desvalido y recibe <span className='font-bold text-green-400'>{inducementState.money.toLocaleString()} M.O.</span> para incentivos.</p> <div className="bg-slate-800 p-4 rounded-lg"> <h4 className="font-bold text-amber-300 mb-2">Incentivos</h4> <div className="space-y-2 text-sm"> {options.map(item => (<div key={item.name} className="flex justify-between items-center"> <span>{item.label} ({item.cost / 1000}k)</span> <div className="flex items-center gap-2"> <button onClick={() => handleSellInducement(item.name as any, item.cost)} className="bg-rose-600 h-6 w-6 rounded-full font-bold">-</button> <span className="font-mono w-6 text-center">{item.count}</span> <button onClick={() => handleBuyInducement(item.name as any, item.cost)} className="bg-green-600 h-6 w-6 rounded-full font-bold">+</button> </div> </div>))} </div> </div> <div className="bg-slate-800 p-4 rounded-lg"> <h4 className="font-bold text-amber-300 mb-2">Jugadores Estrella</h4> <div className="max-h-60 overflow-y-auto space-y-2 pr-2"> {eligibleStars.map(star => (<div key={star.name} className="flex justify-between items-center text-sm"> <button onClick={() => setSelectedStarPlayer(star)} className="text-sky-400 hover:underline">{star.name} ({star.cost / 1000}k)</button> {inducementState.hiredStars.some(s => s.name === star.name) ? <button onClick={() => handleFireStar(star)} className="bg-rose-600 text-white font-bold py-1 px-2 text-xs rounded">Despedir</button> : <button onClick={() => handleHireStar(star)} disabled={inducementState.money < star.cost} className="bg-green-600 text-white font-bold py-1 px-2 text-xs rounded disabled:bg-slate-600">Contratar</button>} </div>))} </div> </div> <div className="text-center pt-4 border-t border-slate-700"> <button onClick={() => setPreGameStep(2)} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">Confirmar y Continuar</button> </div> </div>)
+                                })() : (<> <p className="text-center">¡Equipos igualados! No hay incentivos.</p> <button onClick={() => setPreGameStep(2)} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">Continuar</button> </>)} </div>)}
                         {preGameStep === 2 && (<div className='text-center space-y-4'> <p>Cada entrenador tira 2D6 y suma sus Hinchas. El más alto gana +1 FAMA (+2 si dobla o más).</p> <div className="grid grid-cols-2 gap-4"> <div> <label className='block text-sm font-medium text-slate-300 mb-1'>{liveHomeTeam.name} (Hinchas: {liveHomeTeam.dedicatedFans})</label> <input type="text" pattern="[2-9]|1[0-2]" value={fansRoll.home} onChange={e => setFansRoll(p => ({ ...p, home: e.target.value.replace(/[^0-9]/g, '').slice(0, 2) }))} className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-center" placeholder="2D6" /> </div> <div> <label className='block text-sm font-medium text-slate-300 mb-1'>{liveOpponentTeam.name} (Hinchas: {liveOpponentTeam.dedicatedFans})</label> <input type="text" pattern="[2-9]|1[0-2]" value={fansRoll.opponent} onChange={e => setFansRoll(p => ({ ...p, opponent: e.target.value.replace(/[^0-9]/g, '').slice(0, 2) }))} className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-center" placeholder="2D6" /> </div> </div> <button onClick={() => { const homeTotal = liveHomeTeam.dedicatedFans + parseInt(fansRoll.home || '0'); const oppTotal = liveOpponentTeam.dedicatedFans + parseInt(fansRoll.opponent || '0'); let homeFame = 0, oppFame = 0; if (homeTotal >= oppTotal * 2) homeFame = 2; else if (homeTotal > oppTotal) homeFame = 1; if (oppTotal >= homeTotal * 2) oppFame = 2; else if (oppTotal > homeTotal) oppFame = 1; setFame({ home: homeFame, opponent: oppFame }); logEvent('INFO', `Tirada Hinchas - ${liveHomeTeam.name}: ${homeTotal}, ${liveOpponentTeam.name}: ${oppTotal}. FAMA: ${homeFame} - ${oppFame}`); setPreGameStep(3); }} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">Calcular FAMA</button> </div>)}
                         {preGameStep === 3 && (<div className='text-center space-y-4'> <p>Tira 2D6 para determinar el clima.</p> <button onClick={() => setIsWeatherModalOpen(true)} className="bg-sky-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-sky-500">Generar Clima</button> {gameStatus.weather && <div><p>Clima: <span className='font-bold text-white'>{gameStatus.weather.title}</span></p><p className='text-slate-400 text-sm'>{gameStatus.weather.description}</p></div>} {gameStatus.weather && <button onClick={() => setPreGameStep(4)} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">Continuar</button>} </div>)}
                         {preGameStep === 4 && (<div className='text-center space-y-4'> <p>Un equipo con menor VE (tras incentivos) puede tirar en la tabla de Plegarias a Nuffle.</p> <button onClick={() => setIsPrayersModalOpen(true)} className="bg-sky-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-sky-500">Ver Tabla de Plegarias</button> <button onClick={() => setPreGameStep(5)} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">Continuar</button> </div>)}
@@ -1002,7 +1109,12 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                                                     )}
                                                     <h3 className={`font-bold text-lg ${teamId === 'home' ? 'text-sky-400' : 'text-red-400'}`}>{team.name}</h3>
                                                 </div>
-                                                <MiniField players={onField} teamColor={teamId === 'home' ? 'bg-sky-500' : 'bg-red-500'} onPlayerMove={(playerId, pos) => handlePlayerMove(teamId, playerId, pos)} />
+                                                <MiniField
+                                                    players={onField}
+                                                    teamColor={teamId === 'home' ? 'bg-sky-500' : 'bg-red-500'}
+                                                    onPlayerMove={(playerId, pos) => handlePlayerMove(teamId, playerId, pos)}
+                                                    ballCarrierId={ballCarrierId}
+                                                />
                                                 <div className="space-y-2 max-h-[30vh] overflow-y-auto pr-2">
                                                     <div>
                                                         <h4 className="font-semibold text-slate-400 text-sm sticky top-0 bg-slate-800 z-10 py-1 -mx-3 px-3">En el Campo ({onField.length}/11)</h4>
@@ -1027,7 +1139,29 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                                 </div>
                             </div>
                         )}
-                        {preGameStep === 8 && (<div className='text-center space-y-4'> {!gameStatus.kickoffEvent ? <button onClick={handleKickoffRoll} className="bg-sky-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-sky-500">Generar Evento de Patada</button> : <div><p>Evento: <span className='font-bold text-white'>{gameStatus.kickoffEvent.title}</span></p><p className='text-slate-400 text-sm'>{gameStatus.kickoffEvent.description}</p></div>} {gameStatus.kickoffEvent && kickoffActionCompleted && <button onClick={handleStartDrive} className="bg-green-600 text-white font-bold py-2 px-6 rounded-md shadow-md hover:bg-green-500 mt-4">¡A JUGAR!</button>} </div>)}
+                        {preGameStep === 8 && (
+                            <div className='text-center space-y-6'>
+                                {!gameStatus.kickoffEvent ? (
+                                    <div className="space-y-4">
+                                        <p className="text-slate-400 font-display uppercase tracking-widest text-sm text-center">Tirar para Evento de Patada</p>
+                                        <div className="flex justify-center">
+                                            <DiceRollButton onRoll={handleKickoffRoll} onPlaySound={() => playSound('dice')} />
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="glass-panel border-sky-500/30 p-6 animate-slide-in-up">
+                                        <p className="text-sky-400 font-display font-black text-xl italic uppercase mb-1">Evento de Patada</p>
+                                        <p className="text-white font-bold text-lg mb-2">{gameStatus.kickoffEvent.title}</p>
+                                        <p className="text-slate-400 text-sm max-w-md mx-auto">{gameStatus.kickoffEvent.description}</p>
+                                    </div>
+                                )}
+                                {gameStatus.kickoffEvent && kickoffActionCompleted && (
+                                    <button onClick={handleStartDrive} className="bg-green-600 text-white font-display font-black italic uppercase tracking-widest py-3 px-10 rounded-xl shadow-[0_0_30px_rgba(22,163,74,0.4)] hover:bg-green-500 transition-premium transform hover:scale-105 active:scale-95">
+                                        ¡A JUGAR!
+                                    </button>
+                                )}
+                            </div>
+                        )}
                     </div>
                 );
             }
@@ -1265,38 +1399,52 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
             {liveOpponentTeam.crestImage ? <img src={liveOpponentTeam.crestImage} alt="Escudo" className="w-12 h-12 rounded-full" /> : <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center flex-shrink-0"><ShieldCheckIcon className="w-8 h-8 text-slate-600" /></div>}
             <span>{liveOpponentTeam.name}</span>
         </button>
-    </div>) : (<div className="p-5 space-y-2 max-h-[60vh] overflow-y-auto"><h3 className="text-lg text-slate-300 mb-4">¿Qué jugador ha anotado?</h3> {(tdModalTeam === 'home' ? liveHomeTeam : liveOpponentTeam).players.filter(p => p.status === 'Activo').map(p => <PlayerButton key={p.id} player={p} onSelect={handleSelectTdScorer} />)} </div>)} </div> </div>)} {sppModalState.isOpen && liveHomeTeam && liveOpponentTeam && (<div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={() => setSppModalState({ isOpen: false, type: null, step: 'select_team', teamId: null, selectedPlayer: null })}> <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-md w-full" onClick={e => e.stopPropagation()}> <h2 className="text-xl font-bold text-amber-400 p-4 border-b border-slate-700">Añadir PE por {sppModalState.type === 'pass' ? 'Pase' : sppModalState.type === 'interference' ? 'Interferencia' : 'Lesión'}</h2> <div className="p-5"> {sppModalState.step === 'select_team' && <div className="space-y-3"><h3 className="text-lg text-slate-300 mb-4">¿De qué equipo es el jugador?</h3> <button onClick={() => setSppModalState(p => ({ ...p, step: 'select_player', teamId: 'home' }))} className="w-full bg-slate-700/50 p-4 rounded-md hover:bg-slate-700 font-semibold">{liveHomeTeam.name}</button> <button onClick={() => setSppModalState(p => ({ ...p, step: 'select_player', teamId: 'opponent' }))} className="w-full bg-slate-700/50 p-4 rounded-md hover:bg-slate-700 font-semibold">{liveOpponentTeam.name}</button> </div>} {sppModalState.step === 'select_player' && <div className="space-y-2 max-h-[60vh] overflow-y-auto"><h3 className="text-lg text-slate-300 mb-4">¿Qué jugador?</h3> {(sppModalState.teamId === 'home' ? liveHomeTeam : liveOpponentTeam).players.filter(p => p.status === 'Activo').map(p => <PlayerButton key={p.id} player={p} onSelect={pl => { if (sppModalState.type === 'interference') { setSppModalState(s => ({ ...s, selectedPlayer: pl, step: 'interference_type' })); } else { updatePlayerSppAndAction(pl, sppModalState.teamId!, sppModalState.type === 'pass' ? 1 : 2, sppModalState.type!.toUpperCase() as SppActionType, sppModalState.type!); } }} />)} </div>} {sppModalState.step === 'interference_type' && <div className="space-y-3"><h3 className="text-lg text-slate-300 mb-4">¿La interferencia fue exitosa?</h3> <button onClick={() => updatePlayerSppAndAction(sppModalState.selectedPlayer!, sppModalState.teamId!, 2, 'INTERFERENCE', 'interferencia exitosa')} className="w-full bg-green-600 p-4 rounded-md hover:bg-green-500 font-semibold">Sí, exitosa (2 PE)</button> <button onClick={() => updatePlayerSppAndAction(sppModalState.selectedPlayer!, sppModalState.teamId!, 1, 'INTERFERENCE', 'interferencia fallida')} className="w-full bg-rose-600 p-4 rounded-md hover:bg-rose-500 font-semibold">No, fallida (1 PE)</button> </div>} </div> </div> </div>)} {isCustomEventModalOpen && (<div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={() => setIsCustomEventModalOpen(false)}> <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-md w-full" onClick={e => e.stopPropagation()}> <h2 className="text-xl font-bold text-amber-400 p-4 border-b border-slate-700">Registrar Evento Personalizado</h2> <div className="p-5"> <textarea value={customEventDescription} onChange={e => setCustomEventDescription(e.target.value)} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white" rows={3} placeholder="Describe el evento..."></textarea> </div> <div className="p-4 bg-slate-900/50 border-t border-slate-700 flex justify-end"> <button onClick={() => { logEvent('OTHER', customEventDescription); setIsCustomEventModalOpen(false); setCustomEventDescription(''); }} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md">Guardar</button> </div> </div> </div>)} {selectedStarPlayer && <StarPlayerModal player={selectedStarPlayer} onClose={() => setSelectedStarPlayer(null)} />} {viewingPlayer && <PlayerCardModal player={viewingPlayer} onClose={() => setViewingPlayer(null)} />} {selectedSkillForModal && <SkillModal skill={selectedSkillForModal} onClose={() => setSelectedSkillForModal(null)} />} {isFoulModalOpen && (<div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={() => { setIsFoulModalOpen(false); setFoulState(initialFoulState); }}> <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-md w-full" onClick={e => e.stopPropagation()}> <div className="p-4 border-b border-slate-700 flex justify-between items-center"><h2 className="text-xl font-bold text-amber-400">Asistente de Falta</h2> <button onClick={() => { setIsFoulModalOpen(false); setFoulState(initialFoulState); }} className="text-slate-400 hover:text-white">&times;</button></div> <div className="p-5">{(() => { if (!liveHomeTeam || !liveOpponentTeam) return null; switch (foulState.step) { case 'select_fouler_team': return <><h3 className="text-lg text-slate-300 mb-4">Paso 1: ¿Qué equipo comete la falta?</h3><div className="space-y-3"><button onClick={() => setFoulState(prev => ({ ...prev, foulingTeamId: 'home', step: 'select_fouler' }))} className="w-full bg-slate-700/50 p-4 rounded-md hover:bg-slate-700 font-semibold">{liveHomeTeam.name}</button><button onClick={() => setFoulState(prev => ({ ...prev, foulingTeamId: 'opponent', step: 'select_fouler' }))} className="w-full bg-slate-700/50 p-4 rounded-md hover:bg-slate-700 font-semibold">{liveOpponentTeam.name}</button></div></>; case 'select_fouler': { const team = foulState.foulingTeamId === 'home' ? liveHomeTeam : liveOpponentTeam; return <><h3 className="text-lg text-slate-300 mb-4">Paso 2: ¿Qué jugador comete la falta?</h3><div className="max-h-[60vh] overflow-y-auto space-y-2">{team.players.filter(p => p.status === 'Activo').map(p => <PlayerButton key={p.id} player={p} onSelect={player => setFoulState(prev => ({ ...prev, foulingPlayer: player, step: 'select_victim' }))} />)}</div></>; } case 'select_victim': { const team = foulState.foulingTeamId === 'home' ? liveOpponentTeam : liveHomeTeam; return <><h3 className="text-lg text-slate-300 mb-4">Paso 3: ¿Quién es la víctima?</h3><div className="max-h-[60vh] overflow-y-auto space-y-2">{team.players.map(p => <PlayerButton key={p.id} player={p} onSelect={player => setFoulState(prev => ({ ...prev, victimPlayer: player, step: 'armor_roll' }))} />)}</div></>; } case 'armor_roll': return <DoubleDiceInputStep title="Paso 4: Tirada de Armadura" value={foulState.armorRollInput} onChange={v => setFoulState(prev => ({ ...prev, armorRollInput: v }))} onNext={() => handleFoulAction('next')} onBack={() => handleFoulAction('back')} label={`Introduce 2D6 contra AR ${foulState.victimPlayer?.stats.AR}`} />; case 'injury_roll': return <DoubleDiceInputStep title="Paso 5: Tirada de Heridas" value={foulState.injuryRollInput} onChange={v => setFoulState(prev => ({ ...prev, injuryRollInput: v }))} onNext={() => handleFoulAction('next')} onBack={() => handleFoulAction('back')} label="Introduce 2D6 para la herida" />; case 'casualty_roll': return <RollInputStep title="Paso 6: Tirada de Lesión" value={foulState.casualtyRollInput} onChange={v => setFoulState(prev => ({ ...prev, casualtyRollInput: v }))} onNext={() => handleFoulAction('next')} onBack={() => handleFoulAction('back')} label="Introduce D16" pattern="([1-9]|1[0-6])" placeholder="1-16" />; case 'lasting_injury_roll': return <RollInputStep title="Paso 7: Lesión Permanente" value={foulState.lastingInjuryRollInput} onChange={v => setFoulState(prev => ({ ...prev, lastingInjuryRollInput: v }))} onNext={() => handleFoulAction('next')} onBack={() => handleFoulAction('back')} label="Introduce D6" pattern="[1-6]" placeholder="1-6" />; case 'summary': return <><div className="space-y-2 text-sm"><p><span className="font-semibold text-slate-300">Infractor:</span> {foulState.foulingPlayer?.customName}</p><p><span className="font-semibold text-slate-300">Víctima:</span> {foulState.victimPlayer?.customName}</p><ul className="list-disc list-inside text-slate-400">{foulState.log.map((l, i) => <li key={i}>{l}</li>)}</ul>{foulState.wasExpelled && <p className="font-bold text-red-500 mt-2">{foulState.expulsionReason || `¡${foulState.foulingPlayer?.customName} expulsado!`}</p>}</div><div className="pt-4 mt-4 border-t border-slate-700 flex justify-end"><button onClick={() => handleFoulAction('next')} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md">Finalizar</button></div></>; default: return null; } })()}</div> </div> </div>)} {isInjuryModalOpen && (<div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={() => { setIsInjuryModalOpen(false); setInjuryState(initialInjuryState); }}> <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-md w-full" onClick={e => e.stopPropagation()}> <div className="p-4 border-b border-slate-700 flex justify-between items-center"><h2 className="text-xl font-bold text-amber-400">Asistente de Lesión</h2> <button onClick={() => { setIsInjuryModalOpen(false); setInjuryState(initialInjuryState); }} className="text-slate-400 hover:text-white">&times;</button></div> <div className="p-5">{(() => {
-        if (!liveHomeTeam || !liveOpponentTeam) return null; switch (injuryState.step) {
-            case 'select_victim_team': return <><h3 className="text-lg text-slate-300 mb-4">Paso 1: ¿Qué equipo sufre la lesión?</h3><div className="space-y-3"><button onClick={() => setInjuryState(prev => ({ ...prev, victimTeamId: 'home', step: 'select_victim' }))} className="w-full bg-slate-700/50 p-4 rounded-md hover:bg-slate-700 font-semibold">{liveHomeTeam.name}</button><button onClick={() => setInjuryState(prev => ({ ...prev, victimTeamId: 'opponent', step: 'select_victim' }))} className="w-full bg-slate-700/50 p-4 rounded-md hover:bg-slate-700 font-semibold">{liveOpponentTeam.name}</button></div></>; case 'select_victim': { const team = injuryState.victimTeamId === 'home' ? liveHomeTeam : liveOpponentTeam; return <><h3 className="text-lg text-slate-300 mb-4">Paso 2: ¿Quién es la víctima?</h3><div className="max-h-[60vh] overflow-y-auto space-y-2">{team.players.map(p => <PlayerButton key={p.id} player={p} onSelect={player => setInjuryState(prev => ({ ...prev, victimPlayer: player, step: 'armor_roll' }))} />)}</div></>; } case 'armor_roll': return <DoubleDiceInputStep title="Paso 3: Tirada de Armadura" value={injuryState.armorRollInput} onChange={v => setInjuryState(prev => ({ ...prev, armorRollInput: v }))} onNext={() => handleInjuryAction('next')} onBack={() => handleInjuryAction('back')} label={`Introduce 2D6 contra AR ${injuryState.victimPlayer?.stats.AR}`} />; case 'injury_roll': return <DoubleDiceInputStep title="Paso 4: Tirada de Heridas" value={injuryState.injuryRollInput} onChange={v => setInjuryState(prev => ({ ...prev, injuryRollInput: v }))} onNext={() => handleInjuryAction('next')} onBack={() => handleInjuryAction('back')} label={`Introduce 2D6 para la herida${injuryState.isStunty ? ' (Tabla Escurridizo)' : ''}`} />; case 'casualty_roll': return <RollInputStep title="Paso 5: Tirada de Lesión" value={injuryState.casualtyRollInput} onChange={v => setInjuryState(prev => ({ ...prev, casualtyRollInput: v }))} onNext={() => handleInjuryAction('next')} onBack={() => handleInjuryAction('back')} label="Introduce D16" pattern="([1-9]|1[0-6])" placeholder="1-16" />;
-            case 'lasting_injury_roll': return <RollInputStep title="Paso 6: Lesión Permanente" value={injuryState.lastingInjuryRollInput} onChange={v => setInjuryState(prev => ({ ...prev, lastingInjuryRollInput: v }))} onNext={() => handleInjuryAction('next')} onBack={() => handleInjuryAction('back')} label="Introduce D6" pattern="[1-6]" placeholder="1-6" />;
-            case 'regeneration_check': return <div className="text-center py-4"><h3 className="text-lg text-slate-300 mb-4">Comprobando Regeneración...</h3><button onClick={() => handleInjuryAction('next')} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">Continuar</button></div>;
-            case 'regeneration_roll': return <RollInputStep title="Tirada de Regeneración" value={injuryState.regenerationRollInput} onChange={v => setInjuryState(prev => ({ ...prev, regenerationRollInput: v }))} onNext={() => handleInjuryAction('next')} onBack={() => handleInjuryAction('back')} label="Introduce D6 (4+ Éxito)" pattern="[1-6]" placeholder="1-6" />;
-            case 'staff_reroll_choice': {
-                const victimTeam = injuryState.victimTeamId === 'home' ? liveHomeTeam : liveOpponentTeam;
-                const staffType = victimTeam?.mortuaryAssistants ? 'Asistente de Necromantes' : 'Médico de la Peste';
-                const handleReroll = () => {
-                    const setTeam = injuryState.victimTeamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
-                    setTeam(prev => prev ? ({
-                        ...prev,
-                        mortuaryAssistants: prev.mortuaryAssistants ? prev.mortuaryAssistants - 1 : 0,
-                        plagueDoctors: prev.plagueDoctors ? prev.plagueDoctors - 1 : 0
-                    }) : null);
-                    setInjuryState(prev => ({ ...prev, step: 'regeneration_roll', regenerationRollInput: '' }));
-                };
-                return (
-                    <div className="space-y-4 text-center">
-                        <h3 className="text-lg text-amber-400 font-bold italic uppercase">¡Regeneración Fallida!</h3>
-                        <p className="text-slate-300">¿Quieres usar tu <span className="text-white font-bold">{staffType}</span> para intentar salvar al jugador? (4+ Éxito)</p>
-                        <div className="flex gap-4 justify-center">
-                            <button onClick={handleReroll} className="bg-emerald-600 text-white font-bold py-2 px-6 rounded-md hover:bg-emerald-500 transition-colors uppercase italic text-sm">Usar {staffType}</button>
-                            <button onClick={() => handleInjuryAction('next')} className="bg-slate-700 text-slate-300 font-bold py-2 px-6 rounded-md hover:bg-slate-600 transition-colors uppercase italic text-sm">No utilizar</button>
-                        </div>
-                    </div>
-                );
+    </div>) : (<div className="p-5 space-y-2 max-h-[60vh] overflow-y-auto"><h3 className="text-lg text-slate-300 mb-4">¿Qué jugador ha anotado?</h3> {(tdModalTeam === 'home' ? liveHomeTeam : liveOpponentTeam).players.filter(p => p.status === 'Activo').map(p => <PlayerButton key={p.id} player={p} onSelect={handleSelectTdScorer} />)} </div>)} </div> </div>)} {sppModalState.isOpen && liveHomeTeam && liveOpponentTeam && (<div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={() => setSppModalState({ isOpen: false, type: null, step: 'select_team', teamId: null, selectedPlayer: null })}> <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-md w-full" onClick={e => e.stopPropagation()}> <h2 className="text-xl font-bold text-amber-400 p-4 border-b border-slate-700">Añadir PE por {sppModalState.type === 'pass' ? 'Pase' : sppModalState.type === 'interference' ? 'Interferencia' : 'Lesión'}</h2> <div className="p-5"> {sppModalState.step === 'select_team' && <div className="space-y-3"><h3 className="text-lg text-slate-300 mb-4">¿De qué equipo es el jugador?</h3> <button onClick={() => setSppModalState(p => ({ ...p, step: 'select_player', teamId: 'home' }))} className="w-full bg-slate-700/50 p-4 rounded-md hover:bg-slate-700 font-semibold">{liveHomeTeam.name}</button> <button onClick={() => setSppModalState(p => ({ ...p, step: 'select_player', teamId: 'opponent' }))} className="w-full bg-slate-700/50 p-4 rounded-md hover:bg-slate-700 font-semibold">{liveOpponentTeam.name}</button> </div>} {sppModalState.step === 'select_player' && <div className="space-y-2 max-h-[60vh] overflow-y-auto"><h3 className="text-lg text-slate-300 mb-4">¿Qué jugador?</h3> {(sppModalState.teamId === 'home' ? liveHomeTeam : liveOpponentTeam).players.filter(p => p.status === 'Activo').map(p => <PlayerButton key={p.id} player={p} onSelect={pl => { if (sppModalState.type === 'interference') { setSppModalState(s => ({ ...s, selectedPlayer: pl, step: 'interference_type' })); } else { updatePlayerSppAndAction(pl, sppModalState.teamId!, sppModalState.type === 'pass' ? 1 : 2, sppModalState.type!.toUpperCase() as SppActionType, sppModalState.type!); } }} />)} </div>} {sppModalState.step === 'interference_type' && <div className="space-y-3"><h3 className="text-lg text-slate-300 mb-4">¿La interferencia fue exitosa?</h3> <button onClick={() => updatePlayerSppAndAction(sppModalState.selectedPlayer!, sppModalState.teamId!, 2, 'INTERFERENCE', 'interferencia exitosa')} className="w-full bg-green-600 p-4 rounded-md hover:bg-green-500 font-semibold">Sí, exitosa (2 PE)</button> <button onClick={() => updatePlayerSppAndAction(sppModalState.selectedPlayer!, sppModalState.teamId!, 1, 'INTERFERENCE', 'interferencia fallida')} className="w-full bg-rose-600 p-4 rounded-md hover:bg-rose-500 font-semibold">No, fallida (1 PE)</button> </div>} </div> </div> </div>)} {isCustomEventModalOpen && (<div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={() => setIsCustomEventModalOpen(false)}> <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-md w-full" onClick={e => e.stopPropagation()}> <h2 className="text-xl font-bold text-amber-400 p-4 border-b border-slate-700">Registrar Evento Personalizado</h2> <div className="p-5"> <textarea value={customEventDescription} onChange={e => setCustomEventDescription(e.target.value)} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white" rows={3} placeholder="Describe el evento..."></textarea> </div> <div className="p-4 bg-slate-900/50 border-t border-slate-700 flex justify-end"> <button onClick={() => { logEvent('OTHER', customEventDescription); setIsCustomEventModalOpen(false); setCustomEventDescription(''); }} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md">Guardar</button> </div> </div> </div>)}                 {selectedStarPlayer && <StarPlayerModal player={selectedStarPlayer} onClose={() => setSelectedStarPlayer(null)} />}
+        {viewingPlayer && (
+            <PlayerCardModal
+                player={viewingPlayer}
+                isBallCarrier={ballCarrierId === viewingPlayer.id}
+                onBallToggle={() => handleBallToggle(viewingPlayer.id)}
+                onClose={() => setViewingPlayer(null)}
+            />
+        )}
+        {selectedSkillForModal && <SkillModal skill={selectedSkillForModal} onClose={() => setSelectedSkillForModal(null)} />} {isFoulModalOpen && (<div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={() => { setIsFoulModalOpen(false); setFoulState(initialFoulState); }}> <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-md w-full" onClick={e => e.stopPropagation()}> <div className="p-4 border-b border-slate-700 flex justify-between items-center"><h2 className="text-xl font-bold text-amber-400">Asistente de Falta</h2> <button onClick={() => { setIsFoulModalOpen(false); setFoulState(initialFoulState); }} className="text-slate-400 hover:text-white">&times;</button></div> <div className="p-5">{(() => {
+            if (!liveHomeTeam || !liveOpponentTeam) return null; switch (foulState.step) {
+                case 'select_fouler_team': return <><h3 className="text-lg text-slate-300 mb-4">Paso 1: ¿Qué equipo comete la falta?</h3><div className="space-y-3"><button onClick={() => setFoulState(prev => ({ ...prev, foulingTeamId: 'home', step: 'select_fouler' }))} className="w-full bg-slate-700/50 p-4 rounded-md hover:bg-slate-700 font-semibold">{liveHomeTeam.name}</button><button onClick={() => setFoulState(prev => ({ ...prev, foulingTeamId: 'opponent', step: 'select_fouler' }))} className="w-full bg-slate-700/50 p-4 rounded-md hover:bg-slate-700 font-semibold">{liveOpponentTeam.name}</button></div></>; case 'select_fouler': { const team = foulState.foulingTeamId === 'home' ? liveHomeTeam : liveOpponentTeam; return <><h3 className="text-lg text-slate-300 mb-4">Paso 2: ¿Qué jugador comete la falta?</h3><div className="max-h-[60vh] overflow-y-auto space-y-2">{team.players.filter(p => p.status === 'Activo').map(p => <PlayerButton key={p.id} player={p} onSelect={player => setFoulState(prev => ({ ...prev, foulingPlayer: player, step: 'select_victim' }))} />)}</div></>; } case 'select_victim': { const team = foulState.foulingTeamId === 'home' ? liveOpponentTeam : liveHomeTeam; return <><h3 className="text-lg text-slate-300 mb-4">Paso 3: ¿Quién es la víctima?</h3><div className="max-h-[60vh] overflow-y-auto space-y-2">{team.players.map(p => <PlayerButton key={p.id} player={p} onSelect={player => setFoulState(prev => ({ ...prev, victimPlayer: player, step: 'armor_roll' }))} />)}</div></>; } case 'armor_roll': return <DoubleDiceInputStep title="Paso 4: Tirada de Armadura" value={foulState.armorRollInput} onChange={v => setFoulState(prev => ({ ...prev, armorRollInput: v }))} onNext={() => handleFoulAction('next')} onBack={() => handleFoulAction('back')} label={`Introduce 2D6 contra AR ${foulState.victimPlayer?.stats.AR}`} onPlaySound={() => playSound('dice')} />; case 'injury_roll': return <DoubleDiceInputStep title="Paso 5: Tirada de Heridas" value={foulState.injuryRollInput} onChange={v => setFoulState(prev => ({ ...prev, injuryRollInput: v }))} onNext={() => handleFoulAction('next')} onBack={() => handleFoulAction('back')} label="Introduce 2D6 para la herida" onPlaySound={() => playSound('dice')} />; case 'casualty_roll': return <RollInputStep title="Paso 6: Tirada de Lesión" value={foulState.casualtyRollInput} onChange={v => setFoulState(prev => ({ ...prev, casualtyRollInput: v }))} onNext={() => handleFoulAction('next')} onBack={() => handleFoulAction('back')} label="Introduce D16" pattern="([1-9]|1[0-6])" placeholder="1-16" onPlaySound={() => playSound('dice')} />; case 'lasting_injury_roll': return <RollInputStep title="Paso 7: Lesión Permanente" value={foulState.lastingInjuryRollInput} onChange={v => setFoulState(prev => ({ ...prev, lastingInjuryRollInput: v }))} onNext={() => handleFoulAction('next')} onBack={() => handleFoulAction('back')} label="Introduce D6" pattern="[1-6]" placeholder="1-6" onPlaySound={() => playSound('dice')} />;
+                case 'summary': return <><div className="space-y-2 text-sm"><p><span className="font-semibold text-slate-300">Infractor:</span> {foulState.foulingPlayer?.customName}</p><p><span className="font-semibold text-slate-300">Víctima:</span> {foulState.victimPlayer?.customName}</p><ul className="list-disc list-inside text-slate-400">{foulState.log.map((l, i) => <li key={i}>{l}</li>)}</ul>{foulState.wasExpelled && <p className="font-bold text-red-500 mt-2">{foulState.expulsionReason || `¡${foulState.foulingPlayer?.customName} expulsado!`}</p>}</div><div className="pt-4 mt-4 border-t border-slate-700 flex justify-end"><button onClick={() => handleFoulAction('next')} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md">Finalizar</button></div></>; default: return null;
             }
-            case 'summary': return <><div className="space-y-2 text-sm"><p><span className="font-semibold text-slate-300">Víctima:</span> {injuryState.victimPlayer?.customName}</p><ul className="list-disc list-inside text-slate-400">{injuryState.log.map((l, i) => <li key={i}>{l}</li>)}</ul></div><div className="pt-4 mt-4 border-t border-slate-700 flex justify-end"><button onClick={() => handleInjuryAction('next')} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md">Finalizar</button></div></>; default: return null;
-        }
-    })()}</div> </div> </div>)}
+        })()}</div> </div> </div>)} {isInjuryModalOpen && (<div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={() => { setIsInjuryModalOpen(false); setInjuryState(initialInjuryState); }}> <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-md w-full" onClick={e => e.stopPropagation()}> <div className="p-4 border-b border-slate-700 flex justify-between items-center"><h2 className="text-xl font-bold text-amber-400">Asistente de Lesión</h2> <button onClick={() => { setIsInjuryModalOpen(false); setInjuryState(initialInjuryState); }} className="text-slate-400 hover:text-white">&times;</button></div> <div className="p-5">{(() => {
+            if (!liveHomeTeam || !liveOpponentTeam) return null; switch (injuryState.step) {
+                case 'select_victim_team': return <><h3 className="text-lg text-slate-300 mb-4">Paso 1: ¿Qué equipo sufre la lesión?</h3><div className="space-y-3"><button onClick={() => setInjuryState(prev => ({ ...prev, victimTeamId: 'home', step: 'select_victim' }))} className="w-full bg-slate-700/50 p-4 rounded-md hover:bg-slate-700 font-semibold">{liveHomeTeam.name}</button><button onClick={() => setInjuryState(prev => ({ ...prev, victimTeamId: 'opponent', step: 'select_victim' }))} className="w-full bg-slate-700/50 p-4 rounded-md hover:bg-slate-700 font-semibold">{liveOpponentTeam.name}</button></div></>; case 'select_victim': { const team = injuryState.victimTeamId === 'home' ? liveHomeTeam : liveOpponentTeam; return <><h3 className="text-lg text-slate-300 mb-4">Paso 2: ¿Quién es la víctima?</h3><div className="max-h-[60vh] overflow-y-auto space-y-2">{team.players.map(p => <PlayerButton key={p.id} player={p} onSelect={player => setInjuryState(prev => ({ ...prev, victimPlayer: player, isStunty: player.skills.includes('Escurridizo'), hasRegeneration: player.skills.includes('Regeneración'), step: 'armor_roll' }))} />)}</div></>; } case 'armor_roll': return <DoubleDiceInputStep title="Paso 3: Tirada de Armadura" value={injuryState.armorRollInput} onChange={v => setInjuryState(prev => ({ ...prev, armorRollInput: v }))} onNext={() => handleInjuryAction('next')} onBack={() => handleInjuryAction('back')} label={`Introduce 2D6 contra AR ${injuryState.victimPlayer?.stats.AR}`} onPlaySound={() => playSound('dice')} />; case 'injury_roll': return <DoubleDiceInputStep title="Paso 4: Tirada de Heridas" value={injuryState.injuryRollInput} onChange={v => setInjuryState(prev => ({ ...prev, injuryRollInput: v }))} onNext={() => handleInjuryAction('next')} onBack={() => handleInjuryAction('back')} label={`Introduce 2D6 para la herida${injuryState.isStunty ? ' (Tabla Escurridizo)' : ''}`} onPlaySound={() => playSound('dice')} />; case 'casualty_roll': return <RollInputStep title="Paso 5: Tirada de Lesión" value={injuryState.casualtyRollInput} onChange={v => setInjuryState(prev => ({ ...prev, casualtyRollInput: v }))} onNext={() => handleInjuryAction('next')} onBack={() => handleInjuryAction('back')} label="Introduce D16" pattern="([1-9]|1[0-6])" placeholder="1-16" onPlaySound={() => playSound('dice')} />;
+                case 'lasting_injury_roll': return <RollInputStep title="Paso 6: Lesión Permanente" value={injuryState.lastingInjuryRollInput} onChange={v => setInjuryState(prev => ({ ...prev, lastingInjuryRollInput: v }))} onNext={() => handleInjuryAction('next')} onBack={() => handleInjuryAction('back')} label="Introduce D6" pattern="[1-6]" placeholder="1-6" onPlaySound={() => playSound('dice')} />;
+                case 'regeneration_check': return <div className="text-center py-4"><h3 className="text-lg text-slate-300 mb-4">Comprobando Regeneración...</h3><button onClick={() => handleInjuryAction('next')} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">Continuar</button></div>;
+                case 'regeneration_roll': return <RollInputStep title="Tirada de Regeneración" value={injuryState.regenerationRollInput} onChange={v => setInjuryState(prev => ({ ...prev, regenerationRollInput: v }))} onNext={() => handleInjuryAction('next')} onBack={() => handleInjuryAction('back')} label="Introduce D6 (4+ Éxito)" pattern="[1-6]" placeholder="1-6" onPlaySound={() => playSound('dice')} />;
+                case 'staff_reroll_choice': {
+                    const victimTeam = injuryState.victimTeamId === 'home' ? liveHomeTeam : liveOpponentTeam;
+                    const staffType = victimTeam?.mortuaryAssistants ? 'Asistente de Necromantes' : 'Médico de la Peste';
+                    const handleReroll = () => {
+                        const setTeam = injuryState.victimTeamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
+                        setTeam(prev => prev ? ({
+                            ...prev,
+                            mortuaryAssistants: prev.mortuaryAssistants ? prev.mortuaryAssistants - 1 : 0,
+                            plagueDoctors: prev.plagueDoctors ? prev.plagueDoctors - 1 : 0
+                        }) : null);
+                        setInjuryState(prev => ({ ...prev, step: 'regeneration_roll', regenerationRollInput: '' }));
+                    };
+                    return (
+                        <div className="space-y-4 text-center">
+                            <h3 className="text-lg text-amber-400 font-bold italic uppercase">¡Regeneración Fallida!</h3>
+                            <p className="text-slate-300">¿Quieres usar tu <span className="text-white font-bold">{staffType}</span> para intentar salvar al jugador? (4+ Éxito)</p>
+                            <div className="flex gap-4 justify-center">
+                                <button onClick={handleReroll} className="bg-emerald-600 text-white font-bold py-2 px-6 rounded-md hover:bg-emerald-500 transition-colors uppercase italic text-sm">Usar {staffType}</button>
+                                <button onClick={() => handleInjuryAction('next')} className="bg-slate-700 text-slate-300 font-bold py-2 px-6 rounded-md hover:bg-slate-600 transition-colors uppercase italic text-sm">No utilizar</button>
+                            </div>
+                        </div>
+                    );
+                }
+                case 'summary': return <><div className="space-y-2 text-sm"><p><span className="font-semibold text-slate-300">Víctima:</span> {injuryState.victimPlayer?.customName}</p><ul className="list-disc list-inside text-slate-400">{injuryState.log.map((l, i) => <li key={i}>{l}</li>)}</ul></div><div className="pt-4 mt-4 border-t border-slate-700 flex justify-end"><button onClick={() => handleInjuryAction('next')} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md">Finalizar</button></div></>; default: return null;
+            }
+        })()}</div> </div> </div>)}
         {isTurnoverModalOpen && <TurnoverModal onClose={() => setIsTurnoverModalOpen(false)} onConfirm={handleTurnover} />} {isApothecaryModalOpen && injuryState.victimPlayer && <ApothecaryModal player={injuryState.victimPlayer} hasUsedOnKO={(injuryState.victimTeamId === 'home' ? liveHomeTeam?.apothecaryUsedOnKO : liveOpponentTeam?.apothecaryUsedOnKO) || false} onClose={() => { setIsApothecaryModalOpen(false); setInjuryState(prev => ({ ...prev, step: 'regeneration_check' })); }} onPatchUp={() => { setIsApothecaryModalOpen(false); const teamId = injuryState.victimTeamId!; const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam; setTeam(prev => prev ? ({ ...prev, apothecaryUsedOnKO: true }) : null); updatePlayerStatus(injuryState.victimPlayer!.id, teamId, 'Activo', 'Recuperado por Boticario'); setInjuryState(prev => ({ ...prev, step: 'summary', log: [...prev.log, 'Boticario lo recupera (KO -> Reservas).'] })); }} onReroll={() => { setIsApothecaryModalOpen(false); const teamId = injuryState.victimTeamId!; const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam; const team = teamId === 'home' ? liveHomeTeam : liveOpponentTeam; if (team?.apothecary) { setTeam(prev => prev ? ({ ...prev, apothecary: false }) : null); } else if (team?.wanderingApothecaries && team.wanderingApothecaries > 0) { setTeam(prev => prev ? ({ ...prev, wanderingApothecaries: team.wanderingApothecaries - 1 }) : null); } if (injuryState.casualtyRoll) { setInjuryState(prev => ({ ...prev, step: 'casualty_roll', casualtyRollInput: '', log: [...prev.log, 'Boticario repite tirada de lesión.'], casualtyRoll: { ...prev.casualtyRoll!, rerolled: true } })); } else { setInjuryState(prev => ({ ...prev, step: 'injury_roll', injuryRollInput: { die1: '', die2: '' }, log: [...prev.log, 'Boticario repite tirada de herida.'] })); } }} />} <style>{` @keyframes fade-in-slow { from { opacity: 0; } to { opacity: 1; } } .animate-fade-in-slow { animation: fade-in-slow 0.5s ease-out forwards; } @keyframes fade-in-fast { from { opacity: 0; } to { opacity: 1; } } @keyframes slide-in-up { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } } .animate-fade-in-fast { animation: fade-in-fast 0.2s ease-out forwards; } .animate-slide-in-up { animation: slide-in-up 0.3s ease-out forwards; } `}</style> </div>);
 };
 

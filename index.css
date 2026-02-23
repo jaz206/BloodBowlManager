@@ -1,9 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --blood-red: #8B0000;
-  --premium-gold: #CA8A04;
-  --pitch-green: #1B4332;
+    --blood-red: #8B0000;
+    --premium-gold: #CA8A04;
+    --pitch-green: #1B4332;
 }
 
 body {
@@ -13,7 +13,11 @@ body {
     font-family: 'Barlow', sans-serif;
 }
 
-h1, h2, h3, h4, .font-display {
+h1,
+h2,
+h3,
+h4,
+.font-display {
     font-family: 'Barlow Condensed', sans-serif;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -39,7 +43,7 @@ h1, h2, h3, h4, .font-display {
     border-color: rgba(202, 138, 4, 0.3);
     transform: translateY(-2px);
     background: rgba(0, 0, 0, 0.5);
-    box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
 }
 
 /* Premium Scrollbar */
@@ -69,4 +73,88 @@ h1, h2, h3, h4, .font-display {
 /* Custom Text Shadow for Titles */
 .text-shadow-premium {
     text-shadow: 0 0 20px rgba(202, 138, 4, 0.2);
+}
+
+/* Dice Animations */
+.die-container {
+    width: 3rem;
+    height: 3rem;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.5s ease;
+}
+
+.die-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #000;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.animate-roll {
+    animation: roll 0.6s ease-out;
+}
+
+@keyframes roll {
+    0% {
+        transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+    }
+
+    33% {
+        transform: rotateX(120deg) rotateY(180deg) rotateZ(90deg);
+    }
+
+    66% {
+        transform: rotateX(240deg) rotateY(360deg) rotateZ(180deg);
+    }
+
+    100% {
+        transform: rotateX(360deg) rotateY(720deg) rotateZ(360deg);
+    }
+}
+
+.shake {
+    animation: shake 0.2s ease-in-out infinite;
+}
+
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-2px) rotate(-2deg);
+    }
+
+    75% {
+        transform: translateX(2px) rotate(2deg);
+    }
+}
+
+/* Status dots on MiniField */
+.field-node {
+    position: relative;
+}
+
+.ball-indicator {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 12px;
+    height: 12px;
+    background: #fbbf24;
+    border-radius: 50%;
+    border: 2px solid #000;
+    box-shadow: 0 0 5px rgba(251, 191, 36, 0.8);
+    z-index: 10;
 }
