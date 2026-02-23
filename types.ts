@@ -45,9 +45,9 @@ export interface CasualtyEvent {
 }
 
 export interface LastingInjuryEvent {
-    diceRoll: string;
-    permanentInjury: string;
-    characteristicReduction: string;
+  diceRoll: string;
+  permanentInjury: string;
+  characteristicReduction: string;
 }
 
 export type PlayerPosition = 'Blitzer' | 'Lanzador' | 'Corredor' | 'Línea' | 'Receptor';
@@ -60,11 +60,11 @@ export interface Token {
 }
 
 export interface BoardToken extends Token {
-    teamId: 'home' | 'away';
-    playerData?: ManagedPlayer;
-    isDown?: boolean;
-    hasMoved?: boolean;
-    hasActed?: boolean;
+  teamId: 'home' | 'away';
+  playerData?: ManagedPlayer;
+  isDown?: boolean;
+  hasMoved?: boolean;
+  hasActed?: boolean;
 }
 
 export interface Play {
@@ -92,20 +92,20 @@ export interface Player {
 }
 
 export interface PairedPlayer {
-    name: string;
-    stats: PlayerStats;
-    skills: string;
+  name: string;
+  stats: PlayerStats;
+  skills: string;
 }
 
 export interface StarPlayer {
-    name: string;
-    cost: number;
-    stats?: PlayerStats;
-    skills?: string;
-    pair?: [PairedPlayer, PairedPlayer];
-    specialRules: string;
-    playsFor: string[];
-    image?: string;
+  name: string;
+  cost: number;
+  stats?: PlayerStats;
+  skills?: string;
+  pair?: [PairedPlayer, PairedPlayer];
+  specialRules: string;
+  playsFor: string[];
+  image?: string;
 }
 
 
@@ -127,19 +127,34 @@ export interface Team {
 }
 
 export interface Skill {
-    name: string;
-    category: string;
-    description: string;
+  name: string;
+  category: string;
+  description: string;
 }
 
 export interface Prayer {
-    diceRoll: string;
-    title: string;
-    description: string;
+  diceRoll: string;
+  title: string;
+  description: string;
 }
 
 export type PlayerStatus = 'Activo' | 'Reserva' | 'KO' | 'Lesionado' | 'Expulsado' | 'Muerto';
 export type SppActionType = 'TD' | 'PASS' | 'CASUALTY' | 'INTERFERENCE';
+
+export type AdvancementType =
+  | 'RandomPrimary'
+  | 'ChosenPrimary'
+  | 'RandomSecondary'
+  | 'ChosenSecondary'
+  | 'Characteristic';
+
+export interface Advancement {
+  type: AdvancementType;
+  sppCost: number;
+  skillName?: string;
+  characteristicName?: 'MV' | 'FU' | 'AG' | 'PS' | 'AR';
+  characteristicImprovement?: string;
+}
 
 // Team Manager Types
 export interface ManagedPlayer extends Player {
@@ -148,6 +163,7 @@ export interface ManagedPlayer extends Player {
   spp: number;
   gainedSkills: string[];
   lastingInjuries: string[];
+  advancements?: Advancement[]; // Added for BB2025
   status?: PlayerStatus;
   statusDetail?: string;
   isStarPlayer?: boolean;
@@ -155,7 +171,6 @@ export interface ManagedPlayer extends Player {
   isJourneyman?: boolean;
   missNextGame?: number;
   fieldPosition?: { x: number; y: number; }; // For live game board
-  // FIX: Added isBenched property to align with its usage in various components.
   isBenched?: boolean;
 }
 
@@ -179,6 +194,10 @@ export interface ManagedTeam {
   tempAssistantCoaches?: number;
   coachExpelled?: boolean;
   apothecaryUsedOnKO?: boolean;
+  biasedRef?: boolean;
+  wanderingApothecaries?: number;
+  mortuaryAssistants?: number;
+  plagueDoctors?: number;
 }
 
 // Competition Types
@@ -213,10 +232,10 @@ export interface Competition {
 export type GameEventType = 'INFO' | 'KICKOFF' | 'TOUCHDOWN' | 'INJURY' | 'FOUL' | 'WEATHER' | 'OTHER' | 'TURNOVER';
 
 export interface GameEvent {
-    id: number;
-    timestamp: string;
-    turn: number;
-    half: number;
-    type: GameEventType;
-    description: string;
+  id: number;
+  timestamp: string;
+  turn: number;
+  half: number;
+  type: GameEventType;
+  description: string;
 }

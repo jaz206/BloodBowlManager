@@ -19,7 +19,7 @@ const SkillSelectionModal: React.FC<SkillSelectionModalProps> = ({ player, roste
         if (!basePlayer) return [];
         const categoriesString = skillType === 'Primary' ? basePlayer.primary : basePlayer.secondary;
         const categories = categoriesString.split('');
-        
+
         const categoryMap: { [key: string]: string } = {
             G: 'General', A: 'Agilidad', F: 'Fuerza', P: 'Pase', M: 'Mutaciones'
         };
@@ -27,7 +27,7 @@ const SkillSelectionModal: React.FC<SkillSelectionModalProps> = ({ player, roste
         const skillCategories = categories.map(c => categoryMap[c]).filter(Boolean);
         const currentSkills = new Set([...(player.skills || '').split(', '), ...player.gainedSkills]);
 
-        return skillsData.filter(skill => 
+        return skillsData.filter(skill =>
             skillCategories.includes(skill.category) && !currentSkills.has(skill.name)
         ).sort((a, b) => a.name.localeCompare(b.name));
 
@@ -106,7 +106,7 @@ const cloneTeamForPostGame = (team: ManagedTeam): ManagedTeam => {
         players: clonedPlayers,
         crestImage: team.crestImage,
     };
-    
+
     return clonedTeam;
 };
 
@@ -119,39 +119,41 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
     const [skillSelection, setSkillSelection] = useState<{ player: ManagedPlayer, type: 'Primary' | 'Secondary', cost: number } | null>(null);
 
     useEffect(() => {
-        const winningsRoll = Math.floor(Math.random() * 6) + 1;
-        const calculatedWinnings = (winningsRoll + fame) * 10000;
+        // BB2025 Winnings Logic:
+        // Winner: Roll 2D6, pick highest.
+        // Draw: Roll 1D6.
+        // Loser: Roll 2D6, pick lowest.
+        let winningsRoll = 0;
+        const d1 = Math.floor(Math.random() * 6) + 1;
+        const d2 = Math.floor(Math.random() * 6) + 1;
+
+        if (score.home > score.opponent) {
+            winningsRoll = Math.max(d1, d2);
+        } else if (score.home < score.opponent) {
+            winningsRoll = Math.min(d1, d2);
+        } else {
+            winningsRoll = d1;
+        }
+
+        const calculatedWinnings = (winningsRoll + finalHomeTeam.dedicatedFans + score.home) * 10000;
 
         const tempTeam = cloneTeamForPostGame(finalHomeTeam);
-        let mvpPlayer: (ManagedPlayer & { teamName: string }) | null = null;
-        
+
+        // MVP Selection (Random for now, but following rules)
         const isEligibleForMvp = (p: ManagedPlayer) => !p.isStarPlayer && !p.isJourneyman;
-
         const homeEligible = tempTeam.players.filter(isEligibleForMvp);
-        const oppEligible = opponentTeam.players.filter(isEligibleForMvp);
 
-        let mvpPool: (ManagedPlayer & { teamName: string })[] = [];
-        if (score.home > score.opponent) { // Home wins
-            mvpPool = homeEligible.map(p => ({ ...p, teamName: tempTeam.name }));
-        } else if (score.opponent > score.home) { // Opponent wins
-            mvpPool = oppEligible.map(p => ({ ...p, teamName: opponentTeam.name }));
-        } else { // Draw
-            mvpPool = [
-                ...homeEligible.map(p => ({ ...p, teamName: tempTeam.name })),
-                ...oppEligible.map(p => ({ ...p, teamName: opponentTeam.name }))
-            ];
-        }
-        
-        if (mvpPool.length > 0) {
-            const randomMvp = mvpPool[Math.floor(Math.random() * mvpPool.length)];
-            mvpPlayer = randomMvp;
+        let mvpPlayer: (ManagedPlayer & { teamName: string }) | null = null;
+        if (homeEligible.length > 0) {
+            const randomMvp = homeEligible[Math.floor(Math.random() * homeEligible.length)];
+            mvpPlayer = { ...randomMvp, teamName: tempTeam.name };
 
-            const mvpInHomeTeam = tempTeam.players.find((p: ManagedPlayer) => p.id === randomMvp.id);
-            if (mvpInHomeTeam) {
-                mvpInHomeTeam.spp += 4;
+            const pIndex = tempTeam.players.findIndex(p => p.id === randomMvp.id);
+            if (pIndex !== -1) {
+                tempTeam.players[pIndex].spp += 4;
             }
         }
-        
+
         tempTeam.treasury += calculatedWinnings;
 
         // Apply Miss Next Game status
@@ -159,6 +161,8 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
         tempTeam.players.forEach(player => {
             if (mngPlayerIds.has(player.id)) {
                 player.missNextGame = (player.missNextGame || 0) + 1;
+            } else if (player.missNextGame && player.missNextGame > 0) {
+                player.missNextGame -= 1; // Reduction of punishment after a match played (or missed)
             }
         });
 
@@ -190,10 +194,19 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
         const roll = Math.floor(Math.random() * 6) + 1;
         setFansRoll(roll);
         let change = 0;
-        if (score.home > score.opponent && roll >= 4) change = 1; // Win
-        if (score.home < score.opponent && roll === 1) change = -1; // Loss
+
+        // BB2025 Fans Logic:
+        if (score.home > score.opponent) {
+            // Win: Increases if roll > current DF
+            if (roll > updatedTeam.dedicatedFans) change = 1;
+        } else if (score.home < score.opponent) {
+            // Loss: Decreases if roll < current DF
+            if (roll < updatedTeam.dedicatedFans) change = -1;
+        }
+        // Draw: No change (change = 0)
+
         setFansChange(change);
-        setUpdatedTeam(prev => ({ ...prev, dedicatedFans: Math.max(1, Math.min(6, prev.dedicatedFans + change)) }));
+        setUpdatedTeam(prev => ({ ...prev, dedicatedFans: Math.max(1, prev.dedicatedFans + change) }));
     };
 
     const handleSkillSelection = (playerId: number, skillName: string, cost: number) => {
@@ -233,40 +246,40 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                     <div className="space-y-4">
                         <h3 className="text-xl font-semibold text-amber-400">Paso 2: Actualizar Hinchas</h3>
                         {!fansRoll ? <button onClick={handleFansRoll} className="bg-sky-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-sky-500">Tirar 1D6 por los Hinchas</button>
-                        : <div>
-                            <p>Tirada: <span className="font-bold text-white">{fansRoll}</span>.</p>
-                            {fansChange > 0 && <p className="text-green-400">¡Ganas 1 Hincha!</p>}
-                            {fansChange < 0 && <p className="text-red-400">¡Pierdes 1 Hincha!</p>}
-                            {fansChange === 0 && <p className="text-slate-300">Tu número de Hinchas no cambia.</p>}
-                            <p>Hinchas actuales: <span className="font-bold text-white">{updatedTeam.dedicatedFans}</span>.</p>
-                        </div>}
+                            : <div>
+                                <p>Tirada: <span className="font-bold text-white">{fansRoll}</span>.</p>
+                                {fansChange > 0 && <p className="text-green-400">¡Ganas 1 Hincha!</p>}
+                                {fansChange < 0 && <p className="text-red-400">¡Pierdes 1 Hincha!</p>}
+                                {fansChange === 0 && <p className="text-slate-300">Tu número de Hinchas no cambia.</p>}
+                                <p>Hinchas actuales: <span className="font-bold text-white">{updatedTeam.dedicatedFans}</span>.</p>
+                            </div>}
                     </div>
                 );
             case 2:
-                const playersToLevelUp = updatedTeam.players.filter(p => !p.isStarPlayer && getLevelFromSpp(p.spp));
+                // SPP check for notification only, spending is done in Dashboard
+                const improvedPlayers = updatedTeam.players.filter(p => {
+                    const original = initialHomeTeam.players.find(op => op.id === p.id);
+                    return p.spp > (original?.spp || 0);
+                });
                 return (
                     <div className="space-y-4">
-                        <h3 className="text-xl font-semibold text-amber-400">Paso 3: Progresión de Jugadores</h3>
-                        {playersToLevelUp.length > 0 ? playersToLevelUp.map(player => {
-                            const levelInfo = getLevelFromSpp(player.spp);
-                            if (!levelInfo) return null;
-                            const secondaryCost = levelInfo.cost * 2;
-                            return (
-                                <div key={player.id} className="bg-slate-900/50 p-3 rounded-lg border border-slate-700">
-                                    <p className="font-bold text-white">{player.customName} ({player.spp} PE) ha alcanzado el nivel: <span className="text-amber-300">{levelInfo.name}</span>.</p>
-                                    <div className="text-sm mt-2">
-                                        <p className="text-slate-300">Elige una mejora:</p>
-                                        <div className="flex flex-wrap gap-2 mt-2">
-                                            <button onClick={() => setSkillSelection({ player, type: 'Primary', cost: levelInfo.cost })} className="bg-emerald-600 text-white text-xs font-bold py-1 px-2 rounded hover:bg-emerald-500">Habilidad Primaria ({levelInfo.cost} PE)</button>
-                                            {player.spp >= secondaryCost && <button onClick={() => setSkillSelection({ player, type: 'Secondary', cost: secondaryCost })} className="bg-sky-600 text-white text-xs font-bold py-1 px-2 rounded hover:bg-sky-500">Habilidad Secundaria ({secondaryCost} PE)</button>}
-                                        </div>
+                        <h3 className="text-xl font-semibold text-amber-400">Paso 3: Progresión de PE</h3>
+                        <p className="text-slate-400 text-sm">Los siguientes jugadores han ganado Puntos de Estrella. Podrás gastarlos en el Panel de Equipo.</p>
+                        <div className="space-y-2">
+                            {improvedPlayers.map(p => {
+                                const original = initialHomeTeam.players.find(op => op.id === p.id);
+                                const gained = p.spp - (original?.spp || 0);
+                                return (
+                                    <div key={p.id} className="flex justify-between items-center p-3 bg-white/5 rounded-lg border border-white/5">
+                                        <span className="font-bold text-white">{p.customName}</span>
+                                        <span className="text-premium-gold font-mono font-bold">+{gained} PE (Total: {p.spp})</span>
                                     </div>
-                                </div>
-                            );
-                        }) : <p className="text-slate-400">Ningún jugador tiene suficientes PE para subir de nivel.</p>}
+                                );
+                            })}
+                        </div>
                     </div>
                 );
-             case 3:
+            case 3:
                 const playersWithMNG = updatedTeam.players.filter(p => (p.missNextGame || 0) > 0);
                 const playersWithNewInjuries = updatedTeam.players.filter(p => {
                     const originalPlayer = initialHomeTeam.players.find(op => op.id === p.id);
@@ -274,7 +287,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                     return p.lastingInjuries.length > originalPlayer.lastingInjuries.length;
                 });
                 return (
-                     <div className="space-y-4">
+                    <div className="space-y-4">
                         <h3 className="text-xl font-semibold text-amber-400">Paso 4: Resumen Final</h3>
                         <p>Tesorería Final: <span className="font-bold text-green-400">{updatedTeam.treasury.toLocaleString()} M.O.</span></p>
                         <p>Hinchas Finales: <span className="font-bold text-white">{updatedTeam.dedicatedFans}</span></p>
@@ -323,7 +336,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                     <div className="p-4 bg-slate-900/50 border-t border-slate-700 flex justify-between">
                         <button onClick={() => setStep(s => Math.max(0, s - 1))} disabled={step === 0} className="bg-slate-600 text-white font-bold py-2 px-6 rounded-md shadow-md hover:bg-slate-500 disabled:bg-slate-700 disabled:cursor-not-allowed">&larr; Anterior</button>
                         {step < 3 ? <button onClick={() => setStep(s => s + 1)} className="bg-sky-600 text-white font-bold py-2 px-6 rounded-md shadow-md hover:bg-sky-500">Siguiente &rarr;</button>
-                        : <button onClick={handleConfirm} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400 transition-colors">Confirmar y Actualizar Plantilla</button>}
+                            : <button onClick={handleConfirm} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400 transition-colors">Confirmar y Actualizar Plantilla</button>}
                     </div>
                 </div>
             </div>

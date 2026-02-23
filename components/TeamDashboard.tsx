@@ -11,6 +11,7 @@ import ImageModal from './ImageModal';
 import UploadIcon from './icons/UploadIcon';
 import MedicalCrossIcon from './icons/MedicalCrossIcon';
 import MiniField from './MiniField';
+import { PlayerAdvancementModal } from './PlayerAdvancementModal';
 
 
 declare const QRCode: any;
@@ -31,6 +32,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
     const [editingName, setEditingName] = useState('');
     const [isCrestModalOpen, setIsCrestModalOpen] = useState(false);
     const [fireConfirmation, setFireConfirmation] = useState<ManagedPlayer | null>(null);
+    const [advancingPlayer, setAdvancingPlayer] = useState<ManagedPlayer | null>(null);
 
     const qrCanvasRef = useRef<HTMLCanvasElement>(null);
     const crestInputRef = useRef<HTMLInputElement>(null);
@@ -71,13 +73,29 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
         if (!baseRoster) return 0;
 
         const playersValue = team.players.reduce((sum, p) => {
-            const skillsValue = p.gainedSkills.reduce((skillSum, skillName) => {
-                if (skillName.toLowerCase().includes('secundaria')) {
-                    return skillSum + 40000;
-                }
-                return skillSum + 20000;
-            }, 0);
-            return sum + p.cost + skillsValue;
+            let improvementsValue = 0;
+            if (p.advancements && p.advancements.length > 0) {
+                improvementsValue = p.advancements.reduce((advSum, adv) => {
+                    switch (adv.type) {
+                        case 'RandomPrimary': return advSum + 10000;
+                        case 'ChosenPrimary': return advSum + 20000;
+                        case 'RandomSecondary': return advSum + 20000;
+                        case 'ChosenSecondary': return advSum + 40000;
+                        case 'Characteristic':
+                            if (adv.characteristicName === 'FU') return advSum + 40000;
+                            if (adv.characteristicName === 'AG' || adv.characteristicName === 'PS') return advSum + 20000;
+                            return advSum + 10000; // MV, AR
+                        default: return advSum;
+                    }
+                }, 0);
+            } else {
+                // Fallback for legacy skills
+                improvementsValue = p.gainedSkills.reduce((skillSum, skillName) => {
+                    if (skillName.toLowerCase().includes('secundaria')) return skillSum + 40000;
+                    return skillSum + 20000;
+                }, 0);
+            }
+            return sum + p.cost + improvementsValue;
         }, 0);
 
         const rerollsValue = team.rerolls * baseRoster.rerollCost;
@@ -751,7 +769,17 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                                             </button>
                                         </td>
                                         <td className="p-4 text-center">
-                                            <span className="font-mono text-premium-gold font-bold bg-premium-gold/5 px-2 py-1 rounded border border-premium-gold/10">{p.spp}</span>
+                                            <div className="flex flex-col items-center gap-1">
+                                                <span className="font-mono text-premium-gold font-bold bg-premium-gold/5 px-2 py-1 rounded border border-premium-gold/10">{p.spp}</span>
+                                                {p.spp >= 3 && (
+                                                    <button
+                                                        onClick={() => setAdvancingPlayer(p)}
+                                                        className="text-[8px] font-display font-black uppercase tracking-widest text-green-400 hover:text-white transition-premium bg-green-400/10 px-1 rounded border border-green-400/20"
+                                                    >
+                                                        Mejorar
+                                                    </button>
+                                                )}
+                                            </div>
                                         </td>
                                         <td className="p-4 whitespace-normal min-w-[250px]">
                                             <div className="flex flex-wrap gap-1">
@@ -804,6 +832,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
             </div>
 
             {editingPlayer && <PlayerModal player={editingPlayer} allSkills={skillsData} onSave={handleSavePlayer} onClose={() => setEditingPlayer(null)} />}
+            {advancingPlayer && <PlayerAdvancementModal player={advancingPlayer} isOpen={!!advancingPlayer} onAdvance={handleSavePlayer} onClose={() => setAdvancingPlayer(null)} />}
             {selectedSkillForModal && <SkillModal skill={selectedSkillForModal} onClose={() => setSelectedSkillForModal(null)} />}
             {isCrestModalOpen && team.crestImage && <ImageModal src={team.crestImage} alt={`Escudo de ${team.name}`} onClose={() => setIsCrestModalOpen(false)} />}
             {fireConfirmation && (
