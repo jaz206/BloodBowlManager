@@ -19,7 +19,7 @@ const SkillModal: React.FC<SkillModalProps> = ({ skill, onClose }) => {
     'Agilidad': 'bg-emerald-600 text-white',
     'Fuerza': 'bg-red-700 text-white',
     'Pase': 'bg-sky-600 text-white',
-    'Mutaciones': 'bg-purple-600 text-white',
+    'Mutación': 'bg-purple-600 text-white',
     'Rasgo': 'bg-yellow-700 text-white',
   };
 

@@ -2,12 +2,12 @@ import type { Team } from "../types";
 
 export const teamsData: Team[] = [
   {
-    "name": "Amazons",
-    "specialRules": "Lustrian Superleague, Team Management",
+    "name": "Amazonas",
+    "specialRules": "Superliga Lustria, Gestión de Equipo",
     "rerollCost": 50000,
     "tier": 1,
     "apothecary": "Sí",
-    "image": "https://i.pinimg.com/736x/b2/f0/5c/b2f05c2fcd61096bbf20a2b194bad517.jpg",
+    "image": "https://i.pinimg.com/736x/eb/18/cd/eb18cde33a47cfbae55f6a95ee27cfcd.jpg",
     "ratings": {
       "fuerza": 65,
       "agilidad": 80,
@@ -42,7 +42,7 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "8+"
         },
-        "skills": "Esquivar, On the Ball, Pasar, Safe Pasar",
+        "skills": "Esquivar, A por el balón, Pasar, Pase Seguro",
         "primary": "GP",
         "secondary": "AS"
       },
@@ -57,7 +57,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "9+"
         },
-        "skills": "Defensive, Esquivar",
+        "skills": "Defensa, Esquivar",
         "primary": "GS",
         "secondary": "A"
       },
@@ -72,15 +72,15 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "8+"
         },
-        "skills": "Esquivar, Hit and Run, Saltar",
+        "skills": "Esquivar, Pegar y Correr, Saltar",
         "primary": "AG",
         "secondary": "S"
       }
     ]
   },
   {
-    "name": "Black Orcs",
-    "specialRules": "Badlands Brawl, Team Management, Bribery and Corruption",
+    "name": "Orcos Negros",
+    "specialRules": "Pelea de Badlands, Gestión de Equipo, Soborno y Corrupción",
     "rerollCost": 50000,
     "tier": 1,
     "apothecary": "Sí",
@@ -119,7 +119,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Brawler, Agarrar",
+        "skills": "Luchador, Agarrar",
         "primary": "GS",
         "secondary": "AP"
       },
@@ -134,7 +134,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Siempre Hambriento, Solitario (3+), Golpe Mortífero (+1), Projectile Vomit, Realmente Estúpido, Regeneración, Throw Team-mate",
+        "skills": "Siempre Hambriento, Solitario (3+), Golpe Mortífero (+1), Vómito Proyectil, Realmente Estúpido, Regeneración, Lanzar Compañero",
         "primary": "S",
         "secondary": "AGP"
       }
@@ -142,7 +142,7 @@ export const teamsData: Team[] = [
   },
   {
     "name": "Elegidos del Caos",
-    "specialRules": "Favored of..., Team Management",
+    "specialRules": "Favorito de..., Gestión de Equipo",
     "rerollCost": 50000,
     "tier": 2,
     "apothecary": "Sí",
@@ -173,8 +173,8 @@ export const teamsData: Team[] = [
     ]
   },
   {
-    "name": "Chaos Dwarfs",
-    "specialRules": "Favored of..., Team Management, Worlds Edge Superleague, Team Management, Badlands Brawl, Team Management",
+    "name": "Enanos del Caos",
+    "specialRules": "Favorito de..., Gestión de Equipo, Superliga del Borde del Mundo, Pelea de Badlands",
     "rerollCost": 50000,
     "tier": 2,
     "apothecary": "Sí",
@@ -213,7 +213,7 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "10+"
         },
-        "skills": "Placaje, Iron Hard Skin, Cabeza Dura",
+        "skills": "Placaje, Piel de Hierro, Cabeza Dura",
         "primary": "GS",
         "secondary": "AM"
       },
@@ -243,7 +243,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skills": "Furia, Horns, Solitario (4+), Golpe Mortífero (+1), Cabeza Dura, Unchannelled Fury",
+        "skills": "Furia, Cuernos, Solitario (4+), Golpe Mortífero (+1), Cabeza Dura, Furia Desencadenada",
         "primary": "S",
         "secondary": "AGM"
       },
@@ -258,7 +258,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "8+"
         },
-        "skills": "Marcaje, Stab",
+        "skills": "Marcaje, Puñalada",
         "primary": "G",
         "secondary": "AS"
       }
@@ -266,7 +266,7 @@ export const teamsData: Team[] = [
   },
   {
     "name": "Renegados del Caos",
-    "specialRules": "Favored of..., Team Management",
+    "specialRules": "Favorito de..., Gestión de Equipo",
     "rerollCost": 50000,
     "tier": 3,
     "apothecary": "Sí",
@@ -320,7 +320,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Bone Head, Solitario (4+), Golpe Mortífero (+1), Cabeza Dura, Throw Team-mate",
+        "skills": "Cabeza de Hueso, Solitario (4+), Golpe Mortífero (+1), Cabeza Dura, Lanzar Compañero",
         "primary": "S",
         "secondary": "AGM"
       },
@@ -350,7 +350,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Siempre Hambriento, Solitario (4+), Golpe Mortífero (+1), Projectile Vomit, Realmente Estúpido, Regeneración, Throw Team-mate",
+        "skills": "Siempre Hambriento, Solitario (4+), Golpe Mortífero (+1), Vómito Proyectil, Realmente Estúpido, Regeneración, Lanzar Compañero",
         "primary": "S",
         "secondary": "AGM"
       },
@@ -380,7 +380,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skills": "Solitario (4+), Furia, Horns, Golpe Mortífero (+1), Cabeza Dura, Unchannelled Fury",
+        "skills": "Solitario (4+), Furia, Cuernos, Golpe Mortífero (+1), Cabeza Dura, Furia Desencadenada",
         "primary": "S",
         "secondary": "AGM"
       },
@@ -410,7 +410,7 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "9+"
         },
-        "skills": "Animosidad (all team-mates), Pasar, Safe Pair of Hands",
+        "skills": "Animosidad (todos los compañeros), Pasar, Manos Seguras",
         "primary": "GMP",
         "secondary": "AS"
       },
@@ -425,15 +425,15 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skills": "Animal Savagery, Furia, Solitario (4+), Golpe Mortífero (+1), Prehensile Tail",
+        "skills": "Salvajismo Animal, Furia, Solitario (4+), Golpe Mortífero (+1), Cola Prensil",
         "primary": "S",
         "secondary": "AGM"
       }
     ]
   },
   {
-    "name": "Dark Elves",
-    "specialRules": "Elven Kingdoms League, Team Management",
+    "name": "Elfos Oscuros",
+    "specialRules": "Liga de los Reinos Élficos, Gestión de Equipo",
     "rerollCost": 50000,
     "tier": 2,
     "apothecary": "Sí",
@@ -457,7 +457,7 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "8+"
         },
-        "skills": "Dump-off",
+        "skills": "Pase Rápido",
         "primary": "AGP",
         "secondary": "S"
       },
@@ -472,7 +472,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "8+"
         },
-        "skills": "Marcaje, Stab",
+        "skills": "Marcaje, Puñalada",
         "primary": "AG",
         "secondary": "PS"
       },
@@ -524,8 +524,8 @@ export const teamsData: Team[] = [
     ]
   },
   {
-    "name": "Dwarves",
-    "specialRules": "Old World Classic, Team Management, Worlds Edge Superleague, Team Management",
+    "name": "Enanos",
+    "specialRules": "Clásico del Viejo Mundo, Gestión de Equipo, Superliga del Borde del Mundo",
     "rerollCost": 50000,
     "tier": 2,
     "apothecary": "Sí",
@@ -609,7 +609,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "11+"
         },
-        "skills": "Break Placar, Jugador Sucio (+2), Juggernaut, Solitario (5+), Golpe Mortífero (+1), No Hands, Secret Weapon, Mantenerse Firme",
+        "skills": "Romper Placar, Jugador Sucio (+2), Juggernaut, Solitario (5+), Golpe Mortífero (+1), Sin Manos, Arma Secreta, Mantenerse Firme",
         "primary": "S",
         "secondary": "AG"
       }
@@ -617,7 +617,7 @@ export const teamsData: Team[] = [
   },
   {
     "name": "Unión Élfica",
-    "specialRules": "Elven Kingdoms League, Team Management",
+    "specialRules": "Liga de los Reinos Élficos, Gestión de Equipo",
     "rerollCost": 50000,
     "tier": 2,
     "apothecary": "Sí",
@@ -693,8 +693,8 @@ export const teamsData: Team[] = [
     ]
   },
   {
-    "name": "Gnomes",
-    "specialRules": "Halflings Thimble Cup, Team Management, Tier 3, Team Management",
+    "name": "Gnomos",
+    "specialRules": "Copa Dedal Halfling, Gestión de Equipo, Nivel 3",
     "rerollCost": 50000,
     "tier": 1,
     "apothecary": "Sí",
@@ -748,7 +748,7 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "7+"
         },
-        "skills": "Saltar, Canijo, Trickster, Lucha",
+        "skills": "Saltar, Canijo, Tramposo, Lucha",
         "primary": "AP",
         "secondary": "G"
       },
@@ -778,7 +778,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "11+"
         },
-        "skills": "Golpe Mortífero (+1), Mantenerse Firme, Brazo Fuerte, Take Root, Cabeza Dura, Throw Team-mate, Timmm-ber!",
+        "skills": "Golpe Mortífero (+1), Mantenerse Firme, Brazo Fuerte, Enraizarse, Cabeza Dura, Lanzar Compañero, ¡Timmm-ber!",
         "primary": "S",
         "secondary": "AGP"
       }
@@ -786,7 +786,7 @@ export const teamsData: Team[] = [
   },
   {
     "name": "Goblins",
-    "specialRules": "Underworld Challenge, Team Management, Badlands Brawl, Team Management, Bribery and Corruption, Tier 3, Team Management",
+    "specialRules": "Desafío Subterráneo, Gestión de Equipo, Pelea de Badlands, Soborno y Corrupción, Nivel 3",
     "rerollCost": 50000,
     "tier": 2,
     "apothecary": "Sí",
@@ -810,7 +810,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Bombardier, Esquivar, Secret Weapon, Canijo",
+        "skills": "Bombardero, Esquivar, Arma Secreta, Canijo",
         "primary": "AP",
         "secondary": "GS"
       },
@@ -825,7 +825,7 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "8+"
         },
-        "skills": "Buena Gente, Canijo, Swoop",
+        "skills": "Buena Gente, Canijo, Planeo",
         "primary": "A",
         "secondary": "GS"
       },
@@ -840,7 +840,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "8+"
         },
-        "skills": "Ball & Chain, No Hands, Secret Weapon, Canijo",
+        "skills": "Bola y Cadena, Sin Manos, Arma Secreta, Canijo",
         "primary": "S",
         "secondary": "AG"
       },
@@ -855,7 +855,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "8+"
         },
-        "skills": "Chainsaw, Secret Weapon, Canijo",
+        "skills": "Motosierra, Arma Secreta, Canijo",
         "primary": "A",
         "secondary": "GS"
       },
@@ -885,7 +885,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Siempre Hambriento, Solitario (3+), Golpe Mortífero (+1), Projectile Vomit, Realmente Estúpido, Regeneración, Throw Team-mate",
+        "skills": "Siempre Hambriento, Solitario (3+), Golpe Mortífero (+1), Vómito Proyectil, Realmente Estúpido, Regeneración, Lanzar Compañero",
         "primary": "S",
         "secondary": "AGP"
       },
@@ -908,7 +908,7 @@ export const teamsData: Team[] = [
   },
   {
     "name": "Halflings",
-    "specialRules": "Old World Classic, Team Management, Halflings Thimble Cup, Team Management, Tier 3, Team Management",
+    "specialRules": "Clásico del Viejo Mundo, Gestión de Equipo, Copa Dedal Halfling, Nivel 3",
     "rerollCost": 50000,
     "tier": 3,
     "apothecary": "Sí",
@@ -962,7 +962,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "11+"
         },
-        "skills": "Golpe Mortífero (+1), Mantenerse Firme, Brazo Fuerte, Take Root, Cabeza Dura, Throw Team-mate, Timmm-ber!",
+        "skills": "Golpe Mortífero (+1), Mantenerse Firme, Brazo Fuerte, Enraizarse, Cabeza Dura, Lanzar Compañero, ¡Timmm-ber!",
         "primary": "S",
         "secondary": "AGP"
       },
@@ -984,8 +984,8 @@ export const teamsData: Team[] = [
     ]
   },
   {
-    "name": "High Elves",
-    "specialRules": "Elven Kingdoms League, Team Management",
+    "name": "Elfos Altos",
+    "specialRules": "Liga de los Reinos Élficos, Gestión de Equipo",
     "rerollCost": 50000,
     "tier": 2,
     "apothecary": "Sí",
@@ -1054,15 +1054,15 @@ export const teamsData: Team[] = [
           "PS": "2+",
           "AR": "9+"
         },
-        "skills": "Rompe nubes, Pasar, Safe Pasar",
+        "skills": "Rompe nubes, Pasar, Pase Seguro",
         "primary": "AGP",
         "secondary": "S"
       }
     ]
   },
   {
-    "name": "Humans",
-    "specialRules": "Old World Classic, Team Management",
+    "name": "Humanos",
+    "specialRules": "Clásico del Viejo Mundo, Gestión de Equipo",
     "rerollCost": 50000,
     "tier": 3,
     "apothecary": "Sí",
@@ -1131,7 +1131,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Bone Head, Solitario (4+), Golpe Mortífero (+1), Cabeza Dura, Throw Team-mate",
+        "skills": "Cabeza de Hueso, Solitario (4+), Golpe Mortífero (+1), Cabeza Dura, Lanzar Compañero",
         "primary": "S",
         "secondary": "AG"
       },
@@ -1169,7 +1169,7 @@ export const teamsData: Team[] = [
   },
   {
     "name": "Hombres Lagarto",
-    "specialRules": "Lustrian Superleague, Team Management",
+    "specialRules": "Superliga Lustria, Gestión de Equipo",
     "rerollCost": 50000,
     "tier": 1,
     "apothecary": "Sí",
@@ -1193,7 +1193,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "10+"
         },
-        "skills": "Bone Head, Solitario (4+), Golpe Mortífero (+1), Prehensile Tail, Cabeza Dura",
+        "skills": "Cabeza de Hueso, Solitario (4+), Golpe Mortífero (+1), Cola Prensil, Cabeza Dura",
         "primary": "S",
         "secondary": "AG"
       },
@@ -1223,7 +1223,7 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "8+"
         },
-        "skills": "Esquivar, On the Ball, Marcaje, Canijo",
+        "skills": "Esquivar, A por el balón, Marcaje, Canijo",
         "primary": "A",
         "secondary": "GPS"
       },
@@ -1246,7 +1246,7 @@ export const teamsData: Team[] = [
   },
   {
     "name": "Horror Nigromántico",
-    "specialRules": "Sylvanian Spotlight, Team Management, Masters of Undeath",
+    "specialRules": "Escaparate Sylvaniano, Gestión de Equipo, Maestros de la No-Muerte",
     "rerollCost": 50000,
     "tier": 1,
     "apothecary": "No",
@@ -1285,7 +1285,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skills": "Placaje, Foul Appearance, No Hands, Regeneración, Echarse a un lado",
+        "skills": "Placaje, Apariencia Asquerosa, Sin Manos, Regeneración, Echarse a un lado",
         "primary": "GS",
         "secondary": "A"
       },
@@ -1330,7 +1330,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skills": "Claws, Furia, Regeneración",
+        "skills": "Garras, Furia, Regeneración",
         "primary": "AG",
         "secondary": "PS"
       }
@@ -1338,7 +1338,7 @@ export const teamsData: Team[] = [
   },
   {
     "name": "Nórdicos",
-    "specialRules": "Favored of..., Old World Classic",
+    "specialRules": "Favorito de..., Clásico del Viejo Mundo",
     "rerollCost": 50000,
     "tier": 1,
     "apothecary": "Sí",
@@ -1392,7 +1392,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skills": "Claws, Disturbing Presence, Furia, Solitario (4+), Unchannelled Fury",
+        "skills": "Garras, Presencia Perturbadora, Furia, Solitario (4+), Furia Desencadenada",
         "primary": "S",
         "secondary": "AG"
       },
@@ -1422,7 +1422,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "6+"
         },
-        "skills": "Esquivar, No Hands, Pick-me-up, Canijo, Diminuto",
+        "skills": "Esquivar, Sin Manos, Levantarse, Canijo, Diminuto",
         "primary": "-",
         "secondary": "A"
       },
@@ -1445,7 +1445,7 @@ export const teamsData: Team[] = [
   },
   {
     "name": "Nurgle",
-    "specialRules": "Favored of..., Team Management",
+    "specialRules": "Favorito de..., Gestión de Equipo",
     "rerollCost": 50000,
     "tier": 2,
     "apothecary": "Sí",
@@ -1469,7 +1469,7 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "10+"
         },
-        "skills": "Disturbing Presence, Foul Appearance, Plague Ridden, Regeneración",
+        "skills": "Presencia Perturbadora, Apariencia Asquerosa, Plagado, Regeneración",
         "primary": "GMS",
         "secondary": "A"
       },
@@ -1484,7 +1484,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "10+"
         },
-        "skills": "Disturbing Presence, Foul Appearance, Solitario (4+), Golpe Mortífero (+1), Plague Ridden, Realmente Estúpido, Regeneración, Tentacles",
+        "skills": "Presencia Perturbadora, Apariencia Asquerosa, Solitario (4+), Golpe Mortífero (+1), Plagado, Realmente Estúpido, Regeneración, Tentáculos",
         "primary": "S",
         "secondary": "AGM"
       },
@@ -1499,7 +1499,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skills": "Horns, Plague Ridden, Regeneración",
+        "skills": "Cuernos, Plagado, Regeneración",
         "primary": "GMS",
         "secondary": "AP"
       },
@@ -1514,15 +1514,15 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "9+"
         },
-        "skills": "Descomposición, Plague Ridden",
+        "skills": "Descomposición, Plagado",
         "primary": "GM",
         "secondary": "AS"
       }
     ]
   },
   {
-    "name": "Ogres",
-    "specialRules": "Old World Classic, Team Management, Badlands Brawl, Team Management, Low Cost Linemen, Tier 3, Team Management",
+    "name": "Ogros",
+    "specialRules": "Clásico del Viejo Mundo, Gestión de Equipo, Pelea de Badlands, Peones Baratos, Nivel 4",
     "rerollCost": 50000,
     "tier": 4,
     "apothecary": "Sí",
@@ -1576,7 +1576,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Bone Head, Golpe Mortífero (+1), Cabeza Dura, Throw Team-mate,",
+        "skills": "Cabeza de Hueso, Golpe Mortífero (+1), Cabeza Dura, Lanzar Compañero",
         "primary": "S",
         "secondary": "AGP"
       }
@@ -1584,7 +1584,7 @@ export const teamsData: Team[] = [
   },
   {
     "name": "Alianza del Viejo Mundo",
-    "specialRules": "Old World Classic, Team Management",
+    "specialRules": "Clásico del Viejo Mundo, Gestión de Equipo",
     "rerollCost": 50000,
     "tier": 1,
     "apothecary": "Sí",
@@ -1608,7 +1608,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skills": "Animosidad (all Enanos and Halflings team-mates), Placaje",
+        "skills": "Animosidad (Enanos y Halflings del equipo), Placaje",
         "primary": "GS",
         "secondary": "A"
       },
@@ -1623,7 +1623,7 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "8+"
         },
-        "skills": "Animosidad (all Enanos and Halflings team-mates), Atrapar, Esquivar",
+        "skills": "Animosidad (Enanos y Halflings del equipo), Atrapar, Esquivar",
         "primary": "AG",
         "secondary": "S"
       },
@@ -1653,7 +1653,7 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "9+"
         },
-        "skills": "Animosidad (all Enanos and Halflings team-mates), Pasar, Manos Seguras",
+        "skills": "Animosidad (Enanos y Halflings del equipo), Pasar, Manos Seguras",
         "primary": "GP",
         "secondary": "AS"
       },
@@ -1668,7 +1668,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "7+"
         },
-        "skills": "Animosidad (all Enanos and Humanos team-mates), Esquivar, Buena Gente, Canijo",
+        "skills": "Animosidad (Enanos y Humanos del equipo), Esquivar, Buena Gente, Canijo",
         "primary": "A",
         "secondary": "GS"
       },
@@ -1698,7 +1698,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Arm Bar, Brawler, Solitario (3+), Cabeza Dura",
+        "skills": "Palanca de Brazo, Luchador, Solitario (3+), Cabeza Dura",
         "primary": "GS",
         "secondary": "A"
       },
@@ -1735,8 +1735,8 @@ export const teamsData: Team[] = [
     ]
   },
   {
-    "name": "Orcs",
-    "specialRules": "Badlands Brawl, Team Management",
+    "name": "Orcos",
+    "specialRules": "Pelea de Badlands, Gestión de Equipo",
     "rerollCost": 50000,
     "tier": 1,
     "apothecary": "Sí",
@@ -1760,7 +1760,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "10+"
         },
-        "skills": "Animosidad (Orcos Linemen)",
+        "skills": "Animosidad (Línea de Orcos)",
         "primary": "G",
         "secondary": "AS"
       },
@@ -1775,7 +1775,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Siempre Hambriento, Solitario (4+), Golpe Mortífero (+1), Projectile Vomit, Realmente Estúpido, Regeneración, Throw Team-mate",
+        "skills": "Siempre Hambriento, Solitario (4+), Golpe Mortífero (+1), Vómito Proyectil, Realmente Estúpido, Regeneración, Lanzar Compañero",
         "primary": "S",
         "secondary": "AGP"
       },
@@ -1805,7 +1805,7 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "9+"
         },
-        "skills": "Animosidad (all team-mates), Pasar, Sure Hnds",
+        "skills": "Animosidad (todos los compañeros), Pasar, Manos Seguras",
         "primary": "GS",
         "secondary": "AP"
       },
@@ -1820,7 +1820,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "10+"
         },
-        "skills": "Animosidad (Fortachón Blockers)",
+        "skills": "Animosidad (Fortachones Bloqueadores)",
         "primary": "GS",
         "secondary": "A"
       },
@@ -1835,7 +1835,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "10+"
         },
-        "skills": "Animosidad (all team-mates), Placaje",
+        "skills": "Animosidad (todos los compañeros), Placaje",
         "primary": "GS",
         "secondary": "AP"
       }
@@ -1843,7 +1843,7 @@ export const teamsData: Team[] = [
   },
   {
     "name": "No Muertos",
-    "specialRules": "Sylvanian Spotlight, Team Management, Masters of Undeath",
+    "specialRules": "Escaparate Sylvaniano, Gestión de Equipo, Maestros de la No-Muerte",
     "rerollCost": 50000,
     "tier": 1,
     "apothecary": "No",
@@ -1935,7 +1935,7 @@ export const teamsData: Team[] = [
   },
   {
     "name": "Skaven",
-    "specialRules": "Underworld Challenge, Team Management",
+    "specialRules": "Desafío Subterráneo, Gestión de Equipo",
     "rerollCost": 50000,
     "tier": 1,
     "apothecary": "Sí",
@@ -1959,7 +1959,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skills": "Animal Savagery, Furia, Solitario (4+), Golpe Mortífero (+1), Prehensile Tail",
+        "skills": "Salvajismo Animal, Furia, Solitario (4+), Golpe Mortífero (+1), Cola Prensil",
         "primary": "S",
         "secondary": "AGM"
       },
@@ -2027,7 +2027,7 @@ export const teamsData: Team[] = [
   },
   {
     "name": "Slann (NAF)",
-    "specialRules": "Lustrian Superleague, Team Management",
+    "specialRules": "Superliga Lustria, Gestión de Equipo",
     "rerollCost": 50000,
     "tier": 2,
     "apothecary": "Sí",
@@ -2066,7 +2066,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Diving Atrapar, Pogo Stick, Piernas Muy Largas",
+        "skills": "Recepción en Plancha, Pogo Stick, Piernas Muy Largas",
         "primary": "GA",
         "secondary": "SP"
       },
@@ -2081,7 +2081,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skills": "Diving Placar, Saltar, Pogo Stick, Piernas Muy Largas",
+        "skills": "Placaje de Buceo, Saltar, Pogo Stick, Piernas Muy Largas",
         "primary": "GAS",
         "secondary": "P"
       },
@@ -2096,7 +2096,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "10+"
         },
-        "skills": "Bone Head, Solitario (4+), Golpe Mortífero (+1), Prehensile Tail, Cabeza Dura",
+        "skills": "Cabeza de Hueso, Solitario (4+), Golpe Mortífero (+1), Cola Prensil, Cabeza Dura",
         "primary": "S",
         "secondary": "GA"
       }
@@ -2104,7 +2104,7 @@ export const teamsData: Team[] = [
   },
   {
     "name": "Reyes de las Tumbas",
-    "specialRules": "Sylvanian Spotlight, Team Management",
+    "specialRules": "Escaparate Sylvaniano, Gestión de Equipo",
     "rerollCost": 50000,
     "tier": 1,
     "apothecary": "Sí",
@@ -2205,7 +2205,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Siempre Hambriento, Solitario (4+), Golpe Mortífero (+1), Projectile Vomit, Realmente Estúpido, Regeneración, Throw Team-mate",
+        "skills": "Siempre Hambriento, Solitario (4+), Golpe Mortífero (+1), Vómito Proyectil, Realmente Estúpido, Regeneración, Lanzar Compañero",
         "primary": "MS",
         "secondary": "AGP"
       },
@@ -2295,7 +2295,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skills": "Animal Savagery, Furia, Solitario (4+), Golpe Mortífero (+1), Prehensile Tail",
+        "skills": "Salvajismo Animal, Furia, Solitario (4+), Golpe Mortífero (+1), Cola Prensil",
         "primary": "MS",
         "secondary": "AG"
       },
@@ -2310,15 +2310,15 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "6+"
         },
-        "skills": "Esquivar, Buena Gente, Echarse a un lado, Canijo, Swarming, Diminuto",
+        "skills": "Esquivar, Buena Gente, Echarse a un lado, Canijo, Enjambre, Diminuto",
         "primary": "AM",
         "secondary": "G"
       }
     ]
   },
   {
-    "name": "Vampires",
-    "specialRules": "Sylvanian Spotlight, Team Management, Vampiros Lord",
+    "name": "Vampiros",
+    "specialRules": "Escaparate Sylvaniano, Gestión de Equipo, Lord Vampiro",
     "rerollCost": 50000,
     "tier": 1,
     "apothecary": "Sí",
@@ -2357,7 +2357,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "9+"
         },
-        "skills": "Bloodlust (3+), Hypnotic Gaze, Juggernaut, Regeneración",
+        "skills": "Sed de Sangre (3+), Mirada Hipnótica, Juggernaut, Regeneración",
         "primary": "AGS",
         "secondary": "110000"
       },
@@ -2372,7 +2372,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Bloodlust (2+), Hypnotic Gaze, Regeneración",
+        "skills": "Sed de Sangre (2+), Mirada Hipnótica, Regeneración",
         "primary": "AG",
         "secondary": "PS"
       },
@@ -2387,7 +2387,7 @@ export const teamsData: Team[] = [
           "PS": "2+",
           "AR": "9+"
         },
-        "skills": "Bloodlust (2+), Hypnotic Gaze, Pasar,  Regeneración",
+        "skills": "Sed de Sangre (2+), Mirada Hipnótica, Pasar, Regeneración",
         "primary": "AGP",
         "secondary": "S"
       },
@@ -2402,15 +2402,15 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "10+"
         },
-        "skills": "Bloodlust (3+), Claws, Furia, Solitario (4+), Regeneración",
+        "skills": "Sed de Sangre (3+), Garras, Furia, Solitario (4+), Regeneración",
         "primary": "S",
         "secondary": "AG"
       }
     ]
   },
   {
-    "name": "Wood Elves",
-    "specialRules": "Elven Kingdoms League, Team Management",
+    "name": "Elfos Silvanos",
+    "specialRules": "Liga de los Reinos Élficos, Gestión de Equipo",
     "rerollCost": 50000,
     "tier": 2,
     "apothecary": "Sí",
@@ -2494,7 +2494,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "11+"
         },
-        "skills": "Solitario (4+), Golpe Mortífero (+1), Mantenerse Firme, Brazo Fuerte, Take Root, Cabeza Dura, Throw Team-mate",
+        "skills": "Solitario (4+), Golpe Mortífero (+1), Mantenerse Firme, Brazo Fuerte, Enraizarse, Cabeza Dura, Lanzar Compañero",
         "primary": "S",
         "secondary": "AG"
       }
