@@ -1,7 +1,6 @@
-
 import React, { useState, useMemo } from 'react';
-import { skillsData } from '../data/skills';
 import type { Skill } from '../types';
+import { useMasterData } from '../hooks/useMasterData';
 
 const SkillCard: React.FC<{ skill: Skill }> = ({ skill }) => {
     const categoryColor: Record<string, string> = {
@@ -21,24 +20,25 @@ const SkillCard: React.FC<{ skill: Skill }> = ({ skill }) => {
                     {skill.category}
                 </span>
             </div>
-            <p className="text-slate-300 mt-2 text-sm">{skill.description}</p>
+            <p className="text-slate-300 mt-2 text-sm leading-relaxed">{skill.description}</p>
         </div>
     );
 };
 
 const Skills: React.FC = () => {
+    const { skills, loading } = useMasterData();
     const [searchTerm, setSearchTerm] = useState('');
 
     const filteredSkills = useMemo(() => {
         if (!searchTerm) {
-            return skillsData;
+            return skills;
         }
-        return skillsData.filter(skill =>
+        return skills.filter(skill =>
             skill.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             skill.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
             skill.category.toLowerCase().includes(searchTerm.toLowerCase())
         );
-    }, [searchTerm]);
+    }, [searchTerm, skills]);
 
     return (
         <div className="space-y-6">
@@ -47,24 +47,32 @@ const Skills: React.FC = () => {
                 <p className="text-slate-400 max-w-lg mx-auto">Busca habilidades por nombre, categoría o descripción.</p>
             </div>
 
-            <div className="sticky top-2 z-10">
+            <div className="sticky top-2 z-10 mb-6 flex justify-center">
                 <input
                     type="text"
-                    placeholder="Buscar habilidad o rasgo..."
+                    placeholder="Filtrar habilidades..."
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
-                    className="w-full bg-slate-900 border-2 border-slate-600 rounded-lg py-3 px-4 text-white placeholder-slate-400 focus:ring-amber-500 focus:border-amber-500 shadow-lg"
-                    aria-label="Buscar habilidad o rasgo"
+                    className="w-full max-w-md bg-slate-900 border-2 border-slate-600 rounded-lg py-3 px-4 text-white placeholder-slate-400 focus:ring-amber-500 focus:border-amber-500 shadow-lg"
+                    aria-label="Filtrar habilidades"
                 />
             </div>
 
-            <div className="space-y-4">
-                {filteredSkills.length > 0 ? (
-                    filteredSkills.map(skill => <SkillCard key={skill.name} skill={skill} />)
-                ) : (
-                    <p className="text-center text-slate-400 py-8">No se encontraron habilidades que coincidan con la búsqueda.</p>
-                )}
-            </div>
+            {loading ? (
+                <div className="flex justify-center py-20">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500"></div>
+                </div>
+            ) : filteredSkills.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {filteredSkills.map(skill => (
+                        <SkillCard key={skill.name} skill={skill} />
+                    ))}
+                </div>
+            ) : (
+                <p className="text-center text-slate-400 py-8">
+                    No se encontraron habilidades que coincidan con "{searchTerm}".
+                </p>
+            )}
         </div>
     );
 };

@@ -1,10 +1,11 @@
-
-
 import React, { useState, useMemo } from 'react';
-import { teamsData } from '../data/teams';
+import { teamsData as staticTeams } from '../data/teams';
 import { skillsData } from '../data/skills';
 import type { Team, Skill } from '../types';
 import { useAuth } from '../hooks/useAuth';
+import { useMasterTeams } from '../hooks/useMasterData';
+import { storage } from '../firebaseConfig';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import SkillModal from './SkillModal';
 import ImageModal from './ImageModal';
 import RadarChart from './RadarChart';
@@ -39,14 +40,36 @@ const TeamCard: React.FC<{ team: Team, onViewRoster: () => void, onViewImage: (e
     );
 };
 
-const TeamModal: React.FC<{ team: Team, onSkillClick: (skillName: string) => void, onClose: () => void, onImageClick: (e: React.MouseEvent) => void, onRequestTeamCreation: (rosterName: string) => void }> = ({ team, onSkillClick, onClose, onImageClick, onRequestTeamCreation }) => {
+const TeamModal: React.FC<{ team: Team, onSkillClick: (skillName: string) => void, onClose: () => void, onImageClick: (e: React.MouseEvent) => void, onRequestTeamCreation: (rosterName: string) => void, onUpdateImage: (teamName: string, url: string) => Promise<void> }> = ({ team, onSkillClick, onClose, onImageClick, onRequestTeamCreation, onUpdateImage }) => {
     const [isRadarModalOpen, setIsRadarModalOpen] = useState(false);
     const { isAdmin } = useAuth() as { isAdmin: boolean };
     const [isEditingImage, setIsEditingImage] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
     const [newImageUrl, setNewImageUrl] = useState(team.image || '');
 
     const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
         if (e.target === e.currentTarget) onClose();
+    };
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !isAdmin || !storage) return;
+
+        setIsUploading(true);
+        try {
+            const storageRef = ref(storage, `teams/${team.name.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`);
+            const snapshot = await uploadBytes(storageRef, file);
+            const url = await getDownloadURL(snapshot.ref);
+            setNewImageUrl(url);
+            // Auto-save the new URL to Firestore
+            await onUpdateImage(team.name, url);
+            setIsEditingImage(false);
+        } catch (error) {
+            console.error("Error uploading image:", error);
+            alert("Error al subir la imagen.");
+        } finally {
+            setIsUploading(false);
+        }
     };
 
     return (
@@ -92,19 +115,32 @@ const TeamModal: React.FC<{ team: Team, onSkillClick: (skillName: string) => voi
                                                         type="text"
                                                         value={newImageUrl}
                                                         onChange={(e) => setNewImageUrl(e.target.value)}
-                                                        className="text-xs bg-slate-800 border border-slate-600 rounded p-1 w-full text-white"
-                                                        placeholder="URL de la imagen..."
+                                                        className="text-[10px] bg-slate-800 border border-slate-600 rounded p-1 w-full text-white"
+                                                        placeholder="URL de la imagen (Pinteres, GitHub...)"
                                                     />
+                                                    <div className="flex border-2 border-dashed border-slate-600 rounded p-2 items-center justify-center cursor-pointer hover:bg-slate-700 transition-colors" onClick={() => document.getElementById('imageUpload')?.click()}>
+                                                        <span className="text-[10px] text-slate-400">{isUploading ? 'Subiendo...' : 'Subir desde dispositivo'}</span>
+                                                        <input
+                                                            id="imageUpload"
+                                                            type="file"
+                                                            accept="image/*"
+                                                            className="hidden"
+                                                            onChange={handleFileUpload}
+                                                            disabled={isUploading}
+                                                        />
+                                                    </div>
                                                     <div className="flex gap-1">
                                                         <button
-                                                            onClick={() => { team.image = newImageUrl; setIsEditingImage(false); }}
-                                                            className="text-[10px] bg-green-600 px-2 py-1 rounded text-white"
+                                                            onClick={async () => { await onUpdateImage(team.name, newImageUrl); setIsEditingImage(false); }}
+                                                            className="flex-1 text-[10px] bg-green-600 hover:bg-green-500 px-2 py-1 rounded text-white font-bold"
+                                                            disabled={isUploading}
                                                         >
-                                                            Guardar
+                                                            Guardar URL
                                                         </button>
                                                         <button
                                                             onClick={() => { setIsEditingImage(false); setNewImageUrl(team.image || ''); }}
-                                                            className="text-[10px] bg-slate-600 px-2 py-1 rounded text-white"
+                                                            className="flex-1 text-[10px] bg-slate-600 px-2 py-1 rounded text-white"
+                                                            disabled={isUploading}
                                                         >
                                                             Cancelar
                                                         </button>
@@ -206,19 +242,36 @@ interface TeamsProps {
 }
 
 const Teams: React.FC<TeamsProps> = ({ onRequestTeamCreation = () => { } }) => {
+    const { teams, updateTeamImage, syncStaticData, loading } = useMasterTeams();
+    const { isAdmin } = useAuth();
     const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
     const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
     const [enlargedImage, setEnlargedImage] = useState<{ src: string, alt: string } | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [isSyncing, setIsSyncing] = useState(false);
 
     const filteredTeams = useMemo(() => {
         if (!searchTerm) {
-            return teamsData;
+            return teams;
         }
-        return teamsData.filter(team =>
+        return teams.filter(team =>
             team.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
-    }, [searchTerm]);
+    }, [searchTerm, teams]);
+
+    const handleSync = async () => {
+        if (!window.confirm("¿Seguro que quieres resincronizar todos los equipos? Esto sobrescribirá las URLs de imágenes actuales en la base de datos con las del archivo teams.ts.")) return;
+        setIsSyncing(true);
+        try {
+            await syncStaticData();
+            alert("Sincronización completada con éxito.");
+        } catch (e) {
+            console.error(e);
+            alert("Error al sincronizar.");
+        } finally {
+            setIsSyncing(false);
+        }
+    };
 
     const handleSkillClick = (skillName: string) => {
         const cleanedName = skillName.split('(')[0].trim();
@@ -233,18 +286,36 @@ const Teams: React.FC<TeamsProps> = ({ onRequestTeamCreation = () => { } }) => {
 
     return (
         <div className="space-y-6">
-            <div className="sticky top-2 z-10 mb-6">
+            <div className="sticky top-2 z-10 mb-6 flex gap-4 items-center">
                 <input
                     type="text"
                     placeholder="Buscar equipo..."
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
-                    className="w-full max-w-md mx-auto bg-slate-900 border-2 border-slate-600 rounded-lg py-3 px-4 text-white placeholder-slate-400 focus:ring-amber-500 focus:border-amber-500 shadow-lg"
+                    className="flex-grow bg-slate-900 border-2 border-slate-600 rounded-lg py-3 px-4 text-white placeholder-slate-400 focus:ring-amber-500 focus:border-amber-500 shadow-lg"
                     aria-label="Buscar equipo por nombre"
                 />
+                {isAdmin && (
+                    <button
+                        onClick={handleSync}
+                        disabled={isSyncing}
+                        className="bg-slate-800 border border-slate-600 text-slate-400 p-3 rounded-lg hover:text-amber-400 transition-colors"
+                        title="Sincronizar datos estáticos con Firebase"
+                    >
+                        {isSyncing ? '...' :
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                        }
+                    </button>
+                )}
             </div>
 
-            {filteredTeams.length > 0 ? (
+            {loading ? (
+                <div className="flex justify-center py-20">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500"></div>
+                </div>
+            ) : filteredTeams.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                     {filteredTeams.map((team) => (
                         <TeamCard
@@ -261,7 +332,7 @@ const Teams: React.FC<TeamsProps> = ({ onRequestTeamCreation = () => { } }) => {
                 </p>
             )}
 
-            {selectedTeam && <TeamModal team={selectedTeam} onClose={() => setSelectedTeam(null)} onSkillClick={handleSkillClick} onImageClick={(e) => handleImageClick(e, selectedTeam)} onRequestTeamCreation={onRequestTeamCreation} />}
+            {selectedTeam && <TeamModal team={selectedTeam} onClose={() => setSelectedTeam(null)} onSkillClick={handleSkillClick} onImageClick={(e) => handleImageClick(e, selectedTeam)} onRequestTeamCreation={onRequestTeamCreation} onUpdateImage={updateTeamImage} />}
             {selectedSkill && <SkillModal skill={selectedSkill} onClose={() => setSelectedSkill(null)} />}
             {enlargedImage && <ImageModal src={enlargedImage.src} alt={enlargedImage.alt} onClose={() => setEnlargedImage(null)} />}
         </div>
