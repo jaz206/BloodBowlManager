@@ -3,7 +3,7 @@ import { teamsData as staticTeams } from '../data/teams';
 import { skillsData } from '../data/skills';
 import type { Team, Skill } from '../types';
 import { useAuth } from '../hooks/useAuth';
-import { useMasterTeams } from '../hooks/useMasterData';
+import { useMasterData } from '../hooks/useMasterData';
 import { storage } from '../firebaseConfig';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import SkillModal from './SkillModal';
@@ -242,7 +242,7 @@ interface TeamsProps {
 }
 
 const Teams: React.FC<TeamsProps> = ({ onRequestTeamCreation = () => { } }) => {
-    const { teams, updateTeamImage, syncStaticData, loading } = useMasterTeams();
+    const { teams, updateTeamImage, syncMasterData, loading } = useMasterData();
     const { isAdmin } = useAuth();
     const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
     const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
@@ -263,7 +263,7 @@ const Teams: React.FC<TeamsProps> = ({ onRequestTeamCreation = () => { } }) => {
         if (!window.confirm("¿Seguro que quieres resincronizar todos los equipos? Esto sobrescribirá las URLs de imágenes actuales en la base de datos con las del archivo teams.ts.")) return;
         setIsSyncing(true);
         try {
-            await syncStaticData();
+            await syncMasterData();
             alert("Sincronización completada con éxito.");
         } catch (e) {
             console.error(e);
