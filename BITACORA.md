@@ -1,0 +1,70 @@
+# 🩸 BITÁCORA DE CAMPAÑA: BLOOD BOWL MANAGER 🩸
+
+Bienvenido, Entrenador. Este tomo contiene el registro sagrado de la construcción del **Asistente Digital de Blood Bowl**, una herramienta forjada en las fraguas de la tecnología moderna para llevar la gloria (y la carnicería) al campo de juego. Aquí documentamos cada táctica, cada formación y cada gota de sudor invertida en este proyecto.
+
+---
+
+## 🛠️ PORTAL DE PODER (Plataforma y Tecnologías)
+Nuestra fortaleza ha sido construida con los materiales más resistentes del reino digital:
+
+*   **El Corazón (Framework)**: [React 19](https://react.dev/) con el rayo de [Vite](https://vitejs.dev/) para una velocidad de carga de vértigo.
+*   **La Mente (Lenguaje)**: [TypeScript](https://www.typescriptlang.org/), asegurando que cada orden sea precisa y sin errores de bulto.
+*   **El Archivo (Base de Datos)**: [Firebase Firestore](https://firebase.google.com/), donde las leyendas de los equipos quedan grabadas en la eternidad del servidor.
+*   **La Armadura (Estilo)**: [Tailwind CSS](https://tailwindcss.com/) con tonalidades Amber y Slate para ese aspecto premium de las ligas mayores.
+*   **El Almacén (Storage)**: [Firebase Storage](https://firebase.google.com/) para guardar los estandartes y escudos de cada facción.
+
+---
+
+## 🎯 OBJETIVO DE LA MISIÓN
+En el caos del Blood Bowl, la información es poder. Este proyecto resuelve el problema de la desinformación en el banquillo, aportando:
+1.  **Sabiduría Instantánea**: Consulta de reglas, tiers y rosters de todas las facciones oficiales (Temporada 2020).
+2.  **Estrategia Dinámica**: Gráficos de radar para visualizar las fortalezas y debilidades de cada equipo.
+3.  **Gestión de Leyendas**: Capacidad para que un Comisionado (Admin) actualice los registros y escudos en tiempo real para todos los entrenadores del reino.
+
+---
+
+## 🏛️ ARQUITECTURA DEL ESTADIO (Estructura del Proyecto)
+
+```text
+root/
+├── components/          # Las gradas y el campo: Componentes visuales de la interfaz.
+│   ├── Teams.tsx        # El Gran Estadio: Visualización de todas las facciones.
+│   ├── Skills.tsx       # El Manual de Tácticas: Listado de todas las habilidades.
+│   └── TeamCreator.tsx  # El Centro de Reclutamiento: Forja de nuevos equipos.
+├── data/                # Los Textos Antiguos: Datos estáticos de respaldo.
+│   ├── teams.ts         # Registros locales de las facciones.
+│   └── skills.ts        # Diccionario local de habilidades.
+├── hooks/               # Las Maniobras de Juego: Lógica reutilizable y estados.
+│   └── useMasterData.ts # El Mensajero: Sincroniza la voluntad de Firebase con la UI.
+├── contexts/            # El Aura del Vestuario: Estados globales como la Autentificación.
+├── firebaseConfig.ts    # El Contrato con los Dioses: Configuración de la conexión a Firebase.
+└── types.ts             # El Código de Honor: Definiciones de interfaces y tipos.
+```
+
+---
+
+## ⚔️ CÓMO FUNCIONA EL JUEGO (Flujo de Sesión)
+
+1.  **Invocación**: El Entrenador entra en la aplicación y es recibido por el muro de escudos.
+2.  **Exploración**: Se filtran los equipos por nombre para encontrar la facción deseada.
+3.  **Consulta de Roster**: Se despliega el pergamino del equipo, mostrando costes y habilidades (con descripciones traducidas del inglés antiguo).
+4.  **Intervención Divina (Admin)**: Si el usuario tiene rango de Comisionado, puede cambiar el escudo de un equipo o sincronizar los registros maestros con un solo clic.
+
+---
+
+## 📜 REGISTRO DE CAMBIOS (Hitos Importantes)
+
+### [2026-03-06] El Gran Despertar del Comisionado
+*   **Gestión Maestra**: Migración de datos estáticos a **Firebase Firestore**. Ahora los equipos viven en la nube.
+*   **Estandartes Dinámicos**: Implementación de **Firebase Storage** para subir imágenes de escudos desde el dispositivo.
+*   **Mantenimiento de Campo**: Se solventaron errores de importación que bloqueaban el despliegue en Vercel.
+*   **Visión de Águila**: Añadido buscador en las vistas de Equipos y Habilidades.
+*   *Archivos Afectados*: `useMasterData.ts`, `Teams.tsx`, `firebaseConfig.ts`, `Skills.tsx`.
+
+### [2026-03-06] La Gran Traducción de Lustria
+*   **Lengua Materna**: Traducción completa de todos los equipos y habilidades al español.
+*   **Corrección de Imagen**: Amazonia ahora luce su verdadero estandarte tras años de confusión visual.
+*   *Archivos Afectados*: `teams.ts`, `skills.ts`.
+
+---
+¡Por Nuffle, que los dados siempre te favorezcan! 🎲🎲

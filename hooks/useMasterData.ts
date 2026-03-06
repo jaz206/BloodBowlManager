@@ -19,30 +19,51 @@ export const useMasterData = () => {
             return;
         }
 
+        let teamsLoaded = false;
+        let skillsLoaded = false;
+
+        const checkLoading = () => {
+            if (teamsLoaded && skillsLoaded) {
+                setLoading(false);
+            }
+        };
+
         // Teams Listener
         const unsubTeams = onSnapshot(collection(db, 'teams_master'), (snapshot) => {
             if (snapshot.empty) {
+                console.log("Firestore 'teams_master' is empty. Using static data.");
                 setTeams(staticTeams);
             } else {
                 const fetched = snapshot.docs.map(doc => doc.data() as Team);
                 fetched.sort((a, b) => a.name.localeCompare(b.name));
                 setTeams(fetched);
             }
+            teamsLoaded = true;
+            checkLoading();
+        }, (err) => {
+            console.error("Error fetching teams from Firestore:", err);
+            setTeams(staticTeams); // Fallback to static on error
+            teamsLoaded = true;
+            checkLoading();
         });
 
         // Skills Listener
         const unsubSkills = onSnapshot(collection(db, 'skills_master'), (snapshot) => {
             if (snapshot.empty) {
+                console.log("Firestore 'skills_master' is empty. Using static data.");
                 setSkills(staticSkills);
             } else {
                 const fetched = snapshot.docs.map(doc => doc.data() as Skill);
                 fetched.sort((a, b) => a.name.localeCompare(b.name));
                 setSkills(fetched);
             }
-            setLoading(false);
+            skillsLoaded = true;
+            checkLoading();
         }, (err) => {
-            setError(err.message);
-            setLoading(false);
+            console.error("Error fetching skills from Firestore:", err);
+            setSkills(staticSkills); // Fallback to static on error
+            skillsLoaded = true;
+            checkLoading();
         });
 
         return () => { unsubTeams(); unsubSkills(); };
