@@ -7,6 +7,7 @@ export interface User {
   name: string;
   email: string;
   picture: string;
+  isAdmin?: boolean;
 }
 
 export interface Rule {

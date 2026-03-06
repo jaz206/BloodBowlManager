@@ -2,12 +2,12 @@ import type { Team } from "../types";
 
 export const teamsData: Team[] = [
   {
-    "name": "Equipos Amazons",
+    "name": "Amazons",
     "specialRules": "Lustrian Superleague, Team Management",
     "rerollCost": 50000,
     "tier": 1,
     "apothecary": "Sí",
-    "image": "https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0",
+    "image": "https://i.pinimg.com/736x/b2/f0/5c/b2f05c2fcd61096bbf20a2b194bad517.jpg",
     "ratings": {
       "fuerza": 65,
       "agilidad": 80,
@@ -18,7 +18,7 @@ export const teamsData: Team[] = [
     "roster": [
       {
         "qty": "0-16",
-        "position": "Eagle Warrior Linewoman",
+        "position": "Eagle Guerrero Línea",
         "cost": 50000,
         "stats": {
           "MV": 6,
@@ -27,13 +27,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Dodge",
+        "skills": "Esquivar",
         "primary": "G",
         "secondary": "AS"
       },
       {
         "qty": "0-2",
-        "position": "Python Warrior Thrower",
+        "position": "Python Guerrero Lanzador",
         "cost": 80000,
         "stats": {
           "MV": 6,
@@ -42,13 +42,13 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "8+"
         },
-        "skills": "Dodge, On the Ball, Pass, Safe Pass",
+        "skills": "Esquivar, On the Ball, Pasar, Safe Pasar",
         "primary": "GP",
         "secondary": "AS"
       },
       {
         "qty": "0-16",
-        "position": "Jaguar Warrior Blocker",
+        "position": "Jaguar Guerrero Bloqueador",
         "cost": 110000,
         "stats": {
           "MV": 6,
@@ -57,13 +57,13 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "9+"
         },
-        "skills": "Defensive, Dodge",
+        "skills": "Defensive, Esquivar",
         "primary": "GS",
         "secondary": "A"
       },
       {
         "qty": "0-2",
-        "position": "Piranha Warrior Blitzer",
+        "position": "Piranha Guerrero Placador",
         "cost": 90000,
         "stats": {
           "MV": 7,
@@ -72,19 +72,19 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "8+"
         },
-        "skills": "Dodge, Hit and Run, Jump Up",
+        "skills": "Esquivar, Hit and Run, Saltar",
         "primary": "AG",
         "secondary": "S"
       }
     ]
   },
   {
-    "name": "Equipos Black Orcs",
+    "name": "Black Orcs",
     "specialRules": "Badlands Brawl, Team Management, Bribery and Corruption",
     "rerollCost": 50000,
     "tier": 1,
     "apothecary": "Sí",
-    "image": "https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0",
+    "image": "https://i.pinimg.com/736x/01/95/95/0195951b4bb9081cf33a85740fedb59c.jpg",
     "ratings": {
       "fuerza": 73,
       "agilidad": 60,
@@ -95,7 +95,7 @@ export const teamsData: Team[] = [
     "roster": [
       {
         "qty": "0-12",
-        "position": "Goblin Bruiser Lineman",
+        "position": "Goblins Bruiser Línea",
         "cost": 45000,
         "stats": {
           "MV": 6,
@@ -104,13 +104,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Dodge, Right Stuff, Stunty, Thick Skull",
+        "skills": "Esquivar, Buena Gente, Canijo, Cabeza Dura",
         "primary": "A",
         "secondary": "GPS"
       },
       {
         "qty": "0-6",
-        "position": "Black Orc",
+        "position": "Orcos Negros",
         "cost": 90000,
         "stats": {
           "MV": 4,
@@ -119,7 +119,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Brawler, Grab",
+        "skills": "Brawler, Agarrar",
         "primary": "GS",
         "secondary": "AP"
       },
@@ -134,19 +134,19 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Always Hungry, Loner (3+), Mighty Blow (+1), Projectile Vomit, Really Stupid, Regeneration, Throw Team-mate",
+        "skills": "Siempre Hambriento, Solitario (3+), Golpe Mortífero (+1), Projectile Vomit, Realmente Estúpido, Regeneración, Throw Team-mate",
         "primary": "S",
         "secondary": "AGP"
       }
     ]
   },
   {
-    "name": "Equipos Chaos Chosen",
+    "name": "Elegidos del Caos",
     "specialRules": "Favored of..., Team Management",
     "rerollCost": 50000,
     "tier": 2,
     "apothecary": "Sí",
-    "image": "https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0",
+    "image": "https://i.pinimg.com/736x/76/4c/a7/764ca7f2f36fbd1cd1a513191cb31c9b.jpg",
     "ratings": {
       "fuerza": 80,
       "agilidad": 80,
@@ -157,7 +157,7 @@ export const teamsData: Team[] = [
     "roster": [
       {
         "qty": "0-4",
-        "position": "Chosen Blocker",
+        "position": "Chosen Bloqueador",
         "cost": 100000,
         "stats": {
           "MV": 5,
@@ -166,14 +166,14 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "<characteristic name=\"Primary\" typeId=\"fda4-6261-f0d2-ba0d\">GMS",
+        "skills": "GMS",
         "primary": "",
         "secondary": "A"
       }
     ]
   },
   {
-    "name": "Equipos Chaos Dwarfs",
+    "name": "Chaos Dwarfs",
     "specialRules": "Favored of..., Team Management, Worlds Edge Superleague, Team Management, Badlands Brawl, Team Management",
     "rerollCost": 50000,
     "tier": 2,
@@ -189,7 +189,7 @@ export const teamsData: Team[] = [
     "roster": [
       {
         "qty": "0-16",
-        "position": "Hobgoblin Lineman",
+        "position": "Hobgoblin Línea",
         "cost": 40000,
         "stats": {
           "MV": 6,
@@ -198,13 +198,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "<characteristic name=\"Primary\" typeId=\"fda4-6261-f0d2-ba0d\">G",
+        "skills": "G",
         "primary": "",
         "secondary": "AS"
       },
       {
         "qty": "0-4",
-        "position": "Chaos Dwarf Blocker",
+        "position": "Enanos del Caos Bloqueador",
         "cost": 70000,
         "stats": {
           "MV": 4,
@@ -213,13 +213,13 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "10+"
         },
-        "skills": "Block, Iron Hard Skin, Thick Skull",
+        "skills": "Placaje, Iron Hard Skin, Cabeza Dura",
         "primary": "GS",
         "secondary": "AM"
       },
       {
         "qty": "0-2",
-        "position": "Bull Centaur Blitzer",
+        "position": "Bull Centaur Placador",
         "cost": 130000,
         "stats": {
           "MV": 6,
@@ -228,13 +228,13 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "10+"
         },
-        "skills": "Sprint, Sure Feet, Thick Skull",
+        "skills": "Esprintar, Pies Firmes, Cabeza Dura",
         "primary": "GS",
         "secondary": "AM"
       },
       {
         "qty": "0-1",
-        "position": "Renegade Minotaur",
+        "position": "Renegade Minotauro",
         "cost": 150000,
         "stats": {
           "MV": 5,
@@ -243,7 +243,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skills": "Frenzy, Horns, Loner (4+), Mighty Blow (+1), Thick Skull, Unchannelled Fury",
+        "skills": "Furia, Horns, Solitario (4+), Golpe Mortífero (+1), Cabeza Dura, Unchannelled Fury",
         "primary": "S",
         "secondary": "AGM"
       },
@@ -258,19 +258,19 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "8+"
         },
-        "skills": "Shadowing, Stab",
+        "skills": "Marcaje, Stab",
         "primary": "G",
         "secondary": "AS"
       }
     ]
   },
   {
-    "name": "Equipos Chaos Renegades",
+    "name": "Renegados del Caos",
     "specialRules": "Favored of..., Team Management",
     "rerollCost": 50000,
     "tier": 3,
     "apothecary": "Sí",
-    "image": "https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0",
+    "image": "https://i.pinimg.com/736x/c3/bc/00/c3bc00232d9e1ffccb8fa176aeb236c2.jpg",
     "ratings": {
       "fuerza": 74,
       "agilidad": 72,
@@ -290,13 +290,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Animosity (all team-mates)",
+        "skills": "Animosidad (all team-mates)",
         "primary": "GM",
         "secondary": "AS"
       },
       {
         "qty": "0-1",
-        "position": "Renegade Dark Elf",
+        "position": "Renegade Elfos Oscuros",
         "cost": 75000,
         "stats": {
           "MV": 6,
@@ -305,13 +305,13 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "9+"
         },
-        "skills": "Animosity (all team-mates)",
+        "skills": "Animosidad (all team-mates)",
         "primary": "AGM",
         "secondary": "PS"
       },
       {
         "qty": "0-1",
-        "position": "Renegade Ogre",
+        "position": "Renegade Ogros",
         "cost": 140000,
         "stats": {
           "MV": 5,
@@ -320,13 +320,13 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Bone Head, Loner (4+), Mighty Blow (+1), Thick Skull, Throw Team-mate",
+        "skills": "Bone Head, Solitario (4+), Golpe Mortífero (+1), Cabeza Dura, Throw Team-mate",
         "primary": "S",
         "secondary": "AGM"
       },
       {
         "qty": "0-1",
-        "position": "Renegade Orc",
+        "position": "Renegade Orcos",
         "cost": 50000,
         "stats": {
           "MV": 5,
@@ -335,7 +335,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Animosity (all team-mates)",
+        "skills": "Animosidad (all team-mates)",
         "primary": "GM",
         "secondary": "AS"
       },
@@ -350,13 +350,13 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Always Hungry, Loner (4+), Mighty Blow (+1), Projectile Vomit, Really Stupid, Regeneration, Throw Team-mate",
+        "skills": "Siempre Hambriento, Solitario (4+), Golpe Mortífero (+1), Projectile Vomit, Realmente Estúpido, Regeneración, Throw Team-mate",
         "primary": "S",
         "secondary": "AGM"
       },
       {
         "qty": "0-1",
-        "position": "Renegade Goblin",
+        "position": "Renegade Goblins",
         "cost": 40000,
         "stats": {
           "MV": 6,
@@ -365,13 +365,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Animosity (all team-mates), Dodge, Right Stuff, Stunty",
+        "skills": "Animosidad (all team-mates), Esquivar, Buena Gente, Canijo",
         "primary": "AM",
         "secondary": "GP"
       },
       {
         "qty": "0-1",
-        "position": "Renegade Minotaur",
+        "position": "Renegade Minotauro",
         "cost": 150000,
         "stats": {
           "MV": 5,
@@ -380,13 +380,13 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skills": "Loner (4+), Frenzy, Horns, Mighty Blow (+1), Thick Skull, Unchannelled Fury",
+        "skills": "Solitario (4+), Furia, Horns, Golpe Mortífero (+1), Cabeza Dura, Unchannelled Fury",
         "primary": "S",
         "secondary": "AGM"
       },
       {
         "qty": "0-12",
-        "position": "Renegade Human Lineman",
+        "position": "Renegade Humanos Línea",
         "cost": 50000,
         "stats": {
           "MV": 6,
@@ -395,13 +395,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skills": "<characteristic name=\"Primary\" typeId=\"fda4-6261-f0d2-ba0d\">GM",
+        "skills": "GM",
         "primary": "",
         "secondary": "AS"
       },
       {
         "qty": "0-1",
-        "position": "Renegade Human Thrower",
+        "position": "Renegade Humanos Lanzador",
         "cost": 75000,
         "stats": {
           "MV": 6,
@@ -410,13 +410,13 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "9+"
         },
-        "skills": "Animosity (all team-mates), Pass, Safe Pair of Hands",
+        "skills": "Animosidad (all team-mates), Pasar, Safe Pair of Hands",
         "primary": "GMP",
         "secondary": "AS"
       },
       {
         "qty": "0-1",
-        "position": "Renegade Rat Ogre",
+        "position": "Renegade Rat Ogros",
         "cost": 150000,
         "stats": {
           "MV": 6,
@@ -425,14 +425,14 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skills": "Animal Savagery, Frenzy, Loner (4+), Mighty Blow (+1), Prehensile Tail",
+        "skills": "Animal Savagery, Furia, Solitario (4+), Golpe Mortífero (+1), Prehensile Tail",
         "primary": "S",
         "secondary": "AGM"
       }
     ]
   },
   {
-    "name": "Equipos Dark Elves",
+    "name": "Dark Elves",
     "specialRules": "Elven Kingdoms League, Team Management",
     "rerollCost": 50000,
     "tier": 2,
@@ -448,7 +448,7 @@ export const teamsData: Team[] = [
     "roster": [
       {
         "qty": "0-2",
-        "position": "Runner",
+        "position": "Corredor",
         "cost": 80000,
         "stats": {
           "MV": 7,
@@ -472,13 +472,13 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "8+"
         },
-        "skills": "Shadowing, Stab",
+        "skills": "Marcaje, Stab",
         "primary": "AG",
         "secondary": "PS"
       },
       {
         "qty": "0-4",
-        "position": "Blitzer",
+        "position": "Placador",
         "cost": 100000,
         "stats": {
           "MV": 7,
@@ -487,7 +487,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skills": "Block",
+        "skills": "Placaje",
         "primary": "AG",
         "secondary": "PS"
       },
@@ -502,13 +502,13 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "8+"
         },
-        "skills": "Dodge, Frenzy, Jump Up",
+        "skills": "Esquivar, Furia, Saltar",
         "primary": "AG",
         "secondary": "PS"
       },
       {
         "qty": "0-12",
-        "position": "Dark Elf Lineman",
+        "position": "Elfos Oscuros Línea",
         "cost": 70000,
         "stats": {
           "MV": 6,
@@ -517,14 +517,14 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skills": "<characteristic name=\"Primary\" typeId=\"fda4-6261-f0d2-ba0d\">AG",
+        "skills": "AG",
         "primary": "",
         "secondary": "S"
       }
     ]
   },
   {
-    "name": "Equipos Dwarves",
+    "name": "Dwarves",
     "specialRules": "Old World Classic, Team Management, Worlds Edge Superleague, Team Management",
     "rerollCost": 50000,
     "tier": 2,
@@ -540,7 +540,7 @@ export const teamsData: Team[] = [
     "roster": [
       {
         "qty": "0-12",
-        "position": "Dwarf Blocker Lineman",
+        "position": "Enanos Bloqueador Línea",
         "cost": 70000,
         "stats": {
           "MV": 4,
@@ -549,13 +549,13 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Block, Tackle, Thick Skull",
+        "skills": "Placaje, Placar, Cabeza Dura",
         "primary": "GS",
         "secondary": "A"
       },
       {
         "qty": "0-2",
-        "position": "Runner",
+        "position": "Corredor",
         "cost": 85000,
         "stats": {
           "MV": 6,
@@ -564,13 +564,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skills": "Sure Hands, Thick Skull",
+        "skills": "Manos Seguras, Cabeza Dura",
         "primary": "GP",
         "secondary": "AS"
       },
       {
         "qty": "0-2",
-        "position": "Blitzer",
+        "position": "Placador",
         "cost": 80000,
         "stats": {
           "MV": 5,
@@ -579,7 +579,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "10+"
         },
-        "skills": "Block, Thick Skull",
+        "skills": "Placaje, Cabeza Dura",
         "primary": "GS",
         "secondary": "AP"
       },
@@ -594,7 +594,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skills": "Block, Dauntless, Frenzy, Thick Skull",
+        "skills": "Placaje, Agallas, Furia, Cabeza Dura",
         "primary": "GS",
         "secondary": "A"
       },
@@ -609,19 +609,19 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "11+"
         },
-        "skills": "Break Tackle, Dirty Player (+2), Juggernaut, Loner (5+), Mighty Blow (+1), No Hands, Secret Weapon, Stand Firm",
+        "skills": "Break Placar, Jugador Sucio (+2), Juggernaut, Solitario (5+), Golpe Mortífero (+1), No Hands, Secret Weapon, Mantenerse Firme",
         "primary": "S",
         "secondary": "AG"
       }
     ]
   },
   {
-    "name": "Equipos Elven Union",
+    "name": "Unión Élfica",
     "specialRules": "Elven Kingdoms League, Team Management",
     "rerollCost": 50000,
     "tier": 2,
     "apothecary": "Sí",
-    "image": "https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0",
+    "image": "https://i.pinimg.com/736x/00/92/17/0092173b8d1e26ac361e877e871a6977.jpg",
     "ratings": {
       "fuerza": 60,
       "agilidad": 100,
@@ -632,7 +632,7 @@ export const teamsData: Team[] = [
     "roster": [
       {
         "qty": "0-4",
-        "position": "Catcher",
+        "position": "Receptor",
         "cost": 100000,
         "stats": {
           "MV": 8,
@@ -641,13 +641,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Catch, Nerves of Steel",
+        "skills": "Atrapar, Nervios de Acero",
         "primary": "AG",
         "secondary": "S"
       },
       {
         "qty": "0-2",
-        "position": "Blitzer",
+        "position": "Placador",
         "cost": 115000,
         "stats": {
           "MV": 7,
@@ -656,13 +656,13 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "9+"
         },
-        "skills": "Block, Sidestep",
+        "skills": "Placaje, Echarse a un lado",
         "primary": "AG",
         "secondary": "PS"
       },
       {
         "qty": "0-12",
-        "position": "Lineman",
+        "position": "Línea",
         "cost": 60000,
         "stats": {
           "MV": 6,
@@ -671,13 +671,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "<characteristic name=\"Primary\" typeId=\"fda4-6261-f0d2-ba0d\">AG",
+        "skills": "AG",
         "primary": "",
         "secondary": "S"
       },
       {
         "qty": "0-2",
-        "position": "Thrower",
+        "position": "Lanzador",
         "cost": 75000,
         "stats": {
           "MV": 6,
@@ -686,15 +686,15 @@ export const teamsData: Team[] = [
           "PS": "2+",
           "AR": "8+"
         },
-        "skills": "Pass",
+        "skills": "Pasar",
         "primary": "AGP",
         "secondary": "S"
       }
     ]
   },
   {
-    "name": "Equipos Gnomes",
-    "specialRules": "Halfling Thimble Cup, Team Management, Tier 3, Team Management",
+    "name": "Gnomes",
+    "specialRules": "Halflings Thimble Cup, Team Management, Tier 3, Team Management",
     "rerollCost": 50000,
     "tier": 1,
     "apothecary": "Sí",
@@ -709,7 +709,7 @@ export const teamsData: Team[] = [
     "roster": [
       {
         "qty": "0-16",
-        "position": "Gnome Lineman",
+        "position": "Gnomos Línea",
         "cost": 40000,
         "stats": {
           "MV": 5,
@@ -718,13 +718,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "7+"
         },
-        "skills": "Jump Up, Right Stuff, Stunty, Wrestle",
+        "skills": "Saltar, Buena Gente, Canijo, Lucha",
         "primary": "A",
         "secondary": "GS"
       },
       {
         "qty": "0-2",
-        "position": "Gnome Beastmaster",
+        "position": "Gnomos Beastmaster",
         "cost": 55000,
         "stats": {
           "MV": 5,
@@ -733,13 +733,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Guard, Jump Up, Stunty, Wrestle",
+        "skills": "Defensa, Saltar, Canijo, Lucha",
         "primary": "A",
         "secondary": "GS"
       },
       {
         "qty": "0-2",
-        "position": "Gnome Illusionist",
+        "position": "Gnomos Illusionist",
         "cost": 50000,
         "stats": {
           "MV": 5,
@@ -748,7 +748,7 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "7+"
         },
-        "skills": "Jump Up, Stunty, Trickster, Wrestle",
+        "skills": "Saltar, Canijo, Trickster, Lucha",
         "primary": "AP",
         "secondary": "G"
       },
@@ -763,7 +763,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "6+"
         },
-        "skills": "Dodge, My Ball, Sidestep, Stunty",
+        "skills": "Esquivar, My Ball, Echarse a un lado, Canijo",
         "primary": "-",
         "secondary": "A"
       },
@@ -778,19 +778,19 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "11+"
         },
-        "skills": "Mighty Blow (+1), Stand Firm, Strong Arm, Take Root, Thick Skull, Throw Team-mate, Timmm-ber!",
+        "skills": "Golpe Mortífero (+1), Mantenerse Firme, Brazo Fuerte, Take Root, Cabeza Dura, Throw Team-mate, Timmm-ber!",
         "primary": "S",
         "secondary": "AGP"
       }
     ]
   },
   {
-    "name": "Equipos Goblins",
+    "name": "Goblins",
     "specialRules": "Underworld Challenge, Team Management, Badlands Brawl, Team Management, Bribery and Corruption, Tier 3, Team Management",
     "rerollCost": 50000,
     "tier": 2,
     "apothecary": "Sí",
-    "image": "https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0",
+    "image": "https://i.pinimg.com/736x/20/90/b4/2090b456fd49abe77abc7362c8181b0d.jpg",
     "ratings": {
       "fuerza": 63,
       "agilidad": 74,
@@ -810,7 +810,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Bombardier, Dodge, Secret Weapon, Stunty",
+        "skills": "Bombardier, Esquivar, Secret Weapon, Canijo",
         "primary": "AP",
         "secondary": "GS"
       },
@@ -825,7 +825,7 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "8+"
         },
-        "skills": "Right Stuff, Stunty, Swoop",
+        "skills": "Buena Gente, Canijo, Swoop",
         "primary": "A",
         "secondary": "GS"
       },
@@ -840,7 +840,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "8+"
         },
-        "skills": "Ball & Chain, No Hands, Secret Weapon, Stunty",
+        "skills": "Ball & Chain, No Hands, Secret Weapon, Canijo",
         "primary": "S",
         "secondary": "AG"
       },
@@ -855,13 +855,13 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "8+"
         },
-        "skills": "Chainsaw, Secret Weapon, Stunty",
+        "skills": "Chainsaw, Secret Weapon, Canijo",
         "primary": "A",
         "secondary": "GS"
       },
       {
         "qty": "0-16",
-        "position": "Goblin Lineman",
+        "position": "Goblins Línea",
         "cost": 40000,
         "stats": {
           "MV": 6,
@@ -870,7 +870,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Dodge, Right Stuff, Stunty",
+        "skills": "Esquivar, Buena Gente, Canijo",
         "primary": "A",
         "secondary": "GPS"
       },
@@ -885,7 +885,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Always Hungry, Loner (3+), Mighty Blow (+1), Projectile Vomit, Really Stupid, Regeneration, Throw Team-mate",
+        "skills": "Siempre Hambriento, Solitario (3+), Golpe Mortífero (+1), Projectile Vomit, Realmente Estúpido, Regeneración, Throw Team-mate",
         "primary": "S",
         "secondary": "AGP"
       },
@@ -900,19 +900,19 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "8+"
         },
-        "skills": "Dodge, Pogo Stick, Stunty",
+        "skills": "Esquivar, Pogo Stick, Canijo",
         "primary": "A",
         "secondary": "GPS"
       }
     ]
   },
   {
-    "name": "Equipos Halflings",
-    "specialRules": "Old World Classic, Team Management, Halfling Thimble Cup, Team Management, Tier 3, Team Management",
+    "name": "Halflings",
+    "specialRules": "Old World Classic, Team Management, Halflings Thimble Cup, Team Management, Tier 3, Team Management",
     "rerollCost": 50000,
     "tier": 3,
     "apothecary": "Sí",
-    "image": "https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0",
+    "image": "https://i.pinimg.com/736x/b2/f0/5c/b2f05c2fcd61096bbf20a2b194bad517.jpg",
     "ratings": {
       "fuerza": 60,
       "agilidad": 70,
@@ -923,7 +923,7 @@ export const teamsData: Team[] = [
     "roster": [
       {
         "qty": "0-16",
-        "position": "Halfling Hopeful Lineman",
+        "position": "Halflings Hopeful Línea",
         "cost": 30000,
         "stats": {
           "MV": 5,
@@ -932,13 +932,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "7+"
         },
-        "skills": "Dodge, Right Stuff, Stunty",
+        "skills": "Esquivar, Buena Gente, Canijo",
         "primary": "A",
         "secondary": "GS"
       },
       {
         "qty": "0-2",
-        "position": "Halfling Hefty",
+        "position": "Halflings Hefty",
         "cost": 50000,
         "stats": {
           "MV": 5,
@@ -947,7 +947,7 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "8+"
         },
-        "skills": "Dodge, Fend, Stunty",
+        "skills": "Esquivar, Apartar, Canijo",
         "primary": "AP",
         "secondary": "GS"
       },
@@ -962,13 +962,13 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "11+"
         },
-        "skills": "Mighty Blow (+1), Stand Firm, Strong Arm, Take Root, Thick Skull, Throw Team-mate, Timmm-ber!",
+        "skills": "Golpe Mortífero (+1), Mantenerse Firme, Brazo Fuerte, Take Root, Cabeza Dura, Throw Team-mate, Timmm-ber!",
         "primary": "S",
         "secondary": "AGP"
       },
       {
         "qty": "0-2",
-        "position": "Halfling Catcher",
+        "position": "Halflings Receptor",
         "cost": 55000,
         "stats": {
           "MV": 5,
@@ -977,14 +977,14 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "7+"
         },
-        "skills": "Catch, Dodge, Right Stuff, Sprint, Stunty",
+        "skills": "Atrapar, Esquivar, Buena Gente, Esprintar, Canijo",
         "primary": "A",
         "secondary": "GS"
       }
     ]
   },
   {
-    "name": "Equipos High Elves",
+    "name": "High Elves",
     "specialRules": "Elven Kingdoms League, Team Management",
     "rerollCost": 50000,
     "tier": 2,
@@ -1000,7 +1000,7 @@ export const teamsData: Team[] = [
     "roster": [
       {
         "qty": "0-2",
-        "position": "Blitzer",
+        "position": "Placador",
         "cost": 100000,
         "stats": {
           "MV": 7,
@@ -1009,13 +1009,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skills": "Block",
+        "skills": "Placaje",
         "primary": "AG",
         "secondary": "PS"
       },
       {
         "qty": "0-16",
-        "position": "Lineman",
+        "position": "Línea",
         "cost": 70000,
         "stats": {
           "MV": 6,
@@ -1024,13 +1024,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skills": "<characteristic name=\"Primary\" typeId=\"fda4-6261-f0d2-ba0d\">AG",
+        "skills": "AG",
         "primary": "",
         "secondary": "PS"
       },
       {
         "qty": "0-4",
-        "position": "Catcher",
+        "position": "Receptor",
         "cost": 90000,
         "stats": {
           "MV": 8,
@@ -1039,13 +1039,13 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "8+"
         },
-        "skills": "Catch",
+        "skills": "Atrapar",
         "primary": "AG",
         "secondary": "S"
       },
       {
         "qty": "0-2",
-        "position": "Thrower",
+        "position": "Lanzador",
         "cost": 100000,
         "stats": {
           "MV": 6,
@@ -1054,19 +1054,19 @@ export const teamsData: Team[] = [
           "PS": "2+",
           "AR": "9+"
         },
-        "skills": "Cloud Burster, Pass, Safe Pass",
+        "skills": "Rompe nubes, Pasar, Safe Pasar",
         "primary": "AGP",
         "secondary": "S"
       }
     ]
   },
   {
-    "name": "Equipos Humans",
+    "name": "Humans",
     "specialRules": "Old World Classic, Team Management",
     "rerollCost": 50000,
     "tier": 3,
     "apothecary": "Sí",
-    "image": "https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0",
+    "image": "https://i.pinimg.com/736x/c2/63/6b/c2636b8d808236de876bc37716a39f49.jpg",
     "ratings": {
       "fuerza": 60,
       "agilidad": 77,
@@ -1077,7 +1077,7 @@ export const teamsData: Team[] = [
     "roster": [
       {
         "qty": "0-2",
-        "position": "Thrower",
+        "position": "Lanzador",
         "cost": 80000,
         "stats": {
           "MV": 6,
@@ -1086,13 +1086,13 @@ export const teamsData: Team[] = [
           "PS": "2+",
           "AR": "9+"
         },
-        "skills": "Pass, Sure Hands",
+        "skills": "Pasar, Manos Seguras",
         "primary": "GP",
         "secondary": "AS"
       },
       {
         "qty": "0-4",
-        "position": "Catcher",
+        "position": "Receptor",
         "cost": 65000,
         "stats": {
           "MV": 8,
@@ -1101,13 +1101,13 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "8+"
         },
-        "skills": "Catch, Dodge",
+        "skills": "Atrapar, Esquivar",
         "primary": "AG",
         "secondary": "PS"
       },
       {
         "qty": "0-4",
-        "position": "Blitzer",
+        "position": "Placador",
         "cost": 85000,
         "stats": {
           "MV": 7,
@@ -1116,13 +1116,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skills": "Block",
+        "skills": "Placaje",
         "primary": "GS",
         "secondary": "AP"
       },
       {
         "qty": "0-1",
-        "position": "Ogre",
+        "position": "Ogros",
         "cost": 140000,
         "stats": {
           "MV": 5,
@@ -1131,13 +1131,13 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Bone Head, Loner (4+), Mighty Blow (+1), Thick Skull, Throw Team-mate",
+        "skills": "Bone Head, Solitario (4+), Golpe Mortífero (+1), Cabeza Dura, Throw Team-mate",
         "primary": "S",
         "secondary": "AG"
       },
       {
         "qty": "0-16",
-        "position": "Human Lineman",
+        "position": "Humanos Línea",
         "cost": 50000,
         "stats": {
           "MV": 6,
@@ -1146,13 +1146,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skills": "<characteristic name=\"Primary\" typeId=\"fda4-6261-f0d2-ba0d\">G",
+        "skills": "G",
         "primary": "",
         "secondary": "AS"
       },
       {
         "qty": "0-3",
-        "position": "Halfling Hopeful",
+        "position": "Halflings Hopeful",
         "cost": 30000,
         "stats": {
           "MV": 5,
@@ -1161,19 +1161,19 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "7+"
         },
-        "skills": "Dodge, Right Stuff, Stunty",
+        "skills": "Esquivar, Buena Gente, Canijo",
         "primary": "A",
         "secondary": "GS"
       }
     ]
   },
   {
-    "name": "Equipos Lizardmen",
+    "name": "Hombres Lagarto",
     "specialRules": "Lustrian Superleague, Team Management",
     "rerollCost": 50000,
     "tier": 1,
     "apothecary": "Sí",
-    "image": "https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0",
+    "image": "https://i.pinimg.com/736x/b4/c1/f5/b4c1f571ca61aaba9bc450b462b1783d.jpg",
     "ratings": {
       "fuerza": 65,
       "agilidad": 60,
@@ -1193,13 +1193,13 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "10+"
         },
-        "skills": "Bone Head, Loner (4+), Mighty Blow (+1), Prehensile Tail, Thick Skull",
+        "skills": "Bone Head, Solitario (4+), Golpe Mortífero (+1), Prehensile Tail, Cabeza Dura",
         "primary": "S",
         "secondary": "AG"
       },
       {
         "qty": "0-6",
-        "position": "Saurus Blocker",
+        "position": "Saurus Bloqueador",
         "cost": 85000,
         "stats": {
           "MV": 6,
@@ -1208,7 +1208,7 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "10+"
         },
-        "skills": "<characteristic name=\"Primary\" typeId=\"fda4-6261-f0d2-ba0d\">GS",
+        "skills": "GS",
         "primary": "",
         "secondary": "A"
       },
@@ -1223,13 +1223,13 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "8+"
         },
-        "skills": "Dodge, On the Ball, Shadowing, Stunty",
+        "skills": "Esquivar, On the Ball, Marcaje, Canijo",
         "primary": "A",
         "secondary": "GPS"
       },
       {
         "qty": "0-12",
-        "position": "Skink Runner Lineman",
+        "position": "Skink Corredor Línea",
         "cost": 60000,
         "stats": {
           "MV": 8,
@@ -1238,19 +1238,19 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Dodge, Stunty",
+        "skills": "Esquivar, Canijo",
         "primary": "A",
         "secondary": "GPS"
       }
     ]
   },
   {
-    "name": "Equipos Necromantic Horror",
+    "name": "Horror Nigromántico",
     "specialRules": "Sylvanian Spotlight, Team Management, Masters of Undeath",
     "rerollCost": 50000,
     "tier": 1,
     "apothecary": "No",
-    "image": "https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0",
+    "image": "https://i.pinimg.com/736x/a9/d0/c9/a9d0c9c23d2a99e34d6e0dae24ab2e1d.jpg",
     "ratings": {
       "fuerza": 64,
       "agilidad": 72,
@@ -1261,7 +1261,7 @@ export const teamsData: Team[] = [
     "roster": [
       {
         "qty": "0-16",
-        "position": "Zombie Lineman",
+        "position": "Zombie Línea",
         "cost": 40000,
         "stats": {
           "MV": 4,
@@ -1270,13 +1270,13 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skills": "Regeneration",
+        "skills": "Regeneración",
         "primary": "G",
         "secondary": "AS"
       },
       {
         "qty": "0-2",
-        "position": "Wraith",
+        "position": "Espectro",
         "cost": 95000,
         "stats": {
           "MV": 6,
@@ -1285,13 +1285,13 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skills": "Block, Foul Appearance, No Hands, Regeneration, Sidestep",
+        "skills": "Placaje, Foul Appearance, No Hands, Regeneración, Echarse a un lado",
         "primary": "GS",
         "secondary": "A"
       },
       {
         "qty": "0-2",
-        "position": "Ghoul Runner",
+        "position": "Ghoul Corredor",
         "cost": 75000,
         "stats": {
           "MV": 7,
@@ -1300,13 +1300,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Dodge",
+        "skills": "Esquivar",
         "primary": "AG",
         "secondary": "PS"
       },
       {
         "qty": "0-2",
-        "position": "Flesh Golem",
+        "position": "Flesh Golem de Carne",
         "cost": 115000,
         "stats": {
           "MV": 4,
@@ -1315,7 +1315,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "10+"
         },
-        "skills": "Regeneration, Stand Firm, Thick Skull",
+        "skills": "Regeneración, Mantenerse Firme, Cabeza Dura",
         "primary": "GS",
         "secondary": "A"
       },
@@ -1330,19 +1330,19 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skills": "Claws, Frenzy, Regeneration",
+        "skills": "Claws, Furia, Regeneración",
         "primary": "AG",
         "secondary": "PS"
       }
     ]
   },
   {
-    "name": "Equipos Norse",
+    "name": "Nórdicos",
     "specialRules": "Favored of..., Old World Classic",
     "rerollCost": 50000,
     "tier": 1,
     "apothecary": "Sí",
-    "image": "https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0",
+    "image": "https://i.pinimg.com/736x/b2/f0/5c/b2f05c2fcd61096bbf20a2b194bad517.jpg",
     "ratings": {
       "fuerza": 63,
       "agilidad": 73,
@@ -1353,7 +1353,7 @@ export const teamsData: Team[] = [
     "roster": [
       {
         "qty": "0-16",
-        "position": "Norse Raider Lineman",
+        "position": "Nórdicos Raider Línea",
         "cost": 50000,
         "stats": {
           "MV": 6,
@@ -1362,7 +1362,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Block, Drunkard, Thick Skull",
+        "skills": "Placaje, Drunkard, Cabeza Dura",
         "primary": "G",
         "secondary": "APS"
       },
@@ -1377,7 +1377,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skills": "Frenzy",
+        "skills": "Furia",
         "primary": "GS",
         "secondary": "A"
       },
@@ -1392,13 +1392,13 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skills": "Claws, Disturbing Presence, Frenzy, Loner (4+), Unchannelled Fury",
+        "skills": "Claws, Disturbing Presence, Furia, Solitario (4+), Unchannelled Fury",
         "primary": "S",
         "secondary": "AG"
       },
       {
         "qty": "0-2",
-        "position": "Norse Berserker",
+        "position": "Nórdicos Berserker",
         "cost": 90000,
         "stats": {
           "MV": 6,
@@ -1407,7 +1407,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "8+"
         },
-        "skills": "Block, Frenzy, Jump Up",
+        "skills": "Placaje, Furia, Saltar",
         "primary": "GS",
         "secondary": "AP"
       },
@@ -1422,7 +1422,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "6+"
         },
-        "skills": "Dodge, No Hands, Pick-me-up, Stunty, Titchy",
+        "skills": "Esquivar, No Hands, Pick-me-up, Canijo, Diminuto",
         "primary": "-",
         "secondary": "A"
       },
@@ -1437,19 +1437,19 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "8+"
         },
-        "skills": "Catch, Dauntless, Pass, Strip Ball",
+        "skills": "Atrapar, Agallas, Pasar, Balón Robado",
         "primary": "AGP",
         "secondary": "S"
       }
     ]
   },
   {
-    "name": "Equipos Nurgle",
+    "name": "Nurgle",
     "specialRules": "Favored of..., Team Management",
     "rerollCost": 50000,
     "tier": 2,
     "apothecary": "Sí",
-    "image": "https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0",
+    "image": "https://i.pinimg.com/736x/d3/c6/1f/d3c61fa5d46fc5872dd609282a34047d.jpg",
     "ratings": {
       "fuerza": 75,
       "agilidad": 65,
@@ -1469,7 +1469,7 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "10+"
         },
-        "skills": "Disturbing Presence, Foul Appearance, Plague Ridden, Regeneration",
+        "skills": "Disturbing Presence, Foul Appearance, Plague Ridden, Regeneración",
         "primary": "GMS",
         "secondary": "A"
       },
@@ -1484,7 +1484,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "10+"
         },
-        "skills": "Disturbing Presence, Foul Appearance, Loner (4+), Mighty Blow (+1), Plague Ridden, Really Stupid, Regeneration, Tentacles",
+        "skills": "Disturbing Presence, Foul Appearance, Solitario (4+), Golpe Mortífero (+1), Plague Ridden, Realmente Estúpido, Regeneración, Tentacles",
         "primary": "S",
         "secondary": "AGM"
       },
@@ -1499,13 +1499,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skills": "Horns, Plague Ridden, Regeneration",
+        "skills": "Horns, Plague Ridden, Regeneración",
         "primary": "GMS",
         "secondary": "AP"
       },
       {
         "qty": "0-12",
-        "position": "Rotter Lineman",
+        "position": "Rotter Línea",
         "cost": 35000,
         "stats": {
           "MV": 5,
@@ -1514,19 +1514,19 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "9+"
         },
-        "skills": "Decay, Plague Ridden",
+        "skills": "Descomposición, Plague Ridden",
         "primary": "GM",
         "secondary": "AS"
       }
     ]
   },
   {
-    "name": "Equipos Ogres",
+    "name": "Ogres",
     "specialRules": "Old World Classic, Team Management, Badlands Brawl, Team Management, Low Cost Linemen, Tier 3, Team Management",
     "rerollCost": 50000,
     "tier": 4,
     "apothecary": "Sí",
-    "image": "https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0",
+    "image": "https://i.pinimg.com/736x/9b/77/bd/9b77bd2d5538a9bfd2be58af2186de82.jpg",
     "ratings": {
       "fuerza": 73,
       "agilidad": 67,
@@ -1537,7 +1537,7 @@ export const teamsData: Team[] = [
     "roster": [
       {
         "qty": "0-1",
-        "position": "Ogre Runt Punter",
+        "position": "Ogros Runt Punter",
         "cost": 145000,
         "stats": {
           "MV": 5,
@@ -1546,13 +1546,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "10+"
         },
-        "skills": "Bone Head, Kick Team-Mate, Mighty Blow (+1), Thick Skull",
+        "skills": "Bone Head, Patada Team-Mate, Golpe Mortífero (+1), Cabeza Dura",
         "primary": "PS",
         "secondary": "AG"
       },
       {
         "qty": "0-16",
-        "position": "Gnoblar Lineman",
+        "position": "Gnoblar Línea",
         "cost": 0,
         "stats": {
           "MV": 5,
@@ -1561,13 +1561,13 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "6+"
         },
-        "skills": "Dodge, Right Stuff, Sidestep, Stunty, Titchy",
+        "skills": "Esquivar, Buena Gente, Echarse a un lado, Canijo, Diminuto",
         "primary": "A",
         "secondary": "G"
       },
       {
         "qty": "0-6",
-        "position": "Ogre Blocker",
+        "position": "Ogros Bloqueador",
         "cost": 140000,
         "stats": {
           "MV": 5,
@@ -1576,19 +1576,19 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Bone Head, Mighty Blow (+1), Thick Skull, Throw Team-mate,",
+        "skills": "Bone Head, Golpe Mortífero (+1), Cabeza Dura, Throw Team-mate,",
         "primary": "S",
         "secondary": "AGP"
       }
     ]
   },
   {
-    "name": "Equipos Old World Alliance",
+    "name": "Alianza del Viejo Mundo",
     "specialRules": "Old World Classic, Team Management",
     "rerollCost": 50000,
     "tier": 1,
     "apothecary": "Sí",
-    "image": "https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0",
+    "image": "https://i.pinimg.com/736x/d3/a2/19/d3a219f32e89433aa05b5396f935d334.jpg",
     "ratings": {
       "fuerza": 56,
       "agilidad": 76,
@@ -1599,7 +1599,7 @@ export const teamsData: Team[] = [
     "roster": [
       {
         "qty": "0-1",
-        "position": "Old World Human Blitzer",
+        "position": "Old World Humanos Placador",
         "cost": 90000,
         "stats": {
           "MV": 7,
@@ -1608,13 +1608,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skills": "Animosity (all Dwarf and Halfling team-mates), Block",
+        "skills": "Animosidad (all Enanos and Halflings team-mates), Placaje",
         "primary": "GS",
         "secondary": "A"
       },
       {
         "qty": "0-1",
-        "position": "Old World Human Catcher",
+        "position": "Old World Humanos Receptor",
         "cost": 65000,
         "stats": {
           "MV": 8,
@@ -1623,13 +1623,13 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "8+"
         },
-        "skills": "Animosity (all Dwarf and Halfling team-mates), Catch, Dodge",
+        "skills": "Animosidad (all Enanos and Halflings team-mates), Atrapar, Esquivar",
         "primary": "AG",
         "secondary": "S"
       },
       {
         "qty": "0-12",
-        "position": "Old World Human Lineman",
+        "position": "Old World Humanos Línea",
         "cost": 50000,
         "stats": {
           "MV": 6,
@@ -1644,7 +1644,7 @@ export const teamsData: Team[] = [
       },
       {
         "qty": "0-1",
-        "position": "Old World Human Thrower",
+        "position": "Old World Humanos Lanzador",
         "cost": 80000,
         "stats": {
           "MV": 6,
@@ -1653,13 +1653,13 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "9+"
         },
-        "skills": "Animosity (all Dwarf and Halfling team-mates), Pass, Sure Hands",
+        "skills": "Animosidad (all Enanos and Halflings team-mates), Pasar, Manos Seguras",
         "primary": "GP",
         "secondary": "AS"
       },
       {
         "qty": "0-2",
-        "position": "Old World Halfling Hopeful",
+        "position": "Old World Halflings Hopeful",
         "cost": 30000,
         "stats": {
           "MV": 5,
@@ -1668,13 +1668,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "7+"
         },
-        "skills": "Animosity (all Dwarf and Human team-mates), Dodge, Right Stuff, Stunty",
+        "skills": "Animosidad (all Enanos and Humanos team-mates), Esquivar, Buena Gente, Canijo",
         "primary": "A",
         "secondary": "GS"
       },
       {
         "qty": "0-1",
-        "position": "Old World Dwarf Blitzer",
+        "position": "Old World Enanos Placador",
         "cost": 80000,
         "stats": {
           "MV": 5,
@@ -1683,13 +1683,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "10+"
         },
-        "skills": "Block, Loner (3+), Thick Skull",
+        "skills": "Placaje, Solitario (3+), Cabeza Dura",
         "primary": "GS",
         "secondary": "A"
       },
       {
         "qty": "0-2",
-        "position": "Old World Dwarf Blocker",
+        "position": "Old World Enanos Bloqueador",
         "cost": 75000,
         "stats": {
           "MV": 4,
@@ -1698,13 +1698,13 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Arm Bar, Brawler, Loner (3+), Thick Skull",
+        "skills": "Arm Bar, Brawler, Solitario (3+), Cabeza Dura",
         "primary": "GS",
         "secondary": "A"
       },
       {
         "qty": "0-1",
-        "position": "Old World Dwarf Runner",
+        "position": "Old World Enanos Corredor",
         "cost": 85000,
         "stats": {
           "MV": 6,
@@ -1713,13 +1713,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skills": "Loner (3+), Sure Hands, Thick Skull",
+        "skills": "Solitario (3+), Manos Seguras, Cabeza Dura",
         "primary": "GP",
         "secondary": "AS"
       },
       {
         "qty": "0-1",
-        "position": "Old World Dwarf Troll Slayer",
+        "position": "Old World Enanos Troll Slayer",
         "cost": 95000,
         "stats": {
           "MV": 5,
@@ -1728,19 +1728,19 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skills": "Block, Dauntless, Frenzy, Loner (3+), Thick Skull",
+        "skills": "Placaje, Agallas, Furia, Solitario (3+), Cabeza Dura",
         "primary": "GS",
         "secondary": "A"
       }
     ]
   },
   {
-    "name": "Equipos Orcs",
+    "name": "Orcs",
     "specialRules": "Badlands Brawl, Team Management",
     "rerollCost": 50000,
     "tier": 1,
     "apothecary": "Sí",
-    "image": "https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0",
+    "image": "https://i.pinimg.com/736x/c4/15/c0/c415c0a781138589868249c294e95b4a.jpg",
     "ratings": {
       "fuerza": 67,
       "agilidad": 70,
@@ -1751,7 +1751,7 @@ export const teamsData: Team[] = [
     "roster": [
       {
         "qty": "0-16",
-        "position": "Orc Lineman",
+        "position": "Orcos Línea",
         "cost": 50000,
         "stats": {
           "MV": 5,
@@ -1760,7 +1760,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "10+"
         },
-        "skills": "Animosity (Orc Linemen)",
+        "skills": "Animosidad (Orcos Linemen)",
         "primary": "G",
         "secondary": "AS"
       },
@@ -1775,13 +1775,13 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Always Hungry, Loner (4+), Mighty Blow (+1), Projectile Vomit, Really Stupid, Regeneration, Throw Team-mate",
+        "skills": "Siempre Hambriento, Solitario (4+), Golpe Mortífero (+1), Projectile Vomit, Realmente Estúpido, Regeneración, Throw Team-mate",
         "primary": "S",
         "secondary": "AGP"
       },
       {
         "qty": "0-4",
-        "position": "Goblin",
+        "position": "Goblins",
         "cost": 40000,
         "stats": {
           "MV": 6,
@@ -1790,13 +1790,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Dodge, Right Stuff, Stunty",
+        "skills": "Esquivar, Buena Gente, Canijo",
         "primary": "A",
         "secondary": "GS"
       },
       {
         "qty": "0-2",
-        "position": "Thrower",
+        "position": "Lanzador",
         "cost": 65000,
         "stats": {
           "MV": 5,
@@ -1805,13 +1805,13 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "9+"
         },
-        "skills": "Animosity (all team-mates), Pass, Sure Hnds",
+        "skills": "Animosidad (all team-mates), Pasar, Sure Hnds",
         "primary": "GS",
         "secondary": "AP"
       },
       {
         "qty": "0-4",
-        "position": "Big Un Blocker",
+        "position": "Fortachón Bloqueador",
         "cost": 90000,
         "stats": {
           "MV": 5,
@@ -1820,13 +1820,13 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "10+"
         },
-        "skills": "Animosity (Big Un Blockers)",
+        "skills": "Animosidad (Fortachón Blockers)",
         "primary": "GS",
         "secondary": "A"
       },
       {
         "qty": "0-4",
-        "position": "Blitzer",
+        "position": "Placador",
         "cost": 80000,
         "stats": {
           "MV": 6,
@@ -1835,19 +1835,19 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "10+"
         },
-        "skills": "Animosity (all team-mates), Block",
+        "skills": "Animosidad (all team-mates), Placaje",
         "primary": "GS",
         "secondary": "AP"
       }
     ]
   },
   {
-    "name": "Equipos Shambling Undead",
+    "name": "No Muertos",
     "specialRules": "Sylvanian Spotlight, Team Management, Masters of Undeath",
     "rerollCost": 50000,
     "tier": 1,
     "apothecary": "No",
-    "image": "https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0",
+    "image": "https://i.pinimg.com/736x/40/d3/3f/40d33f8e8aee4cc2a793df0b0f3b3619.jpg",
     "ratings": {
       "fuerza": 68,
       "agilidad": 64,
@@ -1858,7 +1858,7 @@ export const teamsData: Team[] = [
     "roster": [
       {
         "qty": "0-12",
-        "position": "Skeleton Lineman",
+        "position": "Esqueleto Línea",
         "cost": 40000,
         "stats": {
           "MV": 5,
@@ -1867,13 +1867,13 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "8+"
         },
-        "skills": "Regeneration, Thick Skull",
+        "skills": "Regeneración, Cabeza Dura",
         "primary": "G",
         "secondary": "AS"
       },
       {
         "qty": "0-4",
-        "position": "Ghoul Runner",
+        "position": "Ghoul Corredor",
         "cost": 75000,
         "stats": {
           "MV": 7,
@@ -1882,13 +1882,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Dodge",
+        "skills": "Esquivar",
         "primary": "AG",
         "secondary": "PS"
       },
       {
         "qty": "0-2",
-        "position": "Mummy",
+        "position": "Momia",
         "cost": 125000,
         "stats": {
           "MV": 3,
@@ -1897,13 +1897,13 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "10+"
         },
-        "skills": "Mighty Blow (+1), Regeneration",
+        "skills": "Golpe Mortífero (+1), Regeneración",
         "primary": "S",
         "secondary": "AG"
       },
       {
         "qty": "0-2",
-        "position": "Wight Blitzer",
+        "position": "Túmulo Placador",
         "cost": 90000,
         "stats": {
           "MV": 6,
@@ -1912,13 +1912,13 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "9+"
         },
-        "skills": "Block, Regeneration",
+        "skills": "Placaje, Regeneración",
         "primary": "GS",
         "secondary": "AP"
       },
       {
         "qty": "0-12",
-        "position": "Zombie Lineman",
+        "position": "Zombie Línea",
         "cost": 40000,
         "stats": {
           "MV": 4,
@@ -1927,19 +1927,19 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skills": "Regeneration",
+        "skills": "Regeneración",
         "primary": "G",
         "secondary": "AS"
       }
     ]
   },
   {
-    "name": "Equipos Skaven",
+    "name": "Skaven",
     "specialRules": "Underworld Challenge, Team Management",
     "rerollCost": 50000,
     "tier": 1,
     "apothecary": "Sí",
-    "image": "https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0",
+    "image": "https://i.pinimg.com/736x/88/35/53/88355314bb5c808eb7dc95fac928d1e4.jpg",
     "ratings": {
       "fuerza": 64,
       "agilidad": 80,
@@ -1950,7 +1950,7 @@ export const teamsData: Team[] = [
     "roster": [
       {
         "qty": "0-1",
-        "position": "Rat Ogre",
+        "position": "Rat Ogros",
         "cost": 150000,
         "stats": {
           "MV": 6,
@@ -1959,13 +1959,13 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skills": "Animal Savagery, Frenzy, Loner (4+), Mighty Blow (+1), Prehensile Tail",
+        "skills": "Animal Savagery, Furia, Solitario (4+), Golpe Mortífero (+1), Prehensile Tail",
         "primary": "S",
         "secondary": "AGM"
       },
       {
         "qty": "0-2",
-        "position": "Blitzer",
+        "position": "Placador",
         "cost": 90000,
         "stats": {
           "MV": 7,
@@ -1974,13 +1974,13 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "9+"
         },
-        "skills": "Block",
+        "skills": "Placaje",
         "primary": "GS",
         "secondary": "AMP"
       },
       {
         "qty": "0-4",
-        "position": "Gutter Runner",
+        "position": "Gutter Corredor",
         "cost": 85000,
         "stats": {
           "MV": 9,
@@ -1989,13 +1989,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Dodge",
+        "skills": "Esquivar",
         "primary": "AG",
         "secondary": "MPS"
       },
       {
         "qty": "0-2",
-        "position": "Thrower",
+        "position": "Lanzador",
         "cost": 85000,
         "stats": {
           "MV": 7,
@@ -2004,13 +2004,13 @@ export const teamsData: Team[] = [
           "PS": "2+",
           "AR": "8+"
         },
-        "skills": "Pass, Sure Hands",
+        "skills": "Pasar, Manos Seguras",
         "primary": "GP",
         "secondary": "AMS"
       },
       {
         "qty": "0-16",
-        "position": "Skaven Clanrat Lineman",
+        "position": "Skaven Clanrat Línea",
         "cost": 50000,
         "stats": {
           "MV": 7,
@@ -2019,14 +2019,14 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "<characteristic name=\"Primary\" typeId=\"fda4-6261-f0d2-ba0d\">G",
+        "skills": "G",
         "primary": "",
         "secondary": "AMS"
       }
     ]
   },
   {
-    "name": "Equipos Slann (NAF)",
+    "name": "Slann (NAF)",
     "specialRules": "Lustrian Superleague, Team Management",
     "rerollCost": 50000,
     "tier": 2,
@@ -2042,7 +2042,7 @@ export const teamsData: Team[] = [
     "roster": [
       {
         "qty": "0-16",
-        "position": "Lineman",
+        "position": "Línea",
         "cost": 60000,
         "stats": {
           "MV": 6,
@@ -2051,13 +2051,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skills": "Pogo Stick, Very Long Legs",
+        "skills": "Pogo Stick, Piernas Muy Largas",
         "primary": "G",
         "secondary": "AS"
       },
       {
         "qty": "0-4",
-        "position": "Catcher",
+        "position": "Receptor",
         "cost": 80000,
         "stats": {
           "MV": 7,
@@ -2066,13 +2066,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Diving Catch, Pogo Stick, Very Long Legs",
+        "skills": "Diving Atrapar, Pogo Stick, Piernas Muy Largas",
         "primary": "GA",
         "secondary": "SP"
       },
       {
         "qty": "0-4",
-        "position": "Blitzer",
+        "position": "Placador",
         "cost": 110000,
         "stats": {
           "MV": 7,
@@ -2081,7 +2081,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skills": "Diving Tackle, Jump Up, Pogo Stick, Very Long Legs",
+        "skills": "Diving Placar, Saltar, Pogo Stick, Piernas Muy Largas",
         "primary": "GAS",
         "secondary": "P"
       },
@@ -2096,14 +2096,14 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "10+"
         },
-        "skills": "Bone Head, Loner (4+), Mighty Blow (+1), Prehensile Tail, Thick Skull",
+        "skills": "Bone Head, Solitario (4+), Golpe Mortífero (+1), Prehensile Tail, Cabeza Dura",
         "primary": "S",
         "secondary": "GA"
       }
     ]
   },
   {
-    "name": "Equipos Tomb Kings",
+    "name": "Reyes de las Tumbas",
     "specialRules": "Sylvanian Spotlight, Team Management",
     "rerollCost": 50000,
     "tier": 1,
@@ -2119,7 +2119,7 @@ export const teamsData: Team[] = [
     "roster": [
       {
         "qty": "0-2",
-        "position": "Anointed Blitzer",
+        "position": "Anointed Placador",
         "cost": 90000,
         "stats": {
           "MV": 6,
@@ -2128,13 +2128,13 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "9+"
         },
-        "skills": "Block, Regeneration, Thick Skull",
+        "skills": "Placaje, Regeneración, Cabeza Dura",
         "primary": "GS",
         "secondary": "AP"
       },
       {
         "qty": "0-2",
-        "position": "Anointed Thrower",
+        "position": "Anointed Lanzador",
         "cost": 70000,
         "stats": {
           "MV": 6,
@@ -2143,13 +2143,13 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "8+"
         },
-        "skills": "Pass, Regeneration, Sure Hands, Thick Skull",
+        "skills": "Pasar, Regeneración, Manos Seguras, Cabeza Dura",
         "primary": "GP",
         "secondary": "A"
       },
       {
         "qty": "0-16",
-        "position": "Skeleton Lineman",
+        "position": "Esqueleto Línea",
         "cost": 40000,
         "stats": {
           "MV": 5,
@@ -2158,7 +2158,7 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "8+"
         },
-        "skills": "Regeneration, Thick Skull",
+        "skills": "Regeneración, Cabeza Dura",
         "primary": "G",
         "secondary": "AS"
       },
@@ -2173,14 +2173,14 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "10+"
         },
-        "skills": "Decay, Regeneration",
+        "skills": "Descomposición, Regeneración",
         "primary": "S",
         "secondary": "AG"
       }
     ]
   },
   {
-    "name": "Equipos Underworld Denizens",
+    "name": "Habitantes del Inframundo",
     "specialRules": "Underworld Challenge, Team Management, Bribery and Corruption",
     "rerollCost": 50000,
     "tier": 1,
@@ -2205,13 +2205,13 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Always Hungry, Loner (4+), Mighty Blow (+1), Projectile Vomit, Really Stupid, Regeneration, Throw Team-mate",
+        "skills": "Siempre Hambriento, Solitario (4+), Golpe Mortífero (+1), Projectile Vomit, Realmente Estúpido, Regeneración, Throw Team-mate",
         "primary": "MS",
         "secondary": "AGP"
       },
       {
         "qty": "0-12",
-        "position": "Underworld Goblin Lineman",
+        "position": "Underworld Goblins Línea",
         "cost": 40000,
         "stats": {
           "MV": 6,
@@ -2220,7 +2220,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Dodge, Right Stuff, Stunty",
+        "skills": "Esquivar, Buena Gente, Canijo",
         "primary": "AM",
         "secondary": "GS"
       },
@@ -2235,13 +2235,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Animosity (Underworld Goblin Linemen)",
+        "skills": "Animosidad (Underworld Goblins Linemen)",
         "primary": "GM",
         "secondary": "AS"
       },
       {
         "qty": "0-1",
-        "position": "Skaven Thrower",
+        "position": "Skaven Lanzador",
         "cost": 85000,
         "stats": {
           "MV": 7,
@@ -2250,13 +2250,13 @@ export const teamsData: Team[] = [
           "PS": "2+",
           "AR": "8+"
         },
-        "skills": "Animosity (Underworld Goblin Linemen), Pass, Sure Hands",
+        "skills": "Animosidad (Underworld Goblins Linemen), Pasar, Manos Seguras",
         "primary": "GMP",
         "secondary": "AS"
       },
       {
         "qty": "0-1",
-        "position": "Skaven Blitzer",
+        "position": "Skaven Placador",
         "cost": 90000,
         "stats": {
           "MV": 7,
@@ -2265,13 +2265,13 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "9+"
         },
-        "skills": "Animosity (Underworld Goblin Linemen), Block",
+        "skills": "Animosidad (Underworld Goblins Linemen), Placaje",
         "primary": "GMS",
         "secondary": "AP"
       },
       {
         "qty": "0-1",
-        "position": "Gutter Runner",
+        "position": "Gutter Corredor",
         "cost": 85000,
         "stats": {
           "MV": 9,
@@ -2280,13 +2280,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Animosity (Underworld Goblin Linemen), Dodge",
+        "skills": "Animosidad (Underworld Goblins Linemen), Esquivar",
         "primary": "AGM",
         "secondary": "PS"
       },
       {
         "qty": "0-1",
-        "position": "Mutant Rat Ogre",
+        "position": "Mutant Rat Ogros",
         "cost": 150000,
         "stats": {
           "MV": 6,
@@ -2295,13 +2295,13 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skills": "Animal Savagery, Frenzy, Loner (4+), Mighty Blow (+1), Prehensile Tail",
+        "skills": "Animal Savagery, Furia, Solitario (4+), Golpe Mortífero (+1), Prehensile Tail",
         "primary": "MS",
         "secondary": "AG"
       },
       {
         "qty": "0-6",
-        "position": "Underworld Snotling",
+        "position": "Underworld Snotlings",
         "cost": 15000,
         "stats": {
           "MV": 5,
@@ -2310,15 +2310,15 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "6+"
         },
-        "skills": "Dodge, Right Stuff, Sidestep, Stunty, Swarming, Titchy",
+        "skills": "Esquivar, Buena Gente, Echarse a un lado, Canijo, Swarming, Diminuto",
         "primary": "AM",
         "secondary": "G"
       }
     ]
   },
   {
-    "name": "Equipos Vampires",
-    "specialRules": "Sylvanian Spotlight, Team Management, Vampire Lord",
+    "name": "Vampires",
+    "specialRules": "Sylvanian Spotlight, Team Management, Vampiros Lord",
     "rerollCost": 50000,
     "tier": 1,
     "apothecary": "Sí",
@@ -2333,7 +2333,7 @@ export const teamsData: Team[] = [
     "roster": [
       {
         "qty": "0-16",
-        "position": "Thrall Lineman",
+        "position": "Thrall Línea",
         "cost": 40000,
         "stats": {
           "MV": 6,
@@ -2342,13 +2342,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "<characteristic name=\"Primary\" typeId=\"fda4-6261-f0d2-ba0d\">G",
+        "skills": "G",
         "primary": "",
         "secondary": "AS"
       },
       {
         "qty": "0-2",
-        "position": "Vampire Blitzer",
+        "position": "Vampiros Placador",
         "cost": 110000,
         "stats": {
           "MV": 6,
@@ -2357,13 +2357,13 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "9+"
         },
-        "skills": "Bloodlust (3+), Hypnotic Gaze, Juggernaut, Regeneration",
+        "skills": "Bloodlust (3+), Hypnotic Gaze, Juggernaut, Regeneración",
         "primary": "AGS",
-        "secondary": "<characteristic name=\"Cost\" typeId=\"ee01-7448-8c3f-a882\">110000"
+        "secondary": "110000"
       },
       {
         "qty": "0-2",
-        "position": "Vampire Runner",
+        "position": "Vampiros Corredor",
         "cost": 100000,
         "stats": {
           "MV": 8,
@@ -2372,13 +2372,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Bloodlust (2+), Hypnotic Gaze, Regeneration",
+        "skills": "Bloodlust (2+), Hypnotic Gaze, Regeneración",
         "primary": "AG",
         "secondary": "PS"
       },
       {
         "qty": "0-2",
-        "position": "Vampire Thrower",
+        "position": "Vampiros Lanzador",
         "cost": 110000,
         "stats": {
           "MV": 6,
@@ -2387,7 +2387,7 @@ export const teamsData: Team[] = [
           "PS": "2+",
           "AR": "9+"
         },
-        "skills": "Bloodlust (2+), Hypnotic Gaze, Pass,  Regeneration",
+        "skills": "Bloodlust (2+), Hypnotic Gaze, Pasar,  Regeneración",
         "primary": "AGP",
         "secondary": "S"
       },
@@ -2402,14 +2402,14 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "10+"
         },
-        "skills": "Bloodlust (3+), Claws, Frenzy, Loner (4+), Regeneration",
+        "skills": "Bloodlust (3+), Claws, Furia, Solitario (4+), Regeneración",
         "primary": "S",
         "secondary": "AG"
       }
     ]
   },
   {
-    "name": "Equipos Wood Elves",
+    "name": "Wood Elves",
     "specialRules": "Elven Kingdoms League, Team Management",
     "rerollCost": 50000,
     "tier": 2,
@@ -2425,7 +2425,7 @@ export const teamsData: Team[] = [
     "roster": [
       {
         "qty": "0-4",
-        "position": "Catcher",
+        "position": "Receptor",
         "cost": 90000,
         "stats": {
           "MV": 8,
@@ -2434,13 +2434,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Catch, Dodge",
+        "skills": "Atrapar, Esquivar",
         "primary": "AG",
         "secondary": "PS"
       },
       {
         "qty": "0-12",
-        "position": "Wood Elf Lineman",
+        "position": "Elfos Silvanos Línea",
         "cost": 70000,
         "stats": {
           "MV": 7,
@@ -2449,13 +2449,13 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "<characteristic name=\"Primary\" typeId=\"fda4-6261-f0d2-ba0d\">AG",
+        "skills": "AG",
         "primary": "",
         "secondary": "S"
       },
       {
         "qty": "0-2",
-        "position": "Thrower",
+        "position": "Lanzador",
         "cost": 95000,
         "stats": {
           "MV": 7,
@@ -2464,7 +2464,7 @@ export const teamsData: Team[] = [
           "PS": "2+",
           "AR": "8+"
         },
-        "skills": "Pass",
+        "skills": "Pasar",
         "primary": "AGP",
         "secondary": "S"
       },
@@ -2479,7 +2479,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Block, Dodge, Leap",
+        "skills": "Placaje, Esquivar, Salto",
         "primary": "AG",
         "secondary": "PS"
       },
@@ -2494,7 +2494,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "11+"
         },
-        "skills": "Loner (4+), Mighty Blow (+1), Stand Firm, Strong Arm, Take Root, Thick Skull, Throw Team-mate",
+        "skills": "Solitario (4+), Golpe Mortífero (+1), Mantenerse Firme, Brazo Fuerte, Take Root, Cabeza Dura, Throw Team-mate",
         "primary": "S",
         "secondary": "AG"
       }
