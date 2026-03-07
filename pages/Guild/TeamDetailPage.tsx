@@ -10,7 +10,7 @@ import ShieldCheckIcon from '../../components/icons/ShieldCheckIcon';
 import ImageModal from '../../components/common/ImageModal';
 import UploadIcon from '../../components/icons/UploadIcon';
 import MedicalCrossIcon from '../../components/icons/MedicalCrossIcon';
-import MiniField from '../../components/guild/MiniField';
+import MiniField from '../../components/common/MiniField';
 import { PlayerAdvancementModal } from '../../components/guild/PlayerAdvancementModal';
 
 
