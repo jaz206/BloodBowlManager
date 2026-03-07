@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import type { Skill } from '../types';
+import type { Skill } from '../../types';
 
 interface SkillSelectorModalProps {
     allSkills: Skill[];

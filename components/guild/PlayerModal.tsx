@@ -1,8 +1,8 @@
 
 
 import React, { useState, useEffect } from 'react';
-import type { ManagedPlayer, Skill } from '../types';
-import SkillSelectorModal from './SkillSelectorModal';
+import type { ManagedPlayer, Skill } from '../../types';
+import SkillSelectorModal from '../oracle/SkillSelectorModal';
 
 interface PlayerModalProps {
     player: ManagedPlayer;

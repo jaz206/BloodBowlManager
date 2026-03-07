@@ -34,8 +34,8 @@ export interface Skill {
 export interface StarPlayer {
   name: string;
   cost: number;
-  stats: PlayerStats;
-  skills: string;
+  stats?: PlayerStats; // Made optional
+  skills?: string; // Made optional
   specialRules: string;
   playsFor: string[];
   image?: string;
@@ -114,35 +114,69 @@ export interface Play {
   tokens: BoardToken[];
 }
 
-export interface League {
-  id: string;
+export interface CompetitionTeam {
+  teamName: string;
   ownerId: string;
-  name: string;
-  description?: string;
-  participants: { teamId: string; ownerName: string; teamName: string; }[];
-  status: 'Abierta' | 'En Progreso' | 'Finalizada';
-  createdAt: any;
+  ownerName: string;
 }
 
+export interface Matchup {
+  team1: string;
+  team2: string;
+  score1?: number;
+  score2?: number;
+  winner?: string;
+  played?: boolean;
+}
+
+export interface Competition {
+  id: string;
+  name: string;
+  ownerId: string;
+  ownerName?: string;
+  format: 'Liguilla' | 'Torneo';
+  status: 'Open' | 'In Progress' | 'Finished';
+  teams: CompetitionTeam[];
+  schedule?: Record<string, Matchup[]> | null;
+  bracket?: Record<string, Matchup[]> | null;
+  createdAt?: any;
+}
+
+export type League = Competition;
+
 export type GameEventType =
-  | 'TOUCHDOWN'
-  | 'INJURY'
-  | 'FOUL'
-  | 'INTERCEPTION'
-  | 'PICKUP'
-  | 'PASS'
-  | 'EXPULSION'
-  | 'TURNOVER'
-  | 'WEATHER'
-  | 'KICKOFF'
-  | 'INFO'
-  | 'OTHER';
+  // Match & Turn
+  | 'match_start' | 'match_end' | 'turn_start' | 'turn_end'
+  | 'TOUCHDOWN' | 'INJURY' | 'FOUL' | 'INTERCEPTION' | 'PICKUP' | 'PASS' | 'EXPULSION'
+  // Movement
+  | 'move' | 'rush' | 'rush_fail' | 'dodge' | 'dodge_fail' | 'pickup_ball' | 'pickup_fail'
+  // Block
+  | 'block' | 'push' | 'knockdown' | 'both_down' | 'attacker_down'
+  // Armor & Injury
+  | 'armor_break' | 'armor_hold' | 'injury_stunned' | 'injury_ko' | 'injury_casualty'
+  // Ball
+  | 'pass_attempt' | 'pass_complete' | 'pass_failed' | 'interception' | 'handoff' | 'ball_scatter' | 'ball_drop'
+  // Scoring
+  | 'touchdown' | 'extra_point'
+  // Fouls
+  | 'foul_attempt' | 'foul_success' | 'foul_fail' | 'player_sent_off'
+  // Players
+  | 'star_player_hired' | 'star_player_action' | 'mvp_awarded'
+  // Resources
+  | 'reroll_used' | 'apothecary_used' | 'bribe_used'
+  // Info & Other
+  | 'WEATHER' | 'KICKOFF' | 'TURNOVER' | 'INFO' | 'OTHER';
 
 export interface GameEvent {
   id: number;
+  matchId?: string;
+  team?: string;
+  player?: string | number;
   turn: number;
   half: 1 | 2;
   type: GameEventType;
+  result?: 'success' | 'fail' | string;
+  target?: string | number;
   description: string;
   timestamp: string;
 }
@@ -156,25 +190,45 @@ export interface Inducement {
 }
 
 export interface WeatherCondition {
-  roll: string; // Corrected field name
+  diceRoll: string;
   title: string;
   description: string;
 }
 
 export interface KickoffEvent {
-  roll: string; // Corrected field name
+  diceRoll: string;
   title: string;
   description: string;
 }
 
-export type SppActionType = 'TD' | 'CAS' | 'COMP' | 'INT' | 'MVP' | 'INTERFERENCE';
+export type SppActionType = 'TD' | 'CASUALTY' | 'PASS' | 'INT' | 'MVP' | 'INTERFERENCE';
 
 // Board / Tactical
+export interface InjuryEvent {
+  diceRoll: string;
+  title: string;
+  description: string;
+}
+
+export interface CasualtyEvent {
+  diceRoll: string;
+  title: string;
+  description: string;
+}
+
+export interface LastingInjuryEvent {
+  diceRoll: string;
+  permanentInjury: string;
+  characteristicReduction: string;
+}
+
 export interface BoardToken {
   id: number;
   x: number;
   y: number;
   playerRef?: string;
   teamSide: 'home' | 'away';
+  teamId?: string;
+  playerData?: ManagedPlayer;
   isDown?: boolean;
 }

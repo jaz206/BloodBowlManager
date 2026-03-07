@@ -1,6 +1,6 @@
 import React from 'react';
 import RadarChart from './RadarChart';
-import type { Team } from '../types';
+import type { Team } from '../../types';
 
 interface RadarChartModalProps {
   team: Team;

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import Teams from './Teams';
-import Skills from './Skills';
-import StarPlayers from './StarPlayers';
-import ProbabilityCalculator from './ProbabilityCalculator';
-import InducementTable from './InducementTable';
+// Sub-páginas del Oráculo
+import Teams from './TeamsPage';
+import Skills from './SkillsPage';
+import StarPlayers from './StarPlayersPage';
+import ProbabilityCalculator from './ProbabilitiesPage';
+import InducementTable from './InducementsPage';
 
 type SubView = 'teams' | 'skills' | 'star_players' | 'calculator' | 'inducements';
 

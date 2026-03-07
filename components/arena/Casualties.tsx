@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { casualtyResults } from '../data/casualties';
-import { lastingInjuryResults } from '../data/lastingInjuries';
-import type { CasualtyEvent, LastingInjuryEvent } from '../types';
+import { casualtyResults } from '../../data/casualties';
+import { lastingInjuryResults } from '../../data/lastingInjuries';
+import type { CasualtyEvent, LastingInjuryEvent } from '../../types';
 
 const Casualties: React.FC = () => {
   const [currentCasualty, setCurrentCasualty] = useState<CasualtyEvent | null>(null);
@@ -21,22 +21,22 @@ const Casualties: React.FC = () => {
     } else if (roll <= 12) {
       result = casualtyResults.find(e => e.diceRoll === '11-12');
     } else if (roll <= 14) {
-        result = casualtyResults.find(e => e.diceRoll === '13-14');
+      result = casualtyResults.find(e => e.diceRoll === '13-14');
     } else {
       result = casualtyResults.find(e => e.diceRoll === '15-16');
     }
     setCurrentCasualty(result || null);
   };
-  
+
   const generateLastingInjury = () => {
     const roll = Math.floor(Math.random() * 6) + 1;
     setLastD6Roll(roll);
-    
+
     let result: LastingInjuryEvent | undefined;
     if (roll <= 2) {
-        result = lastingInjuryResults.find(e => e.diceRoll === '1-2');
+      result = lastingInjuryResults.find(e => e.diceRoll === '1-2');
     } else {
-        result = lastingInjuryResults.find(e => e.diceRoll === roll.toString());
+      result = lastingInjuryResults.find(e => e.diceRoll === roll.toString());
     }
     setCurrentLastingInjury(result || null);
   };

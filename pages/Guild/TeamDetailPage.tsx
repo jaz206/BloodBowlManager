@@ -1,17 +1,17 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import type { ManagedTeam, ManagedPlayer, Player, Skill } from '../types';
-import { teamsData } from '../data/teams';
-import { skillsData } from '../data/skills';
-import PlayerModal from './PlayerModal';
-import QrCodeIcon from './icons/QrCodeIcon';
-import SkillModal from './SkillModal';
-import { generateRandomName } from '../data/randomNames';
-import ShieldCheckIcon from './icons/ShieldCheckIcon';
-import ImageModal from './ImageModal';
-import UploadIcon from './icons/UploadIcon';
-import MedicalCrossIcon from './icons/MedicalCrossIcon';
-import MiniField from './MiniField';
-import { PlayerAdvancementModal } from './PlayerAdvancementModal';
+import type { ManagedTeam, ManagedPlayer, Player, Skill } from '../../types';
+import { teamsData } from '../../data/teams';
+import { skillsData } from '../../data/skills';
+import PlayerModal from '../../components/guild/PlayerModal';
+import QrCodeIcon from '../../components/icons/QrCodeIcon';
+import SkillModal from '../../components/oracle/SkillModal';
+import { generateRandomName } from '../../data/randomNames';
+import ShieldCheckIcon from '../../components/icons/ShieldCheckIcon';
+import ImageModal from '../../components/common/ImageModal';
+import UploadIcon from '../../components/icons/UploadIcon';
+import MedicalCrossIcon from '../../components/icons/MedicalCrossIcon';
+import MiniField from '../../components/guild/MiniField';
+import { PlayerAdvancementModal } from '../../components/guild/PlayerAdvancementModal';
 
 
 declare const QRCode: any;
@@ -367,6 +367,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
             spp: 0,
             gainedSkills: [],
             lastingInjuries: [],
+            status: 'Activo',
             isBenched: true, // New players start on the bench
             missNextGame: 0,
         };

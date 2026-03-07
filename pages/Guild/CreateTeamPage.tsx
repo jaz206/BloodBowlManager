@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ManagedTeam, Team } from '../types';
-import { useMasterData } from '../hooks/useMasterData';
-import SparklesIcon from './icons/SparklesIcon';
-import { generateRandomName as generateRandomNameLocally } from '../data/randomNames';
-import UploadIcon from './icons/UploadIcon';
-import ShieldCheckIcon from './icons/ShieldCheckIcon';
-import RadarChart from './RadarChart';
-import RadarChartModal from './RadarChartModal';
+import { ManagedTeam, Team } from '../../types';
+import { useMasterData } from '../../hooks/useMasterData';
+import SparklesIcon from '../../components/icons/SparklesIcon';
+import { generateRandomName as generateRandomNameLocally } from '../../data/randomNames';
+import UploadIcon from '../../components/icons/UploadIcon';
+import ShieldCheckIcon from '../../components/icons/ShieldCheckIcon';
+import RadarChart from '../../components/oracle/RadarChart';
+import RadarChartModal from '../../components/oracle/RadarChartModal';
 
 interface TeamCreatorProps {
     onTeamCreate: (team: Omit<ManagedTeam, 'id'>) => void;

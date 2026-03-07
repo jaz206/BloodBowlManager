@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { kickoffEvents } from '../data/kickoffEvents';
-import type { KickoffEvent } from '../types';
+import { kickoffEvents } from '../../data/kickoffEvents';
+import type { KickoffEvent } from '../../types';
 
 const KickoffEvents: React.FC = () => {
   const [currentEvent, setCurrentEvent] = useState<KickoffEvent | null>(null);
@@ -12,7 +12,7 @@ const KickoffEvents: React.FC = () => {
     const die2 = Math.floor(Math.random() * 6) + 1;
     const roll = die1 + die2;
     setLastRoll(roll);
-    
+
     // Find the event corresponding to the roll
     const event = kickoffEvents.find(e => parseInt(e.diceRoll, 10) === roll);
     setCurrentEvent(event || null);

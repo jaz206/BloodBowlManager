@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from 'react';
-import { GameEvent } from '../types';
-import BookOpenIcon from './icons/BookOpenIcon';
-import FireIcon from './icons/FireIcon';
-import TdIcon from './icons/TdIcon';
-import CasualtyIcon from './icons/CasualtyIcon';
+import { GameEvent } from '../../types';
+import BookOpenIcon from '../icons/BookOpenIcon';
+import FireIcon from '../icons/FireIcon';
+import TdIcon from '../icons/TdIcon';
+import CasualtyIcon from '../icons/CasualtyIcon';
 
 interface MatchNarratorProps {
     events: GameEvent[];
@@ -16,7 +16,12 @@ const MatchNarrator: React.FC<MatchNarratorProps> = ({ events, homeTeamName, awa
     const [chronicle, setChronicle] = useState<string | null>(null);
 
     const epicEvents = useMemo(() => {
-        return events.filter(e => ['TOUCHDOWN', 'INJURY', 'TURNOVER', 'FOUL'].includes(e.type));
+        return events.filter(e => [
+            'touchdown', 'TOUCHDOWN',
+            'injury', 'INJURY', 'injury_casualty', 'injury_ko',
+            'turnover', 'TURNOVER',
+            'foul', 'FOUL', 'foul_success'
+        ].includes(e.type));
     }, [events]);
 
     const generateChronicle = () => {
@@ -37,10 +42,11 @@ const MatchNarrator: React.FC<MatchNarratorProps> = ({ events, homeTeamName, awa
             const highlights = epicEvents.slice(0, 5); // Take top 5 highlights
 
             highlights.forEach(e => {
-                if (e.type === 'TOUCHDOWN') body += `\n- El estadio rugió cuando ${e.description}. ¡Una jugada bendecida por el mismísimo Nuffle!`;
-                if (e.type === 'INJURY') body += `\n- Crujido de huesos y gritos de agonía: ${e.description}. La medicina será cara esta noche.`;
-                if (e.type === 'TURNOVER') body += `\n- ¡El caos se desató! ${e.description}. Un error que costó caro en el momento más crítico.`;
-                if (e.type === 'FOUL') body += `\n- ¡Juego sucio! El árbitro miró a otro lado mientras ${e.description}.`;
+                const type = e.type.toLowerCase();
+                if (type === 'touchdown') body += `\n- El estadio rugió cuando ${e.description}. ¡Una jugada bendecida por el mismísimo Nuffle!`;
+                else if (type.includes('injury')) body += `\n- Crujido de huesos y gritos de agonía: ${e.description}. La medicina será cara esta noche.`;
+                else if (type === 'turnover') body += `\n- ¡El caos se desató! ${e.description}. Un error que costó caro en el momento más crítico.`;
+                else if (type.includes('foul')) body += `\n- ¡Juego sucio! El árbitro miró a otro lado mientras ${e.description}.`;
             });
 
             const fullText = `${intros[Math.floor(Math.random() * intros.length)]}\n\n${body}\n\n${outro}`;
@@ -60,8 +66,8 @@ const MatchNarrator: React.FC<MatchNarratorProps> = ({ events, homeTeamName, awa
                     onClick={generateChronicle}
                     disabled={isGenerating || events.length === 0}
                     className={`px-4 py-2 rounded-lg font-display font-black text-[10px] uppercase tracking-widest transition-all ${isGenerating
-                            ? 'bg-slate-800 text-slate-500 cursor-wait'
-                            : 'bg-premium-gold text-black hover:scale-105 active:scale-95 shadow-lg shadow-premium-gold/20'
+                        ? 'bg-slate-800 text-slate-500 cursor-wait'
+                        : 'bg-premium-gold text-black hover:scale-105 active:scale-95 shadow-lg shadow-premium-gold/20'
                         }`}
                 >
                     {isGenerating ? 'Consultando a Nuffle...' : 'Generar Crónica'}
@@ -98,10 +104,10 @@ const MatchNarrator: React.FC<MatchNarratorProps> = ({ events, homeTeamName, awa
                     {epicEvents.slice(0, 10).map(e => (
                         <div key={e.id} className="flex gap-4 p-4 bg-white/5 rounded-xl border border-white/5 hover:border-white/10 transition-colors group">
                             <div className="flex-shrink-0 mt-1">
-                                {e.type === 'TOUCHDOWN' && <TdIcon className="w-5 h-5 text-green-400" />}
-                                {e.type === 'INJURY' && <CasualtyIcon className="w-5 h-5 text-blood-red" />}
-                                {e.type === 'TURNOVER' && <FireIcon className="w-5 h-5 text-amber-500" />}
-                                {e.type === 'FOUL' && <div className="w-5 h-5 bg-red-600 rounded blur-sm opacity-50 group-hover:opacity-100 transition-opacity" />}
+                                {e.type.toLowerCase() === 'touchdown' && <TdIcon className="w-5 h-5 text-green-400" />}
+                                {e.type.toLowerCase().includes('injury') && <CasualtyIcon className="w-5 h-5 text-blood-red" />}
+                                {e.type.toLowerCase() === 'turnover' && <FireIcon className="w-5 h-5 text-amber-500" />}
+                                {e.type.toLowerCase().includes('foul') && <div className="w-5 h-5 bg-red-600 rounded blur-sm opacity-50 group-hover:opacity-100 transition-opacity" />}
                             </div>
                             <div>
                                 <p className="text-[10px] font-display font-black text-slate-500 uppercase tracking-[0.2em] mb-1">

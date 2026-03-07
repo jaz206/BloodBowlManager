@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { injuryResults } from '../data/injuries';
-import { stuntyInjuryResults } from '../data/stuntyInjuries';
-import type { InjuryEvent } from '../types';
+import { injuryResults } from '../../data/injuries';
+import { stuntyInjuryResults } from '../../data/stuntyInjuries';
+import type { InjuryEvent } from '../../types';
 
 const Injuries: React.FC = () => {
   const [currentInjury, setCurrentInjury] = useState<InjuryEvent | null>(null);
@@ -39,7 +39,7 @@ const Injuries: React.FC = () => {
     } else if (roll >= 7 && roll <= 8) {
       result = stuntyInjuryResults.find(e => e.diceRoll === '7-8');
     } else if (roll === 9) {
-        result = stuntyInjuryResults.find(e => e.diceRoll === '9');
+      result = stuntyInjuryResults.find(e => e.diceRoll === '9');
     } else {
       result = stuntyInjuryResults.find(e => e.diceRoll === '10-12');
     }

@@ -1,23 +1,28 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import Home from './Home';
-import QuickGuide from './QuickGuide';
-import TeamsAndSkills from './TeamsAndSkills';
-import StarPlayers from './StarPlayers';
-import Plays from './Plays';
-import TeamManager from './TeamManager';
-import GameBoard from './GameBoard';
+// ── Pages ─────────────────────────────────────────────────────────────────────
+import Home from '../../pages/Home/index';
+import OraclePage from '../../pages/Oracle/index';
+import GuildPage from '../../pages/Guild/index';
+import TacticalBoardPage from '../../pages/Guild/TacticalBoardPage';
+import MatchPage from '../../pages/Arena/MatchPage';
+// ── Components / Common ───────────────────────────────────────────────────────
+import UserProfile from '../common/UserProfile';
+import SyncStatusIndicator from '../common/SyncStatusIndicator';
+// ── Components / Oracle ───────────────────────────────────────────────────────
+import QuickGuide from '../oracle/QuickGuide';
+// ── Components / Shared ───────────────────────────────────────────────────────
 import AdminPanel from './AdminPanel';
-import BookOpenIcon from './icons/BookOpenIcon';
-import UsersIcon from './icons/UsersIcon';
-import ClipboardListIcon from './icons/ClipboardListIcon';
-import TrophyIcon from './icons/TrophyIcon';
-import HomeIcon from './icons/HomeIcon';
-import type { ManagedTeam, League, Play, GameEvent } from '../types';
-import { useAuth } from '../hooks/useAuth';
-import UserProfile from './UserProfile';
-import { db } from '../firebaseConfig';
+// ── Icons ─────────────────────────────────────────────────────────────────────
+import BookOpenIcon from '../icons/BookOpenIcon';
+import UsersIcon from '../icons/UsersIcon';
+import ClipboardListIcon from '../icons/ClipboardListIcon';
+import TrophyIcon from '../icons/TrophyIcon';
+import HomeIcon from '../icons/HomeIcon';
+// ── Types & Firebase ──────────────────────────────────────────────────────────
+import type { ManagedTeam, League, Play, GameEvent } from '../../types';
+import { useAuth } from '../../hooks/useAuth';
+import { db } from '../../firebaseConfig';
 import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, query, limit, orderBy } from "firebase/firestore";
-import SyncStatusIndicator from './SyncStatusIndicator';
 
 type View = 'home' | 'oracle' | 'starplayers' | 'guild' | 'tactical' | 'arena' | 'leagues' | 'guide' | 'admin';
 type SyncStatus = 'synced' | 'syncing' | 'error';
@@ -128,6 +133,50 @@ const MainApp: React.FC = () => {
     }
   };
 
+  const handlePlaySave = async (play: Play) => {
+    if (!user || !db) return;
+    setSyncState('syncing');
+    if (isGuest) {
+      if (play.id) {
+        setPlays(prev => prev.map(p => p.id === play.id ? play : p));
+      } else {
+        setPlays(prev => [...prev, { ...play, id: `temp_${Date.now()}` }]);
+      }
+      setSyncState('synced');
+      return;
+    }
+    try {
+      if (play.id) {
+        const playRef = doc(db, 'users', user.id, 'plays', play.id);
+        const { id, ...data } = play;
+        await updateDoc(playRef, data);
+      } else {
+        await addDoc(collection(db, 'users', user.id, 'plays'), play);
+      }
+      setSyncState('synced');
+    } catch (error) {
+      console.error("Error saving play:", error);
+      setSyncState('error');
+    }
+  };
+
+  const handlePlayDelete = async (playId: string) => {
+    if (!user || !db) return;
+    setSyncState('syncing');
+    if (isGuest) {
+      setPlays(prev => prev.filter(p => p.id !== playId));
+      setSyncState('synced');
+      return;
+    }
+    try {
+      await deleteDoc(doc(db, 'users', user.id, 'plays', playId));
+      setSyncState('synced');
+    } catch (error) {
+      console.error("Error deleting play:", error);
+      setSyncState('error');
+    }
+  };
+
   const NavButton: React.FC<{
     view: View;
     label: string;
@@ -172,8 +221,8 @@ const MainApp: React.FC = () => {
             <button
               onClick={() => setActiveView('admin')}
               className={`hidden md:block px-3 py-1 rounded border text-[10px] font-display font-black uppercase tracking-widest transition-all ${activeView === 'admin'
-                  ? 'bg-premium-gold text-black border-premium-gold'
-                  : 'border-white/20 text-slate-500 hover:border-premium-gold hover:text-premium-gold'
+                ? 'bg-premium-gold text-black border-premium-gold'
+                : 'border-white/20 text-slate-500 hover:border-premium-gold hover:text-premium-gold'
                 }`}
             >
               ADMIN
@@ -211,10 +260,9 @@ const MainApp: React.FC = () => {
           ) : (
             <div className="animate-in fade-in zoom-in-95 duration-500">
               {activeView === 'home' && <Home onNavigate={(v) => setActiveView(v)} managedTeams={managedTeams} competitions={leagues as any} recentEvents={recentEvents} />}
-              {activeView === 'oracle' && <TeamsAndSkills onRequestTeamCreation={(r) => { setRequestedRoster(r); setActiveView('guild'); }} />}
-              {activeView === 'starplayers' && <StarPlayers />}
+              {activeView === 'oracle' && <OraclePage onRequestTeamCreation={(r) => { setRequestedRoster(r); setActiveView('guild'); }} />}
               {activeView === 'guild' && (
-                <TeamManager
+                <GuildPage
                   teams={managedTeams}
                   onTeamCreate={handleTeamCreate}
                   onTeamUpdate={handleTeamUpdate}
@@ -224,10 +272,11 @@ const MainApp: React.FC = () => {
                   isGuest={isGuest}
                 />
               )}
-              {activeView === 'tactical' && <Plays managedTeams={managedTeams} plays={plays} onSavePlay={async () => { }} onDeletePlay={async () => { }} />}
-              {activeView === 'arena' && <GameBoard managedTeams={managedTeams} onTeamUpdate={handleTeamUpdate} />}
+              {activeView === 'tactical' && <TacticalBoardPage managedTeams={managedTeams} plays={plays} onSavePlay={handlePlaySave} onDeletePlay={handlePlayDelete} />}
+              {activeView === 'arena' && <MatchPage managedTeams={managedTeams} onTeamUpdate={handleTeamUpdate} />}
               {activeView === 'admin' && <AdminPanel />}
-              {activeView === 'guide' && <QuickGuide />}
+              {activeView === 'guide' && <QuickGuide />
+              }
             </div>
           )}
         </div>

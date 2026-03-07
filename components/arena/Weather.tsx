@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { weatherConditions } from '../data/weather';
-import type { WeatherCondition } from '../types';
+import { weatherConditions } from '../../data/weather';
+import type { WeatherCondition } from '../../types';
 
 const Weather: React.FC = () => {
   const [currentWeather, setCurrentWeather] = useState<WeatherCondition | null>(null);
@@ -15,15 +15,15 @@ const Weather: React.FC = () => {
 
     let result: WeatherCondition | undefined;
     if (roll === 2) {
-      result = weatherConditions.find(e => e.roll === '2');
+      result = weatherConditions.find(e => e.diceRoll === '2');
     } else if (roll === 3) {
-      result = weatherConditions.find(e => e.roll === '3');
+      result = weatherConditions.find(e => e.diceRoll === '3');
     } else if (roll >= 4 && roll <= 10) {
-      result = weatherConditions.find(e => e.roll === '4-10');
+      result = weatherConditions.find(e => e.diceRoll === '4-10');
     } else if (roll === 11) {
-      result = weatherConditions.find(e => e.roll === '11');
+      result = weatherConditions.find(e => e.diceRoll === '11');
     } else { // roll === 12
-      result = weatherConditions.find(e => e.roll === '12');
+      result = weatherConditions.find(e => e.diceRoll === '12');
     }
 
     setCurrentWeather(result || null);

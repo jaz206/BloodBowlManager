@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import type { Skill } from '../types';
-import { useMasterData } from '../hooks/useMasterData';
+import type { Skill } from '../../types';
+import { useMasterData } from '../../hooks/useMasterData';
 
 const SkillCard: React.FC<{ skill: Skill }> = ({ skill }) => {
     const categoryColor: Record<string, string> = {

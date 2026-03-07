@@ -1,36 +1,36 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import type { ManagedTeam, GameEvent, GameEventType, ManagedPlayer, WeatherCondition, KickoffEvent, PlayerStatus, StarPlayer, SppActionType, Team, Skill } from '../types';
-import { weatherConditions } from '../data/weather';
-import { kickoffEvents } from '../data/kickoffEvents';
-import { teamsData } from '../data/teams';
-import { starPlayersData } from '../data/starPlayers';
-import { casualtyResults } from '../data/casualties';
-import { lastingInjuryResults } from '../data/lastingInjuries';
-import { generateRandomName } from '../data/randomNames';
-import SunIcon from './icons/SunIcon';
-import CloudRainIcon from './icons/CloudRainIcon';
-import SnowflakeIcon from './icons/SnowflakeIcon';
-import FireIcon from './icons/FireIcon';
-import CloudIcon from './icons/CloudIcon';
-import PlayerStatusCard from './PlayerStatusCard';
-import PostGameWizard from './PostGameWizard';
-import DownloadIcon from './icons/DownloadIcon';
-import StarPlayerModal from './StarPlayerModal';
-import QuestionMarkCircleIcon from './icons/QuestionMarkCircleIcon';
-import TdIcon from './icons/TdIcon';
-import PassIcon from './icons/PassIcon';
-import CasualtyIcon from './icons/CasualtyIcon';
-import InterferenceIcon from './icons/InterferenceIcon';
-import PrayersModal from './PrayersModal';
-import TurnoverModal from './TurnoverModal';
-import PlayerCardModal from './PlayerCardModal';
-import { skillsData } from '../data/skills';
-import SkillModal from './SkillModal';
-import ApothecaryModal from './ApothecaryModal';
-import ChevronDownIcon from './icons/ChevronDownIcon';
-import ShieldCheckIcon from './icons/ShieldCheckIcon';
-import MiniField from './MiniField';
-import MatchNarrator from './MatchNarrator';
+import type { ManagedTeam, GameEvent, GameEventType, ManagedPlayer, WeatherCondition, KickoffEvent, PlayerStatus, StarPlayer, SppActionType, Team, Skill } from '../../types';
+import { weatherConditions } from '../../data/weather';
+import { kickoffEvents } from '../../data/kickoffEvents';
+import { teamsData } from '../../data/teams';
+import { starPlayersData } from '../../data/starPlayers';
+import { casualtyResults } from '../../data/casualties';
+import { lastingInjuryResults } from '../../data/lastingInjuries';
+import { generateRandomName } from '../../data/randomNames';
+import SunIcon from '../../components/icons/SunIcon';
+import CloudRainIcon from '../../components/icons/CloudRainIcon';
+import SnowflakeIcon from '../../components/icons/SnowflakeIcon';
+import FireIcon from '../../components/icons/FireIcon';
+import CloudIcon from '../../components/icons/CloudIcon';
+import PlayerStatusCard from '../../components/arena/PlayerStatusCard';
+import PostGameWizard from '../../components/arena/PostGameWizard';
+import DownloadIcon from '../../components/icons/DownloadIcon';
+import StarPlayerModal from '../../components/oracle/StarPlayerModal';
+import QuestionMarkCircleIcon from '../../components/icons/QuestionMarkCircleIcon';
+import TdIcon from '../../components/icons/TdIcon';
+import PassIcon from '../../components/icons/PassIcon';
+import CasualtyIcon from '../../components/icons/CasualtyIcon';
+import InterferenceIcon from '../../components/icons/InterferenceIcon';
+import PrayersModal from '../../components/arena/PrayersModal';
+import TurnoverModal from '../../components/arena/TurnoverModal';
+import PlayerCardModal from '../../components/arena/PlayerCardModal';
+import { skillsData } from '../../data/skills';
+import SkillModal from '../../components/oracle/SkillModal';
+import ApothecaryModal from '../../components/arena/ApothecaryModal';
+import ChevronDownIcon from '../../components/icons/ChevronDownIcon';
+import ShieldCheckIcon from '../../components/icons/ShieldCheckIcon';
+import MiniField from '../../components/common/MiniField';
+import MatchNarrator from '../../components/arena/MatchNarrator';
 
 
 declare const Html5Qrcode: any;
@@ -492,7 +492,17 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
         }
     }, [gameState, preGameStep, homeTV, opponentTV, liveHomeTeam, liveOpponentTeam]);
 
-    const logEvent = (type: GameEventType, description: string) => { setGameLog(prev => [{ id: Date.now(), timestamp: new Date().toLocaleTimeString('es-ES'), turn, half, type, description }, ...prev]); };
+    const logEvent = (type: GameEventType, description: string, extra?: Partial<Pick<GameEvent, 'team' | 'player' | 'result' | 'target'>>) => {
+        setGameLog(prev => [{
+            id: Date.now(),
+            timestamp: new Date().toLocaleTimeString('es-ES'),
+            turn,
+            half,
+            type,
+            description,
+            ...extra
+        }, ...prev]);
+    };
     const handleHalftime = () => { setTurn(0); setHalf(2); logEvent('INFO', 'Fin de la primera parte. Comienza la segunda parte.'); setGameStatus(prev => ({ ...prev, kickoffEvent: null })); if (firstHalfReceiver) { const secondHalfReceiver = firstHalfReceiver === 'home' ? 'opponent' : 'home'; setGameStatus(prev => ({ ...prev, receivingTeam: secondHalfReceiver })); logEvent('INFO', `Recibe en la segunda parte ${secondHalfReceiver === 'home' ? homeTeam?.name : opponentTeam?.name}.`); setGameState('pre_game'); setPreGameStep(7); } else { setGameState('pre_game'); setPreGameStep(6); } };
     const handleConfirmJourneymen = () => { if (pendingJourneymen.home.length > 0 && liveHomeTeam) { setLiveHomeTeam(prev => prev ? ({ ...prev, players: [...prev.players, ...pendingJourneymen.home] }) : null); logEvent('INFO', `${liveHomeTeam.name} añade ${pendingJourneymen.home.length} Sustituto(s).`); } if (pendingJourneymen.opponent.length > 0 && liveOpponentTeam) { setLiveOpponentTeam(prev => prev ? ({ ...prev, players: [...prev.players, ...pendingJourneymen.opponent] }) : null); logEvent('INFO', `${liveOpponentTeam.name} añade ${pendingJourneymen.opponent.length} Sustituto(s).`); } setJourneymenNotification(null); setPendingJourneymen({ home: [], opponent: [] }); setPreGameStep(1); };
     const handleSkillClick = useCallback((skillName: string) => { const cleanedName = skillName.split('(')[0].trim(); const foundSkill = skillsData.find(s => s.name.toLowerCase().startsWith(cleanedName.toLowerCase())); if (foundSkill) setSelectedSkillForModal(foundSkill); else console.warn(`Skill not found: ${cleanedName}`); }, []);
@@ -502,7 +512,7 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
     const handleSelectTdScorer = (scorer: ManagedPlayer) => {
         if (!tdModalTeam || !liveHomeTeam || !liveOpponentTeam) return;
         const teamName = tdModalTeam === 'home' ? liveHomeTeam.name : liveOpponentTeam.name;
-        logEvent('TOUCHDOWN', `${scorer.customName} ha anotado un Touchdown para ${teamName}!`);
+        logEvent('touchdown', `${scorer.customName} ha anotado un Touchdown para ${teamName}!`, { team: tdModalTeam, player: scorer.id });
         setScore(s => ({ ...s, [tdModalTeam]: s[tdModalTeam] + 1 }));
         playSound('td');
         updatePlayerSppAndAction(scorer, tdModalTeam, 3, 'TD', `anotar un Touchdown para ${teamName}`);
@@ -800,7 +810,7 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
     const handleExportLog = () => { if (!homeTeam || !opponentTeam) return; try { const worksheet = XLSX.utils.json_to_sheet([...gameLog].reverse().map(e => ({ 'Hora': e.timestamp, 'Parte': e.half, 'Turno': e.turn, 'Tipo': e.type, 'Descripción': e.description }))); const workbook = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(workbook, worksheet, 'Bitácora'); XLSX.writeFile(workbook, `bitacora_${homeTeam.name}_vs_${opponentTeam.name}.xlsx`); } catch (error) { console.error("Error al exportar:", error); alert("Error al exportar bitácora."); } };
     const rollKoRecovery = (player: ManagedPlayer) => { const roll = Math.floor(Math.random() * 6) + 1; const success = roll >= 4; setKoRecoveryRolls(prev => ({ ...prev, [player.id]: { roll, success } })); if (success) { const teamId = liveHomeTeam?.players.some(p => p.id === player.id) ? 'home' : 'opponent'; updatePlayerStatus(player.id, teamId, 'Reserva'); } };
     const renderWeatherIcon = (title: string) => { const lowerTitle = title.toLowerCase(); if (lowerTitle.includes('calor')) return <FireIcon className="w-5 h-5 text-red-400" />; if (lowerTitle.includes('soleado')) return <SunIcon className="w-5 h-5 text-yellow-300" />; if (lowerTitle.includes('perfecto')) return <CloudIcon className="w-5 h-5 text-blue-300" />; if (lowerTitle.includes('lluvioso')) return <CloudRainIcon className="w-5 h-5 text-cyan-300" />; if (lowerTitle.includes('ventisca')) return <SnowflakeIcon className="w-5 h-5 text-white" />; return null; };
-    const handleConfirmWeatherReroll = () => { const roll = parseInt(weatherRerollInput); if (isNaN(roll) || roll < 2 || roll > 12) { alert("Introduce un resultado de 2D6 válido (2-12)."); return; } let newWeather: WeatherCondition | undefined; if (roll === 2) newWeather = weatherConditions.find(w => w.roll === "2"); else if (roll === 3) newWeather = weatherConditions.find(w => w.roll === "3"); else if (roll >= 4 && roll <= 10) newWeather = weatherConditions.find(w => w.roll === "4-10"); else if (roll === 11) newWeather = weatherConditions.find(w => w.roll === "11"); else if (roll === 12) newWeather = weatherConditions.find(w => w.roll === "12"); if (newWeather) { setGameStatus(prev => ({ ...prev, weather: newWeather })); let logMessage = `Clima Cambiante (Tirada ${roll}): Nuevo clima es ${newWeather.title}.`; if (newWeather.title === 'Clima Perfecto') logMessage += " El balón se escorará."; logEvent('WEATHER', logMessage); } setIsChangingWeatherModalOpen(false); setKickoffActionCompleted(true); setWeatherRerollInput(''); };
+    const handleConfirmWeatherReroll = () => { const roll = parseInt(weatherRerollInput); if (isNaN(roll) || roll < 2 || roll > 12) { alert("Introduce un resultado de 2D6 válido (2-12)."); return; } let newWeather: WeatherCondition | undefined; if (roll === 2) newWeather = weatherConditions.find(w => w.diceRoll === "2"); else if (roll === 3) newWeather = weatherConditions.find(w => w.diceRoll === "3"); else if (roll >= 4 && roll <= 10) newWeather = weatherConditions.find(w => w.diceRoll === "4-10"); else if (roll === 11) newWeather = weatherConditions.find(w => w.diceRoll === "11"); else if (roll === 12) newWeather = weatherConditions.find(w => w.diceRoll === "12"); if (newWeather) { setGameStatus(prev => ({ ...prev, weather: newWeather })); let logMessage = `Clima Cambiante (Tirada ${roll}): Nuevo clima es ${newWeather.title}.`; if (newWeather.title === 'Clima Perfecto') logMessage += " El balón se escorará."; logEvent('WEATHER', logMessage); } setIsChangingWeatherModalOpen(false); setKickoffActionCompleted(true); setWeatherRerollInput(''); };
     const handleAdjustTurnCounter = (kickingTeamId: 'home' | 'opponent') => { const kickingTeam = kickingTeamId === 'home' ? liveHomeTeam : liveOpponentTeam; if (!kickingTeam) return; const isTurn6to8 = turn >= 6 && turn <= 8; if (isTurn6to8) { setTurn(t => { const newTurn = Math.max(1, t - 1); logEvent('INFO', `Tiempo Muerto: Los marcadores de turno se retrasan. Turno actual: ${newTurn}.`); return newTurn; }); } else { setTurn(t => { const newTurn = Math.min(8, t + 1); logEvent('INFO', `Tiempo Muerto: Los marcadores de turno se adelantan. Turno actual: ${newTurn}.`); return newTurn; }); } setKickoffActionCompleted(true); };
 
     const handleHireStar = (star: StarPlayer) => {
@@ -899,7 +909,7 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
             return newTeam;
         });
     };
-    const handleGenerateWeather = () => { const die1 = Math.floor(Math.random() * 6) + 1, die2 = Math.floor(Math.random() * 6) + 1, roll = die1 + die2; let result: WeatherCondition | undefined; if (roll === 2) result = weatherConditions.find(w => w.roll === "2"); else if (roll === 3) result = weatherConditions.find(w => w.roll === "3"); else if (roll >= 4 && roll <= 10) result = weatherConditions.find(w => w.roll === "4-10"); else if (roll === 11) result = weatherConditions.find(w => w.roll === "11"); else if (roll === 12) result = weatherConditions.find(w => w.roll === "12"); if (result) { setGameStatus(prev => ({ ...prev, weather: result })); logEvent('WEATHER', `Tirada Clima (${roll}): ${result.title}.`); } setIsWeatherModalOpen(false); };
+    const handleGenerateWeather = () => { const die1 = Math.floor(Math.random() * 6) + 1, die2 = Math.floor(Math.random() * 6) + 1, roll = die1 + die2; let result: WeatherCondition | undefined; if (roll === 2) result = weatherConditions.find(w => w.diceRoll === "2"); else if (roll === 3) result = weatherConditions.find(w => w.diceRoll === "3"); else if (roll >= 4 && roll <= 10) result = weatherConditions.find(w => w.diceRoll === "4-10"); else if (roll === 11) result = weatherConditions.find(w => w.diceRoll === "11"); else if (roll === 12) result = weatherConditions.find(w => w.diceRoll === "12"); if (result) { setGameStatus(prev => ({ ...prev, weather: result })); logEvent('WEATHER', `Tirada Clima (${roll}): ${result.title}.`); } setIsWeatherModalOpen(false); };
     const useReroll = (teamId: 'home' | 'opponent') => {
         const team = teamId === 'home' ? liveHomeTeam : liveOpponentTeam;
         const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
@@ -1109,7 +1119,13 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                 const preGameTitles = ["Paso 1: Contratar Sustitutos", "Paso 2: Incentivos", "Paso 3: Hinchas y FAMA", "Paso 4: El Clima", "Paso 5: Plegarias a Nuffle", "Paso 6: Lanzamiento de Moneda", "Paso 7: Patada o Recepción", "Paso 8: Despliegue", "Paso 9: Evento de Patada Inicial"];
                 const handleKickoffRoll = () => {
                     setKickoffActionCompleted(false); // Reset before rolling for a new kickoff
-                    const die1 = Math.floor(Math.random() * 6) + 1, die2 = Math.floor(Math.random() * 6) + 1, roll = die1 + die2; const event = kickoffEvents.find(e => parseInt(e.roll, 10) === roll); if (event) { setGameStatus(prev => ({ ...prev, kickoffEvent: event })); logEvent('KICKOFF', `Evento de Patada (${roll}): ${event.title}`); if (event.title !== 'Clima Cambiante' && event.title !== 'Tiempo Muerto') setKickoffActionCompleted(true); }
+                    const die1 = Math.floor(Math.random() * 6) + 1, die2 = Math.floor(Math.random() * 6) + 1, roll = die1 + die2;
+                    const event = kickoffEvents.find(e => e.diceRoll === roll.toString());
+                    if (event) {
+                        setGameStatus(prev => ({ ...prev, kickoffEvent: event }));
+                        logEvent('KICKOFF', `Evento de Patada (${roll}): ${event.title}`);
+                        if (event.title !== 'Clima Cambiante' && event.title !== 'Tiempo Muerto') setKickoffActionCompleted(true);
+                    }
                 };
 
                 return (
@@ -1317,7 +1333,17 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                                     <div className="text-5xl sm:text-7xl font-black text-white tracking-wider" style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.7)' }}>
                                         {score.home} - {score.opponent}
                                     </div>
-                                    <div className="font-bold text-base text-amber-400 mt-1">Parte {half} - Turno {turn}</div>
+                                    <div className="font-display font-black text-[10px] uppercase tracking-widest text-amber-500 mt-1">Parte {half} - Turno {turn}</div>
+                                    <div className="flex justify-center gap-4 mt-2">
+                                        <div className="flex items-center gap-1 bg-sky-900/40 px-2 py-0.5 rounded border border-sky-500/30">
+                                            <span className="text-[10px] text-sky-300 font-bold">RR:</span>
+                                            <span className="text-sm text-white font-black">{liveHomeTeam.liveRerolls || 0}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1 bg-red-900/40 px-2 py-0.5 rounded border border-red-500/30">
+                                            <span className="text-[10px] text-red-300 font-bold">RR:</span>
+                                            <span className="text-sm text-white font-black">{liveOpponentTeam.liveRerolls || 0}</span>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 {/* Opponent Team */}
@@ -1416,14 +1442,20 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                                 <div className="bg-slate-900/70 p-3 rounded-lg border border-slate-700">
                                     <h3 className="text-lg font-semibold text-amber-400 mb-3">Acciones de Juego</h3>
                                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
-                                        <button onClick={() => setIsTdModalOpen(true)} className="bg-green-600 text-white font-bold p-2 rounded hover:bg-green-500">Anotar TD</button>
-                                        <button onClick={() => setIsFoulModalOpen(true)} className="bg-yellow-600 text-slate-900 font-bold p-2 rounded hover:bg-yellow-500">Falta</button>
-                                        <button onClick={() => setIsInjuryModalOpen(true)} className="bg-orange-600 text-white font-bold p-2 rounded hover:bg-orange-500">Lesión</button>
-                                        <button onClick={() => setIsTurnoverModalOpen(true)} className="bg-red-600 text-white font-bold p-2 rounded hover:bg-red-500">Turnover</button>
-                                        <button onClick={() => openSppModal('pass')} className="bg-sky-600 text-white font-bold p-2 rounded hover:bg-sky-500">Pase (PE)</button>
-                                        <button onClick={() => openSppModal('interference')} className="bg-sky-700 text-white font-bold p-2 rounded hover:bg-sky-600">Interf. (PE)</button>
-                                        <button onClick={() => openSppModal('casualty')} className="bg-rose-700 text-white font-bold p-2 rounded hover:bg-rose-600">Lesión Caus. (PE)</button>
-                                        <button onClick={handleNextTurn} className="bg-amber-500 text-slate-900 font-bold p-2 rounded hover:bg-amber-400">Siguiente Turno</button>
+                                        <button onClick={() => setIsTdModalOpen(true)} className="bg-green-600/80 text-white font-display font-black p-3 rounded-xl hover:bg-green-500 transition-premium shadow-lg uppercase italic text-[10px] tracking-widest">Anotar TD</button>
+                                        <button onClick={() => setIsFoulModalOpen(true)} className="bg-amber-600/80 text-black font-display font-black p-3 rounded-xl hover:bg-amber-500 transition-premium shadow-lg uppercase italic text-[10px] tracking-widest">Falta</button>
+                                        <button onClick={() => setIsInjuryModalOpen(true)} className="bg-orange-600/80 text-white font-display font-black p-3 rounded-xl hover:bg-orange-500 transition-premium shadow-lg uppercase italic text-[10px] tracking-widest">Lesión</button>
+                                        <button onClick={() => setIsTurnoverModalOpen(true)} className="bg-red-600/80 text-white font-display font-black p-3 rounded-xl hover:bg-red-500 transition-premium shadow-lg uppercase italic text-[10px] tracking-widest">Turnover</button>
+
+                                        <button onClick={() => logEvent('block', 'Acción de bloque declarada.')} className="bg-slate-700 text-white font-display font-black p-3 rounded-xl hover:bg-slate-600 transition-premium shadow-lg uppercase italic text-[10px] tracking-widest">Bloqueo</button>
+                                        <button onClick={() => logEvent('move', 'Acción de movimiento declarada.')} className="bg-slate-700 text-white font-display font-black p-3 rounded-xl hover:bg-slate-600 transition-premium shadow-lg uppercase italic text-[10px] tracking-widest">Movimiento</button>
+                                        <button onClick={() => logEvent('dodge', 'Intento de esquiva.')} className="bg-slate-700 text-white font-display font-black p-3 rounded-xl hover:bg-slate-600 transition-premium shadow-lg uppercase italic text-[10px] tracking-widest">Esquiva</button>
+                                        <button onClick={() => logEvent('pickup_ball', 'Intento de recoger balón.')} className="bg-slate-700 text-white font-display font-black p-3 rounded-xl hover:bg-slate-600 transition-premium shadow-lg uppercase italic text-[10px] tracking-widest">Recoger Balón</button>
+
+                                        <button onClick={() => openSppModal('pass')} className="bg-sky-600/80 text-white font-display font-black p-3 rounded-xl hover:bg-sky-500 transition-premium shadow-lg uppercase italic text-[10px] tracking-widest">Pase (PE)</button>
+                                        <button onClick={() => openSppModal('interference')} className="bg-sky-800/80 text-white font-display font-black p-3 rounded-xl hover:bg-sky-700 transition-premium shadow-lg uppercase italic text-[10px] tracking-widest">Interf. (PE)</button>
+                                        <button onClick={() => openSppModal('casualty')} className="bg-rose-800/80 text-white font-display font-black p-3 rounded-xl hover:bg-rose-700 transition-premium shadow-lg uppercase italic text-[10px] tracking-widest">Baja Caus. (PE)</button>
+                                        <button onClick={handleNextTurn} className="bg-amber-400 text-slate-900 font-display font-black p-3 rounded-xl hover:bg-amber-300 transition-premium shadow-lg uppercase italic text-[10px] tracking-widest">Siguiente Turno</button>
                                     </div>
                                     <div className="mt-4 pt-4 border-t border-slate-700 flex flex-wrap gap-2">
                                         <button onClick={() => setIsCustomEventModalOpen(true)} className="text-xs bg-slate-600 text-slate-200 font-semibold py-1 px-3 rounded hover:bg-slate-500">Evento Personalizado</button>

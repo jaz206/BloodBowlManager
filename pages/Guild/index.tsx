@@ -1,13 +1,13 @@
 
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import type { ManagedTeam } from '../types';
-import TeamCreator from './TeamCreator';
-import { TeamDashboard } from './TeamDashboard';
-import UploadIcon from './icons/UploadIcon';
-import DownloadIcon from './icons/DownloadIcon';
-import ShieldCheckIcon from './icons/ShieldCheckIcon';
-import TrashIcon from './icons/TrashIcon';
+import type { ManagedTeam } from '../../types';
+import TeamCreator from './CreateTeamPage';
+import { TeamDashboard } from './TeamDetailPage';
+import UploadIcon from '../../components/icons/UploadIcon';
+import DownloadIcon from '../../components/icons/DownloadIcon';
+import ShieldCheckIcon from '../../components/icons/ShieldCheckIcon';
+import TrashIcon from '../../components/icons/TrashIcon';
 
 // Helper to create a plain JS object from a ManagedTeam, suitable for JSON stringification.
 // This prevents "circular structure" errors from Firestore objects.
@@ -46,7 +46,7 @@ interface TeamManagerProps {
     isGuest: boolean;
 }
 
-const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUpdate, onTeamDelete, requestedRoster, onRosterRequestHandled = () => {}, isGuest }) => {
+const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUpdate, onTeamDelete, requestedRoster, onRosterRequestHandled = () => { }, isGuest }) => {
     const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
     const [isCreating, setIsCreating] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -94,7 +94,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
             });
         }
     };
-    
+
     const handleImportClick = () => {
         fileInputRef.current?.click();
     };
@@ -113,7 +113,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                 if (!Array.isArray(importedTeams) || (importedTeams.length > 0 && (!importedTeams[0].name || !importedTeams[0].rosterName))) {
                     throw new Error("El archivo no parece contener una lista de equipos válida.");
                 }
-                
+
                 const existingTeamNames = new Set(teams.map(t => t.name.toLowerCase()));
                 let newTeamsCount = 0;
                 const skippedTeams: string[] = [];
@@ -127,7 +127,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                         newTeamsCount++;
                     }
                 }
-                
+
                 let alertMessage = '';
                 if (newTeamsCount > 0) {
                     alertMessage += `${newTeamsCount} equipos importados con éxito.\n`;
@@ -154,9 +154,9 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
     };
 
     const handleExportSelectionChange = (teamId: string) => {
-        setSelectedTeamsForExport(prev => 
-            prev.includes(teamId) 
-                ? prev.filter(id => id !== teamId) 
+        setSelectedTeamsForExport(prev =>
+            prev.includes(teamId)
+                ? prev.filter(id => id !== teamId)
                 : [...prev, teamId]
         );
     };
@@ -171,22 +171,22 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
 
     const triggerExport = () => {
         const teamsToExport = teams.filter(team => team.id && selectedTeamsForExport.includes(team.id));
-        
+
         if (teamsToExport.length === 0) {
             alert("Selecciona al menos un equipo para exportar.");
             return;
         }
-        
+
         const sanitizedData = teamsToExport.map(sanitizeTeamForExport);
         const dataStr = JSON.stringify(sanitizedData, null, 2);
 
-        const blob = new Blob([dataStr], {type : 'application/json'});
+        const blob = new Blob([dataStr], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
-        
-        const exportFileDefaultName = teamsToExport.length > 1 
-            ? 'bloodbowl_teams.json' 
+
+        const exportFileDefaultName = teamsToExport.length > 1
+            ? 'bloodbowl_teams.json'
             : `${teamsToExport[0].name.replace(/ /g, '_')}.json`;
-        
+
         const linkElement = document.createElement('a');
         linkElement.setAttribute('href', url);
         linkElement.setAttribute('download', exportFileDefaultName);
@@ -194,7 +194,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
         linkElement.click();
         document.body.removeChild(linkElement);
         URL.revokeObjectURL(url);
-        
+
         setIsExportModalOpen(false);
         setSelectedTeamsForExport([]);
     };
@@ -207,14 +207,14 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
     if (selectedTeam) {
         return (
             <div className="p-2 sm:p-4 animate-fade-in-slow">
-                <TeamDashboard 
-                    team={selectedTeam} 
+                <TeamDashboard
+                    team={selectedTeam}
                     onUpdate={onTeamUpdate}
                     onDeleteRequest={requestTeamDelete}
                     onBack={() => setSelectedTeamId(null)}
                     isGuest={isGuest}
                 />
-                 <style>{`
+                <style>{`
                     @keyframes fade-in-slow {
                         from { opacity: 0; }
                         to { opacity: 1; }
@@ -229,10 +229,10 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
 
     if (isCreating) {
         return (
-             <div className="p-2 sm:p-4 animate-fade-in-slow">
+            <div className="p-2 sm:p-4 animate-fade-in-slow">
                 <TeamCreator onTeamCreate={handleTeamCreate} initialRosterName={initialRosterForCreation} />
-                 <button onClick={handleCancelCreation} className="text-amber-400 hover:underline mt-4">Volver a la lista</button>
-                  <style>{`
+                <button onClick={handleCancelCreation} className="text-amber-400 hover:underline mt-4">Volver a la lista</button>
+                <style>{`
                     @keyframes fade-in-slow {
                         from { opacity: 0; }
                         to { opacity: 1; }
@@ -244,7 +244,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
             </div>
         );
     }
-    
+
     return (
         <div className="p-4 sm:p-8 animate-fade-in-slow text-center max-w-md mx-auto">
             <h2 className="text-3xl font-bold text-amber-400 mb-4">Mis Equipos</h2>
@@ -253,7 +253,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                 <div className="space-y-3 mb-6">
                     {teams.map(team => (
                         <div key={team.id || team.name} className="w-full flex items-center gap-2">
-                            <button 
+                            <button
                                 onClick={() => setSelectedTeamId(team.id!)}
                                 className="flex-grow bg-slate-700/50 text-slate-200 p-4 rounded-lg shadow-md hover:bg-slate-700 hover:text-white transition-all duration-200 flex items-center gap-4 text-left"
                             >
@@ -269,33 +269,33 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                     <p className="text-xs text-slate-400 truncate">{team.rosterName}</p>
                                 </div>
                             </button>
-                             <button 
+                            <button
                                 onClick={() => requestTeamDelete(team.id!)}
                                 className="flex-shrink-0 bg-red-800/50 text-red-400 p-4 rounded-lg shadow-md hover:bg-red-800 hover:text-white transition-colors"
                                 aria-label={`Eliminar equipo ${team.name}`}
-                             >
+                            >
                                 <TrashIcon className="w-6 h-6" />
-                             </button>
+                            </button>
                         </div>
                     ))}
                 </div>
             ) : (
-                 <div className="text-center p-8 mb-6 bg-slate-900/50 rounded-lg border border-slate-700">
+                <div className="text-center p-8 mb-6 bg-slate-900/50 rounded-lg border border-slate-700">
                     <p className="text-slate-400">
                         Aún no has creado ningún equipo. ¡Usa los botones de abajo para empezar!
                     </p>
                 </div>
             )}
-            
+
             <button
                 onClick={() => setIsCreating(true)}
                 className="w-full bg-amber-500 text-slate-900 font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-500/50 transform hover:scale-105 transition-all duration-200"
             >
                 Crear Nuevo Equipo
             </button>
-             <div className="mt-8 pt-6 border-t border-slate-700">
+            <div className="mt-8 pt-6 border-t border-slate-700">
                 <h3 className="text-xl font-semibold text-slate-300 mb-4">Opciones de Datos</h3>
-                 <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex flex-col sm:flex-row gap-4">
                     <button
                         onClick={handleImportClick}
                         className="flex-1 flex items-center justify-center gap-2 bg-slate-600 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-slate-500 transition-colors"
@@ -310,15 +310,15 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                         className="flex-1 flex items-center justify-center gap-2 bg-sky-700 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-sky-600 transition-colors"
                         title="Exportar equipos a un archivo .json"
                     >
-                       <DownloadIcon />
+                        <DownloadIcon />
                         Exportar Equipos
                     </button>
                 </div>
             </div>
 
             {isExportModalOpen && (
-                <div 
-                    className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 animate-fade-in-fast" 
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 animate-fade-in-fast"
                     onClick={() => setIsExportModalOpen(false)}
                     role="dialog" aria-modal="true"
                 >
@@ -328,7 +328,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                         </div>
                         <div className="p-5 max-h-[60vh] overflow-y-auto">
                             <div className="flex items-center mb-4">
-                                <input 
+                                <input
                                     type="checkbox"
                                     id="select-all-export"
                                     className="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"
@@ -342,7 +342,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                             <div className="space-y-2">
                                 {teams.map(team => (
                                     <div key={team.id} className="flex items-center bg-slate-700/50 p-3 rounded-md">
-                                        <input 
+                                        <input
                                             type="checkbox"
                                             id={`export-${team.id}`}
                                             className="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"
@@ -367,7 +367,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                     </div>
                 </div>
             )}
-            
+
             {confirmation && (
                 <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
                     <div className="bg-slate-800 p-6 rounded-lg shadow-xl border border-slate-700 max-w-sm w-full">

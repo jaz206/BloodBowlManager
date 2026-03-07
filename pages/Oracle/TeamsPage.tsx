@@ -1,15 +1,15 @@
 import React, { useState, useMemo } from 'react';
-import { teamsData as staticTeams } from '../data/teams';
-import { skillsData } from '../data/skills';
-import type { Team, Skill } from '../types';
-import { useAuth } from '../hooks/useAuth';
-import { useMasterData } from '../hooks/useMasterData';
-import { storage } from '../firebaseConfig';
+import { teamsData as staticTeams } from '../../data/teams';
+import { skillsData } from '../../data/skills';
+import type { Team, Skill } from '../../types';
+import { useAuth } from '../../hooks/useAuth';
+import { useMasterData } from '../../hooks/useMasterData';
+import { storage } from '../../firebaseConfig';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import SkillModal from './SkillModal';
-import ImageModal from './ImageModal';
-import RadarChart from './RadarChart';
-import RadarChartModal from './RadarChartModal';
+import SkillModal from '../../components/oracle/SkillModal';
+import ImageModal from '../../components/common/ImageModal';
+import RadarChart from '../../components/oracle/RadarChart';
+import RadarChartModal from '../../components/oracle/RadarChartModal';
 
 const TeamCard: React.FC<{ team: Team, onViewRoster: () => void, onViewImage: (e: React.MouseEvent) => void }> = ({ team, onViewRoster, onViewImage }) => {
     return (
@@ -242,7 +242,11 @@ interface TeamsProps {
 }
 
 const Teams: React.FC<TeamsProps> = ({ onRequestTeamCreation = () => { } }) => {
-    const { teams, updateTeamImage, syncMasterData, loading } = useMasterData();
+    const { teams, updateMasterItem, syncMasterData, loading } = useMasterData();
+    // Wrapper que mapea la API de Teams a updateMasterItem
+    const updateTeamImage = async (teamName: string, url: string) => {
+        await updateMasterItem('team', teamName, { image: url });
+    };
     const { isAdmin } = useAuth();
     const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
     const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);

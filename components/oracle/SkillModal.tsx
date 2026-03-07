@@ -1,6 +1,6 @@
 
 import React from 'react';
-import type { Skill } from '../types';
+import type { Skill } from '../../types';
 
 interface SkillModalProps {
   skill: Skill;

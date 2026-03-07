@@ -1,16 +1,16 @@
 import React, { useState, useMemo } from 'react';
-import DashboardBlock from './DashboardBlock';
-import { useAuth } from '../hooks/useAuth';
-import SearchIcon from './icons/SearchIcon';
-import BookOpenIcon from './icons/BookOpenIcon';
-import UsersIcon from './icons/UsersIcon';
-import TrophyIcon from './icons/TrophyIcon';
-import CubeIcon from './icons/CubeIcon';
-import StopwatchIcon from './icons/StopwatchIcon';
-import DiceIcon from './icons/DiceIcon'; // Fallback to Cube if not found
-import ProbabilityCalculator from './ProbabilityCalculator';
-import InducementTable from './InducementTable';
-import type { ManagedTeam, Competition, GameEvent } from '../types';
+import DashboardBlock from '../../components/common/DashboardBlock';
+import { useAuth } from '../../hooks/useAuth';
+import SearchIcon from '../../components/icons/SearchIcon';
+import BookOpenIcon from '../../components/icons/BookOpenIcon';
+import UsersIcon from '../../components/icons/UsersIcon';
+import TrophyIcon from '../../components/icons/TrophyIcon';
+import CubeIcon from '../../components/icons/CubeIcon';
+import StopwatchIcon from '../../components/icons/StopwatchIcon';
+import DiceIcon from '../../components/icons/DiceIcon';
+import ProbabilityCalculator from '../Oracle/ProbabilitiesPage';
+import InducementTable from '../Oracle/InducementsPage';
+import type { ManagedTeam, League as Competition, GameEvent } from '../../types';
 
 interface HomeProps {
     onNavigate: (view: any) => void;
@@ -58,11 +58,11 @@ const Home: React.FC<HomeProps> = ({ onNavigate, managedTeams, competitions, rec
                 <div className="md:col-span-3 space-y-6">
                     <DashboardBlock title="El Oráculo" icon={<BookOpenIcon className="w-5 h-5 text-premium-gold" />}>
                         <div className="space-y-2">
-                            <button onClick={() => onNavigate('teams')} className="w-full text-left p-3 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 hover:border-premium-gold/30 transition-all flex items-center justify-between group">
+                            <button onClick={() => onNavigate('oracle')} className="w-full text-left p-3 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 hover:border-premium-gold/30 transition-all flex items-center justify-between group">
                                 <span className="text-xs font-display font-bold text-slate-300 uppercase tracking-widest group-hover:text-white">Enciclopedia</span>
                                 <span className="text-premium-gold opacity-50 group-hover:opacity-100">&rarr;</span>
                             </button>
-                            <button onClick={() => onNavigate('starplayers')} className="w-full text-left p-3 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 hover:border-premium-gold/30 transition-all flex items-center justify-between group">
+                            <button onClick={() => onNavigate('oracle')} className="w-full text-left p-3 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 hover:border-premium-gold/30 transition-all flex items-center justify-between group">
                                 <span className="text-xs font-display font-bold text-slate-300 uppercase tracking-widest group-hover:text-white">Jugadores Estrella</span>
                                 <span className="text-premium-gold opacity-50 group-hover:opacity-100">&rarr;</span>
                             </button>
@@ -84,7 +84,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate, managedTeams, competitions, rec
                         <div className="flex justify-between items-center mb-6">
                             <p className="text-xs text-slate-400 max-w-[200px] leading-relaxed">Gestiona tus rosters y crea formaciones imparables.</p>
                             <button
-                                onClick={() => onNavigate('manager')}
+                                onClick={() => onNavigate('guild')}
                                 className="bg-premium-gold hover:bg-premium-gold/80 text-black font-display font-black px-6 py-2.5 rounded-xl uppercase text-xs italic tracking-tighter transition-all shadow-[0_4px_15px_rgba(202,138,4,0.4)]"
                             >
                                 Nuevo Equipo
@@ -95,7 +95,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate, managedTeams, competitions, rec
                             {managedTeams.length > 0 ? managedTeams.map(team => (
                                 <div
                                     key={team.id}
-                                    onClick={() => onNavigate('manager')}
+                                    onClick={() => onNavigate('guild')}
                                     className="p-4 bg-white/5 border border-white/5 rounded-2xl flex items-center gap-4 hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer group"
                                 >
                                     <div className="w-12 h-12 bg-black/40 rounded-xl overflow-hidden border border-white/10 flex-shrink-0 group-hover:scale-110 transition-transform">
@@ -133,7 +133,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate, managedTeams, competitions, rec
                     >
                         <div className="space-y-4">
                             <button
-                                onClick={() => onNavigate('game')}
+                                onClick={() => onNavigate('arena')}
                                 className="w-full py-6 rounded-2xl border-2 border-blood-red/40 bg-blood-red/10 hover:bg-blood-red/20 hover:border-blood-red/60 transition-all flex flex-col items-center justify-center gap-2 group shadow-[0_10px_30px_rgba(153,27,27,0.2)]"
                             >
                                 <StopwatchIcon className="w-8 h-8 text-blood-red group-hover:scale-110 transition-transform" />
@@ -144,7 +144,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate, managedTeams, competitions, rec
                             <div className="space-y-3">
                                 <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-500">
                                     <span>Ligas Activas</span>
-                                    <span onClick={() => onNavigate('leagues')} className="text-premium-gold cursor-pointer hover:underline">Ver todas</span>
+                                    <span onClick={() => onNavigate('arena')} className="text-premium-gold cursor-pointer hover:underline">Ver todas</span>
                                 </div>
                                 {activeLeagues.length > 0 ? activeLeagues.map(league => (
                                     <div key={league.id} className="p-3 bg-white/5 border border-white/5 rounded-xl hover:bg-white/10 transition-all cursor-pointer">
