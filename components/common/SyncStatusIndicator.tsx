@@ -1,6 +1,6 @@
 import React from 'react';
-import CheckCircleIcon from './icons/CheckCircleIcon';
-import ExclamationCircleIcon from './icons/ExclamationCircleIcon';
+import CheckCircleIcon from '../icons/CheckCircleIcon';
+import ExclamationCircleIcon from '../icons/ExclamationCircleIcon';
 
 type SyncStatus = 'synced' | 'syncing' | 'error';
 

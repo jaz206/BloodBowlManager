@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import DiceIcon from './icons/DiceIcon';
+import DiceIcon from '../../components/icons/DiceIcon';
 
 const ProbabilityCalculator: React.FC = () => {
     const [target, setTarget] = useState(3);
