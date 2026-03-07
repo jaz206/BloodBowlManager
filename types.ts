@@ -1,77 +1,10 @@
 
-
-
-
 export interface User {
   id: string;
   name: string;
   email: string;
   picture: string;
   isAdmin?: boolean;
-}
-
-export interface Rule {
-  text: string;
-  subRules?: Rule[];
-  dice?: string;
-}
-
-export interface GameSection {
-  title: string;
-  rules: Rule[];
-}
-
-export interface WeatherCondition {
-  roll: string;
-  title: string;
-  description: string;
-}
-
-export interface KickoffEvent {
-  diceRoll: string;
-  title: string;
-  description: string;
-}
-
-export interface InjuryEvent {
-  diceRoll: string;
-  title: string;
-  description: string;
-}
-
-export interface CasualtyEvent {
-  diceRoll: string;
-  title: string;
-  description: string;
-}
-
-export interface LastingInjuryEvent {
-  diceRoll: string;
-  permanentInjury: string;
-  characteristicReduction: string;
-}
-
-export type PlayerPosition = 'Blitzer' | 'Lanzador' | 'Corredor' | 'Línea' | 'Receptor';
-
-export interface Token {
-  id: number;
-  x: number; // grid x
-  y: number; // grid y
-  position: PlayerPosition;
-}
-
-export interface BoardToken extends Token {
-  teamId: 'home' | 'away';
-  playerData?: ManagedPlayer;
-  isDown?: boolean;
-  hasMoved?: boolean;
-  hasActed?: boolean;
-}
-
-export interface Play {
-  id?: string;
-  name: string;
-  tokens: Token[];
 }
 
 export interface PlayerStats {
@@ -92,23 +25,23 @@ export interface Player {
   secondary: string;
 }
 
-export interface PairedPlayer {
+export interface Skill {
   name: string;
-  stats: PlayerStats;
-  skills: string;
+  category: string;
+  description: string;
 }
 
 export interface StarPlayer {
   name: string;
   cost: number;
-  stats?: PlayerStats;
-  skills?: string;
-  pair?: [PairedPlayer, PairedPlayer];
+  stats: PlayerStats;
+  skills: string;
   specialRules: string;
   playsFor: string[];
   image?: string;
+  description?: string;
+  pair?: { name: string; stats: PlayerStats; skills: string; }[];
 }
-
 
 export interface Team {
   name: string;
@@ -127,56 +60,27 @@ export interface Team {
   };
 }
 
-export interface Skill {
-  name: string;
-  category: string;
-  description: string;
-}
-
-export interface Prayer {
-  diceRoll: string;
-  title: string;
-  description: string;
-}
-
 export type PlayerStatus = 'Activo' | 'Reserva' | 'KO' | 'Lesionado' | 'Expulsado' | 'Muerto';
-export type SppActionType = 'TD' | 'PASS' | 'CASUALTY' | 'INTERFERENCE';
 
-export type AdvancementType =
-  | 'RandomPrimary'
-  | 'ChosenPrimary'
-  | 'RandomSecondary'
-  | 'ChosenSecondary'
-  | 'Characteristic';
-
-export interface Advancement {
-  type: AdvancementType;
-  sppCost: number;
-  skillName?: string;
-  characteristicName?: 'MV' | 'FU' | 'AG' | 'PS' | 'AR';
-  characteristicImprovement?: string;
-}
-
-// Team Manager Types
 export interface ManagedPlayer extends Player {
   id: number;
   customName: string;
   spp: number;
   gainedSkills: string[];
   lastingInjuries: string[];
-  advancements?: Advancement[]; // Added for BB2025
-  status?: PlayerStatus;
+  status: PlayerStatus;
   statusDetail?: string;
-  isStarPlayer?: boolean;
-  sppActions?: Partial<Record<SppActionType, number>>;
-  isJourneyman?: boolean;
-  missNextGame?: number;
-  fieldPosition?: { x: number; y: number; }; // For live game board
   isBenched?: boolean;
+  missNextGame?: number;
+  fieldPosition?: { x: number; y: number };
+  sppActions?: Record<string, number>;
+  isStarPlayer?: boolean;
+  isJourneyman?: boolean;
 }
 
 export interface ManagedTeam {
-  id?: string; // For Firestore document ID
+  id?: string;
+  ownerId?: string;
   name: string;
   rosterName: string;
   treasury: number;
@@ -186,9 +90,10 @@ export interface ManagedTeam {
   assistantCoaches: number;
   apothecary: boolean;
   players: ManagedPlayer[];
-  crestImage?: string; // Base64 data URL for the team crest
-  isAutoCalculating?: boolean; // New property for auto-calculate mode
-  // Live game specific, optional
+  crestImage?: string;
+  isAutoCalculating?: boolean;
+
+  // For Live Match
   liveRerolls?: number;
   tempBribes?: number;
   tempCheerleaders?: number;
@@ -197,46 +102,79 @@ export interface ManagedTeam {
   apothecaryUsedOnKO?: boolean;
   biasedRef?: boolean;
   wanderingApothecaries?: number;
-  mortuaryAssistants?: number;
   plagueDoctors?: number;
+  mortuaryAssistants?: number;
 }
 
-// Competition Types
-export interface Matchup {
-  team1: string;
-  team2: string;
-  winner?: string | null;
-  score1?: number | null;
-  score2?: number | null;
-}
-
-export interface CompetitionTeam {
-  teamName: string;
-  ownerId: string;
-  ownerName: string;
-}
-
-export interface Competition {
-  id: string;
+export interface Play {
+  id?: string;
   name: string;
-  format: 'Liguilla' | 'Torneo';
-  teams: CompetitionTeam[];
-  schedule?: Record<string, Matchup[]> | null; // For Liguilla (round-robin)
-  bracket?: Record<string, Matchup[]> | null;  // For Torneo (knockout)
-  ownerId: string;
-  ownerName: string;
-  status: 'Open' | 'In Progress' | 'Finished';
+  description?: string;
+  rosterName: string;
+  tokens: BoardToken[];
 }
 
+export interface League {
+  id: string;
+  ownerId: string;
+  name: string;
+  description?: string;
+  participants: { teamId: string; ownerName: string; teamName: string; }[];
+  status: 'Abierta' | 'En Progreso' | 'Finalizada';
+  createdAt: any;
+}
 
-// Live Game Types
-export type GameEventType = 'INFO' | 'KICKOFF' | 'TOUCHDOWN' | 'INJURY' | 'FOUL' | 'WEATHER' | 'OTHER' | 'TURNOVER';
+export type GameEventType =
+  | 'TOUCHDOWN'
+  | 'INJURY'
+  | 'FOUL'
+  | 'INTERCEPTION'
+  | 'PICKUP'
+  | 'PASS'
+  | 'EXPULSION'
+  | 'TURNOVER'
+  | 'WEATHER'
+  | 'KICKOFF'
+  | 'INFO'
+  | 'OTHER';
 
 export interface GameEvent {
   id: number;
-  timestamp: string;
   turn: number;
-  half: number;
+  half: 1 | 2;
   type: GameEventType;
   description: string;
+  timestamp: string;
+}
+
+export interface Inducement {
+  name: string;
+  cost: number;
+  description: string;
+  strategy?: string;
+  category?: string;
+}
+
+export interface WeatherCondition {
+  roll: string; // Corrected field name
+  title: string;
+  description: string;
+}
+
+export interface KickoffEvent {
+  roll: string; // Corrected field name
+  title: string;
+  description: string;
+}
+
+export type SppActionType = 'TD' | 'CAS' | 'COMP' | 'INT' | 'MVP' | 'INTERFERENCE';
+
+// Board / Tactical
+export interface BoardToken {
+  id: number;
+  x: number;
+  y: number;
+  playerRef?: string;
+  teamSide: 'home' | 'away';
+  isDown?: boolean;
 }

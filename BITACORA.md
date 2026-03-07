@@ -61,10 +61,12 @@ root/
 *   **Visión de Águila**: Añadido buscador en las vistas de Equipos y Habilidades.
 *   *Archivos Afectados*: `useMasterData.ts`, `Teams.tsx`, `firebaseConfig.ts`, `Skills.tsx`.
 
-### [2026-03-06] La Gran Traducción de Lustria
-*   **Lengua Materna**: Traducción completa de todos los equipos y habilidades al español.
-*   **Corrección de Imagen**: Amazonia ahora luce su verdadero estandarte tras años de confusión visual.
-*   *Archivos Afectados*: `teams.ts`, `skills.ts`.
+### [2026-03-06] El Oráculo de Nuffle y la Crónica de la Arena
+*   **Crónica en Vivo**: Implementación de **MatchNarrator.tsx**, un cronista épico impulsado por las sombras de Nuffle que genera relatos heroicos de cada partido en tiempo real.
+*   **La Arena de la Gloria**: Refactorización completa de **GameBoard.tsx** para incluir gestión de turnos, eventos de campo (Touchdowns, Heridas, Faltas) y un sistema de pestañas para alternar entre el Asistente Técnico y la Narración Épica.
+*   **Sincronización Divina**: El Panel de Administración ahora permite la sincronización masiva de datos maestros (equipos, estrellas, incentivos) con Firestore mediante un solo botón, resolviendo conflictos de tipos y garantizando coherencia en el reino.
+*   **Código de Honor Reforzado**: Actualización masiva de **types.ts** para dar soporte a parejas de Jugadores Estrella, estados de clima y acciones de puntos de estrellato (PE).
+*   *Archivos Afectados*: `GameBoard.tsx`, `MatchNarrator.tsx`, `AdminPanel.tsx`, `types.ts`, `useMasterData.ts`.
 
 ---
 ¡Por Nuffle, que los dados siempre te favorezcan! 🎲🎲

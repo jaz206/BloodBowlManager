@@ -30,6 +30,7 @@ import ApothecaryModal from './ApothecaryModal';
 import ChevronDownIcon from './icons/ChevronDownIcon';
 import ShieldCheckIcon from './icons/ShieldCheckIcon';
 import MiniField from './MiniField';
+import MatchNarrator from './MatchNarrator';
 
 
 declare const Html5Qrcode: any;
@@ -351,6 +352,7 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
     const [playersMissingNextGame, setPlayersMissingNextGame] = useState<{ playerId: number, teamId: 'home' | 'opponent' }[]>([]);
     const [ballCarrierId, setBallCarrierId] = useState<number | null>(null);
     const [prayersAlert, setPrayersAlert] = useState<{ underdog: string, difference: number } | null>(null);
+    const [activeTab, setActiveTab] = useState<'assistant' | 'narrator'>('assistant');
 
     const playSound = useCallback((type: 'td' | 'injury' | 'turnover' | 'dice') => {
         // En un entorno real, aquí cargaríamos archivos .mp3 o .wav
@@ -1107,7 +1109,7 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                 const preGameTitles = ["Paso 1: Contratar Sustitutos", "Paso 2: Incentivos", "Paso 3: Hinchas y FAMA", "Paso 4: El Clima", "Paso 5: Plegarias a Nuffle", "Paso 6: Lanzamiento de Moneda", "Paso 7: Patada o Recepción", "Paso 8: Despliegue", "Paso 9: Evento de Patada Inicial"];
                 const handleKickoffRoll = () => {
                     setKickoffActionCompleted(false); // Reset before rolling for a new kickoff
-                    const die1 = Math.floor(Math.random() * 6) + 1, die2 = Math.floor(Math.random() * 6) + 1, roll = die1 + die2; const event = kickoffEvents.find(e => parseInt(e.diceRoll, 10) === roll); if (event) { setGameStatus(prev => ({ ...prev, kickoffEvent: event })); logEvent('KICKOFF', `Evento de Patada (${roll}): ${event.title}`); if (event.title !== 'Clima Cambiante' && event.title !== 'Tiempo Muerto') setKickoffActionCompleted(true); }
+                    const die1 = Math.floor(Math.random() * 6) + 1, die2 = Math.floor(Math.random() * 6) + 1, roll = die1 + die2; const event = kickoffEvents.find(e => parseInt(e.roll, 10) === roll); if (event) { setGameStatus(prev => ({ ...prev, kickoffEvent: event })); logEvent('KICKOFF', `Evento de Patada (${roll}): ${event.title}`); if (event.title !== 'Clima Cambiante' && event.title !== 'Tiempo Muerto') setKickoffActionCompleted(true); }
                 };
 
                 return (
@@ -1394,55 +1396,76 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                             </div>
                         </div>
 
-                        <div className="bg-slate-900/70 p-3 rounded-lg border border-slate-700">
-                            <h3 className="text-lg font-semibold text-amber-400 mb-3">Acciones de Juego</h3>
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
-                                <button onClick={() => setIsTdModalOpen(true)} className="bg-green-600 text-white font-bold p-2 rounded hover:bg-green-500">Anotar TD</button>
-                                <button onClick={() => setIsFoulModalOpen(true)} className="bg-yellow-600 text-slate-900 font-bold p-2 rounded hover:bg-yellow-500">Falta</button>
-                                <button onClick={() => setIsInjuryModalOpen(true)} className="bg-orange-600 text-white font-bold p-2 rounded hover:bg-orange-500">Lesión</button>
-                                <button onClick={() => setIsTurnoverModalOpen(true)} className="bg-red-600 text-white font-bold p-2 rounded hover:bg-red-500">Turnover</button>
-                                <button onClick={() => openSppModal('pass')} className="bg-sky-600 text-white font-bold p-2 rounded hover:bg-sky-500">Pase (PE)</button>
-                                <button onClick={() => openSppModal('interference')} className="bg-sky-700 text-white font-bold p-2 rounded hover:bg-sky-600">Interf. (PE)</button>
-                                <button onClick={() => openSppModal('casualty')} className="bg-rose-700 text-white font-bold p-2 rounded hover:bg-rose-600">Lesión Caus. (PE)</button>
-                                <button onClick={handleNextTurn} className="bg-amber-500 text-slate-900 font-bold p-2 rounded hover:bg-amber-400">Siguiente Turno</button>
-                            </div>
-                            <div className="mt-4 pt-4 border-t border-slate-700 flex flex-wrap gap-2">
-                                <button onClick={() => setIsCustomEventModalOpen(true)} className="text-xs bg-slate-600 text-slate-200 font-semibold py-1 px-3 rounded hover:bg-slate-500">Evento Personalizado</button>
-                                <button onClick={handleExportLog} className="text-xs bg-slate-600 text-slate-200 font-semibold py-1 px-3 rounded hover:bg-slate-500 flex items-center gap-1"><DownloadIcon className="w-4 h-4" /> Exportar Bitácora</button>
-                                <button onClick={() => setGameState('post_game')} className="text-xs bg-red-800 text-red-200 font-semibold py-1 px-3 rounded hover:bg-red-700 ml-auto">Finalizar Partido</button>
-                            </div>
+                        <div className="flex gap-2 mb-4 bg-black/40 p-1 rounded-xl border border-white/5">
+                            <button
+                                onClick={() => setActiveTab('assistant')}
+                                className={`flex-1 py-3 rounded-lg font-display font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'assistant' ? 'bg-premium-gold text-black' : 'text-slate-500 hover:text-white'}`}
+                            >
+                                Asistente
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('narrator')}
+                                className={`flex-1 py-3 rounded-lg font-display font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'narrator' ? 'bg-blood-red text-white' : 'text-slate-500 hover:text-white'}`}
+                            >
+                                Crónica de Nuffle
+                            </button>
                         </div>
 
-                        <div className="bg-slate-900/70 p-3 rounded-lg border border-slate-700">
-                            <button onClick={() => setIsLogVisible(!isLogVisible)} className="w-full text-left flex justify-between items-center group">
-                                <h3 className="text-lg font-semibold text-amber-400">
-                                    Bitácora del Partido
-                                </h3>
-                                <ChevronDownIcon className={`w-5 h-5 text-amber-400 transform transition-transform duration-200 group-hover:text-amber-300 ${isLogVisible ? 'rotate-180' : ''}`} />
-                            </button>
-                            {isLogVisible && (
-                                <div className="mt-3 max-h-60 overflow-y-auto space-y-2 text-sm pr-2 animate-fade-in-fast">
-                                    {gameLog.map(event => (
-                                        <div key={event.id} className="border-b border-slate-800 pb-1 last:border-b-0">
-                                            <p>
-                                                <span className="text-slate-500 mr-2 font-mono text-xs">
-                                                    [{event.half}-{event.turn} | {event.timestamp}]
-                                                </span>
-                                                <span className={`font-semibold ${event.type === 'TURNOVER' ? 'text-red-400' :
-                                                    event.type === 'TOUCHDOWN' ? 'text-green-400' :
-                                                        event.type === 'INJURY' || event.type === 'FOUL' ? 'text-orange-400' :
-                                                            'text-slate-400'
-                                                    }`}>
-                                                    {event.type !== 'INFO' && `${event.type}: `}
-                                                </span>
-                                                <span className="text-slate-300">{event.description}</span>
-                                            </p>
-                                        </div>
-                                    ))}
-                                    {gameLog.length === 0 && <p className="text-slate-500">No hay eventos registrados.</p>}
+                        {activeTab === 'assistant' ? (
+                            <>
+                                <div className="bg-slate-900/70 p-3 rounded-lg border border-slate-700">
+                                    <h3 className="text-lg font-semibold text-amber-400 mb-3">Acciones de Juego</h3>
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
+                                        <button onClick={() => setIsTdModalOpen(true)} className="bg-green-600 text-white font-bold p-2 rounded hover:bg-green-500">Anotar TD</button>
+                                        <button onClick={() => setIsFoulModalOpen(true)} className="bg-yellow-600 text-slate-900 font-bold p-2 rounded hover:bg-yellow-500">Falta</button>
+                                        <button onClick={() => setIsInjuryModalOpen(true)} className="bg-orange-600 text-white font-bold p-2 rounded hover:bg-orange-500">Lesión</button>
+                                        <button onClick={() => setIsTurnoverModalOpen(true)} className="bg-red-600 text-white font-bold p-2 rounded hover:bg-red-500">Turnover</button>
+                                        <button onClick={() => openSppModal('pass')} className="bg-sky-600 text-white font-bold p-2 rounded hover:bg-sky-500">Pase (PE)</button>
+                                        <button onClick={() => openSppModal('interference')} className="bg-sky-700 text-white font-bold p-2 rounded hover:bg-sky-600">Interf. (PE)</button>
+                                        <button onClick={() => openSppModal('casualty')} className="bg-rose-700 text-white font-bold p-2 rounded hover:bg-rose-600">Lesión Caus. (PE)</button>
+                                        <button onClick={handleNextTurn} className="bg-amber-500 text-slate-900 font-bold p-2 rounded hover:bg-amber-400">Siguiente Turno</button>
+                                    </div>
+                                    <div className="mt-4 pt-4 border-t border-slate-700 flex flex-wrap gap-2">
+                                        <button onClick={() => setIsCustomEventModalOpen(true)} className="text-xs bg-slate-600 text-slate-200 font-semibold py-1 px-3 rounded hover:bg-slate-500">Evento Personalizado</button>
+                                        <button onClick={handleExportLog} className="text-xs bg-slate-600 text-slate-200 font-semibold py-1 px-3 rounded hover:bg-slate-500 flex items-center gap-1"><DownloadIcon className="w-4 h-4" /> Exportar Bitácora</button>
+                                        <button onClick={() => setGameState('post_game')} className="text-xs bg-red-800 text-red-200 font-semibold py-1 px-3 rounded hover:bg-red-700 ml-auto">Finalizar Partido</button>
+                                    </div>
                                 </div>
-                            )}
-                        </div>
+
+                                <div className="bg-slate-900/70 p-3 rounded-lg border border-slate-700">
+                                    <button onClick={() => setIsLogVisible(!isLogVisible)} className="w-full text-left flex justify-between items-center group">
+                                        <h3 className="text-lg font-semibold text-amber-400">
+                                            Bitácora del Partido
+                                        </h3>
+                                        <ChevronDownIcon className={`w-5 h-5 text-amber-400 transform transition-transform duration-200 group-hover:text-amber-300 ${isLogVisible ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    {isLogVisible && (
+                                        <div className="mt-3 max-h-60 overflow-y-auto space-y-2 text-sm pr-2 animate-fade-in-fast">
+                                            {gameLog.map(event => (
+                                                <div key={event.id} className="border-b border-slate-800 pb-1 last:border-b-0">
+                                                    <p>
+                                                        <span className="text-slate-500 mr-2 font-mono text-xs">
+                                                            [{event.half}-{event.turn} | {event.timestamp}]
+                                                        </span>
+                                                        <span className={`font-semibold ${event.type === 'TURNOVER' ? 'text-red-400' :
+                                                            event.type === 'TOUCHDOWN' ? 'text-green-400' :
+                                                                event.type === 'INJURY' || event.type === 'FOUL' ? 'text-orange-400' :
+                                                                    'text-slate-400'
+                                                            }`}>
+                                                            {event.type !== 'INFO' && `${event.type}: `}
+                                                        </span>
+                                                        <span className="text-slate-300">{event.description}</span>
+                                                    </p>
+                                                </div>
+                                            ))}
+                                            {gameLog.length === 0 && <p className="text-slate-500">No hay eventos registrados.</p>}
+                                        </div>
+                                    )}
+                                </div>
+                            </>
+                        ) : (
+                            <MatchNarrator events={gameLog} homeTeamName={liveHomeTeam.name} awayTeamName={liveOpponentTeam.name} />
+                        )}
                     </div>
                 );
             case 'post_game': if (!homeTeam || !liveHomeTeam || !liveOpponentTeam) return <div>Cargando...</div>; return <PostGameWizard initialHomeTeam={homeTeam} finalHomeTeam={liveHomeTeam} opponentTeam={liveOpponentTeam} score={score} fame={fame.home} playersMNG={playersMissingNextGame.filter(p => p.teamId === 'home')} onConfirm={handleConfirmPostGame} />;
