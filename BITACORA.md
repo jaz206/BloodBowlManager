@@ -71,9 +71,10 @@ root/
 ### [2026-03-07] La Gran Forja de Rutas y Tipos
 *   **Reestructuración del Reino**: Refactorización masiva de importaciones para adaptarse a la nueva arquitectura dividida en `Arena`, `Gremio` y `Oráculo`.
 *   **Código de Honor Unificado**: Centralización y expansión de `types.ts`. Se han forjado nuevos contratos para Plegarias, Progresión de Jugadores (`Advancement`), y la Pizarra Táctica (`Token`, `PlayerPosition`).
-*   **Estabilidad en el Campo**: Corrección de componentes críticos como `MatchPage.tsx`, `TacticalBoardPage.tsx` y `PostGameWizard.tsx`, asegurando que el flujo de partido y gestión de equipo sea inquebrantable.
-*   **Limpieza de Arsenales**: Eliminación de duplicados (como `MiniField.tsx`) y corrección de rutas de `useAuth`, `useMasterData` y acceso a datos maestros.
-*   *Archivos Afectados*: `types.ts`, `MatchPage.tsx`, `TacticalBoardPage.tsx`, `PostGameWizard.tsx`, `ApothecaryModal.tsx`, `MiniField.tsx`, `PlayerStatusCard.tsx`, y múltiples componentes en `oracle`, `guild` y `shared`.
+*   **Estabilidad en el Campo**: Corrección de componentes críticos como `MatchPage.tsx`, `TacticalBoardPage.tsx`, `TeamDetailPage.tsx` y `PostGameWizard.tsx`.
+*   **Limpieza de Arsenales**: Eliminación de duplicados y reubicación de `MiniField.tsx` a `components/common/`.
+*   **Sincronización Divina Forzada**: Se ha ajustado la configuración de Git (`core.ignorecase false`) y reseteado la caché para asegurar que Vercel respete la sensibilidad de mayúsculas en los nombres de archivos y carpetas.
+*   *Archivos Afectados*: `types.ts`, `MatchPage.tsx`, `TacticalBoardPage.tsx`, `TeamDetailPage.tsx`, `PostGameWizard.tsx`, `ApothecaryModal.tsx`, `MiniField.tsx`, `PlayerStatusCard.tsx`, y múltiples componentes en `oracle`, `guild` y `shared`.
 
 ---
 ¡Por Nuffle, que los dados siempre te favorezcan! 🎲🎲
