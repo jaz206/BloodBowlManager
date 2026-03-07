@@ -76,5 +76,12 @@ root/
 *   **Sincronización Divina Forzada**: Se ha ajustado la configuración de Git (`core.ignorecase false`) y reseteado la caché para asegurar que Vercel respete la sensibilidad de mayúsculas en los nombres de archivos y carpetas.
 *   *Archivos Afectados*: `types.ts`, `MatchPage.tsx`, `TacticalBoardPage.tsx`, `TeamDetailPage.tsx`, `PostGameWizard.tsx`, `ApothecaryModal.tsx`, `MiniField.tsx`, `PlayerStatusCard.tsx`, y múltiples componentes en `oracle`, `guild` y `shared`.
 
+### [2026-03-07] La Torre de Babel (Internacionalización)
+*   **Motor de Lenguaje**: Creación de `LanguageContext.tsx` y `LanguageProvider` para gestionar el estado del idioma (Español/Inglés) de forma global, con persistencia en `localStorage` y detección automática del navegador.
+*   **Selector de Estandarte**: Implementación del componente `LanguageSelector.tsx` en la cabecera, permitiendo a los entrenadores alternar entre idiomas con una interfaz premium.
+*   **Traducción Maestra**: Creación y traducción completa de los diccionarios de datos: `skills_es.ts`, `skills_en.ts`, `inducements_en.ts`. Ahora las descripciones de habilidades e incentivos son 100% legibles en ambos idiomas.
+*   **IU Localizada**: Integración de la función `t()` en componentes clave: `MainApp`, `OraclePage`, `SkillsPage`, `StarPlayersPage`, e `InducementTable`.
+*   *Archivos Afectados*: `LanguageContext.tsx`, `LanguageSelector.tsx`, `MainApp.tsx`, `useMasterData.ts`, `skills_es.ts`, `skills_en.ts`, `inducements_en.ts`, y las páginas del Oráculo.
+
 ---
 ¡Por Nuffle, que los dados siempre te favorezcan! 🎲🎲
