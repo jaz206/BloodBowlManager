@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
-import GameSequence from './GameSequence';
+import GameSequence from '../arena/GameSequence';
 import PassChart from './PassChart';
-import Prayers from './Prayers';
+import Prayers from '../arena/Prayers';
 import CheatSheet from './CheatSheet';
 
 type SubView = 'sequence' | 'pass' | 'prayers' | 'reference';

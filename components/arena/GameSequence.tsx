@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { gameSequenceData } from '../data/gameSequence';
-import Section from './Section';
+import { gameSequenceData } from '../../data/gameSequence';
+import Section from '../common/Section';
 
 const GameSequence: React.FC = () => {
   return (
