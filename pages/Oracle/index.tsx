@@ -5,6 +5,7 @@ import Skills from './SkillsPage';
 import StarPlayers from './StarPlayersPage';
 import ProbabilityCalculator from './ProbabilitiesPage';
 import InducementTable from './InducementsPage';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 type SubView = 'teams' | 'skills' | 'star_players' | 'calculator' | 'inducements';
 
@@ -13,6 +14,7 @@ interface TeamsAndSkillsProps {
 }
 
 const TeamsAndSkills: React.FC<TeamsAndSkillsProps> = ({ onRequestTeamCreation = () => { } }) => {
+    const { t } = useLanguage();
     const [activeView, setActiveView] = useState<SubView>('teams');
 
     const getButtonClass = (view: SubView) => {
@@ -27,23 +29,23 @@ const TeamsAndSkills: React.FC<TeamsAndSkillsProps> = ({ onRequestTeamCreation =
             <div className="p-2 sm:p-4">
                 <div className="flex border-b border-white/5 mb-8 bg-black/40 rounded-2xl overflow-hidden shadow-xl">
                     <button onClick={() => setActiveView('teams')} className={getButtonClass('teams')}>
-                        Equipos
+                        {t('oracle.tabs.teams')}
                         {activeView === 'teams' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-premium-gold" />}
                     </button>
                     <button onClick={() => setActiveView('skills')} className={getButtonClass('skills')}>
-                        Habilidades
+                        {t('oracle.tabs.skills')}
                         {activeView === 'skills' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-premium-gold" />}
                     </button>
                     <button onClick={() => setActiveView('star_players')} className={getButtonClass('star_players')}>
-                        Estrellas
+                        {t('oracle.tabs.stars')}
                         {activeView === 'star_players' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-premium-gold" />}
                     </button>
                     <button onClick={() => setActiveView('calculator')} className={getButtonClass('calculator')}>
-                        Oráculo
+                        {t('oracle.tabs.oracle')}
                         {activeView === 'calculator' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-premium-gold" />}
                     </button>
                     <button onClick={() => setActiveView('inducements')} className={getButtonClass('inducements')}>
-                        Incentivos
+                        {t('oracle.tabs.inducements')}
                         {activeView === 'inducements' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-premium-gold" />}
                     </button>
                 </div>
@@ -54,13 +56,13 @@ const TeamsAndSkills: React.FC<TeamsAndSkillsProps> = ({ onRequestTeamCreation =
                     {activeView === 'star_players' && <StarPlayers />}
                     {activeView === 'calculator' && (
                         <div className="max-w-md mx-auto py-10">
-                            <h3 className="text-xl font-display font-black text-white italic tracking-tighter uppercase mb-6 text-center">Calculadora de Nuffle</h3>
+                            <h3 className="text-xl font-display font-black text-white italic tracking-tighter uppercase mb-6 text-center">{t('oracle.calculator.title')}</h3>
                             <ProbabilityCalculator />
                         </div>
                     )}
                     {activeView === 'inducements' && (
                         <div className="max-w-2xl mx-auto py-10">
-                            <h3 className="text-xl font-display font-black text-white italic tracking-tighter uppercase mb-6 text-center">Tabla de Incentivos</h3>
+                            <h3 className="text-xl font-display font-black text-white italic tracking-tighter uppercase mb-6 text-center">{t('oracle.inducements.title')}</h3>
                             <InducementTable />
                         </div>
                     )}

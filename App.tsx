@@ -1,14 +1,10 @@
-
-
-
 import React from 'react';
 import { useAuth } from './hooks/useAuth';
 import Login from './components/shared/Login';
 import MainApp from './components/shared/MainApp';
 import { firebaseError } from './firebaseConfig';
 import ErrorBoundary from './components/common/ErrorBoundary';
-
-
+import { LanguageProvider } from './contexts/LanguageContext';
 
 const App: React.FC = () => {
     if (firebaseError) {
@@ -38,11 +34,15 @@ const App: React.FC = () => {
         );
     }
 
-    return user ? (
-        <ErrorBoundary>
-            <MainApp />
-        </ErrorBoundary>
-    ) : <Login />;
+    return (
+        <LanguageProvider>
+            {user ? (
+                <ErrorBoundary>
+                    <MainApp />
+                </ErrorBoundary>
+            ) : <Login />}
+        </LanguageProvider>
+    );
 }
 
 export default App;

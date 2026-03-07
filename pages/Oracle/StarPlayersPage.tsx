@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { starPlayersData } from '../../data/starPlayers';
 import type { StarPlayer } from '../../types';
 import SearchIcon from '../../components/icons/SearchIcon';
-import FilterIcon from '../../components/icons/FilterIcon';
 import SparklesIcon from '../../components/icons/SparklesIcon';
+import { useMasterData } from '../../hooks/useMasterData';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const PlayerStatsRow: React.FC<{ stats: any }> = ({ stats }) => (
     <div className="flex gap-2 mt-2 text-[10px] items-center">
@@ -101,30 +101,38 @@ const StarPlayerCard: React.FC<{ player: StarPlayer }> = ({ player }) => {
 };
 
 const StarPlayers: React.FC = () => {
+    const { starPlayers, loading } = useMasterData();
+    const { t } = useLanguage();
     const [searchTerm, setSearchTerm] = useState('');
-    const [maxCost, setMaxCost] = useState(400000);
     const [selectedFaction, setSelectedFaction] = useState('Todas');
 
     const factions = useMemo(() => {
         const all = new Set<string>();
-        starPlayersData.forEach(p => p.playsFor.forEach(f => all.add(f)));
-        return ['Todas', ...Array.from(all).sort()];
-    }, []);
+        starPlayers.forEach(p => p.playsFor.forEach(f => all.add(f)));
+        return [t('oracle.stars.all'), ...Array.from(all).sort()];
+    }, [starPlayers, t]);
 
     const filteredPlayers = useMemo(() => {
-        return starPlayersData.filter(p => {
+        return starPlayers.filter(p => {
             const matchesSearch = (p.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
                 (p.skills?.toLowerCase() || '').includes(searchTerm.toLowerCase());
-            const matchesCost = p.cost <= maxCost;
-            const matchesFaction = selectedFaction === 'Todas' ||
+            const matchesFaction = selectedFaction === t('oracle.stars.all') ||
                 (p.playsFor && (
                     p.playsFor.includes(selectedFaction) ||
                     p.playsFor.includes('Any Team') ||
                     p.playsFor.includes('Any team except Sylvanian Spotlight')
                 ));
-            return matchesSearch && matchesCost && matchesFaction;
+            return matchesSearch && matchesFaction;
         });
-    }, [searchTerm, maxCost, selectedFaction]);
+    }, [searchTerm, selectedFaction, starPlayers, t]);
+
+    if (loading) {
+        return (
+            <div className="flex justify-center py-20">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-premium-gold"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
@@ -132,7 +140,7 @@ const StarPlayers: React.FC = () => {
                 <div className="relative w-full max-w-md">
                     <input
                         type="text"
-                        placeholder="Buscar jugador o habilidad..."
+                        placeholder={t('oracle.stars.search')}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-slate-500 focus:border-premium-gold outline-none transition-all"
@@ -159,7 +167,7 @@ const StarPlayers: React.FC = () => {
 
             {filteredPlayers.length === 0 && (
                 <div className="text-center py-20">
-                    <p className="text-slate-500 font-display italic">Nuffle dice que aquí no hay nadie... Reintenta con otro filtro.</p>
+                    <p className="text-slate-500 font-display italic">{t('oracle.stars.empty')}</p>
                 </div>
             )}
         </div>

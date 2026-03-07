@@ -1,13 +1,30 @@
 import { useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
 import { collection, onSnapshot, doc, setDoc } from 'firebase/firestore';
-import { teamsData as staticTeams } from '../data/teams';
-import { skillsData as staticSkills } from '../data/skills';
-import { starPlayersData as staticStars } from '../data/starPlayers';
-import { inducements as staticInducements } from '../data/inducements';
+import { useLanguage } from '../contexts/LanguageContext';
+
+// ── Static Spanish Data ───────────────────────────────────────────────────────
+import { teamsData as teamsDataEs } from '../data/teams';
+import { skillsData as skillsDataEs } from '../data/skills_es';
+import { starPlayersData as starsDataEs } from '../data/starPlayers';
+import { inducements as inducementsEs } from '../data/inducements';
+
+// ── Static English Data ───────────────────────────────────────────────────────
+// (For demo, using localized versions if available, fallback to ES for now on non-created yet)
+import { skillsData as skillsDataEn } from '../data/skills_en';
+import { inducementsData as inducementsEn } from '../data/inducements_en';
+
 import type { Team, Skill, StarPlayer, Inducement } from '../types';
 
 export const useMasterData = () => {
+    const { language } = useLanguage();
+
+    // Resolve static data based on language
+    const staticSkills = language === 'es' ? skillsDataEs : skillsDataEn;
+    const staticInducements = language === 'es' ? inducementsEs : (inducementsEn as any as Inducement[]);
+    const staticTeams = teamsDataEs; // TODO: Localize teams
+    const staticStars = starsDataEs; // TODO: Localize stars
+
     const [teams, setTeams] = useState<Team[]>([]);
     const [skills, setSkills] = useState<Skill[]>([]);
     const [starPlayers, setStarPlayers] = useState<StarPlayer[]>([]);
@@ -16,6 +33,7 @@ export const useMasterData = () => {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        // Reset when language changes if not using Firestore primarily
         if (!db) {
             setTeams(staticTeams);
             setSkills(staticSkills);
@@ -36,6 +54,10 @@ export const useMasterData = () => {
             }
         };
 
+        // Note: Firestore data is currently language-agnostic. 
+        // In a real production app, we would fetch from different collections or fields.
+        // For this localized demonstration, if Firestore is empty, we use our localized static files.
+
         // Teams Listener
         const unsubTeams = onSnapshot(collection(db, 'teams_master'), (snapshot) => {
             if (snapshot.empty) {
@@ -48,7 +70,6 @@ export const useMasterData = () => {
             teamsLoaded = true;
             checkLoading();
         }, (err) => {
-            console.error("Error fetching teams:", err);
             setTeams(staticTeams);
             teamsLoaded = true;
             checkLoading();
@@ -59,6 +80,7 @@ export const useMasterData = () => {
             if (snapshot.empty) {
                 setSkills(staticSkills);
             } else {
+                // If using Firestore, we still use static as fallback
                 const fetched = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as unknown as Skill));
                 fetched.sort((a, b) => a.name.localeCompare(b.name));
                 setSkills(fetched);
@@ -66,7 +88,6 @@ export const useMasterData = () => {
             skillsLoaded = true;
             checkLoading();
         }, (err) => {
-            console.error("Error fetching skills:", err);
             setSkills(staticSkills);
             skillsLoaded = true;
             checkLoading();
@@ -111,7 +132,7 @@ export const useMasterData = () => {
             unsubStars();
             unsubInducements();
         };
-    }, []);
+    }, [language]); // Depend on language to re-trigger fallback if db is not connected
 
     const updateMasterItem = async (type: 'team' | 'skill' | 'starPlayer' | 'inducement', itemId: string, data: any) => {
         if (!db) return;
@@ -127,10 +148,11 @@ export const useMasterData = () => {
 
     const syncMasterData = async () => {
         if (!db) return;
-        for (const item of staticTeams) await setDoc(doc(db, 'teams_master', item.name), item);
-        for (const item of staticSkills) await setDoc(doc(db, 'skills_master', item.name), item);
-        for (const item of staticStars) await setDoc(doc(db, 'star_players_master', item.name), item);
-        for (const item of staticInducements) await setDoc(doc(db, 'inducements_master', item.name), item);
+        // Syncing always uses ES data as default "source of truth" for Firestore for now
+        for (const item of teamsDataEs) await setDoc(doc(db, 'teams_master', item.name), item);
+        for (const item of skillsDataEs) await setDoc(doc(db, 'skills_master', item.name), item);
+        for (const item of starsDataEs) await setDoc(doc(db, 'star_players_master', item.name), item);
+        for (const item of inducementsEs) await setDoc(doc(db, 'inducements_master', item.name), item);
     };
 
     return {
@@ -142,6 +164,6 @@ export const useMasterData = () => {
         error,
         updateMasterItem,
         syncMasterData,
-        refresh: () => setLoading(true) // Triggers re-fetch by logic if needed, but snapshots handle it
+        refresh: () => setLoading(true)
     };
 };

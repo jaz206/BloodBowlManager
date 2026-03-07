@@ -23,17 +23,23 @@ import type { ManagedTeam, League, Play, GameEvent } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
 import { db } from '../../firebaseConfig';
 import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, query, limit, orderBy } from "firebase/firestore";
+import { useLanguage } from '../../contexts/LanguageContext';
+import LanguageSelector from '../common/LanguageSelector';
 
 type View = 'home' | 'oracle' | 'starplayers' | 'guild' | 'tactical' | 'arena' | 'leagues' | 'guide' | 'admin';
 type SyncStatus = 'synced' | 'syncing' | 'error';
 
-const GuestWarningBanner = () => (
-  <div className="bg-blood-red/40 backdrop-blur-md border-b border-blood-red/50 text-white text-center p-2 text-[10px] font-display uppercase tracking-[0.2em] sticky top-0 z-[60] shadow-2xl">
-    <span className="opacity-80">Estás en modo Invitado. Tu progreso no se guardará al cerrar o recargar la página.</span>
-  </div>
-);
+const GuestWarningBanner = () => {
+  const { t } = useLanguage();
+  return (
+    <div className="bg-blood-red/40 backdrop-blur-md border-b border-blood-red/50 text-white text-center p-2 text-[10px] font-display uppercase tracking-[0.2em] sticky top-0 z-[60] shadow-2xl">
+      <span className="opacity-80">{t('guest.warning')}</span>
+    </div>
+  );
+};
 
 const MainApp: React.FC = () => {
+  const { t } = useLanguage();
   const [activeView, setActiveView] = useState<View>('home');
   const { user, isAdmin } = useAuth();
   const isGuest = useMemo(() => user?.id.startsWith('guest-'), [user]);
@@ -215,7 +221,7 @@ const MainApp: React.FC = () => {
             onClick={() => setActiveView('home')}
             className="text-2xl font-display font-black text-white italic tracking-tighter leading-none cursor-pointer group"
           >
-            BLOOD BOWL <span className="text-blood-red group-hover:text-white transition-colors">ASSISTANT</span>
+            {t('header.title')} <span className="text-blood-red group-hover:text-white transition-colors">{t('header.subtitle')}</span>
           </h1>
           {isAdmin && (
             <button
@@ -225,13 +231,14 @@ const MainApp: React.FC = () => {
                 : 'border-white/20 text-slate-500 hover:border-premium-gold hover:text-premium-gold'
                 }`}
             >
-              ADMIN
+              {t('nav.admin')}
             </button>
           )}
         </div>
 
         <div className="flex items-center gap-6">
           <SyncStatusIndicator status={syncState} />
+          <LanguageSelector />
           <UserProfile />
         </div>
       </header>
@@ -240,11 +247,11 @@ const MainApp: React.FC = () => {
         {/* Navigation - Modern Bento Nav (Bottom or Top) */}
         <nav className="fixed bottom-10 left-1/2 -translate-x-1/2 w-[95%] max-w-2xl glass-panel border-white/10 overflow-hidden z-[100] shadow-[0_30px_60px_rgba(0,0,0,0.9)] rounded-3xl bg-black/80 backdrop-blur-2xl">
           <div className="flex justify-around items-center h-16">
-            <NavButton view="home" label="Inicio" icon={<HomeIcon />} />
-            <NavButton view="oracle" label="Oráculo" icon={<BookOpenIcon />} />
-            <NavButton view="guild" label="Gremio" icon={<UsersIcon />} />
-            <NavButton view="tactical" label="Pizarra" icon={<ClipboardListIcon />} />
-            <NavButton view="arena" label="Arena" icon={<TrophyIcon />} />
+            <NavButton view="home" label={t('nav.home')} icon={<HomeIcon />} />
+            <NavButton view="oracle" label={t('nav.oracle')} icon={<BookOpenIcon />} />
+            <NavButton view="guild" label={t('nav.guild')} icon={<UsersIcon />} />
+            <NavButton view="tactical" label={t('nav.tactical')} icon={<ClipboardListIcon />} />
+            <NavButton view="arena" label={t('nav.arena')} icon={<TrophyIcon />} />
           </div>
         </nav>
 
@@ -255,7 +262,7 @@ const MainApp: React.FC = () => {
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              <p className="text-sm font-display uppercase tracking-widest mt-4 animate-pulse text-premium-gold/60">Sincronizando con Nuffle...</p>
+              <p className="text-sm font-display uppercase tracking-widest mt-4 animate-pulse text-premium-gold/60">{t('loading.sync')}</p>
             </div>
           ) : (
             <div className="animate-in fade-in zoom-in-95 duration-500">
@@ -275,8 +282,7 @@ const MainApp: React.FC = () => {
               {activeView === 'tactical' && <TacticalBoardPage managedTeams={managedTeams} plays={plays} onSavePlay={handlePlaySave} onDeletePlay={handlePlayDelete} />}
               {activeView === 'arena' && <MatchPage managedTeams={managedTeams} onTeamUpdate={handleTeamUpdate} />}
               {activeView === 'admin' && <AdminPanel />}
-              {activeView === 'guide' && <QuickGuide />
-              }
+              {activeView === 'guide' && <QuickGuide />}
             </div>
           )}
         </div>

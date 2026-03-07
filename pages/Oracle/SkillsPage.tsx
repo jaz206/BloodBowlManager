@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import type { Skill } from '../../types';
 import { useMasterData } from '../../hooks/useMasterData';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const SkillCard: React.FC<{ skill: Skill }> = ({ skill }) => {
     const categoryColor: Record<string, string> = {
@@ -27,6 +28,7 @@ const SkillCard: React.FC<{ skill: Skill }> = ({ skill }) => {
 
 const Skills: React.FC = () => {
     const { skills, loading } = useMasterData();
+    const { t } = useLanguage();
     const [searchTerm, setSearchTerm] = useState('');
 
     const filteredSkills = useMemo(() => {
@@ -43,18 +45,18 @@ const Skills: React.FC = () => {
     return (
         <div className="space-y-6">
             <div className="text-center">
-                <h2 className="text-2xl font-semibold text-amber-400 mb-2">Referencia de Habilidades</h2>
+                <h2 className="text-2xl font-semibold text-amber-400 mb-2">{t('oracle.skills.title')}</h2>
                 <p className="text-slate-400 max-w-lg mx-auto">Busca habilidades por nombre, categoría o descripción.</p>
             </div>
 
             <div className="sticky top-2 z-10 mb-6 flex justify-center">
                 <input
                     type="text"
-                    placeholder="Filtrar habilidades..."
+                    placeholder={t('oracle.skills.filter')}
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
                     className="w-full max-w-md bg-slate-900 border-2 border-slate-600 rounded-lg py-3 px-4 text-white placeholder-slate-400 focus:ring-amber-500 focus:border-amber-500 shadow-lg"
-                    aria-label="Filtrar habilidades"
+                    aria-label={t('oracle.skills.filter')}
                 />
             </div>
 
@@ -70,7 +72,7 @@ const Skills: React.FC = () => {
                 </div>
             ) : (
                 <p className="text-center text-slate-400 py-8">
-                    No se encontraron habilidades que coincidan con "{searchTerm}".
+                    {t('oracle.skills.empty')}
                 </p>
             )}
         </div>
