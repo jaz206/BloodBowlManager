@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import type { ManagedTeam, ManagedPlayer, Skill } from '../types';
-import { skillsData } from '../data/skills';
-import { teamsData } from '../data/teams';
+import type { ManagedTeam, ManagedPlayer, Skill } from '../../types';
+import { skillsData } from '../../data/skills';
+import { teamsData } from '../../data/teams';
 
 interface SkillSelectionModalProps {
     player: ManagedPlayer;

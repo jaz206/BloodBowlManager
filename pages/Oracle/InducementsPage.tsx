@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { inducements } from '../data/inducements';
+import { inducements } from '../../data/inducements';
 
 const InducementTable: React.FC = () => {
     const [tv1, setTv1] = useState(1000);

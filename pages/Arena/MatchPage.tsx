@@ -39,6 +39,7 @@ declare const XLSX: any;
 export interface BlockResolution {
     knockDowns: { id: number; isTurnoverSource: boolean }[];
     ballBecomesLoose: boolean;
+    summary: string[];
 }
 
 interface GameBoardProps {

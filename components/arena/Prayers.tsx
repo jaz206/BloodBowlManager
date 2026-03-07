@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { prayersData } from '../data/prayers';
-import type { Prayer } from '../types';
+import { prayersData } from '../../data/prayers';
+import type { Prayer } from '../../types';
 
 const Prayers: React.FC = () => {
   const [currentPrayer, setCurrentPrayer] = useState<Prayer | null>(null);

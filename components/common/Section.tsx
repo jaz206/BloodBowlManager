@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
-import type { Rule } from '../types';
-import RuleItem from './RuleItem';
-import ChevronDownIcon from './icons/ChevronDownIcon';
-import ChevronUpIcon from './icons/ChevronUpIcon';
+import type { Rule } from '../../types';
+import RuleItem from '../oracle/RuleItem';
+import ChevronDownIcon from '../icons/ChevronDownIcon';
+import ChevronUpIcon from '../icons/ChevronUpIcon';
 
 interface SectionProps {
   title: string;

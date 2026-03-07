@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import type { ManagedPlayer, AdvancementType, Advancement, Skill } from '../types';
-import { skillsData } from '../data/skills';
+import type { ManagedPlayer, AdvancementType, Advancement, Skill } from '../../types';
+import { skillsData } from '../../data/skills';
 
 interface PlayerAdvancementModalProps {
     player: ManagedPlayer;
@@ -197,8 +197,8 @@ const AdvancementOption: React.FC<{ title: string; cost: number; available: bool
         disabled={!available}
         onClick={onClick}
         className={`w-full flex justify-between items-center p-4 rounded-xl border transition-premium ${available
-                ? 'bg-white/5 border-white/10 hover:border-premium-gold/50 hover:bg-premium-gold/5 group'
-                : 'bg-black/20 border-white/5 opacity-40 cursor-not-allowed'
+            ? 'bg-white/5 border-white/10 hover:border-premium-gold/50 hover:bg-premium-gold/5 group'
+            : 'bg-black/20 border-white/5 opacity-40 cursor-not-allowed'
             }`}
     >
         <span className={`font-display font-black uppercase tracking-tight italic ${available ? 'text-white group-hover:text-premium-gold' : 'text-slate-600'}`}>

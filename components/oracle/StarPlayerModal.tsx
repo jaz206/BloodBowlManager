@@ -1,10 +1,10 @@
 
 
 import React, { useState } from 'react';
-import type { StarPlayer, Skill } from '../types';
-import { skillsData } from '../data/skills';
+import type { StarPlayer, Skill } from '../../types';
+import { skillsData } from '../../data/skills';
 import SkillModal from './SkillModal';
-import ImageModal from './ImageModal';
+import ImageModal from '../common/ImageModal';
 
 interface StarPlayerModalProps {
   player: StarPlayer;

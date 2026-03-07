@@ -68,5 +68,12 @@ root/
 *   **Código de Honor Reforzado**: Actualización masiva de **types.ts** para dar soporte a parejas de Jugadores Estrella, estados de clima y acciones de puntos de estrellato (PE).
 *   *Archivos Afectados*: `GameBoard.tsx`, `MatchNarrator.tsx`, `AdminPanel.tsx`, `types.ts`, `useMasterData.ts`.
 
+### [2026-03-07] La Gran Forja de Rutas y Tipos
+*   **Reestructuración del Reino**: Refactorización masiva de importaciones para adaptarse a la nueva arquitectura dividida en `Arena`, `Gremio` y `Oráculo`.
+*   **Código de Honor Unificado**: Centralización y expansión de `types.ts`. Se han forjado nuevos contratos para Plegarias, Progresión de Jugadores (`Advancement`), y la Pizarra Táctica (`Token`, `PlayerPosition`).
+*   **Estabilidad en el Campo**: Corrección de componentes críticos como `MatchPage.tsx`, `TacticalBoardPage.tsx` y `PostGameWizard.tsx`, asegurando que el flujo de partido y gestión de equipo sea inquebrantable.
+*   **Limpieza de Arsenales**: Eliminación de duplicados (como `MiniField.tsx`) y corrección de rutas de `useAuth`, `useMasterData` y acceso a datos maestros.
+*   *Archivos Afectados*: `types.ts`, `MatchPage.tsx`, `TacticalBoardPage.tsx`, `PostGameWizard.tsx`, `ApothecaryModal.tsx`, `MiniField.tsx`, `PlayerStatusCard.tsx`, y múltiples componentes en `oracle`, `guild` y `shared`.
+
 ---
 ¡Por Nuffle, que los dados siempre te favorezcan! 🎲🎲

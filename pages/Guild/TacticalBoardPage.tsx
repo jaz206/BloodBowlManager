@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import type { Token, Play, PlayerPosition, ManagedTeam, ManagedPlayer } from '../types';
-import { fieldImage } from '../data/fieldImage';
+import type { Token, Play, PlayerPosition, ManagedTeam, ManagedPlayer, BoardToken } from '../../types';
+import { fieldImage } from '../../data/fieldImage';
 
 const MAX_TOKENS = 11;
 const GRID_COLS = 15;
@@ -14,9 +14,7 @@ const positionConfig: Record<PlayerPosition, { color: string; hover: string; }> 
   Receptor: { color: 'bg-amber-500', hover: 'hover:bg-amber-500' },
 };
 
-interface BoardToken extends Token {
-    playerData?: ManagedPlayer;
-}
+// Using BoardToken from types.ts instead of local interface
 
 interface PlaysProps {
   managedTeams: ManagedTeam[];
@@ -31,22 +29,22 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
   const [selectedPlayId, setSelectedPlayId] = useState<string | undefined>(plays.length > 0 ? plays[0].id : undefined);
   const [teamToLoad, setTeamToLoad] = useState('');
   const [selectedPlayer, setSelectedPlayer] = useState<ManagedPlayer | null>(null);
-  
+
   const fieldRef = useRef<HTMLDivElement>(null);
   const draggedTokenRef = useRef<{ id: number } | null>(null);
-  
+
   // When available plays change (e.g., after deleting one), make sure the selection is still valid.
   useEffect(() => {
     if (plays.length > 0 && !plays.find(p => p.id === selectedPlayId)) {
-        setSelectedPlayId(plays[0].id);
+      setSelectedPlayId(plays[0].id);
     } else if (plays.length === 0) {
-        setSelectedPlayId(undefined);
+      setSelectedPlayId(undefined);
     }
   }, [plays, selectedPlayId]);
 
   const handleDragMove = useCallback((e: MouseEvent | TouchEvent) => {
     if (!draggedTokenRef.current || !fieldRef.current) return;
-    
+
     if (e.cancelable) e.preventDefault();
 
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
@@ -65,11 +63,11 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     gridX = Math.max(0, Math.min(GRID_COLS - 1, gridX));
     gridY = Math.max(0, Math.min(GRID_ROWS - 1, gridY));
 
-    setTokens(currentTokens => currentTokens.map(token => 
-        token.id === draggedTokenRef.current?.id ? { ...token, x: gridX, y: gridY } : token
+    setTokens(currentTokens => currentTokens.map(token =>
+      token.id === draggedTokenRef.current?.id ? { ...token, x: gridX, y: gridY } : token
     ));
   }, []);
-  
+
   const handleDragEnd = useCallback(() => {
     draggedTokenRef.current = null;
   }, []);
@@ -82,20 +80,20 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     document.addEventListener('touchend', handleDragEnd);
 
     return () => {
-        document.removeEventListener('mousemove', handleDragMove);
-        document.removeEventListener('mouseup', handleDragEnd);
-        document.removeEventListener('touchmove', handleDragMove as any);
-        document.removeEventListener('touchend', handleDragEnd);
+      document.removeEventListener('mousemove', handleDragMove);
+      document.removeEventListener('mouseup', handleDragEnd);
+      document.removeEventListener('touchmove', handleDragMove as any);
+      document.removeEventListener('touchend', handleDragEnd);
     };
   }, [handleDragMove, handleDragEnd]);
 
   const mapPositionToType = (position: string): PlayerPosition => {
-      const lowerPos = position.toLowerCase();
-      if (lowerPos.includes('blitzer') || lowerPos.includes('wardancer') || lowerPos.includes('witch') || lowerPos.includes('assassin') || lowerPos.includes('slayer')) return 'Blitzer';
-      if (lowerPos.includes('thrower') || lowerPos.includes('lanzador')) return 'Lanzador';
-      if (lowerPos.includes('runner') || lowerPos.includes('corredor')) return 'Corredor';
-      if (lowerPos.includes('catcher') || lowerPos.includes('receptor')) return 'Receptor';
-      return 'Línea';
+    const lowerPos = position.toLowerCase();
+    if (lowerPos.includes('blitzer') || lowerPos.includes('wardancer') || lowerPos.includes('witch') || lowerPos.includes('assassin') || lowerPos.includes('slayer')) return 'Blitzer';
+    if (lowerPos.includes('thrower') || lowerPos.includes('lanzador')) return 'Lanzador';
+    if (lowerPos.includes('runner') || lowerPos.includes('corredor')) return 'Corredor';
+    if (lowerPos.includes('catcher') || lowerPos.includes('receptor')) return 'Receptor';
+    return 'Línea';
   };
 
   const handleAddToken = (position: PlayerPosition) => {
@@ -114,16 +112,17 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
       alert('Por favor, introduce un nombre para la jugada y añade al menos un jugador.');
       return;
     }
-    
+
     // Check if we are updating an existing play by name
     const existingPlay = plays.find(p => p.name.toLowerCase() === playName.trim().toLowerCase());
 
-    const newPlay: Play = { 
-        id: existingPlay?.id, // Keep the id if it's an update
-        name: playName.trim(), 
-        tokens: tokens.map(({playerData, ...token}) => token) // Don't save playerData
+    const newPlay: Play = {
+      id: existingPlay?.id, // Keep the id if it's an update
+      name: playName.trim(),
+      rosterName: managedTeams.find(t => t.id === teamToLoad)?.rosterName || 'Generica',
+      tokens: tokens.map(({ playerData, ...token }) => token) // Don't save playerData
     };
-    
+
     onSavePlay(newPlay);
     setPlayName('');
     // The selection will be updated via useEffect when props change
@@ -144,33 +143,33 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     if (!teamToLoad) return;
     const team = managedTeams.find(t => t.name === teamToLoad);
     if (team && team.players.length > 0) {
-        const newTokens: BoardToken[] = team.players.map((player, index) => ({
-            id: player.id,
-            position: mapPositionToType(player.position),
-            x: 2 + (index % 6) * 2,
-            y: GRID_ROWS - 3 + Math.floor(index / 6),
-            playerData: player,
-        }));
-        setTokens(newTokens);
+      const newTokens: BoardToken[] = team.players.map((player, index) => ({
+        id: player.id,
+        position: mapPositionToType(player.position),
+        x: 2 + (index % 6) * 2,
+        y: GRID_ROWS - 3 + Math.floor(index / 6),
+        playerData: player,
+      }));
+      setTokens(newTokens);
     }
   };
 
   const handleDeletePlay = () => {
-     if (!selectedPlayId) return;
-     const playToDelete = plays.find(p => p.id === selectedPlayId);
-     if (playToDelete && confirm(`¿Estás seguro de que quieres borrar la jugada "${playToDelete.name}"?`)) {
-        onDeletePlay(selectedPlayId);
-     }
+    if (!selectedPlayId) return;
+    const playToDelete = plays.find(p => p.id === selectedPlayId);
+    if (playToDelete && confirm(`¿Estás seguro de que quieres borrar la jugada "${playToDelete.name}"?`)) {
+      onDeletePlay(selectedPlayId);
+    }
   };
 
   const handleDragStart = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>, id: number) => {
     // Prevent default for mouse events to enable dragging, but not for touch, to allow scrolling.
     if (!('touches' in e)) {
-        e.preventDefault();
+      e.preventDefault();
     }
     const clickedToken = tokens.find(t => t.id === id);
     if (clickedToken) {
-        setSelectedPlayer(clickedToken.playerData || null);
+      setSelectedPlayer(clickedToken.playerData || null);
     }
     draggedTokenRef.current = { id };
   };
@@ -182,26 +181,26 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
         <p className="text-slate-400 max-w-lg mx-auto">Crea, guarda y carga tus jugadas. Arrastra los jugadores para posicionarlos.</p>
       </div>
 
-      <div 
+      <div
         ref={fieldRef}
         className="relative w-full max-w-5xl mx-auto aspect-[15/13] bg-slate-900 overflow-hidden rounded-lg shadow-xl border-2 border-slate-700 select-none"
       >
         <img src={fieldImage} alt="Campo de Blood Bowl" className="absolute inset-0 w-full h-full object-cover object-top" />
-        
+
         {/* Opponent's Touchdown Zone */}
         <div className="absolute top-0 left-0 right-0 h-[calc(100%/13)] bg-red-800/40 border-b-2 border-red-500/60 pointer-events-none"></div>
 
         {/* Grid Overlay */}
-        <div 
-            className="absolute inset-0 grid pointer-events-none" 
-            style={{ 
-                gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`, 
-                gridTemplateRows: `repeat(${GRID_ROWS}, 1fr)` 
-            }}
+        <div
+          className="absolute inset-0 grid pointer-events-none"
+          style={{
+            gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`,
+            gridTemplateRows: `repeat(${GRID_ROWS}, 1fr)`
+          }}
         >
-            {Array.from({ length: GRID_ROWS * GRID_COLS }).map((_, i) => (
-                <div key={i} className="w-full h-full border border-white/10"></div>
-            ))}
+          {Array.from({ length: GRID_ROWS * GRID_COLS }).map((_, i) => (
+            <div key={i} className="w-full h-full border border-white/10"></div>
+          ))}
         </div>
 
         {tokens.map((token, index) => (
@@ -221,7 +220,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
         ))}
       </div>
 
-       {selectedPlayer && (
+      {selectedPlayer && (
         <div className="mt-6 bg-slate-900/70 p-4 rounded-lg border border-slate-700 animate-fade-in max-w-5xl mx-auto">
           <div className="flex justify-between items-start">
             <div>
@@ -229,9 +228,9 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
               <p className="text-slate-400 text-sm">{selectedPlayer.position}</p>
             </div>
             <button onClick={() => setSelectedPlayer(null)} className="text-slate-400 hover:text-white p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-white" aria-label="Cerrar detalles del jugador">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
@@ -260,71 +259,71 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
         <div className="bg-slate-900/70 p-4 rounded-lg border border-slate-700 md:col-span-2">
-            <h3 className="text-lg font-semibold text-amber-400 mb-4">Cargar Plantilla de Equipo</h3>
-            {managedTeams.length > 0 ? (
-                <div className="flex gap-3">
-                    <select
-                        value={teamToLoad}
-                        onChange={e => setTeamToLoad(e.target.value)}
-                        className="flex-grow bg-slate-800 border border-slate-600 rounded-md py-2 px-3 text-white focus:ring-amber-500 focus:border-amber-500"
-                    >
-                        <option value="">Seleccionar equipo...</option>
-                        {managedTeams.map(team => <option key={team.id || team.name} value={team.name}>{team.name}</option>)}
-                    </select>
-                    <button onClick={handleLoadTeam} className="bg-teal-600 text-white font-bold py-2 px-6 rounded-md shadow-md hover:bg-teal-500 transition-colors">Cargar Equipo</button>
-                </div>
-            ) : (
-                <p className="text-slate-400">No has creado ningún equipo en el "Gestor de Equipo".</p>
-            )}
+          <h3 className="text-lg font-semibold text-amber-400 mb-4">Cargar Plantilla de Equipo</h3>
+          {managedTeams.length > 0 ? (
+            <div className="flex gap-3">
+              <select
+                value={teamToLoad}
+                onChange={e => setTeamToLoad(e.target.value)}
+                className="flex-grow bg-slate-800 border border-slate-600 rounded-md py-2 px-3 text-white focus:ring-amber-500 focus:border-amber-500"
+              >
+                <option value="">Seleccionar equipo...</option>
+                {managedTeams.map(team => <option key={team.id || team.name} value={team.name}>{team.name}</option>)}
+              </select>
+              <button onClick={handleLoadTeam} className="bg-teal-600 text-white font-bold py-2 px-6 rounded-md shadow-md hover:bg-teal-500 transition-colors">Cargar Equipo</button>
+            </div>
+          ) : (
+            <p className="text-slate-400">No has creado ningún equipo en el "Gestor de Equipo".</p>
+          )}
         </div>
-        
+
         <div className="bg-slate-900/70 p-4 rounded-lg border border-slate-700">
-            <h3 className="text-lg font-semibold text-amber-400 mb-4">Añadir Jugadores ({tokens.length}/{MAX_TOKENS})</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
-                {(Object.keys(positionConfig) as PlayerPosition[]).map((position) => (
-                    <button 
-                        key={position}
-                        onClick={() => handleAddToken(position)}
-                        disabled={tokens.length >= MAX_TOKENS}
-                        className={`w-full ${positionConfig[position].color} ${positionConfig[position].hover} text-white font-bold py-2 px-2 rounded-md shadow-md disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm`}
-                    >
-                        + {position}
-                    </button>
-                ))}
-            </div>
-            <button onClick={handleClearField} className="bg-rose-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-rose-500 transition-colors w-full">
-                Limpiar Campo
-            </button>
+          <h3 className="text-lg font-semibold text-amber-400 mb-4">Añadir Jugadores ({tokens.length}/{MAX_TOKENS})</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
+            {(Object.keys(positionConfig) as PlayerPosition[]).map((position) => (
+              <button
+                key={position}
+                onClick={() => handleAddToken(position)}
+                disabled={tokens.length >= MAX_TOKENS}
+                className={`w-full ${positionConfig[position].color} ${positionConfig[position].hover} text-white font-bold py-2 px-2 rounded-md shadow-md disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm`}
+              >
+                + {position}
+              </button>
+            ))}
+          </div>
+          <button onClick={handleClearField} className="bg-rose-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-rose-500 transition-colors w-full">
+            Limpiar Campo
+          </button>
         </div>
-        
-         <div className="bg-slate-900/70 p-4 rounded-lg border border-slate-700">
-            <h3 className="text-lg font-semibold text-amber-400 mb-4">Mis Jugadas</h3>
-            {plays.length > 0 ? (
+
+        <div className="bg-slate-900/70 p-4 rounded-lg border border-slate-700">
+          <h3 className="text-lg font-semibold text-amber-400 mb-4">Mis Jugadas</h3>
+          {plays.length > 0 ? (
             <div className="space-y-3">
-                 <select value={selectedPlayId} onChange={e => setSelectedPlayId(e.target.value)} className="w-full bg-slate-800 border border-slate-600 rounded-md py-2 px-3 text-white focus:ring-amber-500 focus:border-amber-500">
-                    {plays.map(play => <option key={play.id} value={play.id}>{play.name}</option>)}
-                </select>
-                <div className="flex flex-wrap gap-2">
-                    <button onClick={handleLoadPlay} className="flex-1 bg-sky-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-sky-500 transition-colors">Cargar</button>
-                    <button onClick={handleDeletePlay} className="flex-1 bg-slate-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-slate-500 transition-colors">Borrar</button>
-                </div>
+              <select value={selectedPlayId} onChange={e => setSelectedPlayId(e.target.value)} className="w-full bg-slate-800 border border-slate-600 rounded-md py-2 px-3 text-white focus:ring-amber-500 focus:border-amber-500">
+                {plays.map(play => <option key={play.id} value={play.id}>{play.name}</option>)}
+              </select>
+              <div className="flex flex-wrap gap-2">
+                <button onClick={handleLoadPlay} className="flex-1 bg-sky-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-sky-500 transition-colors">Cargar</button>
+                <button onClick={handleDeletePlay} className="flex-1 bg-slate-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-slate-500 transition-colors">Borrar</button>
+              </div>
             </div>
-             ) : <p className="text-slate-400">No hay jugadas guardadas.</p>}
+          ) : <p className="text-slate-400">No hay jugadas guardadas.</p>}
         </div>
 
         <div className="bg-slate-900/70 p-4 rounded-lg border border-slate-700 md:col-span-2">
-            <h3 className="text-lg font-semibold text-amber-400 mb-4">Guardar Jugada Actual</h3>
-            <div className="flex gap-3">
-                <input 
-                    type="text"
-                    value={playName}
-                    onChange={e => setPlayName(e.target.value)}
-                    placeholder="Nombre de la jugada"
-                    className="flex-grow bg-slate-800 border border-slate-600 rounded-md py-2 px-3 text-white focus:ring-amber-500 focus:border-amber-500"
-                    aria-label="Nombre de la jugada"
-                />
-                <button onClick={handleSavePlay} className="bg-emerald-600 text-white font-bold py-2 px-6 rounded-md shadow-md hover:bg-emerald-500 transition-colors">Guardar</button>
-            </div>
+          <h3 className="text-lg font-semibold text-amber-400 mb-4">Guardar Jugada Actual</h3>
+          <div className="flex gap-3">
+            <input
+              type="text"
+              value={playName}
+              onChange={e => setPlayName(e.target.value)}
+              placeholder="Nombre de la jugada"
+              className="flex-grow bg-slate-800 border border-slate-600 rounded-md py-2 px-3 text-white focus:ring-amber-500 focus:border-amber-500"
+              aria-label="Nombre de la jugada"
+            />
+            <button onClick={handleSavePlay} className="bg-emerald-600 text-white font-bold py-2 px-6 rounded-md shadow-md hover:bg-emerald-500 transition-colors">Guardar</button>
+          </div>
         </div>
       </div>
       <style>{`

@@ -1,11 +1,11 @@
 
 
 import React from 'react';
-import type { ManagedPlayer, PlayerStatus, SppActionType } from '../types';
-import TdIcon from './icons/TdIcon';
-import PassIcon from './icons/PassIcon';
-import CasualtyIcon from './icons/CasualtyIcon';
-import InterferenceIcon from './icons/InterferenceIcon';
+import type { ManagedPlayer, PlayerStatus, SppActionType } from '../../types';
+import TdIcon from '../icons/TdIcon';
+import PassIcon from '../icons/PassIcon';
+import CasualtyIcon from '../icons/CasualtyIcon';
+import InterferenceIcon from '../icons/InterferenceIcon';
 
 interface PlayerStatusCardProps {
     player: ManagedPlayer;
@@ -24,6 +24,8 @@ const SppActionIcons: React.FC<{ actions: Partial<Record<SppActionType, number>>
         PASS: { icon: <PassIcon />, title: 'Pase Completado' },
         CASUALTY: { icon: <CasualtyIcon />, title: 'Lesión Causada' },
         INTERFERENCE: { icon: <InterferenceIcon />, title: 'Interferencia' },
+        INT: { icon: <InterferenceIcon />, title: 'Intercepción' },
+        MVP: { icon: <TdIcon />, title: 'MVP' },
     };
 
     return (

@@ -1,13 +1,13 @@
 
 import React, { useState } from 'react';
-import { skillCategories } from '../data/skillCategories';
-import { advancementCosts, valuationIncreases, costlyErrors, errorDefinitions } from '../data/managementTables';
-import { weatherConditions } from '../data/weather';
-import { kickoffEvents } from '../data/kickoffEvents';
-import { casualtyResults } from '../data/casualties';
-import { stuntyInjuryResults } from '../data/stuntyInjuries';
-import { lastingInjuryResults } from '../data/lastingInjuries';
-import { prayersData } from '../data/prayers';
+import { skillCategories } from '../../data/skillCategories';
+import { advancementCosts, valuationIncreases, costlyErrors, errorDefinitions } from '../../data/managementTables';
+import { weatherConditions } from '../../data/weather';
+import { kickoffEvents } from '../../data/kickoffEvents';
+import { casualtyResults } from '../../data/casualties';
+import { stuntyInjuryResults } from '../../data/stuntyInjuries';
+import { lastingInjuryResults } from '../../data/lastingInjuries';
+import { prayersData } from '../../data/prayers';
 
 type CheatSection = 'game' | 'management' | 'skills' | 'injuries';
 
@@ -80,10 +80,10 @@ const GameTables = () => (
             <h3 className="text-premium-gold font-display uppercase tracking-widest text-sm mb-4 border-b border-premium-gold/30 pb-1">Tablas de Clima (2D6)</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {weatherConditions.map(w => (
-                    <div key={w.roll} className="bg-slate-800/40 p-3 rounded-lg border border-white/5">
+                    <div key={w.diceRoll} className="bg-slate-800/40 p-3 rounded-lg border border-white/5">
                         <div className="flex justify-between items-center mb-2">
                             <span className="text-premium-gold font-bold">{w.title}</span>
-                            <span className="bg-slate-700 px-2 py-0.5 rounded text-xs font-mono">{w.roll}</span>
+                            <span className="bg-slate-700 px-2 py-0.5 rounded text-xs font-mono">{w.diceRoll}</span>
                         </div>
                         <p className="text-xs text-slate-400 leading-relaxed">{w.description}</p>
                     </div>

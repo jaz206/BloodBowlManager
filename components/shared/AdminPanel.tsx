@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useMasterData } from '../hooks/useMasterData';
-import { db } from '../firebaseConfig';
+import { useMasterData } from '../../hooks/useMasterData';
+import { db } from '../../firebaseConfig';
 import { doc, updateDoc, collection, getDocs } from 'firebase/firestore';
-import SearchIcon from './icons/SearchIcon';
+import SearchIcon from '../icons/SearchIcon';
 
 const AdminPanel: React.FC = () => {
     const { teams, starPlayers, loading, refresh } = useMasterData();

@@ -1,9 +1,9 @@
 
 
 import React, { useState } from 'react';
-import type { ManagedPlayer, Skill } from '../types';
-import { skillsData } from '../data/skills';
-import SkillModal from './SkillModal';
+import type { ManagedPlayer, Skill } from '../../types';
+import { skillsData } from '../../data/skills';
+import SkillModal from '../oracle/SkillModal';
 
 interface PlayerCardModalProps {
   player: ManagedPlayer;
@@ -118,8 +118,8 @@ const PlayerCardModal: React.FC<PlayerCardModalProps> = ({ player, onClose, isBa
               <button
                 onClick={onBallToggle}
                 className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl border transition-premium font-display font-black uppercase tracking-widest italic ${isBallCarrier
-                    ? 'bg-amber-500 border-amber-400 text-black shadow-[0_0_20px_rgba(251,191,36,0.4)]'
-                    : 'bg-white/5 border-white/10 text-slate-400 hover:border-amber-500/50 hover:text-amber-400'
+                  ? 'bg-amber-500 border-amber-400 text-black shadow-[0_0_20px_rgba(251,191,36,0.4)]'
+                  : 'bg-white/5 border-white/10 text-slate-400 hover:border-amber-500/50 hover:text-amber-400'
                   }`}
               >
                 <span className="text-xl">{isBallCarrier ? '🏈' : '🏉'}</span>

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import type { BoardToken, Skill } from '../types';
-import { skillsData } from '../data/skills';
-import SkillModal from './SkillModal';
+import type { BoardToken, Skill } from '../../types';
+import { skillsData } from '../../data/skills';
+import SkillModal from '../oracle/SkillModal';
 
 interface PlayerDetailPanelProps {
-  playerToken: BoardToken;
-  onClose: () => void;
+    playerToken: BoardToken;
+    onClose: () => void;
 }
 
 const SkillButton: React.FC<{ skillName: string; onSkillClick: (name: string) => void }> = ({ skillName, onSkillClick }) => {
@@ -14,8 +14,8 @@ const SkillButton: React.FC<{ skillName: string; onSkillClick: (name: string) =>
 
     if (hasDescription) {
         return (
-            <button 
-                onClick={() => onSkillClick(cleanSkillName)} 
+            <button
+                onClick={() => onSkillClick(cleanSkillName)}
                 className="text-sky-400 hover:text-sky-300 hover:underline focus:outline-none focus:ring-1 focus:ring-sky-300 rounded"
             >
                 {skillName}
@@ -28,7 +28,7 @@ const SkillButton: React.FC<{ skillName: string; onSkillClick: (name: string) =>
 
 const PlayerDetailPanel: React.FC<PlayerDetailPanelProps> = ({ playerToken, onClose }) => {
     const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
-    
+
     const player = playerToken.playerData;
 
     if (!player) return null;
@@ -36,10 +36,10 @@ const PlayerDetailPanel: React.FC<PlayerDetailPanelProps> = ({ playerToken, onCl
     const handleSkillClick = (skillName: string) => {
         const foundSkill = skillsData.find(s => s.name.toLowerCase().startsWith(skillName.toLowerCase()));
         if (foundSkill) {
-          setSelectedSkill(foundSkill);
+            setSelectedSkill(foundSkill);
         }
     };
-    
+
     const allSkills = [...(player.skills ? player.skills.split(', ').filter(s => s.toLowerCase() !== 'ninguna') : []), ...player.gainedSkills];
 
     const teamColor = playerToken.teamId === 'home' ? 'border-sky-500' : 'border-red-500';
@@ -79,7 +79,7 @@ const PlayerDetailPanel: React.FC<PlayerDetailPanelProps> = ({ playerToken, onCl
                                 <span className="font-bold text-amber-300 font-mono">PE: {player.spp}</span>
                             </div>
                         </div>
-                         <div>
+                        <div>
                             <h3 className="font-semibold text-slate-300 mb-2">Estado en Campo</h3>
                             <p className={`text-sm font-bold ${playerToken.isDown ? 'text-orange-400' : 'text-green-400'}`}>
                                 {playerToken.isDown ? 'Derribado' : 'En Pie'}
@@ -106,7 +106,7 @@ const PlayerDetailPanel: React.FC<PlayerDetailPanelProps> = ({ playerToken, onCl
                 </div>
             </div>
             {selectedSkill && <SkillModal skill={selectedSkill} onClose={() => setSelectedSkill(null)} />}
-             <style>{`
+            <style>{`
                 @keyframes slide-in-right { from { transform: translateX(100%); } to { transform: translateX(0); } }
                 .animate-slide-in-right { animation: slide-in-right 0.3s ease-out forwards; }
             `}</style>

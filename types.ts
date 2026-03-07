@@ -62,6 +62,21 @@ export interface Team {
 
 export type PlayerStatus = 'Activo' | 'Reserva' | 'KO' | 'Lesionado' | 'Expulsado' | 'Muerto';
 
+export interface Prayer {
+  diceRoll: string;
+  title: string;
+  description: string;
+}
+
+export type AdvancementType = 'RandomPrimary' | 'ChosenPrimary' | 'RandomSecondary' | 'ChosenSecondary' | 'Characteristic';
+
+export interface Advancement {
+  type: AdvancementType;
+  sppCost: number;
+  skillName?: string;
+  characteristicName?: string;
+}
+
 export interface ManagedPlayer extends Player {
   id: number;
   customName: string;
@@ -76,6 +91,7 @@ export interface ManagedPlayer extends Player {
   sppActions?: Record<string, number>;
   isStarPlayer?: boolean;
   isJourneyman?: boolean;
+  advancements?: Advancement[];
 }
 
 export interface ManagedTeam {
@@ -222,10 +238,21 @@ export interface LastingInjuryEvent {
   characteristicReduction: string;
 }
 
-export interface BoardToken {
+export interface Rule {
+  text: string;
+  dice?: string;
+  subRules?: Rule[];
+}
+
+export interface Token {
   id: number;
   x: number;
   y: number;
+}
+
+export type PlayerPosition = 'Blitzer' | 'Lanzador' | 'Corredor' | 'Línea' | 'Receptor';
+
+export interface BoardToken extends Token {
   playerRef?: string;
   teamSide: 'home' | 'away';
   teamId?: string;

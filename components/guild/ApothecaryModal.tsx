@@ -1,5 +1,5 @@
 import React from 'react';
-import type { ManagedPlayer } from '../types';
+import type { ManagedPlayer } from '../../types';
 
 interface ApothecaryModalProps {
   player: ManagedPlayer;

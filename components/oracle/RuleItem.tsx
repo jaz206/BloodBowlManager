@@ -1,7 +1,7 @@
 
 import React from 'react';
-import type { Rule } from '../types';
-import DiceIcon from './icons/DiceIcon';
+import type { Rule } from '../../types';
+import DiceIcon from '../icons/DiceIcon';
 
 interface RuleItemProps {
   rule: Rule;

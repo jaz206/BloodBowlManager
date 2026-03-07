@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { passChartGrid, passTypeDetails } from '../data/passChart';
+import { passChartGrid, passTypeDetails } from '../../data/passChart';
 
 const GRID_SIZE = 14;
 
