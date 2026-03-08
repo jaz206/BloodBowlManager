@@ -1,8 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ManagedTeam, Team, Player, ManagedPlayer } from '../../types';
+import { ManagedTeam, Team, Player, ManagedPlayer, Skill } from '../../types';
 import { useMasterData } from '../../hooks/useMasterData';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../hooks/useAuth';
+import SkillModal from '../../components/oracle/SkillModal';
 
 interface TeamCreatorProps {
     onTeamCreate: (team: Omit<ManagedTeam, 'id'>) => void;
@@ -23,6 +24,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
     const [assistantCoaches, setAssistantCoaches] = useState(0);
     const [cheerleaders, setCheerleaders] = useState(0);
     const [apothecary, setApothecary] = useState(false);
+    const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
 
     // Initial Budget
     const startingTreasury = 1000000;
@@ -83,6 +85,16 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
 
     const handleFirePlayer = (id: number) => {
         setDraftedPlayers(draftedPlayers.filter(p => p.id !== id));
+    };
+
+    const { skills: allSkills } = useMasterData();
+
+    const handleSkillClick = (skillName: string) => {
+        const cleanName = skillName.replace(/\(\+\d\)/g, '').trim();
+        const found = allSkills.find(s => s.name.toLowerCase() === cleanName.toLowerCase());
+        if (found) {
+            setSelectedSkill(found);
+        }
     };
 
     const handleSubmit = () => {
@@ -196,8 +208,8 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                             </h3>
                             <span className="text-[10px] text-slate-500 italic font-medium uppercase tracking-widest">{t('team.create.hire.limit')}</span>
                         </div>
-                        <div className="overflow-x-auto custom-scrollbar -mx-4 px-4 lg:mx-0 lg:px-0">
-                            <table className="w-full text-left border-collapse min-w-[700px]">
+                        <div className="overflow-x-visible lg:mx-0 lg:px-0">
+                            <table className="w-full text-left border-collapse">
                                 <thead>
                                     <tr className="text-[9px] text-slate-500 uppercase tracking-[0.2em] font-black">
                                         <th className="pb-4 px-4">{t('oracle.tabs.teams')}</th>
@@ -230,7 +242,21 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                                                 <td className="py-5 px-2 text-center font-mono font-black text-slate-400">{pos.stats.AG}</td>
                                                 <td className="py-5 px-2 text-center font-mono font-black text-slate-400">{pos.stats.PS}</td>
                                                 <td className="py-5 px-2 text-center font-mono font-black text-slate-400">{pos.stats.AR}</td>
-                                                <td className="py-5 px-4 text-[11px] text-slate-500 leading-relaxed font-medium italic group-hover:text-slate-300 transition-colors">{pos.skills || '-'}</td>
+                                                <td className="py-5 px-4 text-[11px] text-slate-500 leading-relaxed font-medium italic group-hover:text-slate-300 transition-colors">
+                                                    {pos.skills ? (
+                                                        <div className="flex flex-wrap gap-x-2 gap-y-1">
+                                                            {pos.skills.split(',').map((skill, sIdx) => (
+                                                                <button
+                                                                    key={sIdx}
+                                                                    onClick={() => handleSkillClick(skill.trim())}
+                                                                    className="hover:text-premium-gold transition-colors cursor-pointer text-left"
+                                                                >
+                                                                    {skill.trim()}{sIdx < pos.skills.split(',').length - 1 ? ',' : ''}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    ) : '-'}
+                                                </td>
                                                 <td className="py-5 px-4 text-right font-mono font-black text-premium-gold italic">{(pos.cost / 1000)}k</td>
                                                 <td className="py-5 px-4 text-center">
                                                     <button
@@ -468,6 +494,14 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                     </div>
                 </aside>
             </div>
+
+            {/* Skill Modal */}
+            {selectedSkill && (
+                <SkillModal
+                    skill={selectedSkill}
+                    onClose={() => setSelectedSkill(null)}
+                />
+            )}
 
             {/* Custom Scrollbar Styles */}
             <style>{`
