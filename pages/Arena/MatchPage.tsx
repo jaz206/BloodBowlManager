@@ -1052,83 +1052,177 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
     const renderContent = () => {
         switch (gameState) {
             case 'setup': return (
-                <div className="text-center p-4 sm:p-8">
-                    <h2 className="text-3xl font-bold text-amber-400 mb-4">Configurar Partida</h2>
-                    <p className="text-slate-400 mb-8 max-w-lg mx-auto">Selecciona tu equipo y el del oponente para empezar.</p>
-                    {managedTeams.length > 0 ? (
-                        <button onClick={() => setGameState('select_team')} className="w-full max-w-sm mx-auto bg-amber-500 text-slate-900 font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-500/50 transform hover:scale-105">Seleccionar Equipo Local</button>
-                    ) : (
-                        <p className="text-yellow-400">Debes crear un equipo en el "Gestor de Equipo" primero.</p>
-                    )}
+                <div className="flex flex-col items-center justify-center py-20 animate-fade-in">
+                    <div className="w-24 h-24 bg-premium-gold/10 rounded-3xl border border-premium-gold/30 flex items-center justify-center mb-8 shadow-[0_0_50px_rgba(245,159,10,0.1)]">
+                        <StadiumIcon className="w-12 h-12 text-premium-gold" />
+                    </div>
+                    <h2 className="text-4xl font-display font-black text-white italic tracking-tighter uppercase mb-2">Arena de <span className="text-blood-red">Gloria</span></h2>
+                    <p className="text-slate-500 font-medium mb-12 max-w-md text-center leading-relaxed">Prepara tu escuadra y desafía al destino. La sangre y la arena te esperan en el Coliseo de Nuffle.</p>
+
+                    <div className="flex flex-col gap-4 w-full max-w-sm">
+                        {managedTeams.length > 0 ? (
+                            <button
+                                onClick={() => setGameState('select_team')}
+                                className="w-full group relative overflow-hidden bg-premium-gold text-black font-display font-black py-4 px-8 rounded-2xl shadow-[0_20px_40px_rgba(245,159,10,0.2)] hover:shadow-[0_25px_50px_rgba(245,159,10,0.3)] transform hover:-translate-y-1 transition-all duration-300"
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                                <span className="relative flex items-center justify-center gap-2 tracking-[0.2em] uppercase text-xs">
+                                    Configurar Encuentro
+                                    <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                                </span>
+                            </button>
+                        ) : (
+                            <div className="glass-panel p-6 border-amber-500/30 bg-amber-500/10 text-center space-y-4">
+                                <p className="text-amber-200 text-sm font-bold uppercase tracking-widest italic">Naces sin Legado</p>
+                                <p className="text-amber-200/60 text-xs">Debes forjar un equipo en el Gremio antes de entrar en la arena.</p>
+                            </div>
+                        )}
+                        <button className="text-[10px] font-display font-black text-slate-500 hover:text-white uppercase tracking-[0.3em] transition-colors py-4">Tutorial de Combate</button>
+                    </div>
                 </div>
             );
             case 'select_team': return (
-                <div className="text-center p-4 sm:p-8 max-w-md mx-auto">
-                    <h2 className="text-3xl font-bold text-amber-400 mb-4">Elige tu Equipo</h2>
-                    <div className="space-y-3">
+                <div className="max-w-xl mx-auto py-10 animate-slide-in-up">
+                    <div className="text-center mb-12">
+                        <h2 className="text-3xl font-display font-black text-white uppercase italic tracking-tighter mb-2">Tu <span className="text-sky-400">Escuadra</span></h2>
+                        <p className="text-slate-500 text-sm tracking-wide">Representa a tu casa y reclama la victoria.</p>
+                    </div>
+
+                    <div className="grid gap-4">
                         {managedTeams.map(team => (
-                            <button key={team.name} onClick={() => { setHomeTeam(team); setGameState(hasCamera ? 'scanning' : 'manual_select'); }} className="w-full flex items-center gap-4 text-left bg-slate-700/50 p-4 rounded-lg shadow-md hover:bg-slate-700 hover:text-white transition-colors">
-                                {team.crestImage ? (
-                                    <img src={team.crestImage} alt="Escudo" className="w-12 h-12 rounded-full object-cover bg-slate-900" />
-                                ) : (
-                                    <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center flex-shrink-0">
-                                        <ShieldCheckIcon className="w-8 h-8 text-slate-600" />
-                                    </div>
-                                )}
-                                <div className="flex-grow min-w-0">
-                                    <p className="font-semibold truncate">{team.name}</p>
-                                    <p className="text-xs text-slate-400 truncate">{team.rosterName}</p>
+                            <button
+                                key={team.name}
+                                onClick={() => { setHomeTeam(team); setGameState(hasCamera ? 'scanning' : 'manual_select'); }}
+                                className="group w-full flex items-center gap-6 glass-panel p-5 border-white/5 bg-black/40 hover:bg-sky-500 hover:border-sky-400 transition-all duration-300 transform hover:scale-[1.02] shadow-xl"
+                            >
+                                <div className="relative">
+                                    {team.crestImage ? (
+                                        <img src={team.crestImage} alt="Escudo" className="w-16 h-16 rounded-2xl object-cover bg-black/60 border border-white/10 group-hover:border-black/20" />
+                                    ) : (
+                                        <div className="w-16 h-16 rounded-2xl bg-slate-900 flex items-center justify-center border border-white/10 group-hover:border-black/20">
+                                            <ShieldCheckIcon className="w-8 h-8 text-slate-700 group-hover:text-black/40" />
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex-grow text-left">
+                                    <p className="text-lg font-display font-black text-white group-hover:text-black uppercase italic tracking-tighter transition-colors">{team.name}</p>
+                                    <p className="text-[10px] font-bold text-slate-500 group-hover:text-black/60 uppercase tracking-widest transition-colors">{team.rosterName}</p>
+                                </div>
+                                <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-slate-500 group-hover:text-black group-hover:border-black/20 transition-all">
+                                    <span className="material-symbols-outlined">radio_button_unchecked</span>
                                 </div>
                             </button>
                         ))}
                     </div>
-                    <button onClick={() => setGameState('setup')} className="text-amber-400 hover:underline mt-6 text-sm">&larr; Volver</button>
+
+                    <div className="mt-12 text-center">
+                        <button onClick={() => setGameState('setup')} className="text-xs font-display font-black text-slate-500 hover:text-white uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 mx-auto">
+                            <span className="material-symbols-outlined text-sm">arrow_back</span>
+                            Regresar
+                        </button>
+                    </div>
                 </div>
             );
             case 'scanning': return (
-                <div className="text-center p-4 sm:p-8">
-                    <h2 className="text-3xl font-bold text-amber-400 mb-4">Escanear QR del Oponente</h2>
-                    <p className="text-slate-400 mb-6 max-w-lg mx-auto">Usa la cámara para escanear el QR del equipo rival.</p>
-                    <div id="qr-reader" ref={scannerContainerRef} className="max-w-sm mx-auto aspect-square bg-slate-900 rounded-lg overflow-hidden border-2 border-slate-700"></div>
-                    <button onClick={() => setGameState('manual_select')} className="mt-6 text-amber-400 hover:underline">O selecciona un equipo manualmente</button>
+                <div className="max-w-lg mx-auto py-10 animate-fade-in">
+                    <div className="text-center mb-8">
+                        <h2 className="text-3xl font-display font-black text-white uppercase italic tracking-tighter mb-2">Buscando <span className="text-red-500">Rival</span></h2>
+                        <p className="text-slate-500 text-sm">Escanea el Sello de Guerra (QR) del oponente para iniciar el duelo.</p>
+                    </div>
+
+                    <div className="relative group">
+                        <div className="absolute -inset-1 bg-gradient-to-r from-red-500 to-orange-500 rounded-[2.5rem] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+                        <div id="qr-reader" ref={scannerContainerRef} className="relative aspect-square bg-black rounded-[2rem] overflow-hidden border-4 border-white/5 shadow-2xl"></div>
+
+                        <div className="absolute inset-0 pointer-events-none border-x-[40px] border-y-[40px] border-black/40"></div>
+                        <div className="absolute top-1/2 left-0 w-full h-1 bg-red-500/40 shadow-[0_0_20px_rgba(239,68,68,0.8)] animate-scan z-10"></div>
+                    </div>
+
+                    <div className="mt-10 flex flex-col gap-4">
+                        <button
+                            onClick={() => setGameState('manual_select')}
+                            className="bg-white/5 border border-white/10 text-white font-display font-black py-4 px-8 rounded-2xl hover:bg-white/10 hover:border-premium-gold/30 transition-all text-sm uppercase tracking-widest"
+                        >
+                            Selección Manual de Rival
+                        </button>
+                        <button onClick={() => setGameState('select_team')} className="text-xs font-display font-black text-slate-500 hover:text-white uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2">
+                            <span className="material-symbols-outlined text-sm">arrow_back</span>
+                            Cancelar
+                        </button>
+                    </div>
                 </div>
             );
             case 'manual_select': return (
-                <div className="text-center p-4 sm:p-8 max-w-md mx-auto">
-                    <h2 className="text-3xl font-bold text-amber-400 mb-4">Elige al Oponente</h2>
-                    <div className="space-y-3">
+                <div className="max-w-xl mx-auto py-10 animate-slide-in-up">
+                    <div className="text-center mb-12">
+                        <h2 className="text-3xl font-display font-black text-white uppercase italic tracking-tighter mb-2">Desafío <span className="text-red-500">Manual</span></h2>
+                        <p className="text-slate-500 text-sm tracking-wide">Selecciona el equipo rival de entre los registrados en el santuario.</p>
+                    </div>
+
+                    <div className="grid gap-3">
                         {managedTeams.filter(t => t.name !== homeTeam?.name).map(team => (
-                            <button key={team.name} onClick={() => handleManualOpponentSelect(team.name)} className="w-full flex items-center gap-4 text-left bg-slate-700/50 p-4 rounded-lg shadow-md hover:bg-slate-700 hover:text-white transition-colors">
-                                {team.crestImage ? (
-                                    <img src={team.crestImage} alt="Escudo" className="w-12 h-12 rounded-full object-cover bg-slate-900" />
-                                ) : (
-                                    <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center flex-shrink-0">
-                                        <ShieldCheckIcon className="w-8 h-8 text-slate-600" />
-                                    </div>
-                                )}
-                                <div className="flex-grow min-w-0">
-                                    <p className="font-semibold truncate">{team.name}</p>
-                                    <p className="text-xs text-slate-400 truncate">{team.rosterName}</p>
+                            <button
+                                key={team.name}
+                                onClick={() => handleManualOpponentSelect(team.name)}
+                                className="group w-full flex items-center gap-6 glass-panel p-5 border-white/5 bg-black/40 hover:bg-red-500 hover:border-red-400 transition-all duration-300 transform hover:scale-[1.01] shadow-xl"
+                            >
+                                <div className="relative">
+                                    {team.crestImage ? (
+                                        <img src={team.crestImage} alt="Escudo" className="w-14 h-14 rounded-2xl object-cover bg-black/60 border border-white/10 group-hover:border-black/20" />
+                                    ) : (
+                                        <div className="w-14 h-14 rounded-2xl bg-slate-900 flex items-center justify-center border border-white/10 group-hover:border-black/20">
+                                            <ShieldCheckIcon className="w-7 h-7 text-slate-700 group-hover:text-black/40" />
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex-grow text-left">
+                                    <p className="text-lg font-display font-black text-white group-hover:text-white uppercase italic tracking-tighter transition-colors">{team.name}</p>
+                                    <p className="text-[10px] font-bold text-slate-500 group-hover:text-white/60 uppercase tracking-widest transition-colors">{team.rosterName}</p>
+                                </div>
+                                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-500 group-hover:bg-black/20 group-hover:text-white group-hover:border-white/20 transition-all">
+                                    <span className="material-symbols-outlined text-sm">swords</span>
                                 </div>
                             </button>
                         ))}
+                    </div>
+
+                    <div className="mt-12 text-center">
+                        <button onClick={() => setGameState('select_team')} className="text-xs font-display font-black text-slate-500 hover:text-white uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 mx-auto">
+                            <span className="material-symbols-outlined text-sm">arrow_back</span>
+                            Regresar
+                        </button>
                     </div>
                 </div>
             );
             case 'pre_game': {
-                if (!liveHomeTeam || !liveOpponentTeam) return <div>Cargando equipos...</div>;
+                if (!liveHomeTeam || !liveOpponentTeam) return <div className="flex items-center justify-center py-20 text-premium-gold font-display font-black animate-pulse uppercase tracking-widest">Invocando Equipos...</div>;
                 if (journeymenNotification) return (
-                    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-                        <div className="bg-slate-800 p-6 rounded-lg shadow-xl border border-slate-700 max-w-sm w-full text-center">
-                            <h3 className="text-lg font-bold text-amber-400 mb-4">Sustitutos Requeridos</h3>
-                            <p className="text-slate-300 mb-6 whitespace-pre-wrap">{journeymenNotification}</p>
-                            <button onClick={handleConfirmJourneymen} className="bg-amber-500 text-slate-900 font-bold py-2 px-4 rounded">Entendido</button>
+                    <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
+                        <div className="glass-panel p-8 max-w-sm w-full text-center border-premium-gold/30 shadow-[0_0_50px_rgba(245,159,10,0.2)] animate-slide-in-up">
+                            <div className="w-16 h-16 bg-premium-gold/10 rounded-2xl border border-premium-gold/30 flex items-center justify-center mx-auto mb-6">
+                                <span className="material-symbols-outlined text-3xl text-premium-gold">person_add</span>
+                            </div>
+                            <h3 className="text-xl font-display font-black text-premium-gold uppercase italic tracking-tighter mb-4">Sustitutos Requeridos</h3>
+                            <p className="text-slate-400 text-sm mb-8 leading-relaxed whitespace-pre-wrap">{journeymenNotification}</p>
+                            <button onClick={handleConfirmJourneymen} className="w-full bg-premium-gold text-black font-display font-black py-3 rounded-xl uppercase tracking-widest text-xs hover:bg-white hover:scale-105 transition-all shadow-lg">Entendido, Capitán</button>
                         </div>
                     </div>
                 );
-                const preGameTitles = ["Paso 1: Contratar Sustitutos", "Paso 2: Incentivos", "Paso 3: Hinchas y FAMA", "Paso 4: El Clima", "Paso 5: Plegarias a Nuffle", "Paso 6: Lanzamiento de Moneda", "Paso 7: Patada o Recepción", "Paso 8: Despliegue", "Paso 9: Evento de Patada Inicial"];
+
+                const preGameTitles = [
+                    "Levantamiento de Muertos",
+                    "Guerra de Incentivos",
+                    "Clamor del Coliseo",
+                    "Presagio del Cielo",
+                    "Plegarias a Nuffle",
+                    "Juicio de la Moneda",
+                    "Estrategia de Apertura",
+                    "Despliegue de Guerra",
+                    "El Gran Kickoff"
+                ];
+
                 const handleKickoffRoll = () => {
-                    setKickoffActionCompleted(false); // Reset before rolling for a new kickoff
+                    setKickoffActionCompleted(false);
                     const die1 = Math.floor(Math.random() * 6) + 1, die2 = Math.floor(Math.random() * 6) + 1, roll = die1 + die2;
                     const event = kickoffEvents.find(e => e.diceRoll === roll.toString());
                     if (event) {
@@ -1139,117 +1233,481 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                 };
 
                 return (
-                    <div className="bg-slate-900/70 p-4 sm:p-6 rounded-lg border border-slate-700 max-w-6xl mx-auto space-y-6">
-                        <h2 className="text-2xl font-bold text-amber-400 text-center">{preGameTitles[preGameStep]}</h2>
-                        {preGameStep === 1 && (
-                            <div className='text-center space-y-4'>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-center">
-                                    <p>VE {liveHomeTeam.name}: <span className='font-bold text-sky-400'>{homeTV.toLocaleString()}</span></p>
-                                    <p>VE {liveOpponentTeam.name}: <span className='font-bold text-red-400'>{opponentTV.toLocaleString()}</span></p>
-                                </div>
+                    <div className="max-w-6xl mx-auto space-y-10 py-6 animate-fade-in">
+                        {/* Pre-Game Stepper Header */}
+                        <div className="flex flex-col items-center">
+                            <div className="text-[10px] font-display font-black text-premium-gold uppercase tracking-[0.4em] mb-2 opacity-60">Fase de Preparación</div>
+                            <h2 className="text-4xl font-display font-black text-white italic tracking-tighter uppercase text-center">
+                                {preGameTitles[preGameStep]}
+                            </h2>
+                            <div className="mt-4 flex gap-1">
+                                {preGameTitles.map((_, i) => (
+                                    <div key={i} className={`h-1 rounded-full transition-all duration-500 ${i === preGameStep ? 'w-8 bg-premium-gold' : i < preGameStep ? 'w-4 bg-premium-gold/40' : 'w-4 bg-white/5'}`}></div>
+                                ))}
+                            </div>
+                        </div>
 
-                                {prayersAlert && (
-                                    <div className="glass-panel border-premium-gold/30 p-4 animate-premium-pulse shadow-[0_0_20px_rgba(202,138,4,0.1)]">
-                                        <p className="text-premium-gold font-display font-black italic uppercase tracking-wider text-sm">
-                                            ⚠️ Sugerencia de Nuffle: {prayersAlert.underdog} tiene {Math.max(1, Math.floor(prayersAlert.difference / 100000))} Plegaria(s) disponibles por diferencia de TV.
-                                        </p>
+                        <div className="glass-panel border-white/5 bg-black/40 p-8 shadow-2xl">
+                            {preGameStep === 1 && (
+                                <div className='space-y-8 max-w-2xl mx-auto'>
+                                    <div className="grid grid-cols-2 gap-6">
+                                        <div className="bg-sky-500/5 border border-sky-500/20 p-6 rounded-3xl text-center">
+                                            <p className="text-[10px] font-black text-sky-500 uppercase tracking-widest mb-1">{liveHomeTeam.name}</p>
+                                            <p className="text-2xl font-display font-black text-white italic tracking-tighter">{homeTV.toLocaleString()}</p>
+                                            <p className="text-[8px] font-bold text-slate-500 uppercase">Valor de Equipo</p>
+                                        </div>
+                                        <div className="bg-red-500/5 border border-red-500/20 p-6 rounded-3xl text-center">
+                                            <p className="text-[10px] font-black text-red-500 uppercase tracking-widest mb-1">{liveOpponentTeam.name}</p>
+                                            <p className="text-2xl font-display font-black text-white italic tracking-tighter">{opponentTV.toLocaleString()}</p>
+                                            <p className="text-[8px] font-bold text-slate-500 uppercase">Valor de Equipo</p>
+                                        </div>
                                     </div>
-                                )}
 
-                                {inducementState.underdog ? (() => {
-                                    const underdogTeam = inducementState.underdog === 'home' ? liveHomeTeam : liveOpponentTeam; const baseRoster = teamsData.find(t => t.name === underdogTeam.rosterName); const eligibleStars = starPlayersData.filter(star => isEligibleStar(star, baseRoster)); const bribeCost = baseRoster?.specialRules.includes("Sobornos y corrupción") ? 50000 : 100000;
-                                    const isUndead = ["Nigrománticos", "No Muertos", "Khemri", "Vampiros"].includes(underdogTeam.rosterName);
-                                    const isNurgle = underdogTeam.rosterName === "Nurgle";
-                                    const canHaveApo = baseRoster?.apothecary === "Sí";
+                                    {prayersAlert && (
+                                        <div className="bg-premium-gold/10 border border-premium-gold/30 p-4 rounded-2xl flex items-center gap-4 animate-premium-pulse">
+                                            <div className="w-10 h-10 rounded-full bg-premium-gold/20 flex items-center justify-center flex-shrink-0">
+                                                <span className="material-symbols-outlined text-premium-gold">warning</span>
+                                            </div>
+                                            <p className="text-premium-gold font-bold italic text-sm">
+                                                Nuffle te observa: {prayersAlert.underdog} tiene {Math.max(1, Math.floor(prayersAlert.difference / 100000))} Plegaria(s) por diferencia de TV.
+                                            </p>
+                                        </div>
+                                    )}
 
-                                    const options = [
-                                        { name: 'reroll', label: 'Segunda Oportunidad Extra', cost: 100000, count: (underdogTeam.liveRerolls || 0) - underdogTeam.rerolls },
-                                        { name: 'bribe', label: 'Soborno', cost: bribeCost, count: underdogTeam.tempBribes || 0 },
-                                        { name: 'cheerleader', label: 'Animadora', cost: 10000, count: underdogTeam.tempCheerleaders || 0 },
-                                        { name: 'coach', label: 'Ayudante', cost: 10000, count: underdogTeam.tempAssistantCoaches || 0 },
-                                        { name: 'biasedRef', label: 'Árbitro Parcial', cost: 50000, count: underdogTeam.biasedRef ? 1 : 0 },
-                                    ];
+                                    {inducementState.underdog ? (() => {
+                                        const underdogTeam = inducementState.underdog === 'home' ? liveHomeTeam : liveOpponentTeam;
+                                        const baseRoster = teamsData.find(t => t.name === underdogTeam.rosterName);
+                                        const eligibleStars = starPlayersData.filter(star => isEligibleStar(star, baseRoster));
+                                        const bribeCost = baseRoster?.specialRules.includes("Sobornos y corrupción") ? 50000 : 100000;
+                                        const isUndead = ["Nigrománticos", "No Muertos", "Khemri", "Vampiros"].includes(underdogTeam.rosterName);
+                                        const isNurgle = underdogTeam.rosterName === "Nurgle";
+                                        const canHaveApo = baseRoster?.apothecary === "Sí";
 
-                                    if (canHaveApo) options.push({ name: 'wanderingApothecary', label: 'Boticario Errante', cost: 100000, count: underdogTeam.wanderingApothecaries || 0 });
-                                    if (isUndead) options.push({ name: 'mortuaryAssistant', label: 'Asistente de Necromantes', cost: 100000, count: underdogTeam.mortuaryAssistants || 0 });
-                                    if (isNurgle) options.push({ name: 'plagueDoctor', label: 'Médico de la Peste', cost: 100000, count: underdogTeam.plagueDoctors || 0 });
+                                        const options = [
+                                            { name: 'reroll', icon: 'refresh', label: 'Reroll Extra', cost: 100000, count: (underdogTeam.liveRerolls || 0) - underdogTeam.rerolls },
+                                            { name: 'bribe', icon: 'payments', label: 'Soborno', cost: bribeCost, count: underdogTeam.tempBribes || 0 },
+                                            { name: 'cheerleader', icon: 'campaign', label: 'Animadora', cost: 10000, count: underdogTeam.tempCheerleaders || 0 },
+                                            { name: 'coach', icon: 'person', label: 'Ayudante', cost: 10000, count: underdogTeam.tempAssistantCoaches || 0 },
+                                            { name: 'biasedRef', icon: 'gavel', label: 'Árbitro Parcial', cost: 50000, count: underdogTeam.biasedRef ? 1 : 0 },
+                                        ];
 
-                                    return (<div className="space-y-6 text-left"> <p className="text-center">{(inducementState.underdog === 'home' ? liveHomeTeam.name : liveOpponentTeam.name)} es desvalido y recibe <span className='font-bold text-green-400'>{inducementState.money.toLocaleString()} M.O.</span> para incentivos.</p> <div className="bg-slate-800 p-4 rounded-lg"> <h4 className="font-bold text-amber-300 mb-2">Incentivos</h4> <div className="space-y-2 text-sm"> {options.map(item => (<div key={item.name} className="flex justify-between items-center"> <span>{item.label} ({item.cost / 1000}k)</span> <div className="flex items-center gap-2"> <button onClick={() => handleSellInducement(item.name as any, item.cost)} className="bg-rose-600 h-6 w-6 rounded-full font-bold">-</button> <span className="font-mono w-6 text-center">{item.count}</span> <button onClick={() => handleBuyInducement(item.name as any, item.cost)} className="bg-green-600 h-6 w-6 rounded-full font-bold">+</button> </div> </div>))} </div> </div> <div className="bg-slate-800 p-4 rounded-lg"> <h4 className="font-bold text-amber-300 mb-2">Jugadores Estrella</h4> <div className="max-h-60 overflow-y-auto space-y-2 pr-2"> {eligibleStars.map(star => (<div key={star.name} className="flex justify-between items-center text-sm"> <button onClick={() => setSelectedStarPlayer(star)} className="text-sky-400 hover:underline">{star.name} ({star.cost / 1000}k)</button> {inducementState.hiredStars.some(s => s.name === star.name) ? <button onClick={() => handleFireStar(star)} className="bg-rose-600 text-white font-bold py-1 px-2 text-xs rounded">Despedir</button> : <button onClick={() => handleHireStar(star)} disabled={inducementState.money < star.cost} className="bg-green-600 text-white font-bold py-1 px-2 text-xs rounded disabled:bg-slate-600">Contratar</button>} </div>))} </div> </div> <div className="text-center pt-4 border-t border-slate-700"> <button onClick={() => setPreGameStep(2)} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">Confirmar y Continuar</button> </div> </div>)
-                                })() : (<> <p className="text-center">¡Equipos igualados! No hay incentivos.</p> <button onClick={() => setPreGameStep(2)} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">Continuar</button> </>)} </div>)}
-                        {preGameStep === 2 && (<div className='text-center space-y-4'> <p>Cada entrenador tira 2D6 y suma sus Hinchas. El más alto gana +1 FAMA (+2 si dobla o más).</p> <div className="grid grid-cols-2 gap-4"> <div> <label className='block text-sm font-medium text-slate-300 mb-1'>{liveHomeTeam.name} (Hinchas: {liveHomeTeam.dedicatedFans})</label> <input type="text" pattern="[2-9]|1[0-2]" value={fansRoll.home} onChange={e => setFansRoll(p => ({ ...p, home: e.target.value.replace(/[^0-9]/g, '').slice(0, 2) }))} className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-center" placeholder="2D6" /> </div> <div> <label className='block text-sm font-medium text-slate-300 mb-1'>{liveOpponentTeam.name} (Hinchas: {liveOpponentTeam.dedicatedFans})</label> <input type="text" pattern="[2-9]|1[0-2]" value={fansRoll.opponent} onChange={e => setFansRoll(p => ({ ...p, opponent: e.target.value.replace(/[^0-9]/g, '').slice(0, 2) }))} className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-center" placeholder="2D6" /> </div> </div> <button onClick={() => { const homeTotal = liveHomeTeam.dedicatedFans + parseInt(fansRoll.home || '0'); const oppTotal = liveOpponentTeam.dedicatedFans + parseInt(fansRoll.opponent || '0'); let homeFame = 0, oppFame = 0; if (homeTotal >= oppTotal * 2) homeFame = 2; else if (homeTotal > oppTotal) homeFame = 1; if (oppTotal >= homeTotal * 2) oppFame = 2; else if (oppTotal > homeTotal) oppFame = 1; setFame({ home: homeFame, opponent: oppFame }); logEvent('INFO', `Tirada Hinchas - ${liveHomeTeam.name}: ${homeTotal}, ${liveOpponentTeam.name}: ${oppTotal}. FAMA: ${homeFame} - ${oppFame}`); setPreGameStep(3); }} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">Calcular FAMA</button> </div>)}
-                        {preGameStep === 3 && (<div className='text-center space-y-4'> <p>Tira 2D6 para determinar el clima.</p> <button onClick={() => setIsWeatherModalOpen(true)} className="bg-sky-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-sky-500">Generar Clima</button> {gameStatus.weather && <div><p>Clima: <span className='font-bold text-white'>{gameStatus.weather.title}</span></p><p className='text-slate-400 text-sm'>{gameStatus.weather.description}</p></div>} {gameStatus.weather && <button onClick={() => setPreGameStep(4)} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">Continuar</button>} </div>)}
-                        {preGameStep === 4 && (<div className='text-center space-y-4'> <p>Un equipo con menor VE (tras incentivos) puede tirar en la tabla de Plegarias a Nuffle.</p> <button onClick={() => setIsPrayersModalOpen(true)} className="bg-sky-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-sky-500">Ver Tabla de Plegarias</button> <button onClick={() => setPreGameStep(5)} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">Continuar</button> </div>)}
-                        {preGameStep === 5 && (<div className='text-center space-y-4'> <p>Lanza una moneda para ver quién patea.</p> <div className="flex gap-4 justify-center"> <button onClick={() => { setGameStatus(p => ({ ...p, coinTossWinner: 'home' })); setPreGameStep(6) }} className="bg-sky-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-sky-500">Gana {liveHomeTeam.name}</button> <button onClick={() => { setGameStatus(p => ({ ...p, coinTossWinner: 'opponent' })); setPreGameStep(6) }} className="bg-red-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-red-500">Gana {liveOpponentTeam.name}</button> </div> </div>)}
-                        {preGameStep === 6 && gameStatus.coinTossWinner && (<div className='text-center space-y-4'> <p><span className='font-bold text-white'>{(gameStatus.coinTossWinner === 'home' ? liveHomeTeam.name : liveOpponentTeam.name)}</span> gana el sorteo. ¿Elige patear o recibir?</p> <div className="flex gap-4 justify-center"> <button onClick={() => { const receiving = gameStatus.coinTossWinner === 'home' ? 'opponent' : 'home'; setGameStatus(p => ({ ...p, receivingTeam: receiving })); setFirstHalfReceiver(receiving); logEvent('INFO', `${(gameStatus.coinTossWinner === 'home' ? liveHomeTeam.name : liveOpponentTeam.name)} elige patear.`); setPreGameStep(7); }} className="bg-gray-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-gray-500">Patear</button> <button onClick={() => { const receiving = gameStatus.coinTossWinner; setGameStatus(p => ({ ...p, receivingTeam: receiving })); setFirstHalfReceiver(receiving); logEvent('INFO', `${(gameStatus.coinTossWinner === 'home' ? liveHomeTeam.name : liveOpponentTeam.name)} elige recibir.`); setPreGameStep(7); }} className="bg-amber-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-amber-500">Recibir</button> </div> </div>)}
-                        {preGameStep === 7 && (
-                            <div className="space-y-4">
-                                <p className="text-center text-slate-300">Coloca hasta 11 jugadores en el campo. El resto quedará en el banquillo.</p>
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    {[liveHomeTeam, liveOpponentTeam].map((team, index) => {
-                                        const teamId = index === 0 ? 'home' : 'opponent';
-                                        const onField = team.players.filter(p => p.status === 'Activo');
-                                        const onBench = team.players.filter(p => p.status === 'Reserva');
+                                        if (canHaveApo) options.push({ name: 'wanderingApothecary', icon: 'medical_services', label: 'Boticario', cost: 100000, count: underdogTeam.wanderingApothecaries || 0 });
+                                        if (isUndead) options.push({ name: 'mortuaryAssistant', icon: 'skull', label: 'Asistente Necromante', cost: 100000, count: underdogTeam.mortuaryAssistants || 0 });
+                                        if (isNurgle) options.push({ name: 'plagueDoctor', icon: 'coronavirus', label: 'Médico de la Peste', cost: 100000, count: underdogTeam.plagueDoctors || 0 });
+
                                         return (
-                                            <div key={teamId} className="bg-slate-800 p-3 rounded-lg flex flex-col">
-                                                <div className="flex items-center gap-3 mb-2">
-                                                    {team.crestImage && (
-                                                        <img src={team.crestImage} alt="Escudo" className="w-10 h-10 rounded-full object-cover" />
-                                                    )}
-                                                    <h3 className={`font-bold text-lg ${teamId === 'home' ? 'text-sky-400' : 'text-red-400'}`}>{team.name}</h3>
+                                            <div className="space-y-8">
+                                                <div className="text-center p-4 bg-black/40 border border-white/5 rounded-2xl">
+                                                    <p className="text-xs text-slate-500 uppercase tracking-widest mb-1">Tesoro de Indulgencia</p>
+                                                    <p className="text-3xl font-display font-black text-green-400 italic">
+                                                        {inducementState.money.toLocaleString()} <span className="text-[10px] lowercase text-green-500/50">m.o.</span>
+                                                    </p>
                                                 </div>
-                                                <MiniField
-                                                    players={onField}
-                                                    teamColor={teamId === 'home' ? 'bg-sky-500' : 'bg-red-500'}
-                                                    onPlayerMove={(playerId, pos) => handlePlayerMove(teamId, playerId, pos)}
-                                                    ballCarrierId={ballCarrierId}
-                                                />
-                                                <div className="space-y-2 max-h-[30vh] overflow-y-auto pr-2">
-                                                    <div>
-                                                        <h4 className="font-semibold text-slate-400 text-sm sticky top-0 bg-slate-800 z-10 py-1 -mx-3 px-3">En el Campo ({onField.length}/11)</h4>
-                                                        {onField.length > 0 ? onField.map((p, idx) => <PlayerStatusCard key={p.id} player={p} playerNumber={idx + 1} onViewPlayer={setViewingPlayer} onSkillClick={handleSkillClick} canToggleStatus={true} onStatusToggle={() => handlePlayerStatusToggle(p, teamId)} />) : <p className="text-xs text-slate-500">Ningún jugador en el campo.</p>}
+
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div className="space-y-3">
+                                                        <h4 className="text-[10px] font-display font-black text-premium-gold uppercase tracking-[0.2em] mb-4">Mercado de Favores</h4>
+                                                        {options.map(item => (
+                                                            <div key={item.name} className="flex justify-between items-center bg-white/5 p-3 rounded-2xl border border-white/5 group hover:border-premium-gold/30 transition-all">
+                                                                <div className="flex items-center gap-3">
+                                                                    <span className="material-symbols-outlined text-lg text-slate-500 group-hover:text-premium-gold">{item.icon}</span>
+                                                                    <div>
+                                                                        <p className="text-[10px] font-bold text-white uppercase tracking-wider">{item.label}</p>
+                                                                        <p className="text-[8px] text-slate-500 font-bold">{item.cost / 1000}k</p>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex items-center gap-3">
+                                                                    <button onClick={() => handleSellInducement(item.name as any, item.cost)} className="w-8 h-8 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all">
+                                                                        <span className="material-symbols-outlined text-sm">remove</span>
+                                                                    </button>
+                                                                    <span className="font-display font-black text-white text-lg w-6 text-center">{item.count}</span>
+                                                                    <button onClick={() => handleBuyInducement(item.name as any, item.cost)} className="w-8 h-8 rounded-xl bg-green-500/10 text-green-500 flex items-center justify-center hover:bg-green-500 hover:text-white transition-all">
+                                                                        <span className="material-symbols-outlined text-sm">add</span>
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        ))}
                                                     </div>
-                                                    <div>
-                                                        <h4 className="font-semibold text-slate-400 text-sm mt-3 sticky top-0 bg-slate-800 z-10 py-1 -mx-3 px-3">Banquillo ({onBench.length})</h4>
-                                                        {onBench.length > 0 ? onBench.map(p => <PlayerStatusCard key={p.id} player={p} onViewPlayer={setViewingPlayer} onSkillClick={handleSkillClick} canToggleStatus={true} onStatusToggle={() => handlePlayerStatusToggle(p, teamId)} />) : <p className="text-xs text-slate-500">Banquillo vacío.</p>}
+
+                                                    <div className="space-y-4">
+                                                        <h4 className="text-[10px] font-display font-black text-premium-gold uppercase tracking-[0.2em] mb-4">Jugadores Estrella</h4>
+                                                        <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                                            {eligibleStars.map(star => {
+                                                                const isHired = inducementState.hiredStars.some(s => s.name === star.name);
+                                                                return (
+                                                                    <div key={star.name} className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${isHired ? 'bg-premium-gold/10 border-premium-gold/40' : 'bg-white/5 border-white/5 shadow-xl hover:border-white/20'}`}>
+                                                                        <div className="flex-1 min-w-0 mr-4">
+                                                                            <button onClick={() => setSelectedStarPlayer(star)} className="text-[10px] font-black text-white hover:text-premium-gold uppercase italic tracking-tighter truncate w-full text-left transition-colors">{star.name}</button>
+                                                                            <p className="text-[8px] font-bold text-slate-500 group-hover:text-slate-400">{star.cost / 1000}k m.o.</p>
+                                                                        </div>
+                                                                        {isHired ? (
+                                                                            <button onClick={() => handleFireStar(star)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-xl transition-all">
+                                                                                <span className="material-symbols-outlined text-sm">person_remove</span>
+                                                                            </button>
+                                                                        ) : (
+                                                                            <button
+                                                                                onClick={() => handleHireStar(star)}
+                                                                                disabled={inducementState.money < star.cost}
+                                                                                className="p-2 text-green-500 hover:bg-green-500/10 rounded-xl transition-all disabled:opacity-20"
+                                                                            >
+                                                                                <span className="material-symbols-outlined text-sm">person_add</span>
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
                                                     </div>
+                                                </div>
+
+                                                <div className="pt-6 border-t border-white/5 text-center">
+                                                    <button onClick={() => setPreGameStep(2)} className="bg-premium-gold text-black font-display font-black py-4 px-12 rounded-2xl shadow-[0_20px_40px_rgba(245,159,10,0.1)] hover:scale-105 active:scale-95 transition-all text-xs uppercase tracking-[0.2em]">Sellar Contratos</button>
                                                 </div>
                                             </div>
                                         );
-                                    })}
+                                    })() : (
+                                        <div className="text-center py-10 space-y-6">
+                                            <div className="w-16 h-16 bg-white/5 rounded-2xl border border-white/10 flex items-center justify-center mx-auto mb-4">
+                                                <span className="material-symbols-outlined text-3xl text-slate-600">balance</span>
+                                            </div>
+                                            <p className="text-slate-500 text-sm font-medium tracking-wide">Equilibrio perfecto. Ningún equipo recibe oro adicional del Tesoro de Nuffle.</p>
+                                            <button onClick={() => setPreGameStep(2)} className="bg-white text-black font-display font-black py-4 px-12 rounded-2xl hover:scale-105 active:scale-95 transition-all text-xs uppercase tracking-[0.2em]">Continuar</button>
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="text-center pt-4 border-t border-slate-700 flex flex-wrap justify-center gap-4">
-                                    <button onClick={handleSuggestDeployment} className="bg-teal-600 text-white font-bold py-2 px-6 rounded-md shadow-md hover:bg-teal-500">
-                                        Sugerir Despliegue Aleatorio
-                                    </button>
-                                    <button onClick={() => { const homeOnField = liveHomeTeam.players.filter(p => p.status === 'Activo').length; const oppOnField = liveOpponentTeam.players.filter(p => p.status === 'Activo').length; if (homeOnField === 0 || oppOnField === 0) { alert('Ambos equipos deben tener al menos un jugador en el campo para continuar.'); return; } setPreGameStep(8); }} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">
-                                        Confirmar Despliegue
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                        {preGameStep === 8 && (
-                            <div className='text-center space-y-6'>
-                                {!gameStatus.kickoffEvent ? (
-                                    <div className="space-y-4">
-                                        <p className="text-slate-400 font-display uppercase tracking-widest text-sm text-center">Tirar para Evento de Patada</p>
-                                        <div className="flex justify-center">
-                                            <DiceRollButton onRoll={handleKickoffRoll} onPlaySound={() => playSound('dice')} />
+                            )}
+
+                            {preGameStep === 2 && (
+                                <div className='max-w-md mx-auto space-y-8 text-center'>
+                                    <div className="bg-premium-gold/5 border border-premium-gold/20 p-6 rounded-3xl">
+                                        <span className="material-symbols-outlined text-4xl text-premium-gold mb-4">groups</span>
+                                        <p className="text-slate-400 text-sm leading-relaxed italic">"El rugido de la grada puede cambiar el destino de un partido. Suma tus seguidores a la tirada de dados."</p>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-4">
+                                            <div className="text-center">
+                                                <p className="text-[10px] font-black text-sky-500 uppercase tracking-widest mb-1">Local</p>
+                                                <p className="text-[8px] text-slate-500 uppercase font-bold mb-3">Fans: {liveHomeTeam.dedicatedFans}</p>
+                                                <input
+                                                    type="text"
+                                                    pattern="[2-9]|1[0-2]"
+                                                    value={fansRoll.home}
+                                                    onChange={e => setFansRoll(p => ({ ...p, home: e.target.value.replace(/[^0-9]/g, '').slice(0, 2) }))}
+                                                    className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-center font-display font-black text-2xl text-white focus:border-sky-500 outline-none transition-all shadow-inner"
+                                                    placeholder="2D6"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-4">
+                                            <div className="text-center">
+                                                <p className="text-[10px] font-black text-red-500 uppercase tracking-widest mb-1">Rival</p>
+                                                <p className="text-[8px] text-slate-500 uppercase font-bold mb-3">Fans: {liveOpponentTeam.dedicatedFans}</p>
+                                                <input
+                                                    type="text"
+                                                    pattern="[2-9]|1[0-2]"
+                                                    value={fansRoll.opponent}
+                                                    onChange={e => setFansRoll(p => ({ ...p, opponent: e.target.value.replace(/[^0-9]/g, '').slice(0, 2) }))}
+                                                    className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-center font-display font-black text-2xl text-white focus:border-red-500 outline-none transition-all shadow-inner"
+                                                    placeholder="2D6"
+                                                />
+                                            </div>
                                         </div>
                                     </div>
-                                ) : (
-                                    <div className="glass-panel border-sky-500/30 p-6 animate-slide-in-up">
-                                        <p className="text-sky-400 font-display font-black text-xl italic uppercase mb-1">Evento de Patada</p>
-                                        <p className="text-white font-bold text-lg mb-2">{gameStatus.kickoffEvent.title}</p>
-                                        <p className="text-slate-400 text-sm max-w-md mx-auto">{gameStatus.kickoffEvent.description}</p>
-                                    </div>
-                                )}
-                                {gameStatus.kickoffEvent && kickoffActionCompleted && (
-                                    <button onClick={handleStartDrive} className="bg-green-600 text-white font-display font-black italic uppercase tracking-widest py-3 px-10 rounded-xl shadow-[0_0_30px_rgba(22,163,74,0.4)] hover:bg-green-500 transition-premium transform hover:scale-105 active:scale-95">
-                                        ¡A JUGAR!
+
+                                    <button
+                                        onClick={() => {
+                                            const homeTotal = liveHomeTeam.dedicatedFans + parseInt(fansRoll.home || '0');
+                                            const oppTotal = liveOpponentTeam.dedicatedFans + parseInt(fansRoll.opponent || '0');
+                                            let homeFame = 0, oppFame = 0;
+                                            if (homeTotal >= oppTotal * 2) homeFame = 2; else if (homeTotal > oppTotal) homeFame = 1;
+                                            if (oppTotal >= homeTotal * 2) oppFame = 2; else if (oppTotal > homeTotal) oppFame = 1;
+                                            setFame({ home: homeFame, opponent: oppFame });
+                                            logEvent('INFO', `Tirada Hinchas - ${liveHomeTeam.name}: ${homeTotal}, ${liveOpponentTeam.name}: ${oppTotal}. FAMA: ${homeFame} - ${oppFame}`);
+                                            setPreGameStep(3);
+                                        }}
+                                        className="w-full bg-premium-gold text-black font-display font-black py-5 rounded-2xl shadow-xl transform hover:scale-[1.02] active:scale-95 transition-all text-xs uppercase tracking-[0.3em]"
+                                    >
+                                        Calcular Influencia de FAMA
                                     </button>
-                                )}
-                            </div>
-                        )}
+                                </div>
+                            )}
+
+                            {preGameStep === 3 && (
+                                <div className='max-w-md mx-auto space-y-10 text-center'>
+                                    <div className="flex flex-col items-center gap-6">
+                                        <div className="w-32 h-32 rounded-[2.5rem] bg-sky-500/10 border-2 border-sky-500/30 flex items-center justify-center shadow-[0_0_60px_rgba(14,165,233,0.1)]">
+                                            <span className="material-symbols-outlined text-6xl text-sky-400 animate-pulse">cloud_queue</span>
+                                        </div>
+                                        <p className="text-slate-400 text-sm max-w-xs">Consulta a los cielos antes de que comience el caos. El clima dictará la dificultad de tus maniobras.</p>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <button
+                                            onClick={() => setIsWeatherModalOpen(true)}
+                                            className="w-full bg-sky-600 text-white font-display font-black py-5 rounded-2xl shadow-[0_20px_40px_rgba(14,165,233,0.2)] hover:bg-sky-500 transition-all text-xs uppercase tracking-[0.3em] flex items-center justify-center gap-3"
+                                        >
+                                            <span className="material-symbols-outlined text-lg">casino</span>
+                                            Invocar Clima
+                                        </button>
+
+                                        {gameStatus.weather && (
+                                            <div className="glass-panel border-sky-400/30 bg-sky-400/5 p-6 animate-slide-in-up">
+                                                <p className="text-[10px] font-black text-sky-400 uppercase tracking-widest mb-1">Presagio Actual</p>
+                                                <h4 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter mb-2">{gameStatus.weather.title}</h4>
+                                                <p className="text-slate-400 text-xs italic leading-relaxed">{gameStatus.weather.description}</p>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {gameStatus.weather && (
+                                        <button onClick={() => setPreGameStep(4)} className="w-full group text-[10px] font-display font-black text-slate-500 hover:text-white uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2">
+                                            Continuar Bajo este Cielo
+                                            <span className="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+
+                            {preGameStep === 4 && (
+                                <div className='max-w-md mx-auto space-y-10 text-center'>
+                                    <div className="w-32 h-32 bg-amber-500/10 rounded-full border-2 border-amber-500/30 flex items-center justify-center mx-auto shadow-[0_0_50px_rgba(245,159,10,0.1)]">
+                                        <span className="material-symbols-outlined text-6xl text-amber-500">auto_awesome</span>
+                                    </div>
+                                    <p className="text-slate-400 text-sm">Aquellos que caminan por la senda de la derrota temporal pueden clamar por la misericordia de Nuffle.</p>
+
+                                    <div className="flex flex-col gap-4">
+                                        <button
+                                            onClick={() => setIsPrayersModalOpen(true)}
+                                            className="w-full bg-white/5 border border-white/10 text-white font-display font-black py-5 rounded-2xl hover:bg-white/10 hover:border-premium-gold/30 transition-all text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-3"
+                                        >
+                                            <span className="material-symbols-outlined text-lg text-premium-gold">book_5</span>
+                                            Consultar Plegarias
+                                        </button>
+                                        <button onClick={() => setPreGameStep(5)} className="w-full bg-premium-gold text-black font-display font-black py-5 rounded-2xl shadow-xl hover:scale-[1.02] transition-all text-xs uppercase tracking-[0.3em]">Continuar</button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {preGameStep === 5 && (
+                                <div className='max-w-lg mx-auto space-y-12 text-center'>
+                                    <div className="space-y-4">
+                                        <h3 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter">El Lanzamiento Sagrado</h3>
+                                        <p className="text-slate-500 text-sm tracking-wide">La moneda de la suerte girará en el aire. ¿Qué escuadra dictará el primer golpe?</p>
+                                    </div>
+
+                                    <div className="flex flex-col sm:flex-row gap-6 justify-center">
+                                        <button
+                                            onClick={() => { setGameStatus(p => ({ ...p, coinTossWinner: 'home' })); setPreGameStep(6) }}
+                                            className="group flex-1 aspect-square sm:aspect-auto flex flex-col items-center justify-center gap-4 glass-panel border-sky-400/20 bg-black/60 hover:bg-sky-500 hover:border-sky-400 transition-all duration-500 rounded-[3rem] p-8 shadow-2xl"
+                                        >
+                                            <div className="w-16 h-16 rounded-2xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-center group-hover:bg-black group-hover:border-black transition-all">
+                                                <span className="material-symbols-outlined text-3xl text-sky-400 group-hover:text-sky-500">castle</span>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black text-sky-500 group-hover:text-black uppercase tracking-widest transition-colors">Gloria Para</p>
+                                                <h4 className="text-lg font-display font-black text-white group-hover:text-black uppercase italic transition-colors leading-tight">{liveHomeTeam.name}</h4>
+                                            </div>
+                                        </button>
+
+                                        <button
+                                            onClick={() => { setGameStatus(p => ({ ...p, coinTossWinner: 'opponent' })); setPreGameStep(6) }}
+                                            className="group flex-1 aspect-square sm:aspect-auto flex flex-col items-center justify-center gap-4 glass-panel border-red-400/20 bg-black/60 hover:bg-red-500 hover:border-red-400 transition-all duration-500 rounded-[3rem] p-8 shadow-2xl"
+                                        >
+                                            <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center group-hover:bg-black group-hover:border-black transition-all">
+                                                <span className="material-symbols-outlined text-3xl text-red-400 group-hover:text-red-500">swords</span>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black text-red-500 group-hover:text-black uppercase tracking-widest transition-colors">Gloria Para</p>
+                                                <h4 className="text-lg font-display font-black text-white group-hover:text-black uppercase italic transition-colors leading-tight">{liveOpponentTeam.name}</h4>
+                                            </div>
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {preGameStep === 6 && gameStatus.coinTossWinner && (
+                                <div className='max-w-md mx-auto space-y-12 text-center'>
+                                    <div className="space-y-4">
+                                        <div className="inline-block px-4 py-1 rounded-full bg-premium-gold/10 border border-premium-gold/30 text-[10px] font-black text-premium-gold uppercase tracking-[0.3em] mb-4">Vencedor del Sorteo</div>
+                                        <h3 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter leading-none">
+                                            {(gameStatus.coinTossWinner === 'home' ? liveHomeTeam.name : liveOpponentTeam.name)}
+                                        </h3>
+                                        <p className="text-slate-500 text-sm">El destino te sonríe. ¿Cómo deseas comenzar tu asedio?</p>
+                                    </div>
+
+                                    <div className="flex gap-4">
+                                        <button
+                                            onClick={() => {
+                                                const receiving = gameStatus.coinTossWinner === 'home' ? 'opponent' : 'home';
+                                                setGameStatus(p => ({ ...p, receivingTeam: receiving }));
+                                                setFirstHalfReceiver(receiving);
+                                                logEvent('INFO', `${(gameStatus.coinTossWinner === 'home' ? liveHomeTeam.name : liveOpponentTeam.name)} elige patear.`);
+                                                setPreGameStep(7);
+                                            }}
+                                            className="flex-1 bg-white/5 border border-white/10 text-white font-display font-black py-6 rounded-2xl hover:bg-white/10 transition-all text-xs uppercase tracking-widest flex flex-col items-center gap-2 group"
+                                        >
+                                            <span className="material-symbols-outlined text-2xl text-slate-500 group-hover:text-white">sports_football</span>
+                                            Patear
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                const receiving = gameStatus.coinTossWinner;
+                                                setGameStatus(p => ({ ...p, receivingTeam: receiving }));
+                                                setFirstHalfReceiver(receiving);
+                                                logEvent('INFO', `${(gameStatus.coinTossWinner === 'home' ? liveHomeTeam.name : liveOpponentTeam.name)} elige recibir.`);
+                                                setPreGameStep(7);
+                                            }}
+                                            className="flex-1 bg-premium-gold text-black font-display font-black py-6 rounded-2xl shadow-xl hover:bg-white transition-all text-xs uppercase tracking-widest flex flex-col items-center gap-2 group"
+                                        >
+                                            <span className="material-symbols-outlined text-2xl text-black">handshake</span>
+                                            Recibir
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {preGameStep === 7 && (
+                                <div className="space-y-10">
+                                    <div className="text-center max-w-lg mx-auto">
+                                        <p className="text-slate-500 text-sm leading-relaxed tracking-wide italic">"Despliega tus tropas. El campo de batalla se tiñe de verde y gloria. Solo 11 guerreros pueden pisar el césped al unísono."</p>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                                        {[liveHomeTeam, liveOpponentTeam].map((team, index) => {
+                                            const teamId = index === 0 ? 'home' : 'opponent';
+                                            const onField = team.players.filter(p => p.status === 'Activo');
+                                            const onBench = team.players.filter(p => p.status === 'Reserva');
+                                            const accentColor = teamId === 'home' ? 'sky' : 'red';
+
+                                            return (
+                                                <div key={teamId} className="flex flex-col gap-6">
+                                                    <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className={`w-12 h-12 rounded-2xl bg-black/60 border border-white/10 flex items-center justify-center overflow-hidden`}>
+                                                                {team.crestImage ? <img src={team.crestImage} className="w-full h-full object-cover" /> : <ShieldCheckIcon className="w-6 h-6 text-slate-700" />}
+                                                            </div>
+                                                            <div>
+                                                                <h4 className={`text-lg font-display font-black text-${accentColor}-400 uppercase italic tracking-tighter leading-none`}>{team.name}</h4>
+                                                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{team.rosterName}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <div className={`text-xl font-display font-black ${onField.length > 11 ? 'text-red-500' : 'text-white'}`}>{onField.length}/11</div>
+                                                            <div className="text-[8px] font-bold text-slate-600 uppercase">En el Campo</div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="relative group">
+                                                        <div className={`absolute -inset-1 bg-gradient-to-b from-${accentColor}-500/20 to-transparent rounded-[2.5rem] blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000`}></div>
+                                                        <div className="relative bg-black/60 rounded-[2.5rem] border border-white/10 p-4 shadow-3xl">
+                                                            <MiniField
+                                                                players={onField}
+                                                                teamColor={teamId === 'home' ? 'bg-sky-500' : 'bg-red-500'}
+                                                                onPlayerMove={(playerId, pos) => handlePlayerMove(teamId, playerId, pos)}
+                                                                ballCarrierId={ballCarrierId}
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="bg-black/40 border border-white/5 rounded-3xl p-5 h-[300px] overflow-hidden flex flex-col">
+                                                        <h5 className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mb-4 flex justify-between items-center">
+                                                            Roster de Guerra
+                                                            <span className="text-[8px] bg-white/5 px-2 py-0.5 rounded-full">{team.players.length} Total</span>
+                                                        </h5>
+                                                        <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-2">
+                                                            {/* Grouped statuses for better UI */}
+                                                            <div className="space-y-1">
+                                                                {team.players.map((p, idx) => (
+                                                                    <PlayerStatusCard
+                                                                        key={p.id}
+                                                                        player={p}
+                                                                        playerNumber={p.status === 'Activo' ? onField.findIndex(pl => pl.id === p.id) + 1 : undefined}
+                                                                        onViewPlayer={setViewingPlayer}
+                                                                        onSkillClick={handleSkillClick}
+                                                                        canToggleStatus={true}
+                                                                        onStatusToggle={() => handlePlayerStatusToggle(p, teamId)}
+                                                                    />
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    <div className="flex flex-wrap justify-center gap-6 pt-10 border-t border-white/5">
+                                        <button
+                                            onClick={handleSuggestDeployment}
+                                            className="flex items-center gap-3 bg-white/5 border border-white/10 text-white font-display font-black py-4 px-8 rounded-2xl hover:bg-teal-500/10 hover:border-teal-500/30 hover:text-teal-400 transition-all text-xs uppercase tracking-widest"
+                                        >
+                                            <span className="material-symbols-outlined">shuffle</span>
+                                            Táctica Aleatoria
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                const homeOnField = liveHomeTeam.players.filter(p => p.status === 'Activo').length;
+                                                const oppOnField = liveOpponentTeam.players.filter(p => p.status === 'Activo').length;
+                                                if (homeOnField === 0 || oppOnField === 0) {
+                                                    alert('Ambos equipos deben tener al menos un guerrero en el campo para la batalla.');
+                                                    return;
+                                                }
+                                                setPreGameStep(8);
+                                            }}
+                                            className="bg-premium-gold text-black font-display font-black py-4 px-12 rounded-2xl shadow-xl hover:scale-105 transition-all text-xs uppercase tracking-[0.3em]"
+                                        >
+                                            Confirmar Despliegue
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {preGameStep === 8 && (
+                                <div className='max-w-xl mx-auto space-y-12 text-center py-6'>
+                                    {!gameStatus.kickoffEvent ? (
+                                        <div className="space-y-10">
+                                            <div className="flex flex-col items-center gap-6">
+                                                <div className="w-40 h-40 bg-premium-gold/5 rounded-[3rem] border-2 border-premium-gold/20 flex items-center justify-center shadow-[0_0_80px_rgba(245,159,10,0.1)] relative group">
+                                                    <div className="absolute inset-0 bg-premium-gold/10 rounded-[3rem] blur-2xl animate-pulse"></div>
+                                                    <span className="material-symbols-outlined text-7xl text-premium-gold relative z-10 animate-bounce">sports_football</span>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <h3 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter">La Patada Inicial</h3>
+                                                    <p className="text-slate-500 text-sm max-w-xs mx-auto">Lanza los dados del destino para determinar el evento impredecible que marcará el inicio del asalto.</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex justify-center">
+                                                <DiceRollButton onRoll={handleKickoffRoll} onPlaySound={() => playSound('dice')} />
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-10 animate-slide-in-up">
+                                            <div className="relative">
+                                                <div className="absolute -inset-8 bg-sky-500/10 blur-[80px] rounded-full"></div>
+                                                <div className="relative glass-panel border-sky-500/30 bg-black/60 p-10 rounded-[4rem] shadow-4xl transform hover:scale-[1.02] transition-transform duration-700">
+                                                    <div className="text-[10px] font-display font-black text-sky-400 uppercase tracking-[0.4em] mb-4">Intervención del Destino</div>
+                                                    <h4 className="text-4xl font-display font-black text-white italic uppercase tracking-tighter mb-4">{gameStatus.kickoffEvent.title}</h4>
+                                                    <div className="w-16 h-1 bg-sky-500/30 mx-auto mb-6 rounded-full"></div>
+                                                    <p className="text-slate-400 text-sm leading-relaxed max-w-sm mx-auto italic">{gameStatus.kickoffEvent.description}</p>
+                                                </div>
+                                            </div>
+
+                                            {kickoffActionCompleted && (
+                                                <button
+                                                    onClick={handleStartDrive}
+                                                    className="group relative overflow-hidden bg-green-500 text-black font-display font-black py-6 px-20 rounded-2xl shadow-[0_30px_60px_rgba(34,197,94,0.3)] hover:scale-105 active:scale-95 transition-all duration-300"
+                                                >
+                                                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                                                    <span className="relative text-xs uppercase tracking-[0.4em]">¡Que Corra la Sangre!</span>
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 );
             }
@@ -1293,387 +1751,415 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                 );
             }
             case 'in_progress':
-                if (!liveHomeTeam || !liveOpponentTeam) return <div>Cargando equipos...</div>;
-
-                const homeScorers = liveHomeTeam.players.filter(p => p.sppActions?.TD);
-                const oppScorers = liveOpponentTeam.players.filter(p => p.sppActions?.TD);
-
-                const renderPlayerGroup = (title: string, players: ManagedPlayer[], teamId: 'home' | 'opponent') => {
-                    if (players.length === 0) return null;
-                    const onFieldNumberOffset = teamId === 'home'
-                        ? 0
-                        : liveHomeTeam.players.filter(p => p.status === 'Activo').length;
-
-                    return (
-                        <div className="mt-2">
-                            <h4 className="font-bold text-xs uppercase text-slate-500 mb-1 px-2">{title}</h4>
-                            <div className="space-y-1">
-                                {players.map((p, idx) => (
-                                    <div
-                                        key={p.id}
-                                        onClick={() => {
-                                            setSelectedPlayerForAction(p);
-                                            setActiveTeamId(teamId);
-                                        }}
-                                        className={`transition-all duration-300 rounded-xl cursor-pointer ${selectedPlayerForAction?.id === p.id
-                                                ? 'ring-2 ring-premium-gold bg-premium-gold/10'
-                                                : 'hover:bg-white/5'
-                                            }`}
-                                    >
-                                        <PlayerStatusCard
-                                            player={p}
-                                            playerNumber={p.status === 'Activo' ? onFieldNumberOffset + idx + 1 : undefined}
-                                            onViewPlayer={setViewingPlayer}
-                                            onSkillClick={handleSkillClick}
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    );
-                };
+                if (!liveHomeTeam || !liveOpponentTeam) return <div className="text-white font-display font-black text-center py-20 animate-pulse">Invocando escuadras...</div>;
 
                 return (
-                    <div className="space-y-4">
-                        <div className="glass-panel p-6 border-white/5 bg-black/40 overflow-hidden relative">
-                            {/* Scoreboard Background Decor */}
-                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full opacity-5 pointer-events-none">
-                                <StadiumIcon className="w-full h-full object-contain p-4" />
-                            </div>
-
-                            <div className="flex justify-around items-center relative z-10">
-                                {/* Home Team */}
-                                <div className="flex flex-col items-center gap-3 w-1/3">
-                                    <div className="relative group">
-                                        {liveHomeTeam.crestImage ? (
-                                            <img src={liveHomeTeam.crestImage} alt="Escudo Local" className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl object-cover bg-black/60 border-2 border-sky-500/50 shadow-[0_0_20px_rgba(14,165,233,0.3)] transition-transform group-hover:scale-105" />
-                                        ) : (
-                                            <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl bg-slate-900 flex items-center justify-center border-2 border-sky-500/50 shadow-[0_0_20px_rgba(14,165,233,0.3)]">
-                                                <ShieldCheckIcon className="w-12 h-12 text-sky-500/50" />
-                                            </div>
-                                        )}
-                                        <div className="absolute -top-2 -right-2 bg-sky-500 text-white font-black px-2 py-0.5 rounded-lg text-xs shadow-lg uppercase tracking-widest">Local</div>
+                    <div className="flex h-[calc(100vh-180px)] gap-6 overflow-hidden animate-fade-in-slow">
+                        {/* SIDEBAR IZQUIERDA: Marcador y Recursos */}
+                        <aside className="w-80 flex flex-col gap-4 overflow-y-auto pr-2 custom-scrollbar">
+                            {/* Scoreboard */}
+                            <div className="glass-panel p-6 border-white/5 bg-black/40 space-y-8">
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center bg-black/60 p-4 rounded-3xl border border-white/10 shadow-inner">
+                                        <div className="text-center flex-1">
+                                            <p className="text-[10px] font-display font-black text-sky-500 uppercase tracking-widest mb-1">Local</p>
+                                            <span className="text-5xl font-display font-black text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">{score.home}</span>
+                                        </div>
+                                        <div className="text-premium-gold/30 font-black text-2xl px-2 italic select-none">VS</div>
+                                        <div className="text-center flex-1">
+                                            <p className="text-[10px] font-display font-black text-red-500 uppercase tracking-widest mb-1">Rival</p>
+                                            <span className="text-5xl font-display font-black text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">{score.opponent}</span>
+                                        </div>
                                     </div>
-                                    <h3 className="text-sm sm:text-lg font-display font-black text-sky-400 truncate text-center uppercase tracking-wider">{liveHomeTeam.name}</h3>
+
+                                    <div className="bg-premium-gold/5 border border-premium-gold/20 p-4 rounded-2xl text-center relative overflow-hidden group">
+                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-premium-gold/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                                        <p className="text-[9px] font-display font-black text-premium-gold uppercase tracking-[0.3em] mb-2">Reloj de Arena</p>
+                                        <div className="flex items-center justify-center gap-3">
+                                            <div className="flex flex-col">
+                                                <span className="text-white font-display font-black text-lg leading-none italic">{half === 1 ? '1ª' : '2ª'}</span>
+                                                <span className="text-[8px] text-slate-500 font-bold uppercase">Mitad</span>
+                                            </div>
+                                            <div className="w-px h-8 bg-premium-gold/20"></div>
+                                            <div className="flex flex-col">
+                                                <span className="text-white font-display font-black text-lg leading-none italic">{turn}</span>
+                                                <span className="text-[8px] text-slate-500 font-bold uppercase">Turno</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                {/* Score Center */}
-                                <div className="text-center flex-shrink-0 px-4">
-                                    <div className="flex items-center justify-center gap-4">
-                                        <span className="text-6xl sm:text-8xl font-display font-bold text-white tracking-tighter tabular-nums drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">{score.home}</span>
-                                        <span className="text-3xl font-display font-black text-premium-gold/40 mt-2">:</span>
-                                        <span className="text-6xl sm:text-8xl font-display font-bold text-white tracking-tighter tabular-nums drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">{score.opponent}</span>
+                                {/* Active Team Selector */}
+                                <div className="space-y-3">
+                                    <h4 className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest px-2">Posesión Activa</h4>
+                                    <div className="flex gap-2 p-1.5 bg-black/60 rounded-2xl border border-white/10">
+                                        <button
+                                            onClick={() => setActiveTeamId('home')}
+                                            className={`flex-1 py-3 rounded-xl text-[10px] font-display font-black uppercase tracking-widest transition-all duration-300 ${activeTeamId === 'home' ? 'bg-sky-500 text-black shadow-[0_0_20px_rgba(14,165,233,0.4)] scale-105' : 'text-slate-500 hover:text-sky-400 hover:bg-sky-500/5'}`}
+                                        >
+                                            {liveHomeTeam.name.split(' ')[0]}
+                                        </button>
+                                        <button
+                                            onClick={() => setActiveTeamId('opponent')}
+                                            className={`flex-1 py-3 rounded-xl text-[10px] font-display font-black uppercase tracking-widest transition-all duration-300 ${activeTeamId === 'opponent' ? 'bg-red-600 text-white shadow-[0_0_20px_rgba(220,38,38,0.4)] scale-105' : 'text-slate-500 hover:text-red-400 hover:bg-red-500/5'}`}
+                                        >
+                                            {liveOpponentTeam.name.split(' ')[0]}
+                                        </button>
                                     </div>
-                                    <div className="flex flex-col items-center gap-2 mt-4">
-                                        <div className="inline-flex items-center gap-2 bg-black/60 px-4 py-1.5 rounded-full border border-white/10 backdrop-blur-sm">
-                                            <span className="text-[10px] sm:text-xs font-display font-black uppercase tracking-[0.2em] text-white/40">Parte {half} · Turno {turn}</span>
-                                        </div>
-                                        <div className="flex gap-1 p-1 bg-black/40 rounded-xl border border-white/5">
-                                            <button
-                                                onClick={() => setActiveTeamId('home')}
-                                                className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${activeTeamId === 'home' ? 'bg-sky-500 text-black shadow-[0_0_15px_rgba(14,165,233,0.4)]' : 'text-slate-500 hover:text-white'}`}
-                                            >
-                                                Turno Local
-                                            </button>
-                                            <button
-                                                onClick={() => setActiveTeamId('opponent')}
-                                                className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${activeTeamId === 'opponent' ? 'bg-red-500 text-white shadow-[0_0_15px_rgba(239,68,68,0.4)]' : 'text-slate-500 hover:text-white'}`}
-                                            >
-                                                Turno Rival
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div className="flex justify-center gap-6 mt-6">
-                                        <div className="flex flex-col items-center gap-1 group">
-                                            <span className="text-[10px] text-sky-500/60 font-black uppercase tracking-widest">Rerolls</span>
-                                            <div className="flex items-center gap-2 bg-sky-500/10 px-3 py-1.5 rounded-xl border border-sky-500/30">
-                                                <span className="text-lg text-white font-display font-black">{liveHomeTeam.liveRerolls || 0}</span>
-                                                <button onClick={() => useReroll('home')} disabled={(liveHomeTeam.liveRerolls || 0) === 0} className="w-6 h-6 rounded-lg bg-sky-500 text-black flex items-center justify-center hover:bg-sky-400 disabled:opacity-30 disabled:grayscale transition-all active:scale-90">
-                                                    <span className="material-symbols-outlined text-sm font-black">remove</span>
+                                </div>
+
+                                {/* Rerolls & Inducements */}
+                                <div className="space-y-4 pt-6 border-t border-white/5">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="bg-sky-500/5 border border-sky-500/20 p-4 rounded-2xl flex flex-col items-center gap-2 group transition-all hover:bg-sky-500/10">
+                                            <span className="text-[9px] font-display font-black text-sky-500 uppercase tracking-tighter">Segundas Oportunidades</span>
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-2xl font-display font-black text-white">{liveHomeTeam.liveRerolls || 0}</span>
+                                                <button
+                                                    onClick={() => useReroll('home')}
+                                                    disabled={(liveHomeTeam.liveRerolls || 0) === 0}
+                                                    className="w-7 h-7 rounded-xl bg-sky-500 text-black flex items-center justify-center hover:bg-sky-400 disabled:opacity-20 transition-all active:scale-90 shadow-lg"
+                                                >
+                                                    <span className="material-symbols-outlined text-sm font-black text-black">remove</span>
                                                 </button>
                                             </div>
                                         </div>
-                                        <div className="flex flex-col items-center gap-1 group">
-                                            <span className="text-[10px] text-red-500/60 font-black uppercase tracking-widest">Rerolls</span>
-                                            <div className="flex items-center gap-2 bg-red-500/10 px-3 py-1.5 rounded-xl border border-red-500/30">
-                                                <span className="text-lg text-white font-display font-black">{liveOpponentTeam.liveRerolls || 0}</span>
-                                                <button onClick={() => useReroll('opponent')} disabled={(liveOpponentTeam.liveRerolls || 0) === 0} className="w-6 h-6 rounded-lg bg-red-500 text-white flex items-center justify-center hover:bg-red-400 disabled:opacity-30 disabled:grayscale transition-all active:scale-90">
-                                                    <span className="material-symbols-outlined text-sm font-black">remove</span>
+                                        <div className="bg-red-500/5 border border-red-500/20 p-4 rounded-2xl flex flex-col items-center gap-2 group transition-all hover:bg-red-500/10">
+                                            <span className="text-[9px] font-display font-black text-red-500 uppercase tracking-tighter">Segundas Oportunidades</span>
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-2xl font-display font-black text-white">{liveOpponentTeam.liveRerolls || 0}</span>
+                                                <button
+                                                    onClick={() => useReroll('opponent')}
+                                                    disabled={(liveOpponentTeam.liveRerolls || 0) === 0}
+                                                    className="w-7 h-7 rounded-xl bg-red-600 text-white flex items-center justify-center hover:bg-red-500 disabled:opacity-20 transition-all active:scale-90 shadow-lg"
+                                                >
+                                                    <span className="material-symbols-outlined text-sm font-black text-white">remove</span>
                                                 </button>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Opponent Team */}
-                                <div className="flex flex-col items-center gap-3 w-1/3">
-                                    <div className="relative group">
-                                        {liveOpponentTeam.crestImage ? (
-                                            <img src={liveOpponentTeam.crestImage} alt="Escudo Rival" className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl object-cover bg-black/60 border-2 border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-transform group-hover:scale-105" />
-                                        ) : (
-                                            <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl bg-slate-900 flex items-center justify-center border-2 border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.3)]">
-                                                <ShieldCheckIcon className="w-12 h-12 text-red-500/50" />
+                                {/* Dugout / Casualty Summary */}
+                                <div className="space-y-3 pt-6 border-t border-white/5">
+                                    <h4 className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest px-2">Baneados y Bajas</h4>
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between items-center p-3 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                                            <div className="flex items-center gap-2">
+                                                <span className="material-symbols-outlined text-amber-500 text-sm">hotel</span>
+                                                <span className="text-[10px] font-display font-bold text-slate-400 uppercase">Inconscientes (KO)</span>
                                             </div>
-                                        )}
-                                        <div className="absolute -top-2 -left-2 bg-red-500 text-white font-black px-2 py-0.5 rounded-lg text-xs shadow-lg uppercase tracking-widest">Visitante</div>
-                                    </div>
-                                    <h3 className="text-sm sm:text-lg font-display font-black text-red-400 truncate text-center uppercase tracking-wider">{liveOpponentTeam.name}</h3>
-                                </div>
-                            </div>
-
-                            {/* Scorers Quick View */}
-                            <div className="grid grid-cols-2 gap-8 mt-6 pt-4 border-t border-white/5">
-                                <div className="flex flex-wrap gap-2 justify-start">
-                                    {homeScorers.length > 0 ? homeScorers.map(p => (
-                                        <div key={p.id} className="bg-sky-500/10 border border-sky-500/20 px-2 py-0.5 rounded flex items-center gap-1.5 animate-fade-in-fast">
-                                            <TdIcon className="w-3 h-3 text-sky-400" />
-                                            <span className="text-[10px] font-display font-bold text-white/70 uppercase truncate max-w-[80px]">{p.customName}</span>
-                                            {p.sppActions?.TD && p.sppActions.TD > 1 && <span className="text-[8px] font-black text-sky-400">x{p.sppActions.TD}</span>}
+                                            <span className="text-xs font-display font-black text-white">
+                                                <span className="text-sky-400">{liveHomeTeam.players.filter(p => p.status === 'KO').length}</span>
+                                                <span className="mx-1 text-slate-600">|</span>
+                                                <span className="text-red-400">{liveOpponentTeam.players.filter(p => p.status === 'KO').length}</span>
+                                            </span>
                                         </div>
-                                    )) : <span className="text-[10px] uppercase font-bold text-white/5 italic">Sin anotadores</span>}
-                                </div>
-                                <div className="flex flex-wrap gap-2 justify-end">
-                                    {oppScorers.length > 0 ? oppScorers.map(p => (
-                                        <div key={p.id} className="bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded flex items-center gap-1.5 animate-fade-in-fast">
-                                            <span className="text-[10px] font-display font-bold text-white/70 uppercase truncate max-w-[80px] text-right">{p.customName}</span>
-                                            {p.sppActions?.TD && p.sppActions.TD > 1 && <span className="text-[8px] font-black text-red-400">x{p.sppActions.TD}</span>}
-                                            <TdIcon className="w-3 h-3 text-red-400" />
+                                        <div className="flex justify-between items-center p-3 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                                            <div className="flex items-center gap-2">
+                                                <span className="material-symbols-outlined text-blood-red text-sm">skull</span>
+                                                <span className="text-[10px] font-display font-bold text-slate-400 uppercase">Bajas Críticas</span>
+                                            </div>
+                                            <span className="text-xs font-display font-black text-white">
+                                                <span className="text-sky-400">{liveHomeTeam.players.filter(p => ['Lesionado', 'Expulsado', 'Muerto'].includes(p.status || '')).length}</span>
+                                                <span className="mx-1 text-slate-600">|</span>
+                                                <span className="text-red-400">{liveOpponentTeam.players.filter(p => ['Lesionado', 'Expulsado', 'Muerto'].includes(p.status || '')).length}</span>
+                                            </span>
                                         </div>
-                                    )) : <span className="text-[10px] uppercase font-bold text-white/5 italic">Sin anotadores</span>}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                            {gameStatus.weather && (
-                                <div className="bento-card p-4 border-white/5 bg-black/40 flex items-center gap-4 group">
-                                    <div className="w-12 h-12 bg-sky-500/10 rounded-xl flex items-center justify-center border border-sky-500/20 group-hover:scale-110 transition-transform">
-                                        {renderWeatherIcon(gameStatus.weather.title)}
-                                    </div>
-                                    <div>
-                                        <h4 className="font-display font-black text-premium-gold uppercase tracking-widest text-[10px] mb-0.5">Estado del Clima</h4>
-                                        <p className="font-display font-bold text-white group-hover:text-premium-gold transition-colors">{gameStatus.weather.title}</p>
-                                        <p className="text-slate-400 text-[10px] leading-tight mt-1">{gameStatus.weather.description}</p>
-                                    </div>
-                                </div>
-                            )}
-                            {gameStatus.kickoffEvent && (
-                                <div className="bento-card p-4 border-white/5 bg-black/40 flex items-center gap-4 group">
-                                    <div className="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center border border-amber-500/20 group-hover:scale-110 transition-transform">
-                                        <StadiumIcon className="w-6 h-6 text-amber-500" />
-                                    </div>
-                                    <div>
-                                        <h4 className="font-display font-black text-premium-gold uppercase tracking-widest text-[10px] mb-0.5">Evento de Patada</h4>
-                                        <p className="font-display font-bold text-white group-hover:text-premium-gold transition-colors">{gameStatus.kickoffEvent.title}</p>
-                                        <p className="text-slate-400 text-[10px] leading-tight mt-1">{gameStatus.kickoffEvent.description}</p>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="glass-panel p-4 border-white/5 bg-black/40 space-y-3">
-                                <div className="flex justify-between items-center pb-3 border-b border-white/5">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-1 px-2 bg-sky-500/20 rounded border border-sky-500/30 text-[10px] font-black text-sky-400 uppercase tracking-widest">Team A</div>
-                                        <h3 className="text-sm font-display font-black text-white uppercase tracking-wider">{liveHomeTeam.name}</h3>
-                                    </div>
-                                    <div className="flex items-center gap-1.5 hover:scale-105 transition-transform cursor-help" title="Segundas Oportunidades Restantes">
-                                        <DiceIcon className="w-4 h-4 text-premium-gold" />
-                                        <span className="text-lg font-display font-black text-white">{liveHomeTeam.liveRerolls || 0}</span>
-                                    </div>
-                                </div>
-                                <div className="max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
-                                    {renderPlayerGroup(`En el Campo (${liveHomeTeam.players.filter(p => p.status === 'Activo').length}/11)`, liveHomeTeam.players.filter(p => p.status === 'Activo'), 'home')}
-                                    {renderPlayerGroup(`Banquillo (${liveHomeTeam.players.filter(p => p.status === 'Reserva').length})`, liveHomeTeam.players.filter(p => p.status === 'Reserva'), 'home')}
-                                    {renderPlayerGroup(`Inconscientes (${liveHomeTeam.players.filter(p => p.status === 'KO').length})`, liveHomeTeam.players.filter(p => p.status === 'KO'), 'home')}
-                                    {renderPlayerGroup(`Bajas (${liveHomeTeam.players.filter(p => ['Lesionado', 'Expulsado', 'Muerto'].includes(p.status || '')).length})`, liveHomeTeam.players.filter(p => ['Lesionado', 'Expulsado', 'Muerto'].includes(p.status || '')), 'home')}
-                                </div>
-                            </div>
-                            <div className="glass-panel p-4 border-white/5 bg-black/40 space-y-3">
-                                <div className="flex justify-between items-center pb-3 border-b border-white/5">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-1 px-2 bg-red-500/20 rounded border border-red-500/30 text-[10px] font-black text-red-400 uppercase tracking-widest">Team B</div>
-                                        <h3 className="text-sm font-display font-black text-white uppercase tracking-wider">{liveOpponentTeam.name}</h3>
-                                    </div>
-                                    <div className="flex items-center gap-1.5 hover:scale-105 transition-transform cursor-help" title="Segundas Oportunidades Restantes">
-                                        <DiceIcon className="w-4 h-4 text-premium-gold" />
-                                        <span className="text-lg font-display font-black text-white">{liveOpponentTeam.liveRerolls || 0}</span>
-                                    </div>
-                                </div>
-                                <div className="max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
-                                    {renderPlayerGroup(`En el Campo (${liveOpponentTeam.players.filter(p => p.status === 'Activo').length}/11)`, liveOpponentTeam.players.filter(p => p.status === 'Activo'), 'opponent')}
-                                    {renderPlayerGroup(`Banquillo (${liveOpponentTeam.players.filter(p => p.status === 'Reserva').length})`, liveOpponentTeam.players.filter(p => p.status === 'Reserva'), 'opponent')}
-                                    {renderPlayerGroup(`Inconscientes (${liveOpponentTeam.players.filter(p => p.status === 'KO').length})`, liveOpponentTeam.players.filter(p => p.status === 'KO'), 'opponent')}
-                                    {renderPlayerGroup(`Bajas (${liveOpponentTeam.players.filter(p => ['Lesionado', 'Expulsado', 'Muerto'].includes(p.status || '')).length})`, liveOpponentTeam.players.filter(p => ['Lesionado', 'Expulsado', 'Muerto'].includes(p.status || '')), 'opponent')}
-                                </div>
-                            </div>
-                        </div>
-
-
-                        <div className="flex gap-2 mb-4 bg-black/40 p-1 rounded-xl border border-white/5">
                             <button
-                                onClick={() => setActiveTab('assistant')}
-                                className={`flex-1 py-3 rounded-lg font-display font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'assistant' ? 'bg-premium-gold text-black' : 'text-slate-500 hover:text-white'}`}
+                                onClick={() => setGameState('post_game')}
+                                className="w-full group relative overflow-hidden text-[10px] font-display font-black uppercase tracking-[0.3em] bg-blood-red/10 border border-blood-red/30 text-blood-red hover:bg-black hover:text-white py-4 px-6 rounded-2xl transition-all shadow-xl mt-auto"
                             >
-                                Asistente
+                                <div className="absolute inset-0 bg-blood-red -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-in-out -z-10"></div>
+                                Finalizar Encuentro
                             </button>
-                            <button
-                                onClick={() => setActiveTab('narrator')}
-                                className={`flex-1 py-3 rounded-lg font-display font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'narrator' ? 'bg-blood-red text-white' : 'text-slate-500 hover:text-white'}`}
-                            >
-                                Crónica de Nuffle
-                            </button>
-                        </div>
+                        </aside>
 
-                        {activeTab === 'assistant' ? (
-                            <>
-                                <div className="glass-panel p-5 border-white/5 bg-black/40 space-y-6">
-                                    {selectedPlayerForAction && (
-                                        <div className="glass-panel p-4 border-premium-gold/20 bg-black/60 shadow-[0_0_40px_rgba(245,159,10,0.1)] mb-2 animate-slide-in-up">
-                                            <div className="flex items-center gap-4">
-                                                <div className="relative">
-                                                    <div className="w-14 h-14 rounded-xl bg-premium-gold/10 border border-premium-gold/30 flex items-center justify-center overflow-hidden">
-                                                        <span className="material-symbols-outlined text-premium-gold text-2xl">person</span>
-                                                    </div>
-                                                    <button
-                                                        onClick={() => setSelectedPlayerForAction(null)}
-                                                        className="absolute -top-2 -right-2 w-6 h-6 bg-blood-red rounded-full flex items-center justify-center text-white shadow-lg hover:scale-110 active:scale-90 transition-all"
-                                                    >
-                                                        <span className="material-symbols-outlined text-xs">close</span>
-                                                    </button>
+                        {/* PANEL CENTRAL: Consola de Jugador y Acciones */}
+                        <main className="flex-1 flex flex-col gap-6 overflow-hidden">
+                            {/* Player Selection Header */}
+                            <div className="glass-panel p-6 border-premium-gold/30 bg-black/60 shadow-[0_0_50px_rgba(245,159,10,0.1)] flex-shrink-0 relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-premium-gold/5 blur-[100px] -z-10"></div>
+                                {selectedPlayerForAction ? (
+                                    <div className="flex items-center gap-8 animate-slide-in-up">
+                                        <div className="relative">
+                                            <div className="w-24 h-24 rounded-3xl bg-premium-gold/5 border-2 border-premium-gold/20 flex items-center justify-center overflow-hidden shadow-2xl">
+                                                <span className="material-symbols-outlined text-premium-gold text-5xl">person</span>
+                                            </div>
+                                            <div className={`absolute -bottom-2 -right-2 w-10 h-10 rounded-2xl ${activeTeamId === 'home' ? 'bg-sky-500 shadow-[0_0_20px_rgba(14,165,233,0.5)]' : 'bg-red-600 shadow-[0_0_20px_rgba(220,38,38,0.5)]'} flex items-center justify-center border-4 border-black`}>
+                                                <span className="text-xs font-display font-black text-white">#{selectedPlayerForAction.id.toString().slice(-2)}</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex-grow min-w-0">
+                                            <div className="flex items-center gap-4 mb-3">
+                                                <h3 className="text-3xl font-display font-black text-white uppercase italic tracking-tighter truncate leading-none">
+                                                    {selectedPlayerForAction.customName}
+                                                </h3>
+                                                <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[9px] font-display font-black text-slate-500 uppercase tracking-widest leading-none">
+                                                    {selectedPlayerForAction.position}
+                                                </span>
+                                            </div>
+                                            <div className="flex gap-8 items-center">
+                                                <div className="flex gap-6">
+                                                    {[
+                                                        { l: 'MA', v: selectedPlayerForAction.stats.MA },
+                                                        { l: 'ST', v: selectedPlayerForAction.stats.ST },
+                                                        { l: 'AG', v: selectedPlayerForAction.stats.AG },
+                                                        { l: 'AV', v: selectedPlayerForAction.stats.AR }
+                                                    ].map(s => (
+                                                        <div key={s.l} className="flex flex-col items-center">
+                                                            <span className="text-[9px] text-premium-gold/50 font-display font-black uppercase tracking-widest leading-none mb-2">{s.l}</span>
+                                                            <span className="text-lg font-display font-black text-white leading-none">{s.v}</span>
+                                                        </div>
+                                                    ))}
                                                 </div>
-                                                <div className="flex-grow">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className={`w-2 h-2 rounded-full ${activeTeamId === 'home' ? 'bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.8)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]'}`}></span>
-                                                        <h3 className="text-sm font-display font-black text-white uppercase tracking-tight truncate">{selectedPlayerForAction.customName}</h3>
-                                                    </div>
-                                                    <div className="flex gap-3 mt-1.5">
-                                                        <div className="flex flex-col">
-                                                            <span className="text-[7px] text-premium-gold/60 font-black uppercase tracking-widest">MA / ST / AG / AV</span>
-                                                            <span className="text-[10px] font-display font-black text-white">{selectedPlayerForAction.stats.MA} / {selectedPlayerForAction.stats.ST} / {selectedPlayerForAction.stats.AG} / {selectedPlayerForAction.stats.AR}</span>
-                                                        </div>
-                                                        <div className="flex flex-wrap gap-1 items-center">
-                                                            {selectedPlayerForAction.skills.split(',').slice(0, 2).map((s, i) => (
-                                                                <span key={i} className="bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-[8px] font-bold text-slate-400 whitespace-nowrap">{s.trim()}</span>
-                                                            ))}
-                                                        </div>
-                                                    </div>
+                                                <div className="h-10 w-px bg-white/10"></div>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {selectedPlayerForAction.skills.split(',').map((s, i) => (
+                                                        <button
+                                                            key={i}
+                                                            onClick={() => handleSkillClick(s.trim())}
+                                                            className="text-[10px] font-display font-bold text-sky-400 hover:text-white hover:bg-sky-400/10 px-2 py-1 rounded-md transition-all border border-transparent hover:border-sky-400/30"
+                                                        >
+                                                            {s.trim()}
+                                                        </button>
+                                                    ))}
                                                 </div>
                                             </div>
                                         </div>
-                                    )}
-
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-2 h-6 bg-premium-gold rounded-full shadow-[0_0_10px_rgba(245,159,10,0.5)]"></div>
-                                        <h3 className="text-xs font-display font-black text-premium-gold uppercase tracking-[0.2em]">Acciones de Juego</h3>
-                                    </div>
-                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                        <button onClick={() => setIsTdModalOpen(true)} className="group bg-green-950/40 border border-green-500/20 text-white font-display font-black p-4 rounded-2xl hover:bg-green-600 hover:text-black transition-premium shadow-lg uppercase italic text-[10px] tracking-widest flex flex-col items-center gap-2">
-                                            <TdIcon className="w-6 h-6 text-green-500 group-hover:text-black transition-colors" />
-                                            Anotar TD
-                                        </button>
-                                        <button onClick={() => setIsFoulModalOpen(true)} className="group bg-amber-950/40 border border-amber-500/20 text-white font-display font-black p-4 rounded-2xl hover:bg-amber-500 hover:text-black transition-premium shadow-lg uppercase italic text-[10px] tracking-widest flex flex-col items-center gap-2">
-                                            <span className="material-symbols-outlined text-amber-500 group-hover:text-black transition-colors">skull</span>
-                                            Falta
-                                        </button>
-                                        <button onClick={() => setIsInjuryModalOpen(true)} className="group bg-orange-950/40 border border-orange-500/20 text-white font-display font-black p-4 rounded-2xl hover:bg-orange-500 hover:text-black transition-premium shadow-lg uppercase italic text-[10px] tracking-widest flex flex-col items-center gap-2">
-                                            <CasualtyIcon className="w-6 h-6 text-orange-500 group-hover:text-black transition-colors" />
-                                            Lesión
-                                        </button>
-                                        <button onClick={() => setIsTurnoverModalOpen(true)} className="group bg-red-950/40 border border-red-500/20 text-white font-display font-black p-4 rounded-2xl hover:bg-red-500 hover:text-black transition-premium shadow-lg uppercase italic text-[10px] tracking-widest flex flex-col items-center gap-2">
-                                            <span className="material-symbols-outlined text-red-500 group-hover:text-black transition-colors">error</span>
-                                            Turnover
-                                        </button>
-
-                                        <button onClick={() => { playSound('dice'); logEvent('block', `${selectedPlayerForAction ? selectedPlayerForAction.customName : 'Un jugador'} inicia un bloqueo.`); }} className="group bg-white/5 border border-white/10 text-slate-400 font-display font-black p-4 rounded-2xl hover:bg-white/10 hover:text-white transition-premium shadow-lg uppercase italic text-[10px] tracking-widest flex flex-col items-center gap-2">
-                                            <span className="material-symbols-outlined text-white/40 group-hover:text-white transition-colors">sports_martial_arts</span>
-                                            Bloqueo
-                                        </button>
-                                        <button onClick={() => logEvent('move', `${selectedPlayerForAction ? selectedPlayerForAction.customName : 'Un jugador'} se mueve.`)} className="group bg-white/5 border border-white/10 text-slate-400 font-display font-black p-4 rounded-2xl hover:bg-white/10 hover:text-white transition-premium shadow-lg uppercase italic text-[10px] tracking-widest flex flex-col items-center gap-2">
-                                            <span className="material-symbols-outlined text-white/40 group-hover:text-white transition-colors">directions_run</span>
-                                            Movimiento
-                                        </button>
-                                        <button onClick={() => { playSound('dice'); const res = Math.floor(Math.random() * 6) + 1; logEvent('dodge', `${selectedPlayerForAction ? selectedPlayerForAction.customName : 'Un jugador'} intenta esquivar: D6 -> ${res}`); }} className="group bg-white/5 border border-white/10 text-slate-400 font-display font-black p-4 rounded-2xl hover:bg-white/10 hover:text-white transition-premium shadow-lg uppercase italic text-[10px] tracking-widest flex flex-col items-center gap-2">
-                                            <span className="material-symbols-outlined text-white/40 group-hover:text-white transition-colors">gesture</span>
-                                            Esquiva
-                                        </button>
-                                        <button onClick={() => { playSound('dice'); const res = Math.floor(Math.random() * 6) + 1; logEvent('pickup_ball', `${selectedPlayerForAction ? selectedPlayerForAction.customName : 'Un jugador'} intenta recoger el balón: D6 -> ${res}`); }} className="group bg-white/5 border border-white/10 text-slate-400 font-display font-black p-4 rounded-2xl hover:bg-white/10 hover:text-white transition-premium shadow-lg uppercase italic text-[10px] tracking-widest flex flex-col items-center gap-2">
-                                            <BallIcon className="w-6 h-6 text-white/40 group-hover:text-white transition-colors" />
-                                            Recoger
-                                        </button>
-
-                                        <button onClick={() => openSppModal('pass')} className="group bg-sky-950/40 border border-sky-500/20 text-white font-display font-black p-4 rounded-2xl hover:bg-sky-500 hover:text-black transition-premium shadow-lg uppercase italic text-[10px] tracking-widest flex flex-col items-center gap-2">
-                                            <PassIcon className="w-6 h-6 text-sky-500 group-hover:text-black transition-colors" />
-                                            Pase (PE)
-                                        </button>
-                                        <button onClick={() => openSppModal('interference')} className="group bg-sky-950/40 border border-sky-500/20 text-white font-display font-black p-4 rounded-2xl hover:bg-indigo-500 hover:text-black transition-premium shadow-lg uppercase italic text-[10px] tracking-widest flex flex-col items-center gap-2">
-                                            <InterferenceIcon className="w-6 h-6 text-indigo-400 group-hover:text-black transition-colors" />
-                                            Interf. (PE)
-                                        </button>
-                                        <button onClick={() => openSppModal('casualty')} className="group bg-rose-950/40 border border-rose-500/20 text-white font-display font-black p-4 rounded-2xl hover:bg-blood-red hover:text-white transition-premium shadow-lg uppercase italic text-[10px] tracking-widest flex flex-col items-center gap-2">
-                                            <CasualtyIcon className="w-6 h-6 text-blood-red group-hover:text-white transition-colors" />
-                                            Causa Baja
-                                        </button>
-                                        <button onClick={handleNextTurn} className="group bg-premium-gold/20 border border-premium-gold/30 text-white font-display font-black p-4 rounded-2xl hover:bg-premium-gold hover:text-black transition-premium shadow-lg uppercase italic text-[10px] tracking-widest flex flex-col items-center gap-2 border-dashed">
-                                            <span className="material-symbols-outlined text-premium-gold group-hover:text-black transition-colors">forward</span>
-                                            Siguiente
+                                        <button
+                                            onClick={() => setSelectedPlayerForAction(null)}
+                                            className="w-12 h-12 rounded-2xl bg-white/5 hover:bg-blood-red/20 text-slate-500 hover:text-blood-red transition-all flex items-center justify-center border border-white/5"
+                                            title="Liberar Guerrero"
+                                        >
+                                            <span className="material-symbols-outlined text-2xl">close</span>
                                         </button>
                                     </div>
-                                    <div className="mt-6 pt-6 border-t border-white/5 flex flex-wrap items-center gap-3">
-                                        <button onClick={() => setIsCustomEventModalOpen(true)} className="text-[10px] font-display font-black uppercase tracking-widest text-slate-500 hover:text-white flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-white/5 transition-all">
-                                            <span className="material-symbols-outlined text-sm">edit_note</span>
-                                            Evento Personalizado
-                                        </button>
-                                        <button onClick={handleExportLog} className="text-[10px] font-display font-black uppercase tracking-widest text-slate-500 hover:text-white flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-white/5 transition-all">
-                                            <DownloadIcon className="w-3.5 h-3.5" />
-                                            Exportar Bitácora
-                                        </button>
-                                        <div className="flex-grow"></div>
-                                        <button onClick={() => setGameState('post_game')} className="group text-[10px] font-display font-black uppercase tracking-[0.2em] bg-blood-red/10 border border-blood-red/30 text-blood-red hover:bg-blood-red hover:text-white py-2 px-6 rounded-xl transition-all shadow-[0_0_20px_rgba(139,0,0,0.1)] hover:shadow-blood-red/30">
-                                            Finalizar Partido
-                                        </button>
+                                ) : (
+                                    <div className="py-8 text-center animate-fade-in">
+                                        <div className="flex items-center justify-center gap-3 text-slate-500 mb-1">
+                                            <span className="material-symbols-outlined text-lg">touch_app</span>
+                                            <p className="font-display font-bold italic text-sm uppercase tracking-widest">Selecciona un Campeón en la Plantilla</p>
+                                        </div>
+                                        <p className="text-[10px] text-slate-600 font-bold uppercase tracking-[0.2em]">Nuffle aguarda tu siguiente movimiento</p>
                                     </div>
-                                </div>
+                                )}
+                            </div>
 
-
-                                <div className="bg-slate-900/70 p-3 rounded-lg border border-slate-700">
-                                    <button onClick={() => setIsLogVisible(!isLogVisible)} className="w-full text-left flex justify-between items-center group">
-                                        <h3 className="text-lg font-semibold text-amber-400">
-                                            Bitácora del Partido
-                                        </h3>
-                                        <ChevronDownIcon className={`w-5 h-5 text-amber-400 transform transition-transform duration-200 group-hover:text-amber-300 ${isLogVisible ? 'rotate-180' : ''}`} />
+                            {/* Center Action Grid */}
+                            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar pb-8">
+                                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <button
+                                        onClick={() => setIsTdModalOpen(true)}
+                                        className="group relative overflow-hidden bg-green-950/20 border-2 border-green-500/20 text-white font-display font-black p-8 rounded-[2rem] hover:bg-green-600 hover:text-black hover:border-green-400 transition-all duration-500 shadow-2xl flex flex-col items-center gap-4"
+                                    >
+                                        <div className="w-16 h-16 bg-green-500/10 rounded-2xl flex items-center justify-center border border-green-500/30 group-hover:bg-black group-hover:border-black group-hover:scale-110 transition-all duration-300">
+                                            <TdIcon className="w-8 h-8 text-green-500" />
+                                        </div>
+                                        <span className="uppercase italic text-[10px] tracking-[0.3em]">Cantar Touchdown</span>
+                                        <div className="absolute -bottom-2 -right-2 opacity-5 translate-y-4 group-hover:translate-y-0 transition-transform duration-700">
+                                            <TdIcon className="w-24 h-24 text-white" />
+                                        </div>
                                     </button>
-                                    {isLogVisible && (
-                                        <div className="mt-3 max-h-60 overflow-y-auto space-y-2 text-sm pr-2 animate-fade-in-fast">
-                                            {gameLog.map(event => (
-                                                <div key={event.id} className="border-b border-slate-800 pb-1 last:border-b-0">
-                                                    <p>
-                                                        <span className="text-slate-500 mr-2 font-mono text-xs">
-                                                            [{event.half}-{event.turn} | {event.timestamp}]
-                                                        </span>
-                                                        <span className={`font-display font-black tracking-widest ${event.type === 'TURNOVER' ? 'text-blood-red' :
-                                                            event.type === 'TOUCHDOWN' ? 'text-green-400' :
-                                                                event.type === 'INJURY' || event.type === 'FOUL' ? 'text-orange-400' :
-                                                                    'text-premium-gold/40'
-                                                            }`}>
-                                                            {event.type !== 'INFO' && `${event.type}: `}
-                                                        </span>
 
-                                                        <span className="text-slate-300">{event.description}</span>
-                                                    </p>
-                                                </div>
-                                            ))}
-                                            {gameLog.length === 0 && <p className="text-slate-500">No hay eventos registrados.</p>}
+                                    <button
+                                        onClick={() => setIsInjuryModalOpen(true)}
+                                        className="group relative overflow-hidden bg-orange-950/20 border-2 border-orange-500/20 text-white font-display font-black p-8 rounded-[2rem] hover:bg-orange-600 hover:text-black hover:border-orange-400 transition-all duration-500 shadow-2xl flex flex-col items-center gap-4"
+                                    >
+                                        <div className="w-16 h-16 bg-orange-500/10 rounded-2xl flex items-center justify-center border border-orange-500/30 group-hover:bg-black group-hover:border-black group-hover:scale-110 transition-all duration-300">
+                                            <CasualtyIcon className="w-8 h-8 text-orange-500" />
                                         </div>
-                                    )}
+                                        <span className="uppercase italic text-[10px] tracking-[0.3em]">Registrar Baja</span>
+                                        <div className="absolute -bottom-2 -right-2 opacity-10 translate-y-4 group-hover:translate-y-0 transition-transform duration-700">
+                                            <CasualtyIcon className="w-24 h-24 text-white" />
+                                        </div>
+                                    </button>
+
+                                    <button
+                                        onClick={() => setIsFoulModalOpen(true)}
+                                        className="group relative overflow-hidden bg-amber-950/20 border-2 border-amber-500/20 text-white font-display font-black p-8 rounded-[2rem] hover:bg-amber-600 hover:text-black hover:border-amber-400 transition-all duration-500 shadow-2xl flex flex-col items-center gap-4"
+                                    >
+                                        <div className="w-16 h-16 bg-amber-500/10 rounded-2xl flex items-center justify-center border border-amber-500/30 group-hover:bg-black group-hover:border-black group-hover:scale-110 transition-all duration-300">
+                                            <span className="material-symbols-outlined text-amber-500 text-3xl">skull</span>
+                                        </div>
+                                        <span className="uppercase italic text-[10px] tracking-[0.3em]">Cometer Falta</span>
+                                        <div className="absolute -bottom-2 -right-2 opacity-5 translate-y-4 group-hover:translate-y-0 transition-transform duration-700">
+                                            <span className="material-symbols-outlined text-8xl text-white">skull</span>
+                                        </div>
+                                    </button>
+
+                                    <button
+                                        onClick={() => setIsTurnoverModalOpen(true)}
+                                        className="group relative overflow-hidden bg-blood-red/5 border-2 border-blood-red/20 text-blood-red font-display font-black p-8 rounded-[2rem] hover:bg-blood-red hover:text-white hover:border-red-400 transition-all duration-500 shadow-2xl flex flex-col items-center gap-4"
+                                    >
+                                        <div className="w-16 h-16 bg-blood-red/10 rounded-2xl flex items-center justify-center border border-blood-red/30 group-hover:bg-black group-hover:border-black group-hover:scale-110 transition-all duration-300">
+                                            <span className="material-symbols-outlined text-3xl">error</span>
+                                        </div>
+                                        <span className="uppercase italic text-[10px] tracking-[0.3em]">¡TURNOVER!</span>
+                                        <div className="absolute -bottom-2 -right-2 opacity-10 translate-y-4 group-hover:translate-y-0 transition-transform duration-700">
+                                            <span className="material-symbols-outlined text-8xl text-white">bolt</span>
+                                        </div>
+                                    </button>
+
+                                    <button
+                                        onClick={() => openSppModal('pass')}
+                                        className="group relative overflow-hidden bg-sky-950/20 border-2 border-sky-500/20 text-white font-display font-black p-8 rounded-[2rem] hover:bg-sky-500 hover:text-black hover:border-sky-400 transition-all duration-500 shadow-2xl flex flex-col items-center gap-4"
+                                    >
+                                        <div className="w-16 h-16 bg-sky-500/10 rounded-2xl flex items-center justify-center border border-sky-500/30 group-hover:bg-black group-hover:border-black group-hover:scale-110 transition-all duration-300">
+                                            <PassIcon className="w-8 h-8 text-sky-400" />
+                                        </div>
+                                        <span className="uppercase italic text-[10px] tracking-[0.3em]">Lanzar Pase</span>
+                                        <div className="absolute -bottom-2 -right-2 opacity-10 translate-y-4 group-hover:translate-y-0 transition-transform duration-700">
+                                            <PassIcon className="w-24 h-24 text-white" />
+                                        </div>
+                                    </button>
+
+                                    <button
+                                        onClick={handleNextTurn}
+                                        className="group relative overflow-hidden bg-premium-gold/5 border-2 border-dashed border-premium-gold/30 text-premium-gold font-display font-black p-8 rounded-[2rem] hover:bg-premium-gold hover:text-black hover:border-solid hover:border-premium-gold transition-all duration-500 shadow-2xl flex flex-col items-center gap-4"
+                                    >
+                                        <div className="w-16 h-16 bg-premium-gold/10 rounded-2xl flex items-center justify-center border border-premium-gold/30 group-hover:bg-black group-hover:border-black group-hover:scale-110 transition-all duration-300">
+                                            <span className="material-symbols-outlined text-3xl">forward</span>
+                                        </div>
+                                        <span className="uppercase italic text-[10px] tracking-[0.3em]">Cambiar Turno</span>
+                                        <div className="absolute -bottom-2 -right-2 opacity-10 translate-y-4 group-hover:translate-y-0 transition-transform duration-700">
+                                            <span className="material-symbols-outlined text-8xl text-white">redo</span>
+                                        </div>
+                                    </button>
                                 </div>
-                            </>
-                        ) : (
-                            <MatchNarrator events={gameLog} homeTeamName={liveHomeTeam.name} awayTeamName={liveOpponentTeam.name} />
-                        )}
+
+                                {/* Event Quick Bar */}
+                                <div className="mt-10 flex flex-wrap gap-4">
+                                    <button onClick={() => setIsCustomEventModalOpen(true)} className="group bg-white/5 border border-white/5 px-6 py-4 rounded-2xl text-[10px] font-display font-black uppercase tracking-widest text-slate-400 hover:text-premium-gold hover:border-premium-gold/30 hover:bg-premium-gold/5 transition-all flex items-center gap-3">
+                                        <span className="material-symbols-outlined text-lg transition-transform group-hover:rotate-12">edit_note</span>
+                                        Intervención Divina
+                                    </button>
+                                    <button onClick={() => setIsPrayersModalOpen(true)} className="group bg-white/5 border border-white/5 px-6 py-4 rounded-2xl text-[10px) font-display font-black uppercase tracking-widest text-slate-400 hover:text-sky-400 hover:border-sky-400/30 hover:bg-sky-400/5 transition-all flex items-center gap-3">
+                                        <span className="material-symbols-outlined text-lg transition-transform group-hover:scale-110">auto_awesome</span>
+                                        Plegarias
+                                    </button>
+                                    <button onClick={() => setIsWeatherModalOpen(true)} className="group bg-white/5 border border-white/5 px-6 py-4 rounded-2xl text-[10px) font-display font-black uppercase tracking-widest text-slate-400 hover:text-amber-400 hover:border-amber-400/30 hover:bg-amber-400/5 transition-all flex items-center gap-3">
+                                        <span className="material-symbols-outlined text-lg animate-spin-slow">cyclone</span>
+                                        Vientos de Nuffle
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Team Player List Toggler */}
+                            <div className="flex gap-10 mt-auto pt-6 border-t border-white/5">
+                                <div className="flex-1 space-y-3">
+                                    <div className="flex items-center justify-between px-2">
+                                        <h4 className="text-[10px] font-display font-black text-sky-500 uppercase tracking-widest">Plantilla Local</h4>
+                                        <span className="text-[8px] font-bold text-slate-600 uppercase italic">Activos: {liveHomeTeam.players.filter(p => p.status === 'Activo').length}</span>
+                                    </div>
+                                    <div className="flex gap-2 overflow-x-auto pb-4 custom-scrollbar">
+                                        {liveHomeTeam.players.filter(p => p.status === 'Activo').map(p => (
+                                            <div
+                                                key={p.id}
+                                                onClick={() => { setSelectedPlayerForAction(p); setActiveTeamId('home'); }}
+                                                className={`flex-shrink-0 w-14 h-14 rounded-2xl border-2 flex items-center justify-center cursor-pointer transition-all duration-300 transform hover:scale-110 ${selectedPlayerForAction?.id === p.id ? 'bg-sky-500 border-sky-300 shadow-[0_0_20px_rgba(14,165,233,0.4)]' : 'bg-black/60 border-white/10 hover:border-sky-500/50'}`}
+                                            >
+                                                <span className={`text-base font-display font-black ${selectedPlayerForAction?.id === p.id ? 'text-black' : 'text-slate-400'}`}>{p.id.toString().slice(-2)}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="flex-1 space-y-3">
+                                    <div className="flex items-center justify-between px-2 flex-row-reverse">
+                                        <h4 className="text-[10px] font-display font-black text-red-500 uppercase tracking-widest text-right">Plantilla Rival</h4>
+                                        <span className="text-[8px] font-bold text-slate-600 uppercase italic">Activos: {liveOpponentTeam.players.filter(p => p.status === 'Activo').length}</span>
+                                    </div>
+                                    <div className="flex flex-row-reverse gap-2 overflow-x-auto pb-4 custom-scrollbar">
+                                        {liveOpponentTeam.players.filter(p => p.status === 'Activo').map(p => (
+                                            <div
+                                                key={p.id}
+                                                onClick={() => { setSelectedPlayerForAction(p); setActiveTeamId('opponent'); }}
+                                                className={`flex-shrink-0 w-14 h-14 rounded-2xl border-2 flex items-center justify-center cursor-pointer transition-all duration-300 transform hover:scale-110 ${selectedPlayerForAction?.id === p.id ? 'bg-red-600 border-red-400 shadow-[0_0_20px_rgba(220,38,38,0.4)]' : 'bg-black/60 border-white/10 hover:border-red-500/50'}`}
+                                            >
+                                                <span className={`text-base font-display font-black ${selectedPlayerForAction?.id === p.id ? 'text-white' : 'text-slate-400'}`}>{p.id.toString().slice(-2)}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </main>
+
+                        {/* SIDEBAR DERECHA: Bitácora y Crónica */}
+                        <aside className="w-96 glass-panel border-white/5 bg-black/40 flex flex-col overflow-hidden relative">
+                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-premium-gold/20 to-transparent"></div>
+                            <div className="p-5 border-b border-white/5 flex items-center justify-between bg-black/40">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-2.5 h-2.5 bg-premium-gold rounded-full animate-pulse shadow-[0_0_12px_rgba(245,159,10,1)]"></div>
+                                    <h3 className="text-xs font-display font-black text-white uppercase tracking-[0.3em]">Ecos de la Arena</h3>
+                                </div>
+                                <button onClick={handleExportLog} className="p-2.5 hover:bg-white/5 rounded-xl transition-all border border-transparent hover:border-white/10" title="Codificar Crónica">
+                                    <DownloadIcon className="w-4 h-4 text-slate-500 hover:text-premium-gold" />
+                                </button>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar">
+                                {[...gameLog].map((event, idx) => (
+                                    <div key={event.id} className={`group relative p-4 rounded-2xl border transition-all duration-300 ${idx === 0 ? 'bg-premium-gold/10 border-premium-gold/40 shadow-[0_0_20px_rgba(245,159,10,0.1)] animate-fade-in-fast scale-[1.02]' : 'bg-black/40 border-white/5 opacity-50 hover:opacity-100 hover:border-white/20'}`}>
+                                        <div className="flex justify-between items-start mb-2">
+                                            <span className="text-[9px] font-display font-black text-slate-500 uppercase tracking-widest">{event.timestamp} <span className="mx-1 opacity-30">•</span> T{event.turn}</span>
+                                            <div className={`text-[8px] font-display font-black uppercase px-2 py-0.5 rounded-lg border ${event.type === 'touchdown' ? 'bg-green-500/10 text-green-400 border-green-500/30 shadow-[0_0_10px_rgba(34,197,94,0.2)]' :
+                                                event.type === 'INJURY' || event.type === 'FOUL' ? 'bg-orange-500/10 text-orange-400 border-orange-500/30' :
+                                                    event.type === 'TURNOVER' ? 'bg-blood-red/10 text-blood-red border-blood-red/30 shadow-[0_0_10px_rgba(185,28,28,0.2)]' :
+                                                        'bg-white/5 text-slate-500 border-white/10'
+                                                }`}>
+                                                {event.type}
+                                            </div>
+                                        </div>
+                                        <p className="text-xs text-slate-200 mt-2 leading-relaxed font-display font-medium tracking-wide">
+                                            {event.description}
+                                        </p>
+                                        <div className="absolute left-0 top-0 w-1 h-full bg-premium-gold scale-y-0 group-hover:scale-y-100 transition-transform origin-top"></div>
+                                    </div>
+                                ))}
+                                {gameLog.length === 0 && (
+                                    <div className="h-full flex flex-col items-center justify-center text-center opacity-10 py-32">
+                                        <span className="material-symbols-outlined text-6xl mb-6">history_edu</span>
+                                        <p className="text-sm uppercase font-display font-black tracking-[0.5em] italic">La arena esta en silencio</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Match Narrator Toggler */}
+                            <div className="p-5 bg-black/60 border-t border-white/5 space-y-3">
+                                <button
+                                    onClick={() => setActiveTab(activeTab === 'assistant' ? 'narrator' : 'assistant')}
+                                    className="w-full relative group overflow-hidden py-3 rounded-2xl border border-white/10 text-[10px] font-display font-black uppercase tracking-[0.2em] text-slate-400 hover:text-white transition-all shadow-inner"
+                                >
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                                    {activeTab === 'assistant' ? 'Invocar Crónica de Nuffle' : 'Regresar a la Batalla'}
+                                </button>
+                                {activeTab === 'narrator' && (
+                                    <div className="fixed inset-0 z-[250] bg-black/98 backdrop-blur-3xl animate-fade-in">
+                                        <div className="h-full w-full max-w-6xl mx-auto p-12 flex flex-col">
+                                            <div className="flex justify-between items-center mb-16">
+                                                <div className="space-y-2">
+                                                    <h2 className="text-5xl font-display font-black text-white italic tracking-tighter uppercase">La Crónica de <span className="text-blood-red drop-shadow-[0_0_15px_rgba(185,28,28,0.5)]">Nuffle</span></h2>
+                                                    <p className="text-[10px] font-display font-bold text-slate-500 uppercase tracking-[0.5em]">Relato sagrado de la carnicería</p>
+                                                </div>
+                                                <button
+                                                    onClick={() => setActiveTab('assistant')}
+                                                    className="w-16 h-16 rounded-3xl bg-white/5 hover:bg-white/10 text-white flex items-center justify-center transition-all border border-white/10 shadow-2xl group"
+                                                >
+                                                    <span className="material-symbols-outlined text-3xl group-hover:rotate-90 transition-transform">close</span>
+                                                </button>
+                                            </div>
+                                            <div className="flex-1 overflow-y-auto custom-scrollbar pr-6 pb-20">
+                                                <MatchNarrator events={gameLog} homeTeamName={liveHomeTeam.name} awayTeamName={liveOpponentTeam.name} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </aside>
                     </div>
                 );
             case 'post_game': if (!homeTeam || !liveHomeTeam || !liveOpponentTeam) return <div>Cargando...</div>; return <PostGameWizard initialHomeTeam={homeTeam} finalHomeTeam={liveHomeTeam} opponentTeam={liveOpponentTeam} score={score} fame={fame.home} playersMNG={playersMissingNextGame.filter(p => p.teamId === 'home')} onConfirm={handleConfirmPostGame} />;
@@ -1792,7 +2278,104 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                     </div>
                 </div>
             )}
-            {sppModalState.isOpen && liveHomeTeam && liveOpponentTeam && (<div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={() => setSppModalState({ isOpen: false, type: null, step: 'select_team', teamId: null, selectedPlayer: null })}> <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-md w-full" onClick={e => e.stopPropagation()}> <h2 className="text-xl font-bold text-amber-400 p-4 border-b border-slate-700">Añadir PE por {sppModalState.type === 'pass' ? 'Pase' : sppModalState.type === 'interference' ? 'Interferencia' : 'Lesión'}</h2> <div className="p-5"> {sppModalState.step === 'select_team' && <div className="space-y-3"><h3 className="text-lg text-slate-300 mb-4">¿De qué equipo es el jugador?</h3> <button onClick={() => setSppModalState(p => ({ ...p, step: 'select_player', teamId: 'home' }))} className="w-full bg-slate-700/50 p-4 rounded-md hover:bg-slate-700 font-semibold">{liveHomeTeam.name}</button> <button onClick={() => setSppModalState(p => ({ ...p, step: 'select_player', teamId: 'opponent' }))} className="w-full bg-slate-700/50 p-4 rounded-md hover:bg-slate-700 font-semibold">{liveOpponentTeam.name}</button> </div>} {sppModalState.step === 'select_player' && <div className="space-y-2 max-h-[60vh] overflow-y-auto"><h3 className="text-lg text-slate-300 mb-4">¿Qué jugador?</h3> {(sppModalState.teamId === 'home' ? liveHomeTeam : liveOpponentTeam).players.filter(p => p.status === 'Activo').map(p => <PlayerButton key={p.id} player={p} onSelect={pl => { if (sppModalState.type === 'interference') { setSppModalState(s => ({ ...s, selectedPlayer: pl, step: 'interference_type' })); } else { updatePlayerSppAndAction(pl, sppModalState.teamId!, sppModalState.type === 'pass' ? 1 : 2, sppModalState.type!.toUpperCase() as SppActionType, sppModalState.type!); } }} />)} </div>} {sppModalState.step === 'interference_type' && <div className="space-y-3"><h3 className="text-lg text-slate-300 mb-4">¿La interferencia fue exitosa?</h3> <button onClick={() => updatePlayerSppAndAction(sppModalState.selectedPlayer!, sppModalState.teamId!, 2, 'INTERFERENCE', 'interferencia exitosa')} className="w-full bg-green-600 p-4 rounded-md hover:bg-green-500 font-semibold">Sí, exitosa (2 PE)</button> <button onClick={() => updatePlayerSppAndAction(sppModalState.selectedPlayer!, sppModalState.teamId!, 1, 'INTERFERENCE', 'interferencia fallida')} className="w-full bg-rose-600 p-4 rounded-md hover:bg-rose-500 font-semibold">No, fallida (1 PE)</button> </div>} </div> </div> </div>)} {isCustomEventModalOpen && (<div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={() => setIsCustomEventModalOpen(false)}> <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-md w-full" onClick={e => e.stopPropagation()}> <h2 className="text-xl font-bold text-amber-400 p-4 border-b border-slate-700">Registrar Evento Personalizado</h2> <div className="p-5"> <textarea value={customEventDescription} onChange={e => setCustomEventDescription(e.target.value)} className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white" rows={3} placeholder="Describe el evento..."></textarea> </div> <div className="p-4 bg-slate-900/50 border-t border-slate-700 flex justify-end"> <button onClick={() => { logEvent('OTHER', customEventDescription); setIsCustomEventModalOpen(false); setCustomEventDescription(''); }} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md">Guardar</button> </div> </div> </div>)}                 {selectedStarPlayer && <StarPlayerModal player={selectedStarPlayer} onClose={() => setSelectedStarPlayer(null)} />}
+            {sppModalState.isOpen && liveHomeTeam && liveOpponentTeam && (
+                <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[250] p-4" onClick={() => setSppModalState({ isOpen: false, type: null, step: 'select_team', teamId: null, selectedPlayer: null })}>
+                    <div className="glass-panel max-w-md w-full border-premium-gold/30 bg-black shadow-[0_0_100px_rgba(245,159,10,0.1)] overflow-hidden animate-slide-in-up" onClick={e => e.stopPropagation()}>
+                        <div className="bg-premium-gold/10 p-6 border-b border-white/5 flex items-center gap-4">
+                            <div className="w-12 h-12 bg-premium-gold/20 rounded-xl flex items-center justify-center border border-premium-gold/30">
+                                <span className="material-symbols-outlined text-premium-gold text-2xl">{sppModalState.type === 'pass' ? 'forward' : sppModalState.type === 'interference' ? 'block' : 'personal_injury'}</span>
+                            </div>
+                            <div>
+                                <h2 className="text-2xl font-display font-black text-white uppercase italic tracking-tighter">Mérito de Guerra</h2>
+                                <p className="text-[10px] font-display font-bold text-premium-gold uppercase tracking-widest">{sppModalState.type === 'pass' ? 'Pase de Precisión' : sppModalState.type === 'interference' ? 'Interferencia' : 'Baja Causada'}</p>
+                            </div>
+                        </div>
+                        <div className="p-6">
+                            {sppModalState.step === 'select_team' && (
+                                <div className="space-y-4">
+                                    <h3 className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mb-4">¿Qué estandarte reclama el honor?</h3>
+                                    <button onClick={() => setSppModalState(p => ({ ...p, step: 'select_player', teamId: 'home' }))} className="w-full group flex items-center gap-4 text-left bg-white/5 p-4 rounded-2xl border border-white/5 hover:border-sky-500/50 hover:bg-sky-500/10 transition-all">
+                                        <div className="w-12 h-12 bg-black/40 rounded-xl border border-white/5 flex items-center justify-center">
+                                            {liveHomeTeam.crestImage ? <img src={liveHomeTeam.crestImage} alt="Escudo" className="w-full h-full object-cover rounded-lg" /> : <ShieldCheckIcon className="w-6 h-6 text-slate-700" />}
+                                        </div>
+                                        <span className="font-display font-bold text-base text-white group-hover:text-sky-400 transition-colors uppercase italic">{liveHomeTeam.name}</span>
+                                    </button>
+                                    <button onClick={() => setSppModalState(p => ({ ...p, step: 'select_player', teamId: 'opponent' }))} className="w-full group flex items-center gap-4 text-left bg-white/5 p-4 rounded-2xl border border-white/5 hover:border-red-500/50 hover:bg-red-500/10 transition-all">
+                                        <div className="w-12 h-12 bg-black/40 rounded-xl border border-white/5 flex items-center justify-center">
+                                            {liveOpponentTeam.crestImage ? <img src={liveOpponentTeam.crestImage} alt="Escudo" className="w-full h-full object-cover rounded-lg" /> : <ShieldCheckIcon className="w-6 h-6 text-slate-700" />}
+                                        </div>
+                                        <span className="font-display font-bold text-base text-white group-hover:text-red-400 transition-colors uppercase italic">{liveOpponentTeam.name}</span>
+                                    </button>
+                                </div>
+                            )}
+                            {sppModalState.step === 'select_player' && (
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <h3 className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest">Héroe de la jugada</h3>
+                                        <button onClick={() => setSppModalState(p => ({ ...p, step: 'select_team' }))} className="text-[9px] font-display font-black text-premium-gold uppercase">&larr; Volver</button>
+                                    </div>
+                                    <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
+                                        {(sppModalState.teamId === 'home' ? liveHomeTeam : liveOpponentTeam).players.filter(p => p.status === 'Activo').map(p => (
+                                            <button key={p.id} onClick={() => {
+                                                if (sppModalState.type === 'interference') setSppModalState(s => ({ ...s, selectedPlayer: p, step: 'interference_type' }));
+                                                else updatePlayerSppAndAction(p, sppModalState.teamId!, sppModalState.type === 'pass' ? 1 : 2, sppModalState.type!.toUpperCase() as SppActionType, sppModalState.type!);
+                                            }} className="w-full flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:border-premium-gold/50 hover:bg-premium-gold/5 transition-all group">
+                                                <div className="text-left">
+                                                    <p className="text-sm font-display font-bold text-white group-hover:text-premium-gold transition-colors">{p.customName}</p>
+                                                    <p className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest">{p.position}</p>
+                                                </div>
+                                                <span className="text-xs font-display font-black text-premium-gold/30">#{p.id.toString().slice(-2)}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            {sppModalState.step === 'interference_type' && (
+                                <div className="space-y-6 text-center">
+                                    <h3 className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest">Magnitud de la Interferencia</h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <button onClick={() => updatePlayerSppAndAction(sppModalState.selectedPlayer!, sppModalState.teamId!, 2, 'INTERFERENCE', 'interferencia exitosa')} className="bg-green-500/10 border border-green-500/20 p-6 rounded-2xl hover:bg-green-500 hover:text-black transition-all group">
+                                            <p className="text-2xl font-display font-black italic mb-1 transition-colors">ÉXITO</p>
+                                            <p className="text-[10px] font-display font-bold uppercase tracking-widest opacity-60">2 PE Ganados</p>
+                                        </button>
+                                        <button onClick={() => updatePlayerSppAndAction(sppModalState.selectedPlayer!, sppModalState.teamId!, 1, 'INTERFERENCE', 'interferencia fallida')} className="bg-blood-red/10 border border-blood-red/20 p-6 rounded-2xl hover:bg-blood-red hover:text-white transition-all group">
+                                            <p className="text-2xl font-display font-black italic mb-1 transition-colors">FALLO</p>
+                                            <p className="text-[10px] font-display font-bold uppercase tracking-widest opacity-60">1 PE Ganado</p>
+                                        </button>
+                                    </div>
+                                    <button onClick={() => setSppModalState(p => ({ ...p, step: 'select_player' }))} className="text-[9px] font-display font-black text-slate-500 uppercase tracking-widest hover:text-white transition-colors">Regresar a selección</button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {isCustomEventModalOpen && (
+                <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[250] p-4" onClick={() => setIsCustomEventModalOpen(false)}>
+                    <div className="glass-panel max-w-md w-full border-white/10 bg-black shadow-4xl animate-slide-in-up" onClick={e => e.stopPropagation()}>
+                        <div className="p-6 border-b border-white/5 bg-white/5">
+                            <h2 className="text-xl font-display font-black text-white uppercase italic tracking-tighter">Cronista de Guerra</h2>
+                            <p className="text-[9px] font-display font-black text-slate-500 uppercase tracking-widest">Registrar evento personalizado</p>
+                        </div>
+                        <div className="p-6">
+                            <textarea
+                                value={customEventDescription}
+                                onChange={e => setCustomEventDescription(e.target.value)}
+                                className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white font-display text-sm focus:border-premium-gold outline-none transition-all placeholder:text-slate-600 italic custom-scrollbar"
+                                rows={4}
+                                placeholder="Nuffle ha intervenido... describe el caos ocurrido en la arena."
+                                autoFocus
+                            ></textarea>
+                        </div>
+                        <div className="p-6 bg-black/40 border-t border-white/5 flex justify-end gap-3">
+                            <button onClick={() => setIsCustomEventModalOpen(false)} className="px-6 py-2.5 rounded-xl text-[10px] font-display font-black text-slate-500 uppercase tracking-[0.2em] hover:text-white transition-colors">Descartar</button>
+                            <button onClick={() => { logEvent('OTHER', customEventDescription); setIsCustomEventModalOpen(false); setCustomEventDescription(''); }} className="px-8 py-2.5 bg-premium-gold text-black rounded-xl text-[10px] font-display font-black uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all">Sellar Destino</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {selectedStarPlayer && <StarPlayerModal player={selectedStarPlayer} onClose={() => setSelectedStarPlayer(null)} />}
             {viewingPlayer && (
                 <PlayerCardModal
                     player={viewingPlayer}
@@ -1801,44 +2384,234 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                     onClose={() => setViewingPlayer(null)}
                 />
             )}
-            {selectedSkillForModal && <SkillModal skill={selectedSkillForModal} onClose={() => setSelectedSkillForModal(null)} />} {isFoulModalOpen && (<div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={() => { setIsFoulModalOpen(false); setFoulState(initialFoulState); }}> <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-md w-full" onClick={e => e.stopPropagation()}> <div className="p-4 border-b border-slate-700 flex justify-between items-center"><h2 className="text-xl font-bold text-amber-400">Asistente de Falta</h2> <button onClick={() => { setIsFoulModalOpen(false); setFoulState(initialFoulState); }} className="text-slate-400 hover:text-white">&times;</button></div> <div className="p-5">{(() => {
-                if (!liveHomeTeam || !liveOpponentTeam) return null; switch (foulState.step) {
-                    case 'select_fouler_team': return <><h3 className="text-lg text-slate-300 mb-4">Paso 1: ¿Qué equipo comete la falta?</h3><div className="space-y-3"><button onClick={() => setFoulState(prev => ({ ...prev, foulingTeamId: 'home', step: 'select_fouler' }))} className="w-full bg-slate-700/50 p-4 rounded-md hover:bg-slate-700 font-semibold">{liveHomeTeam.name}</button><button onClick={() => setFoulState(prev => ({ ...prev, foulingTeamId: 'opponent', step: 'select_fouler' }))} className="w-full bg-slate-700/50 p-4 rounded-md hover:bg-slate-700 font-semibold">{liveOpponentTeam.name}</button></div></>; case 'select_fouler': { const team = foulState.foulingTeamId === 'home' ? liveHomeTeam : liveOpponentTeam; return <><h3 className="text-lg text-slate-300 mb-4">Paso 2: ¿Qué jugador comete la falta?</h3><div className="max-h-[60vh] overflow-y-auto space-y-2">{team.players.filter(p => p.status === 'Activo').map(p => <PlayerButton key={p.id} player={p} onSelect={player => setFoulState(prev => ({ ...prev, foulingPlayer: player, step: 'select_victim' }))} />)}</div></>; } case 'select_victim': { const team = foulState.foulingTeamId === 'home' ? liveOpponentTeam : liveHomeTeam; return <><h3 className="text-lg text-slate-300 mb-4">Paso 3: ¿Quién es la víctima?</h3><div className="max-h-[60vh] overflow-y-auto space-y-2">{team.players.map(p => <PlayerButton key={p.id} player={p} onSelect={player => setFoulState(prev => ({ ...prev, victimPlayer: player, step: 'armor_roll' }))} />)}</div></>; } case 'armor_roll': return <DoubleDiceInputStep title="Paso 4: Tirada de Armadura" value={foulState.armorRollInput} onChange={v => setFoulState(prev => ({ ...prev, armorRollInput: v }))} onNext={() => handleFoulAction('next')} onBack={() => handleFoulAction('back')} label={`Introduce 2D6 contra AR ${foulState.victimPlayer?.stats.AR}`} onPlaySound={() => playSound('dice')} />; case 'injury_roll': return <DoubleDiceInputStep title="Paso 5: Tirada de Heridas" value={foulState.injuryRollInput} onChange={v => setFoulState(prev => ({ ...prev, injuryRollInput: v }))} onNext={() => handleFoulAction('next')} onBack={() => handleFoulAction('back')} label="Introduce 2D6 para la herida" onPlaySound={() => playSound('dice')} />; case 'casualty_roll': return <RollInputStep title="Paso 6: Tirada de Lesión" value={foulState.casualtyRollInput} onChange={v => setFoulState(prev => ({ ...prev, casualtyRollInput: v }))} onNext={() => handleFoulAction('next')} onBack={() => handleFoulAction('back')} label="Introduce D16" pattern="([1-9]|1[0-6])" placeholder="1-16" onPlaySound={() => playSound('dice')} />; case 'lasting_injury_roll': return <RollInputStep title="Paso 7: Lesión Permanente" value={foulState.lastingInjuryRollInput} onChange={v => setFoulState(prev => ({ ...prev, lastingInjuryRollInput: v }))} onNext={() => handleFoulAction('next')} onBack={() => handleFoulAction('back')} label="Introduce D6" pattern="[1-6]" placeholder="1-6" onPlaySound={() => playSound('dice')} />;
-                    case 'summary': return <><div className="space-y-2 text-sm"><p><span className="font-semibold text-slate-300">Infractor:</span> {foulState.foulingPlayer?.customName}</p><p><span className="font-semibold text-slate-300">Víctima:</span> {foulState.victimPlayer?.customName}</p><ul className="list-disc list-inside text-slate-400">{foulState.log.map((l, i) => <li key={i}>{l}</li>)}</ul>{foulState.wasExpelled && <p className="font-bold text-red-500 mt-2">{foulState.expulsionReason || `¡${foulState.foulingPlayer?.customName} expulsado!`}</p>}</div><div className="pt-4 mt-4 border-t border-slate-700 flex justify-end"><button onClick={() => handleFoulAction('next')} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md">Finalizar</button></div></>; default: return null;
-                }
-            })()}</div> </div> </div>)} {isInjuryModalOpen && (<div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={() => { setIsInjuryModalOpen(false); setInjuryState(initialInjuryState); }}> <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-w-md w-full" onClick={e => e.stopPropagation()}> <div className="p-4 border-b border-slate-700 flex justify-between items-center"><h2 className="text-xl font-bold text-amber-400">Asistente de Lesión</h2> <button onClick={() => { setIsInjuryModalOpen(false); setInjuryState(initialInjuryState); }} className="text-slate-400 hover:text-white">&times;</button></div> <div className="p-5">{(() => {
-                if (!liveHomeTeam || !liveOpponentTeam) return null; switch (injuryState.step) {
-                    case 'select_victim_team': return <><h3 className="text-lg text-slate-300 mb-4">Paso 1: ¿Qué equipo sufre la lesión?</h3><div className="space-y-3"><button onClick={() => setInjuryState(prev => ({ ...prev, victimTeamId: 'home', step: 'select_victim' }))} className="w-full bg-slate-700/50 p-4 rounded-md hover:bg-slate-700 font-semibold">{liveHomeTeam.name}</button><button onClick={() => setInjuryState(prev => ({ ...prev, victimTeamId: 'opponent', step: 'select_victim' }))} className="w-full bg-slate-700/50 p-4 rounded-md hover:bg-slate-700 font-semibold">{liveOpponentTeam.name}</button></div></>; case 'select_victim': { const team = injuryState.victimTeamId === 'home' ? liveHomeTeam : liveOpponentTeam; return <><h3 className="text-lg text-slate-300 mb-4">Paso 2: ¿Quién es la víctima?</h3><div className="max-h-[60vh] overflow-y-auto space-y-2">{team.players.map(p => <PlayerButton key={p.id} player={p} onSelect={player => setInjuryState(prev => ({ ...prev, victimPlayer: player, isStunty: player.skills.includes('Escurridizo'), hasRegeneration: player.skills.includes('Regeneración'), step: 'armor_roll' }))} />)}</div></>; } case 'armor_roll': return <DoubleDiceInputStep title="Paso 3: Tirada de Armadura" value={injuryState.armorRollInput} onChange={v => setInjuryState(prev => ({ ...prev, armorRollInput: v }))} onNext={() => handleInjuryAction('next')} onBack={() => handleInjuryAction('back')} label={`Introduce 2D6 contra AR ${injuryState.victimPlayer?.stats.AR}`} onPlaySound={() => playSound('dice')} />; case 'injury_roll': return <DoubleDiceInputStep title="Paso 4: Tirada de Heridas" value={injuryState.injuryRollInput} onChange={v => setInjuryState(prev => ({ ...prev, injuryRollInput: v }))} onNext={() => handleInjuryAction('next')} onBack={() => handleInjuryAction('back')} label={`Introduce 2D6 para la herida${injuryState.isStunty ? ' (Tabla Escurridizo)' : ''}`} onPlaySound={() => playSound('dice')} />; case 'casualty_roll': return <RollInputStep title="Paso 5: Tirada de Lesión" value={injuryState.casualtyRollInput} onChange={v => setInjuryState(prev => ({ ...prev, casualtyRollInput: v }))} onNext={() => handleInjuryAction('next')} onBack={() => handleInjuryAction('back')} label="Introduce D16" pattern="([1-9]|1[0-6])" placeholder="1-16" onPlaySound={() => playSound('dice')} />;
-                    case 'lasting_injury_roll': return <RollInputStep title="Paso 6: Lesión Permanente" value={injuryState.lastingInjuryRollInput} onChange={v => setInjuryState(prev => ({ ...prev, lastingInjuryRollInput: v }))} onNext={() => handleInjuryAction('next')} onBack={() => handleInjuryAction('back')} label="Introduce D6" pattern="[1-6]" placeholder="1-6" onPlaySound={() => playSound('dice')} />;
-                    case 'regeneration_check': return <div className="text-center py-4"><h3 className="text-lg text-slate-300 mb-4">Comprobando Regeneración...</h3><button onClick={() => handleInjuryAction('next')} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400">Continuar</button></div>;
-                    case 'regeneration_roll': return <RollInputStep title="Tirada de Regeneración" value={injuryState.regenerationRollInput} onChange={v => setInjuryState(prev => ({ ...prev, regenerationRollInput: v }))} onNext={() => handleInjuryAction('next')} onBack={() => handleInjuryAction('back')} label="Introduce D6 (4+ Éxito)" pattern="[1-6]" placeholder="1-6" onPlaySound={() => playSound('dice')} />;
-                    case 'staff_reroll_choice': {
-                        const victimTeam = injuryState.victimTeamId === 'home' ? liveHomeTeam : liveOpponentTeam;
-                        const staffType = victimTeam?.mortuaryAssistants ? 'Asistente de Necromantes' : 'Médico de la Peste';
-                        const handleReroll = () => {
-                            const setTeam = injuryState.victimTeamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
-                            setTeam(prev => prev ? ({
-                                ...prev,
-                                mortuaryAssistants: prev.mortuaryAssistants ? prev.mortuaryAssistants - 1 : 0,
-                                plagueDoctors: prev.plagueDoctors ? prev.plagueDoctors - 1 : 0
-                            }) : null);
-                            setInjuryState(prev => ({ ...prev, step: 'regeneration_roll', regenerationRollInput: '' }));
-                        };
-                        return (
-                            <div className="space-y-4 text-center">
-                                <h3 className="text-lg text-amber-400 font-bold italic uppercase">¡Regeneración Fallida!</h3>
-                                <p className="text-slate-300">¿Quieres usar tu <span className="text-white font-bold">{staffType}</span> para intentar salvar al jugador? (4+ Éxito)</p>
-                                <div className="flex gap-4 justify-center">
-                                    <button onClick={handleReroll} className="bg-emerald-600 text-white font-bold py-2 px-6 rounded-md hover:bg-emerald-500 transition-colors uppercase italic text-sm">Usar {staffType}</button>
-                                    <button onClick={() => handleInjuryAction('next')} className="bg-slate-700 text-slate-300 font-bold py-2 px-6 rounded-md hover:bg-slate-600 transition-colors uppercase italic text-sm">No utilizar</button>
+            {selectedSkillForModal && <SkillModal skill={selectedSkillForModal} onClose={() => setSelectedSkillForModal(null)} />}
+            {isFoulModalOpen && (
+                <div className="fixed inset-0 bg-black/95 backdrop-blur-xl flex items-center justify-center z-[300] p-4" onClick={() => { setIsFoulModalOpen(false); setFoulState(initialFoulState); }}>
+                    <div className="glass-panel max-w-lg w-full border-blood-red/30 bg-black shadow-[0_0_100px_rgba(185,28,28,0.1)] overflow-hidden animate-slide-in-up" onClick={e => e.stopPropagation()}>
+                        <div className="bg-blood-red/10 p-6 border-b border-white/5 flex justify-between items-center">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-blood-red/20 rounded-xl flex items-center justify-center border border-blood-red/30">
+                                    <span className="material-symbols-outlined text-blood-red text-2xl">gavel</span>
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-display font-black text-white uppercase italic tracking-tighter">Juicio de Sangre</h2>
+                                    <p className="text-[10px] font-display font-bold text-blood-red uppercase tracking-widest">Asistente de Falta</p>
                                 </div>
                             </div>
-                        );
-                    }
-                    case 'summary': return <><div className="space-y-2 text-sm"><p><span className="font-semibold text-slate-300">Víctima:</span> {injuryState.victimPlayer?.customName}</p><ul className="list-disc list-inside text-slate-400">{injuryState.log.map((l, i) => <li key={i}>{l}</li>)}</ul></div><div className="pt-4 mt-4 border-t border-slate-700 flex justify-end"><button onClick={() => handleInjuryAction('next')} className="bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md">Finalizar</button></div></>; default: return null;
-                }
-            })()}</div> </div> </div>)}
-            {isTurnoverModalOpen && <TurnoverModal onClose={() => setIsTurnoverModalOpen(false)} onConfirm={handleTurnover} />} {isApothecaryModalOpen && injuryState.victimPlayer && <ApothecaryModal player={injuryState.victimPlayer} hasUsedOnKO={(injuryState.victimTeamId === 'home' ? liveHomeTeam?.apothecaryUsedOnKO : liveOpponentTeam?.apothecaryUsedOnKO) || false} onClose={() => { setIsApothecaryModalOpen(false); setInjuryState(prev => ({ ...prev, step: 'regeneration_check' })); }} onPatchUp={() => { setIsApothecaryModalOpen(false); const teamId = injuryState.victimTeamId!; const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam; setTeam(prev => prev ? ({ ...prev, apothecaryUsedOnKO: true }) : null); updatePlayerStatus(injuryState.victimPlayer!.id, teamId, 'Activo', 'Recuperado por Boticario'); setInjuryState(prev => ({ ...prev, step: 'summary', log: [...prev.log, 'Boticario lo recupera (KO -> Reservas).'] })); }} onReroll={() => { setIsApothecaryModalOpen(false); const teamId = injuryState.victimTeamId!; const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam; const team = teamId === 'home' ? liveHomeTeam : liveOpponentTeam; if (team?.apothecary) { setTeam(prev => prev ? ({ ...prev, apothecary: false }) : null); } else if (team?.wanderingApothecaries && team.wanderingApothecaries > 0) { setTeam(prev => prev ? ({ ...prev, wanderingApothecaries: team.wanderingApothecaries - 1 }) : null); } if (injuryState.casualtyRoll) { setInjuryState(prev => ({ ...prev, step: 'casualty_roll', casualtyRollInput: '', log: [...prev.log, 'Boticario repite tirada de lesión.'], casualtyRoll: { ...prev.casualtyRoll!, rerolled: true } })); } else { setInjuryState(prev => ({ ...prev, step: 'injury_roll', injuryRollInput: { die1: '', die2: '' }, log: [...prev.log, 'Boticario repite tirada de herida.'] })); } }} />} <style>{` @keyframes fade-in-slow { from { opacity: 0; } to { opacity: 1; } } .animate-fade-in-slow { animation: fade-in-slow 0.5s ease-out forwards; } @keyframes fade-in-fast { from { opacity: 0; } to { opacity: 1; } } @keyframes slide-in-up { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } } .animate-fade-in-fast { animation: fade-in-fast 0.2s ease-out forwards; } .animate-slide-in-up { animation: slide-in-up 0.3s ease-out forwards; } `}</style> </div>);
-};
+                            <button onClick={() => { setIsFoulModalOpen(false); setFoulState(initialFoulState); }} className="w-10 h-10 rounded-xl bg-white/5 hover:bg-blood-red/20 text-slate-500 hover:text-blood-red transition-all flex items-center justify-center border border-white/5">
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                        <div className="p-8">
+                            {(() => {
+                                if (!liveHomeTeam || !liveOpponentTeam) return null;
+                                switch (foulState.step) {
+                                    case 'select_fouler_team': return (
+                                        <div className="space-y-6">
+                                            <h3 className="text-xs font-display font-black text-slate-500 uppercase tracking-widest">¿Quién inicia la agresión?</h3>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <button onClick={() => setFoulState(prev => ({ ...prev, foulingTeamId: 'home', step: 'select_fouler' }))} className="bg-white/5 border border-white/5 p-6 rounded-3xl hover:border-sky-500/50 hover:bg-sky-500/10 transition-all group">
+                                                    <span className="text-xs font-display font-black text-sky-500 uppercase tracking-widest block mb-2 opacity-50">Local</span>
+                                                    <p className="text-lg font-display font-black text-white group-hover:text-sky-400 transition-colors uppercase italic">{liveHomeTeam.name}</p>
+                                                </button>
+                                                <button onClick={() => setFoulState(prev => ({ ...prev, foulingTeamId: 'opponent', step: 'select_fouler' }))} className="bg-white/5 border border-white/5 p-6 rounded-3xl hover:border-red-500/50 hover:bg-red-500/10 transition-all group">
+                                                    <span className="text-xs font-display font-black text-red-500 uppercase tracking-widest block mb-1 opacity-50">Rival</span>
+                                                    <p className="text-lg font-display font-black text-white group-hover:text-red-400 transition-colors uppercase italic">{liveOpponentTeam.name}</p>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    );
+                                    case 'select_fouler': {
+                                        const team = foulState.foulingTeamId === 'home' ? liveHomeTeam : liveOpponentTeam;
+                                        return (
+                                            <div className="space-y-4">
+                                                <div className="flex items-center justify-between">
+                                                    <h3 className="text-xs font-display font-black text-slate-500 uppercase tracking-widest">El Infractor</h3>
+                                                    <button onClick={() => setFoulState(prev => ({ ...prev, step: 'select_fouler_team' }))} className="text-[9px] font-display font-bold text-blood-red uppercase tracking-widest">&larr; Volver</button>
+                                                </div>
+                                                <div className="max-h-[50vh] overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                                                    {team.players.filter(p => p.status === 'Activo').map(p => <PlayerButton key={p.id} player={p} onSelect={player => setFoulState(prev => ({ ...prev, foulingPlayer: player, step: 'select_victim' }))} />)}
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+                                    case 'select_victim': {
+                                        const team = foulState.foulingTeamId === 'home' ? liveOpponentTeam : liveHomeTeam;
+                                        return (
+                                            <div className="space-y-4">
+                                                <div className="flex items-center justify-between">
+                                                    <h3 className="text-xs font-display font-black text-slate-500 uppercase tracking-widest">La Víctima</h3>
+                                                    <button onClick={() => setFoulState(prev => ({ ...prev, step: 'select_fouler' }))} className="text-[9px] font-display font-bold text-blood-red uppercase tracking-widest">&larr; Volver</button>
+                                                </div>
+                                                <div className="max-h-[50vh] overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                                                    {team.players.map(p => <PlayerButton key={p.id} player={p} onSelect={player => setFoulState(prev => ({ ...prev, victimPlayer: player, step: 'armor_roll' }))} />)}
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+                                    case 'armor_roll': return <DoubleDiceInputStep title="Tirada de Armadura" value={foulState.armorRollInput} onChange={v => setFoulState(prev => ({ ...prev, armorRollInput: v }))} onNext={() => handleFoulAction('next')} onBack={() => handleFoulAction('back')} label={`2D6 contra AR ${foulState.victimPlayer?.stats.AR}`} onPlaySound={() => playSound('dice')} />;
+                                    case 'injury_roll': return <DoubleDiceInputStep title="Tirada de Heridas" value={foulState.injuryRollInput} onChange={v => setFoulState(prev => ({ ...prev, injuryRollInput: v }))} onNext={() => handleFoulAction('next')} onBack={() => handleFoulAction('back')} label="Introduce el golpe final (2D6)" onPlaySound={() => playSound('dice')} />;
+                                    case 'casualty_roll': return <RollInputStep title="Tirada de Lesión" value={foulState.casualtyRollInput} onChange={v => setFoulState(prev => ({ ...prev, casualtyRollInput: v }))} onNext={() => handleFoulAction('next')} onBack={() => handleFoulAction('back')} label="Introduce el D16 de la agonía" pattern="([1-9]|1[0-6])" placeholder="1-16" onPlaySound={() => playSound('dice')} />;
+                                    case 'lasting_injury_roll': return <RollInputStep title="Lesión Permanente" value={foulState.lastingInjuryRollInput} onChange={v => setFoulState(prev => ({ ...prev, lastingInjuryRollInput: v }))} onNext={() => handleFoulAction('next')} onBack={() => handleFoulAction('back')} label="Introduce D6 del destino" pattern="[1-6]" placeholder="1-6" onPlaySound={() => playSound('dice')} />;
+                                    case 'summary': return (
+                                        <div className="space-y-8 animate-fade-in text-center">
+                                            <div className="space-y-4">
+                                                <div className="flex items-center justify-center gap-6">
+                                                    <div className="text-center">
+                                                        <p className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mb-1">Culpable</p>
+                                                        <p className="text-lg font-display font-black text-white italic truncate w-32">{foulState.foulingPlayer?.customName}</p>
+                                                    </div>
+                                                    <span className="material-symbols-outlined text-blood-red text-2xl">swords</span>
+                                                    <div className="text-center">
+                                                        <p className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mb-1">Víctima</p>
+                                                        <p className="text-lg font-display font-black text-white italic truncate w-32">{foulState.victimPlayer?.customName}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="glass-panel p-6 bg-black/60 border-white/5 space-y-2 mt-6">
+                                                    {foulState.log.map((l, i) => <p key={i} className="text-xs text-slate-400 font-display italic">"{l}"</p>)}
+                                                    {foulState.wasExpelled && (
+                                                        <div className="mt-4 pt-4 border-t border-white/5">
+                                                            <div className="flex items-center justify-center gap-2 text-blood-red">
+                                                                <span className="material-symbols-outlined text-xl">person_remove</span>
+                                                                <p className="font-display font-black text-sm uppercase tracking-widest">{foulState.expulsionReason || '¡EXPULSADO!'}</p>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <button onClick={() => handleFoulAction('next')} className="w-full bg-blood-red text-white font-display font-black py-4 rounded-2xl shadow-xl hover:bg-red-600 transition-all uppercase tracking-[0.2em] text-xs">Cerrar Crónica</button>
+                                        </div>
+                                    );
+                                    default: return null;
+                                }
+                            })()}
+                        </div>
+                    </div>
+                </div>
+            )}
 
+            {isInjuryModalOpen && (
+                <div className="fixed inset-0 bg-black/95 backdrop-blur-xl flex items-center justify-center z-[300] p-4" onClick={() => { setIsInjuryModalOpen(false); setInjuryState(initialInjuryState); }}>
+                    <div className="glass-panel max-w-lg w-full border-premium-gold/30 bg-black shadow-[0_0_100px_rgba(245,159,10,0.1)] overflow-hidden animate-slide-in-up" onClick={e => e.stopPropagation()}>
+                        <div className="bg-premium-gold/10 p-6 border-b border-white/5 flex justify-between items-center">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-premium-gold/20 rounded-xl flex items-center justify-center border border-premium-gold/30">
+                                    <span className="material-symbols-outlined text-premium-gold text-2xl">healing</span>
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-display font-black text-white uppercase italic tracking-tighter">Santuario de Heridas</h2>
+                                    <p className="text-[10px] font-display font-bold text-premium-gold uppercase tracking-widest">Asistente de Lesión</p>
+                                </div>
+                            </div>
+                            <button onClick={() => { setIsInjuryModalOpen(false); setInjuryState(initialInjuryState); }} className="w-10 h-10 rounded-xl bg-white/5 hover:bg-premium-gold/20 text-slate-500 hover:text-premium-gold transition-all flex items-center justify-center border border-white/5">
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                        <div className="p-8">
+                            {(() => {
+                                if (!liveHomeTeam || !liveOpponentTeam) return null;
+                                switch (injuryState.step) {
+                                    case 'select_victim_team': return (
+                                        <div className="space-y-6">
+                                            <h3 className="text-xs font-display font-black text-slate-500 uppercase tracking-widest">¿Qué estandarte ha tropezado?</h3>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <button onClick={() => setInjuryState(prev => ({ ...prev, victimTeamId: 'home', step: 'select_victim' }))} className="bg-white/5 border border-white/5 p-6 rounded-3xl hover:border-sky-500/50 hover:bg-sky-500/10 transition-all group">
+                                                    <span className="text-xs font-display font-black text-sky-500 uppercase tracking-widest block mb-1 opacity-50">Local</span>
+                                                    <p className="text-lg font-display font-black text-white group-hover:text-sky-400 transition-colors uppercase italic">{liveHomeTeam.name}</p>
+                                                </button>
+                                                <button onClick={() => setInjuryState(prev => ({ ...prev, victimTeamId: 'opponent', step: 'select_victim' }))} className="bg-white/5 border border-white/5 p-6 rounded-3xl hover:border-red-500/50 hover:bg-red-500/10 transition-all group">
+                                                    <span className="text-xs font-display font-black text-red-500 uppercase tracking-widest block mb-1 opacity-50">Rival</span>
+                                                    <p className="text-lg font-display font-black text-white group-hover:text-red-400 transition-colors uppercase italic">{liveOpponentTeam.name}</p>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    );
+                                    case 'select_victim': {
+                                        const team = injuryState.victimTeamId === 'home' ? liveHomeTeam : liveOpponentTeam;
+                                        return (
+                                            <div className="space-y-4">
+                                                <div className="flex items-center justify-between">
+                                                    <h3 className="text-xs font-display font-black text-slate-500 uppercase tracking-widest">La Víctima en Suelo</h3>
+                                                    <button onClick={() => setInjuryState(prev => ({ ...prev, step: 'select_victim_team' }))} className="text-[9px] font-display font-bold text-premium-gold uppercase tracking-widest">&larr; Volver</button>
+                                                </div>
+                                                <div className="max-h-[50vh] overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                                                    {team.players.map(p => <PlayerButton key={p.id} player={p} onSelect={player => setInjuryState(prev => ({ ...prev, victimPlayer: player, isStunty: player.skills.includes('Escurridizo'), hasRegeneration: player.skills.includes('Regeneración'), step: 'armor_roll' }))} />)}
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+                                    case 'armor_roll': return <DoubleDiceInputStep title="Tirada de Armadura" value={injuryState.armorRollInput} onChange={v => setInjuryState(prev => ({ ...prev, armorRollInput: v }))} onNext={() => handleInjuryAction('next')} onBack={() => handleInjuryAction('back')} label={`2D6 contra AR ${injuryState.victimPlayer?.stats.AR}`} onPlaySound={() => playSound('dice')} />;
+                                    case 'injury_roll': return <DoubleDiceInputStep title="Tirada de Heridas" value={injuryState.injuryRollInput} onChange={v => setInjuryState(prev => ({ ...prev, injuryRollInput: v }))} onNext={() => handleInjuryAction('next')} onBack={() => handleInjuryAction('back')} label={`Introduce 2D6${injuryState.isStunty ? ' (Tabla Escurridizo)' : ''}`} onPlaySound={() => playSound('dice')} />;
+                                    case 'casualty_roll': return <RollInputStep title="Tirada de Lesión" value={injuryState.casualtyRollInput} onChange={v => setInjuryState(prev => ({ ...prev, casualtyRollInput: v }))} onNext={() => handleInjuryAction('next')} onBack={() => handleInjuryAction('back')} label="Introduce el D16 de la agonía" pattern="([1-9]|1[0-6])" placeholder="1-16" onPlaySound={() => playSound('dice')} />;
+                                    case 'lasting_injury_roll': return <RollInputStep title="Lesión Permanente" value={injuryState.lastingInjuryRollInput} onChange={v => setInjuryState(prev => ({ ...prev, lastingInjuryRollInput: v }))} onNext={() => handleInjuryAction('next')} onBack={() => handleInjuryAction('back')} label="Introduce D6 del destino" pattern="[1-6]" placeholder="1-6" onPlaySound={() => playSound('dice')} />;
+                                    case 'regeneration_check': return (
+                                        <div className="text-center py-6 space-y-6">
+                                            <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center border border-emerald-500/30 mx-auto animate-premium-pulse">
+                                                <span className="material-symbols-outlined text-4xl text-emerald-400">restart_alt</span>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <h3 className="text-xl font-display font-black text-white uppercase italic tracking-tighter">Comprobar Regeneración</h3>
+                                                <p className="text-slate-400 text-sm italic">"Los dioses pueden conceder una secondaria oportunidad."</p>
+                                            </div>
+                                            <button onClick={() => handleInjuryAction('next')} className="w-full bg-emerald-600 text-white font-display font-black py-4 rounded-2xl shadow-xl hover:bg-emerald-500 transition-all uppercase tracking-[0.2em] text-xs">Apelar a los Dioses</button>
+                                        </div>
+                                    );
+                                    case 'regeneration_roll': return <RollInputStep title="Tirada de Regeneración" value={injuryState.regenerationRollInput} onChange={v => setInjuryState(prev => ({ ...prev, regenerationRollInput: v }))} onNext={() => handleInjuryAction('next')} onBack={() => handleInjuryAction('back')} label="Introduce D6 (4+ Éxito)" pattern="[1-6]" placeholder="1-6" onPlaySound => playSound('dice')} />;
+                            case 'staff_reroll_choice': {
+                                        const victimTeam = injuryState.victimTeamId === 'home' ? liveHomeTeam : liveOpponentTeam;
+                            const staffType = victimTeam?.mortuaryAssistants ? 'Asistente de Necromantes' : 'Médico de la Peste';
+                            return (
+                            <div className="space-y-8 text-center animate-fade-in">
+                                <div className="w-20 h-20 bg-blood-red/10 rounded-full flex items-center justify-center border border-blood-red/30 mx-auto animate-pulse">
+                                    <span className="material-symbols-outlined text-4xl text-blood-red">warning</span>
+                                </div>
+                                <div className="space-y-2">
+                                    <h3 className="text-xl font-display font-black text-white uppercase italic tracking-tighter">¡Regeneración Fallida!</h3>
+                                    <p className="text-slate-400 text-sm">¿Deseas que tu {staffType} intente recomponer los restos? (4+ Éxito)</p>
+                                </div>
+                                <div className="flex gap-4">
+                                    <button onClick={() => {
+                                        const setTeam = injuryState.victimTeamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
+                                        setTeam(prev => prev ? ({ ...prev, mortuaryAssistants: prev.mortuaryAssistants ? prev.mortuaryAssistants - 1 : 0, plagueDoctors: prev.plagueDoctors ? prev.plagueDoctors - 1 : 0 }) : null);
+                                        setInjuryState(prev => ({ ...prev, step: 'regeneration_roll', regenerationRollInput: '' }));
+                                    }} className="flex-1 bg-emerald-600 text-white font-display font-black py-4 rounded-2xl hover:bg-emerald-500 transition-all uppercase tracking-widest text-[10px]">Usar {staffType}</button>
+                                    <button onClick={() => handleInjuryAction('next')} className="flex-1 bg-white/5 border border-white/10 text-slate-500 font-display font-black py-4 rounded-2xl hover:bg-white/10 hover:text-white transition-all uppercase tracking-widest text-[10px]">Dejar Morir</button>
+                                </div>
+                            </div>
+                            );
+                                    }
+                            case 'summary': return (
+                            <div className="space-y-8 animate-fade-in text-center">
+                                <div className="space-y-4">
+                                    <div className="text-center">
+                                        <p className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mb-1">Víctima Registrada</p>
+                                        <p className="text-xl font-display font-black text-white italic truncate uppercase">{injuryState.victimPlayer?.customName}</p>
+                                    </div>
+                                    <div className="glass-panel p-6 bg-black/60 border-white/5 space-y-2 mt-6">
+                                        {injuryState.log.map((l, i) => <p key={i} className="text-xs text-slate-400 font-display italic">"{l}"</p>)}
+                                    </div>
+                                </div>
+                                <button onClick={() => handleInjuryAction('next')} className="w-full bg-premium-gold text-black font-display font-black py-4 rounded-2xl shadow-xl hover:bg-white transition-all uppercase tracking-[0.2em] text-xs">Sellar Parte médico</button>
+                            </div>
+                            );
+                            default: return null;
+                                }
+                            })()}
+                        </div>
+                    </div>
+                </div>
+            )}
+            {isTurnoverModalOpen && <TurnoverModal onClose={() => setIsTurnoverModalOpen(false)} onConfirm={handleTurnover} />}
+            {isApothecaryModalOpen && injuryState.victimPlayer && <ApothecaryModal player={injuryState.victimPlayer} hasUsedOnKO={(injuryState.victimTeamId === 'home' ? liveHomeTeam?.apothecaryUsedOnKO : liveOpponentTeam?.apothecaryUsedOnKO) || false} onClose={() => { setIsApothecaryModalOpen(false); setInjuryState(prev => ({ ...prev, step: 'regeneration_check' })); }} onPatchUp={() => { setIsApothecaryModalOpen(false); const teamId = injuryState.victimTeamId!; const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam; setTeam(prev => prev ? ({ ...prev, apothecaryUsedOnKO: true }) : null); updatePlayerStatus(injuryState.victimPlayer!.id, teamId, 'Activo', 'Recuperado por Boticario'); setInjuryState(prev => ({ ...prev, step: 'summary', log: [...prev.log, 'Boticario lo recupera (KO -> Reservas).'] })); }} onReroll={() => { setIsApothecaryModalOpen(false); const teamId = injuryState.victimTeamId!; const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam; const team = teamId === 'home' ? liveHomeTeam : liveOpponentTeam; if (team?.apothecary) { setTeam(prev => prev ? ({ ...prev, apothecary: false }) : null); } else if (team?.wanderingApothecaries && team.wanderingApothecaries > 0) { setTeam(prev => prev ? ({ ...prev, wanderingApothecaries: team.wanderingApothecaries - 1 }) : null); } if (injuryState.casualtyRoll) { setInjuryState(prev => ({ ...prev, step: 'casualty_roll', casualtyRollInput: '', log: [...prev.log, 'Boticario repite tirada de lesión.'], casualtyRoll: { ...prev.casualtyRoll!, rerolled: true } })); } else { setInjuryState(prev => ({ ...prev, step: 'injury_roll', injuryRollInput: { die1: '', die2: '' }, log: [...prev.log, 'Boticario repite tirada de herida.'] })); } }} />}
+            <style>{`
+                @keyframes fade-in-slow { from { opacity: 0; } to { opacity: 1; } }
+                .animate-fade-in-slow { animation: fade-in-slow 0.5s ease-out forwards; }
+                @keyframes fade-in-fast { from { opacity: 0; } to { opacity: 1; } }
+                @keyframes slide-in-up { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+                .animate-fade-in-fast { animation: fade-in-fast 0.2s ease-out forwards; }
+                .animate-slide-in-up { animation: slide-in-up 0.3s ease-out forwards; }
+            `}</style>
+        </div>
+    );
+};
 export default GameBoard;
