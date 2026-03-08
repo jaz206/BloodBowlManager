@@ -225,7 +225,19 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
 
 
     if (!baseRoster) {
-        return <div className="p-8 text-center text-red-500">Error: No se encontró la facción del equipo.</div>;
+        return (
+            <div className="flex flex-col items-center justify-center p-20 min-h-[60vh] text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-premium-gold mb-6 mx-auto"></div>
+                <h3 className="text-xl font-display font-black text-white uppercase italic tracking-tighter mb-2">Sincronizando Facciones de Nuffle...</h3>
+                <p className="text-slate-500 text-sm font-medium italic mb-8 max-w-md mx-auto">No pudimos encontrar la facción "{team.rosterName}" en los datos guardados. Estamos recuperando los archivos del templo...</p>
+                <button
+                    onClick={onBack}
+                    className="px-8 py-3 rounded-xl bg-white/5 border border-white/10 text-white font-display font-bold uppercase tracking-widest text-xs hover:bg-premium-gold hover:text-black transition-all"
+                >
+                    Regresar al Gremio
+                </button>
+            </div>
+        );
     }
 
     const handleBuyReroll = () => {
