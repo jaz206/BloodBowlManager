@@ -1,10 +1,7 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import type { ManagedTeam, ManagedPlayer, Skill } from '../../types';
 import { skillsData } from '../../data/skills';
 import { teamsData } from '../../data/teams';
-import TdIcon from '../icons/TdIcon';
-import CasualtyIcon from '../icons/CasualtyIcon';
-import PassIcon from '../icons/PassIcon';
 
 interface SkillSelectionModalProps {
     player: ManagedPlayer;
@@ -93,7 +90,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
     const [postGameState, setPostGameState] = useState<PostGameState | null>(null);
     const [skillSelection, setSkillSelection] = useState<{ player: ManagedPlayer, type: 'Primary' | 'Secondary', cost: number } | null>(null);
 
-    const cloneTeamForPostGame = (team: ManagedTeam): ManagedTeam => {
+    const cloneTeamForPostGame = useCallback((team: ManagedTeam): ManagedTeam => {
         const clonedPlayers = team.players.map(p => {
             const clonedPlayer = { ...p };
             if (p.stats) clonedPlayer.stats = { ...p.stats };
@@ -107,7 +104,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
             ...team,
             players: clonedPlayers,
         };
-    };
+    }, []);
 
     useEffect(() => {
         let winningsRoll = 0;

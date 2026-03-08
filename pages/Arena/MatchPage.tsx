@@ -13,7 +13,7 @@ import SnowflakeIcon from '../../components/icons/SnowflakeIcon';
 import FireIcon from '../../components/icons/FireIcon';
 import CloudIcon from '../../components/icons/CloudIcon';
 import PlayerStatusCard from '../../components/arena/PlayerStatusCard';
-import PostGameWizard from '../../components/arena/PostGameWizard';
+import PostGameWizardComponent from '../../components/arena/PostGameWizard';
 import DownloadIcon from '../../components/icons/DownloadIcon';
 import StarPlayerModal from '../../components/oracle/StarPlayerModal';
 import QuestionMarkCircleIcon from '../../components/icons/QuestionMarkCircleIcon';
@@ -314,6 +314,9 @@ const cloneLiveTeam = (team: ManagedTeam): ManagedTeam => {
     return clonedTeam;
 };
 
+const initialFoulState: FoulState = { step: 'select_fouler_team', foulingTeamId: null, foulingPlayer: null, victimPlayer: null, armorRoll: null, injuryRoll: null, casualtyRoll: null, lastingInjuryRoll: null, wasExpelled: false, expulsionReason: '', log: [], armorRollInput: { die1: '', die2: '' }, injuryRollInput: { die1: '', die2: '' }, casualtyRollInput: '', lastingInjuryRollInput: '' };
+const initialInjuryState: InjuryState = { step: 'select_victim_team', victimTeamId: null, victimPlayer: null, isStunty: false, armorRoll: null, injuryRoll: null, casualtyRoll: null, lastingInjuryRoll: null, log: [], armorRollInput: { die1: '', die2: '' }, injuryRollInput: { die1: '', die2: '' }, casualtyRollInput: '', lastingInjuryRollInput: '', apothecaryAction: null, regenerationRollInput: '', regenerationRoll: null };
+
 const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactElement => {
     const [gameState, setGameState] = useState<GameState>('setup');
     const [hasCamera, setHasCamera] = useState<boolean | null>(null);
@@ -352,9 +355,7 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
     const [selectedPlayerForAction, setSelectedPlayerForAction] = useState<ManagedPlayer | null>(null);
     type SppModalType = 'pass' | 'interference' | 'casualty';
     const [sppModalState, setSppModalState] = useState<{ isOpen: boolean; type: SppModalType | null; step: 'select_team' | 'select_player' | 'interference_type'; teamId: 'home' | 'opponent' | null; selectedPlayer: ManagedPlayer | null; }>({ isOpen: false, type: null, step: 'select_team', teamId: null, selectedPlayer: null });
-    const initialFoulState: FoulState = { step: 'select_fouler_team', foulingTeamId: null, foulingPlayer: null, victimPlayer: null, armorRoll: null, injuryRoll: null, casualtyRoll: null, lastingInjuryRoll: null, wasExpelled: false, expulsionReason: '', log: [], armorRollInput: { die1: '', die2: '' }, injuryRollInput: { die1: '', die2: '' }, casualtyRollInput: '', lastingInjuryRollInput: '' };
     const [foulState, setFoulState] = useState<FoulState>(initialFoulState);
-    const initialInjuryState: InjuryState = { step: 'select_victim_team', victimTeamId: null, victimPlayer: null, isStunty: false, armorRoll: null, injuryRoll: null, casualtyRoll: null, lastingInjuryRoll: null, log: [], armorRollInput: { die1: '', die2: '' }, injuryRollInput: { die1: '', die2: '' }, casualtyRollInput: '', lastingInjuryRollInput: '', apothecaryAction: null, regenerationRollInput: '', regenerationRoll: null };
     const [isInjuryModalOpen, setIsInjuryModalOpen] = useState(false);
     const [injuryState, setInjuryState] = useState<InjuryState>(initialInjuryState);
     const [isApothecaryModalOpen, setIsApothecaryModalOpen] = useState(false);
@@ -1049,6 +1050,38 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
         updateTeamDeployment(setLiveOpponentTeam);
     };
 
+    const handleAutoSelectTeam = (teamId: 'home' | 'opponent') => {
+        const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
+        setTeam(prevTeam => {
+            if (!prevTeam) return null;
+            // 1. Filter out unavailable players
+            const availablePlayers = prevTeam.players.filter(p =>
+                p.status !== 'Muerto' &&
+                p.status !== 'Lesionado' &&
+                (p.missNextGame || 0) <= 0
+            );
+
+            // 2. Sort by cost (proxy for "best")
+            const sortedByCost = [...availablePlayers].sort((a, b) => b.cost - a.cost);
+
+            // 3. Take top 11
+            const bestElevenIds = new Set(sortedByCost.slice(0, 11).map(p => p.id));
+
+            // 4. Update status and positions
+            const updatedPlayers = prevTeam.players.map(p => {
+                if (bestElevenIds.has(p.id)) {
+                    return { ...p, status: 'Activo' as PlayerStatus };
+                }
+                return { ...p, status: 'Reserva' as PlayerStatus, fieldPosition: undefined };
+            });
+
+            return { ...prevTeam, players: updatedPlayers };
+        });
+
+        // 5. Trigger deployment layout
+        setTimeout(() => handleSuggestDeployment(), 50);
+    };
+
     const renderContent = () => {
         switch (gameState) {
             case 'setup': return (
@@ -1228,7 +1261,7 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                     if (event) {
                         setGameStatus(prev => ({ ...prev, kickoffEvent: event }));
                         logEvent('KICKOFF', `Evento de Patada (${roll}): ${event.title}`);
-                        if (event.title !== 'Clima Cambiante' && event.title !== 'Tiempo Muerto') setKickoffActionCompleted(true);
+                        if (event.title !== 'Clima Cambiante') setKickoffActionCompleted(true);
                     }
                 };
 
@@ -1610,11 +1643,19 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                                                         </div>
                                                     </div>
 
-                                                    <div className="bg-black/40 border border-white/5 rounded-3xl p-5 h-[300px] overflow-hidden flex flex-col">
-                                                        <h5 className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mb-4 flex justify-between items-center">
-                                                            Roster de Guerra
-                                                            <span className="text-[8px] bg-white/5 px-2 py-0.5 rounded-full">{team.players.length} Total</span>
-                                                        </h5>
+                                                    <div className="bg-black/40 border border-white/5 rounded-3xl p-5 h-[350px] overflow-hidden flex flex-col">
+                                                        <div className="flex justify-between items-center mb-4">
+                                                            <h5 className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest">
+                                                                Roster de Guerra
+                                                                <span className="ml-2 text-[8px] bg-white/5 px-2 py-0.5 rounded-full">{team.players.length} Total</span>
+                                                            </h5>
+                                                            <button
+                                                                onClick={() => handleAutoSelectTeam(teamId as 'home' | 'opponent')}
+                                                                className="text-[8px] font-display font-black text-premium-gold hover:text-white border border-premium-gold/30 hover:border-premium-gold bg-premium-gold/5 px-3 py-1.5 rounded-lg transition-all uppercase tracking-widest"
+                                                            >
+                                                                Sugerir 11 Inicial
+                                                            </button>
+                                                        </div>
                                                         <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-2">
                                                             {/* Grouped statuses for better UI */}
                                                             <div className="space-y-1">
@@ -1639,7 +1680,11 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
 
                                     <div className="flex flex-wrap justify-center gap-6 pt-10 border-t border-white/5">
                                         <button
-                                            onClick={handleSuggestDeployment}
+                                            onClick={() => {
+                                                if (liveHomeTeam.players.filter(p => p.status === 'Activo').length === 0) handleAutoSelectTeam('home');
+                                                if (liveOpponentTeam.players.filter(p => p.status === 'Activo').length === 0) handleAutoSelectTeam('opponent');
+                                                handleSuggestDeployment();
+                                            }}
                                             className="flex items-center gap-3 bg-white/5 border border-white/10 text-white font-display font-black py-4 px-8 rounded-2xl hover:bg-teal-500/10 hover:border-teal-500/30 hover:text-teal-400 transition-all text-xs uppercase tracking-widest"
                                         >
                                             <span className="material-symbols-outlined">shuffle</span>
@@ -1647,11 +1692,28 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                                         </button>
                                         <button
                                             onClick={() => {
+                                                handleAutoSelectTeam('home');
+                                                handleAutoSelectTeam('opponent');
+                                            }}
+                                            className="flex items-center gap-3 bg-premium-gold/10 border border-premium-gold/30 text-premium-gold font-display font-black py-4 px-8 rounded-2xl hover:bg-premium-gold/20 hover:text-white transition-all text-xs uppercase tracking-widest"
+                                        >
+                                            <span className="material-symbols-outlined">bolt</span>
+                                            Despliegue Maestro (Mejores 11)
+                                        </button>
+                                        <button
+                                            onClick={() => {
                                                 const homeOnField = liveHomeTeam.players.filter(p => p.status === 'Activo').length;
                                                 const oppOnField = liveOpponentTeam.players.filter(p => p.status === 'Activo').length;
+                                                const homeAvailable = liveHomeTeam.players.filter(p => p.status !== 'Muerto' && p.status !== 'Lesionado' && (p.missNextGame || 0) <= 0).length;
+                                                const oppAvailable = liveOpponentTeam.players.filter(p => p.status !== 'Muerto' && p.status !== 'Lesionado' && (p.missNextGame || 0) <= 0).length;
+
                                                 if (homeOnField === 0 || oppOnField === 0) {
                                                     alert('Ambos equipos deben tener al menos un guerrero en el campo para la batalla.');
                                                     return;
+                                                }
+
+                                                if ((homeOnField < 11 && homeOnField < homeAvailable) || (oppOnField < 11 && oppOnField < oppAvailable)) {
+                                                    if (!confirm('Uno de los equipos tiene menos de 11 jugadores en el campo pudiendo desplegar más. ¿Deseas continuar con estas bajas?')) return;
                                                 }
                                                 setPreGameStep(8);
                                             }}
@@ -2162,7 +2224,7 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                         </aside>
                     </div>
                 );
-            case 'post_game': if (!homeTeam || !liveHomeTeam || !liveOpponentTeam) return <div>Cargando...</div>; return <PostGameWizard initialHomeTeam={homeTeam} finalHomeTeam={liveHomeTeam} opponentTeam={liveOpponentTeam} score={score} fame={fame.home} playersMNG={playersMissingNextGame.filter(p => p.teamId === 'home')} onConfirm={handleConfirmPostGame} />;
+            case 'post_game': if (!homeTeam || !liveHomeTeam || !liveOpponentTeam) return <div>Cargando...</div>; return <PostGameWizardComponent initialHomeTeam={homeTeam} finalHomeTeam={liveHomeTeam} opponentTeam={liveOpponentTeam} score={score} fame={fame.home} playersMNG={playersMissingNextGame.filter(p => p.teamId === 'home')} onConfirm={handleConfirmPostGame} />;
             default: return <div>Estado de juego desconocido.</div>;
         }
     };
