@@ -99,5 +99,13 @@ root/
 *   **Internacionalización Completa**: Soporte bilingüe para todas las etiquetas del proceso de draft.
 *   *Archivos Afectados*: `CreateTeamPage.tsx`, `LanguageContext.tsx`, `BITACORA.md`.
 
+### [2026-03-08] El Oráculo de Nuffle (Hub de Sabiduría)
+*   **Portal Centralizado**: Rediseño integral de `Oracle/index.tsx` creando un "Hub" de sabiduría que organiza el acceso a equipos, habilidades y calculadoras.
+*   **Oracle Dice & Incentivos**: Implementación de tarjetas dinámicas con gradientes premium para el cálculo de probabilidades y la tabla de incentivos.
+*   **Codex de Habilidades**: Nuevo flujo de navegación para el Codex, con etiquetas de categoría y previsualización rápida.
+*   **Estéticas de Alta Fantasía**: Uso extensivo de glassmorphism, gradientes **premium-gold** y animaciones fluidas con **Framer Motion**.
+*   **Internacionalización Robusta**: Implementación de soporte bilingüe completo para todas las nuevas secciones del Hub.
+*   *Archivos Afectados*: `Oracle/index.tsx`, `LanguageContext.tsx`, `BITACORA.md`.
+
 ---
 ¡Por Nuffle, que los dados siempre te favorezcan! 🎲🎲

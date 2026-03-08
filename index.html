@@ -1,48 +1,52 @@
 <!DOCTYPE html>
-    <html lang="es">
-      <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Asistente de Blood Bowl | Coach Edition</title>
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        <meta name="theme-color" content="#0a0a0a" />
-        <meta name="google-signin-client_id" content="789696388629-q5g7q19g8o38et3ggr3bb87f9609h2qs.apps.googleusercontent.com">
-        <link rel="manifest" href="/manifest.json" />
-        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-        <script src="https://cdn.tailwindcss.com"></script>
-        <script>
-          tailwind.config = {
-            theme: {
-              extend: {
-                colors: {
-                  blood: {
-                    red: '#8B0000',
-                    dark: '#450a0a',
-                  },
-                  pitch: {
-                    green: '#1B4332',
-                    dark: '#081c15',
-                  },
-                  premium: {
-                    gold: '#CA8A04',
-                    light: '#fde047',
-                  }
-                },
-                fontFamily: {
-                  sans: ['Barlow', 'system-ui', 'sans-serif'],
-                  display: ['Barlow Condensed', 'Impact', 'sans-serif'],
-                }
-              }
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Asistente de Blood Bowl | Coach Edition</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <meta name="google-signin-client_id"
+    content="789696388629-q5g7q19g8o38et3ggr3bb87f9609h2qs.apps.googleusercontent.com">
+  <link rel="manifest" href="/manifest.json" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            blood: {
+              red: '#8B0000',
+              dark: '#450a0a',
+            },
+            pitch: {
+              green: '#1B4332',
+              dark: '#081c15',
+            },
+            premium: {
+              gold: '#CA8A04',
+              light: '#fde047',
             }
+          },
+          fontFamily: {
+            sans: ['Barlow', 'system-ui', 'sans-serif'],
+            display: ['Barlow Condensed', 'Impact', 'sans-serif'],
           }
-        </script>
-        <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
-        <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-        <script src="https://accounts.google.com/gsi/client" async defer></script>
-        <link rel="stylesheet" href="/index.css">
-      <script type="importmap">
+        }
+      }
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <link rel="stylesheet" href="/index.css">
+  <script type="importmap">
 {
   "imports": {
     "react/": "https://aistudiocdn.com/react@^19.1.1/",
@@ -53,25 +57,28 @@
     "firebase/auth": "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js",
     "firebase/firestore": "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js",
     "firebase/": "https://aistudiocdn.com/firebase@^12.3.0/",
-    "@vercel/node": "https://aistudiocdn.com/@vercel/node@^5.3.24"
+    "@vercel/node": "https://aistudiocdn.com/@vercel/node@^5.3.24",
+    "framer-motion": "https://esm.sh/framer-motion@11.0.0"
   }
 }
 </script>
-    </head>
-      <body class="bg-slate-900">
-        <div id="root"></div>
-        <script type="module" src="/index.tsx"></script>
-        <script>
-          if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-              const swUrl = `${window.location.origin}/sw.js`;
-              navigator.serviceWorker.register(swUrl).then(registration => {
-                console.log('ServiceWorker registration successful with scope: ', registration.scope);
-              }, err => {
-                console.log('ServiceWorker registration failed: ', err);
-              });
-            });
-          }
-        </script>
-      </body>
-    </html>
+</head>
+
+<body class="bg-slate-900">
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        const swUrl = `${window.location.origin}/sw.js`;
+        navigator.serviceWorker.register(swUrl).then(registration => {
+          console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        }, err => {
+          console.log('ServiceWorker registration failed: ', err);
+        });
+      });
+    }
+  </script>
+</body>
+
+</html>
