@@ -275,7 +275,7 @@ const MainApp: React.FC = () => {
                   recentEvents={recentEvents}
                 />
               )}
-              {activeView === 'oracle' && <OraclePage onRequestTeamCreation={(r) => { setRequestedRoster(r); setActiveView('guild'); }} />}
+              {activeView === 'oracle' && <OraclePage managedTeams={managedTeams} onRequestTeamCreation={(r) => { setRequestedRoster(r); setActiveView('guild'); }} />}
               {activeView === 'guild' && (
                 <GuildPage
                   teams={managedTeams}

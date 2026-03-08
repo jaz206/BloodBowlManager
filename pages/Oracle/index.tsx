@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 // Sub-páginas del Oráculo
 import Teams from './TeamsPage';
@@ -7,20 +7,38 @@ import StarPlayers from './StarPlayersPage';
 import ProbabilityCalculator from './ProbabilitiesPage';
 import InducementTable from './InducementsPage';
 import { useLanguage } from '../../contexts/LanguageContext';
+import type { ManagedTeam } from '../../types';
 
 type SubView = 'hub' | 'teams' | 'skills' | 'star_players' | 'calculator' | 'inducements';
 
 const SKILL_CATEGORIES = ['General', 'Fuerza', 'Agilidad', 'Pase', 'Mutación'];
 
 interface OraclePageProps {
+    managedTeams?: ManagedTeam[];
     onRequestTeamCreation?: (rosterName: string) => void;
 }
 
-const OraclePage: React.FC<OraclePageProps> = ({ onRequestTeamCreation = () => { } }) => {
+const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTeamCreation = () => { } }) => {
     const { t } = useLanguage();
     const [activeView, setActiveView] = useState<SubView>('hub');
     const [selectedHubTeam, setSelectedHubTeam] = useState<string | null>(null);
     const [initialSkillCategory, setInitialSkillCategory] = useState<string>('General');
+    const [hubSearchTerm, setHubSearchTerm] = useState('');
+
+    const userTv = useMemo(() => {
+        if (managedTeams.length === 0) return 1000000;
+        const team = managedTeams[0];
+        let total = 0;
+        team.players.forEach(p => { total += p.cost; });
+        total += (team.rerolls || 0) * 60000;
+        total += (team.cheerleaders || 0) * 10000;
+        total += (team.assistantCoaches || 0) * 10000;
+        total += (team.dedicatedFans || 0) * 10000;
+        if (team.apothecary) total += 50000;
+        return total;
+    }, [managedTeams]);
+
+    const rivalTv = useMemo(() => userTv + 230000, [userTv]);
 
     const handleBackToHub = () => {
         setActiveView('hub');
@@ -62,9 +80,14 @@ const OraclePage: React.FC<OraclePageProps> = ({ onRequestTeamCreation = () => {
                         <input
                             className="w-full bg-transparent border-none focus:ring-0 text-white placeholder:text-slate-600 px-6 text-lg font-medium"
                             placeholder={t('oracle.hub.search.placeholder')}
+                            value={hubSearchTerm}
+                            onChange={(e) => setHubSearchTerm(e.target.value)}
                         />
                         <div className="flex items-center pr-2">
-                            <button className="bg-premium-gold text-black font-black px-8 h-12 rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-premium-gold/20 uppercase italic tracking-tighter">
+                            <button
+                                onClick={() => setActiveView('skills')}
+                                className="bg-premium-gold text-black font-black px-8 h-12 rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-premium-gold/20 uppercase italic tracking-tighter"
+                            >
                                 Buscar
                             </button>
                         </div>
@@ -196,16 +219,22 @@ const OraclePage: React.FC<OraclePageProps> = ({ onRequestTeamCreation = () => {
                     <div className="mt-4 space-y-6">
                         <div className="flex flex-col gap-2">
                             <span className="text-[10px] text-slate-600 uppercase font-black tracking-widest ml-1">{t('oracle.hub.inducements.yourTv')}</span>
-                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 text-premium-gold font-mono text-2xl text-center italic font-black shadow-inner">1,250,000</div>
+                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 text-premium-gold font-mono text-2xl text-center italic font-black shadow-inner">
+                                {userTv.toLocaleString()}
+                            </div>
                         </div>
                         <div className="flex flex-col gap-2">
                             <span className="text-[10px] text-slate-600 uppercase font-black tracking-widest ml-1">{t('oracle.hub.inducements.rivalTv')}</span>
-                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 text-slate-400 font-mono text-2xl text-center italic font-black shadow-inner">1,480,000</div>
+                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 text-slate-400 font-mono text-2xl text-center italic font-black shadow-inner">
+                                {rivalTv.toLocaleString()}
+                            </div>
                         </div>
                         <div className="pt-6 border-t border-white/5 mt-2">
                             <div className="flex justify-between items-center mb-6 px-1">
                                 <span className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">{t('oracle.hub.inducements.budget')}</span>
-                                <span className="text-premium-gold text-2xl font-black italic tracking-tighter">230k</span>
+                                <span className="text-premium-gold text-2xl font-black italic tracking-tighter">
+                                    {Math.max(0, (rivalTv - userTv) / 1000)}k
+                                </span>
                             </div>
                             <button
                                 onClick={() => setActiveView('inducements')}

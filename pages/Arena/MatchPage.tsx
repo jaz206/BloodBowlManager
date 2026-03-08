@@ -348,6 +348,8 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
     const [kickoffActionCompleted, setKickoffActionCompleted] = useState(false);
     const [journeymenNotification, setJourneymenNotification] = useState<string | null>(null);
     const [pendingJourneymen, setPendingJourneymen] = useState<{ home: ManagedPlayer[], opponent: ManagedPlayer[] }>({ home: [], opponent: [] });
+    const [activeTeamId, setActiveTeamId] = useState<'home' | 'opponent'>('home');
+    const [selectedPlayerForAction, setSelectedPlayerForAction] = useState<ManagedPlayer | null>(null);
     type SppModalType = 'pass' | 'interference' | 'casualty';
     const [sppModalState, setSppModalState] = useState<{ isOpen: boolean; type: SppModalType | null; step: 'select_team' | 'select_player' | 'interference_type'; teamId: 'home' | 'opponent' | null; selectedPlayer: ManagedPlayer | null; }>({ isOpen: false, type: null, step: 'select_team', teamId: null, selectedPlayer: null });
     const initialFoulState: FoulState = { step: 'select_fouler_team', foulingTeamId: null, foulingPlayer: null, victimPlayer: null, armorRoll: null, injuryRoll: null, casualtyRoll: null, lastingInjuryRoll: null, wasExpelled: false, expulsionReason: '', log: [], armorRollInput: { die1: '', die2: '' }, injuryRollInput: { die1: '', die2: '' }, casualtyRollInput: '', lastingInjuryRollInput: '' };
@@ -1306,15 +1308,26 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                         <div className="mt-2">
                             <h4 className="font-bold text-xs uppercase text-slate-500 mb-1 px-2">{title}</h4>
                             <div className="space-y-1">
-                                {players.map((p, idx) =>
-                                    <PlayerStatusCard
+                                {players.map((p, idx) => (
+                                    <div
                                         key={p.id}
-                                        player={p}
-                                        playerNumber={p.status === 'Activo' ? onFieldNumberOffset + idx + 1 : undefined}
-                                        onViewPlayer={setViewingPlayer}
-                                        onSkillClick={handleSkillClick}
-                                    />
-                                )}
+                                        onClick={() => {
+                                            setSelectedPlayerForAction(p);
+                                            setActiveTeamId(teamId);
+                                        }}
+                                        className={`transition-all duration-300 rounded-xl cursor-pointer ${selectedPlayerForAction?.id === p.id
+                                                ? 'ring-2 ring-premium-gold bg-premium-gold/10'
+                                                : 'hover:bg-white/5'
+                                            }`}
+                                    >
+                                        <PlayerStatusCard
+                                            player={p}
+                                            playerNumber={p.status === 'Activo' ? onFieldNumberOffset + idx + 1 : undefined}
+                                            onViewPlayer={setViewingPlayer}
+                                            onSkillClick={handleSkillClick}
+                                        />
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     );
@@ -1351,8 +1364,24 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                                         <span className="text-3xl font-display font-black text-premium-gold/40 mt-2">:</span>
                                         <span className="text-6xl sm:text-8xl font-display font-bold text-white tracking-tighter tabular-nums drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">{score.opponent}</span>
                                     </div>
-                                    <div className="inline-flex items-center gap-2 bg-premium-gold/10 px-4 py-1.5 rounded-full border border-premium-gold/20 mt-4 backdrop-blur-sm">
-                                        <span className="text-[10px] sm:text-xs font-display font-black uppercase tracking-[0.2em] text-premium-gold">Parte {half} · Turno {turn}</span>
+                                    <div className="flex flex-col items-center gap-2 mt-4">
+                                        <div className="inline-flex items-center gap-2 bg-black/60 px-4 py-1.5 rounded-full border border-white/10 backdrop-blur-sm">
+                                            <span className="text-[10px] sm:text-xs font-display font-black uppercase tracking-[0.2em] text-white/40">Parte {half} · Turno {turn}</span>
+                                        </div>
+                                        <div className="flex gap-1 p-1 bg-black/40 rounded-xl border border-white/5">
+                                            <button
+                                                onClick={() => setActiveTeamId('home')}
+                                                className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${activeTeamId === 'home' ? 'bg-sky-500 text-black shadow-[0_0_15px_rgba(14,165,233,0.4)]' : 'text-slate-500 hover:text-white'}`}
+                                            >
+                                                Turno Local
+                                            </button>
+                                            <button
+                                                onClick={() => setActiveTeamId('opponent')}
+                                                className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${activeTeamId === 'opponent' ? 'bg-red-500 text-white shadow-[0_0_15px_rgba(239,68,68,0.4)]' : 'text-slate-500 hover:text-white'}`}
+                                            >
+                                                Turno Rival
+                                            </button>
+                                        </div>
                                     </div>
                                     <div className="flex justify-center gap-6 mt-6">
                                         <div className="flex flex-col items-center gap-1 group">
@@ -1501,9 +1530,44 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
 
                         {activeTab === 'assistant' ? (
                             <>
-                                <div className="glass-panel p-5 border-white/5 bg-black/40">
-                                    <div className="flex items-center gap-2 mb-4">
-                                        <div className="w-2 h-6 bg-premium-gold rounded-full"></div>
+                                <div className="glass-panel p-5 border-white/5 bg-black/40 space-y-6">
+                                    {selectedPlayerForAction && (
+                                        <div className="glass-panel p-4 border-premium-gold/20 bg-black/60 shadow-[0_0_40px_rgba(245,159,10,0.1)] mb-2 animate-slide-in-up">
+                                            <div className="flex items-center gap-4">
+                                                <div className="relative">
+                                                    <div className="w-14 h-14 rounded-xl bg-premium-gold/10 border border-premium-gold/30 flex items-center justify-center overflow-hidden">
+                                                        <span className="material-symbols-outlined text-premium-gold text-2xl">person</span>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => setSelectedPlayerForAction(null)}
+                                                        className="absolute -top-2 -right-2 w-6 h-6 bg-blood-red rounded-full flex items-center justify-center text-white shadow-lg hover:scale-110 active:scale-90 transition-all"
+                                                    >
+                                                        <span className="material-symbols-outlined text-xs">close</span>
+                                                    </button>
+                                                </div>
+                                                <div className="flex-grow">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className={`w-2 h-2 rounded-full ${activeTeamId === 'home' ? 'bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.8)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]'}`}></span>
+                                                        <h3 className="text-sm font-display font-black text-white uppercase tracking-tight truncate">{selectedPlayerForAction.customName}</h3>
+                                                    </div>
+                                                    <div className="flex gap-3 mt-1.5">
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[7px] text-premium-gold/60 font-black uppercase tracking-widest">MA / ST / AG / AV</span>
+                                                            <span className="text-[10px] font-display font-black text-white">{selectedPlayerForAction.stats.MA} / {selectedPlayerForAction.stats.ST} / {selectedPlayerForAction.stats.AG} / {selectedPlayerForAction.stats.AR}</span>
+                                                        </div>
+                                                        <div className="flex flex-wrap gap-1 items-center">
+                                                            {selectedPlayerForAction.skills.split(',').slice(0, 2).map((s, i) => (
+                                                                <span key={i} className="bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-[8px] font-bold text-slate-400 whitespace-nowrap">{s.trim()}</span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2 h-6 bg-premium-gold rounded-full shadow-[0_0_10px_rgba(245,159,10,0.5)]"></div>
                                         <h3 className="text-xs font-display font-black text-premium-gold uppercase tracking-[0.2em]">Acciones de Juego</h3>
                                     </div>
                                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -1524,19 +1588,19 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                                             Turnover
                                         </button>
 
-                                        <button onClick={() => { playSound('dice'); logEvent('block', `Acción de bloqueo: Lanzando ${Math.floor(Math.random() * 3) + 1} dado(s).`); }} className="group bg-white/5 border border-white/10 text-slate-400 font-display font-black p-4 rounded-2xl hover:bg-white/10 hover:text-white transition-premium shadow-lg uppercase italic text-[10px] tracking-widest flex flex-col items-center gap-2">
+                                        <button onClick={() => { playSound('dice'); logEvent('block', `${selectedPlayerForAction ? selectedPlayerForAction.customName : 'Un jugador'} inicia un bloqueo.`); }} className="group bg-white/5 border border-white/10 text-slate-400 font-display font-black p-4 rounded-2xl hover:bg-white/10 hover:text-white transition-premium shadow-lg uppercase italic text-[10px] tracking-widest flex flex-col items-center gap-2">
                                             <span className="material-symbols-outlined text-white/40 group-hover:text-white transition-colors">sports_martial_arts</span>
                                             Bloqueo
                                         </button>
-                                        <button onClick={() => logEvent('move', 'Acción de movimiento.')} className="group bg-white/5 border border-white/10 text-slate-400 font-display font-black p-4 rounded-2xl hover:bg-white/10 hover:text-white transition-premium shadow-lg uppercase italic text-[10px] tracking-widest flex flex-col items-center gap-2">
+                                        <button onClick={() => logEvent('move', `${selectedPlayerForAction ? selectedPlayerForAction.customName : 'Un jugador'} se mueve.`)} className="group bg-white/5 border border-white/10 text-slate-400 font-display font-black p-4 rounded-2xl hover:bg-white/10 hover:text-white transition-premium shadow-lg uppercase italic text-[10px] tracking-widest flex flex-col items-center gap-2">
                                             <span className="material-symbols-outlined text-white/40 group-hover:text-white transition-colors">directions_run</span>
                                             Movimiento
                                         </button>
-                                        <button onClick={() => { playSound('dice'); const res = Math.floor(Math.random() * 6) + 1; logEvent('dodge', `Esquiva: D6 -> ${res} (${res >= 3 ? 'Éxito' : 'Falla?'})`); }} className="group bg-white/5 border border-white/10 text-slate-400 font-display font-black p-4 rounded-2xl hover:bg-white/10 hover:text-white transition-premium shadow-lg uppercase italic text-[10px] tracking-widest flex flex-col items-center gap-2">
+                                        <button onClick={() => { playSound('dice'); const res = Math.floor(Math.random() * 6) + 1; logEvent('dodge', `${selectedPlayerForAction ? selectedPlayerForAction.customName : 'Un jugador'} intenta esquivar: D6 -> ${res}`); }} className="group bg-white/5 border border-white/10 text-slate-400 font-display font-black p-4 rounded-2xl hover:bg-white/10 hover:text-white transition-premium shadow-lg uppercase italic text-[10px] tracking-widest flex flex-col items-center gap-2">
                                             <span className="material-symbols-outlined text-white/40 group-hover:text-white transition-colors">gesture</span>
                                             Esquiva
                                         </button>
-                                        <button onClick={() => { playSound('dice'); const res = Math.floor(Math.random() * 6) + 1; logEvent('pickup_ball', `Recoger Balón: D6 -> ${res} (${res >= 3 ? 'Éxito' : 'Falla?'})`); }} className="group bg-white/5 border border-white/10 text-slate-400 font-display font-black p-4 rounded-2xl hover:bg-white/10 hover:text-white transition-premium shadow-lg uppercase italic text-[10px] tracking-widest flex flex-col items-center gap-2">
+                                        <button onClick={() => { playSound('dice'); const res = Math.floor(Math.random() * 6) + 1; logEvent('pickup_ball', `${selectedPlayerForAction ? selectedPlayerForAction.customName : 'Un jugador'} intenta recoger el balón: D6 -> ${res}`); }} className="group bg-white/5 border border-white/10 text-slate-400 font-display font-black p-4 rounded-2xl hover:bg-white/10 hover:text-white transition-premium shadow-lg uppercase italic text-[10px] tracking-widest flex flex-col items-center gap-2">
                                             <BallIcon className="w-6 h-6 text-white/40 group-hover:text-white transition-colors" />
                                             Recoger
                                         </button>

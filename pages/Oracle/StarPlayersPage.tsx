@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { StarPlayer, PlayerStats } from '../../types';
 import { useMasterData } from '../../hooks/useMasterData';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useAuth } from '../../hooks/useAuth';
 
 const StatBox: React.FC<{ label: string; value: string | number }> = ({ label, value }) => (
     <div className="bg-border-gold/40 p-2 rounded-lg border border-border-gold flex flex-col items-center justify-center min-w-[45px]">
@@ -102,6 +103,7 @@ const StarPlayerCard: React.FC<{
 const StarPlayers: React.FC = () => {
     const { starPlayers, loading } = useMasterData();
     const { t } = useLanguage();
+    const { isAdmin } = useAuth();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedFaction, setSelectedFaction] = useState('Todas');
     const [selectedPlayerName, setSelectedPlayerName] = useState<string | null>(null);
@@ -178,6 +180,15 @@ const StarPlayers: React.FC = () => {
                         Consulta las leyendas vivas de los campos de Blood Bowl. Contrataciones de élite para entrenadores con ambición.
                     </p>
                 </div>
+                {isAdmin && (
+                    <button
+                        onClick={() => showToast('Funcionalidad de creación en desarrollo para administradores.')}
+                        className="flex items-center gap-3 bg-primary text-background-dark px-8 py-4 rounded-2xl font-black uppercase italic tracking-widest text-xs hover:scale-105 transition-all shadow-xl shadow-primary/20"
+                    >
+                        <span className="material-symbols-outlined font-bold">add</span>
+                        Nuevo Jugador
+                    </button>
+                )}
             </div>
 
             {/* Filters */}
@@ -225,8 +236,8 @@ const StarPlayers: React.FC = () => {
 
             {/* Main Content Area */}
             <div className={`grid gap-8 items-stretch ${viewMode === 'grid'
-                    ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'
-                    : 'grid-cols-1 lg:grid-cols-2'
+                ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'
+                : 'grid-cols-1 lg:grid-cols-2'
                 }`}>
                 <AnimatePresence mode="popLayout">
                     {filteredPlayers.map(player => (

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import type { Play, PlayerPosition, ManagedTeam, ManagedPlayer, BoardToken } from '../../types';
+import type { Play, PlayerPosition, ManagedTeam, ManagedPlayer, BoardToken, DrawingPath } from '../../types';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const MAX_TOKENS = 11;
@@ -10,24 +10,24 @@ type ActiveTool = 'move' | 'pass' | 'defense' | null;
 
 const FORMATION_PRESETS: Record<string, { position: string; x: number; y: number }[]> = {
   'Defensa Estándar': [
-    { position: 'Línea', x: 13, y: 7 }, { position: 'Línea', x: 13, y: 5 }, { position: 'Línea', x: 13, y: 9 },
-    { position: 'Blitzer', x: 11, y: 4 }, { position: 'Blitzer', x: 11, y: 10 },
-    { position: 'Corredor', x: 9, y: 7 }, { position: 'Línea', x: 9, y: 5 }, { position: 'Línea', x: 9, y: 9 },
-    { position: 'Receptor', x: 6, y: 4 }, { position: 'Receptor', x: 6, y: 10 }, { position: 'Lanzador', x: 5, y: 7 },
+    { position: 'Línea', x: 12, y: 7 }, { position: 'Línea', x: 12, y: 6 }, { position: 'Línea', x: 12, y: 8 },
+    { position: 'Blitzer', x: 10, y: 4 }, { position: 'Blitzer', x: 10, y: 10 },
+    { position: 'Corredor', x: 8, y: 7 }, { position: 'Línea', x: 8, y: 5 }, { position: 'Línea', x: 8, y: 9 },
+    { position: 'Receptor', x: 5, y: 4 }, { position: 'Receptor', x: 5, y: 10 }, { position: 'Lanzador', x: 4, y: 7 },
   ],
   'Ataque Jaula': [
-    { position: 'Línea', x: 13, y: 7 }, { position: 'Línea', x: 13, y: 6 }, { position: 'Línea', x: 13, y: 8 },
-    { position: 'Blitzer', x: 11, y: 6 }, { position: 'Blitzer', x: 11, y: 8 },
-    { position: 'Lanzador', x: 10, y: 7 }, { position: 'Corredor', x: 9, y: 7 },
-    { position: 'Receptor', x: 7, y: 3 }, { position: 'Receptor', x: 7, y: 11 },
-    { position: 'Línea', x: 10, y: 5 }, { position: 'Línea', x: 10, y: 9 },
+    { position: 'Línea', x: 12, y: 7 }, { position: 'Línea', x: 12, y: 6 }, { position: 'Línea', x: 12, y: 8 },
+    { position: 'Blitzer', x: 10, y: 6 }, { position: 'Blitzer', x: 10, y: 8 },
+    { position: 'Lanzador', x: 9, y: 7 }, { position: 'Corredor', x: 8, y: 7 },
+    { position: 'Receptor', x: 6, y: 3 }, { position: 'Receptor', x: 6, y: 11 },
+    { position: 'Línea', x: 9, y: 5 }, { position: 'Línea', x: 9, y: 9 },
   ],
   'Presión Lateral': [
-    { position: 'Blitzer', x: 13, y: 3 }, { position: 'Blitzer', x: 13, y: 11 },
-    { position: 'Línea', x: 13, y: 7 }, { position: 'Línea', x: 12, y: 5 }, { position: 'Línea', x: 12, y: 9 },
-    { position: 'Receptor', x: 10, y: 1 }, { position: 'Receptor', x: 10, y: 13 },
-    { position: 'Corredor', x: 9, y: 7 }, { position: 'Lanzador', x: 7, y: 7 },
-    { position: 'Línea', x: 8, y: 5 }, { position: 'Línea', x: 8, y: 9 },
+    { position: 'Blitzer', x: 12, y: 3 }, { position: 'Blitzer', x: 12, y: 11 },
+    { position: 'Línea', x: 12, y: 7 }, { position: 'Línea', x: 11, y: 5 }, { position: 'Línea', x: 11, y: 9 },
+    { position: 'Receptor', x: 9, y: 1 }, { position: 'Receptor', x: 9, y: 13 },
+    { position: 'Corredor', x: 8, y: 7 }, { position: 'Lanzador', x: 6, y: 7 },
+    { position: 'Línea', x: 7, y: 5 }, { position: 'Línea', x: 7, y: 9 },
   ],
 };
 
@@ -49,7 +49,8 @@ interface PlaysProps {
 
 const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDeletePlay }) => {
   const [tokens, setTokens] = useState<BoardToken[]>([]);
-  const [tokenHistory, setTokenHistory] = useState<BoardToken[][]>([[]]);
+  const [drawnPaths, setDrawnPaths] = useState<DrawingPath[]>([]);
+  const [history, setHistory] = useState<{ tokens: BoardToken[], paths: DrawingPath[] }[]>([{ tokens: [], paths: [] }]);
   const [historyIndex, setHistoryIndex] = useState(0);
   const [playName, setPlayName] = useState('');
   const [selectedPlayId, setSelectedPlayId] = useState<string | undefined>(plays.length > 0 ? plays[0].id : undefined);
@@ -57,6 +58,8 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
   const [selectedPlayer, setSelectedPlayer] = useState<ManagedPlayer | null>(null);
   const [zoom, setZoom] = useState(1);
   const [activeTool, setActiveTool] = useState<ActiveTool>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [currentPathPoints, setCurrentPathPoints] = useState<{ x: number, y: number }[]>([]);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -66,27 +69,33 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     setTimeout(() => setToastMessage(null), 2500);
   };
 
-  const pushHistory = (newTokens: BoardToken[]) => {
-    setTokenHistory(prev => {
+  const pushHistory = (newTokens: BoardToken[], newPaths?: DrawingPath[]) => {
+    const pathsToSave = newPaths !== undefined ? newPaths : drawnPaths;
+    setHistory(prev => {
       const sliced = prev.slice(0, historyIndex + 1);
-      return [...sliced, newTokens];
+      return [...sliced, { tokens: newTokens, paths: pathsToSave }];
     });
     setHistoryIndex(prev => prev + 1);
     setTokens(newTokens);
+    if (newPaths !== undefined) setDrawnPaths(newPaths);
   };
 
   const handleUndo = () => {
     if (historyIndex <= 0) return;
     const newIndex = historyIndex - 1;
+    const state = history[newIndex];
     setHistoryIndex(newIndex);
-    setTokens(tokenHistory[newIndex] || []);
+    setTokens(state.tokens);
+    setDrawnPaths(state.paths);
   };
 
   const handleRedo = () => {
-    if (historyIndex >= tokenHistory.length - 1) return;
+    if (historyIndex >= history.length - 1) return;
     const newIndex = historyIndex + 1;
+    const state = history[newIndex];
     setHistoryIndex(newIndex);
-    setTokens(tokenHistory[newIndex]);
+    setTokens(state.tokens);
+    setDrawnPaths(state.paths);
   };
 
   const fieldRef = useRef<HTMLDivElement>(null);
@@ -102,34 +111,77 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
   }, [plays, selectedPlayId]);
 
   const handleDragMove = useCallback((e: MouseEvent | TouchEvent) => {
-    if (!draggedTokenRef.current || !fieldRef.current) return;
+    if (!fieldRef.current) return;
 
     if (e.cancelable) e.preventDefault();
 
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-
     const fieldRect = fieldRef.current.getBoundingClientRect();
-    const x = clientX - fieldRect.left;
-    const y = clientY - fieldRect.top;
 
-    const colWidth = fieldRect.width / GRID_COLS;
-    const rowHeight = fieldRect.height / GRID_ROWS;
+    if (draggedTokenRef.current) {
+      const x = clientX - fieldRect.left;
+      const y = clientY - fieldRect.top;
 
-    let gridX = Math.floor(x / colWidth);
-    let gridY = Math.floor(y / rowHeight);
+      const colWidth = fieldRect.width / GRID_COLS;
+      const rowHeight = fieldRect.height / GRID_ROWS;
 
-    gridX = Math.max(0, Math.min(GRID_COLS - 1, gridX));
-    gridY = Math.max(0, Math.min(GRID_ROWS - 1, gridY));
+      let gridX = Math.floor(x / colWidth);
+      let gridY = Math.floor(y / rowHeight);
 
-    setTokens(currentTokens => currentTokens.map(token =>
-      token.id === draggedTokenRef.current?.id ? { ...token, x: gridX, y: gridY } : token
-    ));
-  }, []);
+      gridX = Math.max(0, Math.min(GRID_COLS - 1, gridX));
+      gridY = Math.max(0, Math.min(GRID_ROWS - 1, gridY));
+
+      setTokens(currentTokens => currentTokens.map(token =>
+        token.id === draggedTokenRef.current?.id ? { ...token, x: gridX, y: gridY } : token
+      ));
+    } else if (isDrawing && activeTool) {
+      const x = (clientX - fieldRect.left) / zoom;
+      const y = (clientY - fieldRect.top) / zoom;
+
+      // Avoid adding duplicate points or points too close
+      setCurrentPathPoints(prev => {
+        if (prev.length === 0) return [{ x, y }];
+        const last = prev[prev.length - 1];
+        const dist = Math.sqrt(Math.pow(x - last.x, 2) + Math.pow(y - last.y, 2));
+        if (dist < 10) return prev;
+        return [...prev, { x, y }];
+      });
+    }
+  }, [isDrawing, activeTool, zoom]);
 
   const handleDragEnd = useCallback(() => {
-    draggedTokenRef.current = null;
-  }, []);
+    if (draggedTokenRef.current) {
+      pushHistory(tokens);
+      draggedTokenRef.current = null;
+    } else if (isDrawing && activeTool && currentPathPoints.length > 1) {
+      const newPath: DrawingPath = {
+        id: Date.now().toString(),
+        type: activeTool,
+        points: currentPathPoints
+      };
+      const newPaths = [...drawnPaths, newPath];
+      pushHistory(tokens, newPaths);
+      setIsDrawing(false);
+      setCurrentPathPoints([]);
+    } else {
+      setIsDrawing(false);
+      setCurrentPathPoints([]);
+    }
+  }, [draggedTokenRef, isDrawing, activeTool, currentPathPoints, tokens, drawnPaths, pushHistory]);
+
+  const handleFieldMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!activeTool || !fieldRef.current) return;
+    const clientX = 'touches' in e ? e.nativeEvent instanceof TouchEvent ? e.nativeEvent.touches[0].clientX : (e.nativeEvent as any).clientX : (e as React.MouseEvent).clientX;
+    const clientY = 'touches' in e ? e.nativeEvent instanceof TouchEvent ? e.nativeEvent.touches[0].clientY : (e.nativeEvent as any).clientY : (e as React.MouseEvent).clientY;
+
+    const fieldRect = fieldRef.current.getBoundingClientRect();
+    const x = (clientX - fieldRect.left) / zoom;
+    const y = (clientY - fieldRect.top) / zoom;
+
+    setIsDrawing(true);
+    setCurrentPathPoints([{ x, y }]);
+  };
 
   useEffect(() => {
     document.addEventListener('mousemove', handleDragMove);
@@ -168,20 +220,21 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
   };
 
   const handleClearField = () => {
-    pushHistory([]);
+    pushHistory([], []);
     setSelectedPlayer(null);
   };
 
   const handleSavePlay = () => {
     if (!playName.trim()) { setSaveError('Introduce un nombre para la jugada.'); return; }
-    if (tokens.length === 0) { setSaveError('Posiciona al menos un jugador.'); return; }
+    if (tokens.length === 0 && drawnPaths.length === 0) { setSaveError('Posiciona al menos un jugador o dibuja una ruta.'); return; }
     setSaveError(null);
     const existingPlay = plays.find(p => p.name.toLowerCase() === playName.trim().toLowerCase());
     const newPlay: Play = {
       id: existingPlay?.id,
       name: playName.trim(),
       rosterName: managedTeams.find(t => t.id === selectedTeamId)?.rosterName || 'Táctica',
-      tokens: tokens.map(({ playerData, ...token }) => token)
+      tokens: tokens.map(({ playerData, ...token }) => token),
+      paths: drawnPaths
     };
     onSavePlay(newPlay);
     setPlayName('');
@@ -192,6 +245,9 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     const playToLoad = plays.find(p => p.id === id);
     if (playToLoad) {
       setTokens(playToLoad.tokens);
+      setDrawnPaths(playToLoad.paths || []);
+      setHistory([{ tokens: playToLoad.tokens, paths: playToLoad.paths || [] }]);
+      setHistoryIndex(0);
       setPlayName(playToLoad.name);
       setSelectedPlayId(id);
     }
@@ -410,8 +466,8 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                   key={tool.id}
                   onClick={() => setActiveTool(prev => prev === tool.id ? null : tool.id)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all ${activeTool === tool.id
-                      ? 'bg-primary text-black shadow-lg shadow-primary/20'
-                      : 'text-slate-500 hover:bg-white/5 hover:text-slate-300'
+                    ? 'bg-primary text-black shadow-lg shadow-primary/20'
+                    : 'text-slate-500 hover:bg-white/5 hover:text-slate-300'
                     }`}
                 >
                   <span className="material-symbols-outlined text-sm">{tool.icon}</span>
@@ -500,7 +556,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
             </button>
             <button
               onClick={handleRedo}
-              disabled={historyIndex >= tokenHistory.length - 1}
+              disabled={historyIndex >= history.length - 1}
               className="p-2 rounded-xl hover:bg-white/5 text-slate-500 hover:text-white transition-all disabled:opacity-20 disabled:cursor-not-allowed"
             >
               <span className="material-symbols-outlined text-sm">redo</span>
@@ -515,6 +571,8 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
           {/* The Pitch Rendering */}
           <div
             ref={fieldRef}
+            onMouseDown={handleFieldMouseDown}
+            onTouchStart={handleFieldMouseDown}
             className="pitch-lines shadow-[0_0_100px_rgba(0,0,0,0.8)] relative"
             style={{
               width: `${GRID_COLS * 40}px`,
@@ -523,8 +581,44 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
               transition: 'transform 0.3s cubic-bezier(0.2, 0, 0, 1)'
             }}
           >
+            {/* SVG Drawing Layer */}
+            <svg className="absolute inset-0 z-20 pointer-events-none w-full h-full overflow-visible">
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="2.5" result="coloredBlur" />
+                <feMerge>
+                  <feMergeNode in="coloredBlur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              {drawnPaths.map(path => (
+                <polyline
+                  key={path.id}
+                  points={path.points.map(p => `${p.x},${p.y}`).join(' ')}
+                  fill="none"
+                  stroke={path.type === 'move' ? '#f59f0a' : path.type === 'pass' ? '#10b981' : '#ef4444'}
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeDasharray={path.type === 'pass' ? '8,6' : '0'}
+                  style={{ filter: 'url(#glow)' }}
+                />
+              ))}
+              {currentPathPoints.length > 0 && (
+                <polyline
+                  points={currentPathPoints.map(p => `${p.x},${p.y}`).join(' ')}
+                  fill="none"
+                  stroke={activeTool === 'move' ? '#f59f0a' : activeTool === 'pass' ? '#10b981' : '#ef4444'}
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeDasharray={activeTool === 'pass' ? '8,6' : '0'}
+                  opacity="0.6"
+                />
+              )}
+            </svg>
+
             {/* Texture/Grid Layer */}
-            <div className="absolute inset-0 pitch-grid opacity-20"></div>
+            <div className="absolute inset-0 pitch-grid opacity-20 pointer-events-none"></div>
 
             {/* Pitch Markings */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -582,7 +676,11 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
               <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 pl-1">Preajustes Rápidos</h3>
               <div className="space-y-2">
                 {['Defensa Estándar', 'Ataque Jaula', 'Presión Lateral'].map(preset => (
-                  <button key={preset} className="w-full text-left px-4 py-3 rounded-2xl bg-white/5 border border-white/5 text-[10px] font-black text-slate-300 uppercase italic tracking-widest hover:bg-primary/10 hover:border-primary/20 hover:text-primary transition-all">
+                  <button
+                    key={preset}
+                    onClick={() => handleApplyPreset(preset)}
+                    className="w-full text-left px-4 py-3 rounded-2xl bg-white/5 border border-white/5 text-[10px] font-black text-slate-300 uppercase italic tracking-widest hover:bg-primary/10 hover:border-primary/20 hover:text-primary transition-all"
+                  >
                     {preset}
                   </button>
                 ))}

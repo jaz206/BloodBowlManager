@@ -122,12 +122,19 @@ export interface ManagedTeam {
   mortuaryAssistants?: number;
 }
 
+export interface DrawingPath {
+  id: string;
+  type: 'move' | 'pass' | 'defense';
+  points: { x: number; y: number }[];
+}
+
 export interface Play {
   id?: string;
   name: string;
   description?: string;
   rosterName: string;
   tokens: BoardToken[];
+  paths?: DrawingPath[];
 }
 
 export interface CompetitionTeam {
