@@ -246,59 +246,75 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
     }
 
     return (
-        <div className="p-4 sm:p-8 animate-fade-in-slow text-center max-w-md mx-auto">
-            <h2 className="text-3xl font-bold text-amber-400 mb-4">Mis Equipos</h2>
+        <div className="p-4 sm:p-8 animate-fade-in-slow max-w-2xl mx-auto pb-20">
+            {/* Header */}
+            <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter border-l-4 border-primary pl-5">
+                        Mis <span className="text-primary">Equipos</span>
+                    </h2>
+                    <p className="text-slate-500 text-xs mt-2 font-bold italic pl-6">
+                        {teams.length} {teams.length === 1 ? 'equipo gestionado' : 'equipos gestionados'}
+                    </p>
+                </div>
+                <button
+                    onClick={() => setIsCreating(true)}
+                    className="flex items-center gap-3 bg-primary text-background-dark font-black py-3 px-8 rounded-xl shadow-lg shadow-primary/10 hover:bg-primary-dark focus:outline-none focus:ring-4 focus:ring-primary/30 transform hover:scale-105 transition-all text-[10px] uppercase tracking-widest italic"
+                >
+                    <span className="material-symbols-outlined text-lg">add_circle</span>
+                    Crear Equipo
+                </button>
+            </div>
 
+            {/* Team Cards */}
             {teams.length > 0 ? (
-                <div className="space-y-3 mb-6">
+                <div className="space-y-3 mb-10">
                     {teams.map(team => (
-                        <div key={team.id || team.name} className="w-full flex items-center gap-2">
+                        <div key={team.id || team.name} className="flex items-center gap-3">
                             <button
                                 onClick={() => setSelectedTeamId(team.id!)}
-                                className="flex-grow bg-slate-700/50 text-slate-200 p-4 rounded-lg shadow-md hover:bg-slate-700 hover:text-white transition-all duration-200 flex items-center gap-4 text-left"
+                                className="flex-grow bg-card-dark/60 border border-border-gold/30 p-5 rounded-2xl shadow-md hover:border-primary/60 hover:bg-card-dark transition-all flex items-center gap-5 text-left group"
                             >
-                                {team.crestImage ? (
-                                    <img src={team.crestImage} alt="Escudo del equipo" className="w-10 h-10 rounded-full object-cover flex-shrink-0 bg-slate-900" />
-                                ) : (
-                                    <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center flex-shrink-0">
-                                        <ShieldCheckIcon className="w-6 h-6 text-slate-600" />
-                                    </div>
-                                )}
-                                <div className="flex-grow min-w-0">
-                                    <p className="font-semibold truncate">{team.name}</p>
-                                    <p className="text-xs text-slate-400 truncate">{team.rosterName}</p>
+                                <div className="size-14 rounded-2xl bg-background-dark border border-border-gold/20 flex items-center justify-center flex-shrink-0 group-hover:border-primary/40 transition-colors overflow-hidden">
+                                    {team.crestImage ? (
+                                        <img src={team.crestImage} alt="Escudo" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <span className="material-symbols-outlined text-slate-600 group-hover:text-primary transition-colors">shield</span>
+                                    )}
                                 </div>
+                                <div className="flex-grow min-w-0">
+                                    <p className="font-black text-white italic uppercase tracking-tight truncate text-lg group-hover:text-primary transition-colors">{team.name}</p>
+                                    <p className="text-xs text-slate-500 font-bold truncate mt-0.5">{team.rosterName}</p>
+                                </div>
+                                <span className="material-symbols-outlined text-slate-700 group-hover:text-primary transition-all group-hover:translate-x-1">chevron_right</span>
                             </button>
                             <button
                                 onClick={() => requestTeamDelete(team.id!)}
-                                className="flex-shrink-0 bg-red-800/50 text-red-400 p-4 rounded-lg shadow-md hover:bg-red-800 hover:text-white transition-colors"
+                                className="flex-shrink-0 bg-red-900/20 text-red-500/60 p-4 rounded-2xl border border-red-900/30 hover:bg-red-600 hover:text-white hover:border-red-600 transition-all"
                                 aria-label={`Eliminar equipo ${team.name}`}
                             >
-                                <TrashIcon className="w-6 h-6" />
+                                <TrashIcon className="w-5 h-5" />
                             </button>
                         </div>
                     ))}
                 </div>
             ) : (
-                <div className="text-center p-8 mb-6 bg-slate-900/50 rounded-lg border border-slate-700">
-                    <p className="text-slate-400">
-                        Aún no has creado ningún equipo. ¡Usa los botones de abajo para empezar!
+                <div className="text-center p-14 mb-10 bg-card-dark/30 rounded-[2rem] border border-border-gold/20">
+                    <span className="material-symbols-outlined text-5xl text-slate-700 mb-4 block">shield</span>
+                    <p className="text-slate-500 font-bold italic text-sm">
+                        Aún no has creado ningún equipo.
                     </p>
+                    <p className="text-slate-600 text-xs mt-1">¡Pulsa Crear Equipo para empezar tu legado!</p>
                 </div>
             )}
 
-            <button
-                onClick={() => setIsCreating(true)}
-                className="w-full bg-amber-500 text-slate-900 font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-500/50 transform hover:scale-105 transition-all duration-200"
-            >
-                Crear Nuevo Equipo
-            </button>
-            <div className="mt-8 pt-6 border-t border-slate-700">
-                <h3 className="text-xl font-semibold text-slate-300 mb-4">Opciones de Datos</h3>
-                <div className="flex flex-col sm:flex-row gap-4">
+            {/* Import / Export */}
+            <div className="pt-6 border-t border-white/5">
+                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.25em] italic mb-4">Gestión de Datos</h3>
+                <div className="flex flex-col sm:flex-row gap-3">
                     <button
                         onClick={handleImportClick}
-                        className="flex-1 flex items-center justify-center gap-2 bg-slate-600 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-slate-500 transition-colors"
+                        className="flex-1 flex items-center justify-center gap-2 bg-slate-800 border border-white/5 text-slate-300 font-black py-3 px-6 rounded-xl hover:border-primary/30 hover:text-white transition-all text-[10px] uppercase tracking-widest italic"
                         title="Importar equipos desde un archivo .json"
                     >
                         <UploadIcon />
@@ -306,8 +322,8 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                     </button>
                     <input type="file" accept=".json" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
                     <button
-                        onClick={() => teams.length > 0 ? setIsExportModalOpen(true) : alert("No hay equipos para exportar.")}
-                        className="flex-1 flex items-center justify-center gap-2 bg-sky-700 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-sky-600 transition-colors"
+                        onClick={() => teams.length > 0 ? setIsExportModalOpen(true) : alert('No hay equipos para exportar.')}
+                        className="flex-1 flex items-center justify-center gap-2 bg-primary/10 border border-primary/20 text-primary font-black py-3 px-6 rounded-xl hover:bg-primary hover:text-black transition-all text-[10px] uppercase tracking-widest italic"
                         title="Exportar equipos a un archivo .json"
                     >
                         <DownloadIcon />

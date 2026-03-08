@@ -10,6 +10,8 @@ import { useLanguage } from '../../contexts/LanguageContext';
 
 type SubView = 'hub' | 'teams' | 'skills' | 'star_players' | 'calculator' | 'inducements';
 
+const SKILL_CATEGORIES = ['General', 'Fuerza', 'Agilidad', 'Pase', 'Mutación'];
+
 interface OraclePageProps {
     onRequestTeamCreation?: (rosterName: string) => void;
 }
@@ -18,10 +20,16 @@ const OraclePage: React.FC<OraclePageProps> = ({ onRequestTeamCreation = () => {
     const { t } = useLanguage();
     const [activeView, setActiveView] = useState<SubView>('hub');
     const [selectedHubTeam, setSelectedHubTeam] = useState<string | null>(null);
+    const [initialSkillCategory, setInitialSkillCategory] = useState<string>('General');
 
     const handleBackToHub = () => {
         setActiveView('hub');
         setSelectedHubTeam(null);
+    };
+
+    const handleNavigateToSkills = (category: string) => {
+        setInitialSkillCategory(category);
+        setActiveView('skills');
     };
 
     const handleNavigateToTeam = (teamName: string) => {
@@ -135,8 +143,12 @@ const OraclePage: React.FC<OraclePageProps> = ({ onRequestTeamCreation = () => {
                             <h2 className="text-white text-xl font-black uppercase italic tracking-tighter">{t('oracle.hub.skills.title')}</h2>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                            {['General', 'Fuerza', 'Agilidad', 'Pase', 'Mutación'].map((cat, i) => (
-                                <button key={cat} className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${i === 0 ? 'bg-premium-gold text-black' : 'bg-black/40 text-slate-500 border border-white/5 hover:text-white'}`}>
+                            {SKILL_CATEGORIES.map((cat, i) => (
+                                <button
+                                    key={cat}
+                                    onClick={() => handleNavigateToSkills(cat)}
+                                    className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 ${i === 0 ? 'bg-premium-gold text-black' : 'bg-black/40 text-slate-500 border border-white/5 hover:text-white hover:bg-premium-gold/20 hover:border-premium-gold/30'}`}
+                                >
                                     {cat}
                                 </button>
                             ))}
@@ -214,14 +226,21 @@ const OraclePage: React.FC<OraclePageProps> = ({ onRequestTeamCreation = () => {
                 </h3>
                 <div className="flex flex-wrap gap-4">
                     {[
-                        { label: t('oracle.hub.recent.weather'), icon: 'device_thermostat' },
-                        { label: t('oracle.hub.recent.injuries'), icon: 'medication' },
-                        { label: t('oracle.hub.recent.throwFriend'), icon: 'sports_kabaddi' },
+                        { label: t('oracle.hub.recent.weather'), icon: 'device_thermostat', act: 'inducements' },
+                        { label: t('oracle.hub.recent.injuries'), icon: 'medication', act: 'inducements' },
+                        { label: t('oracle.hub.recent.throwFriend'), icon: 'sports_kabaddi', act: 'skills', cat: 'Fuerza' },
                         { label: t('oracle.hub.recent.stars'), icon: 'star', act: 'star_players' }
                     ].map((link) => (
                         <button
                             key={link.label}
-                            onClick={() => link.act && setActiveView(link.act as SubView)}
+                            onClick={() => {
+                                if (!link.act) return;
+                                if (link.act === 'skills' && (link as any).cat) {
+                                    handleNavigateToSkills((link as any).cat);
+                                } else {
+                                    setActiveView(link.act as SubView);
+                                }
+                            }}
                             className="px-6 py-3 bg-black/40 border border-white/5 rounded-2xl text-[10px] font-black text-slate-400 uppercase tracking-widest hover:border-premium-gold/40 hover:text-premium-gold hover:scale-105 transition-all flex items-center gap-3 shadow-lg"
                         >
                             <span className="material-symbols-outlined text-sm font-bold opacity-60">{link.icon}</span>
@@ -282,7 +301,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ onRequestTeamCreation = () => {
                                     initialTeamName={selectedHubTeam}
                                 />
                             )}
-                            {activeView === 'skills' && <Skills />}
+                            {activeView === 'skills' && <Skills initialCategory={initialSkillCategory} />}
                             {activeView === 'star_players' && <StarPlayers />}
                             {activeView === 'calculator' && (
                                 <div className="max-w-md mx-auto py-10 bg-zinc-900/40 p-8 rounded-[2.5rem] border border-white/5">

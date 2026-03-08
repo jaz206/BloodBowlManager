@@ -4,6 +4,8 @@ import type { Skill } from '../../types';
 import { useMasterData } from '../../hooks/useMasterData';
 import { useLanguage } from '../../contexts/LanguageContext';
 
+const SKILLS_PER_PAGE = 8;
+
 const Categories = [
     { id: 'General', label: 'General', icon: 'shield' },
     { id: 'Fuerza', label: 'Fuerza', icon: 'fitness_center' },
@@ -12,6 +14,15 @@ const Categories = [
     { id: 'Mutación', label: 'Mutación', icon: 'genetics' },
     { id: 'Rasgo', label: 'Rasgo', icon: 'star' },
 ];
+
+const OracleTips: Record<string, string> = {
+    General: 'Block y Dodge son las habilidades más universales. Prioriza Block en líneas de ataque.',
+    Fuerza: 'Golpe Mortífero (+1) es vital en Orcos y Enanos. Combínalo con Foul Appearance.',
+    Agilidad: 'Esquivar (Dodge) + Nerves of Steel convierte a cualquier receptor en una amenaza constante.',
+    Pase: 'Pase Seguro y Manos Seguras son la base de cualquier estrategia de bombardeo.',
+    Mutación: 'Brazo Extra es la mutación más disruptiva, especialmente en portadores de balón.',
+    Rasgo: 'Los rasgos son exclusivos de ciertos perfiles; consulta siempre la plantilla del equipo.',
+};
 
 const SkillCard: React.FC<{ skill: Skill; onClick: () => void; isSelected: boolean }> = ({ skill, onClick, isSelected }) => {
     return (
@@ -44,16 +55,29 @@ const SkillCard: React.FC<{ skill: Skill; onClick: () => void; isSelected: boole
     );
 };
 
-const Skills: React.FC = () => {
+interface SkillsProps {
+    initialCategory?: string;
+}
+
+const Skills: React.FC<SkillsProps> = ({ initialCategory }) => {
     const { skills, loading } = useMasterData();
     const { t } = useLanguage();
-    const [activeCategory, setActiveCategory] = useState('General');
+    const [activeCategory, setActiveCategory] = useState(initialCategory || 'General');
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedSkillName, setSelectedSkillName] = useState<string | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pinnedSkills, setPinnedSkills] = useState<string[]>([]);
+    const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+    const showToast = (msg: string) => {
+        setToastMessage(msg);
+        setTimeout(() => setToastMessage(null), 2500);
+    };
 
     const filteredSkills = useMemo(() => {
+        setCurrentPage(1); // Reset page on filter change
         return skills.filter(skill => {
-            const matchesCategory = activeCategory === 'Todos' || skill.category === activeCategory;
+            const matchesCategory = skill.category === activeCategory;
             const matchesSearch = !searchTerm ||
                 skill.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 skill.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -61,13 +85,25 @@ const Skills: React.FC = () => {
         });
     }, [activeCategory, searchTerm, skills]);
 
-    // Get the currently "Featured" skill (first in list or selected)
+    const totalPages = Math.ceil(filteredSkills.length / SKILLS_PER_PAGE);
+    const paginatedSkills = filteredSkills.slice((currentPage - 1) * SKILLS_PER_PAGE, currentPage * SKILLS_PER_PAGE);
+
     const featuredSkill = useMemo(() => {
         if (selectedSkillName) {
             return skills.find(s => s.name === selectedSkillName) || filteredSkills[0];
         }
         return filteredSkills[0];
     }, [selectedSkillName, filteredSkills, skills]);
+
+    const handlePinSkill = (skill: Skill) => {
+        if (pinnedSkills.includes(skill.name)) {
+            setPinnedSkills(prev => prev.filter(n => n !== skill.name));
+            showToast(`"${skill.name}" eliminada de tu referencia`);
+        } else {
+            setPinnedSkills(prev => [...prev, skill.name]);
+            showToast(`"${skill.name}" añadida a tu referencia`);
+        }
+    };
 
     if (loading) {
         return (
@@ -82,7 +118,22 @@ const Skills: React.FC = () => {
     }
 
     return (
-        <div className="flex flex-col lg:flex-row gap-8 pb-20">
+        <div className="flex flex-col lg:flex-row gap-8 pb-20 relative">
+            {/* Toast Notification */}
+            <AnimatePresence>
+                {toastMessage && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 20 }}
+                        className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-primary text-black font-black text-[10px] uppercase tracking-widest italic px-6 py-4 rounded-2xl shadow-2xl shadow-primary/20"
+                    >
+                        <span className="material-symbols-outlined text-sm align-middle mr-2">check_circle</span>
+                        {toastMessage}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Sidebar: Categories */}
             <aside className="lg:w-64 shrink-0 space-y-8">
                 <div>
@@ -93,8 +144,9 @@ const Skills: React.FC = () => {
                                 key={cat.id}
                                 onClick={() => {
                                     setActiveCategory(cat.id);
-                                    setSearchTerm(''); // Clear search when switching categories
+                                    setSearchTerm('');
                                     setSelectedSkillName(null);
+                                    setCurrentPage(1);
                                 }}
                                 className={`flex items-center gap-3 px-5 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${activeCategory === cat.id
                                         ? 'bg-primary text-black shadow-lg shadow-primary/20'
@@ -108,15 +160,33 @@ const Skills: React.FC = () => {
                     </nav>
                 </div>
 
-                <div className="p-6 rounded-3xl bg-surface-dark border border-primary/20 text-white shadow-2xl relative overflow-hidden group">
-                    <div className="absolute -right-4 -top-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <span className="material-symbols-outlined text-7xl text-primary font-black">psychology</span>
+                {/* My Reference / Oracle Tip */}
+                {pinnedSkills.length > 0 ? (
+                    <div className="p-6 rounded-3xl bg-surface-dark border border-primary/20 text-white shadow-2xl space-y-3">
+                        <h4 className="font-black text-xs mb-3 uppercase italic tracking-tighter text-primary flex items-center gap-2">
+                            <span className="material-symbols-outlined text-sm">bookmark</span>
+                            Mi Referencia
+                        </h4>
+                        {pinnedSkills.map(name => (
+                            <div key={name} className="flex items-center justify-between gap-2 py-1 border-b border-white/5 last:border-0">
+                                <span className="text-[10px] text-slate-300 font-black italic uppercase truncate">{name}</span>
+                                <button onClick={() => handlePinSkill({ name, category: '', description: '' })} className="text-slate-600 hover:text-red-400 transition-colors shrink-0">
+                                    <span className="material-symbols-outlined text-xs">close</span>
+                                </button>
+                            </div>
+                        ))}
                     </div>
-                    <h4 className="font-black text-xs mb-3 uppercase italic tracking-tighter text-primary">Consejo del Oráculo</h4>
-                    <p className="text-[11px] text-accent-gold leading-relaxed italic font-medium">
-                        Las habilidades de <strong className="text-primary uppercase">Fuerza</strong> son vitales para equipos como Orcos o Enanos. ¡Prioriza Golpe Mortífero!
-                    </p>
-                </div>
+                ) : (
+                    <div className="p-6 rounded-3xl bg-surface-dark border border-primary/20 text-white shadow-2xl relative overflow-hidden group">
+                        <div className="absolute -right-4 -top-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                            <span className="material-symbols-outlined text-7xl text-primary font-black">psychology</span>
+                        </div>
+                        <h4 className="font-black text-xs mb-3 uppercase italic tracking-tighter text-primary">Consejo del Oráculo</h4>
+                        <p className="text-[11px] text-accent-gold leading-relaxed italic font-medium">
+                            {OracleTips[activeCategory] || 'Selecciona una habilidad para ver su descripción completa.'}
+                        </p>
+                    </div>
+                )}
             </aside>
 
             {/* Content Area */}
@@ -130,18 +200,18 @@ const Skills: React.FC = () => {
                         type="text"
                         placeholder="Buscar habilidad por nombre o efecto..."
                         value={searchTerm}
-                        onChange={e => setSearchTerm(e.target.value)}
+                        onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                         className="w-full bg-surface-dark border border-primary/10 text-white text-xs rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-primary/50 transition-all font-medium placeholder:text-slate-600 shadow-inner"
                     />
                 </div>
 
-                {/* Header Information */}
+                {/* Header */}
                 <div className="flex items-center justify-between border-b border-white/5 pb-4">
                     <h2 className="text-2xl font-black text-slate-100 uppercase italic tracking-tighter">
                         Habilidades: <span className="text-primary">{activeCategory}</span>
                     </h2>
                     <span className="text-[10px] text-accent-gold uppercase font-black tracking-widest opacity-60">
-                        Mostrando {filteredSkills.length} resultados
+                        {filteredSkills.length} resultados
                     </span>
                 </div>
 
@@ -169,7 +239,7 @@ const Skills: React.FC = () => {
                                         </span>
                                         <span className="flex items-center gap-1 text-[8px] text-accent-gold font-black uppercase tracking-[0.3em]">
                                             <span className="material-symbols-outlined text-sm text-primary">bolt</span>
-                                            Nivel Pro
+                                            {featuredSkill.category}
                                         </span>
                                     </div>
                                     <h3 className="text-4xl md:text-6xl font-black text-slate-100 uppercase italic tracking-tighter leading-none">
@@ -178,34 +248,24 @@ const Skills: React.FC = () => {
                                     <p className="text-lg md:text-xl text-accent-gold leading-relaxed font-medium italic max-w-2xl border-l-2 border-primary/30 pl-6">
                                         {featuredSkill.description}
                                     </p>
-                                    <div className="flex flex-wrap gap-8 pt-4">
-                                        <div className="flex flex-col">
-                                            <span className="text-[9px] text-primary uppercase font-black tracking-widest mb-1 opacity-60">Uso obligatorio</span>
-                                            <span className="text-slate-100 font-black italic text-sm">Depende de la Regla</span>
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-[9px] text-primary uppercase font-black tracking-widest mb-1 opacity-60">Tipo</span>
-                                            <span className="text-slate-100 font-black italic text-sm">{featuredSkill.category}</span>
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-[9px] text-primary uppercase font-black tracking-widest mb-1 opacity-60">Frecuencia</span>
-                                            <span className="text-slate-100 font-black italic text-sm">Alta</span>
-                                        </div>
-                                    </div>
                                 </div>
                                 <div className="flex flex-col gap-3 w-full md:w-64">
-                                    <button className="w-full py-4 bg-primary text-black font-black uppercase tracking-widest text-[10px] rounded-2xl transition-all transform hover:scale-105 active:scale-95 shadow-xl shadow-primary/10 italic">
-                                        Añadir a Referencia
-                                    </button>
-                                    <button className="w-full py-4 bg-background-dark/80 border border-primary/20 text-slate-100 font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-primary/5 transition-all italic">
-                                        Ver Regla Completa
+                                    <button
+                                        onClick={() => handlePinSkill(featuredSkill)}
+                                        className={`w-full py-4 font-black uppercase tracking-widest text-[10px] rounded-2xl transition-all transform hover:scale-105 active:scale-95 shadow-xl italic flex items-center justify-center gap-2 ${pinnedSkills.includes(featuredSkill.name)
+                                                ? 'bg-primary/20 text-primary border border-primary/50'
+                                                : 'bg-primary text-black shadow-primary/10'
+                                            }`}
+                                    >
+                                        <span className="material-symbols-outlined text-sm">{pinnedSkills.includes(featuredSkill.name) ? 'bookmark_added' : 'bookmark_add'}</span>
+                                        {pinnedSkills.includes(featuredSkill.name) ? 'En Mi Referencia' : 'Añadir a Referencia'}
                                     </button>
                                 </div>
                             </div>
                         </motion.div>
                     ) : (
                         <div className="py-20 text-center bg-surface-dark border border-white/5 rounded-[2.5rem] italic text-slate-500 uppercase tracking-widest text-xs">
-                            No se encontraron habilidades que coincidan con los filtros
+                            No se encontraron habilidades
                         </div>
                     )}
                 </AnimatePresence>
@@ -213,7 +273,7 @@ const Skills: React.FC = () => {
                 {/* Skills Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6">
                     <AnimatePresence mode="popLayout">
-                        {filteredSkills.map((skill) => (
+                        {paginatedSkills.map((skill) => (
                             <SkillCard
                                 key={skill.name}
                                 skill={skill}
@@ -224,13 +284,33 @@ const Skills: React.FC = () => {
                     </AnimatePresence>
                 </div>
 
-                {/* Pagination UI Placeholder */}
-                {filteredSkills.length > 8 && (
-                    <div className="pt-10 flex justify-center gap-3">
-                        <button className="size-12 flex items-center justify-center rounded-2xl bg-primary text-black font-black italic text-xs shadow-xl shadow-primary/20">1</button>
-                        <button className="size-12 flex items-center justify-center rounded-2xl bg-surface-dark border border-primary/10 text-accent-gold font-black hover:border-primary transition-all text-xs italic">2</button>
-                        <button className="size-12 flex items-center justify-center rounded-2xl bg-surface-dark border border-primary/10 text-accent-gold font-black hover:border-primary transition-all text-xs italic">3</button>
-                        <button className="size-12 flex items-center justify-center rounded-2xl bg-surface-dark border border-primary/10 text-accent-gold font-black hover:border-primary transition-all text-xs italic">
+                {/* Real Pagination */}
+                {totalPages > 1 && (
+                    <div className="pt-10 flex justify-center gap-2 flex-wrap">
+                        <button
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                            className="size-12 flex items-center justify-center rounded-2xl bg-surface-dark border border-primary/10 text-accent-gold font-black hover:border-primary transition-all text-xs italic disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                            <span className="material-symbols-outlined text-sm font-bold">chevron_left</span>
+                        </button>
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                            <button
+                                key={page}
+                                onClick={() => setCurrentPage(page)}
+                                className={`size-12 flex items-center justify-center rounded-2xl font-black italic text-xs transition-all ${currentPage === page
+                                        ? 'bg-primary text-black shadow-xl shadow-primary/20'
+                                        : 'bg-surface-dark border border-primary/10 text-accent-gold hover:border-primary'
+                                    }`}
+                            >
+                                {page}
+                            </button>
+                        ))}
+                        <button
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages}
+                            className="size-12 flex items-center justify-center rounded-2xl bg-surface-dark border border-primary/10 text-accent-gold font-black hover:border-primary transition-all text-xs italic disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
                             <span className="material-symbols-outlined text-sm font-bold">chevron_right</span>
                         </button>
                     </div>

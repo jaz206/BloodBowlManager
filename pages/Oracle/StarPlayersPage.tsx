@@ -83,14 +83,11 @@ const StarPlayerCard: React.FC<{
                 </div>
 
                 {/* Footer */}
-                <div className="pt-4 border-t border-border-gold/30 flex justify-between items-center">
+                <div className="pt-4 border-t border-border-gold/30">
                     <div className="flex flex-col">
                         <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest">Coste</span>
                         <span className="text-primary font-black text-lg italic leading-none">{(player.cost / 1000)}k MO</span>
                     </div>
-                    <button className="bg-border-gold/50 hover:bg-primary hover:text-background-dark text-slate-100 font-black py-2 px-4 rounded-lg text-[10px] transition-all uppercase tracking-tighter italic">
-                        Detalles
-                    </button>
                 </div>
             </div>
         </motion.div>
@@ -104,6 +101,12 @@ const StarPlayers: React.FC = () => {
     const [selectedFaction, setSelectedFaction] = useState('Todas');
     const [selectedPlayerName, setSelectedPlayerName] = useState<string | null>(null);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+    const showToast = (msg: string) => {
+        setToastMessage(msg);
+        setTimeout(() => setToastMessage(null), 2500);
+    };
 
     const factions = useMemo(() => {
         const all = new Set<string>();
@@ -138,7 +141,21 @@ const StarPlayers: React.FC = () => {
     }
 
     return (
-        <div className="space-y-10 pb-20 max-w-7xl mx-auto">
+        <div className="space-y-10 pb-20 max-w-7xl mx-auto relative">
+            {/* Toast Notification */}
+            <AnimatePresence>
+                {toastMessage && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 20 }}
+                        className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-primary text-black font-black text-[10px] uppercase tracking-widest italic px-6 py-4 rounded-2xl shadow-2xl shadow-primary/20 flex items-center gap-2"
+                    >
+                        <span className="material-symbols-outlined text-sm">check_circle</span>
+                        {toastMessage}
+                    </motion.div>
+                )}
+            </AnimatePresence>
             {/* Breadcrumbs */}
             <nav className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
                 <span className="text-slate-500">Oráculo</span>
@@ -156,10 +173,6 @@ const StarPlayers: React.FC = () => {
                         Consulta las leyendas vivas de los campos de Blood Bowl. Contrataciones de élite para entrenadores con ambición.
                     </p>
                 </div>
-                <button className="bg-primary text-background-dark px-8 py-3 rounded-xl font-black text-[10px] flex items-center gap-3 hover:bg-primary-dark transition-all uppercase tracking-[0.15em] shadow-xl shadow-primary/10 italic">
-                    <span className="material-symbols-outlined text-lg">add_circle</span>
-                    Nuevo Jugador
-                </button>
             </div>
 
             {/* Filters */}
@@ -313,7 +326,10 @@ const StarPlayers: React.FC = () => {
                                         {selectedPlayer.cost.toLocaleString('es-ES')} <span className="text-base">M.O.</span>
                                     </p>
                                 </div>
-                                <button className="w-full md:w-auto bg-background-dark text-primary px-10 py-5 rounded-2xl font-black uppercase italic tracking-widest text-xs hover:shadow-2xl transition-all border-2 border-background-dark/20 relative z-10">
+                                <button
+                                    onClick={() => showToast(`¡${selectedPlayer.name} anotado para contratación!`)}
+                                    className="w-full md:w-auto bg-background-dark text-primary px-10 py-5 rounded-2xl font-black uppercase italic tracking-widest text-xs hover:shadow-2xl transition-all border-2 border-background-dark/20 relative z-10"
+                                >
                                     Contratar Ahora
                                 </button>
                             </motion.div>

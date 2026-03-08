@@ -3,8 +3,33 @@ import type { Play, PlayerPosition, ManagedTeam, ManagedPlayer, BoardToken } fro
 import { motion, AnimatePresence } from 'framer-motion';
 
 const MAX_TOKENS = 11;
-const GRID_COLS = 26; // Professional Blood Bowl pitch is 26 squares long
-const GRID_ROWS = 15; // and 15 squares wide (including wide zones)
+const GRID_COLS = 26;
+const GRID_ROWS = 15;
+
+type ActiveTool = 'move' | 'pass' | 'defense' | null;
+
+const FORMATION_PRESETS: Record<string, { position: string; x: number; y: number }[]> = {
+  'Defensa Estándar': [
+    { position: 'Línea', x: 13, y: 7 }, { position: 'Línea', x: 13, y: 5 }, { position: 'Línea', x: 13, y: 9 },
+    { position: 'Blitzer', x: 11, y: 4 }, { position: 'Blitzer', x: 11, y: 10 },
+    { position: 'Corredor', x: 9, y: 7 }, { position: 'Línea', x: 9, y: 5 }, { position: 'Línea', x: 9, y: 9 },
+    { position: 'Receptor', x: 6, y: 4 }, { position: 'Receptor', x: 6, y: 10 }, { position: 'Lanzador', x: 5, y: 7 },
+  ],
+  'Ataque Jaula': [
+    { position: 'Línea', x: 13, y: 7 }, { position: 'Línea', x: 13, y: 6 }, { position: 'Línea', x: 13, y: 8 },
+    { position: 'Blitzer', x: 11, y: 6 }, { position: 'Blitzer', x: 11, y: 8 },
+    { position: 'Lanzador', x: 10, y: 7 }, { position: 'Corredor', x: 9, y: 7 },
+    { position: 'Receptor', x: 7, y: 3 }, { position: 'Receptor', x: 7, y: 11 },
+    { position: 'Línea', x: 10, y: 5 }, { position: 'Línea', x: 10, y: 9 },
+  ],
+  'Presión Lateral': [
+    { position: 'Blitzer', x: 13, y: 3 }, { position: 'Blitzer', x: 13, y: 11 },
+    { position: 'Línea', x: 13, y: 7 }, { position: 'Línea', x: 12, y: 5 }, { position: 'Línea', x: 12, y: 9 },
+    { position: 'Receptor', x: 10, y: 1 }, { position: 'Receptor', x: 10, y: 13 },
+    { position: 'Corredor', x: 9, y: 7 }, { position: 'Lanzador', x: 7, y: 7 },
+    { position: 'Línea', x: 8, y: 5 }, { position: 'Línea', x: 8, y: 9 },
+  ],
+};
 
 const positionConfig: Record<string, { icon: string; border: string; label: string }> = {
   Blitzer: { icon: 'swords', border: 'border-primary', label: 'BZ' },
@@ -24,11 +49,45 @@ interface PlaysProps {
 
 const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDeletePlay }) => {
   const [tokens, setTokens] = useState<BoardToken[]>([]);
+  const [tokenHistory, setTokenHistory] = useState<BoardToken[][]>([[]]);
+  const [historyIndex, setHistoryIndex] = useState(0);
   const [playName, setPlayName] = useState('');
   const [selectedPlayId, setSelectedPlayId] = useState<string | undefined>(plays.length > 0 ? plays[0].id : undefined);
   const [selectedTeamId, setSelectedTeamId] = useState<string>('');
   const [selectedPlayer, setSelectedPlayer] = useState<ManagedPlayer | null>(null);
   const [zoom, setZoom] = useState(1);
+  const [activeTool, setActiveTool] = useState<ActiveTool>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 2500);
+  };
+
+  const pushHistory = (newTokens: BoardToken[]) => {
+    setTokenHistory(prev => {
+      const sliced = prev.slice(0, historyIndex + 1);
+      return [...sliced, newTokens];
+    });
+    setHistoryIndex(prev => prev + 1);
+    setTokens(newTokens);
+  };
+
+  const handleUndo = () => {
+    if (historyIndex <= 0) return;
+    const newIndex = historyIndex - 1;
+    setHistoryIndex(newIndex);
+    setTokens(tokenHistory[newIndex] || []);
+  };
+
+  const handleRedo = () => {
+    if (historyIndex >= tokenHistory.length - 1) return;
+    const newIndex = historyIndex + 1;
+    setHistoryIndex(newIndex);
+    setTokens(tokenHistory[newIndex]);
+  };
 
   const fieldRef = useRef<HTMLDivElement>(null);
   const draggedTokenRef = useRef<{ id: number } | null>(null);
@@ -97,26 +156,26 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
 
   const handleAddToken = (position: PlayerPosition) => {
     if (tokens.length < MAX_TOKENS) {
-      setTokens(prev => [...prev, {
+      const newTokens = [...tokens, {
         id: Date.now(),
-        x: 4, // Defensive line start
+        x: 4,
         y: Math.floor(GRID_ROWS / 2),
         position,
-        teamSide: 'home'
-      }]);
+        teamSide: 'home' as const
+      }];
+      pushHistory(newTokens);
     }
   };
 
   const handleClearField = () => {
-    setTokens([]);
+    pushHistory([]);
     setSelectedPlayer(null);
   };
 
   const handleSavePlay = () => {
-    if (!playName.trim() || tokens.length === 0) {
-      alert('Introduce un nombre y posiciona jugadores.');
-      return;
-    }
+    if (!playName.trim()) { setSaveError('Introduce un nombre para la jugada.'); return; }
+    if (tokens.length === 0) { setSaveError('Posiciona al menos un jugador.'); return; }
+    setSaveError(null);
     const existingPlay = plays.find(p => p.name.toLowerCase() === playName.trim().toLowerCase());
     const newPlay: Play = {
       id: existingPlay?.id,
@@ -126,6 +185,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     };
     onSavePlay(newPlay);
     setPlayName('');
+    showToast('Jugada guardada correctamente.');
   };
 
   const handleLoadPlay = (id: string) => {
@@ -144,19 +204,37 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
       const newTokens: BoardToken[] = team.players.slice(0, 11).map((player, index) => ({
         id: player.id,
         position: mapPositionToType(player.position),
-        x: index < 3 ? 12 : (index < 7 ? 10 : 8), // Basic formation
+        x: index < 3 ? 12 : (index < 7 ? 10 : 8),
         y: 4 + (index % 7),
         playerData: player,
         teamSide: 'home'
       }));
-      setTokens(newTokens);
+      pushHistory(newTokens);
     }
   };
 
   const handleDeletePlay = (id: string) => {
-    if (confirm('¿Borrar esta jugada?')) {
-      onDeletePlay(id);
-    }
+    setDeleteConfirmId(id);
+  };
+
+  const confirmDeletePlay = (id: string) => {
+    onDeletePlay(id);
+    setDeleteConfirmId(null);
+    showToast('Jugada eliminada.');
+  };
+
+  const handleApplyPreset = (presetName: string) => {
+    const preset = FORMATION_PRESETS[presetName];
+    if (!preset) return;
+    const newTokens: BoardToken[] = preset.map((p, index) => ({
+      id: Date.now() + index,
+      position: p.position as PlayerPosition,
+      x: p.x,
+      y: p.y,
+      teamSide: 'home'
+    }));
+    pushHistory(newTokens);
+    showToast(`Formación "${presetName}" aplicada.`);
   };
 
   const handleTokenClick = (id: number) => {
@@ -168,7 +246,46 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
   };
 
   return (
-    <div className="flex h-screen w-full flex-col bg-background-dark text-slate-100 overflow-hidden font-display">
+    <div className="flex h-screen w-full flex-col bg-background-dark text-slate-100 overflow-hidden font-display relative">
+      {/* Toast */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed bottom-14 left-1/2 -translate-x-1/2 z-[100] bg-primary text-black font-black text-[10px] uppercase tracking-widest italic px-6 py-4 rounded-2xl shadow-2xl"
+          >
+            {toastMessage}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Confirm Modal */}
+      <AnimatePresence>
+        {deleteConfirmId && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 z-[200] flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.9 }}
+              className="bg-panel-dark border border-red-500/30 rounded-[2rem] p-8 max-w-sm w-full shadow-2xl"
+            >
+              <h3 className="text-white font-black italic uppercase text-xl mb-2">¿Borrar jugada?</h3>
+              <p className="text-slate-400 text-xs mb-6 font-medium">Esta acción no se puede deshacer.</p>
+              <div className="flex gap-3">
+                <button onClick={() => setDeleteConfirmId(null)} className="flex-1 py-3 rounded-xl bg-white/5 text-slate-300 font-black text-xs uppercase tracking-widest hover:bg-white/10 transition-all">Cancelar</button>
+                <button onClick={() => confirmDeletePlay(deleteConfirmId)} className="flex-1 py-3 rounded-xl bg-red-600 text-white font-black text-xs uppercase tracking-widest hover:bg-red-500 transition-all">Borrar</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <style>{`
         .pitch-grid {
           background-image: 
@@ -202,10 +319,12 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
           <div className="flex items-center gap-3">
             <input
               value={playName}
-              onChange={e => setPlayName(e.target.value)}
+              onChange={e => { setPlayName(e.target.value); setSaveError(null); }}
               placeholder="Nueva Estrategia..."
-              className="bg-transparent border-none outline-none text-sm font-semibold text-slate-300 placeholder:text-slate-600 w-48"
+              className={`bg-transparent border-none outline-none text-sm font-semibold placeholder:text-slate-600 w-48 ${saveError ? 'text-red-400' : 'text-slate-300'
+                }`}
             />
+            {saveError && <span className="text-[9px] text-red-400 font-bold italic">{saveError}</span>}
           </div>
         </div>
 
@@ -282,18 +401,23 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
           <section className="space-y-4">
             <h2 className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Herramientas</h2>
             <div className="flex flex-col gap-2">
-              <button className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary border border-primary/20 font-bold text-[10px] uppercase tracking-widest hover:bg-primary/20 transition-all">
-                <span className="material-symbols-outlined text-sm">brush</span>
-                Ruta Movimiento
-              </button>
-              <button className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-white/5 hover:text-slate-300 transition-all font-bold text-[10px] uppercase tracking-widest">
-                <span className="material-symbols-outlined text-sm">near_me</span>
-                Pase / Trayectoria
-              </button>
-              <button className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-white/5 hover:text-slate-300 transition-all font-bold text-[10px] uppercase tracking-widest">
-                <span className="material-symbols-outlined text-sm">groups</span>
-                Zonas Defensa
-              </button>
+              {([
+                { id: 'move', icon: 'brush', label: 'Ruta Movimiento' },
+                { id: 'pass', icon: 'near_me', label: 'Pase / Trayectoria' },
+                { id: 'defense', icon: 'groups', label: 'Zonas Defensa' },
+              ] as { id: ActiveTool; icon: string; label: string }[]).map(tool => (
+                <button
+                  key={tool.id}
+                  onClick={() => setActiveTool(prev => prev === tool.id ? null : tool.id)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all ${activeTool === tool.id
+                      ? 'bg-primary text-black shadow-lg shadow-primary/20'
+                      : 'text-slate-500 hover:bg-white/5 hover:text-slate-300'
+                    }`}
+                >
+                  <span className="material-symbols-outlined text-sm">{tool.icon}</span>
+                  {tool.label}
+                </button>
+              ))}
               <button onClick={handleClearField} className="flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-500/10 transition-all font-bold text-[10px] uppercase tracking-widest mt-2">
                 <span className="material-symbols-outlined text-sm">backspace</span>
                 Limpiar Todo
@@ -367,8 +491,20 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
               </button>
             </div>
             <div className="w-px h-6 bg-white/10"></div>
-            <button className="p-2 rounded-xl hover:bg-white/5 text-slate-500"><span className="material-symbols-outlined text-sm">undo</span></button>
-            <button className="p-2 rounded-xl hover:bg-white/5 text-slate-500"><span className="material-symbols-outlined text-sm">redo</span></button>
+            <button
+              onClick={handleUndo}
+              disabled={historyIndex <= 0}
+              className="p-2 rounded-xl hover:bg-white/5 text-slate-500 hover:text-white transition-all disabled:opacity-20 disabled:cursor-not-allowed"
+            >
+              <span className="material-symbols-outlined text-sm">undo</span>
+            </button>
+            <button
+              onClick={handleRedo}
+              disabled={historyIndex >= tokenHistory.length - 1}
+              className="p-2 rounded-xl hover:bg-white/5 text-slate-500 hover:text-white transition-all disabled:opacity-20 disabled:cursor-not-allowed"
+            >
+              <span className="material-symbols-outlined text-sm">redo</span>
+            </button>
             <div className="w-px h-6 bg-white/10"></div>
             <button className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-red-500/10 text-red-500/60 hover:text-red-500 transition-all">
               <span className="material-symbols-outlined text-sm">grid_view</span>
