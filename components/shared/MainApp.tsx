@@ -266,7 +266,15 @@ const MainApp: React.FC = () => {
             </div>
           ) : (
             <div className="animate-in fade-in zoom-in-95 duration-500">
-              {activeView === 'home' && <Home onNavigate={(v) => setActiveView(v)} managedTeams={managedTeams} competitions={leagues as any} recentEvents={recentEvents} />}
+              {activeView === 'home' && (
+                <Home
+                  onNavigate={(v) => setActiveView(v)}
+                  onCreateTeam={() => { setRequestedRoster(""); setActiveView('guild'); }}
+                  managedTeams={managedTeams}
+                  competitions={leagues as any}
+                  recentEvents={recentEvents}
+                />
+              )}
               {activeView === 'oracle' && <OraclePage onRequestTeamCreation={(r) => { setRequestedRoster(r); setActiveView('guild'); }} />}
               {activeView === 'guild' && (
                 <GuildPage

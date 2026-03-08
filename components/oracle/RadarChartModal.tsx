@@ -5,9 +5,10 @@ import type { Team } from '../../types';
 interface RadarChartModalProps {
   team: Team;
   onClose: () => void;
+  customTitle?: React.ReactNode;
 }
 
-const RadarChartModal: React.FC<RadarChartModalProps> = ({ team, onClose }) => {
+const RadarChartModal: React.FC<RadarChartModalProps> = ({ team, onClose, customTitle }) => {
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
       onClose();
@@ -23,7 +24,9 @@ const RadarChartModal: React.FC<RadarChartModalProps> = ({ team, onClose }) => {
     >
       <div className="glass-panel max-w-lg w-full transform animate-slide-in-up border-white/10 overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)]">
         <div className="flex justify-between items-center p-6 border-b border-white/5 bg-white/5">
-          <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter leading-none">Análisis Táctico: {team.name}</h2>
+          {customTitle ? customTitle : (
+            <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter leading-none">Análisis Táctico: {team.name}</h2>
+          )}
           <button
             onClick={onClose}
             className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-white/5 transition-premium"

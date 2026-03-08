@@ -48,11 +48,11 @@ interface TeamManagerProps {
 
 const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUpdate, onTeamDelete, requestedRoster, onRosterRequestHandled = () => { }, isGuest }) => {
     const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
-    const [isCreating, setIsCreating] = useState(false);
+    const [isCreating, setIsCreating] = useState(requestedRoster !== null && requestedRoster !== undefined);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
     const [selectedTeamsForExport, setSelectedTeamsForExport] = useState<string[]>([]);
-    const [initialRosterForCreation, setInitialRosterForCreation] = useState<string | null>(null);
+    const [initialRosterForCreation, setInitialRosterForCreation] = useState<string | null>(requestedRoster ?? null);
     const [confirmation, setConfirmation] = useState<{ message: string; onConfirm: () => void; } | null>(null);
 
     const selectedTeam = useMemo(() => {
@@ -61,7 +61,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
     }, [selectedTeamId, teams]);
 
     useEffect(() => {
-        if (requestedRoster) {
+        if (requestedRoster !== null && requestedRoster !== undefined) {
             setInitialRosterForCreation(requestedRoster);
             setIsCreating(true);
             onRosterRequestHandled();

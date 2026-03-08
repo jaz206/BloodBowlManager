@@ -4,12 +4,13 @@ import { useLanguage } from '../../contexts/LanguageContext';
 
 interface HomeProps {
     onNavigate: (view: any) => void;
+    onCreateTeam?: () => void;
     managedTeams: ManagedTeam[];
     competitions: Competition[];
     recentEvents: GameEvent[];
 }
 
-const Home: React.FC<HomeProps> = ({ onNavigate, managedTeams }) => {
+const Home: React.FC<HomeProps> = ({ onNavigate, onCreateTeam, managedTeams }) => {
     const { t } = useLanguage();
     const [searchTerm, setSearchTerm] = useState('');
 
@@ -43,7 +44,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate, managedTeams }) => {
 
                     <div className="flex flex-wrap gap-4">
                         <button
-                            onClick={() => onNavigate('guild')}
+                            onClick={onCreateTeam || (() => onNavigate('guild'))}
                             className="bg-premium-gold hover:bg-white hover:scale-105 text-black font-black px-10 py-4 rounded-xl flex items-center gap-3 transition-all active:scale-95 uppercase tracking-tighter text-sm shadow-[0_10px_30px_rgba(202,138,4,0.2)]"
                         >
                             <span className="material-symbols-outlined font-bold">add_circle</span>

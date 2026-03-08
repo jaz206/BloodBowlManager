@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { teamsData as staticTeams } from '../../data/teams';
 import { skillsData } from '../../data/skills';
 import type { Team, Skill } from '../../types';
@@ -11,271 +12,181 @@ import ImageModal from '../../components/common/ImageModal';
 import RadarChart from '../../components/oracle/RadarChart';
 import RadarChartModal from '../../components/oracle/RadarChartModal';
 
-const TeamCard: React.FC<{ team: Team, onViewRoster: () => void, onViewImage: (e: React.MouseEvent) => void }> = ({ team, onViewRoster, onViewImage }) => {
-    return (
-        <div
-            onClick={onViewRoster}
-            className="group bg-slate-800 rounded-lg shadow-lg border border-slate-700 overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-amber-500/10 hover:border-slate-600 hover:-translate-y-1"
-            role="button"
-            tabIndex={0}
-            onKeyPress={(e) => (e.key === 'Enter' || e.key === ' ') && onViewRoster()}
-        >
-            <div className="relative">
-                <img
-                    src={team.image}
-                    alt={`Arte de ${team.name}`}
-                    className="w-full h-40 object-cover object-center transition-transform duration-300 group-hover:scale-110"
-                    onClick={onViewImage}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-800 via-slate-800/50 to-transparent"></div>
+const PopularTeamCard: React.FC<{ team: Team; icon: string; subtitle: string; onClick: () => void }> = ({ team, icon, subtitle, onClick }) => (
+    <motion.div
+        whileHover={{ y: -5 }}
+        onClick={onClick}
+        className="group relative overflow-hidden rounded-xl border border-primary/20 bg-background-dark/50 hover:border-primary transition-all cursor-pointer"
+    >
+        <div className="h-32 w-full bg-gradient-to-br from-primary/40 to-background-dark">
+            <img
+                src={team.image}
+                alt={team.name}
+                className="w-full h-full object-cover opacity-50 group-hover:opacity-70 transition-opacity"
+            />
+        </div>
+        <div className="p-4 relative -mt-8">
+            <div className="size-16 rounded-xl bg-background-dark border-2 border-primary flex items-center justify-center mb-3">
+                <span className="material-symbols-outlined text-primary text-3xl">{icon}</span>
             </div>
-            <div className="p-4 relative">
-                <h3 className="text-lg font-bold text-amber-400 truncate group-hover:text-amber-300">{team.name}</h3>
-                <div className="flex justify-between items-center text-xs text-slate-400 mt-1">
-                    <span>Tier: {team.tier}</span>
-                    <span>Reroll: {team.rerollCost / 1000}k</span>
-                </div>
+            <h3 className="text-xl font-display font-bold text-slate-100">{team.name}</h3>
+            <div className="flex items-center gap-2 mt-1">
+                <span className="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-[10px] font-bold uppercase tracking-tight">Tier {team.tier}</span>
+                <span className="text-slate-400 text-xs italic">{subtitle}</span>
             </div>
         </div>
-    );
-};
+    </motion.div>
+);
 
-const TeamModal: React.FC<{ team: Team, onSkillClick: (skillName: string) => void, onClose: () => void, onImageClick: (e: React.MouseEvent) => void, onRequestTeamCreation: (rosterName: string) => void, onUpdateImage: (teamName: string, url: string) => Promise<void> }> = ({ team, onSkillClick, onClose, onImageClick, onRequestTeamCreation, onUpdateImage }) => {
+const TeamArticle: React.FC<{
+    team: Team;
+    onViewRoster: () => void;
+    onSkillClick: (skill: string) => void;
+    isAdmin: boolean;
+    onUpdateImage: (name: string, url: string) => Promise<void>;
+}> = ({ team, onViewRoster, onSkillClick, isAdmin, onUpdateImage }) => {
     const [isRadarModalOpen, setIsRadarModalOpen] = useState(false);
-    const { isAdmin } = useAuth() as { isAdmin: boolean };
-    const [isEditingImage, setIsEditingImage] = useState(false);
-    const [isUploading, setIsUploading] = useState(false);
-    const [newImageUrl, setNewImageUrl] = useState(team.image || '');
-
-    const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-        if (e.target === e.currentTarget) onClose();
-    };
-
-    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file || !isAdmin || !storage) return;
-
-        setIsUploading(true);
-        try {
-            const storageRef = ref(storage, `teams/${team.name.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`);
-            const snapshot = await uploadBytes(storageRef, file);
-            const url = await getDownloadURL(snapshot.ref);
-            setNewImageUrl(url);
-            // Auto-save the new URL to Firestore
-            await onUpdateImage(team.name, url);
-            setIsEditingImage(false);
-        } catch (error) {
-            console.error("Error uploading image:", error);
-            alert("Error al subir la imagen.");
-        } finally {
-            setIsUploading(false);
-        }
-    };
 
     return (
-        <>
-            <div
-                className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[100] p-2 sm:p-4 animate-fade-in-fast"
-                onClick={handleBackdropClick}
-                role="dialog"
-                aria-modal="true"
-            >
-                <div className="bg-slate-900 border border-white/10 shadow-2xl rounded-2xl max-w-6xl w-full mx-auto transform animate-slide-in-up max-h-[92vh] flex flex-col overflow-hidden relative">
-                    <div className="flex justify-between items-center p-4 sm:p-6 border-b border-white/5 bg-white/5">
-                        <h2 className="text-2xl sm:text-3xl font-display font-black text-amber-400 tracking-tight italic uppercase">{team.name}</h2>
-                        <div className="flex items-center gap-2 sm:gap-4">
-                            <button
-                                onClick={() => { onRequestTeamCreation(team.name); onClose(); }}
-                                className="bg-amber-500 text-slate-900 font-bold py-2.5 px-4 sm:px-6 rounded-full shadow-lg hover:bg-amber-400 transition-premium text-xs sm:text-sm uppercase tracking-widest"
-                            >
-                                Crear equipo
-                            </button>
-                            <button onClick={onClose} className="text-slate-400 hover:text-white hover:bg-white/10 p-2 rounded-full transition-all">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
+        <motion.article
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="bg-background-dark/30 border border-primary/10 rounded-2xl overflow-hidden shadow-xl"
+        >
+            <div className="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+                {/* Visual Section */}
+                <div className="lg:col-span-4 flex flex-col items-center text-center border-b lg:border-b-0 lg:border-r border-primary/10 pb-8 lg:pb-0 lg:pr-8">
+                    <div className="size-32 rounded-3xl bg-primary/10 border border-primary/30 flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(245,159,10,0.1)] overflow-hidden group">
+                        {team.image ? (
+                            <img src={team.image} alt={team.name} className="w-full h-full object-contain p-2 group-hover:scale-110 transition-transform" />
+                        ) : (
+                            <span className="material-symbols-outlined text-primary text-6xl">groups</span>
+                        )}
+                    </div>
+                    <h3 className="text-3xl font-display font-bold text-slate-100">{team.name}</h3>
+                    <div className="mt-4 flex flex-wrap justify-center gap-2">
+                        <span className="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-bold border border-green-500/20 uppercase tracking-tighter">Tier {team.tier}</span>
+                        <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold border border-primary/20 tracking-tighter">Reroll: {team.rerollCost / 1000}k</span>
+                        <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold border border-primary/20 tracking-tighter">APO: {team.apothecary}</span>
+                    </div>
+
+                    <div className="mt-10 w-full flex flex-col items-center">
+                        <p className="text-slate-400 text-[10px] uppercase font-bold mb-4 tracking-widest">Estadísticas Promedio</p>
+                        <div className="w-48 h-48 cursor-pointer hover:scale-105 transition-transform" onClick={() => setIsRadarModalOpen(true)}>
+                            <RadarChart ratings={[{ data: team.ratings, color: '#f59f0a' }]} size={192} />
                         </div>
                     </div>
-                    <div className="p-4 sm:p-5 overflow-y-auto">
-                        <div className="flex flex-col sm:flex-row gap-x-6 gap-y-4 mb-6">
-                            {(team.image || isAdmin) && (
-                                <div className="flex-shrink-0 sm:w-48 mx-auto relative group">
-                                    <img
-                                        src={isEditingImage ? newImageUrl : team.image}
-                                        alt={`Escudo de ${team.name}`}
-                                        className="w-full h-auto object-contain rounded-md bg-slate-900/50 p-2 border border-slate-700 cursor-pointer transition-transform hover:scale-105"
-                                        onClick={onImageClick}
-                                    />
-                                    {isAdmin && (
-                                        <div className="mt-2 space-y-2">
-                                            {isEditingImage ? (
-                                                <div className="flex flex-col gap-2">
-                                                    <input
-                                                        type="text"
-                                                        value={newImageUrl}
-                                                        onChange={(e) => setNewImageUrl(e.target.value)}
-                                                        className="text-[10px] bg-slate-800 border border-slate-600 rounded p-1 w-full text-white"
-                                                        placeholder="URL de la imagen (Pinteres, GitHub...)"
-                                                    />
-                                                    <div className="flex border-2 border-dashed border-slate-600 rounded p-2 items-center justify-center cursor-pointer hover:bg-slate-700 transition-colors" onClick={() => document.getElementById('imageUpload')?.click()}>
-                                                        <span className="text-[10px] text-slate-400">{isUploading ? 'Subiendo...' : 'Subir desde dispositivo'}</span>
-                                                        <input
-                                                            id="imageUpload"
-                                                            type="file"
-                                                            accept="image/*"
-                                                            className="hidden"
-                                                            onChange={handleFileUpload}
-                                                            disabled={isUploading}
-                                                        />
-                                                    </div>
-                                                    <div className="flex gap-1">
-                                                        <button
-                                                            onClick={async () => { await onUpdateImage(team.name, newImageUrl); setIsEditingImage(false); }}
-                                                            className="flex-1 text-[10px] bg-green-600 hover:bg-green-500 px-2 py-1 rounded text-white font-bold"
-                                                            disabled={isUploading}
-                                                        >
-                                                            Guardar URL
-                                                        </button>
-                                                        <button
-                                                            onClick={() => { setIsEditingImage(false); setNewImageUrl(team.image || ''); }}
-                                                            className="flex-1 text-[10px] bg-slate-600 px-2 py-1 rounded text-white"
-                                                            disabled={isUploading}
-                                                        >
-                                                            Cancelar
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <button
-                                                    onClick={() => setIsEditingImage(true)}
-                                                    className="w-full text-[10px] bg-amber-600/20 hover:bg-amber-600/40 border border-amber-600/50 text-amber-400 py-1 rounded"
-                                                >
-                                                    Cambiar Escudo (Admin)
-                                                </button>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                            <div className="flex-grow sm:w-1/2">
-                                {team.ratings && (
-                                    <button onClick={() => setIsRadarModalOpen(true)} className="w-full max-w-xs mx-auto rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-amber-400" aria-label="Ampliar gráfico de estadísticas">
-                                        <RadarChart ratings={[{ data: team.ratings, color: '#f59e0b' }]} />
-                                    </button>
-                                )}
-                            </div>
-                        </div>
 
-                        <div className="text-sm text-slate-300 space-y-2 mb-6 bg-white/5 p-4 rounded-xl border border-white/5">
-                            <p><span className='font-bold text-slate-400'>Coste Segunda Oportunidad:</span> {team.rerollCost.toLocaleString()} M.O.</p>
-                            <p><span className='font-bold text-slate-400'>Nivel (Tier):</span> {team.tier}</p>
-                            <p><span className='font-bold text-slate-400'>Médico (Boticario):</span> {team.apothecary}</p>
-                            <p><span className='font-bold text-slate-400'>Reglas especiales:</span> {team.specialRules}</p>
-                        </div>
+                    {isAdmin && (
+                        <button className="mt-6 text-[10px] text-primary/60 hover:text-primary uppercase font-bold tracking-widest border border-primary/20 px-4 py-2 rounded-lg hover:bg-primary/5 transition-colors">
+                            Gestionar Imagen
+                        </button>
+                    )}
+                </div>
 
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm border-collapse">
-                                <thead className="bg-white/10 text-amber-300 font-display">
-                                    <tr>
-                                        <th className="p-3 border-b border-white/10">Cant.</th>
-                                        <th className="p-3 border-b border-white/10">Posición</th>
-                                        <th className="p-3 border-b border-white/10">Coste</th>
-                                        <th className="p-3 border-b border-white/10 text-center">MA</th>
-                                        <th className="p-3 border-b border-white/10 text-center">FU</th>
-                                        <th className="p-3 border-b border-white/10 text-center">AG</th>
-                                        <th className="p-3 border-b border-white/10 text-center">PA</th>
-                                        <th className="p-3 border-b border-white/10 text-center">AR</th>
-                                        <th className="p-3 border-b border-white/10">Habilidades y Rasgos</th>
-                                        <th className="p-3 border-b border-white/10 text-center">Prim.</th>
-                                        <th className="p-3 border-b border-white/10 text-center">Sec.</th>
+                {/* Content Section */}
+                <div className="lg:col-span-8">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left">
+                            <thead>
+                                <tr className="text-slate-500 text-[10px] uppercase tracking-widest border-b border-primary/10">
+                                    <th className="py-3 px-2 font-bold">Posición</th>
+                                    <th className="py-3 px-2 font-bold text-center">MA</th>
+                                    <th className="py-3 px-2 font-bold text-center">FU</th>
+                                    <th className="py-3 px-2 font-bold text-center">AG</th>
+                                    <th className="py-3 px-2 font-bold text-center">PA</th>
+                                    <th className="py-3 px-2 font-bold text-center">AR</th>
+                                    <th className="py-3 px-2 font-bold">Habilidades</th>
+                                    <th className="py-3 px-2 font-bold text-right">Coste</th>
+                                </tr>
+                            </thead>
+                            <tbody className="text-sm">
+                                {team.roster.slice(0, 5).map((player, idx) => (
+                                    <tr key={idx} className="border-b border-primary/5 hover:bg-primary/5 transition-colors group">
+                                        <td className="py-4 px-2 font-bold text-slate-200">{player.position}</td>
+                                        <td className="py-4 px-2 text-center text-slate-400 font-mono">{player.stats.MV}</td>
+                                        <td className="py-4 px-2 text-center text-slate-400 font-mono font-bold">{player.stats.FU}</td>
+                                        <td className="py-4 px-2 text-center text-slate-400 font-mono">{player.stats.AG}</td>
+                                        <td className="py-4 px-2 text-center text-slate-400 font-mono">{player.stats.PS}</td>
+                                        <td className="py-4 px-2 text-center text-slate-400 font-mono">{player.stats.AR}</td>
+                                        <td className="py-4 px-2 text-[10px] text-slate-500 max-w-[150px] truncate group-hover:whitespace-normal group-hover:truncate-none transition-all">
+                                            {player.skills}
+                                        </td>
+                                        <td className="py-4 px-2 text-right font-bold text-primary">{player.cost.toLocaleString()}</td>
                                     </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-700">
-                                    {team.roster.map(player => (
-                                        <tr key={player.position} className="bg-white/5 hover:bg-white/10 transition-colors">
-                                            <td className="p-3 border-b border-white/5 whitespace-nowrap">{player.qty}</td>
-                                            <td className="p-3 border-b border-white/5 font-semibold text-slate-100 whitespace-nowrap">{player.position}</td>
-                                            <td className="p-3 border-b border-white/5 whitespace-nowrap text-amber-200/80">{player.cost.toLocaleString()}</td>
-                                            <td className="p-3 border-b border-white/5 text-center">{player.stats.MV}</td>
-                                            <td className="p-3 border-b border-white/5 text-center font-bold text-slate-300">{player.stats.FU}</td>
-                                            <td className="p-3 border-b border-white/5 text-center">{player.stats.AG}</td>
-                                            <td className="p-3 border-b border-white/5 text-center">{player.stats.PS}</td>
-                                            <td className="p-3 border-b border-white/5 text-center">{player.stats.AR}</td>
-                                            <td className="p-3 border-b border-white/5 text-xs whitespace-normal min-w-[250px] leading-relaxed">
-                                                {player.skills.split(', ').map((skill, index, arr) => {
-                                                    const cleanSkillName = skill.trim();
-                                                    if (cleanSkillName && cleanSkillName.toLowerCase() !== 'ninguna' && cleanSkillName.toLowerCase() !== 'none') {
-                                                        return (
-                                                            <React.Fragment key={skill}>
-                                                                <button onClick={() => onSkillClick(cleanSkillName)} className="text-sky-400 hover:text-sky-300 hover:underline">{cleanSkillName}</button>
-                                                                {index < arr.length - 1 && ', '}
-                                                            </React.Fragment>
-                                                        );
-                                                    }
-                                                    return cleanSkillName + (index < arr.length - 1 ? ', ' : '');
-                                                })}
-                                            </td>
-                                            <td className="p-3 border-b border-white/5 text-center font-mono text-xs">{player.primary}</td>
-                                            <td className="p-3 border-b border-white/5 text-center font-mono text-xs">{player.secondary}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                ))}
+                                {team.roster.length > 5 && (
+                                    <tr>
+                                        <td colSpan={8} className="py-4 text-center">
+                                            <button
+                                                onClick={onViewRoster}
+                                                className="text-[10px] text-slate-500 hover:text-primary uppercase font-bold tracking-[0.2em] transition-colors"
+                                            >
+                                                + {team.roster.length - 5} Posiciones adicionales
+                                            </button>
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="bg-primary/5 rounded-xl p-4 flex justify-between items-center border border-primary/10 group hover:border-primary/30 transition-colors">
+                            <div className="flex items-center gap-3">
+                                <span className="material-symbols-outlined text-primary text-xl">refresh</span>
+                                <span className="text-xs font-bold uppercase tracking-widest">Segunda Oportunidad</span>
+                            </div>
+                            <span className="text-primary font-bold font-mono">{team.rerollCost.toLocaleString()}</span>
                         </div>
+                        <button
+                            onClick={onViewRoster}
+                            className="bg-primary text-background-dark font-black px-6 py-4 rounded-xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-xs italic shadow-lg shadow-primary/20"
+                        >
+                            <span className="material-symbols-outlined text-sm font-bold">visibility</span>
+                            Ver Roster Completo
+                        </button>
                     </div>
                 </div>
-                <style>{`
-                    @keyframes fade-in-fast { from { opacity: 0; } to { opacity: 1; } }
-                    @keyframes slide-in-up { from { transform: translateY(20px) scale(0.98); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
-                    .animate-fade-in-fast { animation: fade-in-fast 0.2s ease-out forwards; }
-                    .animate-slide-in-up { animation: slide-in-up 0.3s ease-out forwards; }
-                `}</style>
             </div>
             {isRadarModalOpen && <RadarChartModal team={team} onClose={() => setIsRadarModalOpen(false)} />}
-        </>
+        </motion.article>
     );
 };
 
-interface TeamsProps {
-    onRequestTeamCreation?: (rosterName: string) => void;
-}
-
-const Teams: React.FC<TeamsProps> = ({ onRequestTeamCreation = () => { } }) => {
-    const { teams, updateMasterItem, syncMasterData, loading } = useMasterData();
-    // Wrapper que mapea la API de Teams a updateMasterItem
-    const updateTeamImage = async (teamName: string, url: string) => {
-        await updateMasterItem('team', teamName, { image: url });
-    };
+const Teams: React.FC<{ onRequestTeamCreation?: (rosterName: string) => void }> = ({ onRequestTeamCreation = (_name: string) => { } }) => {
+    const { teams: fetchedTeams, updateMasterItem, syncMasterData, loading } = useMasterData();
     const { isAdmin } = useAuth();
+
+    // Safety merge: ensures teams have rosters from static data if Firestore is incomplete
+    const teams = useMemo(() => {
+        return fetchedTeams.map(ft => {
+            const st = staticTeams.find(s => s.name === ft.name);
+            return {
+                ...st, // Use static as base
+                ...ft, // Override with Firestore fields
+                roster: ft.roster && ft.roster.length > 0 ? ft.roster : st?.roster || [] // Ensure roster exists
+            };
+        });
+    }, [fetchedTeams]);
+
     const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
     const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
-    const [enlargedImage, setEnlargedImage] = useState<{ src: string, alt: string } | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [isSyncing, setIsSyncing] = useState(false);
 
     const filteredTeams = useMemo(() => {
-        if (!searchTerm) {
-            return teams;
-        }
+        if (!searchTerm) return teams;
         return teams.filter(team =>
             team.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
     }, [searchTerm, teams]);
 
-    const handleSync = async () => {
-        if (!window.confirm("¿Seguro que quieres resincronizar todos los equipos? Esto sobrescribirá las URLs de imágenes actuales en la base de datos con las del archivo teams.ts.")) return;
-        setIsSyncing(true);
-        try {
-            await syncMasterData();
-            alert("Sincronización completada con éxito.");
-        } catch (e) {
-            console.error(e);
-            alert("Error al sincronizar.");
-        } finally {
-            setIsSyncing(false);
-        }
-    };
+    const popularTeams = useMemo(() => {
+        const names = ['Orcos', 'Humanos', 'Elfos Oscuros', 'Skaven'];
+        return teams.filter(t => names.includes(t.name));
+    }, [teams]);
 
     const handleSkillClick = (skillName: string) => {
         const cleanedName = skillName.split('(')[0].trim();
@@ -283,62 +194,179 @@ const Teams: React.FC<TeamsProps> = ({ onRequestTeamCreation = () => { } }) => {
         if (foundSkill) setSelectedSkill(foundSkill);
     };
 
-    const handleImageClick = (e: React.MouseEvent, team: Team) => {
-        e.stopPropagation();
-        if (team.image) setEnlargedImage({ src: team.image, alt: team.name });
+    const handleSync = async () => {
+        if (!window.confirm("¿Sincronizar datos?")) return;
+        setIsSyncing(true);
+        try {
+            await syncMasterData();
+            alert("Sincronizado");
+        } catch (e) {
+            alert("Error");
+        } finally {
+            setIsSyncing(false);
+        }
+    };
+
+    const updateTeamImage = async (teamName: string, url: string) => {
+        await updateMasterItem('team', teamName, { image: url });
     };
 
     return (
-        <div className="space-y-6">
-            <div className="sticky top-2 z-10 mb-6 flex gap-4 items-center">
-                <input
-                    type="text"
-                    placeholder="Buscar equipo..."
-                    value={searchTerm}
-                    onChange={e => setSearchTerm(e.target.value)}
-                    className="flex-grow bg-slate-900 border-2 border-slate-600 rounded-lg py-3 px-4 text-white placeholder-slate-400 focus:ring-amber-500 focus:border-amber-500 shadow-lg"
-                    aria-label="Buscar equipo por nombre"
-                />
-                {isAdmin && (
-                    <button
-                        onClick={handleSync}
-                        disabled={isSyncing}
-                        className="bg-slate-800 border border-slate-600 text-slate-400 p-3 rounded-lg hover:text-amber-400 transition-colors"
-                        title="Sincronizar datos estáticos con Firebase"
-                    >
-                        {isSyncing ? '...' :
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                            </svg>
-                        }
-                    </button>
-                )}
-            </div>
-
-            {loading ? (
-                <div className="flex justify-center py-20">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500"></div>
+        <div className="max-w-7xl mx-auto px-4 py-8 w-full space-y-12">
+            {/* Hero & Header */}
+            <section>
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+                    <div>
+                        <h1 className="text-5xl font-display font-black text-slate-100 mb-4 italic uppercase tracking-tighter">
+                            Enciclopedia de <span className="text-primary italic">Equipos</span>
+                        </h1>
+                        <p className="text-slate-400 max-w-2xl text-sm leading-relaxed">
+                            Explora todas las facciones del Viejo Mundo. Analiza sus estadísticas promedio, rosters oficiales y costes para planificar tu próxima temporada.
+                        </p>
+                    </div>
+                    <div className="flex gap-3">
+                        <div className="relative group">
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3">
+                                <span className="material-symbols-outlined text-slate-500 text-sm group-focus-within:text-primary transition-colors">search</span>
+                            </span>
+                            <input
+                                type="text"
+                                placeholder="Buscar raza..."
+                                value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                                className="bg-background-dark/50 border border-primary/20 text-slate-100 text-sm rounded-xl focus:ring-primary focus:border-primary block w-64 pl-10 p-3 backdrop-blur-md transition-all"
+                            />
+                        </div>
+                        {isAdmin && (
+                            <button
+                                onClick={handleSync}
+                                disabled={isSyncing}
+                                className="p-3 rounded-xl bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-background-dark transition-all"
+                            >
+                                <span className="material-symbols-outlined">{isSyncing ? 'sync' : 'database'}</span>
+                            </button>
+                        )}
+                        <button className="flex items-center gap-2 px-4 py-3 rounded-xl bg-primary text-background-dark font-black text-[10px] uppercase italic shadow-lg shadow-primary/10">
+                            <span className="material-symbols-outlined text-sm">filter_list</span>
+                            Filtrar Tiers
+                        </button>
+                        <button className="flex items-center gap-2 px-4 py-3 rounded-xl bg-primary/10 text-primary border border-primary/20 font-black text-[10px] uppercase italic">
+                            <span className="material-symbols-outlined text-sm">sort</span>
+                            Ordenar
+                        </button>
+                    </div>
                 </div>
-            ) : filteredTeams.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                    {filteredTeams.map((team) => (
-                        <TeamCard
-                            key={team.name}
-                            team={team}
-                            onViewRoster={() => setSelectedTeam(team)}
-                            onViewImage={(e) => handleImageClick(e, team)}
-                        />
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+                    {[
+                        { label: 'Total Facciones', value: `${teams.length} Razas`, icon: 'groups' },
+                        { label: 'Niveles Disponibles', value: 'Tier 1 - 3', icon: 'military_tech' },
+                        { label: 'Última Actualización', value: 'Edición 2020', icon: 'update' }
+                    ].map((stat, i) => (
+                        <div key={i} className="bg-primary/5 border border-primary/10 p-5 rounded-2xl flex items-center gap-4 hover:bg-primary/10 transition-colors group">
+                            <div className="size-12 rounded-full bg-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                                <span className="material-symbols-outlined">{stat.icon}</span>
+                            </div>
+                            <div>
+                                <p className="text-slate-500 text-[10px] uppercase tracking-widest font-black leading-none mb-1">{stat.label}</p>
+                                <p className="text-2xl text-slate-100 font-display font-black italic">{stat.value}</p>
+                            </div>
+                        </div>
                     ))}
                 </div>
-            ) : (
-                <p className="text-center text-slate-400 py-8">
-                    No se encontraron equipos que coincidan con "{searchTerm}".
-                </p>
+            </section>
+
+            {/* Popular Factions */}
+            {!searchTerm && popularTeams.length > 0 && (
+                <section>
+                    <h2 className="text-2xl font-display font-black text-slate-100 mb-6 flex items-center gap-3 italic uppercase tracking-tight">
+                        <span className="material-symbols-outlined text-primary font-bold">star</span>
+                        Facciones Populares
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {popularTeams.map((team) => {
+                            let icon = 'groups';
+                            let subtitle = 'Versatilidad total';
+                            if (team.name.includes('Orcos')) { icon = 'skull'; subtitle = 'Combatientes puros'; }
+                            if (team.name.includes('Elfos')) { icon = 'auto_fix_high'; subtitle = 'Agilidad letal'; }
+                            if (team.name.includes('Skaven')) { icon = 'pest_control_rodent'; subtitle = 'Velocidad extrema'; }
+                            return (
+                                <PopularTeamCard
+                                    key={team.name}
+                                    team={team}
+                                    icon={icon}
+                                    subtitle={subtitle}
+                                    onClick={() => setSelectedTeam(team)}
+                                />
+                            );
+                        })}
+                    </div>
+                </section>
             )}
 
-            {selectedTeam && <TeamModal team={selectedTeam} onClose={() => setSelectedTeam(null)} onSkillClick={handleSkillClick} onImageClick={(e) => handleImageClick(e, selectedTeam)} onRequestTeamCreation={onRequestTeamCreation} onUpdateImage={updateTeamImage} />}
+            {/* All Races List */}
+            <section className="space-y-8">
+                <div className="flex items-center justify-between mb-8 border-b border-primary/20 pb-4">
+                    <h2 className="text-2xl font-display font-black text-slate-100 flex items-center gap-3 italic uppercase tracking-tight">
+                        <span className="material-symbols-outlined text-primary">menu_book</span>
+                        Todas las Razas
+                    </h2>
+                    <span className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em]">
+                        Mostrando {filteredTeams.length} resultados
+                    </span>
+                </div>
+
+                {loading ? (
+                    <div className="flex justify-center py-20">
+                        <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                            className="size-12 border-4 border-primary border-t-transparent rounded-full"
+                        />
+                    </div>
+                ) : (
+                    <div className="space-y-12 pb-20">
+                        <AnimatePresence>
+                            {filteredTeams.map((team) => (
+                                <TeamArticle
+                                    key={team.name}
+                                    team={team}
+                                    isAdmin={!!isAdmin}
+                                    onViewRoster={() => setSelectedTeam(team)}
+                                    onSkillClick={handleSkillClick}
+                                    onUpdateImage={updateTeamImage}
+                                />
+                            ))}
+                        </AnimatePresence>
+
+                        {filteredTeams.length === 0 && (
+                            <p className="text-center text-slate-500 py-20 italic">
+                                No se encontraron facciones que coincidan con la búsqueda.
+                            </p>
+                        )}
+                    </div>
+                )}
+            </section>
+
+            {/* Modals */}
+            {selectedTeam && (
+                <RadarChartModal
+                    team={selectedTeam}
+                    onClose={() => setSelectedTeam(null)}
+                    customTitle={
+                        <div className="flex items-center gap-4">
+                            <span className="text-primary italic font-black uppercase tracking-tighter text-3xl">{selectedTeam.name}</span>
+                            <button
+                                onClick={() => { onRequestTeamCreation(selectedTeam.name); setSelectedTeam(null); }}
+                                className="bg-primary text-background-dark font-black px-4 py-2 rounded-xl text-xs uppercase italic"
+                            >
+                                Crear Equipo
+                            </button>
+                        </div>
+                    }
+                />
+            )}
             {selectedSkill && <SkillModal skill={selectedSkill} onClose={() => setSelectedSkill(null)} />}
-            {enlargedImage && <ImageModal src={enlargedImage.src} alt={enlargedImage.alt} onClose={() => setEnlargedImage(null)} />}
         </div>
     );
 };

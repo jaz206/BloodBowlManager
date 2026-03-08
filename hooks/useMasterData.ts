@@ -25,11 +25,11 @@ export const useMasterData = () => {
     const staticTeams = teamsDataEs; // TODO: Localize teams
     const staticStars = starsDataEs; // TODO: Localize stars
 
-    const [teams, setTeams] = useState<Team[]>([]);
-    const [skills, setSkills] = useState<Skill[]>([]);
-    const [starPlayers, setStarPlayers] = useState<StarPlayer[]>([]);
-    const [inducements, setInducements] = useState<Inducement[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [teams, setTeams] = useState<Team[]>(staticTeams);
+    const [skills, setSkills] = useState<Skill[]>(staticSkills);
+    const [starPlayers, setStarPlayers] = useState<StarPlayer[]>(staticStars);
+    const [inducements, setInducements] = useState<Inducement[]>(staticInducements);
+    const [loading, setLoading] = useState(false); // Immediate availability with static data fallback
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
