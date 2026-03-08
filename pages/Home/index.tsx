@@ -1,16 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import DashboardBlock from '../../components/common/DashboardBlock';
-import { useAuth } from '../../hooks/useAuth';
-import SearchIcon from '../../components/icons/SearchIcon';
-import BookOpenIcon from '../../components/icons/BookOpenIcon';
-import UsersIcon from '../../components/icons/UsersIcon';
-import TrophyIcon from '../../components/icons/TrophyIcon';
-import CubeIcon from '../../components/icons/CubeIcon';
-import StopwatchIcon from '../../components/icons/StopwatchIcon';
-import DiceIcon from '../../components/icons/DiceIcon';
-import ProbabilityCalculator from '../Oracle/ProbabilitiesPage';
-import InducementTable from '../Oracle/InducementsPage';
 import type { ManagedTeam, League as Competition, GameEvent } from '../../types';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface HomeProps {
     onNavigate: (view: any) => void;
@@ -19,156 +9,210 @@ interface HomeProps {
     recentEvents: GameEvent[];
 }
 
-const Home: React.FC<HomeProps> = ({ onNavigate, managedTeams, competitions, recentEvents }) => {
-    const { user } = useAuth();
+const Home: React.FC<HomeProps> = ({ onNavigate, managedTeams }) => {
+    const { t } = useLanguage();
     const [searchTerm, setSearchTerm] = useState('');
 
-    const activeLeagues = useMemo(() => competitions.filter(c => c.status === 'In Progress'), [competitions]);
+    const latestTeams = useMemo(() => {
+        return [...managedTeams].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0)).slice(0, 3);
+    }, [managedTeams]);
 
     return (
-        <div className="space-y-6">
-            {/* Top Search & Welcome */}
-            <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8 py-4">
-                <div className="flex-1 w-full max-w-xl">
-                    <div className="relative group">
-                        <input
-                            type="text"
-                            placeholder="Buscador global: equipos, habilidades, reglas..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-6 text-white text-lg placeholder-slate-500 focus:border-premium-gold/50 focus:bg-white/10 outline-none transition-all shadow-[0_0_20px_rgba(0,0,0,0.5)]"
-                        />
-                        <SearchIcon className="absolute left-4 top-4.5 w-5 h-5 text-slate-500 group-hover:text-premium-gold transition-colors" />
-                        <div className="absolute right-3 top-3 px-3 py-1.5 bg-premium-gold/10 border border-premium-gold/20 rounded-lg text-[10px] text-premium-gold font-black uppercase tracking-tighter italic">Nuffle Search</div>
+        <div className="space-y-10 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {/* Hero Section */}
+            <section className="relative overflow-hidden rounded-3xl bg-zinc-900/50 border border-white/5 shadow-2xl group">
+                <div
+                    className="absolute inset-0 opacity-15 grayscale hover:grayscale-0 transition-all duration-1000 pointer-events-none"
+                    style={{
+                        backgroundImage: `linear-gradient(to right, #000 30%, transparent), url('https://lh3.googleusercontent.com/aida-public/AB6AXuCJiociLS1yh7ewqvP8Td4uNgye915_a1o2S17vV3fbtEil48xY-03n10qPTW4k9X7iw1vf_Ec0IV8L2VMDDGUbk_VJKfEoVUYbQrSlnMRCRblCcbuS826I0ZbMS2j2sjlAsag0nJOyZAtwdpierwXSsFw6uJ8SQ5UeVzdz7GKlgRuoGTFbbaQatpEvyDGvZ_qVdp0QHvueiyZ1UyAA7HFJgm3hav0xuEBO6tOQGFPWsVMs6DV4DCVHeNdgCjWL95oq7iaot65dCLa4')`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center'
+                    }}
+                ></div>
+
+                <div className="relative p-8 md:p-16 flex flex-col items-start gap-8 max-w-3xl">
+                    <div className="space-y-3">
+                        <h2 className="text-5xl md:text-7xl font-black text-white leading-[0.9] tracking-tighter uppercase italic">
+                            {t('home.welcome')}<br />
+                            <span className="text-premium-gold drop-shadow-[0_0_15px_rgba(202,138,4,0.3)]">{t('home.coach')}</span>
+                        </h2>
+                        <p className="text-slate-400 text-lg md:text-xl font-medium max-w-xl leading-relaxed">
+                            {t('home.hero.subtitle')}
+                        </p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-4">
+                        <button
+                            onClick={() => onNavigate('guild')}
+                            className="bg-premium-gold hover:bg-white hover:scale-105 text-black font-black px-10 py-4 rounded-xl flex items-center gap-3 transition-all active:scale-95 uppercase tracking-tighter text-sm shadow-[0_10px_30px_rgba(202,138,4,0.2)]"
+                        >
+                            <span className="material-symbols-outlined font-bold">add_circle</span>
+                            {t('home.hero.newRoster')}
+                        </button>
+                        <button className="bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold px-10 py-4 rounded-xl flex items-center gap-3 transition-all active:scale-95 uppercase tracking-tighter text-sm backdrop-blur-md">
+                            <span className="material-symbols-outlined font-bold">history_edu</span>
+                            {t('home.hero.matchReports')}
+                        </button>
                     </div>
                 </div>
-                <div className="hidden lg:flex items-center gap-4 text-right">
-                    <div className="flex flex-col">
-                        <span className="text-xs font-display text-slate-500 uppercase tracking-widest font-black italic">Bienvenido, Coach</span>
-                        <span className="text-2xl font-display font-black text-white italic tracking-tighter leading-none">{user?.name}</span>
-                    </div>
-                    {user?.picture && <img src={user.picture} alt="Avatar" className="w-12 h-12 rounded-xl border border-white/10 shadow-lg" />}
-                </div>
-            </div>
 
-            {/* Bento Grid Layout */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 pb-12">
+                {/* Decorative Elements */}
+                <div className="absolute top-8 right-8 w-24 h-24 border-t-2 border-r-2 border-premium-gold/20 rounded-tr-3xl"></div>
+                <div className="absolute bottom-8 left-8 w-16 h-16 border-b-2 border-l-2 border-white/10 rounded-bl-2xl"></div>
+            </section>
 
-                {/* Left Column (Oracle of Nuffle) - 3 cols */}
-                <div className="md:col-span-3 space-y-6">
-                    <DashboardBlock title="El Oráculo" icon={<BookOpenIcon className="w-5 h-5 text-premium-gold" />}>
-                        <div className="space-y-2">
-                            <button onClick={() => onNavigate('oracle')} className="w-full text-left p-3 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 hover:border-premium-gold/30 transition-all flex items-center justify-between group">
-                                <span className="text-xs font-display font-bold text-slate-300 uppercase tracking-widest group-hover:text-white">Enciclopedia</span>
-                                <span className="text-premium-gold opacity-50 group-hover:opacity-100">&rarr;</span>
-                            </button>
-                            <button onClick={() => onNavigate('oracle')} className="w-full text-left p-3 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 hover:border-premium-gold/30 transition-all flex items-center justify-between group">
-                                <span className="text-xs font-display font-bold text-slate-300 uppercase tracking-widest group-hover:text-white">Jugadores Estrella</span>
-                                <span className="text-premium-gold opacity-50 group-hover:opacity-100">&rarr;</span>
-                            </button>
+            {/* Main Access Cards */}
+            <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Oracle Card */}
+                <div className="group bg-zinc-900/40 border border-white/5 p-8 rounded-2xl hover:bg-zinc-800/60 transition-all flex flex-col justify-between h-full hover:border-premium-gold/30 hover:shadow-2xl hover:shadow-premium-gold/5 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-premium-gold/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                    <div>
+                        <div className="w-16 h-16 bg-premium-gold/10 rounded-2xl flex items-center justify-center mb-8 text-premium-gold group-hover:scale-110 transition-transform border border-premium-gold/20 shadow-inner">
+                            <span className="material-symbols-outlined text-4xl font-bold">menu_book</span>
                         </div>
-                    </DashboardBlock>
-
-                    <DashboardBlock title="Probabilidades" icon={<DiceIcon className="w-5 h-5 text-premium-gold" />}>
-                        <ProbabilityCalculator />
-                    </DashboardBlock>
+                        <h3 className="text-2xl font-black text-white mb-3 uppercase tracking-tight italic leading-none">{t('home.cards.oracle.title')}</h3>
+                        <p className="text-slate-400 text-sm mb-10 leading-relaxed font-medium">
+                            {t('home.cards.oracle.desc')}
+                        </p>
+                    </div>
+                    <button
+                        onClick={() => onNavigate('oracle')}
+                        className="w-full py-4 border border-premium-gold/50 text-premium-gold font-black rounded-xl hover:bg-premium-gold hover:text-black transition-all uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-black/20"
+                    >
+                        {t('home.cards.oracle.btn')}
+                    </button>
                 </div>
 
-                {/* Center Column (The Coaches Guild) - 6 cols */}
-                <div className="md:col-span-6 space-y-6">
-                    <DashboardBlock
-                        title="Gremio de Entrenadores"
-                        icon={<UsersIcon className="w-5 h-5 text-premium-gold" />}
-                        className="flex-1"
+                {/* Guild Card */}
+                <div className="group bg-zinc-900/40 border border-white/5 p-8 rounded-2xl hover:bg-zinc-800/60 transition-all flex flex-col justify-between h-full hover:border-premium-gold/30 hover:shadow-2xl hover:shadow-premium-gold/5 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-premium-gold/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                    <div>
+                        <div className="w-16 h-16 bg-premium-gold/10 rounded-2xl flex items-center justify-center mb-8 text-premium-gold group-hover:scale-110 transition-transform border border-premium-gold/20 shadow-inner">
+                            <span className="material-symbols-outlined text-4xl font-bold">shield</span>
+                        </div>
+                        <h3 className="text-2xl font-black text-white mb-3 uppercase tracking-tight italic leading-none">{t('home.cards.guild.title')}</h3>
+                        <p className="text-slate-400 text-sm mb-10 leading-relaxed font-medium">
+                            {t('home.cards.guild.desc')}
+                        </p>
+                    </div>
+                    <button
+                        onClick={() => onNavigate('guild')}
+                        className="w-full py-4 border border-premium-gold/50 text-premium-gold font-black rounded-xl hover:bg-premium-gold hover:text-black transition-all uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-black/20"
                     >
-                        <div className="flex justify-between items-center mb-6">
-                            <p className="text-xs text-slate-400 max-w-[200px] leading-relaxed">Gestiona tus rosters y crea formaciones imparables.</p>
-                            <button
+                        {t('home.cards.guild.btn')}
+                    </button>
+                </div>
+
+                {/* Arena Card */}
+                <div className="group bg-zinc-900/40 border border-white/5 p-8 rounded-2xl hover:bg-zinc-800/60 transition-all flex flex-col justify-between h-full hover:border-premium-gold/30 hover:shadow-2xl hover:shadow-premium-gold/5 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-premium-gold/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                    <div>
+                        <div className="w-16 h-16 bg-premium-gold/10 rounded-2xl flex items-center justify-center mb-8 text-premium-gold group-hover:scale-110 transition-transform border border-premium-gold/20 shadow-inner">
+                            <span className="material-symbols-outlined text-4xl font-bold">sports_score</span>
+                        </div>
+                        <h3 className="text-2xl font-black text-white mb-3 uppercase tracking-tight italic leading-none">{t('home.cards.arena.title')}</h3>
+                        <p className="text-slate-400 text-sm mb-10 leading-relaxed font-medium">
+                            {t('home.cards.arena.desc')}
+                        </p>
+                    </div>
+                    <button
+                        onClick={() => onNavigate('arena')}
+                        className="w-full py-4 border border-premium-gold/50 text-premium-gold font-black rounded-xl hover:bg-premium-gold hover:text-black transition-all uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-black/20"
+                    >
+                        {t('home.cards.arena.btn')}
+                    </button>
+                </div>
+            </section>
+
+            {/* Secondary Row */}
+            <section className="grid grid-cols-1 lg:grid-cols-5 gap-10">
+                {/* Active Teams */}
+                <div className="lg:col-span-2 space-y-6">
+                    <div className="flex items-center justify-between px-2">
+                        <h3 className="text-xl font-black text-white uppercase tracking-tighter flex items-center gap-3 italic">
+                            <span className="material-symbols-outlined text-premium-gold">groups</span>
+                            {t('home.activeTeams.title')}
+                        </h3>
+                        <button
+                            onClick={() => onNavigate('guild')}
+                            className="text-[10px] font-black text-slate-500 hover:text-premium-gold uppercase tracking-[0.2em] transition-colors"
+                        >
+                            {t('home.activeTeams.viewAll')}
+                        </button>
+                    </div>
+
+                    <div className="bg-zinc-900/40 border border-white/5 rounded-3xl divide-y divide-white/5 overflow-hidden shadow-xl">
+                        {latestTeams.length > 0 ? latestTeams.map(team => (
+                            <div
+                                key={team.id}
                                 onClick={() => onNavigate('guild')}
-                                className="bg-premium-gold hover:bg-premium-gold/80 text-black font-display font-black px-6 py-2.5 rounded-xl uppercase text-xs italic tracking-tighter transition-all shadow-[0_4px_15px_rgba(202,138,4,0.4)]"
+                                className="p-6 flex items-center justify-between hover:bg-white/[0.03] transition-colors cursor-pointer group"
                             >
-                                Nuevo Equipo
-                            </button>
-                        </div>
-
-                        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                            {managedTeams.length > 0 ? managedTeams.map(team => (
-                                <div
-                                    key={team.id}
-                                    onClick={() => onNavigate('guild')}
-                                    className="p-4 bg-white/5 border border-white/5 rounded-2xl flex items-center gap-4 hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer group"
-                                >
-                                    <div className="w-12 h-12 bg-black/40 rounded-xl overflow-hidden border border-white/10 flex-shrink-0 group-hover:scale-110 transition-transform">
-                                        {team.crestImage ? <img src={team.crestImage} alt="Crest" className="w-full h-full object-cover" /> : <div className="flex items-center justify-center h-full text-slate-700 font-black">?</div>}
+                                <div className="flex items-center gap-5">
+                                    <div className="w-14 h-14 rounded-xl bg-black/40 flex items-center justify-center border border-white/5 group-hover:border-premium-gold/30 transition-all overflow-hidden relative shadow-inner">
+                                        {team.crestImage ? (
+                                            <img src={team.crestImage} alt={team.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                        ) : (
+                                            <span className="text-premium-gold font-black text-xl italic">{team.name.substring(0, 2).toUpperCase()}</span>
+                                        )}
                                     </div>
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="font-display font-black text-white italic truncate">{team.name}</h4>
-                                        <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">{team.rosterName}</p>
-                                    </div>
-                                    <div className="text-right">
-                                        <span className="text-sm font-mono font-black text-premium-gold tracking-tighter">{team.totalTV / 1000}k MO</span>
-                                        <p className="text-[9px] text-slate-600 font-bold uppercase tracking-widest">{team.players.length} Jugadores</p>
+                                    <div>
+                                        <p className="text-base font-black text-white group-hover:text-premium-gold transition-colors">{team.name}</p>
+                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{team.rosterName} • TV {team.totalTV / 1000}k</p>
                                     </div>
                                 </div>
-                            )) : (
-                                <div className="py-12 flex flex-col items-center justify-center text-center opacity-40">
-                                    <UsersIcon className="w-12 h-12 mb-3 text-slate-600" />
-                                    <p className="text-xs font-display font-bold uppercase tracking-widest">No has reclutado a nadie todavía...</p>
+                                <div className="text-right">
+                                    <p className="text-lg font-mono font-black text-premium-gold italic leading-none">
+                                        {team.record?.wins || 0} - {team.record?.draws || 0} - {team.record?.losses || 0}
+                                    </p>
+                                    <p className="text-[9px] text-slate-600 font-black uppercase tracking-[0.2em] mt-1">W - D - L</p>
                                 </div>
-                            )}
-                        </div>
-                    </DashboardBlock>
-
-                    <DashboardBlock title="Incentivos" icon={<CubeIcon className="w-5 h-5 text-premium-gold" />}>
-                        <InducementTable />
-                    </DashboardBlock>
+                            </div>
+                        )) : (
+                            <div className="p-12 text-center text-slate-600 italic font-medium uppercase tracking-widest text-xs opacity-50">
+                                No hay equipos activos todavía
+                            </div>
+                        )}
+                    </div>
                 </div>
 
-                {/* Right Column (The Arena of Glory) - 3 cols */}
-                <div className="md:col-span-3 space-y-6">
-                    <DashboardBlock
-                        title="Arena de la Gloria"
-                        icon={<TrophyIcon className="w-5 h-5 text-premium-gold" />}
-                        className="min-h-[200px]"
-                    >
-                        <div className="space-y-4">
-                            <button
-                                onClick={() => onNavigate('arena')}
-                                className="w-full py-6 rounded-2xl border-2 border-blood-red/40 bg-blood-red/10 hover:bg-blood-red/20 hover:border-blood-red/60 transition-all flex flex-col items-center justify-center gap-2 group shadow-[0_10px_30px_rgba(153,27,27,0.2)]"
-                            >
-                                <StopwatchIcon className="w-8 h-8 text-blood-red group-hover:scale-110 transition-transform" />
-                                <span className="font-display font-black text-white italic text-lg tracking-tighter uppercase">Iniciar Partido</span>
-                                <span className="text-[9px] text-blood-red/60 font-black uppercase tracking-[0.2em] leading-none">Modo Mesa Activo</span>
-                            </button>
+                {/* Search Area */}
+                <div className="lg:col-span-3 space-y-6">
+                    <h3 className="text-xl font-black text-white uppercase tracking-tighter flex items-center gap-3 italic px-2">
+                        <span className="material-symbols-outlined text-premium-gold">search</span>
+                        {t('home.search.title')}
+                    </h3>
+                    <div className="bg-zinc-900/40 border border-white/5 rounded-3xl p-10 flex flex-col gap-8 shadow-xl relative overflow-hidden group">
+                        <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-premium-gold/5 blur-3xl rounded-full group-hover:scale-150 transition-transform duration-1000"></div>
 
-                            <div className="space-y-3">
-                                <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-500">
-                                    <span>Ligas Activas</span>
-                                    <span onClick={() => onNavigate('arena')} className="text-premium-gold cursor-pointer hover:underline">Ver todas</span>
-                                </div>
-                                {activeLeagues.length > 0 ? activeLeagues.map(league => (
-                                    <div key={league.id} className="p-3 bg-white/5 border border-white/5 rounded-xl hover:bg-white/10 transition-all cursor-pointer">
-                                        <h5 className="text-[11px] font-bold text-slate-200 truncate">{league.name}</h5>
-                                        <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1">{league.participants.length} Equipos</p>
-                                    </div>
-                                )) : (
-                                    <p className="text-[10px] italic text-slate-600 text-center py-4">No hay ligas activas.</p>
-                                )}
+                        <div className="relative">
+                            <span className="material-symbols-outlined absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-premium-gold transition-colors font-bold">search</span>
+                            <input
+                                className="w-full bg-black/60 border border-white/10 rounded-2xl py-5 pl-14 pr-6 text-white focus:ring-2 focus:ring-premium-gold/50 focus:border-transparent outline-none transition-all placeholder:text-slate-600 text-lg shadow-inner"
+                                placeholder={t('home.search.frequent')}
+                                type="text"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="space-y-5">
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] font-display">{t('home.search.frequent')}</p>
+                            <div className="flex flex-wrap gap-2">
+                                {['Golpe Mortífero', 'Interferencia', 'Esquivar', 'Forcejeo', 'Reglas 2024'].map(tag => (
+                                    <span
+                                        key={tag}
+                                        onClick={() => setSearchTerm(tag)}
+                                        className="px-5 py-2 bg-white/5 border border-white/10 text-slate-300 text-[10px] font-black uppercase tracking-widest rounded-full cursor-pointer hover:bg-premium-gold/10 hover:border-premium-gold/30 hover:text-premium-gold transition-all"
+                                    >
+                                        {tag}
+                                    </span>
+                                ))}
                             </div>
                         </div>
-                    </DashboardBlock>
-
-                    <DashboardBlock title="Crónicas de Nuffle" icon={<SearchIcon className="w-5 h-5 text-premium-gold" />}>
-                        <div className="space-y-4">
-                            <div className="p-3 bg-black/40 rounded-lg border-l-2 border-blood-red italic text-[10px] text-slate-400 leading-relaxed">
-                                "En el turno 3, el blitzer orco Gorbag atravesó la línea humana..."
-                            </div>
-                            <p className="text-[9px] text-center text-slate-500 font-bold uppercase tracking-widest italic leading-none">Sistema de narración automática pronto disponible</p>
-                        </div>
-                    </DashboardBlock>
+                    </div>
                 </div>
-
-            </div>
+            </section>
         </div>
     );
 };

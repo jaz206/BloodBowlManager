@@ -288,6 +288,29 @@ const MainApp: React.FC = () => {
         </div>
       </main>
 
+      <footer className="border-t border-white/5 bg-black/40 py-12 relative overflow-hidden backdrop-blur-xl">
+        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-premium-gold/20 to-transparent"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
+            <div className="flex flex-col items-center md:items-start gap-4">
+              <div className="flex items-center gap-2 text-premium-gold group cursor-pointer" onClick={() => setActiveView('home')}>
+                <span className="material-symbols-outlined text-2xl font-bold group-hover:scale-110 transition-transform">query_stats</span>
+                <h1 className="text-lg font-black tracking-tighter uppercase italic">{t('header.title')} <span className="text-blood-red">{t('header.subtitle')}</span></h1>
+              </div>
+              <p className="text-slate-500 text-xs font-medium tracking-wide italic">© 2024 Blood Bowl Companion App. Que Nuffle te favorezca.</p>
+            </div>
+            <div className="flex items-center gap-8">
+              <a href="#" className="text-[10px] font-black text-slate-400 hover:text-white uppercase tracking-[0.2em] transition-colors">Sobre nosotros</a>
+              <a href="#" className="text-[10px] font-black text-slate-400 hover:text-white uppercase tracking-[0.2em] transition-colors">Soporte</a>
+              <a href="#" className="text-[10px] font-black text-slate-400 hover:text-white uppercase tracking-[0.2em] transition-colors">Cambios</a>
+            </div>
+          </div>
+        </div>
+        {/* Background Decorative */}
+        <div className="absolute bottom-0 right-0 w-64 h-64 bg-blood-red/5 blur-[100px] rounded-full translate-y-1/2 translate-x-1/2"></div>
+        <div className="absolute top-0 left-0 w-48 h-48 bg-premium-gold/5 blur-[80px] rounded-full -translate-y-1/2 -translate-x-1/2"></div>
+      </footer>
+
       <div className="fixed inset-0 pointer-events-none overflow-hidden h-screen w-screen z-[-1]">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-premium-gold/5 blur-[120px] rounded-full"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blood-red/5 blur-[120px] rounded-full"></div>
