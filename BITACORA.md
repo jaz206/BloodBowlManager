@@ -91,5 +91,13 @@ root/
 *   **Internacionalización de Inicio**: Integración de todas las nuevas cadenas de texto en `LanguageContext.tsx` para soporte bilingüe completo en la página principal.
 *   *Archivos Afectados*: `Home/index.tsx`, `MainApp.tsx`, `index.html`, `LanguageContext.tsx`, `BITACORA.md`.
 
+### [2026-03-08] El Draft de Nuffle (Nuevo Sistema de Creación)
+*   **Experiencia de Reclutamiento Integrada**: Rediseño de `CreateTeamPage.tsx` para permitir el reclutamiento completo de jugadores durante la creación del equipo.
+*   **Gestión de Bienes**: Añadida la lógica para comprar Segundas Oportunidades, Médicos, Fans y Staff (Asistentes y Animadoras) con cálculo de presupuesto en tiempo real.
+*   **Resumen Dinámico**: Panel lateral de "Resumen de Valor" que muestra el presupuesto restante, el Team Value acumulado y la lista de jugadores contratados.
+*   **Estéticas de Alta Fantasía**: Aplicación del diseño premium con bordes de bronce, fondos de cristal oscuro y tipografía optimizada (MA, ST, AG, PA, AV).
+*   **Internacionalización Completa**: Soporte bilingüe para todas las etiquetas del proceso de draft.
+*   *Archivos Afectados*: `CreateTeamPage.tsx`, `LanguageContext.tsx`, `BITACORA.md`.
+
 ---
 ¡Por Nuffle, que los dados siempre te favorezcan! 🎲🎲
