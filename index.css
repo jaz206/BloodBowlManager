@@ -178,3 +178,9 @@ h4,
     box-shadow: 0 0 5px rgba(251, 191, 36, 0.8);
     z-index: 10;
 }
+
+@layer utilities {
+    .radar-grid {
+        clip-path: polygon(50% 0%, 100% 38%, 81% 100%, 19% 100%, 0% 38%);
+    }
+}

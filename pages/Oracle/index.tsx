@@ -17,8 +17,17 @@ interface OraclePageProps {
 const OraclePage: React.FC<OraclePageProps> = ({ onRequestTeamCreation = () => { } }) => {
     const { t } = useLanguage();
     const [activeView, setActiveView] = useState<SubView>('hub');
+    const [selectedHubTeam, setSelectedHubTeam] = useState<string | null>(null);
 
-    const handleBackToHub = () => setActiveView('hub');
+    const handleBackToHub = () => {
+        setActiveView('hub');
+        setSelectedHubTeam(null);
+    };
+
+    const handleNavigateToTeam = (teamName: string) => {
+        setSelectedHubTeam(teamName);
+        setActiveView('teams');
+    };
 
     const HubView = () => (
         <motion.div
@@ -76,14 +85,14 @@ const OraclePage: React.FC<OraclePageProps> = ({ onRequestTeamCreation = () => {
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-2">
                         {/* Team Cards */}
                         {[
-                            { name: 'No Muertos', icon: 'skull', key: 'Undead' },
-                            { name: 'Elfos Silvanos', icon: 'forest', key: 'Wood Elves' },
-                            { name: 'Humanos', icon: 'shield', key: 'Human' },
-                            { name: 'Orcos', icon: 'bolt', key: 'Orc' }
+                            { name: 'No Muertos', icon: 'skull', key: 'No Muertos' },
+                            { name: 'Elfos Silvanos', icon: 'forest', key: 'Elfos Silvanos' },
+                            { name: 'Humanos', icon: 'shield', key: 'Humanos' },
+                            { name: 'Orcos', icon: 'bolt', key: 'Orcos' }
                         ].map((race) => (
                             <div
                                 key={race.key}
-                                onClick={() => setActiveView('teams')}
+                                onClick={() => handleNavigateToTeam(race.key)}
                                 className="flex flex-col items-center gap-4 p-6 rounded-2xl bg-black/40 border border-white/5 hover:border-premium-gold/50 cursor-pointer group/card transition-all hover:scale-105 hover:shadow-2xl shadow-premium-gold/5"
                             >
                                 <div className="size-16 rounded-full bg-zinc-800 flex items-center justify-center border border-white/5 group-hover/card:bg-premium-gold/10 group-hover/card:border-premium-gold/40 transition-all">
@@ -267,7 +276,12 @@ const OraclePage: React.FC<OraclePageProps> = ({ onRequestTeamCreation = () => {
                         </div>
 
                         <div className="max-w-6xl mx-auto">
-                            {activeView === 'teams' && <Teams onRequestTeamCreation={onRequestTeamCreation} />}
+                            {activeView === 'teams' && (
+                                <Teams
+                                    onRequestTeamCreation={onRequestTeamCreation}
+                                    initialTeamName={selectedHubTeam}
+                                />
+                            )}
                             {activeView === 'skills' && <Skills />}
                             {activeView === 'star_players' && <StarPlayers />}
                             {activeView === 'calculator' && (

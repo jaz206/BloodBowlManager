@@ -11,6 +11,7 @@ import SkillModal from '../../components/oracle/SkillModal';
 import ImageModal from '../../components/common/ImageModal';
 import RadarChart from '../../components/oracle/RadarChart';
 import RadarChartModal from '../../components/oracle/RadarChartModal';
+import TeamDetailPage from './TeamDetailPage';
 
 const PopularTeamCard: React.FC<{ team: Team; icon: string; subtitle: string; onClick: () => void }> = ({ team, icon, subtitle, onClick }) => (
     <motion.div
@@ -155,7 +156,10 @@ const TeamArticle: React.FC<{
     );
 };
 
-const Teams: React.FC<{ onRequestTeamCreation?: (rosterName: string) => void }> = ({ onRequestTeamCreation = (_name: string) => { } }) => {
+const Teams: React.FC<{
+    onRequestTeamCreation?: (rosterName: string) => void;
+    initialTeamName?: string | null;
+}> = ({ onRequestTeamCreation = (_name: string) => { }, initialTeamName }) => {
     const { teams: fetchedTeams, updateMasterItem, syncMasterData, loading } = useMasterData();
     const { isAdmin } = useAuth();
 
@@ -175,6 +179,16 @@ const Teams: React.FC<{ onRequestTeamCreation?: (rosterName: string) => void }> 
     const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [isSyncing, setIsSyncing] = useState(false);
+
+    // Auto-select team if initialTeamName is provided (from Hub)
+    React.useEffect(() => {
+        if (initialTeamName) {
+            const team = teams.find(t => t.name === initialTeamName);
+            if (team) {
+                setSelectedTeam(team);
+            }
+        }
+    }, [initialTeamName, teams]);
 
     const filteredTeams = useMemo(() => {
         if (!searchTerm) return teams;
@@ -211,8 +225,22 @@ const Teams: React.FC<{ onRequestTeamCreation?: (rosterName: string) => void }> 
         await updateMasterItem('team', teamName, { image: url });
     };
 
+    if (selectedTeam) {
+        return (
+            <TeamDetailPage
+                team={selectedTeam}
+                onBack={() => setSelectedTeam(null)}
+                onRequestTeamCreation={onRequestTeamCreation}
+            />
+        );
+    }
+
     return (
-        <div className="max-w-7xl mx-auto px-4 py-8 w-full space-y-12">
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="max-w-7xl mx-auto px-4 py-8 w-full space-y-12"
+        >
             {/* Hero & Header */}
             <section>
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
@@ -349,25 +377,8 @@ const Teams: React.FC<{ onRequestTeamCreation?: (rosterName: string) => void }> 
             </section>
 
             {/* Modals */}
-            {selectedTeam && (
-                <RadarChartModal
-                    team={selectedTeam}
-                    onClose={() => setSelectedTeam(null)}
-                    customTitle={
-                        <div className="flex items-center gap-4">
-                            <span className="text-primary italic font-black uppercase tracking-tighter text-3xl">{selectedTeam.name}</span>
-                            <button
-                                onClick={() => { onRequestTeamCreation(selectedTeam.name); setSelectedTeam(null); }}
-                                className="bg-primary text-background-dark font-black px-4 py-2 rounded-xl text-xs uppercase italic"
-                            >
-                                Crear Equipo
-                            </button>
-                        </div>
-                    }
-                />
-            )}
             {selectedSkill && <SkillModal skill={selectedSkill} onClose={() => setSelectedSkill(null)} />}
-        </div>
+        </motion.div>
     );
 };
 
