@@ -83,5 +83,13 @@ root/
 *   **IU Localizada**: Integración de la función `t()` en componentes clave: `MainApp`, `OraclePage`, `SkillsPage`, `StarPlayersPage`, e `InducementTable`.
 *   *Archivos Afectados*: `LanguageContext.tsx`, `LanguageSelector.tsx`, `MainApp.tsx`, `useMasterData.ts`, `skills_es.ts`, `skills_en.ts`, `inducements_en.ts`, y las páginas del Oráculo.
 
+### [2026-03-08] El Renacer del Estadio (Rediseño de Inicio)
+*   **Nueva Experiencia de Inicio**: Rediseño total de `pages/Home/index.tsx` con una estética de "Alta Fantasía". Incluye una sección Hero dinámica con imágenes épicas y botones premium.
+*   **Acceso Rápido**: Implementación de tarjetas de acceso estilizadas para el Oráculo, el Gremio y la Arena, mejorando la usabilidad y el flujo visual.
+*   **Cimientos Visuales**: Adición de las fuentes **Inter** y **Material Symbols** en `index.html` para un look moderno y profesional.
+*   **Estructura Completa**: Incorporación de un **Footer** (pie de página) en `MainApp.tsx` con enlaces de soporte y créditos, cerrando el ciclo de diseño de la aplicación.
+*   **Internacionalización de Inicio**: Integración de todas las nuevas cadenas de texto en `LanguageContext.tsx` para soporte bilingüe completo en la página principal.
+*   *Archivos Afectados*: `Home/index.tsx`, `MainApp.tsx`, `index.html`, `LanguageContext.tsx`, `BITACORA.md`.
+
 ---
 ¡Por Nuffle, que los dados siempre te favorezcan! 🎲🎲
