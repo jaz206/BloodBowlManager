@@ -2556,45 +2556,45 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                                             <button onClick={() => handleInjuryAction('next')} className="w-full bg-emerald-600 text-white font-display font-black py-4 rounded-2xl shadow-xl hover:bg-emerald-500 transition-all uppercase tracking-[0.2em] text-xs">Apelar a los Dioses</button>
                                         </div>
                                     );
-                                    case 'regeneration_roll': return <RollInputStep title="Tirada de Regeneración" value={injuryState.regenerationRollInput} onChange={v => setInjuryState(prev => ({ ...prev, regenerationRollInput: v }))} onNext={() => handleInjuryAction('next')} onBack={() => handleInjuryAction('back')} label="Introduce D6 (4+ Éxito)" pattern="[1-6]" placeholder="1-6" onPlaySound => playSound('dice')} />;
-                            case 'staff_reroll_choice': {
+                                    case 'regeneration_roll': return <RollInputStep title="Tirada de Regeneración" value={injuryState.regenerationRollInput} onChange={v => setInjuryState(prev => ({ ...prev, regenerationRollInput: v }))} onNext={() => handleInjuryAction('next')} onBack={() => handleInjuryAction('back')} label="Introduce D6 (4+ Éxito)" pattern="[1-6]" placeholder="1-6" onPlaySound={() => playSound('dice')} />;
+                                    case 'staff_reroll_choice': {
                                         const victimTeam = injuryState.victimTeamId === 'home' ? liveHomeTeam : liveOpponentTeam;
-                            const staffType = victimTeam?.mortuaryAssistants ? 'Asistente de Necromantes' : 'Médico de la Peste';
-                            return (
-                            <div className="space-y-8 text-center animate-fade-in">
-                                <div className="w-20 h-20 bg-blood-red/10 rounded-full flex items-center justify-center border border-blood-red/30 mx-auto animate-pulse">
-                                    <span className="material-symbols-outlined text-4xl text-blood-red">warning</span>
-                                </div>
-                                <div className="space-y-2">
-                                    <h3 className="text-xl font-display font-black text-white uppercase italic tracking-tighter">¡Regeneración Fallida!</h3>
-                                    <p className="text-slate-400 text-sm">¿Deseas que tu {staffType} intente recomponer los restos? (4+ Éxito)</p>
-                                </div>
-                                <div className="flex gap-4">
-                                    <button onClick={() => {
-                                        const setTeam = injuryState.victimTeamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
-                                        setTeam(prev => prev ? ({ ...prev, mortuaryAssistants: prev.mortuaryAssistants ? prev.mortuaryAssistants - 1 : 0, plagueDoctors: prev.plagueDoctors ? prev.plagueDoctors - 1 : 0 }) : null);
-                                        setInjuryState(prev => ({ ...prev, step: 'regeneration_roll', regenerationRollInput: '' }));
-                                    }} className="flex-1 bg-emerald-600 text-white font-display font-black py-4 rounded-2xl hover:bg-emerald-500 transition-all uppercase tracking-widest text-[10px]">Usar {staffType}</button>
-                                    <button onClick={() => handleInjuryAction('next')} className="flex-1 bg-white/5 border border-white/10 text-slate-500 font-display font-black py-4 rounded-2xl hover:bg-white/10 hover:text-white transition-all uppercase tracking-widest text-[10px]">Dejar Morir</button>
-                                </div>
-                            </div>
-                            );
+                                        const staffType = victimTeam?.mortuaryAssistants ? 'Asistente de Necromantes' : 'Médico de la Peste';
+                                        return (
+                                            <div className="space-y-8 text-center animate-fade-in">
+                                                <div className="w-20 h-20 bg-blood-red/10 rounded-full flex items-center justify-center border border-blood-red/30 mx-auto animate-pulse">
+                                                    <span className="material-symbols-outlined text-4xl text-blood-red">warning</span>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <h3 className="text-xl font-display font-black text-white uppercase italic tracking-tighter">¡Regeneración Fallida!</h3>
+                                                    <p className="text-slate-400 text-sm">¿Deseas que tu {staffType} intente recomponer los restos? (4+ Éxito)</p>
+                                                </div>
+                                                <div className="flex gap-4">
+                                                    <button onClick={() => {
+                                                        const setTeam = injuryState.victimTeamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
+                                                        setTeam(prev => prev ? ({ ...prev, mortuaryAssistants: prev.mortuaryAssistants ? prev.mortuaryAssistants - 1 : 0, plagueDoctors: prev.plagueDoctors ? prev.plagueDoctors - 1 : 0 }) : null);
+                                                        setInjuryState(prev => ({ ...prev, step: 'regeneration_roll', regenerationRollInput: '' }));
+                                                    }} className="flex-1 bg-emerald-600 text-white font-display font-black py-4 rounded-2xl hover:bg-emerald-500 transition-all uppercase tracking-widest text-[10px]">Usar {staffType}</button>
+                                                    <button onClick={() => handleInjuryAction('next')} className="flex-1 bg-white/5 border border-white/10 text-slate-500 font-display font-black py-4 rounded-2xl hover:bg-white/10 hover:text-white transition-all uppercase tracking-widest text-[10px]">Dejar Morir</button>
+                                                </div>
+                                            </div>
+                                        );
                                     }
-                            case 'summary': return (
-                            <div className="space-y-8 animate-fade-in text-center">
-                                <div className="space-y-4">
-                                    <div className="text-center">
-                                        <p className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mb-1">Víctima Registrada</p>
-                                        <p className="text-xl font-display font-black text-white italic truncate uppercase">{injuryState.victimPlayer?.customName}</p>
-                                    </div>
-                                    <div className="glass-panel p-6 bg-black/60 border-white/5 space-y-2 mt-6">
-                                        {injuryState.log.map((l, i) => <p key={i} className="text-xs text-slate-400 font-display italic">"{l}"</p>)}
-                                    </div>
-                                </div>
-                                <button onClick={() => handleInjuryAction('next')} className="w-full bg-premium-gold text-black font-display font-black py-4 rounded-2xl shadow-xl hover:bg-white transition-all uppercase tracking-[0.2em] text-xs">Sellar Parte médico</button>
-                            </div>
-                            );
-                            default: return null;
+                                    case 'summary': return (
+                                        <div className="space-y-8 animate-fade-in text-center">
+                                            <div className="space-y-4">
+                                                <div className="text-center">
+                                                    <p className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mb-1">Víctima Registrada</p>
+                                                    <p className="text-xl font-display font-black text-white italic truncate uppercase">{injuryState.victimPlayer?.customName}</p>
+                                                </div>
+                                                <div className="glass-panel p-6 bg-black/60 border-white/5 space-y-2 mt-6">
+                                                    {injuryState.log.map((l, i) => <p key={i} className="text-xs text-slate-400 font-display italic">"{l}"</p>)}
+                                                </div>
+                                            </div>
+                                            <button onClick={() => handleInjuryAction('next')} className="w-full bg-premium-gold text-black font-display font-black py-4 rounded-2xl shadow-xl hover:bg-white transition-all uppercase tracking-[0.2em] text-xs">Sellar Parte médico</button>
+                                        </div>
+                                    );
+                                    default: return null;
                                 }
                             })()}
                         </div>
