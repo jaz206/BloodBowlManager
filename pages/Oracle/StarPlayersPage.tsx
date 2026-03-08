@@ -35,11 +35,16 @@ const StarPlayerCard: React.FC<{
                     </div>
                 )}
 
-                <img
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                    src={player.image || "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800&auto=format&fit=crop"}
-                    alt={player.name}
-                />
+                <motion.div
+                    layoutId={`img-${player.name}`}
+                    className="w-full h-full"
+                >
+                    <img
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                        src={player.image || "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800&auto=format&fit=crop"}
+                        alt={player.name}
+                    />
+                </motion.div>
                 <div className="absolute inset-0 bg-gradient-to-t from-card-dark via-transparent to-transparent"></div>
 
                 <div className={`absolute top-4 right-4 font-black px-3 py-1 rounded-full text-[10px] italic z-10 ${isElite ? 'bg-primary text-background-dark' : 'bg-slate-700 text-white'
@@ -128,8 +133,8 @@ const StarPlayers: React.FC = () => {
     }, [searchTerm, selectedFaction, starPlayers]);
 
     const selectedPlayer = useMemo(() =>
-        starPlayers.find(p => p.name === selectedPlayerName) || filteredPlayers[0],
-        [selectedPlayerName, filteredPlayers, starPlayers]);
+        selectedPlayerName ? starPlayers.find(p => p.name === selectedPlayerName) : null,
+        [selectedPlayerName, starPlayers]);
 
     if (loading) {
         return (
@@ -219,7 +224,10 @@ const StarPlayers: React.FC = () => {
             </section>
 
             {/* Main Content Area */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 items-stretch">
+            <div className={`grid gap-8 items-stretch ${viewMode === 'grid'
+                    ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'
+                    : 'grid-cols-1 lg:grid-cols-2'
+                }`}>
                 <AnimatePresence mode="popLayout">
                     {filteredPlayers.map(player => (
                         <StarPlayerCard
@@ -232,109 +240,129 @@ const StarPlayers: React.FC = () => {
                 </AnimatePresence>
             </div>
 
-            {/* Detailed Selection View */}
-            <AnimatePresence mode="wait">
+            {/* Detailed Selection View - Premium Modal Overlay */}
+            <AnimatePresence>
                 {selectedPlayer && (
-                    <motion.section
-                        key={selectedPlayer.name}
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        className="mt-16 grid grid-cols-1 lg:grid-cols-3 gap-12 bg-card-dark/20 p-8 md:p-14 rounded-[3rem] border border-primary/20 shadow-2xl relative overflow-hidden"
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[150] flex items-center justify-center p-4 md:p-10 bg-black/80 backdrop-blur-md overflow-y-auto"
+                        onClick={() => setSelectedPlayerName(null)}
                     >
-                        <div className="absolute top-0 right-0 size-96 bg-primary/5 rounded-full blur-[100px] -mr-48 -mt-48"></div>
-
-                        <div className="lg:col-span-1 space-y-8 relative z-10">
-                            <motion.div
-                                className="aspect-[3/4] rounded-3xl border-2 border-primary overflow-hidden shadow-[0_30px_60px_rgba(245,159,10,0.15)] bg-black"
-                                layoutId={`img-${selectedPlayer.name}`}
+                        <motion.section
+                            key={selectedPlayer.name}
+                            initial={{ opacity: 0, scale: 0.9, y: 30 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 30 }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                            className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12 bg-card-dark border-2 border-primary/30 p-8 md:p-14 rounded-[3rem] shadow-[0_50px_100px_rgba(0,0,0,0.8)] relative overflow-hidden"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            {/* Close Button */}
+                            <button
+                                onClick={() => setSelectedPlayerName(null)}
+                                className="absolute top-8 right-8 size-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-primary transition-all z-50 hover:bg-white/10"
                             >
-                                <img
-                                    className="w-full h-full object-cover"
-                                    src={selectedPlayer.image || "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800&auto=format&fit=crop"}
-                                    alt={selectedPlayer.name}
-                                />
-                            </motion.div>
-                            <div className="space-y-4">
-                                <h4 className="text-primary font-black uppercase tracking-[0.2em] text-[10px] italic border-l-2 border-primary pl-4">Equipos Compatibles</h4>
-                                <div className="flex flex-wrap gap-2">
-                                    {selectedPlayer.playsFor.map(team => (
-                                        <span key={team} className="px-3 py-1.5 bg-border-gold/20 rounded-xl text-[9px] font-bold text-slate-300 border border-border-gold shadow-sm uppercase italic">
-                                            {team}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
+                                <span className="material-symbols-outlined font-bold">close</span>
+                            </button>
 
-                        <div className="lg:col-span-2 space-y-10 relative z-10">
-                            <div>
-                                <h2 className="text-5xl md:text-7xl font-black text-white italic uppercase mb-2 tracking-tighter">
-                                    {selectedPlayer.name}
-                                </h2>
-                                <p className="text-xl text-primary font-black italic tracking-tight">{selectedPlayer.playsFor[0]}</p>
-                            </div>
+                            <div className="absolute top-0 right-0 size-96 bg-primary/5 rounded-full blur-[100px] -mr-48 -mt-48 pointer-events-none"></div>
 
-                            <div className="p-8 bg-black/40 rounded-3xl border border-white/5 space-y-4 shadow-inner">
-                                <h4 className="text-slate-100 font-black italic uppercase tracking-widest text-xs flex items-center gap-3">
-                                    <span className="material-symbols-outlined text-primary text-sm">info</span>
-                                    Biografía y Trasfondo
-                                </h4>
-                                <p className="text-slate-400 leading-relaxed text-sm font-medium italic">
-                                    {selectedPlayer.description || `Esta leyenda de los campos de Blood Bowl es conocida por su impecable técnica y su capacidad para cambiar el rumbo de cualquier partido. Con un coste de ${(selectedPlayer.cost / 1000)},000 monedas de oro, es una inversión en victoria.`}
-                                </p>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div className="p-8 bg-black/30 rounded-3xl border border-white/5 shadow-xl">
-                                    <h4 className="text-slate-100 font-black italic uppercase tracking-widest text-xs mb-6">Regla Especial</h4>
-                                    <div className="flex gap-4">
-                                        <div className="size-10 rounded-2xl bg-primary/20 flex items-center justify-center shrink-0 border border-primary/20">
-                                            <span className="material-symbols-outlined text-lg text-primary">star</span>
-                                        </div>
-                                        <div>
-                                            <span className="text-slate-200 font-black italic block text-sm mb-2">Habilidad Maestra</span>
-                                            <p className="text-[11px] text-slate-500 font-medium italic leading-relaxed">
-                                                {selectedPlayer.specialRules}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="p-8 bg-black/30 rounded-3xl border border-white/5 shadow-xl">
-                                    <h4 className="text-slate-100 font-black italic uppercase tracking-widest text-xs mb-6">Habilidades Base</h4>
-                                    <div className="grid grid-cols-1 gap-2">
-                                        {selectedPlayer.skills?.split(',').map((skill, idx) => (
-                                            <div key={idx} className="flex justify-between items-center py-2.5 border-b border-white/5 last:border-0">
-                                                <span className="text-slate-300 font-bold italic text-[11px] uppercase tracking-wider">{skill.trim()}</span>
-                                                <span className="material-symbols-outlined text-sm text-primary opacity-60">check_circle</span>
-                                            </div>
+                            <div className="lg:col-span-1 space-y-8 relative z-10">
+                                <motion.div
+                                    layoutId={`img-${selectedPlayer.name}`}
+                                    className="aspect-[3/4] rounded-3xl border-2 border-primary overflow-hidden shadow-[0_30px_60px_rgba(245,159,10,0.15)] bg-black"
+                                >
+                                    <img
+                                        className="w-full h-full object-cover"
+                                        src={selectedPlayer.image || "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800&auto=format&fit=crop"}
+                                        alt={selectedPlayer.name}
+                                    />
+                                </motion.div>
+                                <div className="space-y-4">
+                                    <h4 className="text-primary font-black uppercase tracking-[0.2em] text-[10px] italic border-l-2 border-primary pl-4">Equipos Compatibles</h4>
+                                    <div className="flex flex-wrap gap-2">
+                                        {selectedPlayer.playsFor.map(team => (
+                                            <span key={team} className="px-3 py-1.5 bg-border-gold/20 rounded-xl text-[9px] font-bold text-slate-300 border border-border-gold shadow-sm uppercase italic">
+                                                {team}
+                                            </span>
                                         ))}
                                     </div>
                                 </div>
                             </div>
 
-                            <motion.div
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                className="flex flex-col md:flex-row items-center justify-between p-8 bg-primary rounded-[2rem] shadow-[0_20px_50px_rgba(245,159,10,0.3)] group overflow-hidden relative"
-                            >
-                                <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                <div className="text-background-dark relative z-10 mb-6 md:mb-0">
-                                    <span className="text-[9px] font-black uppercase tracking-[0.3em] opacity-80 block mb-1">Honorarios de Contratación</span>
-                                    <p className="text-3xl md:text-4xl font-black italic uppercase tracking-tighter leading-none border-l-2 border-black/40 pl-6">
-                                        {selectedPlayer.cost.toLocaleString('es-ES')} <span className="text-base">M.O.</span>
-                                    </p>
+                            <div className="lg:col-span-2 space-y-8 relative z-10 flex flex-col justify-between">
+                                <div className="space-y-8">
+                                    <div>
+                                        <h2 className="text-4xl md:text-7xl font-black text-white italic uppercase mb-2 tracking-tighter">
+                                            {selectedPlayer.name}
+                                        </h2>
+                                        <p className="text-xl text-primary font-black italic tracking-tight">{selectedPlayer.playsFor[0]}</p>
+                                    </div>
+
+                                    <div className="p-8 bg-black/40 rounded-3xl border border-white/5 space-y-4 shadow-inner">
+                                        <h4 className="text-slate-100 font-black italic uppercase tracking-widest text-xs flex items-center gap-3">
+                                            <span className="material-symbols-outlined text-primary text-sm">info</span>
+                                            Biografía y Trasfondo
+                                        </h4>
+                                        <p className="text-slate-400 leading-relaxed text-sm font-medium italic">
+                                            {selectedPlayer.description || `Esta leyenda de los campos de Blood Bowl es conocida por su impecable técnica y su capacidad para cambiar el rumbo de cualquier partido. Con un coste de ${(selectedPlayer.cost / 1000)},000 monedas de oro, es una inversión en victoria.`}
+                                        </p>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        <div className="p-8 bg-black/30 rounded-3xl border border-white/10 shadow-xl">
+                                            <h4 className="text-slate-100 font-black italic uppercase tracking-widest text-xs mb-6">Regla Especial</h4>
+                                            <div className="flex gap-4">
+                                                <div className="size-10 rounded-2xl bg-primary/20 flex items-center justify-center shrink-0 border border-primary/20">
+                                                    <span className="material-symbols-outlined text-lg text-primary">star</span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-slate-200 font-black italic block text-sm mb-2">Habilidad Maestra</span>
+                                                    <p className="text-[11px] text-slate-500 font-medium italic leading-relaxed">
+                                                        {selectedPlayer.specialRules}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="p-8 bg-black/30 rounded-3xl border border-white/10 shadow-xl">
+                                            <h4 className="text-slate-100 font-black italic uppercase tracking-widest text-xs mb-6">Habilidades Base</h4>
+                                            <div className="grid grid-cols-1 gap-2">
+                                                {selectedPlayer.skills?.split(',').map((skill, idx) => (
+                                                    <div key={idx} className="flex justify-between items-center py-2.5 border-b border-white/5 last:border-0">
+                                                        <span className="text-slate-300 font-bold italic text-[11px] uppercase tracking-wider">{skill.trim()}</span>
+                                                        <span className="material-symbols-outlined text-sm text-primary opacity-60">check_circle</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <button
-                                    onClick={() => showToast(`¡${selectedPlayer.name} anotado para contratación!`)}
-                                    className="w-full md:w-auto bg-background-dark text-primary px-10 py-5 rounded-2xl font-black uppercase italic tracking-widest text-xs hover:shadow-2xl transition-all border-2 border-background-dark/20 relative z-10"
+
+                                <motion.div
+                                    whileHover={{ scale: 1.01 }}
+                                    whileTap={{ scale: 0.99 }}
+                                    className="flex flex-col md:flex-row items-center justify-between p-8 bg-primary rounded-[2.5rem] shadow-[0_20px_50px_rgba(245,159,10,0.3)] group overflow-hidden relative mt-8"
                                 >
-                                    Contratar Ahora
-                                </button>
-                            </motion.div>
-                        </div>
-                    </motion.section>
+                                    <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                    <div className="text-background-dark relative z-10 mb-6 md:mb-0">
+                                        <span className="text-[9px] font-black uppercase tracking-[0.3em] opacity-80 block mb-1">Honorarios de Contratación</span>
+                                        <p className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter leading-none border-l-2 border-black/40 pl-6">
+                                            {selectedPlayer.cost.toLocaleString('es-ES')} <span className="text-base">M.O.</span>
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={() => showToast(`¡${selectedPlayer.name} anotado para contratación!`)}
+                                        className="w-full md:w-auto bg-background-dark text-primary px-12 py-5 rounded-2xl font-black uppercase italic tracking-widest text-xs hover:shadow-2xl transition-all border-2 border-background-dark/20 relative z-10"
+                                    >
+                                        Contratar Ahora
+                                    </button>
+                                </motion.div>
+                            </div>
+                        </motion.section>
+                    </motion.div>
                 )}
             </AnimatePresence>
 
