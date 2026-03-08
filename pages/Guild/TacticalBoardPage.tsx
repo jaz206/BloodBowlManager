@@ -1,20 +1,19 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import type { Token, Play, PlayerPosition, ManagedTeam, ManagedPlayer, BoardToken } from '../../types';
-import { fieldImage } from '../../data/fieldImage';
+import type { Play, PlayerPosition, ManagedTeam, ManagedPlayer, BoardToken } from '../../types';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const MAX_TOKENS = 11;
-const GRID_COLS = 15;
-const GRID_ROWS = 13;
+const GRID_COLS = 26; // Professional Blood Bowl pitch is 26 squares long
+const GRID_ROWS = 15; // and 15 squares wide (including wide zones)
 
-const positionConfig: Record<PlayerPosition, { color: string; hover: string; }> = {
-  Blitzer: { color: 'bg-red-700', hover: 'hover:bg-red-600' },
-  Lanzador: { color: 'bg-sky-600', hover: 'hover:bg-sky-500' },
-  Corredor: { color: 'bg-emerald-600', hover: 'hover:bg-emerald-500' },
-  Línea: { color: 'bg-slate-500', hover: 'hover:bg-slate-400' },
-  Receptor: { color: 'bg-amber-500', hover: 'hover:bg-amber-500' },
+const positionConfig: Record<string, { icon: string; border: string; label: string }> = {
+  Blitzer: { icon: 'swords', border: 'border-primary', label: 'BZ' },
+  Lanzador: { icon: 'ads_click', border: 'border-slate-400', label: 'LZ' },
+  Corredor: { icon: 'directions_run', border: 'border-emerald-500', label: 'CR' },
+  Línea: { icon: 'shield', border: 'border-slate-600', label: 'LN' },
+  Receptor: { icon: 'sports_football', border: 'border-amber-500', label: 'RC' },
+  BigGuy: { icon: 'star', border: 'border-accent-gold', label: 'BG' },
 };
-
-// Using BoardToken from types.ts instead of local interface
 
 interface PlaysProps {
   managedTeams: ManagedTeam[];
@@ -27,13 +26,14 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
   const [tokens, setTokens] = useState<BoardToken[]>([]);
   const [playName, setPlayName] = useState('');
   const [selectedPlayId, setSelectedPlayId] = useState<string | undefined>(plays.length > 0 ? plays[0].id : undefined);
-  const [teamToLoad, setTeamToLoad] = useState('');
+  const [selectedTeamId, setSelectedTeamId] = useState<string>('');
   const [selectedPlayer, setSelectedPlayer] = useState<ManagedPlayer | null>(null);
+  const [zoom, setZoom] = useState(1);
 
   const fieldRef = useRef<HTMLDivElement>(null);
   const draggedTokenRef = useRef<{ id: number } | null>(null);
 
-  // When available plays change (e.g., after deleting one), make sure the selection is still valid.
+  // Sync selection
   useEffect(() => {
     if (plays.length > 0 && !plays.find(p => p.id === selectedPlayId)) {
       setSelectedPlayId(plays[0].id);
@@ -72,7 +72,6 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     draggedTokenRef.current = null;
   }, []);
 
-  // Effect to clean up event listeners on unmount
   useEffect(() => {
     document.addEventListener('mousemove', handleDragMove);
     document.addEventListener('mouseup', handleDragEnd);
@@ -98,7 +97,13 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
 
   const handleAddToken = (position: PlayerPosition) => {
     if (tokens.length < MAX_TOKENS) {
-      setTokens(prev => [...prev, { id: Date.now(), x: Math.floor(GRID_COLS / 2), y: GRID_ROWS - 2, position }]);
+      setTokens(prev => [...prev, {
+        id: Date.now(),
+        x: 4, // Defensive line start
+        y: Math.floor(GRID_ROWS / 2),
+        position,
+        teamSide: 'home'
+      }]);
     }
   };
 
@@ -109,238 +114,365 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
 
   const handleSavePlay = () => {
     if (!playName.trim() || tokens.length === 0) {
-      alert('Por favor, introduce un nombre para la jugada y añade al menos un jugador.');
+      alert('Introduce un nombre y posiciona jugadores.');
       return;
     }
-
-    // Check if we are updating an existing play by name
     const existingPlay = plays.find(p => p.name.toLowerCase() === playName.trim().toLowerCase());
-
     const newPlay: Play = {
-      id: existingPlay?.id, // Keep the id if it's an update
+      id: existingPlay?.id,
       name: playName.trim(),
-      rosterName: managedTeams.find(t => t.id === teamToLoad)?.rosterName || 'Generica',
-      tokens: tokens.map(({ playerData, ...token }) => token) // Don't save playerData
+      rosterName: managedTeams.find(t => t.id === selectedTeamId)?.rosterName || 'Táctica',
+      tokens: tokens.map(({ playerData, ...token }) => token)
     };
-
     onSavePlay(newPlay);
     setPlayName('');
-    // The selection will be updated via useEffect when props change
   };
 
-  const handleLoadPlay = () => {
-    if (!selectedPlayId) return;
-    const playToLoad = plays.find(p => p.id === selectedPlayId);
+  const handleLoadPlay = (id: string) => {
+    const playToLoad = plays.find(p => p.id === id);
     if (playToLoad) {
       setTokens(playToLoad.tokens);
-      setPlayName(playToLoad.name); // Pre-fill name for easy re-saving
-      setSelectedPlayer(null);
+      setPlayName(playToLoad.name);
+      setSelectedPlayId(id);
     }
   };
 
-  const handleLoadTeam = () => {
-    setSelectedPlayer(null);
-    if (!teamToLoad) return;
-    const team = managedTeams.find(t => t.name === teamToLoad);
-    if (team && team.players.length > 0) {
-      const newTokens: BoardToken[] = team.players.map((player, index) => ({
+  const handleLoadTeam = (teamId: string) => {
+    const team = managedTeams.find(t => t.id === teamId);
+    if (team) {
+      setSelectedTeamId(teamId);
+      const newTokens: BoardToken[] = team.players.slice(0, 11).map((player, index) => ({
         id: player.id,
         position: mapPositionToType(player.position),
-        x: 2 + (index % 6) * 2,
-        y: GRID_ROWS - 3 + Math.floor(index / 6),
+        x: index < 3 ? 12 : (index < 7 ? 10 : 8), // Basic formation
+        y: 4 + (index % 7),
         playerData: player,
+        teamSide: 'home'
       }));
       setTokens(newTokens);
     }
   };
 
-  const handleDeletePlay = () => {
-    if (!selectedPlayId) return;
-    const playToDelete = plays.find(p => p.id === selectedPlayId);
-    if (playToDelete && confirm(`¿Estás seguro de que quieres borrar la jugada "${playToDelete.name}"?`)) {
-      onDeletePlay(selectedPlayId);
+  const handleDeletePlay = (id: string) => {
+    if (confirm('¿Borrar esta jugada?')) {
+      onDeletePlay(id);
     }
   };
 
-  const handleDragStart = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>, id: number) => {
-    // Prevent default for mouse events to enable dragging, but not for touch, to allow scrolling.
-    if (!('touches' in e)) {
-      e.preventDefault();
-    }
-    const clickedToken = tokens.find(t => t.id === id);
-    if (clickedToken) {
-      setSelectedPlayer(clickedToken.playerData || null);
+  const handleTokenClick = (id: number) => {
+    const token = tokens.find(t => t.id === id);
+    if (token?.playerData) {
+      setSelectedPlayer(token.playerData);
     }
     draggedTokenRef.current = { id };
   };
 
   return (
-    <div className="space-y-6 p-2 sm:p-4">
-      <div className="text-center">
-        <h2 className="text-2xl font-semibold text-amber-400 mb-2">Pizarra Táctica</h2>
-        <p className="text-slate-400 max-w-lg mx-auto">Crea, guarda y carga tus jugadas. Arrastra los jugadores para posicionarlos.</p>
-      </div>
-
-      <div
-        ref={fieldRef}
-        className="relative w-full max-w-5xl mx-auto aspect-[15/13] bg-slate-900 overflow-hidden rounded-lg shadow-xl border-2 border-slate-700 select-none"
-      >
-        <img src={fieldImage} alt="Campo de Blood Bowl" className="absolute inset-0 w-full h-full object-cover object-top" />
-
-        {/* Opponent's Touchdown Zone */}
-        <div className="absolute top-0 left-0 right-0 h-[calc(100%/13)] bg-red-800/40 border-b-2 border-red-500/60 pointer-events-none"></div>
-
-        {/* Grid Overlay */}
-        <div
-          className="absolute inset-0 grid pointer-events-none"
-          style={{
-            gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`,
-            gridTemplateRows: `repeat(${GRID_ROWS}, 1fr)`
-          }}
-        >
-          {Array.from({ length: GRID_ROWS * GRID_COLS }).map((_, i) => (
-            <div key={i} className="w-full h-full border border-white/10"></div>
-          ))}
-        </div>
-
-        {tokens.map((token, index) => (
-          <div
-            key={token.id}
-            onMouseDown={(e) => handleDragStart(e, token.id)}
-            onTouchStart={(e) => handleDragStart(e, token.id)}
-            className={`absolute flex items-center justify-center w-[6.66%] h-[7.69%] ${positionConfig[token.position]?.color || 'bg-gray-400'} text-white font-bold text-sm border-2 border-white rounded-full shadow-lg cursor-grab active:cursor-grabbing`}
-            style={{
-              left: `${((token.x + 0.5) / GRID_COLS) * 100}%`,
-              top: `${((token.y + 0.5) / GRID_ROWS) * 100}%`,
-              transform: 'translate(-50%, -50%)',
-            }}
-          >
-            {index + 1}
-          </div>
-        ))}
-      </div>
-
-      {selectedPlayer && (
-        <div className="mt-6 bg-slate-900/70 p-4 rounded-lg border border-slate-700 animate-fade-in max-w-5xl mx-auto">
-          <div className="flex justify-between items-start">
-            <div>
-              <h3 className="text-xl font-bold text-amber-400">{selectedPlayer.customName}</h3>
-              <p className="text-slate-400 text-sm">{selectedPlayer.position}</p>
-            </div>
-            <button onClick={() => setSelectedPlayer(null)} className="text-slate-400 hover:text-white p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-white" aria-label="Cerrar detalles del jugador">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
-            <div className="col-span-1 sm:col-span-3">
-              <h4 className="font-semibold text-slate-300 mb-2">Estadísticas</h4>
-              <div className="flex flex-wrap gap-x-4 gap-y-1 bg-slate-800 p-2 rounded-md text-slate-200">
-                <span className="font-mono">MV: {selectedPlayer.stats.MV}</span>
-                <span className="font-mono">FU: {selectedPlayer.stats.FU}</span>
-                <span className="font-mono">AG: {selectedPlayer.stats.AG}</span>
-                <span className="font-mono">PS: {selectedPlayer.stats.PS}</span>
-                <span className="font-mono">AR: {selectedPlayer.stats.AR}</span>
-                <span className="font-bold text-amber-300 font-mono">PE: {selectedPlayer.spp}</span>
-              </div>
-            </div>
-            <div className="col-span-1 sm:col-span-2">
-              <h4 className="font-semibold text-slate-300 mb-2">Habilidades Adquiridas</h4>
-              <p className="text-slate-300">{selectedPlayer.gainedSkills.length > 0 ? selectedPlayer.gainedSkills.join(', ') : 'Ninguna'}</p>
-            </div>
-            <div>
-              <h4 className="font-semibold text-slate-300 mb-2">Lesiones Permanentes</h4>
-              <p className="text-red-400">{selectedPlayer.lastingInjuries.length > 0 ? selectedPlayer.lastingInjuries.join(', ') : 'Ninguna'}</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-        <div className="bg-slate-900/70 p-4 rounded-lg border border-slate-700 md:col-span-2">
-          <h3 className="text-lg font-semibold text-amber-400 mb-4">Cargar Plantilla de Equipo</h3>
-          {managedTeams.length > 0 ? (
-            <div className="flex gap-3">
-              <select
-                value={teamToLoad}
-                onChange={e => setTeamToLoad(e.target.value)}
-                className="flex-grow bg-slate-800 border border-slate-600 rounded-md py-2 px-3 text-white focus:ring-amber-500 focus:border-amber-500"
-              >
-                <option value="">Seleccionar equipo...</option>
-                {managedTeams.map(team => <option key={team.id || team.name} value={team.name}>{team.name}</option>)}
-              </select>
-              <button onClick={handleLoadTeam} className="bg-teal-600 text-white font-bold py-2 px-6 rounded-md shadow-md hover:bg-teal-500 transition-colors">Cargar Equipo</button>
-            </div>
-          ) : (
-            <p className="text-slate-400">No has creado ningún equipo en el "Gestor de Equipo".</p>
-          )}
-        </div>
-
-        <div className="bg-slate-900/70 p-4 rounded-lg border border-slate-700">
-          <h3 className="text-lg font-semibold text-amber-400 mb-4">Añadir Jugadores ({tokens.length}/{MAX_TOKENS})</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
-            {(Object.keys(positionConfig) as PlayerPosition[]).map((position) => (
-              <button
-                key={position}
-                onClick={() => handleAddToken(position)}
-                disabled={tokens.length >= MAX_TOKENS}
-                className={`w-full ${positionConfig[position].color} ${positionConfig[position].hover} text-white font-bold py-2 px-2 rounded-md shadow-md disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm`}
-              >
-                + {position}
-              </button>
-            ))}
-          </div>
-          <button onClick={handleClearField} className="bg-rose-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-rose-500 transition-colors w-full">
-            Limpiar Campo
-          </button>
-        </div>
-
-        <div className="bg-slate-900/70 p-4 rounded-lg border border-slate-700">
-          <h3 className="text-lg font-semibold text-amber-400 mb-4">Mis Jugadas</h3>
-          {plays.length > 0 ? (
-            <div className="space-y-3">
-              <select value={selectedPlayId} onChange={e => setSelectedPlayId(e.target.value)} className="w-full bg-slate-800 border border-slate-600 rounded-md py-2 px-3 text-white focus:ring-amber-500 focus:border-amber-500">
-                {plays.map(play => <option key={play.id} value={play.id}>{play.name}</option>)}
-              </select>
-              <div className="flex flex-wrap gap-2">
-                <button onClick={handleLoadPlay} className="flex-1 bg-sky-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-sky-500 transition-colors">Cargar</button>
-                <button onClick={handleDeletePlay} className="flex-1 bg-slate-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:bg-slate-500 transition-colors">Borrar</button>
-              </div>
-            </div>
-          ) : <p className="text-slate-400">No hay jugadas guardadas.</p>}
-        </div>
-
-        <div className="bg-slate-900/70 p-4 rounded-lg border border-slate-700 md:col-span-2">
-          <h3 className="text-lg font-semibold text-amber-400 mb-4">Guardar Jugada Actual</h3>
-          <div className="flex gap-3">
-            <input
-              type="text"
-              value={playName}
-              onChange={e => setPlayName(e.target.value)}
-              placeholder="Nombre de la jugada"
-              className="flex-grow bg-slate-800 border border-slate-600 rounded-md py-2 px-3 text-white focus:ring-amber-500 focus:border-amber-500"
-              aria-label="Nombre de la jugada"
-            />
-            <button onClick={handleSavePlay} className="bg-emerald-600 text-white font-bold py-2 px-6 rounded-md shadow-md hover:bg-emerald-500 transition-colors">Guardar</button>
-          </div>
-        </div>
-      </div>
+    <div className="flex h-screen w-full flex-col bg-background-dark text-slate-100 overflow-hidden font-display">
       <style>{`
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+        .pitch-grid {
+          background-image: 
+            linear-gradient(to right, rgba(245, 159, 10, 0.1) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(245, 159, 10, 0.1) 1px, transparent 1px);
+          background-size: 40px 40px;
         }
-        .animate-fade-in {
-          animation: fade-in 0.5s ease-out forwards;
+        .pitch-lines {
+          border: 2px solid rgba(245, 159, 10, 0.3);
+          background: radial-gradient(circle at center, #233123 0%, #171f17 100%);
+          position: relative;
+        }
+        .pitch-lines::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+          opacity: 0.1;
+          pointer-events: none;
         }
       `}</style>
+
+      {/* Top Header */}
+      <header className="flex items-center justify-between border-b border-primary/20 bg-panel-dark px-6 py-3 shrink-0">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 text-primary">
+            <span className="material-symbols-outlined text-3xl">sports_football</span>
+            <h1 className="text-xl font-bold tracking-tight uppercase">Pizarra <span className="text-slate-100">Táctica</span></h1>
+          </div>
+          <div className="h-6 w-px bg-primary/20 mx-2"></div>
+          <div className="flex items-center gap-3">
+            <input
+              value={playName}
+              onChange={e => setPlayName(e.target.value)}
+              placeholder="Nueva Estrategia..."
+              className="bg-transparent border-none outline-none text-sm font-semibold text-slate-300 placeholder:text-slate-600 w-48"
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="relative group">
+            <button className="flex items-center gap-2 rounded-lg bg-background-dark border border-primary/30 px-4 py-2 text-xs font-bold text-slate-100 uppercase tracking-widest hover:border-primary transition-colors">
+              <span className="material-symbols-outlined text-primary text-sm">folder_open</span>
+              Formaciones
+              <span className="material-symbols-outlined text-sm">expand_more</span>
+            </button>
+            <div className="absolute right-0 top-full mt-2 w-64 bg-panel-dark border border-primary/20 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 p-2 overflow-hidden">
+              {plays.length > 0 ? plays.map(p => (
+                <div key={p.id} className="flex items-center justify-between group/item p-2 hover:bg-white/5 rounded-lg transition-colors cursor-pointer" onClick={() => handleLoadPlay(p.id!)}>
+                  <span className="text-xs font-bold text-slate-300 truncate pr-2">{p.name}</span>
+                  <button className="opacity-0 group-hover/item:opacity-100 text-red-500 hover:text-red-400 p-1" onClick={(e) => { e.stopPropagation(); handleDeletePlay(p.id!); }}>
+                    <span className="material-symbols-outlined text-sm">delete</span>
+                  </button>
+                </div>
+              )) : <div className="text-[10px] text-slate-500 p-3 italic">Sin jugadas guardadas</div>}
+            </div>
+          </div>
+
+          <button
+            onClick={handleSavePlay}
+            className="flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-xs font-black text-background-dark uppercase tracking-widest hover:bg-primary-dark transition-all shadow-[0_0_20px_rgba(245,159,10,0.2)]"
+          >
+            <span className="material-symbols-outlined text-sm">save</span>
+            Guardar
+          </button>
+        </div>
+      </header>
+
+      <main className="flex flex-1 overflow-hidden">
+        {/* Left Sidebar */}
+        <aside className="w-72 bg-panel-dark border-r border-primary/10 flex flex-col p-5 gap-8 shrink-0">
+          <section>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Tokens de Equipo</h2>
+              <div className="relative group">
+                <span className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 rounded-full border border-primary/20 font-black cursor-pointer hover:bg-primary/20 transition-colors">
+                  {managedTeams.find(t => t.id === selectedTeamId)?.name || 'Seleccionar'}
+                </span>
+                <div className="absolute left-0 top-full mt-2 w-48 bg-panel-dark border border-primary/20 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 p-1">
+                  {managedTeams.map(t => (
+                    <button key={t.id} className="w-full text-left p-2 hover:bg-white/5 rounded-lg text-[10px] font-bold text-slate-300" onClick={() => handleLoadTeam(t.id!)}>
+                      {t.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              {(Object.keys(positionConfig) as Array<keyof typeof positionConfig>).slice(0, 4).map((pos) => (
+                <button
+                  key={pos}
+                  onClick={() => handleAddToken(pos as PlayerPosition)}
+                  disabled={tokens.length >= MAX_TOKENS}
+                  className="group flex flex-col items-center gap-2 cursor-grab active:cursor-grabbing disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <div className={`relative flex items-center justify-center size-14 rounded-full bg-background-dark border-4 ${positionConfig[pos].border} shadow-lg transition-transform group-hover:scale-110`}>
+                    <span className="material-symbols-outlined text-2xl text-slate-300 group-hover:text-primary transition-colors">
+                      {positionConfig[pos].icon}
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{pos}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <div className="h-px bg-white/5"></div>
+
+          <section className="space-y-4">
+            <h2 className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Herramientas</h2>
+            <div className="flex flex-col gap-2">
+              <button className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary border border-primary/20 font-bold text-[10px] uppercase tracking-widest hover:bg-primary/20 transition-all">
+                <span className="material-symbols-outlined text-sm">brush</span>
+                Ruta Movimiento
+              </button>
+              <button className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-white/5 hover:text-slate-300 transition-all font-bold text-[10px] uppercase tracking-widest">
+                <span className="material-symbols-outlined text-sm">near_me</span>
+                Pase / Trayectoria
+              </button>
+              <button className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-white/5 hover:text-slate-300 transition-all font-bold text-[10px] uppercase tracking-widest">
+                <span className="material-symbols-outlined text-sm">groups</span>
+                Zonas Defensa
+              </button>
+              <button onClick={handleClearField} className="flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-500/10 transition-all font-bold text-[10px] uppercase tracking-widest mt-2">
+                <span className="material-symbols-outlined text-sm">backspace</span>
+                Limpiar Todo
+              </button>
+            </div>
+          </section>
+
+          <div className="mt-auto">
+            <AnimatePresence>
+              {selectedPlayer && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="bg-primary/5 rounded-2xl p-4 border border-primary/10 mb-4"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-[9px] font-black text-primary uppercase">Detalle: {selectedPlayer.customName}</span>
+                    <button onClick={() => setSelectedPlayer(null)} className="text-slate-600 hover:text-white">
+                      <span className="material-symbols-outlined text-xs">close</span>
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-5 gap-1 text-center mb-2">
+                    {['MV', 'FU', 'AG', 'PS', 'AR'].map(stat => (
+                      <div key={stat} className="flex flex-col">
+                        <span className="text-[8px] text-slate-600 font-bold">{stat}</span>
+                        <span className="text-[10px] text-slate-100 font-black">{(selectedPlayer.stats as any)[stat]}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="text-[8px] text-accent-gold italic font-medium leading-relaxed">
+                    {selectedPlayer.skills}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div className="bg-panel-dark rounded-2xl p-4 border border-white/5">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="material-symbols-outlined text-primary text-xs">analytics</span>
+                <span className="text-[9px] font-black text-slate-300 uppercase italic">Resumen Táctico</span>
+              </div>
+              <div className="flex justify-between text-[10px] mb-2">
+                <span className="text-slate-500 font-bold uppercase tracking-tighter">Jugadores:</span>
+                <span className="text-primary font-black italic">{tokens.length}/11</span>
+              </div>
+              <div className="flex justify-between text-[10px]">
+                <span className="text-slate-500 font-bold uppercase tracking-tighter">Prob. Éxito:</span>
+                <span className="text-green-500 font-black italic">68%</span>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* Main Pitch Workspace */}
+        <section className="flex-1 bg-background-dark relative flex items-center justify-center p-10 overflow-auto scrollbar-hide">
+          {/* Zoom & View Controls Overlay */}
+          <div className="absolute top-8 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-panel-dark/80 backdrop-blur-xl p-2 rounded-2xl border border-primary/20 shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-40">
+            <div className="flex items-center bg-black/40 rounded-xl p-1">
+              <button
+                onClick={() => setZoom(prev => Math.min(prev + 0.1, 1.5))}
+                className="p-2 rounded-lg hover:bg-primary/20 text-slate-400 hover:text-primary transition-all"
+              >
+                <span className="material-symbols-outlined text-sm">zoom_in</span>
+              </button>
+              <button
+                onClick={() => setZoom(prev => Math.max(prev - 0.1, 0.5))}
+                className="p-2 rounded-lg hover:bg-primary/20 text-slate-400 hover:text-primary transition-all"
+              >
+                <span className="material-symbols-outlined text-sm">zoom_out</span>
+              </button>
+            </div>
+            <div className="w-px h-6 bg-white/10"></div>
+            <button className="p-2 rounded-xl hover:bg-white/5 text-slate-500"><span className="material-symbols-outlined text-sm">undo</span></button>
+            <button className="p-2 rounded-xl hover:bg-white/5 text-slate-500"><span className="material-symbols-outlined text-sm">redo</span></button>
+            <div className="w-px h-6 bg-white/10"></div>
+            <button className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-red-500/10 text-red-500/60 hover:text-red-500 transition-all">
+              <span className="material-symbols-outlined text-sm">grid_view</span>
+              <span className="text-[10px] font-black uppercase tracking-widest">Rejilla</span>
+            </button>
+          </div>
+
+          {/* The Pitch Rendering */}
+          <div
+            ref={fieldRef}
+            className="pitch-lines shadow-[0_0_100px_rgba(0,0,0,0.8)] relative"
+            style={{
+              width: `${GRID_COLS * 40}px`,
+              height: `${GRID_ROWS * 40}px`,
+              transform: `scale(${zoom})`,
+              transition: 'transform 0.3s cubic-bezier(0.2, 0, 0, 1)'
+            }}
+          >
+            {/* Texture/Grid Layer */}
+            <div className="absolute inset-0 pitch-grid opacity-20"></div>
+
+            {/* Pitch Markings */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              {/* Line of Scrimmage */}
+              <div className="h-full w-1 bg-primary/20 shadow-[0_0_20px_rgba(245,159,10,0.2)]"></div>
+              {/* Center Circle */}
+              <div className="absolute size-32 border-2 border-primary/20 rounded-full"></div>
+              {/* End Zones */}
+              <div className="absolute left-0 h-full w-[40px] bg-primary/5 border-r border-primary/20"></div>
+              <div className="absolute right-0 h-full w-[40px] bg-primary/5 border-l border-primary/20"></div>
+              {/* Wide Zones (Approx 4 rows from top/bottom) */}
+              <div className="absolute top-[160px] w-full h-[1px] bg-primary/10 border-t border-dashed border-primary/20"></div>
+              <div className="absolute bottom-[160px] w-full h-[1px] bg-primary/10 border-t border-dashed border-primary/20"></div>
+            </div>
+
+            {/* Placed Tokens */}
+            <AnimatePresence>
+              {tokens.map((token) => {
+                const config = positionConfig[token.position] || positionConfig.Línea;
+                return (
+                  <motion.div
+                    key={token.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0 }}
+                    onMouseDown={(e) => { e.stopPropagation(); handleTokenClick(token.id); }}
+                    onTouchStart={(e) => { e.stopPropagation(); handleTokenClick(token.id); }}
+                    className={`absolute size-10 rounded-full bg-background-dark border-2 ${config.border} flex items-center justify-center shadow-2xl cursor-grab active:cursor-grabbing z-30 transition-shadow active:shadow-primary/40`}
+                    style={{
+                      left: `${token.x * 40 + 20}px`,
+                      top: `${token.y * 40 + 20}px`,
+                      transform: 'translate(-50%, -50%)',
+                    }}
+                  >
+                    <span className="text-[10px] font-black text-slate-100 italic">{config.label}</span>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+
+            {/* Ball */}
+            <motion.div
+              animate={{ y: [0, -5, 0], scale: [1, 1.1, 1] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-accent-gold z-40 drop-shadow-[0_0_10px_rgba(212,175,55,0.4)] pointer-events-none"
+            >
+              <span className="material-symbols-outlined text-2xl fill-1">sports_football</span>
+            </motion.div>
+          </div>
+
+          {/* Bottom Formation Presets Overlay */}
+          <div className="absolute bottom-10 right-10 flex flex-col gap-4 items-end">
+            <div className="bg-panel-dark/90 backdrop-blur-xl p-5 rounded-[2rem] border border-primary/20 shadow-2xl w-64 translate-y-2 group hover:translate-y-0 transition-transform">
+              <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 pl-1">Preajustes Rápidos</h3>
+              <div className="space-y-2">
+                {['Defensa Estándar', 'Ataque Jaula', 'Presión Lateral'].map(preset => (
+                  <button key={preset} className="w-full text-left px-4 py-3 rounded-2xl bg-white/5 border border-white/5 text-[10px] font-black text-slate-300 uppercase italic tracking-widest hover:bg-primary/10 hover:border-primary/20 hover:text-primary transition-all">
+                    {preset}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {/* Bottom Status Bar */}
+      <footer className="h-10 bg-background-dark border-t border-primary/10 flex items-center px-6 justify-between text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] italic">
+        <div className="flex gap-8">
+          <span className="flex items-center gap-2">
+            <span className="size-2 rounded-full bg-primary/40 animate-pulse"></span>
+            Modo Estratega
+          </span>
+          <span className="text-slate-600">Blood Bowl 2020 Draft Edition</span>
+        </div>
+        <div className="flex gap-6 items-center">
+          <span className="flex items-center gap-2">
+            <span className="size-1.5 rounded-full bg-green-500"></span>
+            Nuffle's Link
+          </span>
+          <span className="opacity-40">v2.4.0-Alpha</span>
+        </div>
+      </footer>
     </div>
   );
 };
