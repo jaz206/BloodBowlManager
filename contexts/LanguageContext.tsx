@@ -87,7 +87,7 @@ const translations: Record<Language, Record<string, string>> = {
         'team.create.noStaff': '- Sin Staff -',
         'oracle.hub.title': 'El Oráculo de Nuffle',
         'oracle.hub.subtitle': 'Toda la sabiduría de Nuffle a tu alcance',
-        'oracle.hub.search.placeholder': 'Equipos, habilidades, reglas o incentivos...',
+        'oracle.hub.search.placeholder': 'Equipos, habilidades, estrellas o incentivos...',
         'oracle.hub.teams.title': 'Enciclopedia de Equipos',
         'oracle.hub.teams.viewAll': 'Ver todos',
         'oracle.hub.dice.title': 'ORACLE DICE',
@@ -105,6 +105,9 @@ const translations: Record<Language, Record<string, string>> = {
         'oracle.hub.recent.injuries': 'Tabla de Lesiones',
         'oracle.hub.recent.throwFriend': 'Lanzamiento de Compañero',
         'oracle.hub.recent.stars': 'Jugadores Estrella',
+        'oracle.hub.stars.title': 'Compendio de Estrellas',
+        'oracle.hub.stars.desc': 'Consulta las leyendas vivas y mercenarios de élite disponibles para tu equipo.',
+        'oracle.hub.stars.btn': 'Ver Jugadores Estrella',
     },
     en: {
         'nav.home': 'Home',
@@ -184,7 +187,7 @@ const translations: Record<Language, Record<string, string>> = {
         'team.create.noStaff': '- No Staff -',
         'oracle.hub.title': "Nuffle's Oracle",
         'oracle.hub.subtitle': "All of Nuffle's wisdom at your fingertips",
-        'oracle.hub.search.placeholder': 'Teams, skills, rules, or inducements...',
+        'oracle.hub.search.placeholder': 'Teams, skills, star players, or inducements...',
         'oracle.hub.teams.title': 'Team Encyclopedia',
         'oracle.hub.teams.viewAll': 'View all',
         'oracle.hub.dice.title': 'ORACLE DICE',
@@ -202,6 +205,9 @@ const translations: Record<Language, Record<string, string>> = {
         'oracle.hub.recent.injuries': 'Injury Table',
         'oracle.hub.recent.throwFriend': 'Throw Team-Mate',
         'oracle.hub.recent.stars': 'Star Players',
+        'oracle.hub.stars.title': 'Star Player Compendium',
+        'oracle.hub.stars.desc': 'Check the living legends and elite mercenaries available for your team.',
+        'oracle.hub.stars.btn': 'View Star Players',
     }
 };
 

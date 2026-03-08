@@ -216,6 +216,48 @@ const OraclePage: React.FC<OraclePageProps> = ({ onRequestTeamCreation = () => {
                         </div>
                     </div>
                 </div>
+
+                {/* Star Player Compendium */}
+                <div className="lg:col-span-8 bg-zinc-900/40 p-8 rounded-[2.5rem] border border-white/5 shadow-inner relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-12 opacity-[0.03] group-hover:opacity-10 transition-opacity pointer-events-none">
+                        <span className="material-symbols-outlined !text-[180px] text-premium-gold font-black">star</span>
+                    </div>
+
+                    <div className="relative z-10 flex flex-col h-full justify-between">
+                        <div>
+                            <div className="flex items-center gap-4 mb-6">
+                                <div className="size-10 rounded-xl bg-premium-gold/10 flex items-center justify-center text-premium-gold border border-premium-gold/20">
+                                    <span className="material-symbols-outlined font-bold">star</span>
+                                </div>
+                                <h2 className="text-white text-xl font-black uppercase italic tracking-tighter">{t('oracle.hub.stars.title')}</h2>
+                            </div>
+                            <p className="text-slate-500 text-sm font-medium italic leading-relaxed max-w-lg mb-8">
+                                {t('oracle.hub.stars.desc')}
+                            </p>
+
+                            <div className="flex flex-wrap gap-4 mb-8">
+                                {[
+                                    { name: 'Griff Oberwald', role: 'Human Super Star' },
+                                    { name: 'Morg \'n\' Thorg', role: 'Ogre Mercenary' },
+                                    { name: 'Deeproot Strongbranch', role: 'Treeman Legend' }
+                                ].map(p => (
+                                    <div key={p.name} className="px-4 py-2 bg-black/40 border border-white/5 rounded-xl">
+                                        <p className="text-[10px] text-premium-gold font-black uppercase tracking-tight leading-none mb-1">{p.name}</p>
+                                        <p className="text-[8px] text-slate-600 font-bold uppercase italic">{p.role}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={() => setActiveView('star_players')}
+                            className="w-auto self-start bg-white/5 border border-white/10 text-white font-black py-4 px-10 rounded-2xl hover:bg-premium-gold hover:text-black hover:border-premium-gold transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-xs italic shadow-xl group/btn"
+                        >
+                            {t('oracle.hub.stars.btn')}
+                            <span className="material-symbols-outlined text-sm font-bold group-hover/btn:translate-x-1 transition-transform">arrow_forward</span>
+                        </button>
+                    </div>
+                </div>
             </div>
 
             {/* Quick Links / Recent Rules */}
