@@ -8,9 +8,10 @@ interface HomeProps {
     managedTeams: ManagedTeam[];
     competitions: Competition[];
     recentEvents: GameEvent[];
+    heroImage?: string | null;
 }
 
-const Home: React.FC<HomeProps> = ({ onNavigate, onCreateTeam, managedTeams }) => {
+const Home: React.FC<HomeProps> = ({ onNavigate, onCreateTeam, managedTeams, heroImage }) => {
     const { t } = useLanguage();
     const [searchTerm, setSearchTerm] = useState('');
 
@@ -25,7 +26,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate, onCreateTeam, managedTeams }) =
                 <div
                     className="absolute inset-0 opacity-15 grayscale hover:grayscale-0 transition-all duration-1000 pointer-events-none"
                     style={{
-                        backgroundImage: `linear-gradient(to right, #000 30%, transparent), url('https://lh3.googleusercontent.com/aida-public/AB6AXuCJiociLS1yh7ewqvP8Td4uNgye915_a1o2S17vV3fbtEil48xY-03n10qPTW4k9X7iw1vf_Ec0IV8L2VMDDGUbk_VJKfEoVUYbQrSlnMRCRblCcbuS826I0ZbMS2j2sjlAsag0nJOyZAtwdpierwXSsFw6uJ8SQ5UeVzdz7GKlgRuoGTFbbaQatpEvyDGvZ_qVdp0QHvueiyZ1UyAA7HFJgm3hav0xuEBO6tOQGFPWsVMs6DV4DCVHeNdgCjWL95oq7iaot65dCLa4')`,
+                        backgroundImage: `linear-gradient(to right, #000 30%, transparent), url('${heroImage || 'https://images.unsplash.com/photo-1551817311-d7734187f543?q=80&w=2070&auto=format&fit=crop'}')`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center'
                     }}

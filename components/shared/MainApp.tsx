@@ -25,6 +25,7 @@ import { db } from '../../firebaseConfig';
 import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, query, limit, orderBy } from "firebase/firestore";
 import { useLanguage } from '../../contexts/LanguageContext';
 import LanguageSelector from '../common/LanguageSelector';
+import { useMasterData } from '../../hooks/useMasterData';
 
 type View = 'home' | 'oracle' | 'starplayers' | 'guild' | 'tactical' | 'arena' | 'leagues' | 'guide' | 'admin';
 type SyncStatus = 'synced' | 'syncing' | 'error';
@@ -52,6 +53,7 @@ const MainApp: React.FC = () => {
   const [dataInitiallyLoaded, setDataInitiallyLoaded] = useState(false);
   const [requestedRoster, setRequestedRoster] = useState<string | null>(null);
   const [syncState, setSyncState] = useState<SyncStatus>('synced');
+  const { heroImage } = useMasterData();
 
   useEffect(() => {
     if (isGuest || !user || !db) {
@@ -273,6 +275,7 @@ const MainApp: React.FC = () => {
                   managedTeams={managedTeams}
                   competitions={leagues as any}
                   recentEvents={recentEvents}
+                  heroImage={heroImage}
                 />
               )}
               {activeView === 'oracle' && <OraclePage managedTeams={managedTeams} onRequestTeamCreation={(r) => { setRequestedRoster(r); setActiveView('guild'); }} />}

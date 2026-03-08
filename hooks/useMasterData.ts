@@ -29,6 +29,7 @@ export const useMasterData = () => {
     const [skills, setSkills] = useState<Skill[]>(staticSkills);
     const [starPlayers, setStarPlayers] = useState<StarPlayer[]>(staticStars);
     const [inducements, setInducements] = useState<Inducement[]>(staticInducements);
+    const [heroImage, setHeroImage] = useState<string | null>(null);
     const [loading, setLoading] = useState(false); // Immediate availability with static data fallback
     const [error, setError] = useState<string | null>(null);
 
@@ -126,11 +127,19 @@ export const useMasterData = () => {
             checkLoading();
         });
 
+        // Hero Image Listener
+        const unsubHero = onSnapshot(doc(db, 'settings_master', 'home_hero'), (snapshot) => {
+            if (snapshot.exists()) {
+                setHeroImage(snapshot.data().url);
+            }
+        });
+
         return () => {
             unsubTeams();
             unsubSkills();
             unsubStars();
             unsubInducements();
+            unsubHero();
         };
     }, [language]); // Depend on language to re-trigger fallback if db is not connected
 
@@ -160,10 +169,15 @@ export const useMasterData = () => {
         skills,
         starPlayers,
         inducements,
+        heroImage,
         loading,
         error,
         updateMasterItem,
         syncMasterData,
+        updateHeroImage: async (url: string) => {
+            if (!db) return;
+            await setDoc(doc(db, 'settings_master', 'home_hero'), { url });
+        },
         refresh: () => setLoading(true)
     };
 };
