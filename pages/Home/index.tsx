@@ -74,26 +74,6 @@ const Home: React.FC<HomeProps> = ({ onNavigate, onCreateTeam, managedTeams, her
 
             {/* Main Access Cards */}
             <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Oracle Card */}
-                <div className="group bg-zinc-900/40 border border-white/5 p-8 rounded-2xl hover:bg-zinc-800/60 transition-all flex flex-col justify-between h-full hover:border-premium-gold/30 hover:shadow-2xl hover:shadow-premium-gold/5 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-premium-gold/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                    <div>
-                        <div className="w-16 h-16 bg-premium-gold/10 rounded-2xl flex items-center justify-center mb-8 text-premium-gold group-hover:scale-110 transition-transform border border-premium-gold/20 shadow-inner">
-                            <span className="material-symbols-outlined text-4xl font-bold">menu_book</span>
-                        </div>
-                        <h3 className="text-2xl font-black text-white mb-3 uppercase tracking-tight italic leading-none">{t('home.cards.oracle.title')}</h3>
-                        <p className="text-slate-400 text-sm mb-10 leading-relaxed font-medium">
-                            {t('home.cards.oracle.desc')}
-                        </p>
-                    </div>
-                    <button
-                        onClick={() => onNavigate('oracle')}
-                        className="w-full py-4 border border-premium-gold/50 text-premium-gold font-black rounded-xl hover:bg-premium-gold hover:text-black transition-all uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-black/20"
-                    >
-                        {t('home.cards.oracle.btn')}
-                    </button>
-                </div>
-
                 {/* Guild Card */}
                 <div className="group bg-zinc-900/40 border border-white/5 p-8 rounded-2xl hover:bg-zinc-800/60 transition-all flex flex-col justify-between h-full hover:border-premium-gold/30 hover:shadow-2xl hover:shadow-premium-gold/5 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-premium-gold/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2"></div>
@@ -131,6 +111,26 @@ const Home: React.FC<HomeProps> = ({ onNavigate, onCreateTeam, managedTeams, her
                         className="w-full py-4 border border-premium-gold/50 text-premium-gold font-black rounded-xl hover:bg-premium-gold hover:text-black transition-all uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-black/20"
                     >
                         {t('home.cards.arena.btn')}
+                    </button>
+                </div>
+
+                {/* Oracle Card */}
+                <div className="group bg-zinc-900/40 border border-white/5 p-8 rounded-2xl hover:bg-zinc-800/60 transition-all flex flex-col justify-between h-full hover:border-premium-gold/30 hover:shadow-2xl hover:shadow-premium-gold/5 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-premium-gold/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                    <div>
+                        <div className="w-16 h-16 bg-premium-gold/10 rounded-2xl flex items-center justify-center mb-8 text-premium-gold group-hover:scale-110 transition-transform border border-premium-gold/20 shadow-inner">
+                            <span className="material-symbols-outlined text-4xl font-bold">menu_book</span>
+                        </div>
+                        <h3 className="text-2xl font-black text-white mb-3 uppercase tracking-tight italic leading-none">{t('home.cards.oracle.title')}</h3>
+                        <p className="text-slate-400 text-sm mb-10 leading-relaxed font-medium">
+                            {t('home.cards.oracle.desc')}
+                        </p>
+                    </div>
+                    <button
+                        onClick={() => onNavigate('oracle')}
+                        className="w-full py-4 border border-premium-gold/50 text-premium-gold font-black rounded-xl hover:bg-premium-gold hover:text-black transition-all uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-black/20"
+                    >
+                        {t('home.cards.oracle.btn')}
                     </button>
                 </div>
             </section>
