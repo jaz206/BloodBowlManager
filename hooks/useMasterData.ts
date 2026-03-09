@@ -5,8 +5,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 
 // ── Static Fallback Data ──────────────────────────────────────────────────────
 import { teamsData as staticTeamsData } from '../data/teams';
-import { skillsData as staticSkillsEs } from '../data/skills_es';
-import { skillsData as staticSkillsEn } from '../data/skills_en';
+import { skillsData as staticSkills } from '../data/skills';
 import { starPlayersData as staticStarsData } from '../data/starPlayers';
 import { inducements as staticInducementsEs } from '../data/inducements';
 import { inducementsData as staticInducementsEn } from '../data/inducements_en';
@@ -36,7 +35,7 @@ export const useMasterData = () => {
 
     // ── State ─────────────────────────────────────────────────────────────────
     const [teams, setTeams] = useState<Team[]>(staticTeamsData);
-    const [skills, setSkills] = useState<Skill[]>(language === 'es' ? staticSkillsEs : staticSkillsEn);
+    const [skills, setSkills] = useState<Skill[]>(staticSkills);
     const [starPlayers, setStarPlayers] = useState<StarPlayer[]>(staticStarsData);
     const [inducements, setInducements] = useState<Inducement[]>(language === 'es' ? staticInducementsEs : (staticInducementsEn as unknown as Inducement[]));
     const [heroImage, setHeroImage] = useState<string | null>(null);
@@ -49,9 +48,8 @@ export const useMasterData = () => {
     // ── Firestore listeners ───────────────────────────────────────────────────
     useEffect(() => {
         if (!db) {
-            // No Firebase — use static data
             setTeams(staticTeamsData);
-            setSkills(language === 'es' ? staticSkillsEs : staticSkillsEn);
+            setSkills(staticSkills);
             setStarPlayers(staticStarsData);
             setInducements(language === 'es' ? staticInducementsEs : (staticInducementsEn as unknown as Inducement[]));
             setLoading(false);
@@ -92,20 +90,18 @@ export const useMasterData = () => {
             }
         );
 
-        // Skills listener — language-aware
-        const skillsDoc = language === 'es' ? 'skills_es' : 'skills_en';
-        const staticSkillsFallback = language === 'es' ? staticSkillsEs : staticSkillsEn;
+        // Skills listener — uses consolidated bilingual document
         const unsubSkills = onSnapshot(
-            doc(db, MASTER_COL, skillsDoc),
+            doc(db, MASTER_COL, 'skills'),
             (snap) => {
                 if (snap.exists() && snap.data()?.items?.length > 0) {
                     setSkills(snap.data().items as Skill[]);
                 } else {
-                    setSkills(staticSkillsFallback);
+                    setSkills(staticSkills);
                 }
                 checkDone();
             },
-            () => { setSkills(staticSkillsFallback); checkDone(); }
+            () => { setSkills(staticSkills); checkDone(); }
         );
 
         // Star Players listener
@@ -188,8 +184,7 @@ export const useMasterData = () => {
 
             await Promise.all([
                 setDoc(doc(db, MASTER_COL, 'teams'), { items: staticTeamsData, updatedAt: ts }),
-                setDoc(doc(db, MASTER_COL, 'skills_es'), { items: staticSkillsEs, updatedAt: ts }),
-                setDoc(doc(db, MASTER_COL, 'skills_en'), { items: staticSkillsEn, updatedAt: ts }),
+                setDoc(doc(db, MASTER_COL, 'skills'), { items: staticSkills, updatedAt: ts }),
                 setDoc(doc(db, MASTER_COL, 'star_players'), { items: staticStarsData, updatedAt: ts }),
                 setDoc(doc(db, MASTER_COL, 'inducements_es'), { items: staticInducementsEs, updatedAt: ts }),
                 setDoc(doc(db, MASTER_COL, 'inducements_en'), { items: staticInducementsEn, updatedAt: ts }),
@@ -198,8 +193,7 @@ export const useMasterData = () => {
                     version: new Date().toISOString().split('T')[0],
                     source: 'admin-panel',
                     teamsCount: staticTeamsData.length,
-                    skillsEsCount: staticSkillsEs.length,
-                    skillsEnCount: staticSkillsEn.length,
+                    skillsCount: staticSkills.length,
                     starsCount: staticStarsData.length,
                 }),
             ]);
