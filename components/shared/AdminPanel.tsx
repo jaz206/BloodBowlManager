@@ -259,17 +259,38 @@ const AdminPanel: React.FC = () => {
                                 )}
 
                                 {editingItem.type === 'starPlayer' && (
-                                    <div>
-                                        <label className="block text-[10px] font-display font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Coste de Fichaje (GP)</label>
-                                        <input
-                                            type="number"
-                                            value={editingItem.data.cost || 0}
-                                            onChange={(e) => setEditingItem({
-                                                ...editingItem,
-                                                data: { ...editingItem.data, cost: parseInt(e.target.value) }
-                                            })}
-                                            className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-premium-gold/50 outline-none transition-all"
-                                        />
+                                    <div className="space-y-6">
+                                        <div>
+                                            <label className="block text-[10px] font-display font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Coste de Fichaje (GP)</label>
+                                            <input
+                                                type="number"
+                                                value={editingItem.data.cost || 0}
+                                                onChange={(e) => setEditingItem({
+                                                    ...editingItem,
+                                                    data: { ...editingItem.data, cost: parseInt(e.target.value) }
+                                                })}
+                                                className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-premium-gold/50 outline-none transition-all"
+                                            />
+                                        </div>
+                                        <div className="grid grid-cols-5 gap-4">
+                                            {['MV', 'FU', 'AG', 'PS', 'AR'].map(stat => (
+                                                <div key={stat}>
+                                                    <label className="block text-[10px] font-display font-bold text-slate-500 uppercase tracking-widest mb-1 ml-1">{stat}</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editingItem.data.stats?.[stat] || ''}
+                                                        onChange={(e) => setEditingItem({
+                                                            ...editingItem,
+                                                            data: {
+                                                                ...editingItem.data,
+                                                                stats: { ...editingItem.data.stats, [stat]: e.target.value }
+                                                            }
+                                                        })}
+                                                        className="w-full bg-black/40 border border-white/10 rounded-lg py-2 px-3 text-white text-xs focus:border-premium-gold/50 outline-none"
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 )}
 
@@ -280,7 +301,9 @@ const AdminPanel: React.FC = () => {
                                     <textarea
                                         value={editingItem.type === 'team'
                                             ? (editingItem.data.specialRules || '')
-                                            : (Array.isArray(editingItem.data.skills) ? editingItem.data.skills.join(', ') : '')}
+                                            : (Array.isArray(editingItem.data.skills)
+                                                ? editingItem.data.skills.join(', ')
+                                                : (typeof editingItem.data.skills === 'string' ? editingItem.data.skills : ''))}
                                         onChange={(e) => setEditingItem({
                                             ...editingItem,
                                             data: {
