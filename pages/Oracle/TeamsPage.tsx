@@ -48,6 +48,7 @@ const TeamArticle: React.FC<{
     onUpdateImage: (name: string, url: string) => Promise<void>;
 }> = ({ team, onViewRoster, onSkillClick, isAdmin, onUpdateImage }) => {
     const [isRadarModalOpen, setIsRadarModalOpen] = useState(false);
+    const [isFullscreenImage, setIsFullscreenImage] = useState(false);
 
     return (
         <motion.article
@@ -59,29 +60,40 @@ const TeamArticle: React.FC<{
             <div className="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
                 {/* Visual Section */}
                 <div className="lg:col-span-4 flex flex-col items-center text-center border-b lg:border-b-0 lg:border-r border-primary/10 pb-8 lg:pb-0 lg:pr-8">
-                    <div className="size-32 rounded-3xl bg-primary/10 border border-primary/30 flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(245,159,10,0.1)] overflow-hidden group">
+                    <div
+                        onClick={() => team.image && setIsFullscreenImage(true)}
+                        className="size-48 md:size-56 rounded-3xl bg-primary/5 border border-primary/20 flex items-center justify-center mb-6 shadow-[0_0_50px_rgba(245,159,10,0.05)] overflow-hidden group cursor-pointer relative"
+                    >
                         {team.image ? (
-                            <img src={team.image} alt={team.name} className="w-full h-full object-contain p-2 group-hover:scale-110 transition-transform" />
+                            <img src={team.image} alt={team.name} className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-500" />
                         ) : (
-                            <span className="material-symbols-outlined text-primary text-6xl">groups</span>
+                            <span className="material-symbols-outlined text-primary text-8xl opacity-20">groups</span>
+                        )}
+                        {team.image && (
+                            <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
+                                <span className="material-symbols-outlined text-white text-2xl drop-shadow-lg">zoom_in</span>
+                            </div>
                         )}
                     </div>
-                    <h3 className="text-3xl font-display font-bold text-slate-100">{team.name}</h3>
+                    <h3 className="text-4xl font-display font-black text-slate-100 italic uppercase tracking-tighter">{team.name}</h3>
                     <div className="mt-4 flex flex-wrap justify-center gap-2">
-                        <span className="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-bold border border-green-500/20 uppercase tracking-tighter">Tier {team.tier}</span>
-                        <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold border border-primary/20 tracking-tighter">Reroll: {team.rerollCost / 1000}k</span>
-                        <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold border border-primary/20 tracking-tighter">APO: {team.apothecary}</span>
+                        <span className="px-3 py-1.5 rounded-xl bg-green-500/20 text-green-400 text-[10px] font-black border border-green-500/20 uppercase tracking-widest">Tier {team.tier}</span>
+                        <span className="px-3 py-1.5 rounded-xl bg-primary/10 text-primary text-[10px] font-black border border-primary/20 tracking-widest uppercase italic">Reroll: {team.rerollCost / 1000}k</span>
+                        <span className="px-3 py-1.5 rounded-xl bg-premium-gold/10 text-premium-gold text-[10px] font-black border border-premium-gold/20 tracking-widest uppercase italic">APO: {team.apothecary}</span>
                     </div>
 
                     <div className="mt-10 w-full flex flex-col items-center">
-                        <p className="text-slate-400 text-[10px] uppercase font-bold mb-4 tracking-widest">Estadísticas Promedio</p>
-                        <div className="w-48 h-48 cursor-pointer hover:scale-105 transition-transform" onClick={() => setIsRadarModalOpen(true)}>
-                            <RadarChart ratings={[{ data: team.ratings, color: '#f59f0a' }]} size={192} />
+                        <p className="text-slate-500 text-[9px] uppercase font-black mb-4 tracking-[0.3em] italic">Estadísticas Promedio</p>
+                        <div className="w-52 h-52 cursor-pointer hover:scale-105 transition-all bg-black/20 rounded-full border border-white/5 p-4" onClick={() => setIsRadarModalOpen(true)}>
+                            <RadarChart ratings={[{ data: team.ratings, color: '#f59f0a' }]} size={176} />
                         </div>
                     </div>
 
                     {isAdmin && (
-                        <button className="mt-6 text-[10px] text-primary/60 hover:text-primary uppercase font-bold tracking-widest border border-primary/20 px-4 py-2 rounded-lg hover:bg-primary/5 transition-colors">
+                        <button
+                            onClick={() => onUpdateImage(team.name, team.image || '')}
+                            className="mt-8 text-[10px] text-primary font-black uppercase tracking-widest border border-primary/30 px-6 py-3 rounded-xl hover:bg-primary hover:text-black transition-all italic shadow-lg shadow-primary/5"
+                        >
                             Gestionar Imagen
                         </button>
                     )}
@@ -89,47 +101,49 @@ const TeamArticle: React.FC<{
 
                 {/* Content Section */}
                 <div className="lg:col-span-8">
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto custom-scrollbar">
                         <table className="w-full text-left">
                             <thead>
-                                <tr className="text-slate-500 text-[10px] uppercase tracking-widest border-b border-primary/10">
-                                    <th className="py-3 px-2 font-bold">Posición</th>
-                                    <th className="py-3 px-2 font-bold text-center">MA</th>
-                                    <th className="py-3 px-2 font-bold text-center">FU</th>
-                                    <th className="py-3 px-2 font-bold text-center">AG</th>
-                                    <th className="py-3 px-2 font-bold text-center">PA</th>
-                                    <th className="py-3 px-2 font-bold text-center">AR</th>
-                                    <th className="py-3 px-2 font-bold">Habilidades</th>
-                                    <th className="py-3 px-2 font-bold text-right">Coste</th>
+                                <tr className="text-slate-500 text-[9px] uppercase tracking-[0.2em] border-b border-white/5">
+                                    <th className="py-4 px-2 font-black">Posición</th>
+                                    <th className="py-4 px-2 font-black text-center">MA</th>
+                                    <th className="py-4 px-2 font-black text-center">FU</th>
+                                    <th className="py-4 px-2 font-black text-center">AG</th>
+                                    <th className="py-4 px-2 font-black text-center">PA</th>
+                                    <th className="py-4 px-2 font-black text-center">AR</th>
+                                    <th className="py-4 px-2 font-black">Habilidades</th>
+                                    <th className="py-4 px-2 font-black text-right">Coste</th>
                                 </tr>
                             </thead>
-                            <tbody className="text-sm">
+                            <tbody className="text-xs">
                                 {team.roster.slice(0, 5).map((player, idx) => (
-                                    <tr key={idx} className="border-b border-primary/5 hover:bg-primary/5 transition-colors group">
-                                        <td className="py-4 px-2 font-bold text-slate-200">{player.position}</td>
-                                        <td className="py-4 px-2 text-center text-slate-400 font-mono">{player.stats.MV}</td>
-                                        <td className="py-4 px-2 text-center text-slate-400 font-mono font-bold">{player.stats.FU}</td>
-                                        <td className="py-4 px-2 text-center text-slate-400 font-mono">{player.stats.AG}</td>
-                                        <td className="py-4 px-2 text-center text-slate-400 font-mono">{player.stats.PS}</td>
-                                        <td className="py-4 px-2 text-center text-slate-400 font-mono">{player.stats.AR}</td>
-                                        <td className="py-4 px-2 flex flex-wrap gap-1 max-w-[200px]">
-                                            {(player.skillKeys || []).map(skillKey => (
-                                                <SkillBadge
-                                                    key={skillKey}
-                                                    skillKey={skillKey}
-                                                    onClick={(skill) => onSkillClick(skill)}
-                                                />
-                                            ))}
+                                    <tr key={idx} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors group">
+                                        <td className="py-5 px-2 font-black text-slate-100 italic">{player.position}</td>
+                                        <td className="py-5 px-2 text-center text-slate-400 font-display font-bold">{player.stats.MV}</td>
+                                        <td className="py-5 px-2 text-center text-slate-200 font-display font-black">{player.stats.FU}</td>
+                                        <td className="py-5 px-2 text-center text-slate-400 font-mono italic">{player.stats.AG}</td>
+                                        <td className="py-5 px-2 text-center text-slate-400 font-mono italic">{player.stats.PS}</td>
+                                        <td className="py-5 px-2 text-center text-slate-400 font-mono italic">{player.stats.AR}</td>
+                                        <td className="py-5 px-2">
+                                            <div className="flex flex-wrap gap-1">
+                                                {(player.skillKeys || []).map(skillKey => (
+                                                    <SkillBadge
+                                                        key={skillKey}
+                                                        skillKey={skillKey}
+                                                        onClick={(skill) => onSkillClick(skill)}
+                                                    />
+                                                ))}
+                                            </div>
                                         </td>
-                                        <td className="py-4 px-2 text-right font-bold text-primary">{player.cost.toLocaleString()}</td>
+                                        <td className="py-5 px-2 text-right font-black text-premium-gold italic">{player.cost.toLocaleString('es-ES')}</td>
                                     </tr>
                                 ))}
                                 {team.roster.length > 5 && (
                                     <tr>
-                                        <td colSpan={8} className="py-4 text-center">
+                                        <td colSpan={8} className="py-6 text-center">
                                             <button
                                                 onClick={onViewRoster}
-                                                className="text-[10px] text-slate-500 hover:text-primary uppercase font-bold tracking-[0.2em] transition-colors"
+                                                className="text-[10px] text-slate-500 hover:text-primary uppercase font-black tracking-[0.3em] transition-all bg-white/5 px-6 py-2 rounded-full border border-white/5 hover:border-primary/30"
                                             >
                                                 + {team.roster.length - 5} Posiciones adicionales
                                             </button>
@@ -140,17 +154,17 @@ const TeamArticle: React.FC<{
                         </table>
                     </div>
 
-                    <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="bg-primary/5 rounded-xl p-4 flex justify-between items-center border border-primary/10 group hover:border-primary/30 transition-colors">
-                            <div className="flex items-center gap-3">
-                                <span className="material-symbols-outlined text-primary text-xl">refresh</span>
-                                <span className="text-xs font-bold uppercase tracking-widest">Segunda Oportunidad</span>
+                    <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div className="bg-black/30 rounded-2xl p-6 flex justify-between items-center border border-white/5 group hover:border-primary/20 transition-all shadow-inner">
+                            <div className="flex items-center gap-4">
+                                <span className="material-symbols-outlined text-primary">cached</span>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-300 italic">Segunda Oportunidad</span>
                             </div>
-                            <span className="text-primary font-bold font-mono">{team.rerollCost.toLocaleString()}</span>
+                            <span className="text-primary font-display font-black text-lg italic">{team.rerollCost.toLocaleString('es-ES')}</span>
                         </div>
                         <button
                             onClick={onViewRoster}
-                            className="bg-primary text-background-dark font-black px-6 py-4 rounded-xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-xs italic shadow-lg shadow-primary/20"
+                            className="bg-primary text-background-dark font-black px-8 py-5 rounded-2xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-xs italic shadow-[0_10px_30px_rgba(245,159,10,0.2)]"
                         >
                             <span className="material-symbols-outlined text-sm font-bold">visibility</span>
                             Ver Roster Completo
@@ -158,6 +172,36 @@ const TeamArticle: React.FC<{
                     </div>
                 </div>
             </div>
+
+            {/* Lightbox / Fullscreen Image */}
+            <AnimatePresence>
+                {isFullscreenImage && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setIsFullscreenImage(false)}
+                        className="fixed inset-0 z-[1000] bg-black/95 backdrop-blur-xl flex items-center justify-center p-8 cursor-zoom-out"
+                    >
+                        <motion.button
+                            initial={{ opacity: 0, scale: 0.5 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="absolute top-10 right-10 text-white/50 hover:text-white transition-colors"
+                        >
+                            <span className="material-symbols-outlined !text-4xl">close</span>
+                        </motion.button>
+                        <motion.img
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            src={team.image}
+                            alt={team.name}
+                            className="max-w-full max-h-full object-contain shadow-[0_0_100px_rgba(245,159,10,0.2)] rounded-3xl"
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {isRadarModalOpen && <RadarChartModal team={team} onClose={() => setIsRadarModalOpen(false)} />}
         </motion.article>
     );
