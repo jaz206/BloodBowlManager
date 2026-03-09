@@ -41,7 +41,7 @@ export const useMasterData = () => {
     const [inducements, setInducements] = useState<Inducement[]>(language === 'es' ? staticInducementsEs : (staticInducementsEn as unknown as Inducement[]));
     const [heroImage, setHeroImage] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState<Error | null>(null);
     const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
     const [lastSync, setLastSync] = useState<string | null>(null);
     const [isFromFirestore, setIsFromFirestore] = useState(false);
@@ -74,12 +74,22 @@ export const useMasterData = () => {
                 if (snap.exists() && snap.data()?.items?.length > 0) {
                     setTeams(snap.data().items as Team[]);
                     setIsFromFirestore(true);
+                    setError(null);
                 } else {
                     setTeams(staticTeamsData);
+                    setIsFromFirestore(false);
                 }
                 checkDone();
             },
-            () => { setTeams(staticTeamsData); checkDone(); }
+            (err) => {
+                console.warn("Firestore Teams error:", err.code);
+                if (err.code === 'permission-denied') {
+                    setError(err);
+                }
+                setTeams(staticTeamsData);
+                setIsFromFirestore(false);
+                checkDone();
+            }
         );
 
         // Skills listener — language-aware

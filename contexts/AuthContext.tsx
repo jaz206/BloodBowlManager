@@ -2,7 +2,8 @@
 
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import type { User } from '../types';
-import { auth } from '../firebaseConfig';
+import { auth, db } from '../firebaseConfig';
+import { doc, getDoc } from 'firebase/firestore';
 import { GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
 
 interface AuthContextType {
@@ -40,15 +41,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return;
     }
 
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
-        // A Firebase user is signed in. This is the source of truth.
+        // Fetch additional user data from Firestore (like isAdmin)
+        let isAdminFlag = firebaseUser.uid === ADMIN_UID;
+
+        if (db) {
+          try {
+            const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+            if (userDoc.exists()) {
+              const data = userDoc.data();
+              if (data && typeof data.isAdmin === 'boolean') {
+                isAdminFlag = data.isAdmin;
+              }
+            }
+          } catch (error) {
+            console.error("Error fetching user admin status:", error);
+          }
+        }
+
         const newUser: User = {
           id: firebaseUser.uid,
           name: firebaseUser.displayName || 'Entrenador',
           email: firebaseUser.email || '',
           picture: firebaseUser.photoURL || '',
-          isAdmin: firebaseUser.uid === ADMIN_UID
+          isAdmin: isAdminFlag
         };
 
         // Ensure any guest data is cleared now that a real user is logged in.
