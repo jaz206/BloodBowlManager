@@ -296,7 +296,7 @@ const AdminPanel: React.FC = () => {
 
                                 <div>
                                     <label className="block text-[10px] font-display font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">
-                                        {editingItem.type === 'team' ? 'Reglas Especiales / Descripción' : 'Habilidades Especiales'}
+                                        {editingItem.type === 'team' ? 'Reglas Especiales / Descripción' : 'Habilidades (separadas por comas)'}
                                     </label>
                                     <textarea
                                         value={editingItem.type === 'team'
@@ -313,8 +313,22 @@ const AdminPanel: React.FC = () => {
                                                     : e.target.value.split(',').map(s => s.trim())
                                             }
                                         })}
-                                        className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-premium-gold/50 outline-none transition-all h-24"
+                                        className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-premium-gold/50 outline-none transition-all h-24 mb-4"
                                     />
+
+                                    {editingItem.type === 'starPlayer' && (
+                                        <>
+                                            <label className="block text-[10px] font-display font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Regla Especial Única</label>
+                                            <textarea
+                                                value={editingItem.data.specialRules || ''}
+                                                onChange={(e) => setEditingItem({
+                                                    ...editingItem,
+                                                    data: { ...editingItem.data, specialRules: e.target.value }
+                                                })}
+                                                className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-premium-gold/50 outline-none transition-all h-24"
+                                            />
+                                        </>
+                                    )}
                                 </div>
                             </div>
 
