@@ -47,6 +47,11 @@ const AdminPanel: React.FC = () => {
     const [editingItem, setEditingItem] = useState<{ type: AdminTab | 'hero', data: any } | null>(null);
     const [isSaving, setIsSaving] = useState(false);
 
+    // GitHub Image Explorer State
+    const [gitHubImages, setGitHubImages] = useState<any[]>([]);
+    const [isLoadingGitHub, setIsLoadingGitHub] = useState(false);
+    const [githubSearch, setGithubSearch] = useState('');
+
     // Filtering logic
     const filteredContent = useMemo(() => {
         const term = searchTerm.toLowerCase();
@@ -91,6 +96,32 @@ const AdminPanel: React.FC = () => {
                 });
             }
         }
+    }, [editingItem]);
+
+    // Fetch GitHub images when editing or modal opens
+    useEffect(() => {
+        if (!editingItem) return;
+
+        const fetchGitHubImages = async () => {
+            setIsLoadingGitHub(true);
+            try {
+                const response = await fetch('https://api.github.com/repos/jaz206/Bloodbowl-image/contents/');
+                if (!response.ok) throw new Error('Error al conectar con GitHub');
+                const data = await response.json();
+                // Filter only images
+                const images = data.filter((file: any) =>
+                    file.type === 'file' &&
+                    /\.(png|jpe?g|gif|webp)$/i.test(file.name)
+                );
+                setGitHubImages(images);
+            } catch (err) {
+                console.error('GitHub fetch failed:', err);
+            } finally {
+                setIsLoadingGitHub(false);
+            }
+        };
+
+        fetchGitHubImages();
     }, [editingItem]);
 
     const handleSync = async (force = false) => {
@@ -388,11 +419,88 @@ const AdminPanel: React.FC = () => {
                                 <form onSubmit={handleSave} className="space-y-8">
                                     <div className="grid grid-cols-1 gap-8">
 
-                                        {/* IMAGE / DATA URL FIELD */}
+                                        {/* IMAGE EXPLORER / DATA URL FIELD */}
                                         {(editingItem.type === 'hero' || editingItem.type === 'teams' || editingItem.type === 'stars') && (
-                                            <div className="space-y-4">
-                                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Enlace de Imagen</label>
-                                                <div className="flex gap-4">
+                                            <div className="space-y-6">
+                                                <div className="flex justify-between items-end">
+                                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Origen de la Imagen</label>
+                                                    <span className="text-[9px] font-bold text-premium-gold/50 uppercase tracking-tighter">Repositorio: jaz206/Bloodbowl-image</span>
+                                                </div>
+
+                                                {/* Repo Explorer */}
+                                                <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-6 space-y-6">
+                                                    <div className="flex gap-4">
+                                                        <div className="relative flex-1">
+                                                            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm">search</span>
+                                                            <input
+                                                                type="text"
+                                                                placeholder="Buscar imagen en el repositorio..."
+                                                                value={githubSearch}
+                                                                onChange={(e) => setGithubSearch(e.target.value)}
+                                                                className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-xs text-white focus:border-premium-gold/30 outline-none"
+                                                            />
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => { setGithubSearch(''); }}
+                                                            className="px-4 py-2 bg-white/5 rounded-xl text-[10px] font-black hover:bg-white/10 text-slate-400"
+                                                        >
+                                                            Limpiar
+                                                        </button>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 max-h-64 overflow-y-auto custom-scrollbar p-1">
+                                                        {isLoadingGitHub ? (
+                                                            Array(10).fill(0).map((_, i) => (
+                                                                <div key={i} className="aspect-square bg-white/5 animate-pulse rounded-xl border border-white/5"></div>
+                                                            ))
+                                                        ) : (
+                                                            gitHubImages
+                                                                .filter(img => img.name.toLowerCase().includes(githubSearch.toLowerCase()))
+                                                                .map((img) => {
+                                                                    const currentImg = editingItem.type === 'hero' ? editingItem.data.url : editingItem.data.image;
+                                                                    const isSelected = currentImg === img.download_url;
+
+                                                                    return (
+                                                                        <button
+                                                                            key={img.sha}
+                                                                            type="button"
+                                                                            onClick={() => {
+                                                                                setEditingItem({
+                                                                                    ...editingItem,
+                                                                                    data: { ...editingItem.data, [editingItem.type === 'hero' ? 'url' : 'image']: img.download_url }
+                                                                                });
+                                                                            }}
+                                                                            className={`group relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${isSelected ? 'border-premium-gold shadow-[0_0_15px_rgba(202,138,4,0.3)]' : 'border-white/10 hover:border-white/30'}`}
+                                                                        >
+                                                                            <img src={img.download_url} alt={img.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                                                                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2">
+                                                                                <span className="text-[7px] text-white font-black uppercase text-center break-all leading-tight">
+                                                                                    {img.name.split('.')[0]}
+                                                                                </span>
+                                                                            </div>
+                                                                            {isSelected && (
+                                                                                <div className="absolute top-1 right-1 bg-premium-gold text-black rounded-full w-4 h-4 flex items-center justify-center">
+                                                                                    <span className="material-symbols-outlined text-[10px] font-black">check</span>
+                                                                                </div>
+                                                                            )}
+                                                                        </button>
+                                                                    );
+                                                                })
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                <div className="relative">
+                                                    <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center px-8 opacity-20 pointer-events-none">
+                                                        <div className="h-px w-full bg-white/50"></div>
+                                                        <span className="mx-4 text-[9px] font-black uppercase tracking-widest bg-zinc-950 px-2 whitespace-nowrap">O introduce URL manual</span>
+                                                        <div className="h-px w-full bg-white/50"></div>
+                                                    </div>
+                                                    <div className="h-10"></div>
+                                                </div>
+
+                                                <div className="flex gap-4 items-center">
                                                     <div className="grow">
                                                         <input
                                                             type="text"
@@ -404,12 +512,16 @@ const AdminPanel: React.FC = () => {
                                                                     data: { ...editingItem.data, [editingItem.type === 'hero' ? 'url' : 'image']: val }
                                                                 });
                                                             }}
-                                                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none transition-all placeholder-slate-700 font-medium"
-                                                            placeholder="https://..."
+                                                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-[10px] text-slate-400 font-mono focus:border-premium-gold/50 outline-none transition-all"
+                                                            placeholder="URL personalizada..."
                                                         />
                                                     </div>
-                                                    <div className="w-24 h-16 rounded-2xl border border-white/10 bg-black overflow-hidden flex-shrink-0">
-                                                        <img src={editingItem.type === 'hero' ? editingItem.data.url : editingItem.data.image} alt="" className="w-full h-full object-cover" />
+                                                    <div className="w-24 h-16 rounded-2xl border border-white/10 bg-black overflow-hidden flex-shrink-0 flex items-center justify-center">
+                                                        {(editingItem.type === 'hero' ? editingItem.data.url : editingItem.data.image) ? (
+                                                            <img src={editingItem.type === 'hero' ? editingItem.data.url : editingItem.data.image} alt="" className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <span className="material-symbols-outlined text-white/10">image_not_supported</span>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
