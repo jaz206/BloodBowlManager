@@ -46,6 +46,14 @@ const AdminPanel: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [editingItem, setEditingItem] = useState<{ type: AdminTab | 'hero', data: any } | null>(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+    const [confirmModal, setConfirmModal] = useState<{ title: string; message: string; onConfirm: () => void; danger?: boolean } | null>(null);
+    const [syncProgress, setSyncProgress] = useState<'idle' | 'syncing' | 'done' | 'error'>('idle');
+
+    const showToast = (text: string, type: 'success' | 'error' = 'success') => {
+        setToastMessage({ text, type });
+        setTimeout(() => setToastMessage(null), 4500);
+    };
 
     // GitHub Image Explorer State
     const [gitHubImages, setGitHubImages] = useState<any[]>([]);
@@ -125,21 +133,33 @@ const AdminPanel: React.FC = () => {
     }, [editingItem]);
 
     const handleSync = async (force = false) => {
+        const title = force ? '⚠️ Restablecimiento Total' : '🔄 Sincronización Inteligente';
         const message = force
-            ? '¡PELIGRO! Esto borrará TODOS tus cambios actuales en Firestore (incluyendo imágenes y arreglos manuales) y los reemplazará por los iniciales del código. ¿Estás COMPLETAMENTE seguro?'
-            : 'Sincronización Inteligente: Esto buscará nuevos equipos o habilidades en el código y los añadirá a Firestore SIN borrar tus fotos ni cambios manuales. ¿Continuar?';
+            ? '¡PELIGRO! Esto borrará TODOS los cambios en Firestore (incluyendo imágenes y arreglos manuales) y los reemplazará por los valores del código fuente. Esta acción es IRREVERSIBLE.'
+            : 'Esta acción buscará nuevos equipos o habilidades en el código y los añadirá a Firestore SIN borrar tus fotos ni cambios manuales.';
 
-        if (!window.confirm(message)) return;
-
-        try {
-            await syncMasterData(force);
-            alert(force
-                ? 'Base de datos restablecida por completo.'
-                : 'Sincronización completada. Se han añadido nuevos elementos preservando tus cambios existentes.');
-        } catch (err: any) {
-            console.error('Error syncing:', err);
-            alert('Error al sincronizar: ' + (err.message || 'Desconocido'));
-        }
+        setConfirmModal({
+            title,
+            message,
+            danger: force,
+            onConfirm: async () => {
+                setConfirmModal(null);
+                setSyncProgress('syncing');
+                try {
+                    await syncMasterData(force);
+                    setSyncProgress('done');
+                    showToast(force
+                        ? '✅ Base de datos restablecida por completo.'
+                        : '✅ Sincronización completada. Nuevos elementos añadidos preservando tus cambios.');
+                    setTimeout(() => setSyncProgress('idle'), 3000);
+                } catch (err: any) {
+                    console.error('Error syncing:', err);
+                    setSyncProgress('error');
+                    showToast('Error al sincronizar: ' + (err.message || 'Desconocido'), 'error');
+                    setTimeout(() => setSyncProgress('idle'), 3000);
+                }
+            }
+        });
     };
 
     const handleSave = async (e: React.FormEvent) => {
@@ -162,12 +182,12 @@ const AdminPanel: React.FC = () => {
                 await updateMasterItem(docId, data.name, data);
             }
 
-            alert('Cambios guardados con éxito en la Base de Datos.');
+            showToast('✅ Cambios guardados con éxito en la Base de Datos.');
             setEditingItem(null);
             refresh();
         } catch (error) {
             console.error('Error saving:', error);
-            alert('Error al guardar: ' + (error instanceof Error ? error.message : 'Desconocido'));
+            showToast('Error al guardar: ' + (error instanceof Error ? error.message : 'Desconocido'), 'error');
         } finally {
             setIsSaving(false);
         }
@@ -214,18 +234,26 @@ const AdminPanel: React.FC = () => {
 
                     <button
                         onClick={() => handleSync(false)}
-                        disabled={syncStatus === 'syncing'}
-                        className={`px-6 py-2.5 rounded-xl border font-display font-black uppercase tracking-widest text-[10px] transition-all flex items-center gap-3 shadow-xl ${syncStatus === 'syncing'
+                        disabled={syncProgress === 'syncing'}
+                        className={`px-6 py-2.5 rounded-xl border font-display font-black uppercase tracking-widest text-[10px] transition-all flex items-center gap-3 shadow-xl ${syncProgress === 'syncing'
                             ? 'bg-zinc-800 border-zinc-700 text-zinc-500 cursor-not-allowed'
-                            : 'bg-blood-red/20 border-blood-red/30 text-blood-red hover:bg-blood-red hover:text-white hover:shadow-blood-red/20'
+                            : syncProgress === 'done'
+                                ? 'bg-green-500/20 border-green-500/30 text-green-400'
+                                : syncProgress === 'error'
+                                    ? 'bg-red-500/20 border-red-500/30 text-red-400'
+                                    : 'bg-blood-red/20 border-blood-red/30 text-blood-red hover:bg-blood-red hover:text-white hover:shadow-blood-red/20'
                             }`}
                     >
-                        {syncStatus === 'syncing' ? (
+                        {syncProgress === 'syncing' ? (
                             <span className="w-3 h-3 border-2 border-zinc-500 border-t-white rounded-full animate-spin"></span>
+                        ) : syncProgress === 'done' ? (
+                            <span className="material-symbols-outlined text-sm">check_circle</span>
+                        ) : syncProgress === 'error' ? (
+                            <span className="material-symbols-outlined text-sm">error</span>
                         ) : (
                             <span className="material-symbols-outlined text-sm">sync</span>
                         )}
-                        {syncStatus === 'syncing' ? 'Sincronizando...' : 'Sincronización Inteligente'}
+                        {syncProgress === 'syncing' ? 'Sincronizando...' : syncProgress === 'done' ? '¡Completado!' : syncProgress === 'error' ? 'Error' : 'Sincronización Inteligente'}
                     </button>
                 </div>
             </header>
@@ -815,9 +843,73 @@ const AdminPanel: React.FC = () => {
                     opacity: 0.3;
                 }
             `}</style>
-        </div >
+            {/* ── Sync Progress Bar ─────────────────────────────── */}
+            {syncProgress === 'syncing' && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center z-[500] gap-8 pointer-events-none">
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="w-20 h-20 rounded-3xl bg-premium-gold/10 border border-premium-gold/20 flex items-center justify-center">
+                            <span className="w-10 h-10 border-4 border-premium-gold/30 border-t-premium-gold rounded-full animate-spin"></span>
+                        </div>
+                        <p className="text-premium-gold font-black uppercase tracking-widest text-sm animate-pulse">Sincronizando con Nuffle...</p>
+                        <div className="w-64 h-1 bg-white/10 rounded-full overflow-hidden">
+                            <div className="h-full bg-premium-gold rounded-full animate-progress-bar"></div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Confirmation Modal ────────────────────────────── */}
+            {confirmModal && (
+                <div className="fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center z-[400] p-4">
+                    <div className="bg-[#0a0a0a] border border-white/10 p-10 rounded-[2.5rem] shadow-2xl max-w-sm w-full text-center space-y-6">
+                        <div className={`size-16 rounded-3xl flex items-center justify-center mx-auto ${confirmModal.danger ? 'bg-red-500/10 text-red-500' : 'bg-premium-gold/10 text-premium-gold'
+                            }`}>
+                            <span className="material-symbols-outlined text-4xl">
+                                {confirmModal.danger ? 'dangerous' : 'sync'}
+                            </span>
+                        </div>
+                        <div className="space-y-2">
+                            <h3 className="text-xl font-black text-white italic uppercase tracking-tighter">{confirmModal.title}</h3>
+                            <p className="text-slate-400 text-sm font-medium leading-relaxed">{confirmModal.message}</p>
+                        </div>
+                        <div className="flex flex-col gap-3">
+                            <button
+                                onClick={confirmModal.onConfirm}
+                                className={`w-full py-4 font-black text-xs uppercase tracking-widest rounded-2xl transition-all ${confirmModal.danger
+                                    ? 'bg-red-600 text-white hover:bg-red-500 shadow-xl shadow-red-600/20'
+                                    : 'bg-premium-gold text-black hover:bg-premium-gold/90 shadow-xl shadow-premium-gold/20'
+                                    }`}
+                            >
+                                CONFIRMAR
+                            </button>
+                            <button
+                                onClick={() => setConfirmModal(null)}
+                                className="w-full py-4 bg-white/5 text-slate-400 font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-white/10 transition-all"
+                            >
+                                CANCELAR
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Toast Notification ───────────────────────────── */}
+            {toastMessage && (
+                <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-[500] animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className={`px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 backdrop-blur-xl border ${toastMessage.type === 'error'
+                        ? 'bg-red-950/80 border-red-500/30'
+                        : 'bg-zinc-900/90 border-white/10'
+                        }`}>
+                        <span className={`material-symbols-outlined font-bold ${toastMessage.type === 'error' ? 'text-red-400' : 'text-premium-gold'
+                            }`}>
+                            {toastMessage.type === 'error' ? 'error' : 'check_circle'}
+                        </span>
+                        <p className="text-white font-bold text-sm max-w-xs">{toastMessage.text}</p>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 };
 
 export default AdminPanel;
-

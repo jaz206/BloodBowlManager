@@ -127,4 +127,12 @@ root/
 *   *Archivos Afectados*: `data/teams.ts`, `scripts/fix_encoding.cjs` (nuevo).
 
 ---
+### [2026-03-09] Auditoría UI/UX - Sprint 4: AdminPanel & Zero alert()
+*   **AdminPanel — Sistema Nativo Eliminado**: Sustituidos `window.confirm()` y `alert()` en las sincronizaciones de BD por un modal de confirmación premium + toasts estilizados.
+*   **AdminPanel — Feedback Visual de Sync**: El botón "Sincronización" ahora cambia estado visual (idle ✦ syncing ✦ done ✦ error) + pantalla de progreso flotante bloqueante durante operaciones largas.
+*   **Toast Diferenciado**: Toasts de tipo `success` (dorado) y `error` (rojo) con iconografía adaptada.
+*   **Cero alert() verificado**: Auditoría completa confirmada — ningún componente usa `alert()` o `window.confirm()` nativos.
+*   *Archivos Afectados*: `AdminPanel.tsx`, `BITACORA.md`.
+
+---
 ¡Por Nuffle, que los dados siempre te favorezcan! 🎲🎲
