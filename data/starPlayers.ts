@@ -15,7 +15,8 @@ export const starPlayersData: StarPlayer[] = [
     "specialRules": "**Blind Rage:** Akhorne may choose to re-roll the D6 when rolling for the Dauntless Skill.",
     "playsFor": [
       "Any Team"
-    ]
+    ],
+    "image": "https://www.warhammer.com/app/resources/catalog/product/threeSixty/99120999007_BloodBowlTreemanOTT1360/02-02.jpg"
   },
   {
     "name": "Anqi Panqi",
@@ -31,7 +32,8 @@ export const starPlayersData: StarPlayer[] = [
     "specialRules": "**Savage Blow:** Once per game, when Anqi performs a Block Action against an opposition player he may choose to re-roll any number of the Block Dice.",
     "playsFor": [
       "Lustrian Superleague"
-    ]
+    ],
+    "image": "https://i.redd.it/anqi-panqi-is-back-on-tabletop-v0-1nt28dkhxkqd1.png?width=1080&format=png&auto=webp&s=c58d3de9dab93388dafe3e8ddbb81754f562f832"
   },
   {
     "name": "Barik Farblast",
@@ -48,7 +50,8 @@ export const starPlayersData: StarPlayer[] = [
     "playsFor": [
       "Old World Classic",
       "Worlds Edge Superleague"
-    ]
+    ],
+    "image": "https://www.warhammer.com/app/resources/catalog/product/920x950/99850999037_BBBarikFarblastLead.jpg?fm=webp&w=670&h=691"
   },
   {
     "name": "Bilerot Vomitflesh",
@@ -64,7 +67,8 @@ export const starPlayersData: StarPlayer[] = [
     "specialRules": "**Putrid Regurgitation:** Once per half, Bilerot may use the Projectile Vomit Special Action. This may still be used even if Bilerot has already performed a Block Action this Turn.",
     "playsFor": [
       "Favoured of Nurgle"
-    ]
+    ],
+    "image": "https://www.warhammer.com/app/resources/catalog/product/920x950/99850999058_Bilerot1.jpg?fm=webp&w=670&h=691"
   },
   {
     "name": "The Black Gobbo",
@@ -97,7 +101,8 @@ export const starPlayersData: StarPlayer[] = [
     "specialRules": "**Look into my Eyes:** Once per game, if Boa begins his activation Marking an opposition player in possession of the ball, he may roll a D6. On a 1, nothing happens. On a 2+ the opposition player losses possession of the ball, Boa immediately gains possession of the ball, and Boa’s activation immediately ends.",
     "playsFor": [
       "Lustrian Superleague"
-    ]
+    ],
+    "image": "https://bloodbowlbase.ru/media/starplayers/BBBoaKonssstriktrLead.jpg"
   },
   {
     "name": "Bomber Dribblesnot",
@@ -114,7 +119,8 @@ export const starPlayersData: StarPlayer[] = [
     "playsFor": [
       "Badlands Brawl",
       "Underworld Challenge"
-    ]
+    ],
+    "image": "https://bloodbowlbase.ru/media/starplayers/BomberDribblesnotLead.jpg"
   },
   {
     "name": "Bryce ‘The Slice’ Cambuel",
@@ -146,7 +152,8 @@ export const starPlayersData: StarPlayer[] = [
     "specialRules": "**Tasty Morsel:** Once per game, when Karina fails a Bloodlust roll, she may choose to bite an opposition player with a ST of 3 or lower as if they were a Thrall Lineman team-mate. Karina may not bite Star Players with this special rule.",
     "playsFor": [
       "Sylvanian Spotlight"
-    ]
+    ],
+    "image": "https://bloodbowlbase.ru/media/starplayers/CptKarinaVonRiesz1.jpg"
   },
   {
     "name": "Count Luthor von Drakenborg",
@@ -162,7 +169,8 @@ export const starPlayersData: StarPlayer[] = [
     "specialRules": "**Star of the Show:** Once per game, when Count Luthor scores a Touchdown, his controlling coach gains one Team Re-roll until the end of the following Drive. If this Team Re-roll has not been used by the end of the next Drive, it is lost.",
     "playsFor": [
       "Sylvanian Spotlight"
-    ]
+    ],
+    "image": "https://bloodbowlbase.ru/media/starplayers/LuthorVonDrakenborg1.jpg"
   },
   {
     "name": "Cindy Piewhistle",
@@ -179,7 +187,8 @@ export const starPlayersData: StarPlayer[] = [
     "playsFor": [
       "Halfling Thimble Cup",
       "Old World Classic"
-    ]
+    ],
+    "image": "https://bloodbowlbase.ru/media/starplayers/CindyPiewhistle01.jpg"
   },
   {
     "name": "Deeproot Strongbranch",
@@ -195,7 +204,8 @@ export const starPlayersData: StarPlayer[] = [
     "specialRules": "**Reliable:** If Deeproot makes a Fumbled Throw when performing a Throw Team-mate Action, the player that was being thrown will Bounce as normal but will automatically land safely.",
     "playsFor": [
       "Woodland League"
-    ]
+    ],
+    "image": "https://bloodbowlbase.ru/media/starplayers/DeeprootStrongbranch01.jpg"
   },
   {
     "name": "Dribl & Drull",
@@ -211,7 +221,8 @@ export const starPlayersData: StarPlayer[] = [
     "specialRules": "**A Sneaky Pair:** Dribl & Drull must be hired as a pair. Additionally, whenever Dribl or Drull perform either a Foul Action or a Stab Special Action against an opposition player Marked by both Dribl & Drull, they may apply a +1 modifier to the roll.",
     "playsFor": [
       "Lustrian Superleague"
-    ]
+    ],
+    "image": "https://bloodbowlbase.ru/media/starplayers/DrullDrible2.jpg"
   },
   {
     "name": "Eldril Sidewinder",
@@ -227,7 +238,8 @@ export const starPlayersData: StarPlayer[] = [
     "specialRules": "**Mesmerizing Gaze:** Once per half, Eldril may re-roll the dice when performing a Hypnotic Gaze Special Action.",
     "playsFor": [
       "Elven Kingdoms League"
-    ]
+    ],
+    "image": "https://bloodbowlbase.ru/media/starplayers/BBEldrilSidewinder01.jpg"
   },
   {
     "name": "Estelle La Veneaux",
@@ -243,7 +255,8 @@ export const starPlayersData: StarPlayer[] = [
     "specialRules": "**Baleful Hex:** Once per game, at the beginning of Estelle’s activation, she may select an opposition player within 5 squares and roll a D6. On a 2+, the selected player becomes Distracted and cannot be activated during their team’s next Turn.",
     "playsFor": [
       "Lustrian Superleague"
-    ]
+    ],
+    "image": "https://bloodbowlbase.ru/media/starplayers/BBEstellelaVeneauxLead.jpg"
   },
   {
     "name": "Frank ‘n’ Stein",
@@ -277,7 +290,8 @@ export const starPlayersData: StarPlayer[] = [
     "playsFor": [
       "Badlands Brawl",
       "Underworld Challenge"
-    ]
+    ],
+    "image": "https://bloodbowlbase.ru/media/starplayers/FungusTheLoon.jpg"
   },
   {
     "name": "Glart Smashrip",
@@ -293,7 +307,8 @@ export const starPlayersData: StarPlayer[] = [
     "specialRules": "**Frenzied Rush:** Once per half, when Glart declares a Blitz Action he may gain the Frenzy Skill until the end of his activation. Glatt may not use the Grab Skill during a Turn in which he uses this special rule.",
     "playsFor": [
       "Underworld Challenge"
-    ]
+    ],
+    "image": "https://bloodbowlbase.ru/media/starplayers/GlartSmashrip01.jpg"
   },
   {
     "name": "Gloriel Summerbloom",
