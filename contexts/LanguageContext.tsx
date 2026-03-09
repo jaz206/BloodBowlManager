@@ -108,6 +108,13 @@ const translations: Record<Language, Record<string, string>> = {
         'oracle.hub.stars.title': 'Compendio de Estrellas',
         'oracle.hub.stars.desc': 'Consulta las leyendas vivas y mercenarios de élite disponibles para tu equipo.',
         'oracle.hub.stars.btn': 'Ver Jugadores Estrella',
+        'home.activeTeams.empty': 'Tu salón de la fama está vacío todavía...',
+        'home.activeTeams.createFirst': 'Recluta tu primer equipo',
+        'home.search.tag.mightyBlow': 'Golpe Mortífero',
+        'home.search.tag.foulAppearance': 'Presencia Perturbadora',
+        'home.search.tag.dodge': 'Esquivar',
+        'home.search.tag.wrestle': 'Forcejeo',
+        'home.search.tag.rules': 'Reglas 2024',
     },
     en: {
         'nav.home': 'Home',
@@ -208,6 +215,13 @@ const translations: Record<Language, Record<string, string>> = {
         'oracle.hub.stars.title': 'Star Player Compendium',
         'oracle.hub.stars.desc': 'Check the living legends and elite mercenaries available for your team.',
         'oracle.hub.stars.btn': 'View Star Players',
+        'home.activeTeams.empty': 'Your Hall of Fame is still empty...',
+        'home.activeTeams.createFirst': 'Recruit your first team',
+        'home.search.tag.mightyBlow': 'Mighty Blow',
+        'home.search.tag.foulAppearance': 'Foul Appearance',
+        'home.search.tag.dodge': 'Dodge',
+        'home.search.tag.wrestle': 'Wrestle',
+        'home.search.tag.rules': '2024 Rules',
     }
 };
 

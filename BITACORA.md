@@ -107,6 +107,15 @@ root/
 *   **Internacionalización Robusta**: Implementación de soporte bilingüe completo para todas las nuevas secciones del Hub.
 *   *Archivos Afectados*: `Oracle/index.tsx`, `LanguageContext.tsx`, `BITACORA.md`.
 
+### [2026-03-09] Auditoría UI/UX - Sprint 1 & 2
+*   **Reestilizado de Ligas**: Transformación total de `LeaguesPage.tsx` a la estética Dark Fantasy (zinc-900, premium-gold, glassmorphism).
+*   **Sistema de Modales Premium**: Sustitución de `alert()` nativos por un sistema de modales de confirmación integrados y animados.
+*   **Buscador Global**: Conexión del buscador de la Home con el Oráculo, permitiendo búsquedas transversales de habilidades y reglas.
+*   **Refinamiento de Navegación**: Integración de la Pizarra Táctica en el bento nav y corrección de enlaces rotos en la sección Hero.
+*   **Inmersión Mejorada**: Rediseño del banner de aviso de invitado para hacerlo menos intrusivo y más estético (floating pill).
+*   **Llamadas a la Acción (CTA)**: Mejora de los estados vacíos en la Home con invitaciones directas a la creación de equipos.
+*   *Archivos Afectados*: `LeaguesPage.tsx`, `MainApp.tsx`, `Home/index.tsx`, `SkillsPage.tsx`, `LanguageContext.tsx`.
+
 ### [2026-03-09] La Gran Corrección de Datos (Rosters y Encoding)
 *   **Encoding Limpio**: Corrección masiva de mojibake en `data/teams.ts`. Todos los caracteres especiales (tildes, eñes) ahora se muestran correctamente en la UI (`"LÃ­nea"` → `"Línea"`, etc.).
 *   **Elegidos del Caos — Roster Completo**: Añadidas las posiciones faltantes: `Marauder Línea`, `Beastman Renegado` (Horns), y `Chaos Minotauro` (Frenzy/Horns/MB/Unchannelled Fury).

@@ -33,8 +33,13 @@ type SyncStatus = 'synced' | 'syncing' | 'error';
 const GuestWarningBanner = () => {
   const { t } = useLanguage();
   return (
-    <div className="bg-blood-red/40 backdrop-blur-md border-b border-blood-red/50 text-white text-center p-2 text-[10px] font-display uppercase tracking-[0.2em] sticky top-0 z-[60] shadow-2xl">
-      <span className="opacity-80">{t('guest.warning')}</span>
+    <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[60] animate-in fade-in slide-in-from-top-4 duration-1000">
+      <div className="bg-black/60 backdrop-blur-xl border border-blood-red/30 px-6 py-2 rounded-full shadow-2xl flex items-center gap-3">
+        <div className="w-2 h-2 rounded-full bg-blood-red animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]"></div>
+        <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] italic">
+          {t('guest.warning')}
+        </span>
+      </div>
     </div>
   );
 };

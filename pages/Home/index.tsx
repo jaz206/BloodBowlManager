@@ -180,8 +180,19 @@ const Home: React.FC<HomeProps> = ({ onNavigate, onCreateTeam, managedTeams, her
                                 </div>
                             </div>
                         )) : (
-                            <div className="p-12 text-center text-slate-600 italic font-medium uppercase tracking-widest text-xs opacity-50">
-                                No hay equipos activos todavía
+                            <div className="p-12 text-center flex flex-col items-center gap-6">
+                                <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center border border-dashed border-white/10 text-slate-600">
+                                    <span className="material-symbols-outlined text-4xl">emoji_events</span>
+                                </div>
+                                <p className="text-slate-500 font-bold italic uppercase tracking-widest text-xs opacity-80">
+                                    {t('home.activeTeams.empty')}
+                                </p>
+                                <button
+                                    onClick={onCreateTeam || (() => onNavigate('guild'))}
+                                    className="bg-zinc-800 hover:bg-zinc-700 text-white/80 hover:text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all border border-white/5"
+                                >
+                                    {t('home.activeTeams.createFirst')}
+                                </button>
                             </div>
                         )}
                     </div>
@@ -211,13 +222,19 @@ const Home: React.FC<HomeProps> = ({ onNavigate, onCreateTeam, managedTeams, her
                         <div className="space-y-5">
                             <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] font-display">{t('home.search.frequent')}</p>
                             <div className="flex flex-wrap gap-2">
-                                {['Golpe Mortífero', 'Interferencia', 'Esquivar', 'Forcejeo', 'Reglas 2024'].map(tag => (
+                                {[
+                                    { key: 'home.search.tag.mightyBlow', val: 'Golpe Mortífero' },
+                                    { key: 'home.search.tag.foulAppearance', val: 'Foul Appearance' },
+                                    { key: 'home.search.tag.dodge', val: 'Esquivar' },
+                                    { key: 'home.search.tag.wrestle', val: 'Forcejeo' },
+                                    { key: 'home.search.tag.rules', val: 'Reglas 2024' }
+                                ].map(tag => (
                                     <span
-                                        key={tag}
-                                        onClick={() => onNavigate('oracle', tag)}
+                                        key={tag.key}
+                                        onClick={() => onNavigate('oracle', t(tag.key))}
                                         className="px-5 py-2 bg-white/5 border border-white/10 text-slate-300 text-[10px] font-black uppercase tracking-widest rounded-full cursor-pointer hover:bg-premium-gold/10 hover:border-premium-gold/30 hover:text-premium-gold transition-all"
                                     >
-                                        {tag}
+                                        {t(tag.key)}
                                     </span>
                                 ))}
                             </div>
