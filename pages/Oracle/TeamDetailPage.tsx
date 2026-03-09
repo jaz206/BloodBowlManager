@@ -3,6 +3,10 @@ import { motion } from 'framer-motion';
 import { Team } from '../../types';
 import RadarChart from '../../components/oracle/RadarChart';
 import RadarChartModal from '../../components/oracle/RadarChartModal';
+import SkillBadge from '../../components/shared/SkillBadge';
+import SkillModal from '../../components/oracle/SkillModal';
+import { useLanguage } from '../../contexts/LanguageContext';
+import type { Skill } from '../../types';
 
 interface TeamDetailPageProps {
     team: Team;
@@ -11,7 +15,12 @@ interface TeamDetailPageProps {
 }
 
 const TeamDetailPage: React.FC<TeamDetailPageProps> = ({ team, onBack, onRequestTeamCreation }) => {
+    const { language } = useLanguage();
     const [isRadarModalOpen, setIsRadarModalOpen] = useState(false);
+    const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
+
+    const currentSpecialRules = language === 'es' ? (team.specialRules_es || team.specialRules) : (team.specialRules_en || team.specialRules);
+
 
     return (
         <motion.div
@@ -45,7 +54,7 @@ const TeamDetailPage: React.FC<TeamDetailPageProps> = ({ team, onBack, onRequest
                         </h1>
                     </div>
                     <p className="text-accent-gold text-lg max-w-2xl leading-relaxed italic">
-                        {team.specialRules || "Una facción legendaria lista para la gloria en el césped de Blood Bowl."}
+                        {currentSpecialRules || (language === 'es' ? "Una facción legendaria lista para la gloria en el césped de Blood Bowl." : "A legendary faction ready for glory on the pitch.")}
                     </p>
                     <div className="flex gap-8 pt-2">
                         <div className="flex flex-col border-l-2 border-primary pl-4">
@@ -162,8 +171,15 @@ const TeamDetailPage: React.FC<TeamDetailPageProps> = ({ team, onBack, onRequest
                                             <td className="px-2 py-5 text-center font-mono font-black text-slate-400">{pos.stats.AG}</td>
                                             <td className="px-2 py-5 text-center font-mono font-black text-slate-400">{pos.stats.PS}</td>
                                             <td className="px-2 py-5 text-center font-mono font-black text-slate-200 border-r border-white/5">{pos.stats.AR}</td>
-                                            <td className="px-6 py-5 text-[11px] text-accent-gold font-medium italic group-hover:text-slate-200 transition-colors max-w-[200px] leading-relaxed">
-                                                {pos.skills || 'Ninguna'}
+                                            <td className="px-6 py-5 flex flex-wrap gap-1 max-w-[250px]">
+                                                {(pos.skillKeys || []).map(skillKey => (
+                                                    <SkillBadge
+                                                        key={skillKey}
+                                                        skillKey={skillKey}
+                                                        onClick={(skill) => setSelectedSkill(skill)}
+                                                    />
+                                                ))}
+                                                {(!pos.skillKeys || pos.skillKeys.length === 0) && <span className="text-slate-500 italic text-[10px]">Ninguna</span>}
                                             </td>
                                             <td className="px-6 py-5 text-right font-black text-white italic tracking-tighter text-base">
                                                 {pos.cost.toLocaleString()}
@@ -212,6 +228,7 @@ const TeamDetailPage: React.FC<TeamDetailPageProps> = ({ team, onBack, onRequest
             </div>
 
             {isRadarModalOpen && <RadarChartModal team={team} onClose={() => setIsRadarModalOpen(false)} />}
+            {selectedSkill && <SkillModal skill={selectedSkill} onClose={() => setSelectedSkill(null)} />}
         </motion.div>
     );
 };

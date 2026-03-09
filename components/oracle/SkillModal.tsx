@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useLanguage } from '../../contexts/LanguageContext';
 import type { Skill } from '../../types';
 
 interface SkillModalProps {
@@ -8,20 +9,17 @@ interface SkillModalProps {
 }
 
 const SkillModal: React.FC<SkillModalProps> = ({ skill, onClose }) => {
+  const { language } = useLanguage();
+
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
       onClose();
     }
   };
 
-  const categoryColor: Record<string, string> = {
-    'General': 'bg-slate-600 text-slate-200',
-    'Agilidad': 'bg-emerald-600 text-white',
-    'Fuerza': 'bg-red-700 text-white',
-    'Pase': 'bg-sky-600 text-white',
-    'Mutación': 'bg-purple-600 text-white',
-    'Rasgo': 'bg-yellow-700 text-white',
-  };
+  const name = language === 'es' ? (skill.name_es || skill.name_en) : skill.name_en;
+  const description = language === 'es' ? (skill.desc_es || skill.desc_en) : skill.desc_en;
+
 
   return (
     <div
@@ -33,7 +31,7 @@ const SkillModal: React.FC<SkillModalProps> = ({ skill, onClose }) => {
     >
       <div className="glass-panel max-w-lg w-full transform animate-slide-in-up border-white/10 overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)]">
         <div className="flex justify-between items-center p-6 border-b border-white/5 bg-white/5">
-          <h2 id="skill-modal-title" className="text-2xl font-display font-black text-premium-gold italic uppercase tracking-tighter">{skill.name}</h2>
+          <h2 id="skill-modal-title" className="text-2xl font-display font-black text-premium-gold italic uppercase tracking-tighter">{name}</h2>
           <button
             onClick={onClose}
             className="text-slate-400 hover:text-white transition-premium p-2 rounded-xl hover:bg-white/5 focus:outline-none"
@@ -45,10 +43,10 @@ const SkillModal: React.FC<SkillModalProps> = ({ skill, onClose }) => {
           </button>
         </div>
         <div className="p-8 space-y-4">
-          <div className={`text-[10px] font-display font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-lg border inline-block ${skill.category === 'Rasgo' ? 'bg-premium-gold/10 text-premium-gold border-premium-gold/20' : 'bg-white/5 text-slate-300 border-white/10'}`}>
+          <div className={`text-[10px] font-display font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-lg border inline-block ${skill.category === 'Rasgo' || skill.category === 'Trait' ? 'bg-premium-gold/10 text-premium-gold border-premium-gold/20' : 'bg-white/5 text-slate-300 border-white/10'}`}>
             {skill.category}
           </div>
-          <p className="text-white font-medium leading-relaxed italic opacity-90">{skill.description}</p>
+          <p className="text-white font-medium leading-relaxed italic opacity-90">{description}</p>
         </div>
         <div className="p-6 bg-black/20 border-t border-white/5 flex justify-end">
           <button onClick={onClose} className="w-full sm:w-auto bg-white/5 border border-white/10 text-white font-display font-bold uppercase tracking-widest text-[10px] py-3 px-8 rounded-lg hover:bg-white/10 transition-premium">

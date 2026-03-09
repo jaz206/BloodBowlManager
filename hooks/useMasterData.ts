@@ -214,7 +214,7 @@ export const useMasterData = () => {
      * Finds the item by keyEN (skills) or name (teams/stars/inducements).
      */
     const updateMasterItem = useCallback(async (
-        docId: 'teams' | 'skills_es' | 'skills_en' | 'star_players' | 'inducements_es' | 'inducements_en',
+        docId: 'teams' | 'skills' | 'star_players' | 'inducements_es' | 'inducements_en',
         itemId: string,
         patch: Record<string, unknown>
     ): Promise<void> => {

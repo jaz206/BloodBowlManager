@@ -1,9 +1,10 @@
 
 
 import React, { useState } from 'react';
+import { useLanguage } from '../../contexts/LanguageContext';
 import type { StarPlayer, Skill } from '../../types';
-import { skillsData } from '../../data/skills';
 import SkillModal from './SkillModal';
+import SkillBadge from '../shared/SkillBadge';
 import ImageModal from '../common/ImageModal';
 
 interface StarPlayerModalProps {
@@ -12,6 +13,7 @@ interface StarPlayerModalProps {
 }
 
 const StarPlayerModal: React.FC<StarPlayerModalProps> = ({ player, onClose }) => {
+  const { language } = useLanguage();
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
   const [isImageEnlarged, setIsImageEnlarged] = useState(false);
 
@@ -21,15 +23,8 @@ const StarPlayerModal: React.FC<StarPlayerModalProps> = ({ player, onClose }) =>
     }
   };
 
-  const handleSkillClick = (skillName: string) => {
-    const cleanedName = skillName.split('(')[0].trim();
-    const foundSkill = skillsData.find(s => s.name.toLowerCase().startsWith(cleanedName.toLowerCase()));
-    if (foundSkill) {
-      setSelectedSkill(foundSkill);
-    } else {
-      console.warn(`Skill not found: ${cleanedName}`);
-    }
-  };
+  const currentSpecialRules = language === 'es' ? (player.specialRules_es || player.specialRules) : (player.specialRules_en || player.specialRules);
+
 
   const handleCloseSkillModal = () => {
     setSelectedSkill(null);
@@ -100,32 +95,29 @@ const StarPlayerModal: React.FC<StarPlayerModalProps> = ({ player, onClose }) =>
                         <div className="relative z-10">
                           <h4 className="text-[10px] font-display font-bold text-slate-500 uppercase tracking-[0.2em] mb-2">Habilidades</h4>
                           <div className="flex flex-wrap gap-2">
-                            {p.skills.split(', ').map((skill) => (
-                              <button
-                                key={`${p.name}-${skill}`}
-                                onClick={() => handleSkillClick(skill)}
-                                className="bg-sky-500/10 border border-sky-500/20 text-sky-400 text-[10px] font-display font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg hover:bg-sky-500/20 hover:border-sky-500/40 transition-premium"
-                              >
-                                {skill.trim()}
-                              </button>
+                            {(p.skillKeys || []).map((skillKey) => (
+                              <SkillBadge
+                                key={`${p.name}-${skillKey}`}
+                                skillKey={skillKey}
+                                onClick={(skill) => setSelectedSkill(skill)}
+                              />
                             ))}
                           </div>
                         </div>
                       </div>
                     ))}
 
-                    {player.skills && (
+                    {player.skillKeys && player.skillKeys.length > 0 && (
                       <div className="bento-card border-premium-gold/20 bg-premium-gold/5 p-6">
                         <h3 className="text-[10px] font-display font-bold text-premium-gold uppercase tracking-[0.2em] mb-3">Habilidades de Dúo</h3>
                         <div className="flex flex-wrap gap-2">
-                          {player.skills.split(', ').map((skill) => (
-                            <button
-                              key={`pair-${skill}`}
-                              onClick={() => handleSkillClick(skill)}
-                              className="bg-premium-gold/10 border border-premium-gold/30 text-premium-gold text-[10px] font-display font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg hover:bg-premium-gold/20 transition-premium"
-                            >
-                              {skill.trim()}
-                            </button>
+                          {player.skillKeys.map((skillKey) => (
+                            <SkillBadge
+                              key={`pair-${skillKey}`}
+                              skillKey={skillKey}
+                              variant="premium"
+                              onClick={(skill) => setSelectedSkill(skill)}
+                            />
                           ))}
                         </div>
                       </div>
@@ -134,7 +126,7 @@ const StarPlayerModal: React.FC<StarPlayerModalProps> = ({ player, onClose }) =>
                     <div className="space-y-4">
                       <div className="bento-card border-white/5 bg-white/5 p-6">
                         <h3 className="text-[10px] font-display font-bold text-slate-500 uppercase tracking-[0.2em] mb-2">Reglas Especiales</h3>
-                        <p className="text-white/80 font-display font-medium italic italic leading-relaxed">{player.specialRules}</p>
+                        <p className="text-white/80 font-display font-medium italic italic leading-relaxed">{currentSpecialRules}</p>
                       </div>
                       <div className="flex items-center gap-4">
                         <span className="text-[10px] font-display font-bold text-slate-500 uppercase tracking-[0.2em]">Juega para:</span>
@@ -163,14 +155,12 @@ const StarPlayerModal: React.FC<StarPlayerModalProps> = ({ player, onClose }) =>
                     <div className="bento-card border-white/5 bg-white/5 p-6">
                       <h3 className="text-[10px] font-display font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Repertorio de Habilidades</h3>
                       <div className="flex flex-wrap gap-2">
-                        {(player.skills || '').split(', ').map((skill) => (
-                          <button
-                            key={skill}
-                            onClick={() => handleSkillClick(skill)}
-                            className="bg-sky-500/10 border border-sky-500/20 text-sky-400 text-[10px] font-display font-bold uppercase tracking-widest px-4 py-2 rounded-xl hover:bg-sky-500/20 hover:border-sky-500/40 transition-premium"
-                          >
-                            {skill.trim()}
-                          </button>
+                        {(player.skillKeys || []).map((skillKey) => (
+                          <SkillBadge
+                            key={skillKey}
+                            skillKey={skillKey}
+                            onClick={(skill) => setSelectedSkill(skill)}
+                          />
                         ))}
                       </div>
                     </div>
@@ -178,7 +168,7 @@ const StarPlayerModal: React.FC<StarPlayerModalProps> = ({ player, onClose }) =>
                     <div className="space-y-4">
                       <div className="bento-card border-premium-gold/10 bg-premium-gold/5 p-6">
                         <h3 className="text-[10px] font-display font-bold text-premium-gold uppercase tracking-[0.2em] mb-2">Regla Especial</h3>
-                        <p className="text-white/80 font-display font-medium italic leading-relaxed border-l-2 border-premium-gold/30 pl-4">{player.specialRules}</p>
+                        <p className="text-white/80 font-display font-medium italic leading-relaxed border-l-2 border-premium-gold/30 pl-4">{currentSpecialRules}</p>
                       </div>
                       <div className="flex items-center gap-4">
                         <span className="text-[10px] font-display font-bold text-slate-500 uppercase tracking-[0.2em]">Juega para:</span>

@@ -1,9 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { StarPlayer, PlayerStats } from '../../types';
+import type { StarPlayer, PlayerStats, Skill } from '../../types';
 import { useMasterData } from '../../hooks/useMasterData';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../hooks/useAuth';
+import SkillBadge from '../../components/shared/SkillBadge';
+import SkillModal from '../../components/oracle/SkillModal';
 
 const StatBox: React.FC<{ label: string; value: string | number }> = ({ label, value }) => (
     <div className="bg-border-gold/40 p-2 rounded-lg border border-border-gold flex flex-col items-center justify-center min-w-[45px]">
@@ -15,8 +17,9 @@ const StatBox: React.FC<{ label: string; value: string | number }> = ({ label, v
 const StarPlayerCard: React.FC<{
     player: StarPlayer;
     isSelected: boolean;
-    onSelect: () => void
-}> = ({ player, isSelected, onSelect }) => {
+    onSelect: () => void;
+    onSkillClick: (skill: Skill) => void;
+}> = ({ player, isSelected, onSelect, onSkillClick }) => {
     const isElite = player.cost > 250000;
     const isBrutal = Number(player.stats?.FU || 0) >= 5;
 
@@ -77,12 +80,14 @@ const StarPlayerCard: React.FC<{
                 <div className="mb-5 grow">
                     <span className="block text-[9px] font-black text-primary uppercase mb-2 tracking-[0.2em] opacity-80">Habilidades</span>
                     <div className="flex flex-wrap gap-1">
-                        {player.skills?.split(',').slice(0, 4).map((skill, idx) => (
-                            <span key={idx} className="bg-slate-800/80 text-slate-300 text-[9px] px-2 py-0.5 rounded border border-white/5 font-medium">
-                                {skill.trim()}
-                            </span>
+                        {(player.skillKeys || []).slice(0, 4).map((skillKey) => (
+                            <SkillBadge
+                                key={skillKey}
+                                skillKey={skillKey}
+                                onClick={(skill) => onSkillClick(skill)}
+                            />
                         ))}
-                        {(player.skills?.split(',').length || 0) > 4 && (
+                        {(player.skillKeys?.length || 0) > 4 && (
                             <span className="text-[9px] text-slate-500 font-bold px-1">...</span>
                         )}
                     </div>
@@ -102,13 +107,15 @@ const StarPlayerCard: React.FC<{
 
 const StarPlayers: React.FC = () => {
     const { starPlayers, loading } = useMasterData();
-    const { t } = useLanguage();
     const { isAdmin } = useAuth();
+    const { language } = useLanguage();
+
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedFaction, setSelectedFaction] = useState('Todas');
     const [selectedPlayerName, setSelectedPlayerName] = useState<string | null>(null);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [toastMessage, setToastMessage] = useState<string | null>(null);
+    const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
 
     const showToast = (msg: string) => {
         setToastMessage(msg);
@@ -124,7 +131,7 @@ const StarPlayers: React.FC = () => {
     const filteredPlayers = useMemo(() => {
         return starPlayers.filter(p => {
             const matchesSearch = (p.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-                (p.skills?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+                (p.skillKeys?.some(k => k.toLowerCase().includes(searchTerm.toLowerCase())) || false);
             const matchesFaction = selectedFaction === 'Todas' ||
                 (p.playsFor && (
                     p.playsFor.includes(selectedFaction) ||
@@ -163,6 +170,7 @@ const StarPlayers: React.FC = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
+
             {/* Breadcrumbs */}
             <nav className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
                 <span className="text-slate-500">Oráculo</span>
@@ -246,6 +254,7 @@ const StarPlayers: React.FC = () => {
                             player={player}
                             isSelected={selectedPlayerName === player.name}
                             onSelect={() => setSelectedPlayerName(player.name)}
+                            onSkillClick={(skill) => setSelectedSkill(skill)}
                         />
                     ))}
                 </AnimatePresence>
@@ -332,7 +341,7 @@ const StarPlayers: React.FC = () => {
                                                 <div>
                                                     <span className="text-slate-200 font-black italic block text-sm mb-2">Habilidad Maestra</span>
                                                     <p className="text-[11px] text-slate-500 font-medium italic leading-relaxed">
-                                                        {selectedPlayer.specialRules}
+                                                        {language === 'es' ? (selectedPlayer.specialRules_es || selectedPlayer.specialRules) : (selectedPlayer.specialRules_en || selectedPlayer.specialRules)}
                                                     </p>
                                                 </div>
                                             </div>
@@ -340,12 +349,13 @@ const StarPlayers: React.FC = () => {
 
                                         <div className="p-8 bg-black/30 rounded-3xl border border-white/10 shadow-xl">
                                             <h4 className="text-slate-100 font-black italic uppercase tracking-widest text-xs mb-6">Habilidades Base</h4>
-                                            <div className="grid grid-cols-1 gap-2">
-                                                {selectedPlayer.skills?.split(',').map((skill, idx) => (
-                                                    <div key={idx} className="flex justify-between items-center py-2.5 border-b border-white/5 last:border-0">
-                                                        <span className="text-slate-300 font-bold italic text-[11px] uppercase tracking-wider">{skill.trim()}</span>
-                                                        <span className="material-symbols-outlined text-sm text-primary opacity-60">check_circle</span>
-                                                    </div>
+                                            <div className="flex flex-wrap gap-2">
+                                                {(selectedPlayer.skillKeys || []).map((skillKey) => (
+                                                    <SkillBadge
+                                                        key={skillKey}
+                                                        skillKey={skillKey}
+                                                        onClick={(skill) => setSelectedSkill(skill)}
+                                                    />
                                                 ))}
                                             </div>
                                         </div>
@@ -377,7 +387,7 @@ const StarPlayers: React.FC = () => {
                 )}
             </AnimatePresence>
 
-            {/* Footer Rules Citation */}
+            {/* Rules / Engine Citation */}
             <div className="pt-20 border-t border-white/5 flex flex-col items-center gap-6">
                 <div className="flex items-center gap-3 bg-card-dark/50 px-6 py-3 rounded-full border border-border-gold">
                     <span className="material-symbols-outlined text-primary text-lg">auto_fix</span>
@@ -389,6 +399,11 @@ const StarPlayers: React.FC = () => {
                     <a href="#" className="hover:text-primary transition-colors">API Endpoint</a>
                 </div>
             </div>
+
+            {/* Skill Modal */}
+            {selectedSkill && (
+                <SkillModal skill={selectedSkill} onClose={() => setSelectedSkill(null)} />
+            )}
         </div>
     );
 };

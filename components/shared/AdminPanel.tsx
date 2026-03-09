@@ -294,42 +294,78 @@ const AdminPanel: React.FC = () => {
                                     </div>
                                 )}
 
-                                <div>
-                                    <label className="block text-[10px] font-display font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">
-                                        {editingItem.type === 'team' ? 'Reglas Especiales / Descripción' : 'Habilidades (separadas por comas)'}
-                                    </label>
-                                    <textarea
-                                        value={editingItem.type === 'team'
-                                            ? (editingItem.data.specialRules || '')
-                                            : (Array.isArray(editingItem.data.skills)
-                                                ? editingItem.data.skills.join(', ')
-                                                : (typeof editingItem.data.skills === 'string' ? editingItem.data.skills : ''))}
-                                        onChange={(e) => setEditingItem({
-                                            ...editingItem,
-                                            data: {
-                                                ...editingItem.data,
-                                                [editingItem.type === 'team' ? 'specialRules' : 'skills']: editingItem.type === 'team'
-                                                    ? e.target.value
-                                                    : e.target.value.split(',').map(s => s.trim())
-                                            }
-                                        })}
-                                        className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-premium-gold/50 outline-none transition-all h-24 mb-4"
-                                    />
+                                <div className="grid grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <label className="block text-[10px] font-display font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">
+                                            {editingItem.type === 'team' ? 'Reglas Especiales (ES)' : 'Habilidades (Keys)'}
+                                        </label>
+                                        <textarea
+                                            value={editingItem.type === 'team'
+                                                ? (editingItem.data.specialRules_es || '')
+                                                : (Array.isArray(editingItem.data.skillKeys)
+                                                    ? editingItem.data.skillKeys.join(', ')
+                                                    : '')}
+                                            onChange={(e) => setEditingItem({
+                                                ...editingItem,
+                                                data: {
+                                                    ...editingItem.data,
+                                                    [editingItem.type === 'team' ? 'specialRules_es' : 'skillKeys']: editingItem.type === 'team'
+                                                        ? e.target.value
+                                                        : e.target.value.split(',').map(s => s.trim())
+                                                }
+                                            })}
+                                            className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-premium-gold/50 outline-none transition-all h-24"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-display font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">
+                                            {editingItem.type === 'team' ? 'Special Rules (EN)' : 'Habilidades (Nombres)'}
+                                        </label>
+                                        <textarea
+                                            value={editingItem.type === 'team'
+                                                ? (editingItem.data.specialRules_en || '')
+                                                : (Array.isArray(editingItem.data.skills)
+                                                    ? editingItem.data.skills.join(', ')
+                                                    : (typeof editingItem.data.skills === 'string' ? editingItem.data.skills : ''))}
+                                            disabled={editingItem.type === 'starPlayer'}
+                                            onChange={(e) => setEditingItem({
+                                                ...editingItem,
+                                                data: {
+                                                    ...editingItem.data,
+                                                    [editingItem.type === 'team' ? 'specialRules_en' : 'skills']: e.target.value
+                                                }
+                                            })}
+                                            className={`w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-premium-gold/50 outline-none transition-all h-24 ${editingItem.type === 'starPlayer' ? 'opacity-50 italic' : ''}`}
+                                        />
+                                    </div>
+                                </div>
 
-                                    {editingItem.type === 'starPlayer' && (
-                                        <>
-                                            <label className="block text-[10px] font-display font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Regla Especial Única</label>
+                                {editingItem.type === 'starPlayer' && (
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-[10px] font-display font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Regla Especial Única (ES)</label>
                                             <textarea
-                                                value={editingItem.data.specialRules || ''}
+                                                value={editingItem.data.specialRules_es || ''}
                                                 onChange={(e) => setEditingItem({
                                                     ...editingItem,
-                                                    data: { ...editingItem.data, specialRules: e.target.value }
+                                                    data: { ...editingItem.data, specialRules_es: e.target.value }
                                                 })}
                                                 className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-premium-gold/50 outline-none transition-all h-24"
                                             />
-                                        </>
-                                    )}
-                                </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-display font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Unique Special Rule (EN)</label>
+                                            <textarea
+                                                value={editingItem.data.specialRules_en || ''}
+                                                onChange={(e) => setEditingItem({
+                                                    ...editingItem,
+                                                    data: { ...editingItem.data, specialRules_en: e.target.value }
+                                                })}
+                                                className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-premium-gold/50 outline-none transition-all h-24"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="flex justify-end gap-4 pt-4">
@@ -372,7 +408,7 @@ const AdminPanel: React.FC = () => {
                     border-radius: 10px;
                 }
             `}</style>
-        </div>
+        </div >
     );
 };
 

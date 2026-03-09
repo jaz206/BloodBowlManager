@@ -57,7 +57,7 @@ export interface StarPlayer {
   skills?: string;
   /** @deprecated Use specialRules_es/en */
   specialRules?: string;
-  pair?: { name: string; stats: PlayerStats; skills: string; }[];
+  pair?: { name: string; stats: PlayerStats; skills: string; skillKeys?: string[]; }[];
 }
 
 export interface Team {

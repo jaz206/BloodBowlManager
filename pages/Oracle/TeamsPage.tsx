@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { teamsData as staticTeams } from '../../data/teams';
-import { skillsData } from '../../data/skills';
 import type { Team, Skill } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
 import { useMasterData } from '../../hooks/useMasterData';
@@ -12,6 +11,8 @@ import ImageModal from '../../components/common/ImageModal';
 import RadarChart from '../../components/oracle/RadarChart';
 import RadarChartModal from '../../components/oracle/RadarChartModal';
 import TeamDetailPage from './TeamDetailPage';
+import SkillBadge from '../../components/shared/SkillBadge';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const PopularTeamCard: React.FC<{ team: Team; icon: string; subtitle: string; onClick: () => void }> = ({ team, icon, subtitle, onClick }) => (
     <motion.div
@@ -42,7 +43,7 @@ const PopularTeamCard: React.FC<{ team: Team; icon: string; subtitle: string; on
 const TeamArticle: React.FC<{
     team: Team;
     onViewRoster: () => void;
-    onSkillClick: (skill: string) => void;
+    onSkillClick: (skill: Skill) => void;
     isAdmin: boolean;
     onUpdateImage: (name: string, url: string) => Promise<void>;
 }> = ({ team, onViewRoster, onSkillClick, isAdmin, onUpdateImage }) => {
@@ -111,8 +112,14 @@ const TeamArticle: React.FC<{
                                         <td className="py-4 px-2 text-center text-slate-400 font-mono">{player.stats.AG}</td>
                                         <td className="py-4 px-2 text-center text-slate-400 font-mono">{player.stats.PS}</td>
                                         <td className="py-4 px-2 text-center text-slate-400 font-mono">{player.stats.AR}</td>
-                                        <td className="py-4 px-2 text-[10px] text-slate-500 max-w-[150px] truncate group-hover:whitespace-normal group-hover:truncate-none transition-all">
-                                            {player.skills}
+                                        <td className="py-4 px-2 flex flex-wrap gap-1 max-w-[200px]">
+                                            {(player.skillKeys || []).map(skillKey => (
+                                                <SkillBadge
+                                                    key={skillKey}
+                                                    skillKey={skillKey}
+                                                    onClick={(skill) => onSkillClick(skill)}
+                                                />
+                                            ))}
                                         </td>
                                         <td className="py-4 px-2 text-right font-bold text-primary">{player.cost.toLocaleString()}</td>
                                     </tr>
@@ -202,10 +209,8 @@ const Teams: React.FC<{
         return teams.filter(t => names.includes(t.name));
     }, [teams]);
 
-    const handleSkillClick = (skillName: string) => {
-        const cleanedName = skillName.split('(')[0].trim();
-        const foundSkill = skillsData.find(s => s.name.toLowerCase().startsWith(cleanedName.toLowerCase()));
-        if (foundSkill) setSelectedSkill(foundSkill);
+    const handleSkillClick = (skill: Skill) => {
+        setSelectedSkill(skill);
     };
 
     const handleSync = async () => {
@@ -222,7 +227,7 @@ const Teams: React.FC<{
     };
 
     const updateTeamImage = async (teamName: string, url: string) => {
-        await updateMasterItem('team', teamName, { image: url });
+        await updateMasterItem('teams', teamName, { image: url });
     };
 
     if (selectedTeam) {

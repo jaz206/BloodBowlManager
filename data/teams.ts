@@ -1,4 +1,4 @@
-﻿import type { Team } from "../types";
+import type { Team } from '../types';
 
 export const teamsData: Team[] = [
   {
@@ -27,7 +27,9 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skillKeys": ["Dodge"],
+        "skillKeys": [
+      "Dodge"
+    ],
         "primary": "G",
         "secondary": "AS"
       },
@@ -42,7 +44,12 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "8+"
         },
-        "skillKeys": ["Dodge", "Kick-Off Return", "Pass", "Safe Pass"],
+        "skillKeys": [
+      "Dodge",
+      "Kick-Off Return",
+      "Pass",
+      "Safe Pass"
+    ],
         "primary": "GP",
         "secondary": "AS"
       },
@@ -57,7 +64,10 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "9+"
         },
-        "skillKeys": ["Defensive", "Dodge"],
+        "skillKeys": [
+      "Defensive",
+      "Dodge"
+    ],
         "primary": "GS",
         "secondary": "A"
       },
@@ -72,11 +82,17 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "8+"
         },
-        "skillKeys": ["Dodge", "Hit and Run", "Leap"],
+        "skillKeys": [
+      "Dodge",
+      "Hit and Run",
+      "Leap"
+    ],
         "primary": "AG",
         "secondary": "S"
       }
-    ]
+    ],
+    "specialRules_es": "Superliga Lustria, Gestión de Equipo",
+    "specialRules_en": "Superliga Lustria, Gestión de Equipo"
   },
   {
     "name": "Orcos Negros",
@@ -104,7 +120,12 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skillKeys": ["Dodge", "Right Stuff", "Stunty", "Thick Skull"],
+        "skillKeys": [
+      "Dodge",
+      "Right Stuff",
+      "Stunty",
+      "Thick Skull"
+    ],
         "primary": "A",
         "secondary": "GPS"
       },
@@ -119,7 +140,10 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skillKeys": ["Brawler", "Grab"],
+        "skillKeys": [
+      "Brawler",
+      "Grab"
+    ],
         "primary": "GS",
         "secondary": "AP"
       },
@@ -134,11 +158,21 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skillKeys": ["Always Hungry", "Loner (3+)", "Mighty Blow (+1)", "Projectile Vomit", "Really Stupid", "Regeneration", "Throw Team-mate"],
+        "skillKeys": [
+      "Always Hungry",
+      "Loner (3+)",
+      "Mighty Blow (+1)",
+      "Projectile Vomit",
+      "Really Stupid",
+      "Regeneration",
+      "Throw Team-mate"
+    ],
         "primary": "S",
         "secondary": "AGP"
       }
-    ]
+    ],
+    "specialRules_es": "Pelea de Badlands, Gestión de Equipo, Soborno y Corrupción",
+    "specialRules_en": "Pelea de Badlands, Gestión de Equipo, Soborno y Corrupción"
   },
   {
     "name": "Elegidos del Caos",
@@ -166,7 +200,9 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skillKeys": ["Horns"],
+        "skillKeys": [
+      "Horns"
+    ],
         "primary": "GS",
         "secondary": "AM"
       },
@@ -181,7 +217,9 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skillKeys": [],
+        "skillKeys": [
+      
+    ],
         "primary": "GS",
         "secondary": "AM"
       },
@@ -196,11 +234,19 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skillKeys": ["Animal Savagery", "Frenzy", "Horns", "Mighty Blow (+1)", "Loner (4+)"],
+        "skillKeys": [
+      "Animal Savagery",
+      "Frenzy",
+      "Horns",
+      "Mighty Blow (+1)",
+      "Loner (4+)"
+    ],
         "primary": "S",
         "secondary": "GMA"
       }
-    ]
+    ],
+    "specialRules_es": "Favorito de..., Gestión de Equipo",
+    "specialRules_en": "Favorito de..., Gestión de Equipo"
   },
   {
     "name": "Enanos del Caos",
@@ -228,7 +274,9 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skillKeys": [],
+        "skillKeys": [
+      
+    ],
         "primary": "",
         "secondary": "AS"
       },
@@ -243,7 +291,11 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "10+"
         },
-        "skillKeys": ["Tackle", "Iron Hard Skin", "Thick Skull"],
+        "skillKeys": [
+      "Tackle",
+      "Iron Hard Skin",
+      "Thick Skull"
+    ],
         "primary": "GS",
         "secondary": "AM"
       },
@@ -258,7 +310,11 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "10+"
         },
-        "skillKeys": ["Sprint", "Sure Feet", "Thick Skull"],
+        "skillKeys": [
+      "Sprint",
+      "Sure Feet",
+      "Thick Skull"
+    ],
         "primary": "GS",
         "secondary": "AM"
       },
@@ -273,7 +329,14 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skillKeys": ["Frenzy", "Horns", "Loner (4+)", "Mighty Blow (+1)", "Thick Skull", "Unchannelled Fury"],
+        "skillKeys": [
+      "Frenzy",
+      "Horns",
+      "Loner (4+)",
+      "Mighty Blow (+1)",
+      "Thick Skull",
+      "Unchannelled Fury"
+    ],
         "primary": "S",
         "secondary": "AGM"
       },
@@ -288,11 +351,16 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "8+"
         },
-        "skillKeys": ["Shadowing", "Stab"],
+        "skillKeys": [
+      "Shadowing",
+      "Stab"
+    ],
         "primary": "G",
         "secondary": "AS"
       }
-    ]
+    ],
+    "specialRules_es": "Favorito de..., Gestión de Equipo, Superliga del Borde del Mundo, Pelea de Badlands",
+    "specialRules_en": "Favorito de..., Gestión de Equipo, Superliga del Borde del Mundo, Pelea de Badlands"
   },
   {
     "name": "Renegados del Caos",
@@ -320,7 +388,9 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skillKeys": ["Animosity (all team-mates)"],
+        "skillKeys": [
+      "Animosity (all team-mates)"
+    ],
         "primary": "GM",
         "secondary": "AS"
       },
@@ -335,7 +405,9 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "9+"
         },
-        "skillKeys": ["Animosity (all team-mates)"],
+        "skillKeys": [
+      "Animosity (all team-mates)"
+    ],
         "primary": "AGM",
         "secondary": "PS"
       },
@@ -350,7 +422,13 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skillKeys": ["Bone Head", "Loner (4+)", "Mighty Blow (+1)", "Thick Skull", "Throw Team-mate"],
+        "skillKeys": [
+      "Bone Head",
+      "Loner (4+)",
+      "Mighty Blow (+1)",
+      "Thick Skull",
+      "Throw Team-mate"
+    ],
         "primary": "S",
         "secondary": "AGM"
       },
@@ -365,7 +443,9 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skillKeys": ["Animosity (all team-mates)"],
+        "skillKeys": [
+      "Animosity (all team-mates)"
+    ],
         "primary": "GM",
         "secondary": "AS"
       },
@@ -380,7 +460,15 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skillKeys": ["Always Hungry", "Loner (4+)", "Mighty Blow (+1)", "Projectile Vomit", "Really Stupid", "Regeneration", "Throw Team-mate"],
+        "skillKeys": [
+      "Always Hungry",
+      "Loner (4+)",
+      "Mighty Blow (+1)",
+      "Projectile Vomit",
+      "Really Stupid",
+      "Regeneration",
+      "Throw Team-mate"
+    ],
         "primary": "S",
         "secondary": "AGM"
       },
@@ -395,7 +483,12 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skillKeys": ["Animosity (all team-mates)", "Dodge", "Right Stuff", "Stunty"],
+        "skillKeys": [
+      "Animosity (all team-mates)",
+      "Dodge",
+      "Right Stuff",
+      "Stunty"
+    ],
         "primary": "AM",
         "secondary": "GP"
       },
@@ -410,7 +503,14 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skillKeys": ["Loner (4+)", "Frenzy", "Horns", "Mighty Blow (+1)", "Thick Skull", "Unchannelled Fury"],
+        "skillKeys": [
+      "Loner (4+)",
+      "Frenzy",
+      "Horns",
+      "Mighty Blow (+1)",
+      "Thick Skull",
+      "Unchannelled Fury"
+    ],
         "primary": "S",
         "secondary": "AGM"
       },
@@ -425,7 +525,9 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skillKeys": [],
+        "skillKeys": [
+      
+    ],
         "primary": "",
         "secondary": "AS"
       },
@@ -440,7 +542,11 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "9+"
         },
-        "skillKeys": ["Animosity (all team-mates)", "Pass", "Sure Hands"],
+        "skillKeys": [
+      "Animosity (all team-mates)",
+      "Pass",
+      "Sure Hands"
+    ],
         "primary": "GMP",
         "secondary": "AS"
       },
@@ -455,11 +561,19 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skillKeys": ["Animal Savagery", "Frenzy", "Loner (4+)", "Mighty Blow (+1)", "Prehensile Tail"],
+        "skillKeys": [
+      "Animal Savagery",
+      "Frenzy",
+      "Loner (4+)",
+      "Mighty Blow (+1)",
+      "Prehensile Tail"
+    ],
         "primary": "S",
         "secondary": "AGM"
       }
-    ]
+    ],
+    "specialRules_es": "Favorito de..., Gestión de Equipo",
+    "specialRules_en": "Favorito de..., Gestión de Equipo"
   },
   {
     "name": "Elfos Oscuros",
@@ -487,7 +601,9 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "8+"
         },
-        "skillKeys": ["Dump-Off"],
+        "skillKeys": [
+      "Dump-Off"
+    ],
         "primary": "AGP",
         "secondary": "S"
       },
@@ -502,7 +618,10 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "8+"
         },
-        "skillKeys": ["Shadowing", "Stab"],
+        "skillKeys": [
+      "Shadowing",
+      "Stab"
+    ],
         "primary": "AG",
         "secondary": "PS"
       },
@@ -517,7 +636,9 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skillKeys": ["Tackle"],
+        "skillKeys": [
+      "Tackle"
+    ],
         "primary": "AG",
         "secondary": "PS"
       },
@@ -532,7 +653,11 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "8+"
         },
-        "skillKeys": ["Dodge", "Frenzy", "Leap"],
+        "skillKeys": [
+      "Dodge",
+      "Frenzy",
+      "Leap"
+    ],
         "primary": "AG",
         "secondary": "PS"
       },
@@ -547,11 +672,15 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skillKeys": [],
+        "skillKeys": [
+      
+    ],
         "primary": "",
         "secondary": "S"
       }
-    ]
+    ],
+    "specialRules_es": "Liga de los Reinos Élficos, Gestión de Equipo",
+    "specialRules_en": "Liga de los Reinos Élficos, Gestión de Equipo"
   },
   {
     "name": "Enanos",
@@ -579,7 +708,11 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skillKeys": ["Tackle", "Block", "Thick Skull"],
+        "skillKeys": [
+      "Tackle",
+      "Block",
+      "Thick Skull"
+    ],
         "primary": "GS",
         "secondary": "A"
       },
@@ -594,7 +727,10 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skillKeys": ["Sure Hands", "Thick Skull"],
+        "skillKeys": [
+      "Sure Hands",
+      "Thick Skull"
+    ],
         "primary": "GP",
         "secondary": "AS"
       },
@@ -609,7 +745,10 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "10+"
         },
-        "skillKeys": ["Tackle", "Thick Skull"],
+        "skillKeys": [
+      "Tackle",
+      "Thick Skull"
+    ],
         "primary": "GS",
         "secondary": "AP"
       },
@@ -624,7 +763,12 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skillKeys": ["Tackle", "Dauntless", "Frenzy", "Thick Skull"],
+        "skillKeys": [
+      "Tackle",
+      "Dauntless",
+      "Frenzy",
+      "Thick Skull"
+    ],
         "primary": "GS",
         "secondary": "A"
       },
@@ -639,11 +783,22 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "11+"
         },
-        "skillKeys": ["Break Tackle", "Dirty Player (+1)", "Juggernaut", "Loner (5+)", "Mighty Blow (+1)", "No Hands", "Secret Weapon", "Stand Firm"],
+        "skillKeys": [
+      "Break Tackle",
+      "Dirty Player (+1)",
+      "Juggernaut",
+      "Loner (5+)",
+      "Mighty Blow (+1)",
+      "No Hands",
+      "Secret Weapon",
+      "Stand Firm"
+    ],
         "primary": "S",
         "secondary": "AG"
       }
-    ]
+    ],
+    "specialRules_es": "Clásico del Viejo Mundo, Gestión de Equipo, Superliga del Borde del Mundo",
+    "specialRules_en": "Clásico del Viejo Mundo, Gestión de Equipo, Superliga del Borde del Mundo"
   },
   {
     "name": "Unión Élfica",
@@ -671,7 +826,10 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skillKeys": ["Catch", "Nerves of Steel"],
+        "skillKeys": [
+      "Catch",
+      "Nerves of Steel"
+    ],
         "primary": "AG",
         "secondary": "S"
       },
@@ -686,7 +844,10 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "9+"
         },
-        "skillKeys": ["Tackle", "Sidestep"],
+        "skillKeys": [
+      "Tackle",
+      "Side Step"
+    ],
         "primary": "AG",
         "secondary": "PS"
       },
@@ -701,7 +862,9 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skillKeys": [],
+        "skillKeys": [
+      
+    ],
         "primary": "",
         "secondary": "S"
       },
@@ -716,11 +879,15 @@ export const teamsData: Team[] = [
           "PS": "2+",
           "AR": "8+"
         },
-        "skillKeys": ["Pass"],
+        "skillKeys": [
+      "Pass"
+    ],
         "primary": "AGP",
         "secondary": "S"
       }
-    ]
+    ],
+    "specialRules_es": "Liga de los Reinos Élficos, Gestión de Equipo",
+    "specialRules_en": "Liga de los Reinos Élficos, Gestión de Equipo"
   },
   {
     "name": "Gnomos",
@@ -748,7 +915,12 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "7+"
         },
-        "skillKeys": ["Leap", "Right Stuff", "Stunty", "Wrestle"],
+        "skillKeys": [
+      "Leap",
+      "Right Stuff",
+      "Stunty",
+      "Wrestle"
+    ],
         "primary": "A",
         "secondary": "GS"
       },
@@ -763,7 +935,12 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skillKeys": ["Defensive", "Leap", "Stunty", "Wrestle"],
+        "skillKeys": [
+      "Defensive",
+      "Leap",
+      "Stunty",
+      "Wrestle"
+    ],
         "primary": "A",
         "secondary": "GS"
       },
@@ -778,7 +955,12 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "7+"
         },
-        "skillKeys": ["Leap", "Stunty", "Trickster", "Wrestle"],
+        "skillKeys": [
+      "Leap",
+      "Stunty",
+      "Trickster",
+      "Wrestle"
+    ],
         "primary": "AP",
         "secondary": "G"
       },
@@ -793,7 +975,12 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "6+"
         },
-        "skillKeys": ["Dodge", "My Ball", "Sidestep", "Stunty"],
+        "skillKeys": [
+      "Dodge",
+      "My Ball",
+      "Side Step",
+      "Stunty"
+    ],
         "primary": "-",
         "secondary": "A"
       },
@@ -808,11 +995,20 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "11+"
         },
-        "skillKeys": ["Mighty Blow (+1)", "Stand Firm", "Strong Arm", "Take Root", "Thick Skull", "Throw Team-mate", "Throw Team-mate"],
+        "skillKeys": [
+      "Mighty Blow (+1)",
+      "Stand Firm",
+      "Strong Arm",
+      "Take Root",
+      "Thick Skull",
+      "Throw Team-mate"
+    ],
         "primary": "S",
         "secondary": "AGP"
       }
-    ]
+    ],
+    "specialRules_es": "Copa Dedal Halfling, Gestión de Equipo, Nivel 3",
+    "specialRules_en": "Copa Dedal Halfling, Gestión de Equipo, Nivel 3"
   },
   {
     "name": "Goblins",
@@ -840,7 +1036,12 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skillKeys": ["Bombardier", "Dodge", "Secret Weapon", "Stunty"],
+        "skillKeys": [
+      "Bombardier",
+      "Dodge",
+      "Secret Weapon",
+      "Stunty"
+    ],
         "primary": "AP",
         "secondary": "GS"
       },
@@ -855,7 +1056,11 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "8+"
         },
-        "skillKeys": ["Right Stuff", "Stunty", "Swoop"],
+        "skillKeys": [
+      "Right Stuff",
+      "Stunty",
+      "Swoop"
+    ],
         "primary": "A",
         "secondary": "GS"
       },
@@ -870,7 +1075,12 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "8+"
         },
-        "skillKeys": ["Ball & Chain", "No Hands", "Secret Weapon", "Stunty"],
+        "skillKeys": [
+      "Ball & Chain",
+      "No Hands",
+      "Secret Weapon",
+      "Stunty"
+    ],
         "primary": "S",
         "secondary": "AG"
       },
@@ -885,7 +1095,11 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "8+"
         },
-        "skillKeys": ["Chainsaw", "Secret Weapon", "Stunty"],
+        "skillKeys": [
+      "Chainsaw",
+      "Secret Weapon",
+      "Stunty"
+    ],
         "primary": "A",
         "secondary": "GS"
       },
@@ -900,7 +1114,11 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skillKeys": ["Dodge", "Right Stuff", "Stunty"],
+        "skillKeys": [
+      "Dodge",
+      "Right Stuff",
+      "Stunty"
+    ],
         "primary": "A",
         "secondary": "GPS"
       },
@@ -915,7 +1133,15 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skillKeys": ["Always Hungry", "Loner (3+)", "Mighty Blow (+1)", "Projectile Vomit", "Really Stupid", "Regeneration", "Throw Team-mate"],
+        "skillKeys": [
+      "Always Hungry",
+      "Loner (3+)",
+      "Mighty Blow (+1)",
+      "Projectile Vomit",
+      "Really Stupid",
+      "Regeneration",
+      "Throw Team-mate"
+    ],
         "primary": "S",
         "secondary": "AGP"
       },
@@ -930,11 +1156,17 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "8+"
         },
-        "skillKeys": ["Dodge", "Pogo Stick", "Stunty"],
+        "skillKeys": [
+      "Dodge",
+      "Pogo Stick",
+      "Stunty"
+    ],
         "primary": "A",
         "secondary": "GPS"
       }
-    ]
+    ],
+    "specialRules_es": "Desafío Subterráneo, Gestión de Equipo, Pelea de Badlands, Soborno y Corrupción, Nivel 3",
+    "specialRules_en": "Desafío Subterráneo, Gestión de Equipo, Pelea de Badlands, Soborno y Corrupción, Nivel 3"
   },
   {
     "name": "Halflings",
@@ -962,7 +1194,11 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "7+"
         },
-        "skillKeys": ["Dodge", "Right Stuff", "Stunty"],
+        "skillKeys": [
+      "Dodge",
+      "Right Stuff",
+      "Stunty"
+    ],
         "primary": "A",
         "secondary": "GS"
       },
@@ -977,7 +1213,11 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "8+"
         },
-        "skillKeys": ["Dodge", "Fend", "Stunty"],
+        "skillKeys": [
+      "Dodge",
+      "Fend",
+      "Stunty"
+    ],
         "primary": "AP",
         "secondary": "GS"
       },
@@ -992,7 +1232,14 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "11+"
         },
-        "skillKeys": ["Mighty Blow (+1)", "Stand Firm", "Strong Arm", "Take Root", "Thick Skull", "Throw Team-mate", "Throw Team-mate"],
+        "skillKeys": [
+      "Mighty Blow (+1)",
+      "Stand Firm",
+      "Strong Arm",
+      "Take Root",
+      "Thick Skull",
+      "Throw Team-mate"
+    ],
         "primary": "S",
         "secondary": "AGP"
       },
@@ -1007,11 +1254,19 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "7+"
         },
-        "skillKeys": ["Catch", "Dodge", "Right Stuff", "Sprint", "Stunty"],
+        "skillKeys": [
+      "Catch",
+      "Dodge",
+      "Right Stuff",
+      "Sprint",
+      "Stunty"
+    ],
         "primary": "A",
         "secondary": "GS"
       }
-    ]
+    ],
+    "specialRules_es": "Clásico del Viejo Mundo, Gestión de Equipo, Copa Dedal Halfling, Nivel 3",
+    "specialRules_en": "Clásico del Viejo Mundo, Gestión de Equipo, Copa Dedal Halfling, Nivel 3"
   },
   {
     "name": "Elfos Altos",
@@ -1039,7 +1294,9 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skillKeys": ["Tackle"],
+        "skillKeys": [
+      "Tackle"
+    ],
         "primary": "AG",
         "secondary": "PS"
       },
@@ -1054,7 +1311,9 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skillKeys": [],
+        "skillKeys": [
+      
+    ],
         "primary": "",
         "secondary": "PS"
       },
@@ -1069,7 +1328,9 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "8+"
         },
-        "skillKeys": ["Catch"],
+        "skillKeys": [
+      "Catch"
+    ],
         "primary": "AG",
         "secondary": "S"
       },
@@ -1084,11 +1345,17 @@ export const teamsData: Team[] = [
           "PS": "2+",
           "AR": "9+"
         },
-        "skillKeys": ["Cloud Burster", "Pass", "Safe Pass"],
+        "skillKeys": [
+      "Cloud Burster",
+      "Pass",
+      "Safe Pass"
+    ],
         "primary": "AGP",
         "secondary": "S"
       }
-    ]
+    ],
+    "specialRules_es": "Liga de los Reinos Élficos, Gestión de Equipo",
+    "specialRules_en": "Liga de los Reinos Élficos, Gestión de Equipo"
   },
   {
     "name": "Humanos",
@@ -1116,7 +1383,10 @@ export const teamsData: Team[] = [
           "PS": "2+",
           "AR": "9+"
         },
-        "skillKeys": ["Pass", "Sure Hands"],
+        "skillKeys": [
+      "Pass",
+      "Sure Hands"
+    ],
         "primary": "GP",
         "secondary": "AS"
       },
@@ -1131,7 +1401,10 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "8+"
         },
-        "skillKeys": ["Catch", "Dodge"],
+        "skillKeys": [
+      "Catch",
+      "Dodge"
+    ],
         "primary": "AG",
         "secondary": "PS"
       },
@@ -1146,7 +1419,9 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skillKeys": ["Tackle"],
+        "skillKeys": [
+      "Tackle"
+    ],
         "primary": "GS",
         "secondary": "AP"
       },
@@ -1161,7 +1436,13 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skillKeys": ["Bone Head", "Loner (4+)", "Mighty Blow (+1)", "Thick Skull", "Throw Team-mate"],
+        "skillKeys": [
+      "Bone Head",
+      "Loner (4+)",
+      "Mighty Blow (+1)",
+      "Thick Skull",
+      "Throw Team-mate"
+    ],
         "primary": "S",
         "secondary": "AG"
       },
@@ -1176,7 +1457,9 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skillKeys": ["Block"],
+        "skillKeys": [
+      "Block"
+    ],
         "primary": "GS",
         "secondary": "AP"
       },
@@ -1191,7 +1474,9 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skillKeys": [],
+        "skillKeys": [
+      
+    ],
         "primary": "G",
         "secondary": "AS"
       },
@@ -1206,11 +1491,17 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "7+"
         },
-        "skillKeys": ["Dodge", "Right Stuff", "Stunty"],
+        "skillKeys": [
+      "Dodge",
+      "Right Stuff",
+      "Stunty"
+    ],
         "primary": "A",
         "secondary": "GS"
       }
-    ]
+    ],
+    "specialRules_es": "Clásico del Viejo Mundo, Gestión de Equipo",
+    "specialRules_en": "Clásico del Viejo Mundo, Gestión de Equipo"
   },
   {
     "name": "Hombres Lagarto",
@@ -1238,7 +1529,13 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "10+"
         },
-        "skillKeys": ["Bone Head", "Loner (4+)", "Mighty Blow (+1)", "Prehensile Tail", "Thick Skull"],
+        "skillKeys": [
+      "Bone Head",
+      "Loner (4+)",
+      "Mighty Blow (+1)",
+      "Prehensile Tail",
+      "Thick Skull"
+    ],
         "primary": "S",
         "secondary": "AG"
       },
@@ -1253,7 +1550,9 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "10+"
         },
-        "skillKeys": [],
+        "skillKeys": [
+      
+    ],
         "primary": "",
         "secondary": "A"
       },
@@ -1268,7 +1567,12 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "8+"
         },
-        "skillKeys": ["Dodge", "Kick-Off Return", "Shadowing", "Stunty"],
+        "skillKeys": [
+      "Dodge",
+      "Kick-Off Return",
+      "Shadowing",
+      "Stunty"
+    ],
         "primary": "A",
         "secondary": "GPS"
       },
@@ -1283,11 +1587,16 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skillKeys": ["Dodge", "Stunty"],
+        "skillKeys": [
+      "Dodge",
+      "Stunty"
+    ],
         "primary": "A",
         "secondary": "GPS"
       }
-    ]
+    ],
+    "specialRules_es": "Superliga Lustria, Gestión de Equipo",
+    "specialRules_en": "Superliga Lustria, Gestión de Equipo"
   },
   {
     "name": "Horror Nigromántico",
@@ -1315,7 +1624,9 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skillKeys": ["Regeneration"],
+        "skillKeys": [
+      "Regeneration"
+    ],
         "primary": "G",
         "secondary": "AS"
       },
@@ -1330,7 +1641,13 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skillKeys": ["Tackle", "Foul Appearance", "No Hands", "Regeneration", "Sidestep"],
+        "skillKeys": [
+      "Tackle",
+      "Foul Appearance",
+      "No Hands",
+      "Regeneration",
+      "Side Step"
+    ],
         "primary": "GS",
         "secondary": "A"
       },
@@ -1345,7 +1662,9 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skillKeys": ["Dodge"],
+        "skillKeys": [
+      "Dodge"
+    ],
         "primary": "AG",
         "secondary": "PS"
       },
@@ -1360,7 +1679,11 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "10+"
         },
-        "skillKeys": ["Regeneration", "Stand Firm", "Thick Skull"],
+        "skillKeys": [
+      "Regeneration",
+      "Stand Firm",
+      "Thick Skull"
+    ],
         "primary": "GS",
         "secondary": "A"
       },
@@ -1375,11 +1698,17 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skillKeys": ["Claws", "Frenzy", "Regeneration"],
+        "skillKeys": [
+      "Claws",
+      "Frenzy",
+      "Regeneration"
+    ],
         "primary": "AG",
         "secondary": "PS"
       }
-    ]
+    ],
+    "specialRules_es": "Escaparate Sylvaniano, Gestión de Equipo, Maestros de la No-Muerte",
+    "specialRules_en": "Escaparate Sylvaniano, Gestión de Equipo, Maestros de la No-Muerte"
   },
   {
     "name": "Nórdicos",
@@ -1407,7 +1736,11 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skillKeys": ["Tackle", "Drunkard", "Thick Skull"],
+        "skillKeys": [
+      "Tackle",
+      "Drunkard",
+      "Thick Skull"
+    ],
         "primary": "G",
         "secondary": "APS"
       },
@@ -1422,7 +1755,9 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skillKeys": ["Frenzy"],
+        "skillKeys": [
+      "Frenzy"
+    ],
         "primary": "GS",
         "secondary": "A"
       },
@@ -1437,7 +1772,13 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skillKeys": ["Claws", "Disturbing Presence", "Frenzy", "Loner (4+)", "Unchannelled Fury"],
+        "skillKeys": [
+      "Claws",
+      "Disturbing Presence",
+      "Frenzy",
+      "Loner (4+)",
+      "Unchannelled Fury"
+    ],
         "primary": "S",
         "secondary": "AG"
       },
@@ -1452,7 +1793,11 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "8+"
         },
-        "skillKeys": ["Tackle", "Frenzy", "Leap"],
+        "skillKeys": [
+      "Tackle",
+      "Frenzy",
+      "Leap"
+    ],
         "primary": "GS",
         "secondary": "AP"
       },
@@ -1467,7 +1812,13 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "6+"
         },
-        "skillKeys": ["Dodge", "No Hands", "Jump Up", "Stunty", "Titchy"],
+        "skillKeys": [
+      "Dodge",
+      "No Hands",
+      "Jump Up",
+      "Stunty",
+      "Titchy"
+    ],
         "primary": "-",
         "secondary": "A"
       },
@@ -1482,11 +1833,18 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "8+"
         },
-        "skillKeys": ["Catch", "Dauntless", "Pass", "Strip Ball"],
+        "skillKeys": [
+      "Catch",
+      "Dauntless",
+      "Pass",
+      "Strip Ball"
+    ],
         "primary": "AGP",
         "secondary": "S"
       }
-    ]
+    ],
+    "specialRules_es": "Favorito de..., Clásico del Viejo Mundo",
+    "specialRules_en": "Favorito de..., Clásico del Viejo Mundo"
   },
   {
     "name": "Nurgle",
@@ -1514,7 +1872,12 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "10+"
         },
-        "skillKeys": ["Disturbing Presence", "Foul Appearance", "Plague Ridden", "Regeneration"],
+        "skillKeys": [
+      "Disturbing Presence",
+      "Foul Appearance",
+      "Plague Ridden",
+      "Regeneration"
+    ],
         "primary": "GMS",
         "secondary": "A"
       },
@@ -1529,7 +1892,16 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "10+"
         },
-        "skillKeys": ["Disturbing Presence", "Foul Appearance", "Loner (4+)", "Mighty Blow (+1)", "Plague Ridden", "Really Stupid", "Regeneration", "Tentacles"],
+        "skillKeys": [
+      "Disturbing Presence",
+      "Foul Appearance",
+      "Loner (4+)",
+      "Mighty Blow (+1)",
+      "Plague Ridden",
+      "Really Stupid",
+      "Regeneration",
+      "Tentacles"
+    ],
         "primary": "S",
         "secondary": "AGM"
       },
@@ -1544,7 +1916,11 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skillKeys": ["Horns", "Plague Ridden", "Regeneration"],
+        "skillKeys": [
+      "Horns",
+      "Plague Ridden",
+      "Regeneration"
+    ],
         "primary": "GMS",
         "secondary": "AP"
       },
@@ -1559,11 +1935,16 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "9+"
         },
-        "skillKeys": ["Decay", "Plague Ridden"],
+        "skillKeys": [
+      "Decay",
+      "Plague Ridden"
+    ],
         "primary": "GM",
         "secondary": "AS"
       }
-    ]
+    ],
+    "specialRules_es": "Favorito de..., Gestión de Equipo",
+    "specialRules_en": "Favorito de..., Gestión de Equipo"
   },
   {
     "name": "Ogros",
@@ -1591,7 +1972,12 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "10+"
         },
-        "skillKeys": ["Bone Head", "Kick Team-mate", "Mighty Blow (+1)", "Thick Skull"],
+        "skillKeys": [
+      "Bone Head",
+      "Kick Team-mate",
+      "Mighty Blow (+1)",
+      "Thick Skull"
+    ],
         "primary": "PS",
         "secondary": "AG"
       },
@@ -1606,7 +1992,13 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "6+"
         },
-        "skillKeys": ["Dodge", "Right Stuff", "Sidestep", "Stunty", "Titchy"],
+        "skillKeys": [
+      "Dodge",
+      "Right Stuff",
+      "Side Step",
+      "Stunty",
+      "Titchy"
+    ],
         "primary": "A",
         "secondary": "G"
       },
@@ -1621,11 +2013,18 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skillKeys": ["Bone Head", "Mighty Blow (+1)", "Thick Skull", "Throw Team-mate"],
+        "skillKeys": [
+      "Bone Head",
+      "Mighty Blow (+1)",
+      "Thick Skull",
+      "Throw Team-mate"
+    ],
         "primary": "S",
         "secondary": "AGP"
       }
-    ]
+    ],
+    "specialRules_es": "Clásico del Viejo Mundo, Gestión de Equipo, Pelea de Badlands, Peones Baratos, Nivel 4",
+    "specialRules_en": "Clásico del Viejo Mundo, Gestión de Equipo, Pelea de Badlands, Peones Baratos, Nivel 4"
   },
   {
     "name": "Alianza del Viejo Mundo",
@@ -1653,7 +2052,10 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skillKeys": ["Animosity (all team-mates)", "Tackle"],
+        "skillKeys": [
+      "Animosity (all team-mates)",
+      "Tackle"
+    ],
         "primary": "GS",
         "secondary": "A"
       },
@@ -1668,7 +2070,11 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "8+"
         },
-        "skillKeys": ["Animosity (all team-mates)", "Catch", "Dodge"],
+        "skillKeys": [
+      "Animosity (all team-mates)",
+      "Catch",
+      "Dodge"
+    ],
         "primary": "AG",
         "secondary": "S"
       },
@@ -1683,7 +2089,9 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skillKeys": [],
+        "skillKeys": [
+      
+    ],
         "primary": "G",
         "secondary": "AS"
       },
@@ -1698,7 +2106,11 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "9+"
         },
-        "skillKeys": ["Animosity (all team-mates)", "Pass", "Sure Hands"],
+        "skillKeys": [
+      "Animosity (all team-mates)",
+      "Pass",
+      "Sure Hands"
+    ],
         "primary": "GP",
         "secondary": "AS"
       },
@@ -1713,7 +2125,12 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "7+"
         },
-        "skillKeys": ["Animosity (all team-mates)", "Dodge", "Right Stuff", "Stunty"],
+        "skillKeys": [
+      "Animosity (all team-mates)",
+      "Dodge",
+      "Right Stuff",
+      "Stunty"
+    ],
         "primary": "A",
         "secondary": "GS"
       },
@@ -1728,7 +2145,11 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "10+"
         },
-        "skillKeys": ["Tackle", "Loner (3+)", "Thick Skull"],
+        "skillKeys": [
+      "Tackle",
+      "Loner (3+)",
+      "Thick Skull"
+    ],
         "primary": "GS",
         "secondary": "A"
       },
@@ -1743,7 +2164,12 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skillKeys": ["Arm Bar", "Brawler", "Loner (3+)", "Thick Skull"],
+        "skillKeys": [
+      "Arm Bar",
+      "Brawler",
+      "Loner (3+)",
+      "Thick Skull"
+    ],
         "primary": "GS",
         "secondary": "A"
       },
@@ -1758,7 +2184,11 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skillKeys": ["Loner (3+)", "Sure Hands", "Thick Skull"],
+        "skillKeys": [
+      "Loner (3+)",
+      "Sure Hands",
+      "Thick Skull"
+    ],
         "primary": "GP",
         "secondary": "AS"
       },
@@ -1773,11 +2203,19 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skillKeys": ["Tackle", "Dauntless", "Frenzy", "Loner (3+)", "Thick Skull"],
+        "skillKeys": [
+      "Tackle",
+      "Dauntless",
+      "Frenzy",
+      "Loner (3+)",
+      "Thick Skull"
+    ],
         "primary": "GS",
         "secondary": "A"
       }
-    ]
+    ],
+    "specialRules_es": "Clásico del Viejo Mundo, Gestión de Equipo",
+    "specialRules_en": "Clásico del Viejo Mundo, Gestión de Equipo"
   },
   {
     "name": "Orcos",
@@ -1805,7 +2243,9 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "10+"
         },
-        "skillKeys": ["Animosity (all team-mates)"],
+        "skillKeys": [
+      "Animosity (all team-mates)"
+    ],
         "primary": "G",
         "secondary": "AS"
       },
@@ -1820,7 +2260,15 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skillKeys": ["Always Hungry", "Loner (4+)", "Mighty Blow (+1)", "Projectile Vomit", "Really Stupid", "Regeneration", "Throw Team-mate"],
+        "skillKeys": [
+      "Always Hungry",
+      "Loner (4+)",
+      "Mighty Blow (+1)",
+      "Projectile Vomit",
+      "Really Stupid",
+      "Regeneration",
+      "Throw Team-mate"
+    ],
         "primary": "S",
         "secondary": "AGP"
       },
@@ -1835,7 +2283,11 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skillKeys": ["Dodge", "Right Stuff", "Stunty"],
+        "skillKeys": [
+      "Dodge",
+      "Right Stuff",
+      "Stunty"
+    ],
         "primary": "A",
         "secondary": "GS"
       },
@@ -1850,7 +2302,11 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "9+"
         },
-        "skillKeys": ["Animosity (all team-mates)", "Pass", "Sure Hands"],
+        "skillKeys": [
+      "Animosity (all team-mates)",
+      "Pass",
+      "Sure Hands"
+    ],
         "primary": "GS",
         "secondary": "AP"
       },
@@ -1865,7 +2321,11 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "10+"
         },
-        "skillKeys": ["Animosity (all team-mates)", "Block", "Break Tackle"],
+        "skillKeys": [
+      "Animosity (all team-mates)",
+      "Block",
+      "Break Tackle"
+    ],
         "primary": "GS",
         "secondary": "AP"
       },
@@ -1880,11 +2340,17 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "10+"
         },
-        "skillKeys": ["Animosity (all team-mates)", "Mighty Blow (+1)", "Thick Skull"],
+        "skillKeys": [
+      "Animosity (all team-mates)",
+      "Mighty Blow (+1)",
+      "Thick Skull"
+    ],
         "primary": "GS",
         "secondary": "A"
       }
-    ]
+    ],
+    "specialRules_es": "Pelea de Badlands, Gestión de Equipo",
+    "specialRules_en": "Pelea de Badlands, Gestión de Equipo"
   },
   {
     "name": "No Muertos",
@@ -1912,7 +2378,10 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "8+"
         },
-        "skillKeys": ["Regeneration", "Thick Skull"],
+        "skillKeys": [
+      "Regeneration",
+      "Thick Skull"
+    ],
         "primary": "G",
         "secondary": "AS"
       },
@@ -1927,7 +2396,9 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skillKeys": ["Dodge"],
+        "skillKeys": [
+      "Dodge"
+    ],
         "primary": "AG",
         "secondary": "PS"
       },
@@ -1942,7 +2413,10 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "10+"
         },
-        "skillKeys": ["Mighty Blow (+1)", "Regeneration"],
+        "skillKeys": [
+      "Mighty Blow (+1)",
+      "Regeneration"
+    ],
         "primary": "S",
         "secondary": "AG"
       },
@@ -1957,7 +2431,10 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "9+"
         },
-        "skillKeys": ["Tackle", "Regeneration"],
+        "skillKeys": [
+      "Tackle",
+      "Regeneration"
+    ],
         "primary": "GS",
         "secondary": "AP"
       },
@@ -1972,11 +2449,15 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skillKeys": ["Regeneration"],
+        "skillKeys": [
+      "Regeneration"
+    ],
         "primary": "G",
         "secondary": "AS"
       }
-    ]
+    ],
+    "specialRules_es": "Escaparate Sylvaniano, Gestión de Equipo, Maestros de la No-Muerte",
+    "specialRules_en": "Escaparate Sylvaniano, Gestión de Equipo, Maestros de la No-Muerte"
   },
   {
     "name": "Skaven",
@@ -2004,7 +2485,13 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skillKeys": ["Animal Savagery", "Frenzy", "Loner (4+)", "Mighty Blow (+1)", "Prehensile Tail"],
+        "skillKeys": [
+      "Animal Savagery",
+      "Frenzy",
+      "Loner (4+)",
+      "Mighty Blow (+1)",
+      "Prehensile Tail"
+    ],
         "primary": "S",
         "secondary": "AGM"
       },
@@ -2019,7 +2506,9 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "9+"
         },
-        "skillKeys": ["Tackle"],
+        "skillKeys": [
+      "Tackle"
+    ],
         "primary": "GS",
         "secondary": "AMP"
       },
@@ -2034,7 +2523,9 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skillKeys": ["Dodge"],
+        "skillKeys": [
+      "Dodge"
+    ],
         "primary": "AG",
         "secondary": "MPS"
       },
@@ -2049,7 +2540,10 @@ export const teamsData: Team[] = [
           "PS": "2+",
           "AR": "8+"
         },
-        "skillKeys": ["Pass", "Sure Hands"],
+        "skillKeys": [
+      "Pass",
+      "Sure Hands"
+    ],
         "primary": "GP",
         "secondary": "AMS"
       },
@@ -2064,11 +2558,15 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skillKeys": [],
+        "skillKeys": [
+      
+    ],
         "primary": "",
         "secondary": "AMS"
       }
-    ]
+    ],
+    "specialRules_es": "Desafío Subterráneo, Gestión de Equipo",
+    "specialRules_en": "Desafío Subterráneo, Gestión de Equipo"
   },
   {
     "name": "Slann (NAF)",
@@ -2096,7 +2594,10 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skillKeys": ["Pogo Stick", "Very Long Legs"],
+        "skillKeys": [
+      "Pogo Stick",
+      "Very Long Legs"
+    ],
         "primary": "G",
         "secondary": "AS"
       },
@@ -2111,7 +2612,11 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skillKeys": ["Diving Catch", "Pogo Stick", "Very Long Legs"],
+        "skillKeys": [
+      "Diving Catch",
+      "Pogo Stick",
+      "Very Long Legs"
+    ],
         "primary": "GA",
         "secondary": "SP"
       },
@@ -2126,7 +2631,12 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skillKeys": ["Diving Tackle", "Leap", "Pogo Stick", "Very Long Legs"],
+        "skillKeys": [
+      "Diving Tackle",
+      "Leap",
+      "Pogo Stick",
+      "Very Long Legs"
+    ],
         "primary": "GAS",
         "secondary": "P"
       },
@@ -2141,11 +2651,19 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "10+"
         },
-        "skillKeys": ["Bone Head", "Loner (4+)", "Mighty Blow (+1)", "Prehensile Tail", "Thick Skull"],
+        "skillKeys": [
+      "Bone Head",
+      "Loner (4+)",
+      "Mighty Blow (+1)",
+      "Prehensile Tail",
+      "Thick Skull"
+    ],
         "primary": "S",
         "secondary": "GA"
       }
-    ]
+    ],
+    "specialRules_es": "Superliga Lustria, Gestión de Equipo",
+    "specialRules_en": "Superliga Lustria, Gestión de Equipo"
   },
   {
     "name": "Reyes de las Tumbas",
@@ -2173,7 +2691,11 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "9+"
         },
-        "skillKeys": ["Tackle", "Regeneration", "Thick Skull"],
+        "skillKeys": [
+      "Tackle",
+      "Regeneration",
+      "Thick Skull"
+    ],
         "primary": "GS",
         "secondary": "AP"
       },
@@ -2188,7 +2710,12 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "8+"
         },
-        "skillKeys": ["Pass", "Regeneration", "Sure Hands", "Thick Skull"],
+        "skillKeys": [
+      "Pass",
+      "Regeneration",
+      "Sure Hands",
+      "Thick Skull"
+    ],
         "primary": "GP",
         "secondary": "A"
       },
@@ -2203,7 +2730,10 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "8+"
         },
-        "skillKeys": ["Regeneration", "Thick Skull"],
+        "skillKeys": [
+      "Regeneration",
+      "Thick Skull"
+    ],
         "primary": "G",
         "secondary": "AS"
       },
@@ -2218,11 +2748,16 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "10+"
         },
-        "skillKeys": ["Decay", "Regeneration"],
+        "skillKeys": [
+      "Decay",
+      "Regeneration"
+    ],
         "primary": "S",
         "secondary": "AG"
       }
-    ]
+    ],
+    "specialRules_es": "Escaparate Sylvaniano, Gestión de Equipo",
+    "specialRules_en": "Escaparate Sylvaniano, Gestión de Equipo"
   },
   {
     "name": "Habitantes del Inframundo",
@@ -2250,7 +2785,15 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skillKeys": ["Always Hungry", "Loner (4+)", "Mighty Blow (+1)", "Projectile Vomit", "Really Stupid", "Regeneration", "Throw Team-mate"],
+        "skillKeys": [
+      "Always Hungry",
+      "Loner (4+)",
+      "Mighty Blow (+1)",
+      "Projectile Vomit",
+      "Really Stupid",
+      "Regeneration",
+      "Throw Team-mate"
+    ],
         "primary": "MS",
         "secondary": "AGP"
       },
@@ -2265,7 +2808,11 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skillKeys": ["Dodge", "Right Stuff", "Stunty"],
+        "skillKeys": [
+      "Dodge",
+      "Right Stuff",
+      "Stunty"
+    ],
         "primary": "AM",
         "secondary": "GS"
       },
@@ -2280,7 +2827,9 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skillKeys": ["Animosity (all team-mates)"],
+        "skillKeys": [
+      "Animosity (all team-mates)"
+    ],
         "primary": "GM",
         "secondary": "AS"
       },
@@ -2295,7 +2844,11 @@ export const teamsData: Team[] = [
           "PS": "2+",
           "AR": "8+"
         },
-        "skillKeys": ["Animosity (all team-mates)", "Pass", "Sure Hands"],
+        "skillKeys": [
+      "Animosity (all team-mates)",
+      "Pass",
+      "Sure Hands"
+    ],
         "primary": "GMP",
         "secondary": "AS"
       },
@@ -2310,7 +2863,10 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "9+"
         },
-        "skillKeys": ["Animosity (all team-mates)", "Tackle"],
+        "skillKeys": [
+      "Animosity (all team-mates)",
+      "Tackle"
+    ],
         "primary": "GMS",
         "secondary": "AP"
       },
@@ -2325,7 +2881,10 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skillKeys": ["Animosity (all team-mates)", "Dodge"],
+        "skillKeys": [
+      "Animosity (all team-mates)",
+      "Dodge"
+    ],
         "primary": "AGM",
         "secondary": "PS"
       },
@@ -2340,7 +2899,13 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skillKeys": ["Animal Savagery", "Frenzy", "Loner (4+)", "Mighty Blow (+1)", "Prehensile Tail"],
+        "skillKeys": [
+      "Animal Savagery",
+      "Frenzy",
+      "Loner (4+)",
+      "Mighty Blow (+1)",
+      "Prehensile Tail"
+    ],
         "primary": "MS",
         "secondary": "AG"
       },
@@ -2355,11 +2920,20 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "6+"
         },
-        "skillKeys": ["Dodge", "Right Stuff", "Sidestep", "Stunty", "Swarming", "Titchy"],
+        "skillKeys": [
+      "Dodge",
+      "Right Stuff",
+      "Side Step",
+      "Stunty",
+      "Swarming",
+      "Titchy"
+    ],
         "primary": "AM",
         "secondary": "G"
       }
-    ]
+    ],
+    "specialRules_es": "Desafío Subterráneo, Gestión de Equipo, Soborno y Corrupción",
+    "specialRules_en": "Desafío Subterráneo, Gestión de Equipo, Soborno y Corrupción"
   },
   {
     "name": "Vampiros",
@@ -2387,7 +2961,9 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skillKeys": [],
+        "skillKeys": [
+      
+    ],
         "primary": "",
         "secondary": "AS"
       },
@@ -2402,7 +2978,12 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "9+"
         },
-        "skillKeys": ["Bloodlust (3+)", "Hypnotic Gaze", "Juggernaut", "Regeneration"],
+        "skillKeys": [
+      "Bloodlust (3+)",
+      "Hypnotic Gaze",
+      "Juggernaut",
+      "Regeneration"
+    ],
         "primary": "AGS",
         "secondary": "P"
       },
@@ -2417,7 +2998,11 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skillKeys": ["Bloodlust (2+)", "Hypnotic Gaze", "Regeneration"],
+        "skillKeys": [
+      "Bloodlust (2+)",
+      "Hypnotic Gaze",
+      "Regeneration"
+    ],
         "primary": "AG",
         "secondary": "PS"
       },
@@ -2432,7 +3017,12 @@ export const teamsData: Team[] = [
           "PS": "2+",
           "AR": "9+"
         },
-        "skillKeys": ["Bloodlust (2+)", "Hypnotic Gaze", "Pass", "Regeneration"],
+        "skillKeys": [
+      "Bloodlust (2+)",
+      "Hypnotic Gaze",
+      "Pass",
+      "Regeneration"
+    ],
         "primary": "AGP",
         "secondary": "S"
       },
@@ -2447,11 +3037,19 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "10+"
         },
-        "skillKeys": ["Bloodlust (3+)", "Claws", "Frenzy", "Loner (4+)", "Regeneration"],
+        "skillKeys": [
+      "Bloodlust (3+)",
+      "Claws",
+      "Frenzy",
+      "Loner (4+)",
+      "Regeneration"
+    ],
         "primary": "S",
         "secondary": "AG"
       }
-    ]
+    ],
+    "specialRules_es": "Escaparate Sylvaniano, Gestión de Equipo, Lord Vampiro",
+    "specialRules_en": "Escaparate Sylvaniano, Gestión de Equipo, Lord Vampiro"
   },
   {
     "name": "Elfos Silvanos",
@@ -2479,7 +3077,10 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skillKeys": ["Catch", "Dodge"],
+        "skillKeys": [
+      "Catch",
+      "Dodge"
+    ],
         "primary": "AG",
         "secondary": "PS"
       },
@@ -2494,7 +3095,9 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skillKeys": [],
+        "skillKeys": [
+      
+    ],
         "primary": "",
         "secondary": "S"
       },
@@ -2509,7 +3112,9 @@ export const teamsData: Team[] = [
           "PS": "2+",
           "AR": "8+"
         },
-        "skillKeys": ["Pass"],
+        "skillKeys": [
+      "Pass"
+    ],
         "primary": "AGP",
         "secondary": "S"
       },
@@ -2524,7 +3129,11 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skillKeys": ["Tackle", "Dodge", "Leap"],
+        "skillKeys": [
+      "Tackle",
+      "Dodge",
+      "Leap"
+    ],
         "primary": "AG",
         "secondary": "PS"
       },
@@ -2539,11 +3148,20 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "11+"
         },
-        "skillKeys": ["Loner (4+)", "Mighty Blow (+1)", "Stand Firm", "Strong Arm", "Take Root", "Thick Skull", "Throw Team-mate"],
+        "skillKeys": [
+      "Loner (4+)",
+      "Mighty Blow (+1)",
+      "Stand Firm",
+      "Strong Arm",
+      "Take Root",
+      "Thick Skull",
+      "Throw Team-mate"
+    ],
         "primary": "S",
         "secondary": "AG"
       }
-    ]
+    ],
+    "specialRules_es": "Liga de los Reinos Élficos, Gestión de Equipo",
+    "specialRules_en": "Liga de los Reinos Élficos, Gestión de Equipo"
   }
 ];
-

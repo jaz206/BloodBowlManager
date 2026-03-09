@@ -11,7 +11,7 @@ export const starPlayersData: StarPlayer[] = [
       "PS": "–",
       "AR": "6+"
     },
-    "skills": "Claws, Dauntless, Dodge, Frenzy, Jump Up, Loner (4+), No Ball, Side Step, Stunty, Titchy",
+    "skills": "Claws, Dauntless, Dodge, Frenzy, Jump Up, Loner (4+), No Hands, Side Step, Stunty, Titchy",
     "specialRules": "**Blind Rage:** Akhorne may choose to re-roll the D6 when rolling for the Dauntless Skill.",
     "playsFor": [
       "Any Team"
@@ -24,7 +24,7 @@ export const starPlayersData: StarPlayer[] = [
       "Frenzy",
       "Jump Up",
       "Loner (4+)",
-      "No Ball",
+      "No Hands",
       "Side Step",
       "Stunty",
       "Titchy"
@@ -97,14 +97,14 @@ export const starPlayersData: StarPlayer[] = [
       "PS": "6+",
       "AR": "10+"
     },
-    "skills": "Dirty Player, Disturbing Presence, Foul Appearance, Lone Fouler, Loner (4+), Regeneration, Unsteady",
+    "skills": "Dirty Player (+1), Disturbing Presence, Foul Appearance, Lone Fouler, Loner (4+), Regeneration, Unsteady",
     "specialRules": "**Putrid Regurgitation:** Once per half, Bilerot may use the Projectile Vomit Special Action. This may still be used even if Bilerot has already performed a Block Action this Turn.",
     "playsFor": [
       "Favoured of Nurgle"
     ],
     "image": "https://www.warhammer.com/app/resources/catalog/product/920x950/99850999058_Bilerot1.jpg?fm=webp&w=670&h=691",
     "skillKeys": [
-      "Dirty Player",
+      "Dirty Player (+1)",
       "Disturbing Presence",
       "Foul Appearance",
       "Lone Fouler",
@@ -319,7 +319,7 @@ export const starPlayersData: StarPlayer[] = [
       "PS": "4+",
       "AR": "11+"
     },
-    "skills": "Block, Bullseye, Loner (4+), Mighty Blow, Stand Firm, Strong Arm, Thick Skull, Throw Team-mate, Timmm-ber!",
+    "skills": "Block, Bullseye, Loner (4+), Mighty Blow (+1), Stand Firm, Strong Arm, Thick Skull, Throw Team-mate, Timmm-ber!",
     "specialRules": "**Reliable:** If Deeproot makes a Fumbled Throw when performing a Throw Team-mate Action, the player that was being thrown will Bounce as normal but will automatically land safely.",
     "playsFor": [
       "Woodland League"
@@ -329,7 +329,7 @@ export const starPlayersData: StarPlayer[] = [
       "Block",
       "Bullseye",
       "Loner (4+)",
-      "Mighty Blow",
+      "Mighty Blow (+1)",
       "Stand Firm",
       "Strong Arm",
       "Thick Skull",
@@ -349,24 +349,21 @@ export const starPlayersData: StarPlayer[] = [
       "PS": "4+ & 4+",
       "AR": "8+ & 8+"
     },
-    "skills": "**Dribl:** Dirty Player, Dodge, Loner (4+), Quick Foul, Side Step, Sneaky Git, Stunty. **Drull:** Dodge, Loner (4+), Side Step, Stab, Stunty",
+    "skills": "**Dribl:** Dirty Player, Dodge, Loner (4+), Quick Foul, Side Step, Sneaky Git, Stunty. **Drull:** Dodge, Stab, Stunty",
     "specialRules": "**A Sneaky Pair:** Dribl & Drull must be hired as a pair. Additionally, whenever Dribl or Drull perform either a Foul Action or a Stab Special Action against an opposition player Marked by both Dribl & Drull, they may apply a +1 modifier to the roll.",
     "playsFor": [
       "Lustrian Superleague"
     ],
     "image": "https://bloodbowlbase.ru/media/starplayers/DrullDrible2.jpg",
     "skillKeys": [
-      "**Dribl:** Dirty Player",
+      "Dirty Player (+1)",
       "Dodge",
       "Loner (4+)",
       "Quick Foul",
       "Side Step",
       "Sneaky Git",
-      "Stunty. **Drull:** Dodge",
-      "Loner (4+)",
-      "Side Step",
-      "Stab",
-      "Stunty"
+      "Stunty",
+      "Stab"
     ],
     "specialRules_es": "**A Sneaky Pair:** Dribl & Drull must be hired as a pair. Additionally, whenever Dribl or Drull perform either a Foul Action or a Stab Special Action against an opposition player Marked by both Dribl & Drull, they may apply a +1 modifier to the roll.",
     "specialRules_en": "**A Sneaky Pair:** Dribl & Drull must be hired as a pair. Additionally, whenever Dribl or Drull perform either a Foul Action or a Stab Special Action against an opposition player Marked by both Dribl & Drull, they may apply a +1 modifier to the roll."
@@ -381,7 +378,7 @@ export const starPlayersData: StarPlayer[] = [
       "PS": "3+",
       "AR": "8+"
     },
-    "skills": "Catch, Dodge, Hypnotic Gaze, Loner (4+), Nerves Of Steel, On The Ball",
+    "skills": "Catch, Dodge, Hypnotic Gaze, Loner (4+), Nerves of Steel, On The Ball",
     "specialRules": "**Mesmerizing Gaze:** Once per half, Eldril may re-roll the dice when performing a Hypnotic Gaze Special Action.",
     "playsFor": [
       "Elven Kingdoms League"
@@ -462,7 +459,7 @@ export const starPlayersData: StarPlayer[] = [
       "PS": "–",
       "AR": "8+"
     },
-    "skills": "Ball & Chain, Loner (4+), Mighty Blow, No Ball, Secret Weapon, Stunty",
+    "skills": "Ball & Chain, Loner (4+), Mighty Blow (+1), No Hands, Secret Weapon, Stunty",
     "specialRules": "**Whirling Dervish:** Once per Activation, Fungus may re-roll the D6 when determining which direction he moves in.",
     "playsFor": [
       "Badlands Brawl",
@@ -472,8 +469,8 @@ export const starPlayersData: StarPlayer[] = [
     "skillKeys": [
       "Ball & Chain",
       "Loner (4+)",
-      "Mighty Blow",
-      "No Ball",
+      "Mighty Blow (+1)",
+      "No Hands",
       "Secret Weapon",
       "Stunty"
     ],
@@ -543,7 +540,7 @@ export const starPlayersData: StarPlayer[] = [
       "PS": "6+",
       "AR": "10+"
     },
-    "skills": "Animal Savagery, Frenzy, Loner (4+), Mighty Blow, Prehensile Tail, Stand Firm, Thick Skull",
+    "skills": "Animal Savagery, Frenzy, Loner (4+), Mighty Blow (+1), Prehensile Tail, Stand Firm, Thick Skull",
     "specialRules": "**Primal Savagery:** One per game, when Glotl fails an Animal Savagery roll, it may lash out at an opposition player rather than a team-mate.",
     "playsFor": [
       "Lustrian Superleague"
@@ -552,7 +549,7 @@ export const starPlayersData: StarPlayer[] = [
       "Animal Savagery",
       "Frenzy",
       "Loner (4+)",
-      "Mighty Blow",
+      "Mighty Blow (+1)",
       "Prehensile Tail",
       "Stand Firm",
       "Thick Skull"
@@ -570,19 +567,19 @@ export const starPlayersData: StarPlayer[] = [
       "PS": "4+ & 5+",
       "AR": "10+ & 7+"
     },
-    "skills": "**Grak:** Bone Head, Kick Team-mate, Loner (4+), Mighty Blow, Thick Skull. **Crumbleberry:** Dodge, Lethal Flight, Loner (4+), Right Stuff, Stunty, Sure Hands",
+    "skills": "**Grak:** Bone Head, Kick Team-mate, Loner (4+), Mighty Blow (+1), Thick Skull. **Crumbleberry:** Dodge, Lethal Flight, Right Stuff, Stunty, Sure Hands",
     "specialRules": "**I’ll Carry You:** Grak & Crumbleberry must be hired as a pair. Additionally, once per half, if Grak begins his activation adjacent to Crumbleberry he may pick up Crumbleberry (remove temporarily). At end of activation, place adjacent. Grak gains Break Tackle and Dodge while carrying him.",
     "playsFor": [
       "Any Team"
     ],
     "skillKeys": [
-      "**Grak:** Bone Head",
+      "Bone Head",
       "Kick Team-mate",
       "Loner (4+)",
-      "Mighty Blow",
-      "Thick Skull. **Crumbleberry:** Dodge",
+      "Mighty Blow (+1)",
+      "Thick Skull",
+      "Dodge",
       "Lethal Flight",
-      "Loner (4+)",
       "Right Stuff",
       "Stunty",
       "Sure Hands"
@@ -600,7 +597,7 @@ export const starPlayersData: StarPlayer[] = [
       "PS": "6+",
       "AR": "9+"
     },
-    "skills": "Frenzy, Horns, Loner (4+), Mighty Blow, Thick Skull, Unchannelled Fury",
+    "skills": "Frenzy, Horns, Loner (4+), Mighty Blow (+1), Thick Skull, Unchannelled Fury",
     "specialRules": "**Gored by the Bull:** Once per game when Grashnak performs a Block Action as part of a Blitz Action, he may roll one additional Block Dice (max 3). If Frenzy triggers, the second block also benefits.",
     "playsFor": [
       "Chaos Clash"
@@ -609,7 +606,7 @@ export const starPlayersData: StarPlayer[] = [
       "Frenzy",
       "Horns",
       "Loner (4+)",
-      "Mighty Blow",
+      "Mighty Blow (+1)",
       "Thick Skull",
       "Unchannelled Fury"
     ],
@@ -626,7 +623,7 @@ export const starPlayersData: StarPlayer[] = [
       "PS": "–",
       "AR": "9+"
     },
-    "skills": "Disturbing Presence, Dodge, Foul Appearance, Jump Up, Loner (4+), No Ball, Regeneration, Shadowing, Side Step",
+    "skills": "Disturbing Presence, Dodge, Foul Appearance, Jump Up, Loner (4+), No Hands, Regeneration, Shadowing, Side Step",
     "specialRules": "**Incorporeal:** Once per game, when Gretchen is activated she can use this special rule. Until the end of her activation, Gretchen does not have to make Dodge rolls for leaving a square within an opposition player’s Tackle Zone.",
     "playsFor": [
       "Sylvanian Spotlight"
@@ -637,7 +634,7 @@ export const starPlayersData: StarPlayer[] = [
       "Foul Appearance",
       "Jump Up",
       "Loner (4+)",
-      "No Ball",
+      "No Hands",
       "Regeneration",
       "Shadowing",
       "Side Step"
@@ -708,7 +705,7 @@ export const starPlayersData: StarPlayer[] = [
       "PS": "4+",
       "AR": "10+"
     },
-    "skills": "Block, Break Tackle, Dauntless, Loner (4+), Mighty Blow, Stand Firm, Sure Feet, Thick Skull",
+    "skills": "Block, Break Tackle, Dauntless, Loner (4+), Mighty Blow (+1), Stand Firm, Sure Feet, Thick Skull",
     "specialRules": "**Wisdom of the White Dwarf:** Once per game, when Grombrindal is activated he may select one team-mate within 2 squares. The selected team-mate gains one of: Break Tackle, Dauntless, Mighty Blow, or Sure Feet until the end of turn.",
     "playsFor": [
       "Halfling Thimble Cup",
@@ -720,7 +717,7 @@ export const starPlayersData: StarPlayer[] = [
       "Break Tackle",
       "Dauntless",
       "Loner (4+)",
-      "Mighty Blow",
+      "Mighty Blow (+1)",
       "Stand Firm",
       "Sure Feet",
       "Thick Skull"
@@ -738,7 +735,7 @@ export const starPlayersData: StarPlayer[] = [
       "PS": "6+",
       "AR": "10+"
     },
-    "skills": "Foul Appearance, Loner (4+), Monstrous Mouth, Nerves of Steel, On the Ball, Plague Ridden",
+    "skills": "Foul Appearance, Loner (4+), Monstrous Mouth, Nerves of Steel, On The Ball, Plague Ridden",
     "specialRules": "**Quick Bite:** Once per game, if Guffle is Marking an opposition player who catches the ball, he may immediately make an Armour Roll against that player. If broken, Guffle gains the ball. No Turnover.",
     "playsFor": [
       "Favoured of Nurgle"
@@ -818,7 +815,7 @@ export const starPlayersData: StarPlayer[] = [
       "PS": "–",
       "AR": "9+"
     },
-    "skills": "Chainsaw, Loner (4+), No Ball, Pro, Secret Weapon, Stand Firm",
+    "skills": "Chainsaw, Loner (4+), No Hands, Pro, Secret Weapon, Stand Firm",
     "specialRules": "**Old Pro:** Once per game, Helmut may use his Pro Skill to re-roll a single dice rolled as art of an Armour Roll.",
     "playsFor": [
       "Old World Classic"
@@ -826,7 +823,7 @@ export const starPlayersData: StarPlayer[] = [
     "skillKeys": [
       "Chainsaw",
       "Loner (4+)",
-      "No Ball",
+      "No Hands",
       "Pro",
       "Secret Weapon",
       "Stand Firm"
@@ -896,7 +893,7 @@ export const starPlayersData: StarPlayer[] = [
       "PS": "2+",
       "AR": "9+"
     },
-    "skills": "Block, Dodge, Diving Catch, Dump-off, Loner (4+), Nerves of Steel, On the Ball, Pass, Sidestep",
+    "skills": "Block, Dodge, Diving Catch, Dump-off, Loner (4+), Nerves of Steel, On The Ball, Pass, Side Step",
     "specialRules": "**The Flashing Blade:** Once per game, at the start of his activation, Jeremiah may declare a Stab Special Action. After performing it, he may then perform a Move Action.",
     "playsFor": [
       "Elven Kingdoms League"
@@ -910,7 +907,7 @@ export const starPlayersData: StarPlayer[] = [
       "Nerves of Steel",
       "On The Ball",
       "Pass",
-      "Sidestep"
+      "Side Step"
     ],
     "specialRules_es": "**The Flashing Blade:** Once per game, at the start of his activation, Jeremiah may declare a Stab Special Action. After performing it, he may then perform a Move Action.",
     "specialRules_en": "**The Flashing Blade:** Once per game, at the start of his activation, Jeremiah may declare a Stab Special Action. After performing it, he may then perform a Move Action."
@@ -925,7 +922,7 @@ export const starPlayersData: StarPlayer[] = [
       "PS": "3+",
       "AR": "8+"
     },
-    "skills": "Block, Diving Catch, Dodge, Leap, Loner (4+), Sidestep, Steady Footing",
+    "skills": "Block, Diving Catch, Dodge, Leap, Loner (4+), Side Step, Steady Footing",
     "specialRules": "**Swift as the Breeze:** Once per game, Jordell can choose to pass a single Dodge, Leap, or Rush Test on a 2+, regardless of any modifiers.",
     "playsFor": [
       "Elven Kingdoms League",
@@ -937,7 +934,7 @@ export const starPlayersData: StarPlayer[] = [
       "Dodge",
       "Leap",
       "Loner (4+)",
-      "Sidestep",
+      "Side Step",
       "Steady Footing"
     ],
     "specialRules_es": "**Swift as the Breeze:** Once per game, Jordell can choose to pass a single Dodge, Leap, or Rush Test on a 2+, regardless of any modifiers.",
@@ -1007,7 +1004,7 @@ export const starPlayersData: StarPlayer[] = [
       "PS": "3+",
       "AR": "8+"
     },
-    "skills": "Disturbing Presence, Foul Appearance, Loner (4+), On the Ball, Tackle, Tentacles",
+    "skills": "Disturbing Presence, Foul Appearance, Loner (4+), On The Ball, Tackle, Tentacles",
     "specialRules": "**Black Ink:** Once per game, at the start of activation, select an opposition player Kiroth is Marking. They become Distracted until next activated.",
     "playsFor": [
       "Elven Kingdoms League"
@@ -1033,7 +1030,7 @@ export const starPlayersData: StarPlayer[] = [
       "PS": "–",
       "AR": "10+"
     },
-    "skills": "Ball & Chain, Loner (4+), Mighty Blow, No Ball, Prehensile Tail, Secret Weapon",
+    "skills": "Ball & Chain, Loner (4+), Mighty Blow (+1), No Hands, Prehensile Tail, Secret Weapon",
     "specialRules": "**I’ll Be Back!:** The first time Kreek would be Sent-off by Secret Weapon, he is not. Cannot Argue the Call.",
     "playsFor": [
       "Underworld Challenge"
@@ -1041,8 +1038,8 @@ export const starPlayersData: StarPlayer[] = [
     "skillKeys": [
       "Ball & Chain",
       "Loner (4+)",
-      "Mighty Blow",
-      "No Ball",
+      "Mighty Blow (+1)",
+      "No Hands",
       "Prehensile Tail",
       "Secret Weapon"
     ],
@@ -1059,17 +1056,17 @@ export const starPlayersData: StarPlayer[] = [
       "PS": "5+",
       "AR": "10+"
     },
-    "skills": "Block, Dirty Player, Leader, Loner (3+), Mighty Blow, Put the Boot In, Sneaky Git",
+    "skills": "Block, Dirty Player (+1), Leader, Loner (3+), Mighty Blow (+1), Put the Boot In, Sneaky Git",
     "specialRules": "**Lord of Chaos:** Once per game, when Lord Borak performs a Block Action he may re-roll a single Block Dice.",
     "playsFor": [
       "Chaos Clash"
     ],
     "skillKeys": [
       "Block",
-      "Dirty Player",
+      "Dirty Player (+1)",
       "Leader",
       "Loner (3+)",
-      "Mighty Blow",
+      "Mighty Blow (+1)",
       "Put the Boot In",
       "Sneaky Git"
     ],
@@ -1086,7 +1083,7 @@ export const starPlayersData: StarPlayer[] = [
       "PS": "5+",
       "AR": "11+"
     },
-    "skills": "Brawler, Grab, Loner (4+), Mighty Blow, Stand Firm, Tentacles, Thick Skull",
+    "skills": "Brawler, Grab, Loner (4+), Mighty Blow (+1), Stand Firm, Tentacles, Thick Skull",
     "specialRules": "**Vicious Vines:** Once per half, when Maple declares a Block Action he may do so against an opposition player 2 squares away (cannot follow-up).",
     "playsFor": [
       "Woodland League"
@@ -1095,7 +1092,7 @@ export const starPlayersData: StarPlayer[] = [
       "Brawler",
       "Grab",
       "Loner (4+)",
-      "Mighty Blow",
+      "Mighty Blow (+1)",
       "Stand Firm",
       "Tentacles",
       "Thick Skull"
@@ -1113,7 +1110,7 @@ export const starPlayersData: StarPlayer[] = [
       "PS": "–",
       "AR": "9+"
     },
-    "skills": "Chainsaw, Loner (4+), No Ball, Secret Weapon",
+    "skills": "Chainsaw, Loner (4+), No Hands, Secret Weapon",
     "specialRules": "**Maximum Carnage:** Once per game, after Max performs a Chainsaw Attack he may immediately perform another against a different target.",
     "playsFor": [
       "Favoured Of Khorne"
@@ -1121,7 +1118,7 @@ export const starPlayersData: StarPlayer[] = [
     "skillKeys": [
       "Chainsaw",
       "Loner (4+)",
-      "No Ball",
+      "No Hands",
       "Secret Weapon"
     ],
     "specialRules_es": "**Maximum Carnage:** Once per game, after Max performs a Chainsaw Attack he may immediately perform another against a different target.",
@@ -1137,7 +1134,7 @@ export const starPlayersData: StarPlayer[] = [
       "PS": "6+",
       "AR": "10+"
     },
-    "skills": "Block, Loner (4+), Mighty Blow",
+    "skills": "Block, Loner (4+), Mighty Blow (+1)",
     "specialRules": "**Crushing Blow:** Once per game, when an opposition player is Knocked Down by Zug, apply +1 to the Armour Roll.",
     "playsFor": [
       "Lustrian Superleague",
@@ -1146,7 +1143,7 @@ export const starPlayersData: StarPlayer[] = [
     "skillKeys": [
       "Block",
       "Loner (4+)",
-      "Mighty Blow"
+      "Mighty Blow (+1)"
     ],
     "specialRules_es": "**Crushing Blow:** Once per game, when an opposition player is Knocked Down by Zug, apply +1 to the Armour Roll.",
     "specialRules_en": "**Crushing Blow:** Once per game, when an opposition player is Knocked Down by Zug, apply +1 to the Armour Roll."
@@ -1161,7 +1158,7 @@ export const starPlayersData: StarPlayer[] = [
       "PS": "4+",
       "AR": "11+"
     },
-    "skills": "Block, Bullseye, Hatred (Undead), Loner (4+), Mighty Blow, Thick Skull, Throw Team-mate",
+    "skills": "Block, Bullseye, Hatred (Undead), Loner (4+), Mighty Blow (+1), Thick Skull, Throw Team-mate",
     "specialRules": "**The Ballista:** Once per game, when Morg performs a Throw Team-mate Action, he may re-roll the Passing Ability Test.",
     "playsFor": [
       "Any except Sylvanian"
@@ -1171,7 +1168,7 @@ export const starPlayersData: StarPlayer[] = [
       "Bullseye",
       "Hatred (Undead)",
       "Loner (4+)",
-      "Mighty Blow",
+      "Mighty Blow (+1)",
       "Thick Skull",
       "Throw Team-mate"
     ],
@@ -1188,7 +1185,7 @@ export const starPlayersData: StarPlayer[] = [
       "PS": "–",
       "AR": "8+"
     },
-    "skills": "Block, Chainsaw, Dodge, Loner (4+), No Ball, Secret Weapon, Stunty",
+    "skills": "Block, Chainsaw, Dodge, Loner (4+), No Hands, Secret Weapon, Stunty",
     "specialRules": "**Kick ’em While They’re Down!:** Once per game, Nobbla may use Chainsaw against a Prone or Stunned player. Does not count as Foul.",
     "playsFor": [
       "Badlands Brawl",
@@ -1199,7 +1196,7 @@ export const starPlayersData: StarPlayer[] = [
       "Chainsaw",
       "Dodge",
       "Loner (4+)",
-      "No Ball",
+      "No Hands",
       "Secret Weapon",
       "Stunty"
     ],
@@ -1243,7 +1240,7 @@ export const starPlayersData: StarPlayer[] = [
       "PS": "5+",
       "AR": "8+"
     },
-    "skills": "Loner (4+), Shadowing, Sidestep, Sneaky Git, Stab",
+    "skills": "Loner (4+), Shadowing, Side Step, Sneaky Git, Stab",
     "specialRules": "**Toxin Connoisseur:** Once per game, if Rashnak breaks armour with Stab, apply +1 to the Injury Roll.",
     "playsFor": [
       "Badlands Brawl"
@@ -1251,7 +1248,7 @@ export const starPlayersData: StarPlayer[] = [
     "skillKeys": [
       "Loner (4+)",
       "Shadowing",
-      "Sidestep",
+      "Side Step",
       "Sneaky Git",
       "Stab"
     ],
@@ -1268,7 +1265,7 @@ export const starPlayersData: StarPlayer[] = [
       "PS": "4+",
       "AR": "10+"
     },
-    "skills": "Bullseye, Grab, Loner (4+), Mighty Blow, Regeneration, Throw Team Mate",
+    "skills": "Bullseye, Grab, Loner (4+), Mighty Blow (+1), Regeneration, Throw Team-mate",
     "specialRules": "**Thinking Man’s Troll:** Once per half, Ripper may re-roll a single dice (not Armor/Injury/Casualty).",
     "playsFor": [
       "Badlands Brawl",
@@ -1278,9 +1275,9 @@ export const starPlayersData: StarPlayer[] = [
       "Bullseye",
       "Grab",
       "Loner (4+)",
-      "Mighty Blow",
+      "Mighty Blow (+1)",
       "Regeneration",
-      "Throw Team Mate"
+      "Throw Team-mate"
     ],
     "specialRules_es": "**Thinking Man’s Troll:** Once per half, Ripper may re-roll a single dice (not Armor/Injury/Casualty).",
     "specialRules_en": "**Thinking Man’s Troll:** Once per half, Ripper may re-roll a single dice (not Armor/Injury/Casualty)."
@@ -1402,17 +1399,17 @@ export const starPlayersData: StarPlayer[] = [
       "PS": "4+",
       "AR": "8+"
     },
-    "skills": "Dirty Player, Dodge, Loner (4+), Pogo, Right Stuff, Sprint, Stunty, Sure Feet",
+    "skills": "Dirty Player (+1), Dodge, Loner (4+), Pogo Stick, Right Stuff, Sprint, Stunty, Sure Feet",
     "specialRules": "**Yoink!:** Once per game, Scrappa can automatically Intercept a pass on a 2+.",
     "playsFor": [
       "Badlands Brawl",
       "Underworld Challenge"
     ],
     "skillKeys": [
-      "Dirty Player",
+      "Dirty Player (+1)",
       "Dodge",
       "Loner (4+)",
-      "Pogo",
+      "Pogo Stick",
       "Right Stuff",
       "Sprint",
       "Stunty",
@@ -1431,7 +1428,7 @@ export const starPlayersData: StarPlayer[] = [
       "PS": "6+",
       "AR": "10+"
     },
-    "skills": "Claws, Frenzy, Loner (4+), Might Blow, Prehensile Tail, Thick Skull, Unchannelled Fury",
+    "skills": "Claws, Frenzy, Loner (4+), Mighty Blow (+1), Prehensile Tail, Thick Skull, Unchannelled Fury",
     "specialRules": "**Fury of the Blood God:** If he rolls a 1 for Unchannelled Fury, he may perform two Block Actions instead.",
     "playsFor": [
       "Favoured Of Khorne"
@@ -1440,7 +1437,7 @@ export const starPlayersData: StarPlayer[] = [
       "Claws",
       "Frenzy",
       "Loner (4+)",
-      "Might Blow",
+      "Mighty Blow (+1)",
       "Prehensile Tail",
       "Thick Skull",
       "Unchannelled Fury"
@@ -1483,7 +1480,7 @@ export const starPlayersData: StarPlayer[] = [
       "PS": "6+",
       "AR": "9+"
     },
-    "skills": "Block, Claws, Disturbing Presence, Juggernaut, Loner (4+), Mighty Blow",
+    "skills": "Block, Claws, Disturbing Presence, Juggernaut, Loner (4+), Mighty Blow (+1)",
     "specialRules": "**Pump Up the Crowd:** Once per game, if Skrorg causes a Casualty, gain one Team Re-roll until end of Drive.",
     "playsFor": [
       "Old World Classic",
@@ -1495,7 +1492,7 @@ export const starPlayersData: StarPlayer[] = [
       "Disturbing Presence",
       "Juggernaut",
       "Loner (4+)",
-      "Mighty Blow"
+      "Mighty Blow (+1)"
     ],
     "specialRules_es": "**Pump Up the Crowd:** Once per game, if Skrorg causes a Casualty, gain one Team Re-roll until end of Drive.",
     "specialRules_en": "**Pump Up the Crowd:** Once per game, if Skrorg causes a Casualty, gain one Team Re-roll until end of Drive."
@@ -1538,17 +1535,17 @@ export const starPlayersData: StarPlayer[] = [
       "PS": "3+ & 2+",
       "AR": "9+ & 9+"
     },
-    "skills": "**Lucian:** Block, Loner (4+), Mighty Blow, Tackle. **Valen:** Accurate, Loner (4+), Nerves of Steel, Pass, Safe Pass, Sure Hands",
+    "skills": "**Lucian:** Block, Loner (4+), Mighty Blow (+1), Tackle. **Valen:** Accurate, Nerves of Steel, Pass, Safe Pass, Sure Hands",
     "specialRules": "**Working In Tandem:** Must be hired as a pair. Lucian re-rolls block if Valen marks target. Valen ignores range modifiers if passing to Lucian.",
     "playsFor": [
       "Elven Kingdoms League"
     ],
     "skillKeys": [
-      "**Lucian:** Block",
+      "Block",
       "Loner (4+)",
-      "Mighty Blow",
-      "Tackle. **Valen:** Accurate",
-      "Loner (4+)",
+      "Mighty Blow (+1)",
+      "Tackle",
+      "Accurate",
       "Nerves of Steel",
       "Pass",
       "Safe Pass",
@@ -1618,7 +1615,7 @@ export const starPlayersData: StarPlayer[] = [
       "PS": "5+",
       "AR": "10+"
     },
-    "skills": "Block, Hatred (Undead), Jump Up, Loner (4+), Mighty Blow, Thick Skull, Unsteady",
+    "skills": "Block, Hatred (Undead), Jump Up, Loner (4+), Mighty Blow (+1), Thick Skull, Unsteady",
     "specialRules": "**Krump and Smash:** Once per game, when an opposition player is Knocked Down by Varag, he may re-roll the Armour Roll.",
     "playsFor": [
       "Badlands Brawl"
@@ -1628,7 +1625,7 @@ export const starPlayersData: StarPlayer[] = [
       "Hatred (Undead)",
       "Jump Up",
       "Loner (4+)",
-      "Mighty Blow",
+      "Mighty Blow (+1)",
       "Thick Skull",
       "Unsteady"
     ],
@@ -1722,7 +1719,7 @@ export const starPlayersData: StarPlayer[] = [
       "PS": "5+",
       "AR": "10+"
     },
-    "skills": "Disturbing Presence, Juggernaut, Loner (4+), Mighty Blow, Prehensile Tail, Regeneration, Sure Feet",
+    "skills": "Disturbing Presence, Juggernaut, Loner (4+), Mighty Blow (+1), Prehensile Tail, Regeneration, Sure Feet",
     "specialRules": "**Excuse Me:** Once per game, select an opponent within 3 squares; they lose their Tackle Zone until next activation.",
     "playsFor": [
       "Elven / Lustrian Superleague"
@@ -1731,7 +1728,7 @@ export const starPlayersData: StarPlayer[] = [
       "Disturbing Presence",
       "Juggernaut",
       "Loner (4+)",
-      "Mighty Blow",
+      "Mighty Blow (+1)",
       "Prehensile Tail",
       "Regeneration",
       "Sure Feet"
@@ -1749,7 +1746,7 @@ export const starPlayersData: StarPlayer[] = [
       "PS": "3+",
       "AR": "10+"
     },
-    "skills": "Cannoneer, Hail Mary Pass, Loner (4+), Nerves of Steel, Secret Weapon, Thick Skull!",
+    "skills": "Cannoneer, Hail Mary Pass, Loner (4+), Nerves of Steel, Secret Weapon, Thick Skull",
     "specialRules": "**Blastin’ Solves Everything:** Once per half, 3+ to hit opponent within 3 squares. On 2 coach picks another target. On 1 Zzharg hit. Make Armour Roll.",
     "playsFor": [
       "Favoured of Hashut"
@@ -1760,7 +1757,7 @@ export const starPlayersData: StarPlayer[] = [
       "Loner (4+)",
       "Nerves of Steel",
       "Secret Weapon",
-      "Thick Skull!"
+      "Thick Skull"
     ],
     "specialRules_es": "**Blastin’ Solves Everything:** Once per half, 3+ to hit opponent within 3 squares. On 2 coach picks another target. On 1 Zzharg hit. Make Armour Roll.",
     "specialRules_en": "**Blastin’ Solves Everything:** Once per half, 3+ to hit opponent within 3 squares. On 2 coach picks another target. On 1 Zzharg hit. Make Armour Roll."

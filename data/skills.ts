@@ -182,8 +182,8 @@ export const skillsData: Skill[] = [
     "desc_es": "Si este jugador cae Boca Abajo o es Derribado con el balón, el balón no rebota. En cambio, puede colocarse en cualquier casilla vacía adyacente."
   },
   {
-    "keyEN": "Sidestep",
-    "name_en": "Sidestep",
+    "keyEN": "Side Step",
+    "name_en": "Side Step",
     "name_es": "Echarse a un lado",
     "category": "Agility",
     "desc_en": "When pushed back for any reason, you may choose any unoccupied adjacent square to push this player into instead of the square chosen by the opposing coach.",
@@ -828,5 +828,125 @@ export const skillsData: Skill[] = [
     "category": "Trait",
     "desc_en": "When activated, roll a D6 (+2 if Block/Blitz). On 1-3, this player rages incoherently and their activation ends immediately. On 4+, they continue normally.",
     "desc_es": "Al activarse, lanza 1D6 (+2 si Bloqueo o Blitz). Con 1-3, el jugador grita incoherentemente y su activación termina de inmediato. Con 4+, continúa normalmente."
+  },
+  {
+    "keyEN": "No Ball",
+    "name_en": "No Ball",
+    "name_es": "Sin Manos",
+    "category": "Trait",
+    "desc_en": "This player is unable to pick up, intercept or carry the ball.",
+    "desc_es": "Este jugador no puede recoger, interceptar ni llevar el balón."
+  },
+{
+    "keyEN": "Timmm-ber!",
+    "name_en": "Timmm-ber!",
+    "name_es": "¡Meeeedra!",
+    "category": "Trait",
+    "desc_en": "If this player has a Strength of 5 or more and is attempting to Stand Up, they gain a +1 modifier to the 4+ roll for each adjacent standing team-mate.",
+    "desc_es": "Si este jugador tiene Fuerza 5 o más e intenta Levantarse, gana un modificador de +1 a la tirada de 4+ por cada compañero adyacente que esté de pie."
+  },
+{
+    "keyEN": "Lone Fouler",
+    "name_en": "Lone Fouler",
+    "name_es": "Faltón Solitario",
+    "category": "Trait",
+    "desc_en": "This player is so committed to fouling that they do not require assistance to be more effective.",
+    "desc_es": "Este jugador está tan comprometido con las faltas que no requiere asistencia para ser más efectivo."
+  },
+{
+    "keyEN": "Quick Foul",
+    "name_en": "Quick Foul",
+    "name_es": "Falta Rápida",
+    "category": "Trait",
+    "desc_en": "This player may commit a Foul action as part of a Move or Blitz action, though their activation ends immediately after.",
+    "desc_es": "Este jugador puede realizar una acción de Falta como parte de un Movimiento o Blitz, aunque su activación termina inmediatamente después."
+  },
+{
+    "keyEN": "Bullseye",
+    "name_en": "Bullseye",
+    "name_es": "Ojo de Buey",
+    "category": "Trait",
+    "desc_en": "This player is exceptionally accurate when throwing teammates or bombs.",
+    "desc_es": "Este jugador es excepcionalmente preciso al lanzar compañeros o bombas."
+  },
+{
+    "keyEN": "Ghostly Flames",
+    "name_en": "Ghostly Flames",
+    "name_es": "Llamas Espectrales",
+    "category": "Trait",
+    "desc_en": "A mystical aura of fire that burns opponents upon contact.",
+    "desc_es": "Un aura mística de fuego que quema a los oponentes al contacto."
+  },
+{
+    "keyEN": "Brutal Block",
+    "name_en": "Brutal Block",
+    "name_es": "Bloqueo Brutal",
+    "category": "Trait",
+    "desc_en": "A powerful block that ignores certain defensive abilities.",
+    "desc_es": "Un bloqueo poderoso que ignora ciertas habilidades defensivas."
+  },
+{
+    "keyEN": "Unsteady",
+    "name_en": "Unsteady",
+    "name_es": "Inestable",
+    "category": "Trait",
+    "desc_en": "This player is poorly balanced. If pushed, they always fall over.",
+    "desc_es": "Este jugador tiene poco equilibrio. Si es empujado, siempre se cae."
+  },
+{
+    "keyEN": "Hatred (Undead)",
+    "name_en": "Hatred (Undead)",
+    "name_es": "Odio (No Muertos)",
+    "category": "Trait",
+    "desc_en": "This player gains bonuses when blocking Undead opponents.",
+    "desc_es": "Este jugador gana bonificaciones al bloquear a oponentes No Muertos."
+  },
+{
+    "keyEN": "Hatred (Dwarf)",
+    "name_en": "Hatred (Dwarf)",
+    "name_es": "Odio (Enanos)",
+    "category": "Trait",
+    "desc_en": "This player gains bonuses when blocking Dwarf opponents.",
+    "desc_es": "Este jugador gana bonificaciones al bloquear a oponentes Enanos."
+  },
+{
+    "keyEN": "Hatred (Big Guy)",
+    "name_en": "Hatred (Big Guy)",
+    "name_es": "Odio (Tipos Grandes)",
+    "category": "Trait",
+    "desc_en": "This player gains bonuses when blocking Big Guys.",
+    "desc_es": "Este jugador gana bonificaciones al bloquear a Tipos Grandes."
+  },
+{
+    "keyEN": "Lethal Flight",
+    "name_en": "Lethal Flight",
+    "name_es": "Vuelo Letal",
+    "category": "Trait",
+    "desc_en": "If this player lands in an occupied square, they make an Armour roll against the occupant.",
+    "desc_es": "Si este jugador aterriza en una casilla ocupada, realiza una tirada de Armadura contra el ocupante."
+  },
+  {
+    "keyEN": "Taunt",
+    "name_en": "Taunt",
+    "name_es": "Provocar",
+    "category": "Trait",
+    "desc_en": "Once per game, force an opponent to move towards and block this player.",
+    "desc_es": "Una vez por partido, obliga a un oponente a moverse hacia este jugador y bloquearlo."
+  },
+  {
+    "keyEN": "Steady Footing",
+    "name_en": "Steady Footing",
+    "name_es": "Pie Firme",
+    "category": "Trait",
+    "desc_en": "Once per game, pass a Dodge, Leap or Rush test on a 2+ regardless of modifiers.",
+    "desc_es": "Una vez por partido, supera una prueba de Esquiva, Salto o A Todo Gas con un 2+ sin importar los modificadores."
+  },
+  {
+    "keyEN": "Put the Boot In",
+    "name_en": "Put the Boot In",
+    "name_es": "Meter la Bota",
+    "category": "Trait",
+    "desc_en": "Provides bonuses when performing a Foul action.",
+    "desc_es": "Proporciona bonificaciones al realizar una acción de Falta."
   }
 ];
