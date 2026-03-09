@@ -173,7 +173,13 @@ export const useMasterData = () => {
      * Overwrites existing documents atomically.
      * Only admins should be able to call this (enforced by Firestore Rules).
      */
-    const syncMasterData = useCallback(async (): Promise<void> => {
+    // ── Sync to Firestore (admin action) ─────────────────────────────────────
+    /**
+     * Uploads static master data to Firestore using a Smart Merge strategy.
+     * Preserves existing items in Firestore (with their manual edits) and adds new ones from code.
+     * @param force - If true, performs a full overwrite.
+     */
+    const syncMasterData = useCallback(async (force = false): Promise<void> => {
         if (!db) throw new Error('Firebase no está disponible');
 
         setSyncStatus('syncing');
@@ -182,19 +188,48 @@ export const useMasterData = () => {
         try {
             const ts = serverTimestamp();
 
+            // Helper to merge arrays preserving Firestore versions
+            const mergeItems = (firestoreItems: any[], staticItems: any[], identifier: string) => {
+                if (force) return staticItems;
+                const merged = [...firestoreItems];
+                staticItems.forEach(si => {
+                    const id = si[identifier];
+                    if (!merged.find(mi => mi[identifier] === id)) {
+                        merged.push(si);
+                    }
+                });
+                return merged;
+            };
+
+            // Fetch current data for merging
+            const [teamsSnap, skillsSnap, starsSnap, inducEsSnap, inducEnSnap] = await Promise.all([
+                getDoc(doc(db, MASTER_COL, 'teams')),
+                getDoc(doc(db, MASTER_COL, 'skills')),
+                getDoc(doc(db, MASTER_COL, 'star_players')),
+                getDoc(doc(db, MASTER_COL, 'inducements_es')),
+                getDoc(doc(db, MASTER_COL, 'inducements_en')),
+            ]);
+
+            const teamsToSave = mergeItems(teamsSnap.exists() ? teamsSnap.data().items : [], staticTeamsData, 'name');
+            const skillsToSave = mergeItems(skillsSnap.exists() ? skillsSnap.data().items : [], staticSkills, 'keyEN');
+            const starsToSave = mergeItems(starsSnap.exists() ? starsSnap.data().items : [], staticStarsData, 'name');
+            const inducEsToSave = mergeItems(inducEsSnap.exists() ? inducEsSnap.data().items : [], staticInducementsEs, 'name');
+            const inducEnToSave = mergeItems(inducEnSnap.exists() ? inducEnSnap.data().items : [], staticInducementsEn, 'name');
+
             await Promise.all([
-                setDoc(doc(db, MASTER_COL, 'teams'), { items: staticTeamsData, updatedAt: ts }),
-                setDoc(doc(db, MASTER_COL, 'skills'), { items: staticSkills, updatedAt: ts }),
-                setDoc(doc(db, MASTER_COL, 'star_players'), { items: staticStarsData, updatedAt: ts }),
-                setDoc(doc(db, MASTER_COL, 'inducements_es'), { items: staticInducementsEs, updatedAt: ts }),
-                setDoc(doc(db, MASTER_COL, 'inducements_en'), { items: staticInducementsEn, updatedAt: ts }),
+                setDoc(doc(db, MASTER_COL, 'teams'), { items: teamsToSave, updatedAt: ts }),
+                setDoc(doc(db, MASTER_COL, 'skills'), { items: skillsToSave, updatedAt: ts }),
+                setDoc(doc(db, MASTER_COL, 'star_players'), { items: starsToSave, updatedAt: ts }),
+                setDoc(doc(db, MASTER_COL, 'inducements_es'), { items: inducEsToSave, updatedAt: ts }),
+                setDoc(doc(db, MASTER_COL, 'inducements_en'), { items: inducEnToSave, updatedAt: ts }),
                 setDoc(doc(db, MASTER_COL, 'meta'), {
                     lastSync: ts,
                     version: new Date().toISOString().split('T')[0],
+                    strategy: force ? 'overwrite' : 'smart-merge',
                     source: 'admin-panel',
-                    teamsCount: staticTeamsData.length,
-                    skillsCount: staticSkills.length,
-                    starsCount: staticStarsData.length,
+                    teamsCount: teamsToSave.length,
+                    skillsCount: skillsToSave.length,
+                    starsCount: starsToSave.length,
                 }),
             ]);
 
@@ -206,7 +241,7 @@ export const useMasterData = () => {
             setError(err.message ?? 'Error al sincronizar con Firestore');
             throw err;
         }
-    }, []);
+    }, [db]);
 
     // ── Update a single field in a Firestore master doc ───────────────────────
     /**

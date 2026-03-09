@@ -93,11 +93,18 @@ const AdminPanel: React.FC = () => {
         }
     }, [editingItem]);
 
-    const handleSync = async () => {
-        if (!window.confirm('¿Estás seguro de que quieres sobreescribir los datos de Firestore con los archivos estáticos del proyecto? Esta acción es irreversible.')) return;
+    const handleSync = async (force = false) => {
+        const message = force
+            ? '¡PELIGRO! Esto borrará TODOS tus cambios actuales en Firestore (incluyendo imágenes y arreglos manuales) y los reemplazará por los iniciales del código. ¿Estás COMPLETAMENTE seguro?'
+            : 'Sincronización Inteligente: Esto buscará nuevos equipos o habilidades en el código y los añadirá a Firestore SIN borrar tus fotos ni cambios manuales. ¿Continuar?';
+
+        if (!window.confirm(message)) return;
+
         try {
-            await syncMasterData();
-            alert('Sincronización completada con éxito. Los datos en la nube ahora coinciden con los archivos locales.');
+            await syncMasterData(force);
+            alert(force
+                ? 'Base de datos restablecida por completo.'
+                : 'Sincronización completada. Se han añadido nuevos elementos preservando tus cambios existentes.');
         } catch (err: any) {
             console.error('Error syncing:', err);
             alert('Error al sincronizar: ' + (err.message || 'Desconocido'));
@@ -175,7 +182,7 @@ const AdminPanel: React.FC = () => {
                     </div>
 
                     <button
-                        onClick={handleSync}
+                        onClick={() => handleSync(false)}
                         disabled={syncStatus === 'syncing'}
                         className={`px-6 py-2.5 rounded-xl border font-display font-black uppercase tracking-widest text-[10px] transition-all flex items-center gap-3 shadow-xl ${syncStatus === 'syncing'
                             ? 'bg-zinc-800 border-zinc-700 text-zinc-500 cursor-not-allowed'
@@ -187,7 +194,7 @@ const AdminPanel: React.FC = () => {
                         ) : (
                             <span className="material-symbols-outlined text-sm">sync</span>
                         )}
-                        {syncStatus === 'syncing' ? 'Sincronizando...' : 'Sincronizar BBDD'}
+                        {syncStatus === 'syncing' ? 'Sincronizando...' : 'Sincronización Inteligente'}
                     </button>
                 </div>
             </header>
