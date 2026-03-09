@@ -65,7 +65,7 @@ interface SkillsProps {
 
 const Skills: React.FC<SkillsProps> = ({ initialCategory }) => {
     const { skills, loading } = useMasterData();
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const [activeCategory, setActiveCategory] = useState(initialCategory || 'General');
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedSkillName, setSelectedSkillName] = useState<string | null>(null);
@@ -79,18 +79,28 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory }) => {
     };
 
     const filteredSkills = useMemo(() => {
-        setCurrentPage(1); // Reset page on filter change
         return skills.filter(skill => {
+            // Match category ID (General, Strength, etc)
             const matchesCategory = skill.category === activeCategory;
+
+            const searchTermLower = searchTerm.toLowerCase();
             const matchesSearch = !searchTerm ||
-                skill.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                skill.description.toLowerCase().includes(searchTerm.toLowerCase());
+                (skill.name_es?.toLowerCase().includes(searchTermLower)) ||
+                (skill.name_en?.toLowerCase().includes(searchTermLower)) ||
+                (skill.desc_es?.toLowerCase().includes(searchTermLower)) ||
+                (skill.desc_en?.toLowerCase().includes(searchTermLower)) ||
+                (skill.name?.toLowerCase().includes(searchTermLower)) ||
+                (skill.description?.toLowerCase().includes(searchTermLower));
+
             return matchesCategory && matchesSearch;
         });
     }, [activeCategory, searchTerm, skills]);
 
-    const totalPages = Math.ceil(filteredSkills.length / SKILLS_PER_PAGE);
-    const paginatedSkills = filteredSkills.slice((currentPage - 1) * SKILLS_PER_PAGE, currentPage * SKILLS_PER_PAGE);
+    const totalPages = Math.max(1, Math.ceil(filteredSkills.length / SKILLS_PER_PAGE));
+
+    // Ensure currentPage is within bounds when filters change
+    const safeCurrentPage = Math.min(currentPage, totalPages);
+    const paginatedSkills = filteredSkills.slice((safeCurrentPage - 1) * SKILLS_PER_PAGE, safeCurrentPage * SKILLS_PER_PAGE);
 
     const featuredSkill = useMemo(() => {
         if (selectedSkillName) {
@@ -247,10 +257,10 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory }) => {
                                         </span>
                                     </div>
                                     <h3 className="text-4xl md:text-6xl font-black text-slate-100 uppercase italic tracking-tighter leading-none">
-                                        {featuredSkill.name}
+                                        {language === 'es' ? (featuredSkill.name_es || featuredSkill.name_en || featuredSkill.name) : (featuredSkill.name_en || featuredSkill.name)}
                                     </h3>
                                     <p className="text-lg md:text-xl text-accent-gold leading-relaxed font-medium italic max-w-2xl border-l-2 border-primary/30 pl-6">
-                                        {featuredSkill.description}
+                                        {language === 'es' ? (featuredSkill.desc_es || featuredSkill.desc_en || featuredSkill.description) : (featuredSkill.desc_en || featuredSkill.description)}
                                     </p>
                                 </div>
                                 <div className="flex flex-col gap-3 w-full md:w-64">

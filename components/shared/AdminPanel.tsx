@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMasterData } from '../../hooks/useMasterData';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -6,6 +6,24 @@ import SearchIcon from '../icons/SearchIcon';
 import type { Team, StarPlayer, Skill, Inducement } from '../../types';
 
 type AdminTab = 'general' | 'teams' | 'stars' | 'skills' | 'inducements';
+
+const transformGitHubUrl = (url: string | undefined | null): string => {
+    if (!url || typeof url !== 'string') return url || '';
+
+    // Check if it's a standard GitHub URL with /blob/
+    if (url.includes('github.com') && url.includes('/blob/')) {
+        return url
+            .replace('github.com', 'raw.githubusercontent.com')
+            .replace('/blob/', '/');
+    }
+
+    // Check if it's already a raw URL but with /blob/ (some users copy it wrong)
+    if (url.includes('raw.githubusercontent.com') && url.includes('/blob/')) {
+        return url.replace('/blob/', '/');
+    }
+
+    return url;
+};
 
 const AdminPanel: React.FC = () => {
     const {
@@ -49,6 +67,31 @@ const AdminPanel: React.FC = () => {
                 return [];
         }
     }, [activeTab, searchTerm, teams, starPlayers, skills, inducements]);
+
+    // Automatic URL transformation effect
+    useEffect(() => {
+        if (!editingItem) return;
+
+        const { type, data } = editingItem;
+        const isHero = type === 'hero';
+        const urlField = isHero ? 'url' : 'image';
+        const currentUrl = data[urlField];
+
+        if (currentUrl && typeof currentUrl === 'string') {
+            const transformed = transformGitHubUrl(currentUrl);
+            if (transformed !== currentUrl) {
+                setEditingItem({
+                    ...editingItem,
+                    data: {
+                        ...data,
+                        [urlField]: transformed,
+                        // Also update crestImage for teams just in case
+                        ...(type === 'teams' ? { crestImage: transformed } : {})
+                    }
+                });
+            }
+        }
+    }, [editingItem]);
 
     const handleSync = async () => {
         if (!window.confirm('¿Estás seguro de que quieres sobreescribir los datos de Firestore con los archivos estáticos del proyecto? Esta acción es irreversible.')) return;
@@ -346,11 +389,14 @@ const AdminPanel: React.FC = () => {
                                                     <div className="grow">
                                                         <input
                                                             type="text"
-                                                            value={editingItem.type === 'hero' ? editingItem.data.url : (editingItem.data.image || '')}
-                                                            onChange={(e) => setEditingItem({
-                                                                ...editingItem,
-                                                                data: { ...editingItem.data, [editingItem.type === 'hero' ? 'url' : 'image']: e.target.value }
-                                                            })}
+                                                            value={editingItem.type === 'hero' ? editingItem.data.url : (editingItem.data.image || editingItem.data.crestImage || '')}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value;
+                                                                setEditingItem({
+                                                                    ...editingItem,
+                                                                    data: { ...editingItem.data, [editingItem.type === 'hero' ? 'url' : 'image']: val }
+                                                                });
+                                                            }}
                                                             className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none transition-all placeholder-slate-700 font-medium"
                                                             placeholder="https://..."
                                                         />
