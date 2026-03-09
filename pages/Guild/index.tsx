@@ -69,7 +69,13 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
     const [selectedTeamsForExport, setSelectedTeamsForExport] = useState<string[]>([]);
     const [initialRosterForCreation, setInitialRosterForCreation] = useState<string | null>(requestedRoster ?? null);
-    const [confirmation, setConfirmation] = useState<{ message: string; onConfirm: () => void; } | null>(null);
+    const [confirmation, setConfirmation] = useState<{ title: string; message: string; onConfirm: () => void; type?: 'danger' | 'info' } | null>(null);
+    const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+    const showToast = (msg: string) => {
+        setToastMessage(msg);
+        setTimeout(() => setToastMessage(null), 4000);
+    };
 
     const selectedTeam = useMemo(() => {
         if (!selectedTeamId) return null;
@@ -87,25 +93,27 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
     const handleTeamCreate = (newTeam: ManagedTeam) => {
         const teamNameExists = teams.some(team => team.name.toLowerCase() === newTeam.name.toLowerCase());
         if (teamNameExists) {
-            alert('Ya existe un equipo con este nombre. Por favor, elige otro.');
+            setConfirmation({ title: 'Nombre en uso', message: 'Ya existe un equipo con este nombre en el Gremio. Por favor, elige otro.', onConfirm: () => setConfirmation(null), type: 'info' });
             return;
         }
         const { id, ...teamData } = newTeam;
         onTeamCreate(teamData);
         setIsCreating(false);
+        showToast('¡Equipo creado y registrado en el Gremio!');
     };
 
     const requestTeamDelete = (teamId: string) => {
         const teamToDelete = teams.find(t => t.id === teamId);
         if (teamToDelete) {
             setConfirmation({
-                message: `¿Estás seguro de que quieres disolver el equipo "${teamToDelete.name}"? Esta acción no se puede deshacer.`,
+                title: '¿Disolver equipo?',
+                message: `"${teamToDelete.name}" será eliminado permanentemente. Esta acción no puede deshacerse.`,
+                type: 'danger',
                 onConfirm: () => {
                     onTeamDelete(teamId);
                     setConfirmation(null);
-                    if (selectedTeamId === teamId) {
-                        setSelectedTeamId(null);
-                    }
+                    if (selectedTeamId === teamId) setSelectedTeamId(null);
+                    showToast('El equipo ha sido disuelto.');
                 }
             });
         }
@@ -144,22 +152,16 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                     }
                 }
 
-                let alertMessage = '';
-                if (newTeamsCount > 0) {
-                    alertMessage += `${newTeamsCount} equipos importados con éxito.\n`;
-                }
-                if (skippedTeams.length > 0) {
-                    alertMessage += `${skippedTeams.length} equipos omitidos por tener nombres duplicados: ${skippedTeams.join(', ')}.`;
-                }
-                if (!alertMessage) {
-                    alertMessage = "No se importaron nuevos equipos. Puede que ya existan todos o que el archivo esté vacío.";
-                }
-                alert(alertMessage.trim());
+                let importResult = '';
+                if (newTeamsCount > 0) importResult += `${newTeamsCount} equipos importados con éxito.`;
+                if (skippedTeams.length > 0) importResult += `${skippedTeams.length} duplicados omitidos.`;
+                if (!importResult) importResult = 'No se importaron nuevos equipos. Archivo vacío o duplicados.';
+                showToast(importResult.trim());
 
 
             } catch (error) {
                 console.error("Error importing teams:", error);
-                alert(`Error al importar el archivo: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+                showToast(`Error al importar: ${error instanceof Error ? error.message : 'Error desconocido'}`);
             } finally {
                 if (event.target) {
                     event.target.value = '';
@@ -189,7 +191,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
         const teamsToExport = teams.filter(team => team.id && selectedTeamsForExport.includes(team.id));
 
         if (teamsToExport.length === 0) {
-            alert("Selecciona al menos un equipo para exportar.");
+            showToast('Selecciona al menos un equipo para exportar.');
             return;
         }
 
@@ -245,18 +247,15 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
 
     if (isCreating) {
         return (
-            <div className="p-2 sm:p-4 animate-fade-in-slow">
+            <div className="p-2 sm:p-4 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <button
+                    onClick={handleCancelCreation}
+                    className="flex items-center gap-2 text-primary font-black uppercase tracking-widest text-[10px] mb-2 hover:underline group italic transition-all"
+                >
+                    <span className="material-symbols-outlined font-bold transform group-hover:-translate-x-1 transition-transform">arrow_back</span>
+                    Volver al Gremio
+                </button>
                 <TeamCreator onTeamCreate={handleTeamCreate} initialRosterName={initialRosterForCreation} />
-                <button onClick={handleCancelCreation} className="text-amber-400 hover:underline mt-4">Volver a la lista</button>
-                <style>{`
-                    @keyframes fade-in-slow {
-                        from { opacity: 0; }
-                        to { opacity: 1; }
-                    }
-                    .animate-fade-in-slow {
-                        animation: fade-in-slow 0.5s ease-out forwards;
-                    }
-                `}</style>
             </div>
         );
     }
@@ -376,7 +375,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                         </div>
                         <div className="flex gap-4 w-full sm:w-auto">
                             <button
-                                onClick={handleImportClick}
+                                onClick={() => handleImportClick()}
                                 className="flex-1 sm:flex-none flex items-center justify-center gap-3 h-12 px-8 rounded-xl bg-slate-800 text-slate-100 hover:bg-slate-700 border border-white/5 transition-all text-[10px] font-black uppercase tracking-widest italic"
                             >
                                 <span className="material-symbols-outlined text-primary font-bold">upload</span>
@@ -384,7 +383,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                             </button>
                             <input type="file" accept=".json" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
                             <button
-                                onClick={() => teams.length > 0 ? setIsExportModalOpen(true) : alert('No hay equipos para exportar.')}
+                                onClick={() => teams.length > 0 ? setIsExportModalOpen(true) : showToast('No hay equipos para exportar.')}
                                 className="flex-1 sm:flex-none flex items-center justify-center gap-3 h-12 px-8 rounded-xl bg-slate-800 text-slate-100 hover:bg-slate-700 border border-white/5 transition-all text-[10px] font-black uppercase tracking-widest italic"
                             >
                                 <span className="material-symbols-outlined text-primary font-bold">download</span>
@@ -451,21 +450,43 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
             )}
 
             {confirmation && (
-                <div className="fixed inset-0 bg-black/95 backdrop-blur-sm flex items-center justify-center z-[300] p-4">
-                    <div className="bg-background-dark border border-red-500/20 p-10 rounded-[2.5rem] shadow-2xl max-w-sm w-full text-center">
-                        <div className="size-16 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 mx-auto mb-6">
-                            <span className="material-symbols-outlined text-4xl">warning</span>
+                <div className="fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center z-[300] p-4">
+                    <div className="bg-background-dark border border-white/10 p-10 rounded-[2.5rem] shadow-2xl max-w-sm w-full text-center space-y-6">
+                        <div className={`size-16 rounded-3xl flex items-center justify-center mx-auto ${confirmation.type === 'danger' ? 'bg-red-500/10 text-red-500' : 'bg-primary/10 text-primary'
+                            }`}>
+                            <span className="material-symbols-outlined text-4xl">
+                                {confirmation.type === 'danger' ? 'warning' : 'info'}
+                            </span>
                         </div>
-                        <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter mb-4">¿Estás seguro?</h3>
-                        <p className="text-slate-400 text-sm font-medium italic leading-relaxed mb-10">{confirmation.message}</p>
+                        <div className="space-y-2">
+                            <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter">{(confirmation as any).title || '¿Estás seguro?'}</h3>
+                            <p className="text-slate-400 text-sm font-medium italic leading-relaxed">{confirmation.message}</p>
+                        </div>
                         <div className="flex flex-col gap-3">
-                            <button onClick={confirmation.onConfirm} className="w-full py-4 bg-red-600 text-white font-black text-xs uppercase tracking-widest italic rounded-2xl shadow-xl shadow-red-600/10 hover:bg-red-500 transition-all">
-                                DISOLVER EQUIPO
-                            </button>
+                            {confirmation.type === 'danger' && (
+                                <button onClick={confirmation.onConfirm} className="w-full py-4 bg-red-600 text-white font-black text-xs uppercase tracking-widest italic rounded-2xl shadow-xl shadow-red-600/10 hover:bg-red-500 transition-all">
+                                    CONFIRMAR
+                                </button>
+                            )}
+                            {confirmation.type !== 'danger' && (
+                                <button onClick={confirmation.onConfirm} className="w-full py-4 bg-primary text-background-dark font-black text-xs uppercase tracking-widest italic rounded-2xl shadow-xl shadow-primary/10 hover:bg-primary/90 transition-all">
+                                    ENTENDIDO
+                                </button>
+                            )}
                             <button onClick={() => setConfirmation(null)} className="w-full py-4 bg-white/5 text-slate-400 font-black text-xs uppercase tracking-widest italic rounded-2xl hover:bg-white/10 transition-all">
                                 CANCELAR
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Toast Notification */}
+            {toastMessage && (
+                <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-[400] animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="bg-zinc-900 border border-white/10 px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 backdrop-blur-xl">
+                        <span className="material-symbols-outlined text-primary font-bold">check_circle</span>
+                        <p className="text-white font-bold text-sm">{toastMessage}</p>
                     </div>
                 </div>
             )}
