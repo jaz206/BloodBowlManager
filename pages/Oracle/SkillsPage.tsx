@@ -25,6 +25,10 @@ const OracleTips: Record<string, string> = {
 };
 
 const SkillCard: React.FC<{ skill: Skill; onClick: () => void; isSelected: boolean }> = ({ skill, onClick, isSelected }) => {
+    const { language } = useLanguage();
+    const name = language === 'es' ? (skill.name_es || skill.name_en) : skill.name_en;
+    const description = language === 'es' ? (skill.desc_es || skill.desc_en) : skill.desc_en;
+
     return (
         <motion.div
             layout
@@ -46,11 +50,11 @@ const SkillCard: React.FC<{ skill: Skill; onClick: () => void; isSelected: boole
                 <span className="text-[10px] font-black text-accent-gold uppercase tracking-[0.2em]">{skill.category}</span>
             </div>
             <h4 className="text-xl font-black text-slate-100 mb-2 uppercase italic tracking-tighter group-hover:text-primary transition-colors">
-                {skill.name}
+                {name}
             </h4>
-            <p className="text-sm text-accent-gold line-clamp-3 leading-relaxed font-medium italic">
-                {skill.description}
-            </p>
+            <div className="text-sm text-accent-gold line-clamp-3 leading-relaxed font-medium italic">
+                {description}
+            </div>
         </motion.div>
     );
 };
@@ -170,7 +174,7 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory }) => {
                         {pinnedSkills.map(name => (
                             <div key={name} className="flex items-center justify-between gap-2 py-1 border-b border-white/5 last:border-0">
                                 <span className="text-[10px] text-slate-300 font-black italic uppercase truncate">{name}</span>
-                                <button onClick={() => handlePinSkill({ keyEN: name, name, category: '', description: '' })} className="text-slate-600 hover:text-red-400 transition-colors shrink-0">
+                                <button onClick={() => handlePinSkill({ keyEN: name, name_en: name, name_es: name, category: '', desc_en: '', desc_es: '' })} className="text-slate-600 hover:text-red-400 transition-colors shrink-0">
                                     <span className="material-symbols-outlined text-xs">close</span>
                                 </button>
                             </div>
