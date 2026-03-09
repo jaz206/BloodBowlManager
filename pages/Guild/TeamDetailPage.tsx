@@ -677,7 +677,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                                     <td className="p-4 text-center font-display font-black text-white text-sm bg-white/5">{p.stats.AR}</td>
                                     <td className="p-4 whitespace-normal min-w-[200px]">
                                         <div className="flex flex-wrap gap-1">
-                                            {p.skills.split(', ').map((skill) => {
+                                            {(p.skills || '').split(', ').map((skill) => {
                                                 const cleanSkillName = skill.trim();
                                                 if (cleanSkillName && cleanSkillName.toLowerCase() !== 'ninguna') {
                                                     return (

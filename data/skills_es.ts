@@ -4,7 +4,7 @@ import { Skill } from "../types";
  * Complete Blood Bowl 2020 skill list in Spanish.
  * Each entry mirrors `skills_en.ts` with a `keyEN` canonical key for cross-language lookups.
  */
-export const skillsData: Skill[] = [
+export const skillsData: any[] = [
     // ── GENERAL ─────────────────────────────────────────────────────────────────
     { keyEN: "Block", name: "Placar", category: "General", description: "Cuando se aplica un resultado 'Ambos Derribados' durante un Bloqueo en el que este jugador participa, este jugador puede elegir ignorar el resultado y no ser Derribado." },
     { keyEN: "Dauntless", name: "Agallas", category: "General", description: "Cuando este jugador realiza una acción de Bloqueo y el objetivo tiene Fuerza mayor, lanza 1D6 y suma la Fuerza de este jugador. Si el total supera la Fuerza del objetivo, la Fuerza de este jugador se iguala a la del objetivo durante este Bloqueo." },

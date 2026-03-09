@@ -1087,32 +1087,51 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
     const renderContent = () => {
         switch (gameState) {
             case 'setup': return (
-                <div className="flex flex-col items-center justify-center py-20 animate-fade-in">
-                    <div className="w-24 h-24 bg-premium-gold/10 rounded-3xl border border-premium-gold/30 flex items-center justify-center mb-8 shadow-[0_0_50px_rgba(245,159,10,0.1)]">
-                        <StadiumIcon className="w-12 h-12 text-premium-gold" />
-                    </div>
-                    <h2 className="text-4xl font-display font-black text-white italic tracking-tighter uppercase mb-2">Arena de <span className="text-blood-red">Gloria</span></h2>
-                    <p className="text-slate-500 font-medium mb-12 max-w-md text-center leading-relaxed">Prepara tu escuadra y desafía al destino. La sangre y la arena te esperan en el Coliseo de Nuffle.</p>
+                <div className="relative flex flex-col items-center justify-center py-24 min-h-[70vh] animate-fade-in overflow-hidden">
+                    {/* Background decorations */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blood-red/5 rounded-full blur-[100px] pointer-events-none"></div>
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-premium-gold/5 rounded-full blur-[80px] pointer-events-none"></div>
 
-                    <div className="flex flex-col gap-4 w-full max-w-sm">
+                    <div className="relative z-10 w-32 h-32 bg-gradient-to-br from-black to-zinc-900 rounded-full border-2 border-premium-gold/40 flex items-center justify-center mb-10 shadow-[0_0_80px_rgba(245,159,10,0.15)] group hover:scale-105 transition-transform duration-500">
+                        <div className="absolute inset-0 rounded-full border border-premium-gold/20 animate-ping opacity-20"></div>
+                        <StadiumIcon className="w-16 h-16 text-premium-gold group-hover:drop-shadow-[0_0_15px_rgba(245,159,10,0.8)] transition-all duration-300" />
+                    </div>
+
+                    <h2 className="relative z-10 text-5xl md:text-6xl font-display font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-400 italic tracking-tighter uppercase mb-4 text-center">
+                        Arena de <span className="bg-clip-text bg-gradient-to-r from-blood-red to-red-500">Gloria</span>
+                    </h2>
+
+                    <p className="relative z-10 text-slate-400 font-medium mb-14 max-w-lg text-center leading-relaxed text-sm md:text-base px-4">
+                        Prepara tu escuadra y desafía al destino. La sangre de los caídos y la arena rojiblanca te esperan en el eterno Coliseo de Nuffle.
+                    </p>
+
+                    <div className="relative z-10 flex flex-col gap-5 w-full max-w-sm px-4">
                         {managedTeams.length > 0 ? (
                             <button
                                 onClick={() => setGameState('select_team')}
-                                className="w-full group relative overflow-hidden bg-premium-gold text-black font-display font-black py-4 px-8 rounded-2xl shadow-[0_20px_40px_rgba(245,159,10,0.2)] hover:shadow-[0_25px_50px_rgba(245,159,10,0.3)] transform hover:-translate-y-1 transition-all duration-300"
+                                className="peer w-full group relative overflow-hidden bg-gradient-to-b from-premium-gold to-yellow-600 text-black font-display font-black py-5 px-8 rounded-2xl shadow-[0_20px_40px_rgba(245,159,10,0.25)] hover:shadow-[0_25px_50px_rgba(245,159,10,0.4)] transform hover:-translate-y-1 transition-all duration-300"
                             >
-                                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                                <span className="relative flex items-center justify-center gap-2 tracking-[0.2em] uppercase text-xs">
-                                    Configurar Encuentro
-                                    <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/40 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out"></div>
+                                <span className="relative flex items-center justify-center gap-3 tracking-[0.25em] uppercase text-sm">
+                                    <span className="material-symbols-outlined text-[20px]">sports_mma</span>
+                                    Iniciar Duelo
                                 </span>
                             </button>
                         ) : (
-                            <div className="glass-panel p-6 border-amber-500/30 bg-amber-500/10 text-center space-y-4">
-                                <p className="text-amber-200 text-sm font-bold uppercase tracking-widest italic">Naces sin Legado</p>
-                                <p className="text-amber-200/60 text-xs">Debes forjar un equipo en el Gremio antes de entrar en la arena.</p>
+                            <div className="glass-panel p-8 border-blood-red/30 bg-blood-red/10 text-center space-y-4 shadow-[0_0_30px_rgba(220,38,38,0.1)]">
+                                <div className="w-12 h-12 mx-auto bg-blood-red/20 rounded-full flex items-center justify-center mb-2">
+                                    <span className="material-symbols-outlined text-blood-red">skull</span>
+                                </div>
+                                <p className="text-red-400 text-base font-black uppercase tracking-widest italic">Naces sin Legado</p>
+                                <p className="text-red-300/60 text-xs leading-relaxed">Debes forjar un equipo en el Gremio antes de que el Coliseo abra sus puertas.</p>
                             </div>
                         )}
-                        <button className="text-[10px] font-display font-black text-slate-500 hover:text-white uppercase tracking-[0.3em] transition-colors py-4">Tutorial de Combate</button>
+
+                        <button className="peer-hover:opacity-50 text-[10px] font-display font-black text-slate-500 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 uppercase tracking-[0.3em] transition-all py-4 rounded-xl flex items-center justify-center gap-2">
+                            <span className="material-symbols-outlined text-sm">school</span>
+                            Tutorial de Combate
+                        </button>
                     </div>
                 </div>
             );
@@ -1983,7 +2002,7 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                                                 </div>
                                                 <div className="h-10 w-px bg-white/10"></div>
                                                 <div className="flex flex-wrap gap-2">
-                                                    {selectedPlayerForAction.skills.split(',').map((s, i) => (
+                                                    {(selectedPlayerForAction.skills || '').split(',').map((s, i) => (
                                                         <button
                                                             key={i}
                                                             onClick={() => handleSkillClick(s.trim())}

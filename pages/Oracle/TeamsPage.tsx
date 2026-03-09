@@ -231,7 +231,17 @@ const Teams: React.FC<{
     const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
     const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [selectedTiers, setSelectedTiers] = useState<number[]>([]);
+    const [sortOrder, setSortOrder] = useState<'alpha' | 'tier_asc' | 'tier_desc'>('alpha');
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [isSyncing, setIsSyncing] = useState(false);
+    const [toastMessage, setToastMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
+    const [confirmModal, setConfirmModal] = useState<{ title: string, message: string, onConfirm: () => void } | null>(null);
+
+    const showToast = (text: string, type: 'success' | 'error' = 'success') => {
+        setToastMessage({ text, type });
+        setTimeout(() => setToastMessage(null), 4000);
+    };
 
     // Auto-select team if initialTeamName is provided (from Hub)
     React.useEffect(() => {
@@ -244,11 +254,41 @@ const Teams: React.FC<{
     }, [initialTeamName, teams]);
 
     const filteredTeams = useMemo(() => {
-        if (!searchTerm) return teams;
-        return teams.filter(team =>
-            team.name.toLowerCase().includes(searchTerm.toLowerCase())
+        let result = teams;
+
+        if (searchTerm) {
+            result = result.filter(team =>
+                team.name.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+        }
+
+        if (selectedTiers.length > 0) {
+            result = result.filter(team => selectedTiers.includes(team.tier));
+        }
+
+        result = [...result].sort((a, b) => {
+            if (sortOrder === 'alpha') return a.name.localeCompare(b.name);
+            if (sortOrder === 'tier_asc') return a.tier - b.tier || a.name.localeCompare(b.name);
+            if (sortOrder === 'tier_desc') return b.tier - a.tier || a.name.localeCompare(b.name);
+            return 0;
+        });
+
+        return result;
+    }, [searchTerm, selectedTiers, sortOrder, teams]);
+
+    const toggleSort = () => {
+        setSortOrder(prev => {
+            if (prev === 'alpha') return 'tier_asc';
+            if (prev === 'tier_asc') return 'tier_desc';
+            return 'alpha';
+        });
+    };
+
+    const toggleTier = (tier: number) => {
+        setSelectedTiers(prev =>
+            prev.includes(tier) ? prev.filter(t => t !== tier) : [...prev, tier]
         );
-    }, [searchTerm, teams]);
+    };
 
     const popularTeams = useMemo(() => {
         const names = ['Orcos', 'Humanos', 'Elfos Oscuros', 'Skaven'];
@@ -259,17 +299,23 @@ const Teams: React.FC<{
         setSelectedSkill(skill);
     };
 
-    const handleSync = async () => {
-        if (!window.confirm("¿Sincronizar datos?")) return;
-        setIsSyncing(true);
-        try {
-            await syncMasterData();
-            alert("Sincronizado");
-        } catch (e) {
-            alert("Error");
-        } finally {
-            setIsSyncing(false);
-        }
+    const handleSync = () => {
+        setConfirmModal({
+            title: 'Sincronizar Facciones',
+            message: '¿Quieres buscar y añadir nuevas razas desde el código fuente sin sobreescribir tus cambios actuales?',
+            onConfirm: async () => {
+                setConfirmModal(null);
+                setIsSyncing(true);
+                try {
+                    await syncMasterData();
+                    showToast('Sincronización completada con éxito.');
+                } catch (e) {
+                    showToast('Error al sincronizar datos.', 'error');
+                } finally {
+                    setIsSyncing(false);
+                }
+            }
+        });
     };
 
     const updateTeamImage = async (teamName: string, url: string) => {
@@ -325,13 +371,47 @@ const Teams: React.FC<{
                                 <span className="material-symbols-outlined">{isSyncing ? 'sync' : 'database'}</span>
                             </button>
                         )}
-                        <button className="flex items-center gap-2 px-4 py-3 rounded-xl bg-primary text-background-dark font-black text-[10px] uppercase italic shadow-lg shadow-primary/10">
-                            <span className="material-symbols-outlined text-sm">filter_list</span>
-                            Filtrar Tiers
-                        </button>
-                        <button className="flex items-center gap-2 px-4 py-3 rounded-xl bg-primary/10 text-primary border border-primary/20 font-black text-[10px] uppercase italic">
+                        <div className="relative">
+                            <button
+                                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                                className={`flex items-center gap-2 px-4 py-3 rounded-xl ${selectedTiers.length > 0 ? 'bg-primary text-background-dark shadow-[0_0_15px_rgba(245,159,10,0.3)]' : 'bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20'} font-black text-[10px] uppercase italic transition-all`}
+                            >
+                                <span className="material-symbols-outlined text-sm">filter_list</span>
+                                Filtrar Tiers {selectedTiers.length > 0 && `(${selectedTiers.length})`}
+                            </button>
+                            <AnimatePresence>
+                                {isFilterOpen && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: 10 }}
+                                        className="absolute right-0 top-full mt-2 w-48 bg-background-dark border border-primary/30 rounded-xl shadow-2xl overflow-hidden z-50"
+                                    >
+                                        <div className="p-2 space-y-1">
+                                            {[1, 2, 3].map(tier => (
+                                                <button
+                                                    key={tier}
+                                                    onClick={() => toggleTier(tier)}
+                                                    className={`w-full text-left px-4 py-2 text-xs font-black uppercase italic rounded-lg transition-colors flex items-center justify-between ${selectedTiers.includes(tier)
+                                                            ? 'bg-primary/20 text-primary border border-primary/30'
+                                                            : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+                                                        }`}
+                                                >
+                                                    Tier {tier}
+                                                    {selectedTiers.includes(tier) && <span className="material-symbols-outlined text-[14px]">check</span>}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                        <button
+                            onClick={toggleSort}
+                            className="flex items-center gap-2 px-4 py-3 rounded-xl bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors font-black text-[10px] uppercase italic w-32 justify-center"
+                        >
                             <span className="material-symbols-outlined text-sm">sort</span>
-                            Ordenar
+                            {sortOrder === 'alpha' ? 'A-Z' : sortOrder === 'tier_asc' ? 'Tier ↑' : 'Tier ↓'}
                         </button>
                     </div>
                 </div>
@@ -429,6 +509,33 @@ const Teams: React.FC<{
 
             {/* Modals */}
             {selectedSkill && <SkillModal skill={selectedSkill} onClose={() => setSelectedSkill(null)} />}
+
+            {confirmModal && (
+                <div className="fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center z-[500] p-4">
+                    <div className="bg-background-dark border border-white/10 p-10 rounded-[2.5rem] shadow-2xl max-w-sm w-full text-center space-y-6">
+                        <div className="size-16 rounded-3xl flex items-center justify-center mx-auto bg-primary/10 text-primary">
+                            <span className="material-symbols-outlined text-4xl">sync</span>
+                        </div>
+                        <div className="space-y-2">
+                            <h3 className="text-xl font-black text-white italic uppercase tracking-tighter">{confirmModal.title}</h3>
+                            <p className="text-slate-400 text-sm font-medium leading-relaxed">{confirmModal.message}</p>
+                        </div>
+                        <div className="flex flex-col gap-3">
+                            <button onClick={confirmModal.onConfirm} className="w-full py-4 bg-primary text-black font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-primary/90 transition-all">CONFIRMAR</button>
+                            <button onClick={() => setConfirmModal(null)} className="w-full py-4 bg-white/5 text-slate-400 font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-white/10 transition-all">CANCELAR</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {toastMessage && (
+                <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[600] animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className={`px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 backdrop-blur-xl border ${toastMessage.type === 'error' ? 'bg-red-950/80 border-red-500/30 text-red-400' : 'bg-zinc-900/90 border-white/10 text-primary'}`}>
+                        <span className="material-symbols-outlined font-bold">{toastMessage.type === 'error' ? 'error' : 'check_circle'}</span>
+                        <p className="text-white font-bold text-sm">{toastMessage.text}</p>
+                    </div>
+                </div>
+            )}
         </motion.div>
     );
 };

@@ -5,7 +5,7 @@ import { Skill } from "../types";
  * Each entry has a canonical `keyEN` used as the cross-language ID.
  * Source: Skills.md (official rules)
  */
-export const skillsData: Skill[] = [
+export const skillsData: any[] = [
     // ── GENERAL ─────────────────────────────────────────────────────────────────
     { keyEN: "Block", name: "Block", category: "General", description: "A player with the Block skill is proficient at knocking opponents down. The Block skill, if used, affects the results rolled with the Block dice, as explained in the Blocking rules." },
     { keyEN: "Dauntless", name: "Dauntless", category: "General", description: "When this player performs a Block action, if the target has a higher Strength (before assists), roll a D6 and add this player's Strength. If the total exceeds the target's Strength, this player's Strength is increased to match the target's for this block." },
