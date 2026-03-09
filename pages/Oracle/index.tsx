@@ -11,7 +11,13 @@ import type { ManagedTeam } from '../../types';
 
 type SubView = 'hub' | 'teams' | 'skills' | 'star_players' | 'calculator' | 'inducements';
 
-const SKILL_CATEGORIES = ['General', 'Fuerza', 'Agilidad', 'Pase', 'Mutación'];
+const SKILL_CATEGORIES = [
+    { id: 'General', label: 'General' },
+    { id: 'Strength', label: 'Fuerza' },
+    { id: 'Agility', label: 'Agilidad' },
+    { id: 'Passing', label: 'Pase' },
+    { id: 'Mutation', label: 'Mutación' }
+];
 
 interface OraclePageProps {
     managedTeams?: ManagedTeam[];
@@ -168,11 +174,11 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                         <div className="flex flex-wrap gap-2">
                             {SKILL_CATEGORIES.map((cat, i) => (
                                 <button
-                                    key={cat}
-                                    onClick={() => handleNavigateToSkills(cat)}
+                                    key={cat.id}
+                                    onClick={() => handleNavigateToSkills(cat.id)}
                                     className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 ${i === 0 ? 'bg-premium-gold text-black' : 'bg-black/40 text-slate-500 border border-white/5 hover:text-white hover:bg-premium-gold/20 hover:border-premium-gold/30'}`}
                                 >
-                                    {cat}
+                                    {cat.label}
                                 </button>
                             ))}
                         </div>
@@ -299,7 +305,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                     {[
                         { label: t('oracle.hub.recent.weather'), icon: 'device_thermostat', act: 'inducements' },
                         { label: t('oracle.hub.recent.injuries'), icon: 'medication', act: 'inducements' },
-                        { label: t('oracle.hub.recent.throwFriend'), icon: 'sports_kabaddi', act: 'skills', cat: 'Fuerza' },
+                        { label: t('oracle.hub.recent.throwFriend'), icon: 'sports_kabaddi', act: 'skills', cat: 'Strength' },
                         { label: t('oracle.hub.recent.stars'), icon: 'star', act: 'star_players' }
                     ].map((link) => (
                         <button

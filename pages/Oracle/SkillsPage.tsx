@@ -8,20 +8,20 @@ const SKILLS_PER_PAGE = 8;
 
 const Categories = [
     { id: 'General', label: 'General', icon: 'shield' },
-    { id: 'Fuerza', label: 'Fuerza', icon: 'fitness_center' },
-    { id: 'Agilidad', label: 'Agilidad', icon: 'directions_run' },
-    { id: 'Pase', label: 'Pase', icon: 'sports_football' },
-    { id: 'Mutación', label: 'Mutación', icon: 'genetics' },
-    { id: 'Rasgo', label: 'Rasgo', icon: 'star' },
+    { id: 'Strength', label: 'Fuerza', icon: 'fitness_center' },
+    { id: 'Agility', label: 'Agilidad', icon: 'directions_run' },
+    { id: 'Passing', label: 'Pase', icon: 'sports_football' },
+    { id: 'Mutation', label: 'Mutación', icon: 'genetics' },
+    { id: 'Trait', label: 'Rasgo', icon: 'star' },
 ];
 
 const OracleTips: Record<string, string> = {
     General: 'Block y Dodge son las habilidades más universales. Prioriza Block en líneas de ataque.',
-    Fuerza: 'Golpe Mortífero (+1) es vital en Orcos y Enanos. Combínalo con Foul Appearance.',
-    Agilidad: 'Esquivar (Dodge) + Nerves of Steel convierte a cualquier receptor en una amenaza constante.',
-    Pase: 'Pase Seguro y Manos Seguras son la base de cualquier estrategia de bombardeo.',
-    Mutación: 'Brazo Extra es la mutación más disruptiva, especialmente en portadores de balón.',
-    Rasgo: 'Los rasgos son exclusivos de ciertos perfiles; consulta siempre la plantilla del equipo.',
+    Strength: 'Golpe Mortífero (+1) es vital en Orcos y Enanos. Combínalo con Foul Appearance.',
+    Agility: 'Esquivar (Dodge) + Nerves of Steel convierte a cualquier receptor en una amenaza constante.',
+    Passing: 'Pase Seguro y Manos Seguras son la base de cualquier estrategia de bombardeo.',
+    Mutation: 'Brazo Extra es la mutación más disruptiva, especialmente en portadores de balón.',
+    Trait: 'Los rasgos son exclusivos de ciertos perfiles; consulta siempre la plantilla del equipo.',
 };
 
 const SkillCard: React.FC<{ skill: Skill; onClick: () => void; isSelected: boolean }> = ({ skill, onClick, isSelected }) => {
