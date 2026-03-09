@@ -54,6 +54,14 @@ const MainApp: React.FC = () => {
   const [requestedRoster, setRequestedRoster] = useState<string | null>(null);
   const [syncState, setSyncState] = useState<SyncStatus>('synced');
   const { heroImage, isFromFirestore, error: masterDataError } = useMasterData();
+  const [oracleSearchTerm, setOracleSearchTerm] = useState<string>('');
+
+  const handleNavigate = (view: View, payload?: string) => {
+    if (view === 'oracle') {
+      setOracleSearchTerm(payload || '');
+    }
+    setActiveView(view);
+  };
 
   // Combine sync states
   const displaySyncStatus = masterDataError ? 'error' : syncState;
@@ -276,7 +284,7 @@ const MainApp: React.FC = () => {
             <div className="animate-in fade-in zoom-in-95 duration-500">
               {activeView === 'home' && (
                 <Home
-                  onNavigate={(v) => setActiveView(v)}
+                  onNavigate={(v, p) => handleNavigate(v, p)}
                   onCreateTeam={() => { setRequestedRoster(""); setActiveView('guild'); }}
                   managedTeams={managedTeams}
                   competitions={leagues as any}
@@ -284,7 +292,13 @@ const MainApp: React.FC = () => {
                   heroImage={heroImage}
                 />
               )}
-              {activeView === 'oracle' && <OraclePage managedTeams={managedTeams} onRequestTeamCreation={(r) => { setRequestedRoster(r); setActiveView('guild'); }} />}
+              {activeView === 'oracle' && (
+                <OraclePage
+                  managedTeams={managedTeams}
+                  initialSearchTerm={oracleSearchTerm}
+                  onRequestTeamCreation={(r) => { setRequestedRoster(r); setActiveView('guild'); }}
+                />
+              )}
               {activeView === 'guild' && (
                 <GuildPage
                   teams={managedTeams}

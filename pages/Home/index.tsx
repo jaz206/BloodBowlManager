@@ -3,7 +3,7 @@ import type { ManagedTeam, League as Competition, GameEvent } from '../../types'
 import { useLanguage } from '../../contexts/LanguageContext';
 
 interface HomeProps {
-    onNavigate: (view: any) => void;
+    onNavigate: (view: any, payload?: string) => void;
     onCreateTeam?: () => void;
     managedTeams: ManagedTeam[];
     competitions: Competition[];
@@ -14,6 +14,12 @@ interface HomeProps {
 const Home: React.FC<HomeProps> = ({ onNavigate, onCreateTeam, managedTeams, heroImage }) => {
     const { t } = useLanguage();
     const [searchTerm, setSearchTerm] = useState('');
+
+    const handleSearch = () => {
+        if (searchTerm.trim()) {
+            onNavigate('oracle', searchTerm.trim());
+        }
+    };
 
     const latestTeams = useMemo(() => {
         return [...managedTeams].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0)).slice(0, 3);
@@ -51,7 +57,10 @@ const Home: React.FC<HomeProps> = ({ onNavigate, onCreateTeam, managedTeams, her
                             <span className="material-symbols-outlined font-bold">add_circle</span>
                             {t('home.hero.newRoster')}
                         </button>
-                        <button className="bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold px-10 py-4 rounded-xl flex items-center gap-3 transition-all active:scale-95 uppercase tracking-tighter text-sm backdrop-blur-md">
+                        <button
+                            onClick={() => onNavigate('arena')}
+                            className="bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold px-10 py-4 rounded-xl flex items-center gap-3 transition-all active:scale-95 uppercase tracking-tighter text-sm backdrop-blur-md"
+                        >
                             <span className="material-symbols-outlined font-bold">history_edu</span>
                             {t('home.hero.matchReports')}
                         </button>
@@ -195,6 +204,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate, onCreateTeam, managedTeams, her
                                 type="text"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                             />
                         </div>
 
@@ -204,7 +214,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate, onCreateTeam, managedTeams, her
                                 {['Golpe Mortífero', 'Interferencia', 'Esquivar', 'Forcejeo', 'Reglas 2024'].map(tag => (
                                     <span
                                         key={tag}
-                                        onClick={() => setSearchTerm(tag)}
+                                        onClick={() => onNavigate('oracle', tag)}
                                         className="px-5 py-2 bg-white/5 border border-white/10 text-slate-300 text-[10px] font-black uppercase tracking-widest rounded-full cursor-pointer hover:bg-premium-gold/10 hover:border-premium-gold/30 hover:text-premium-gold transition-all"
                                     >
                                         {tag}

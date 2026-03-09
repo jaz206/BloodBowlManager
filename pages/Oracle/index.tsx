@@ -22,14 +22,22 @@ const SKILL_CATEGORIES = [
 interface OraclePageProps {
     managedTeams?: ManagedTeam[];
     onRequestTeamCreation?: (rosterName: string) => void;
+    initialSearchTerm?: string;
 }
 
-const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTeamCreation = () => { } }) => {
+const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTeamCreation = () => { }, initialSearchTerm = '' }) => {
     const { t } = useLanguage();
     const [activeView, setActiveView] = useState<SubView>('hub');
     const [selectedHubTeam, setSelectedHubTeam] = useState<string | null>(null);
     const [initialSkillCategory, setInitialSkillCategory] = useState<string>('General');
-    const [hubSearchTerm, setHubSearchTerm] = useState('');
+    const [hubSearchTerm, setHubSearchTerm] = useState(initialSearchTerm);
+
+    // Update search term when initialSearchTerm changes from outside
+    React.useEffect(() => {
+        if (initialSearchTerm) {
+            setHubSearchTerm(initialSearchTerm);
+        }
+    }, [initialSearchTerm]);
 
     const userTv = useMemo(() => {
         if (managedTeams.length === 0) return 1000000;
@@ -378,7 +386,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                                     initialTeamName={selectedHubTeam}
                                 />
                             )}
-                            {activeView === 'skills' && <Skills initialCategory={initialSkillCategory} />}
+                            {activeView === 'skills' && <Skills initialCategory={initialSkillCategory} initialSearchTerm={hubSearchTerm} />}
                             {activeView === 'star_players' && <StarPlayers />}
                             {activeView === 'calculator' && (
                                 <div className="max-w-md mx-auto py-10 bg-zinc-900/40 p-8 rounded-[2.5rem] border border-white/5">

@@ -61,13 +61,22 @@ const SkillCard: React.FC<{ skill: Skill; onClick: () => void; isSelected: boole
 
 interface SkillsProps {
     initialCategory?: string;
+    initialSearchTerm?: string;
 }
 
-const Skills: React.FC<SkillsProps> = ({ initialCategory }) => {
+const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = '' }) => {
     const { skills, loading } = useMasterData();
     const { t, language } = useLanguage();
     const [activeCategory, setActiveCategory] = useState(initialCategory || 'General');
-    const [searchTerm, setSearchTerm] = useState('');
+    const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
+
+    // Sync search term if changed from parent
+    React.useEffect(() => {
+        if (initialSearchTerm) {
+            setSearchTerm(initialSearchTerm);
+        }
+    }, [initialSearchTerm]);
+
     const [selectedSkillName, setSelectedSkillName] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [pinnedSkills, setPinnedSkills] = useState<string[]>([]);
@@ -80,11 +89,8 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory }) => {
 
     const filteredSkills = useMemo(() => {
         return skills.filter(skill => {
-            // Match category ID (General, Strength, etc)
-            const matchesCategory = skill.category === activeCategory;
-
-            const searchTermLower = searchTerm.toLowerCase();
-            const matchesSearch = !searchTerm ||
+            const searchTermLower = searchTerm.trim().toLowerCase();
+            const matchesSearch = !searchTermLower ||
                 (skill.name_es?.toLowerCase().includes(searchTermLower)) ||
                 (skill.name_en?.toLowerCase().includes(searchTermLower)) ||
                 (skill.desc_es?.toLowerCase().includes(searchTermLower)) ||
@@ -92,7 +98,11 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory }) => {
                 (skill.name?.toLowerCase().includes(searchTermLower)) ||
                 (skill.description?.toLowerCase().includes(searchTermLower));
 
-            return matchesCategory && matchesSearch;
+            // If there's a search term, allow matches across all categories
+            if (searchTermLower) return matchesSearch;
+
+            // Otherwise match current category
+            return skill.category === activeCategory;
         });
     }, [activeCategory, searchTerm, skills]);
 
