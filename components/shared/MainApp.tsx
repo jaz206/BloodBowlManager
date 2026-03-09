@@ -53,7 +53,10 @@ const MainApp: React.FC = () => {
   const [dataInitiallyLoaded, setDataInitiallyLoaded] = useState(false);
   const [requestedRoster, setRequestedRoster] = useState<string | null>(null);
   const [syncState, setSyncState] = useState<SyncStatus>('synced');
-  const { heroImage } = useMasterData();
+  const { heroImage, isFromFirestore, error: masterDataError } = useMasterData();
+
+  // Combine sync states
+  const displaySyncStatus = masterDataError ? 'error' : syncState;
 
   useEffect(() => {
     if (isGuest || !user || !db) {
@@ -239,7 +242,10 @@ const MainApp: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-6">
-          <SyncStatusIndicator status={syncState} />
+          <SyncStatusIndicator
+            status={displaySyncStatus}
+            origin={isFromFirestore ? 'firestore' : 'static'}
+          />
           <LanguageSelector />
           <UserProfile />
         </div>

@@ -1,4 +1,4 @@
-import type { Team } from "../types";
+﻿import type { Team } from "../types";
 
 export const teamsData: Team[] = [
   {
@@ -27,7 +27,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Esquivar",
+        "skillKeys": ["Dodge"],
         "primary": "G",
         "secondary": "AS"
       },
@@ -42,7 +42,7 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "8+"
         },
-        "skills": "Esquivar, A por el balón, Pasar, Pase Seguro",
+        "skillKeys": ["Dodge", "Kick-Off Return", "Pass", "Safe Pass"],
         "primary": "GP",
         "secondary": "AS"
       },
@@ -57,7 +57,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "9+"
         },
-        "skills": "Defensa, Esquivar",
+        "skillKeys": ["Defensive", "Dodge"],
         "primary": "GS",
         "secondary": "A"
       },
@@ -72,7 +72,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "8+"
         },
-        "skills": "Esquivar, Pegar y Correr, Saltar",
+        "skillKeys": ["Dodge", "Hit and Run", "Leap"],
         "primary": "AG",
         "secondary": "S"
       }
@@ -104,7 +104,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Esquivar, Buena Gente, Canijo, Cabeza Dura",
+        "skillKeys": ["Dodge", "Right Stuff", "Stunty", "Thick Skull"],
         "primary": "A",
         "secondary": "GPS"
       },
@@ -119,7 +119,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Luchador, Agarrar",
+        "skillKeys": ["Brawler", "Grab"],
         "primary": "GS",
         "secondary": "AP"
       },
@@ -134,7 +134,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Siempre Hambriento, Solitario (3+), Golpe Mortífero (+1), Vómito Proyectil, Realmente Estúpido, Regeneración, Lanzar Compañero",
+        "skillKeys": ["Always Hungry", "Loner (3+)", "Mighty Blow (+1)", "Projectile Vomit", "Really Stupid", "Regeneration", "Throw Team-mate"],
         "primary": "S",
         "secondary": "AGP"
       }
@@ -156,8 +156,23 @@ export const teamsData: Team[] = [
     },
     "roster": [
       {
+        "qty": "0-16",
+        "position": "Bestia del Caos",
+        "cost": 60000,
+        "stats": {
+          "MV": 6,
+          "FU": "3",
+          "AG": "3+",
+          "PS": "4+",
+          "AR": "9+"
+        },
+        "skillKeys": ["Horns"],
+        "primary": "GS",
+        "secondary": "AM"
+      },
+      {
         "qty": "0-4",
-        "position": "Chosen Bloqueador",
+        "position": "Elegido Bloqueador",
         "cost": 100000,
         "stats": {
           "MV": 5,
@@ -166,9 +181,24 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "GMS",
-        "primary": "",
-        "secondary": "A"
+        "skillKeys": [],
+        "primary": "GS",
+        "secondary": "AM"
+      },
+      {
+        "qty": "0-1",
+        "position": "Minotauro del Caos",
+        "cost": 150000,
+        "stats": {
+          "MV": 5,
+          "FU": "5",
+          "AG": "4+",
+          "PS": "-",
+          "AR": "9+"
+        },
+        "skillKeys": ["Animal Savagery", "Frenzy", "Horns", "Mighty Blow (+1)", "Loner (4+)"],
+        "primary": "S",
+        "secondary": "GMA"
       }
     ]
   },
@@ -198,7 +228,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "G",
+        "skillKeys": [],
         "primary": "",
         "secondary": "AS"
       },
@@ -213,7 +243,7 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "10+"
         },
-        "skills": "Placaje, Piel de Hierro, Cabeza Dura",
+        "skillKeys": ["Tackle", "Iron Hard Skin", "Thick Skull"],
         "primary": "GS",
         "secondary": "AM"
       },
@@ -228,7 +258,7 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "10+"
         },
-        "skills": "Esprintar, Pies Firmes, Cabeza Dura",
+        "skillKeys": ["Sprint", "Sure Feet", "Thick Skull"],
         "primary": "GS",
         "secondary": "AM"
       },
@@ -243,7 +273,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skills": "Furia, Cuernos, Solitario (4+), Golpe Mortífero (+1), Cabeza Dura, Furia Desencadenada",
+        "skillKeys": ["Frenzy", "Horns", "Loner (4+)", "Mighty Blow (+1)", "Thick Skull", "Unchannelled Fury"],
         "primary": "S",
         "secondary": "AGM"
       },
@@ -258,7 +288,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "8+"
         },
-        "skills": "Marcaje, Puñalada",
+        "skillKeys": ["Shadowing", "Stab"],
         "primary": "G",
         "secondary": "AS"
       }
@@ -290,7 +320,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Animosidad (all team-mates)",
+        "skillKeys": ["Animosity (all team-mates)"],
         "primary": "GM",
         "secondary": "AS"
       },
@@ -305,7 +335,7 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "9+"
         },
-        "skills": "Animosidad (all team-mates)",
+        "skillKeys": ["Animosity (all team-mates)"],
         "primary": "AGM",
         "secondary": "PS"
       },
@@ -320,7 +350,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Cabeza de Hueso, Solitario (4+), Golpe Mortífero (+1), Cabeza Dura, Lanzar Compañero",
+        "skillKeys": ["Bone Head", "Loner (4+)", "Mighty Blow (+1)", "Thick Skull", "Throw Team-mate"],
         "primary": "S",
         "secondary": "AGM"
       },
@@ -335,7 +365,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Animosidad (all team-mates)",
+        "skillKeys": ["Animosity (all team-mates)"],
         "primary": "GM",
         "secondary": "AS"
       },
@@ -350,7 +380,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Siempre Hambriento, Solitario (4+), Golpe Mortífero (+1), Vómito Proyectil, Realmente Estúpido, Regeneración, Lanzar Compañero",
+        "skillKeys": ["Always Hungry", "Loner (4+)", "Mighty Blow (+1)", "Projectile Vomit", "Really Stupid", "Regeneration", "Throw Team-mate"],
         "primary": "S",
         "secondary": "AGM"
       },
@@ -365,7 +395,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Animosidad (all team-mates), Esquivar, Buena Gente, Canijo",
+        "skillKeys": ["Animosity (all team-mates)", "Dodge", "Right Stuff", "Stunty"],
         "primary": "AM",
         "secondary": "GP"
       },
@@ -380,7 +410,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skills": "Solitario (4+), Furia, Cuernos, Golpe Mortífero (+1), Cabeza Dura, Furia Desencadenada",
+        "skillKeys": ["Loner (4+)", "Frenzy", "Horns", "Mighty Blow (+1)", "Thick Skull", "Unchannelled Fury"],
         "primary": "S",
         "secondary": "AGM"
       },
@@ -395,7 +425,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skills": "GM",
+        "skillKeys": [],
         "primary": "",
         "secondary": "AS"
       },
@@ -410,7 +440,7 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "9+"
         },
-        "skills": "Animosidad (todos los compañeros), Pasar, Manos Seguras",
+        "skillKeys": ["Animosity (all team-mates)", "Pass", "Sure Hands"],
         "primary": "GMP",
         "secondary": "AS"
       },
@@ -425,7 +455,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skills": "Salvajismo Animal, Furia, Solitario (4+), Golpe Mortífero (+1), Cola Prensil",
+        "skillKeys": ["Animal Savagery", "Frenzy", "Loner (4+)", "Mighty Blow (+1)", "Prehensile Tail"],
         "primary": "S",
         "secondary": "AGM"
       }
@@ -457,7 +487,7 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "8+"
         },
-        "skills": "Pase Rápido",
+        "skillKeys": ["Dump-Off"],
         "primary": "AGP",
         "secondary": "S"
       },
@@ -472,7 +502,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "8+"
         },
-        "skills": "Marcaje, Puñalada",
+        "skillKeys": ["Shadowing", "Stab"],
         "primary": "AG",
         "secondary": "PS"
       },
@@ -487,7 +517,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skills": "Placaje",
+        "skillKeys": ["Tackle"],
         "primary": "AG",
         "secondary": "PS"
       },
@@ -502,7 +532,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "8+"
         },
-        "skills": "Esquivar, Furia, Saltar",
+        "skillKeys": ["Dodge", "Frenzy", "Leap"],
         "primary": "AG",
         "secondary": "PS"
       },
@@ -517,7 +547,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skills": "AG",
+        "skillKeys": [],
         "primary": "",
         "secondary": "S"
       }
@@ -549,7 +579,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Placaje, Placar, Cabeza Dura",
+        "skillKeys": ["Tackle", "Block", "Thick Skull"],
         "primary": "GS",
         "secondary": "A"
       },
@@ -564,7 +594,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skills": "Manos Seguras, Cabeza Dura",
+        "skillKeys": ["Sure Hands", "Thick Skull"],
         "primary": "GP",
         "secondary": "AS"
       },
@@ -579,7 +609,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "10+"
         },
-        "skills": "Placaje, Cabeza Dura",
+        "skillKeys": ["Tackle", "Thick Skull"],
         "primary": "GS",
         "secondary": "AP"
       },
@@ -594,7 +624,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skills": "Placaje, Agallas, Furia, Cabeza Dura",
+        "skillKeys": ["Tackle", "Dauntless", "Frenzy", "Thick Skull"],
         "primary": "GS",
         "secondary": "A"
       },
@@ -609,7 +639,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "11+"
         },
-        "skills": "Romper Placar, Jugador Sucio (+2), Juggernaut, Solitario (5+), Golpe Mortífero (+1), Sin Manos, Arma Secreta, Mantenerse Firme",
+        "skillKeys": ["Break Tackle", "Dirty Player (+1)", "Juggernaut", "Loner (5+)", "Mighty Blow (+1)", "No Hands", "Secret Weapon", "Stand Firm"],
         "primary": "S",
         "secondary": "AG"
       }
@@ -641,7 +671,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Atrapar, Nervios de Acero",
+        "skillKeys": ["Catch", "Nerves of Steel"],
         "primary": "AG",
         "secondary": "S"
       },
@@ -656,7 +686,7 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "9+"
         },
-        "skills": "Placaje, Echarse a un lado",
+        "skillKeys": ["Tackle", "Sidestep"],
         "primary": "AG",
         "secondary": "PS"
       },
@@ -671,7 +701,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "AG",
+        "skillKeys": [],
         "primary": "",
         "secondary": "S"
       },
@@ -686,7 +716,7 @@ export const teamsData: Team[] = [
           "PS": "2+",
           "AR": "8+"
         },
-        "skills": "Pasar",
+        "skillKeys": ["Pass"],
         "primary": "AGP",
         "secondary": "S"
       }
@@ -718,7 +748,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "7+"
         },
-        "skills": "Saltar, Buena Gente, Canijo, Lucha",
+        "skillKeys": ["Leap", "Right Stuff", "Stunty", "Wrestle"],
         "primary": "A",
         "secondary": "GS"
       },
@@ -733,7 +763,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Defensa, Saltar, Canijo, Lucha",
+        "skillKeys": ["Defensive", "Leap", "Stunty", "Wrestle"],
         "primary": "A",
         "secondary": "GS"
       },
@@ -748,7 +778,7 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "7+"
         },
-        "skills": "Saltar, Canijo, Tramposo, Lucha",
+        "skillKeys": ["Leap", "Stunty", "Trickster", "Wrestle"],
         "primary": "AP",
         "secondary": "G"
       },
@@ -763,7 +793,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "6+"
         },
-        "skills": "Esquivar, My Ball, Echarse a un lado, Canijo",
+        "skillKeys": ["Dodge", "My Ball", "Sidestep", "Stunty"],
         "primary": "-",
         "secondary": "A"
       },
@@ -778,7 +808,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "11+"
         },
-        "skills": "Golpe Mortífero (+1), Mantenerse Firme, Brazo Fuerte, Enraizarse, Cabeza Dura, Lanzar Compañero, ¡Timmm-ber!",
+        "skillKeys": ["Mighty Blow (+1)", "Stand Firm", "Strong Arm", "Take Root", "Thick Skull", "Throw Team-mate", "Throw Team-mate"],
         "primary": "S",
         "secondary": "AGP"
       }
@@ -810,7 +840,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Bombardero, Esquivar, Arma Secreta, Canijo",
+        "skillKeys": ["Bombardier", "Dodge", "Secret Weapon", "Stunty"],
         "primary": "AP",
         "secondary": "GS"
       },
@@ -825,7 +855,7 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "8+"
         },
-        "skills": "Buena Gente, Canijo, Planeo",
+        "skillKeys": ["Right Stuff", "Stunty", "Swoop"],
         "primary": "A",
         "secondary": "GS"
       },
@@ -840,7 +870,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "8+"
         },
-        "skills": "Bola y Cadena, Sin Manos, Arma Secreta, Canijo",
+        "skillKeys": ["Ball & Chain", "No Hands", "Secret Weapon", "Stunty"],
         "primary": "S",
         "secondary": "AG"
       },
@@ -855,7 +885,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "8+"
         },
-        "skills": "Motosierra, Arma Secreta, Canijo",
+        "skillKeys": ["Chainsaw", "Secret Weapon", "Stunty"],
         "primary": "A",
         "secondary": "GS"
       },
@@ -870,7 +900,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Esquivar, Buena Gente, Canijo",
+        "skillKeys": ["Dodge", "Right Stuff", "Stunty"],
         "primary": "A",
         "secondary": "GPS"
       },
@@ -885,7 +915,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Siempre Hambriento, Solitario (3+), Golpe Mortífero (+1), Vómito Proyectil, Realmente Estúpido, Regeneración, Lanzar Compañero",
+        "skillKeys": ["Always Hungry", "Loner (3+)", "Mighty Blow (+1)", "Projectile Vomit", "Really Stupid", "Regeneration", "Throw Team-mate"],
         "primary": "S",
         "secondary": "AGP"
       },
@@ -900,7 +930,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "8+"
         },
-        "skills": "Esquivar, Pogo Stick, Canijo",
+        "skillKeys": ["Dodge", "Pogo Stick", "Stunty"],
         "primary": "A",
         "secondary": "GPS"
       }
@@ -932,7 +962,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "7+"
         },
-        "skills": "Esquivar, Buena Gente, Canijo",
+        "skillKeys": ["Dodge", "Right Stuff", "Stunty"],
         "primary": "A",
         "secondary": "GS"
       },
@@ -947,7 +977,7 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "8+"
         },
-        "skills": "Esquivar, Apartar, Canijo",
+        "skillKeys": ["Dodge", "Fend", "Stunty"],
         "primary": "AP",
         "secondary": "GS"
       },
@@ -962,7 +992,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "11+"
         },
-        "skills": "Golpe Mortífero (+1), Mantenerse Firme, Brazo Fuerte, Enraizarse, Cabeza Dura, Lanzar Compañero, ¡Timmm-ber!",
+        "skillKeys": ["Mighty Blow (+1)", "Stand Firm", "Strong Arm", "Take Root", "Thick Skull", "Throw Team-mate", "Throw Team-mate"],
         "primary": "S",
         "secondary": "AGP"
       },
@@ -977,7 +1007,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "7+"
         },
-        "skills": "Atrapar, Esquivar, Buena Gente, Esprintar, Canijo",
+        "skillKeys": ["Catch", "Dodge", "Right Stuff", "Sprint", "Stunty"],
         "primary": "A",
         "secondary": "GS"
       }
@@ -1009,7 +1039,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skills": "Placaje",
+        "skillKeys": ["Tackle"],
         "primary": "AG",
         "secondary": "PS"
       },
@@ -1024,7 +1054,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skills": "AG",
+        "skillKeys": [],
         "primary": "",
         "secondary": "PS"
       },
@@ -1039,7 +1069,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "8+"
         },
-        "skills": "Atrapar",
+        "skillKeys": ["Catch"],
         "primary": "AG",
         "secondary": "S"
       },
@@ -1054,7 +1084,7 @@ export const teamsData: Team[] = [
           "PS": "2+",
           "AR": "9+"
         },
-        "skills": "Rompe nubes, Pasar, Pase Seguro",
+        "skillKeys": ["Cloud Burster", "Pass", "Safe Pass"],
         "primary": "AGP",
         "secondary": "S"
       }
@@ -1086,7 +1116,7 @@ export const teamsData: Team[] = [
           "PS": "2+",
           "AR": "9+"
         },
-        "skills": "Pasar, Manos Seguras",
+        "skillKeys": ["Pass", "Sure Hands"],
         "primary": "GP",
         "secondary": "AS"
       },
@@ -1101,7 +1131,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "8+"
         },
-        "skills": "Atrapar, Esquivar",
+        "skillKeys": ["Catch", "Dodge"],
         "primary": "AG",
         "secondary": "PS"
       },
@@ -1116,7 +1146,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skills": "Placaje",
+        "skillKeys": ["Tackle"],
         "primary": "GS",
         "secondary": "AP"
       },
@@ -1131,9 +1161,24 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Cabeza de Hueso, Solitario (4+), Golpe Mortífero (+1), Cabeza Dura, Lanzar Compañero",
+        "skillKeys": ["Bone Head", "Loner (4+)", "Mighty Blow (+1)", "Thick Skull", "Throw Team-mate"],
         "primary": "S",
         "secondary": "AG"
+      },
+      {
+        "qty": "0-4",
+        "position": "Placador Blitzer",
+        "cost": 85000,
+        "stats": {
+          "MV": 7,
+          "FU": "3",
+          "AG": "3+",
+          "PS": "4+",
+          "AR": "9+"
+        },
+        "skillKeys": ["Block"],
+        "primary": "GS",
+        "secondary": "AP"
       },
       {
         "qty": "0-16",
@@ -1146,8 +1191,8 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skills": "G",
-        "primary": "",
+        "skillKeys": [],
+        "primary": "G",
         "secondary": "AS"
       },
       {
@@ -1161,7 +1206,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "7+"
         },
-        "skills": "Esquivar, Buena Gente, Canijo",
+        "skillKeys": ["Dodge", "Right Stuff", "Stunty"],
         "primary": "A",
         "secondary": "GS"
       }
@@ -1193,7 +1238,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "10+"
         },
-        "skills": "Cabeza de Hueso, Solitario (4+), Golpe Mortífero (+1), Cola Prensil, Cabeza Dura",
+        "skillKeys": ["Bone Head", "Loner (4+)", "Mighty Blow (+1)", "Prehensile Tail", "Thick Skull"],
         "primary": "S",
         "secondary": "AG"
       },
@@ -1208,7 +1253,7 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "10+"
         },
-        "skills": "GS",
+        "skillKeys": [],
         "primary": "",
         "secondary": "A"
       },
@@ -1223,7 +1268,7 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "8+"
         },
-        "skills": "Esquivar, A por el balón, Marcaje, Canijo",
+        "skillKeys": ["Dodge", "Kick-Off Return", "Shadowing", "Stunty"],
         "primary": "A",
         "secondary": "GPS"
       },
@@ -1238,7 +1283,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Esquivar, Canijo",
+        "skillKeys": ["Dodge", "Stunty"],
         "primary": "A",
         "secondary": "GPS"
       }
@@ -1270,7 +1315,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skills": "Regeneración",
+        "skillKeys": ["Regeneration"],
         "primary": "G",
         "secondary": "AS"
       },
@@ -1285,7 +1330,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skills": "Placaje, Apariencia Asquerosa, Sin Manos, Regeneración, Echarse a un lado",
+        "skillKeys": ["Tackle", "Foul Appearance", "No Hands", "Regeneration", "Sidestep"],
         "primary": "GS",
         "secondary": "A"
       },
@@ -1300,7 +1345,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Esquivar",
+        "skillKeys": ["Dodge"],
         "primary": "AG",
         "secondary": "PS"
       },
@@ -1315,7 +1360,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "10+"
         },
-        "skills": "Regeneración, Mantenerse Firme, Cabeza Dura",
+        "skillKeys": ["Regeneration", "Stand Firm", "Thick Skull"],
         "primary": "GS",
         "secondary": "A"
       },
@@ -1330,7 +1375,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skills": "Garras, Furia, Regeneración",
+        "skillKeys": ["Claws", "Frenzy", "Regeneration"],
         "primary": "AG",
         "secondary": "PS"
       }
@@ -1362,7 +1407,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Placaje, Drunkard, Cabeza Dura",
+        "skillKeys": ["Tackle", "Drunkard", "Thick Skull"],
         "primary": "G",
         "secondary": "APS"
       },
@@ -1377,7 +1422,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skills": "Furia",
+        "skillKeys": ["Frenzy"],
         "primary": "GS",
         "secondary": "A"
       },
@@ -1392,7 +1437,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skills": "Garras, Presencia Perturbadora, Furia, Solitario (4+), Furia Desencadenada",
+        "skillKeys": ["Claws", "Disturbing Presence", "Frenzy", "Loner (4+)", "Unchannelled Fury"],
         "primary": "S",
         "secondary": "AG"
       },
@@ -1407,7 +1452,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "8+"
         },
-        "skills": "Placaje, Furia, Saltar",
+        "skillKeys": ["Tackle", "Frenzy", "Leap"],
         "primary": "GS",
         "secondary": "AP"
       },
@@ -1422,7 +1467,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "6+"
         },
-        "skills": "Esquivar, Sin Manos, Levantarse, Canijo, Diminuto",
+        "skillKeys": ["Dodge", "No Hands", "Jump Up", "Stunty", "Titchy"],
         "primary": "-",
         "secondary": "A"
       },
@@ -1437,7 +1482,7 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "8+"
         },
-        "skills": "Atrapar, Agallas, Pasar, Balón Robado",
+        "skillKeys": ["Catch", "Dauntless", "Pass", "Strip Ball"],
         "primary": "AGP",
         "secondary": "S"
       }
@@ -1469,7 +1514,7 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "10+"
         },
-        "skills": "Presencia Perturbadora, Apariencia Asquerosa, Plagado, Regeneración",
+        "skillKeys": ["Disturbing Presence", "Foul Appearance", "Plague Ridden", "Regeneration"],
         "primary": "GMS",
         "secondary": "A"
       },
@@ -1484,7 +1529,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "10+"
         },
-        "skills": "Presencia Perturbadora, Apariencia Asquerosa, Solitario (4+), Golpe Mortífero (+1), Plagado, Realmente Estúpido, Regeneración, Tentáculos",
+        "skillKeys": ["Disturbing Presence", "Foul Appearance", "Loner (4+)", "Mighty Blow (+1)", "Plague Ridden", "Really Stupid", "Regeneration", "Tentacles"],
         "primary": "S",
         "secondary": "AGM"
       },
@@ -1499,7 +1544,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skills": "Cuernos, Plagado, Regeneración",
+        "skillKeys": ["Horns", "Plague Ridden", "Regeneration"],
         "primary": "GMS",
         "secondary": "AP"
       },
@@ -1514,7 +1559,7 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "9+"
         },
-        "skills": "Descomposición, Plagado",
+        "skillKeys": ["Decay", "Plague Ridden"],
         "primary": "GM",
         "secondary": "AS"
       }
@@ -1546,7 +1591,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "10+"
         },
-        "skills": "Bone Head, Patada Team-Mate, Golpe Mortífero (+1), Cabeza Dura",
+        "skillKeys": ["Bone Head", "Kick Team-mate", "Mighty Blow (+1)", "Thick Skull"],
         "primary": "PS",
         "secondary": "AG"
       },
@@ -1561,7 +1606,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "6+"
         },
-        "skills": "Esquivar, Buena Gente, Echarse a un lado, Canijo, Diminuto",
+        "skillKeys": ["Dodge", "Right Stuff", "Sidestep", "Stunty", "Titchy"],
         "primary": "A",
         "secondary": "G"
       },
@@ -1576,7 +1621,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Cabeza de Hueso, Golpe Mortífero (+1), Cabeza Dura, Lanzar Compañero",
+        "skillKeys": ["Bone Head", "Mighty Blow (+1)", "Thick Skull", "Throw Team-mate"],
         "primary": "S",
         "secondary": "AGP"
       }
@@ -1608,7 +1653,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skills": "Animosidad (Enanos y Halflings del equipo), Placaje",
+        "skillKeys": ["Animosity (all team-mates)", "Tackle"],
         "primary": "GS",
         "secondary": "A"
       },
@@ -1623,7 +1668,7 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "8+"
         },
-        "skills": "Animosidad (Enanos y Halflings del equipo), Atrapar, Esquivar",
+        "skillKeys": ["Animosity (all team-mates)", "Catch", "Dodge"],
         "primary": "AG",
         "secondary": "S"
       },
@@ -1638,7 +1683,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skills": "-",
+        "skillKeys": [],
         "primary": "G",
         "secondary": "AS"
       },
@@ -1653,7 +1698,7 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "9+"
         },
-        "skills": "Animosidad (Enanos y Halflings del equipo), Pasar, Manos Seguras",
+        "skillKeys": ["Animosity (all team-mates)", "Pass", "Sure Hands"],
         "primary": "GP",
         "secondary": "AS"
       },
@@ -1668,7 +1713,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "7+"
         },
-        "skills": "Animosidad (Enanos y Humanos del equipo), Esquivar, Buena Gente, Canijo",
+        "skillKeys": ["Animosity (all team-mates)", "Dodge", "Right Stuff", "Stunty"],
         "primary": "A",
         "secondary": "GS"
       },
@@ -1683,7 +1728,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "10+"
         },
-        "skills": "Placaje, Solitario (3+), Cabeza Dura",
+        "skillKeys": ["Tackle", "Loner (3+)", "Thick Skull"],
         "primary": "GS",
         "secondary": "A"
       },
@@ -1698,7 +1743,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Palanca de Brazo, Luchador, Solitario (3+), Cabeza Dura",
+        "skillKeys": ["Arm Bar", "Brawler", "Loner (3+)", "Thick Skull"],
         "primary": "GS",
         "secondary": "A"
       },
@@ -1713,7 +1758,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skills": "Solitario (3+), Manos Seguras, Cabeza Dura",
+        "skillKeys": ["Loner (3+)", "Sure Hands", "Thick Skull"],
         "primary": "GP",
         "secondary": "AS"
       },
@@ -1728,7 +1773,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skills": "Placaje, Agallas, Furia, Solitario (3+), Cabeza Dura",
+        "skillKeys": ["Tackle", "Dauntless", "Frenzy", "Loner (3+)", "Thick Skull"],
         "primary": "GS",
         "secondary": "A"
       }
@@ -1760,7 +1805,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "10+"
         },
-        "skills": "Animosidad (Línea de Orcos)",
+        "skillKeys": ["Animosity (all team-mates)"],
         "primary": "G",
         "secondary": "AS"
       },
@@ -1775,7 +1820,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Siempre Hambriento, Solitario (4+), Golpe Mortífero (+1), Vómito Proyectil, Realmente Estúpido, Regeneración, Lanzar Compañero",
+        "skillKeys": ["Always Hungry", "Loner (4+)", "Mighty Blow (+1)", "Projectile Vomit", "Really Stupid", "Regeneration", "Throw Team-mate"],
         "primary": "S",
         "secondary": "AGP"
       },
@@ -1790,7 +1835,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Esquivar, Buena Gente, Canijo",
+        "skillKeys": ["Dodge", "Right Stuff", "Stunty"],
         "primary": "A",
         "secondary": "GS"
       },
@@ -1805,7 +1850,22 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "9+"
         },
-        "skills": "Animosidad (todos los compañeros), Pasar, Manos Seguras",
+        "skillKeys": ["Animosity (all team-mates)", "Pass", "Sure Hands"],
+        "primary": "GS",
+        "secondary": "AP"
+      },
+      {
+        "qty": "0-4",
+        "position": "Blitzer Orco",
+        "cost": 80000,
+        "stats": {
+          "MV": 6,
+          "FU": "3",
+          "AG": "3+",
+          "PS": "4+",
+          "AR": "10+"
+        },
+        "skillKeys": ["Animosity (all team-mates)", "Block", "Break Tackle"],
         "primary": "GS",
         "secondary": "AP"
       },
@@ -1820,24 +1880,9 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "10+"
         },
-        "skills": "Animosidad (Fortachones Bloqueadores)",
+        "skillKeys": ["Animosity (all team-mates)", "Mighty Blow (+1)", "Thick Skull"],
         "primary": "GS",
         "secondary": "A"
-      },
-      {
-        "qty": "0-4",
-        "position": "Placador",
-        "cost": 80000,
-        "stats": {
-          "MV": 6,
-          "FU": "3",
-          "AG": "3+",
-          "PS": "4+",
-          "AR": "10+"
-        },
-        "skills": "Animosidad (todos los compañeros), Placaje",
-        "primary": "GS",
-        "secondary": "AP"
       }
     ]
   },
@@ -1867,7 +1912,7 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "8+"
         },
-        "skills": "Regeneración, Cabeza Dura",
+        "skillKeys": ["Regeneration", "Thick Skull"],
         "primary": "G",
         "secondary": "AS"
       },
@@ -1882,7 +1927,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Esquivar",
+        "skillKeys": ["Dodge"],
         "primary": "AG",
         "secondary": "PS"
       },
@@ -1897,7 +1942,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "10+"
         },
-        "skills": "Golpe Mortífero (+1), Regeneración",
+        "skillKeys": ["Mighty Blow (+1)", "Regeneration"],
         "primary": "S",
         "secondary": "AG"
       },
@@ -1912,7 +1957,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "9+"
         },
-        "skills": "Placaje, Regeneración",
+        "skillKeys": ["Tackle", "Regeneration"],
         "primary": "GS",
         "secondary": "AP"
       },
@@ -1927,7 +1972,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skills": "Regeneración",
+        "skillKeys": ["Regeneration"],
         "primary": "G",
         "secondary": "AS"
       }
@@ -1959,7 +2004,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skills": "Salvajismo Animal, Furia, Solitario (4+), Golpe Mortífero (+1), Cola Prensil",
+        "skillKeys": ["Animal Savagery", "Frenzy", "Loner (4+)", "Mighty Blow (+1)", "Prehensile Tail"],
         "primary": "S",
         "secondary": "AGM"
       },
@@ -1974,7 +2019,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "9+"
         },
-        "skills": "Placaje",
+        "skillKeys": ["Tackle"],
         "primary": "GS",
         "secondary": "AMP"
       },
@@ -1989,7 +2034,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Esquivar",
+        "skillKeys": ["Dodge"],
         "primary": "AG",
         "secondary": "MPS"
       },
@@ -2004,7 +2049,7 @@ export const teamsData: Team[] = [
           "PS": "2+",
           "AR": "8+"
         },
-        "skills": "Pasar, Manos Seguras",
+        "skillKeys": ["Pass", "Sure Hands"],
         "primary": "GP",
         "secondary": "AMS"
       },
@@ -2019,7 +2064,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "G",
+        "skillKeys": [],
         "primary": "",
         "secondary": "AMS"
       }
@@ -2051,7 +2096,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skills": "Pogo Stick, Piernas Muy Largas",
+        "skillKeys": ["Pogo Stick", "Very Long Legs"],
         "primary": "G",
         "secondary": "AS"
       },
@@ -2066,7 +2111,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Recepción en Plancha, Pogo Stick, Piernas Muy Largas",
+        "skillKeys": ["Diving Catch", "Pogo Stick", "Very Long Legs"],
         "primary": "GA",
         "secondary": "SP"
       },
@@ -2081,7 +2126,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "9+"
         },
-        "skills": "Placaje de Buceo, Saltar, Pogo Stick, Piernas Muy Largas",
+        "skillKeys": ["Diving Tackle", "Leap", "Pogo Stick", "Very Long Legs"],
         "primary": "GAS",
         "secondary": "P"
       },
@@ -2096,7 +2141,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "10+"
         },
-        "skills": "Cabeza de Hueso, Solitario (4+), Golpe Mortífero (+1), Cola Prensil, Cabeza Dura",
+        "skillKeys": ["Bone Head", "Loner (4+)", "Mighty Blow (+1)", "Prehensile Tail", "Thick Skull"],
         "primary": "S",
         "secondary": "GA"
       }
@@ -2128,7 +2173,7 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "9+"
         },
-        "skills": "Placaje, Regeneración, Cabeza Dura",
+        "skillKeys": ["Tackle", "Regeneration", "Thick Skull"],
         "primary": "GS",
         "secondary": "AP"
       },
@@ -2143,7 +2188,7 @@ export const teamsData: Team[] = [
           "PS": "3+",
           "AR": "8+"
         },
-        "skills": "Pasar, Regeneración, Manos Seguras, Cabeza Dura",
+        "skillKeys": ["Pass", "Regeneration", "Sure Hands", "Thick Skull"],
         "primary": "GP",
         "secondary": "A"
       },
@@ -2158,7 +2203,7 @@ export const teamsData: Team[] = [
           "PS": "6+",
           "AR": "8+"
         },
-        "skills": "Regeneración, Cabeza Dura",
+        "skillKeys": ["Regeneration", "Thick Skull"],
         "primary": "G",
         "secondary": "AS"
       },
@@ -2173,7 +2218,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "10+"
         },
-        "skills": "Descomposición, Regeneración",
+        "skillKeys": ["Decay", "Regeneration"],
         "primary": "S",
         "secondary": "AG"
       }
@@ -2181,7 +2226,7 @@ export const teamsData: Team[] = [
   },
   {
     "name": "Habitantes del Inframundo",
-    "specialRules": "Underworld Challenge, Team Management, Bribery and Corruption",
+    "specialRules": "Desafío Subterráneo, Gestión de Equipo, Soborno y Corrupción",
     "rerollCost": 50000,
     "tier": 1,
     "apothecary": "Sí",
@@ -2205,7 +2250,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "10+"
         },
-        "skills": "Siempre Hambriento, Solitario (4+), Golpe Mortífero (+1), Vómito Proyectil, Realmente Estúpido, Regeneración, Lanzar Compañero",
+        "skillKeys": ["Always Hungry", "Loner (4+)", "Mighty Blow (+1)", "Projectile Vomit", "Really Stupid", "Regeneration", "Throw Team-mate"],
         "primary": "MS",
         "secondary": "AGP"
       },
@@ -2220,7 +2265,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Esquivar, Buena Gente, Canijo",
+        "skillKeys": ["Dodge", "Right Stuff", "Stunty"],
         "primary": "AM",
         "secondary": "GS"
       },
@@ -2235,7 +2280,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Animosidad (Underworld Goblins Linemen)",
+        "skillKeys": ["Animosity (all team-mates)"],
         "primary": "GM",
         "secondary": "AS"
       },
@@ -2250,7 +2295,7 @@ export const teamsData: Team[] = [
           "PS": "2+",
           "AR": "8+"
         },
-        "skills": "Animosidad (Underworld Goblins Linemen), Pasar, Manos Seguras",
+        "skillKeys": ["Animosity (all team-mates)", "Pass", "Sure Hands"],
         "primary": "GMP",
         "secondary": "AS"
       },
@@ -2265,7 +2310,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "9+"
         },
-        "skills": "Animosidad (Underworld Goblins Linemen), Placaje",
+        "skillKeys": ["Animosity (all team-mates)", "Tackle"],
         "primary": "GMS",
         "secondary": "AP"
       },
@@ -2280,7 +2325,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Animosidad (Underworld Goblins Linemen), Esquivar",
+        "skillKeys": ["Animosity (all team-mates)", "Dodge"],
         "primary": "AGM",
         "secondary": "PS"
       },
@@ -2295,7 +2340,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "9+"
         },
-        "skills": "Salvajismo Animal, Furia, Solitario (4+), Golpe Mortífero (+1), Cola Prensil",
+        "skillKeys": ["Animal Savagery", "Frenzy", "Loner (4+)", "Mighty Blow (+1)", "Prehensile Tail"],
         "primary": "MS",
         "secondary": "AG"
       },
@@ -2310,7 +2355,7 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "6+"
         },
-        "skills": "Esquivar, Buena Gente, Echarse a un lado, Canijo, Enjambre, Diminuto",
+        "skillKeys": ["Dodge", "Right Stuff", "Sidestep", "Stunty", "Swarming", "Titchy"],
         "primary": "AM",
         "secondary": "G"
       }
@@ -2342,7 +2387,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "G",
+        "skillKeys": [],
         "primary": "",
         "secondary": "AS"
       },
@@ -2357,9 +2402,9 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "9+"
         },
-        "skills": "Sed de Sangre (3+), Mirada Hipnótica, Juggernaut, Regeneración",
+        "skillKeys": ["Bloodlust (3+)", "Hypnotic Gaze", "Juggernaut", "Regeneration"],
         "primary": "AGS",
-        "secondary": "110000"
+        "secondary": "P"
       },
       {
         "qty": "0-2",
@@ -2372,7 +2417,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Sed de Sangre (2+), Mirada Hipnótica, Regeneración",
+        "skillKeys": ["Bloodlust (2+)", "Hypnotic Gaze", "Regeneration"],
         "primary": "AG",
         "secondary": "PS"
       },
@@ -2387,7 +2432,7 @@ export const teamsData: Team[] = [
           "PS": "2+",
           "AR": "9+"
         },
-        "skills": "Sed de Sangre (2+), Mirada Hipnótica, Pasar, Regeneración",
+        "skillKeys": ["Bloodlust (2+)", "Hypnotic Gaze", "Pass", "Regeneration"],
         "primary": "AGP",
         "secondary": "S"
       },
@@ -2402,7 +2447,7 @@ export const teamsData: Team[] = [
           "PS": "-",
           "AR": "10+"
         },
-        "skills": "Sed de Sangre (3+), Garras, Furia, Solitario (4+), Regeneración",
+        "skillKeys": ["Bloodlust (3+)", "Claws", "Frenzy", "Loner (4+)", "Regeneration"],
         "primary": "S",
         "secondary": "AG"
       }
@@ -2434,7 +2479,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Atrapar, Esquivar",
+        "skillKeys": ["Catch", "Dodge"],
         "primary": "AG",
         "secondary": "PS"
       },
@@ -2449,7 +2494,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "AG",
+        "skillKeys": [],
         "primary": "",
         "secondary": "S"
       },
@@ -2464,7 +2509,7 @@ export const teamsData: Team[] = [
           "PS": "2+",
           "AR": "8+"
         },
-        "skills": "Pasar",
+        "skillKeys": ["Pass"],
         "primary": "AGP",
         "secondary": "S"
       },
@@ -2479,7 +2524,7 @@ export const teamsData: Team[] = [
           "PS": "4+",
           "AR": "8+"
         },
-        "skills": "Placaje, Esquivar, Salto",
+        "skillKeys": ["Tackle", "Dodge", "Leap"],
         "primary": "AG",
         "secondary": "PS"
       },
@@ -2494,10 +2539,11 @@ export const teamsData: Team[] = [
           "PS": "5+",
           "AR": "11+"
         },
-        "skills": "Solitario (4+), Golpe Mortífero (+1), Mantenerse Firme, Brazo Fuerte, Enraizarse, Cabeza Dura, Lanzar Compañero",
+        "skillKeys": ["Loner (4+)", "Mighty Blow (+1)", "Stand Firm", "Strong Arm", "Take Root", "Thick Skull", "Throw Team-mate"],
         "primary": "S",
         "secondary": "AG"
       }
     ]
   }
 ];
+

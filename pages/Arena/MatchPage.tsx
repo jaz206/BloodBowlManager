@@ -512,7 +512,7 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
             type,
             description,
             ...extra
-        }, ...prev]);
+        } as GameEvent, ...prev]);
     };
     const handleHalftime = () => { setTurn(0); setHalf(2); logEvent('INFO', 'Fin de la primera parte. Comienza la segunda parte.'); setGameStatus(prev => ({ ...prev, kickoffEvent: null })); if (firstHalfReceiver) { const secondHalfReceiver = firstHalfReceiver === 'home' ? 'opponent' : 'home'; setGameStatus(prev => ({ ...prev, receivingTeam: secondHalfReceiver })); logEvent('INFO', `Recibe en la segunda parte ${secondHalfReceiver === 'home' ? homeTeam?.name : opponentTeam?.name}.`); setGameState('pre_game'); setPreGameStep(7); } else { setGameState('pre_game'); setPreGameStep(6); } };
     const handleConfirmJourneymen = () => { if (pendingJourneymen.home.length > 0 && liveHomeTeam) { setLiveHomeTeam(prev => prev ? ({ ...prev, players: [...prev.players, ...pendingJourneymen.home] }) : null); logEvent('INFO', `${liveHomeTeam.name} añade ${pendingJourneymen.home.length} Sustituto(s).`); } if (pendingJourneymen.opponent.length > 0 && liveOpponentTeam) { setLiveOpponentTeam(prev => prev ? ({ ...prev, players: [...prev.players, ...pendingJourneymen.opponent] }) : null); logEvent('INFO', `${liveOpponentTeam.name} añade ${pendingJourneymen.opponent.length} Sustituto(s).`); } setJourneymenNotification(null); setPendingJourneymen({ home: [], opponent: [] }); setPreGameStep(1); };
@@ -838,6 +838,7 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                 cost: star.cost / 2,
                 stats: p.stats,
                 skills: p.skills,
+                skillKeys: p.skills ? p.skills.split(',').map((s: string) => s.trim()) : [],
                 primary: 'G', secondary: 'A,F,P',
                 spp: 0, gainedSkills: [], lastingInjuries: [],
                 isStarPlayer: true, qty: "0-1", status: 'Reserva',
@@ -850,6 +851,7 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                 cost: star.cost,
                 stats: star.stats!,
                 skills: star.skills || '',
+                skillKeys: star.skills ? star.skills.split(',').map(s => s.trim()) : [],
                 primary: 'G', secondary: 'A,F,P',
                 spp: 0, gainedSkills: [], lastingInjuries: [],
                 isStarPlayer: true, qty: "0-1", status: 'Reserva',
@@ -1968,8 +1970,8 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                                             <div className="flex gap-8 items-center">
                                                 <div className="flex gap-6">
                                                     {[
-                                                        { l: 'MA', v: selectedPlayerForAction.stats.MA },
-                                                        { l: 'ST', v: selectedPlayerForAction.stats.ST },
+                                                        { l: 'MA', v: selectedPlayerForAction.stats.MV },
+                                                        { l: 'ST', v: selectedPlayerForAction.stats.FU },
                                                         { l: 'AG', v: selectedPlayerForAction.stats.AG },
                                                         { l: 'AV', v: selectedPlayerForAction.stats.AR }
                                                     ].map(s => (
@@ -2331,7 +2333,7 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                                                 <p className="text-sm font-display font-bold text-white group-hover:text-premium-gold transition-colors">{p.customName}</p>
                                                 <p className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest">{p.position}</p>
                                             </div>
-                                            <span className="text-xs font-display font-black text-premium-gold/40 group-hover:text-premium-gold transition-all"># {p.stats.MA}-{p.stats.ST}-{p.stats.AG}</span>
+                                            <span className="text-xs font-display font-black text-premium-gold/40 group-hover:text-premium-gold transition-all"># {p.stats.MV}-{p.stats.FU}-{p.stats.AG}</span>
                                         </button>
                                     ))}
                                 </div>

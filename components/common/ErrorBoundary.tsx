@@ -10,15 +10,19 @@ interface State {
   errorInfo: ErrorInfo | null;
 }
 
-// FIX: An error boundary must be a class component. This component has been converted
-// to a class that extends React.Component to implement the necessary error handling
-// lifecycle methods and resolve issues with accessing `this.props` and `this.setState`.
+/**
+ * Standard React Error Boundary component.
+ * Catch errors in components tree and displays a fallback UI.
+ */
 class ErrorBoundary extends Component<Props, State> {
-  public state: State = {
-    hasError: false,
-    error: null,
-    errorInfo: null,
-  };
+  constructor(props: Props) {
+    super(props);
+    this.state = {
+      hasError: false,
+      error: null,
+      errorInfo: null,
+    };
+  }
 
   public static getDerivedStateFromError(error: Error): Partial<State> {
     return { hasError: true, error };
@@ -44,7 +48,7 @@ class ErrorBoundary extends Component<Props, State> {
                 {this.state.errorInfo && this.state.errorInfo.componentStack}
               </pre>
             </details>
-             <button
+            <button
               onClick={() => window.location.reload()}
               className="mt-6 bg-amber-500 text-slate-900 font-bold py-2 px-6 rounded-md shadow-md hover:bg-amber-400 transition-colors"
             >

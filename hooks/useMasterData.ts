@@ -1,138 +1,154 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { db } from '../firebaseConfig';
-import { collection, onSnapshot, doc, setDoc } from 'firebase/firestore';
+import { collection, doc, onSnapshot, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { useLanguage } from '../contexts/LanguageContext';
 
-// ── Static Spanish Data ───────────────────────────────────────────────────────
-import { teamsData as teamsDataEs } from '../data/teams';
-import { skillsData as skillsDataEs } from '../data/skills_es';
-import { starPlayersData as starsDataEs } from '../data/starPlayers';
-import { inducements as inducementsEs } from '../data/inducements';
-
-// ── Static English Data ───────────────────────────────────────────────────────
-// (For demo, using localized versions if available, fallback to ES for now on non-created yet)
-import { skillsData as skillsDataEn } from '../data/skills_en';
-import { inducementsData as inducementsEn } from '../data/inducements_en';
+// ── Static Fallback Data ──────────────────────────────────────────────────────
+import { teamsData as staticTeamsData } from '../data/teams';
+import { skillsData as staticSkillsEs } from '../data/skills_es';
+import { skillsData as staticSkillsEn } from '../data/skills_en';
+import { starPlayersData as staticStarsData } from '../data/starPlayers';
+import { inducements as staticInducementsEs } from '../data/inducements';
+import { inducementsData as staticInducementsEn } from '../data/inducements_en';
 
 import type { Team, Skill, StarPlayer, Inducement } from '../types';
 
+// ── Firestore collection ID ───────────────────────────────────────────────────
+const MASTER_COL = 'master_data';
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+export type SyncStatus = 'idle' | 'syncing' | 'success' | 'error';
+
+/**
+ * useMasterData hook — Firestore-first with static fallback.
+ *
+ * Data layout in Firestore:
+ *   master_data/teams          → { items: Team[], updatedAt }
+ *   master_data/skills_es      → { items: Skill[], updatedAt }
+ *   master_data/skills_en      → { items: Skill[], updatedAt }
+ *   master_data/star_players   → { items: StarPlayer[], updatedAt }
+ *   master_data/inducements_es → { items: Inducement[], updatedAt }
+ *   master_data/inducements_en → { items: Inducement[], updatedAt }
+ *   master_data/meta           → { lastSync, version, ... }
+ */
 export const useMasterData = () => {
     const { language } = useLanguage();
 
-    // Resolve static data based on language
-    const staticSkills = language === 'es' ? skillsDataEs : skillsDataEn;
-    const staticInducements = language === 'es' ? inducementsEs : (inducementsEn as any as Inducement[]);
-    const staticTeams = teamsDataEs; // TODO: Localize teams
-    const staticStars = starsDataEs; // TODO: Localize stars
-
-    const [teams, setTeams] = useState<Team[]>(staticTeams);
-    const [skills, setSkills] = useState<Skill[]>(staticSkills);
-    const [starPlayers, setStarPlayers] = useState<StarPlayer[]>(staticStars);
-    const [inducements, setInducements] = useState<Inducement[]>(staticInducements);
+    // ── State ─────────────────────────────────────────────────────────────────
+    const [teams, setTeams] = useState<Team[]>(staticTeamsData);
+    const [skills, setSkills] = useState<Skill[]>(language === 'es' ? staticSkillsEs : staticSkillsEn);
+    const [starPlayers, setStarPlayers] = useState<StarPlayer[]>(staticStarsData);
+    const [inducements, setInducements] = useState<Inducement[]>(language === 'es' ? staticInducementsEs : (staticInducementsEn as unknown as Inducement[]));
     const [heroImage, setHeroImage] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false); // Immediate availability with static data fallback
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
+    const [lastSync, setLastSync] = useState<string | null>(null);
+    const [isFromFirestore, setIsFromFirestore] = useState(false);
 
+    // ── Firestore listeners ───────────────────────────────────────────────────
     useEffect(() => {
-        // Reset when language changes if not using Firestore primarily
         if (!db) {
-            setTeams(staticTeams);
-            setSkills(staticSkills);
-            setStarPlayers(staticStars);
-            setInducements(staticInducements);
+            // No Firebase — use static data
+            setTeams(staticTeamsData);
+            setSkills(language === 'es' ? staticSkillsEs : staticSkillsEn);
+            setStarPlayers(staticStarsData);
+            setInducements(language === 'es' ? staticInducementsEs : (staticInducementsEn as unknown as Inducement[]));
             setLoading(false);
             return;
         }
 
-        let teamsLoaded = false;
-        let skillsLoaded = false;
-        let starsLoaded = false;
-        let inducementsLoaded = false;
+        setLoading(true);
+        let resolved = 0;
+        const TOTAL = 5; // teams, skills, stars, inducements, hero
 
-        const checkLoading = () => {
-            if (teamsLoaded && skillsLoaded && starsLoaded && inducementsLoaded) {
-                setLoading(false);
-            }
+        const checkDone = () => {
+            resolved++;
+            if (resolved >= TOTAL) setLoading(false);
         };
 
-        // Note: Firestore data is currently language-agnostic. 
-        // In a real production app, we would fetch from different collections or fields.
-        // For this localized demonstration, if Firestore is empty, we use our localized static files.
+        // Teams listener
+        const unsubTeams = onSnapshot(
+            doc(db, MASTER_COL, 'teams'),
+            (snap) => {
+                if (snap.exists() && snap.data()?.items?.length > 0) {
+                    setTeams(snap.data().items as Team[]);
+                    setIsFromFirestore(true);
+                } else {
+                    setTeams(staticTeamsData);
+                }
+                checkDone();
+            },
+            () => { setTeams(staticTeamsData); checkDone(); }
+        );
 
-        // Teams Listener
-        const unsubTeams = onSnapshot(collection(db, 'teams_master'), (snapshot) => {
-            if (snapshot.empty) {
-                setTeams(staticTeams);
-            } else {
-                const fetched = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as unknown as Team));
-                fetched.sort((a, b) => a.name.localeCompare(b.name));
-                setTeams(fetched);
-            }
-            teamsLoaded = true;
-            checkLoading();
-        }, (err) => {
-            setTeams(staticTeams);
-            teamsLoaded = true;
-            checkLoading();
-        });
+        // Skills listener — language-aware
+        const skillsDoc = language === 'es' ? 'skills_es' : 'skills_en';
+        const staticSkillsFallback = language === 'es' ? staticSkillsEs : staticSkillsEn;
+        const unsubSkills = onSnapshot(
+            doc(db, MASTER_COL, skillsDoc),
+            (snap) => {
+                if (snap.exists() && snap.data()?.items?.length > 0) {
+                    setSkills(snap.data().items as Skill[]);
+                } else {
+                    setSkills(staticSkillsFallback);
+                }
+                checkDone();
+            },
+            () => { setSkills(staticSkillsFallback); checkDone(); }
+        );
 
-        // Skills Listener
-        const unsubSkills = onSnapshot(collection(db, 'skills_master'), (snapshot) => {
-            if (snapshot.empty) {
-                setSkills(staticSkills);
-            } else {
-                // If using Firestore, we still use static as fallback
-                const fetched = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as unknown as Skill));
-                fetched.sort((a, b) => a.name.localeCompare(b.name));
-                setSkills(fetched);
-            }
-            skillsLoaded = true;
-            checkLoading();
-        }, (err) => {
-            setSkills(staticSkills);
-            skillsLoaded = true;
-            checkLoading();
-        });
+        // Star Players listener
+        const unsubStars = onSnapshot(
+            doc(db, MASTER_COL, 'star_players'),
+            (snap) => {
+                if (snap.exists() && snap.data()?.items?.length > 0) {
+                    setStarPlayers(snap.data().items as StarPlayer[]);
+                } else {
+                    setStarPlayers(staticStarsData);
+                }
+                checkDone();
+            },
+            () => { setStarPlayers(staticStarsData); checkDone(); }
+        );
 
-        // Star Players Listener
-        const unsubStars = onSnapshot(collection(db, 'star_players_master'), (snapshot) => {
-            if (snapshot.empty) {
-                setStarPlayers(staticStars);
-            } else {
-                const fetched = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as unknown as StarPlayer));
-                fetched.sort((a, b) => a.name.localeCompare(b.name));
-                setStarPlayers(fetched);
-            }
-            starsLoaded = true;
-            checkLoading();
-        }, (err) => {
-            setStarPlayers(staticStars);
-            starsLoaded = true;
-            checkLoading();
-        });
+        // Inducements listener — language-aware
+        const inducementsDoc = language === 'es' ? 'inducements_es' : 'inducements_en';
+        const staticInducementsFallback = language === 'es' ? staticInducementsEs : (staticInducementsEn as unknown as Inducement[]);
+        const unsubInducements = onSnapshot(
+            doc(db, MASTER_COL, inducementsDoc),
+            (snap) => {
+                if (snap.exists() && snap.data()?.items?.length > 0) {
+                    setInducements(snap.data().items as Inducement[]);
+                } else {
+                    setInducements(staticInducementsFallback);
+                }
+                checkDone();
+            },
+            () => { setInducements(staticInducementsFallback); checkDone(); }
+        );
 
-        // Inducements Listener
-        const unsubInducements = onSnapshot(collection(db, 'inducements_master'), (snapshot) => {
-            if (snapshot.empty) {
-                setInducements(staticInducements);
-            } else {
-                const fetched = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as unknown as Inducement));
-                setInducements(fetched);
-            }
-            inducementsLoaded = true;
-            checkLoading();
-        }, (err) => {
-            setInducements(staticInducements);
-            inducementsLoaded = true;
-            checkLoading();
-        });
+        // Hero image + meta listener
+        const unsubHero = onSnapshot(
+            doc(db, 'settings_master', 'home_hero'),
+            (snap) => {
+                if (snap.exists()) setHeroImage(snap.data().url);
+                checkDone();
+            },
+            () => checkDone()
+        );
 
-        // Hero Image Listener
-        const unsubHero = onSnapshot(doc(db, 'settings_master', 'home_hero'), (snapshot) => {
-            if (snapshot.exists()) {
-                setHeroImage(snapshot.data().url);
-            }
-        });
+        // Meta listener (for last sync info)
+        const unsubMeta = onSnapshot(
+            doc(db, MASTER_COL, 'meta'),
+            (snap) => {
+                if (snap.exists()) {
+                    const d = snap.data();
+                    setLastSync(d.version ?? null);
+                }
+            },
+            () => { }
+        );
 
         return () => {
             unsubTeams();
@@ -140,44 +156,101 @@ export const useMasterData = () => {
             unsubStars();
             unsubInducements();
             unsubHero();
+            unsubMeta();
         };
-    }, [language]); // Depend on language to re-trigger fallback if db is not connected
+        // Re-subscribe when language changes to get the right skills/inducements doc
+    }, [language]);
 
-    const updateMasterItem = async (type: 'team' | 'skill' | 'starPlayer' | 'inducement', itemId: string, data: any) => {
-        if (!db) return;
-        const collectionMap = {
-            team: 'teams_master',
-            skill: 'skills_master',
-            starPlayer: 'star_players_master',
-            inducement: 'inducements_master'
-        };
-        const docRef = doc(db, collectionMap[type], itemId);
-        await setDoc(docRef, data, { merge: true });
-    };
+    // ── Sync to Firestore (admin action) ─────────────────────────────────────
+    /**
+     * Uploads all static master data to Firestore.
+     * Overwrites existing documents atomically.
+     * Only admins should be able to call this (enforced by Firestore Rules).
+     */
+    const syncMasterData = useCallback(async (): Promise<void> => {
+        if (!db) throw new Error('Firebase no está disponible');
 
-    const syncMasterData = async () => {
+        setSyncStatus('syncing');
+        setError(null);
+
+        try {
+            const ts = serverTimestamp();
+
+            await Promise.all([
+                setDoc(doc(db, MASTER_COL, 'teams'), { items: staticTeamsData, updatedAt: ts }),
+                setDoc(doc(db, MASTER_COL, 'skills_es'), { items: staticSkillsEs, updatedAt: ts }),
+                setDoc(doc(db, MASTER_COL, 'skills_en'), { items: staticSkillsEn, updatedAt: ts }),
+                setDoc(doc(db, MASTER_COL, 'star_players'), { items: staticStarsData, updatedAt: ts }),
+                setDoc(doc(db, MASTER_COL, 'inducements_es'), { items: staticInducementsEs, updatedAt: ts }),
+                setDoc(doc(db, MASTER_COL, 'inducements_en'), { items: staticInducementsEn, updatedAt: ts }),
+                setDoc(doc(db, MASTER_COL, 'meta'), {
+                    lastSync: ts,
+                    version: new Date().toISOString().split('T')[0],
+                    source: 'admin-panel',
+                    teamsCount: staticTeamsData.length,
+                    skillsEsCount: staticSkillsEs.length,
+                    skillsEnCount: staticSkillsEn.length,
+                    starsCount: staticStarsData.length,
+                }),
+            ]);
+
+            setSyncStatus('success');
+            setIsFromFirestore(true);
+            setTimeout(() => setSyncStatus('idle'), 3000);
+        } catch (err: any) {
+            setSyncStatus('error');
+            setError(err.message ?? 'Error al sincronizar con Firestore');
+            throw err;
+        }
+    }, []);
+
+    // ── Update a single field in a Firestore master doc ───────────────────────
+    /**
+     * Updates a single item within a master_data document's items array.
+     * Finds the item by keyEN (skills) or name (teams/stars/inducements).
+     */
+    const updateMasterItem = useCallback(async (
+        docId: 'teams' | 'skills_es' | 'skills_en' | 'star_players' | 'inducements_es' | 'inducements_en',
+        itemId: string,
+        patch: Record<string, unknown>
+    ): Promise<void> => {
         if (!db) return;
-        // Syncing always uses ES data as default "source of truth" for Firestore for now
-        for (const item of teamsDataEs) await setDoc(doc(db, 'teams_master', item.name), item);
-        for (const item of skillsDataEs) await setDoc(doc(db, 'skills_master', item.name), item);
-        for (const item of starsDataEs) await setDoc(doc(db, 'star_players_master', item.name), item);
-        for (const item of inducementsEs) await setDoc(doc(db, 'inducements_master', item.name), item);
-    };
+
+        const ref = doc(db, MASTER_COL, docId);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) throw new Error(`Documento ${docId} no encontrado`);
+
+        const items: any[] = snap.data().items ?? [];
+        const idx = items.findIndex(i => (i.keyEN ?? i.name) === itemId);
+        if (idx === -1) throw new Error(`Item "${itemId}" no encontrado en ${docId}`);
+
+        items[idx] = { ...items[idx], ...patch };
+        await setDoc(ref, { items, updatedAt: serverTimestamp() }, { merge: true });
+    }, []);
+
+    // ── Hero image helper ─────────────────────────────────────────────────────
+    const updateHeroImage = useCallback(async (url: string): Promise<void> => {
+        if (!db) return;
+        await setDoc(doc(db, 'settings_master', 'home_hero'), { url });
+    }, []);
 
     return {
+        // Data
         teams,
         skills,
         starPlayers,
         inducements,
         heroImage,
+        // Status
         loading,
         error,
-        updateMasterItem,
+        syncStatus,
+        lastSync,
+        isFromFirestore,
+        // Actions
         syncMasterData,
-        updateHeroImage: async (url: string) => {
-            if (!db) return;
-            await setDoc(doc(db, 'settings_master', 'home_hero'), { url });
-        },
-        refresh: () => setLoading(true)
+        updateMasterItem,
+        updateHeroImage,
+        refresh: () => setLoading(true),
     };
 };

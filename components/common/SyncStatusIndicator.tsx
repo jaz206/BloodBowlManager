@@ -6,15 +6,16 @@ type SyncStatus = 'synced' | 'syncing' | 'error';
 
 interface SyncStatusIndicatorProps {
   status: SyncStatus;
+  origin?: 'firestore' | 'static';
 }
 
-const SyncStatusIndicator: React.FC<SyncStatusIndicatorProps> = ({ status }) => {
+const SyncStatusIndicator: React.FC<SyncStatusIndicatorProps> = ({ status, origin = 'static' }) => {
   const statusConfig: Record<SyncStatus, { icon: React.ReactElement; text: string; color: string; tooltip: string }> = {
     synced: {
       icon: <CheckCircleIcon />,
-      text: 'Sincronizado',
-      color: 'text-green-400',
-      tooltip: 'Todos los cambios están guardados en la nube.',
+      text: origin === 'firestore' ? 'LIVE DATA' : 'SYNCED (LOCAL)',
+      color: origin === 'firestore' ? 'text-green-400' : 'text-amber-400',
+      tooltip: origin === 'firestore' ? 'Conectado a Firestore. Datos actualizados en tiempo real.' : 'Cambios guardados localmente. Datos estáticos del proyecto.',
     },
     syncing: {
       icon: (
@@ -29,20 +30,20 @@ const SyncStatusIndicator: React.FC<SyncStatusIndicatorProps> = ({ status }) => 
     },
     error: {
       icon: <ExclamationCircleIcon />,
-      text: 'Error de Sincronización',
+      text: 'Offline',
       color: 'text-red-500',
-      tooltip: 'No se pudieron guardar los últimos cambios. Comprueba tu conexión.',
+      tooltip: 'No se pudo conectar con Firestore. Revisa las reglas de seguridad.',
     },
   };
 
   const currentStatus = statusConfig[status];
 
   return (
-    <div className={`relative group flex items-center gap-2 text-[10px] font-display font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-white/5 border border-white/5 ${currentStatus.color}`}>
-      <div className="w-2 h-2 rounded-full bg-current animate-pulse shadow-[0_0_10px_currentColor]" />
-      <span className="hidden md:inline">{currentStatus.text}</span>
-      <div className="absolute bottom-full right-0 mb-2 w-max max-w-xs glass-panel py-2 px-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-2xl z-[100]">
-        <p className="text-white normal-case tracking-normal font-sans font-medium">{currentStatus.tooltip}</p>
+    <div className={`relative group flex items-center gap-2 text-[10px] font-display font-black uppercase tracking-wider px-3 py-1.5 rounded-full bg-white/5 border border-white/5 ${currentStatus.color}`}>
+      <div className={`w-2 h-2 rounded-full bg-current ${status === 'syncing' ? '' : 'animate-pulse'} shadow-[0_0_10px_currentColor]`} />
+      <span className="hidden lg:inline">{currentStatus.text}</span>
+      <div className="absolute top-full right-0 mt-3 w-64 glass-panel p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-2xl z-[100] border-white/10">
+        <p className="text-white normal-case tracking-normal font-sans font-medium text-[11px] leading-relaxed italic">{currentStatus.tooltip}</p>
       </div>
     </div>
   );

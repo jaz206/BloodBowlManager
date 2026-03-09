@@ -1,319 +1,122 @@
 import { Skill } from "../types";
 
+/**
+ * Complete Blood Bowl 2020 skill list in Spanish.
+ * Each entry mirrors `skills_en.ts` with a `keyEN` canonical key for cross-language lookups.
+ */
 export const skillsData: Skill[] = [
-    {
-        "name": "Agallas",
-        "category": "General",
-        "description": "Cuando este jugador realiza una acción de Bloqueo (por sí sola o como parte de un Blitz), si el objetivo tiene una Fuerza mayor que la de este jugador antes de contar apoyos pero después de otros modificadores, lanza 1D6 y suma la Fuerza de este jugador. Si el total es mayor que la Fuerza del objetivo, la Fuerza de este jugador aumenta para igualar la del objetivo durante este Bloqueo."
-    },
-    {
-        "name": "Garras",
-        "category": "Mutación",
-        "description": "Cuando realices una tirada de Armadura contra un jugador oponente que haya sido Derribado como resultado de un Bloqueo realizado por este jugador, un resultado de 8+ antes de aplicar modificadores romperá su armadura, independientemente de su valor de Armadura real."
-    },
-    {
-        "name": "Bombardero",
-        "category": "Rasgo",
-        "description": "Cuando se activa y si está de pie, este jugador puede realizar una acción especial de 'Lanzar Bomba'. Esta acción especial no es ni una acción de Pase ni de Lanzar Compañero. Una Bomba se puede lanzar y atrapar igual que un balón, siguiendo las reglas de Pase pero con excepciones: no puede moverse antes, las bombas no rebotan, y si se pifa explota en la casilla del lanzador. Si un jugador atrapa una bomba, esta explota con un 4+; con un 1-3 debe volver a lanzarla inmediatamente."
-    },
-    {
-        "name": "Romper Placaje",
-        "category": "Fuerza",
-        "description": "Una vez durante su activación, después de realizar una tirada de Agilidad para Esquivar, este jugador puede modificar el resultado del dado en +1 si su Fuerza es 4 o menos, o en +2 si su Fuerza es 5 o más."
-    },
-    {
-        "name": "Atrapar",
-        "category": "Agilidad",
-        "description": "Este jugador puede repetir una tirada de Agilidad fallida al intentar atrapar el balón."
-    },
-    {
-        "name": "Cabeza de Hueso",
-        "category": "Rasgo",
-        "description": "Cuando este jugador se activa, incluso si está Derribado o ha perdido su Zona de Defensa, después de declarar la acción pero antes de realizarla, lanza 1D6. Con un 1, el jugador olvida qué estaba haciendo y su activación termina. Pierde su Zona de Defensa hasta su próxima activación. Con un 2+, continúa normalmente."
-    },
-    {
-        "name": "Motosierra",
-        "category": "Rasgo",
-        "description": "Puede realizar un ataque de Motosierra en lugar de bloquear. Suma +3 a la tirada de armadura, pero puede lastimarse a sí mismo con un 1."
-    },
-    {
-        "name": "Placaje",
-        "category": "General",
-        "description": "Cuando un jugador oponente intenta Esquivar desde una casilla en la que está marcado por este jugador, ese oponente no puede usar la habilidad Esquivar. Además, si este jugador realiza un Bloqueo y el resultado es 'Tropezón', el oponente no puede usar Esquivar."
-    },
-    {
-        "name": "Mano Grande",
-        "category": "Mutación",
-        "description": "Ignora modificadores por estar marcado o por lluvia al intentar recoger el balón."
-    },
-    {
-        "name": "Bola y Cadena",
-        "category": "Rasgo",
-        "description": "Este jugador solo puede realizar la acción especial de 'Movimiento de Bola y Cadena'. Se mueve usando la plantilla de devolución de balón. Pasa automáticamente cualquier prueba de Agilidad para Esquivar. Si entra en una casilla con un jugador de pie, debe realizar un Bloqueo contra él. Si entra en una casilla con un jugador derribado, este es empujado. Si este jugador cae, se tira herida automáticamente (KO se trata como herida)."
-    },
-    {
-        "name": "Animosidad",
-        "category": "Rasgo",
-        "description": "El jugador tiene celos de ciertos compañeros. Al intentar entregar el balón o pasar a un compañero del tipo indicado, lanza 1D6. Con un 1, se niega a realizar la acción y su activación termina."
-    },
-    {
-        "name": "Siempre Hambriento",
-        "category": "Rasgo",
-        "description": "Si este jugador intenta Lanzar Compañero, lanza 1D6. Con un 1, intenta comerse al compañero. Lanza otro 1D6: con 1 el compañero es devorado y eliminado definitivamente."
-    },
-    {
-        "name": "Preciso",
-        "category": "Pase",
-        "description": "Al realizar un Pase Rápido o un Pase Corto, se suma un modificador adicional de +1 a la tirada de Habilidad de Pase."
-    },
-    {
-        "name": "Nervios de Acero",
-        "category": "Pase",
-        "description": "Este jugador ignora cualquier modificador por estar marcado al intentar realizar un Pase, atrapar el balón o intentar interferir en un pase."
-    },
-    {
-        "name": "Agarrar",
-        "category": "Fuerza",
-        "description": "Evita que el objetivo use Echarse a un lado. Al empujar, puede elegir cualquier casilla adyacente libre para el oponente."
-    },
-    {
-        "name": "Juggernaut",
-        "category": "Fuerza",
-        "description": "En un Blitz, puede tratar el resultado 'Ambos Derribados' como 'Empujón'. El objetivo no puede usar Mantenerse Firme o Lucha."
-    },
-    {
-        "name": "Apariencia Asquerosa",
-        "category": "Mutación",
-        "description": "Cualquier jugador que declare un Bloqueo o acción especial contra este jugador debe sacar primero un 2+ en 1D6 o la acción se pierde."
-    },
-    {
-        "name": "Defensa",
-        "category": "Fuerza",
-        "description": "Este jugador puede ofrecer apoyos tanto ofensivos como defensivos independientemente de cuántos jugadores oponentes lo estén marcando."
-    },
-    {
-        "name": "Mirada Hipnótica",
-        "category": "Rasgo",
-        "description": "Acción especial: realiza una tirada de Agilidad contra un oponente marcado. Si tiene éxito, el oponente pierde su Zona de Defensa."
-    },
-    {
-        "name": "Golpe Poderoso (+1)",
-        "category": "Fuerza",
-        "description": "Cuando un jugador oponente es Derribado como resultado de un Bloqueo de este jugador, puedes modificar la tirada de Armadura o de Herida en +1. El modificador se aplica después de realizar la tirada."
-    },
-    {
-        "name": "Placaje Múltiple",
-        "category": "Fuerza",
-        "description": "Puede realizar dos bloqueos simultáneos a oponentes marcados, pero resta -2 a su Fuerza."
-    },
-    {
-        "name": "Furia",
-        "category": "General",
-        "description": "Cada vez que este jugador realiza un Bloqueo, debe seguir al oponente si es empujado. Si el objetivo sigue en pie, este jugador debe realizar un segundo Bloqueo contra el mismo objetivo si puede seguirlo."
-    },
-    {
-        "name": "Pasar",
-        "category": "Pase",
-        "description": "Este jugador puede repetir una tirada de Habilidad de Pase fallida al realizar una acción de Pase."
-    },
-    {
-        "name": "Hail Mary Pass",
-        "category": "Pase",
-        "description": "Al realizar una acción de Pase, el objetivo puede estar en cualquier parte del campo. El pase nunca es preciso. Se hace una prueba de Habilidad de Pase para ver si se pifa o es muy impreciso. No se puede interferir."
-    },
-    {
-        "name": "Apartar",
-        "category": "General",
-        "description": "Cuando es empujado, puede impedir que el atacante lo siga (a menos que el atacante tenga Juggernaut o sea un Blitz)."
-    },
-    {
-        "name": "Salto",
-        "category": "Agilidad",
-        "description": "Puede saltar sobre cualquier casilla adyacente ocupada o no. Reduce en 1 los modificadores negativos al saltar."
-    },
-    {
-        "name": "Sin Manos",
-        "category": "Rasgo",
-        "description": "El jugador no puede recoger, interceptar ni llevar el balón. Fallará automáticamente cualquier tirada de atrapar."
-    },
-    {
-        "name": "Cuernos",
-        "category": "Rasgo",
-        "description": "Cuando realiza un Blitz, suma +1 a su Fuerza durante el Bloqueo."
-    },
-    {
-        "name": "Brazos Extras",
-        "category": "Mutación",
-        "description": "Suma +1 al recoger el balón, atraparlo o intentar una intercepción."
-    },
-    {
-        "name": "Líder",
-        "category": "Pase",
-        "description": "Proporciona una Segunda Oportunidad de equipo adicional que solo puede usarse si el jugador con esta habilidad está en el campo."
-    },
-    {
-        "name": "Cola Prensil",
-        "category": "Mutación",
-        "description": "Los oponentes que intenten Esquivar o Saltar fuera de su Zona de Defensa restan -1 a su tirada de Agilidad."
-    },
-    {
-        "name": "Placaje de Buceo",
-        "category": "Agilidad",
-        "description": "Si un oponente que está siendo marcado por este jugador supera su tirada de Agilidad para Esquivar o Saltar, este jugador puede tirarse al suelo para restar 2 al resultado de esa tirada."
-    },
-    {
-        "name": "Recepción en Plancha",
-        "category": "Agilidad",
-        "description": "Este jugador puede intentar atrapar el balón si aterriza en una casilla de su Zona de Defensa tras dispersarse. Además, suma +1 a las tiradas de atrapar pases precisos."
-    },
-    {
-        "name": "Patada",
-        "category": "General",
-        "description": "Al sacar de centro, puedes dividir por dos la distancia de dispersión del balón."
-    },
-    {
-        "name": "Solitario (4+)",
-        "category": "Rasgo",
-        "description": "Para usar una Segunda Oportunidad de equipo, debe sacar un 4+ en 1D6. Si falla, el resultado original se mantiene y se pierde el reroll."
-    },
-    {
-        "name": "Pase Rápido",
-        "category": "Pase",
-        "description": "Si es el objetivo de un Bloqueo y tiene el balón, puede realizar un Pase Rápido antes del bloqueo."
-    },
-    {
-        "name": "Esquivar",
-        "category": "Agilidad",
-        "description": "Una vez por turno de equipo, este jugador puede repetir una tirada de Agilidad fallida al intentar Esquivar. Además, puede elegir usar esta habilidad cuando es el objetivo de un Bloqueo y se aplica un resultado de 'Tropezón'."
-    },
-    {
-        "name": "Realmente Estúpido",
-        "category": "Rasgo",
-        "description": "Igual que Cabeza de Hueso pero con 1-3 falla (4+ éxito). Si hay un compañero cerca sin esta habilidad, suma +2 a la tirada."
-    },
-    {
-        "name": "En pie de un salto",
-        "category": "Agilidad",
-        "description": "Si está derribado, levantarse es gratis. Puede intentar levantarse y bloquear con una tirada de Agilidad (+1)."
-    },
-    {
-        "name": "Presencia Perturbadora",
-        "category": "Mutación",
-        "description": "Los oponentes a 3 casillas o menos restan -1 a sus tiradas de Pase, Atrapar o Interceptar."
-    },
-    {
-        "name": "Jugador Sucio (+1)",
-        "category": "General",
-        "description": "Suma +1 a la tirada de Armadura o Herida al cometer una Falta."
-    },
-    {
-        "name": "Arma Secreta",
-        "category": "Rasgo",
-        "description": "Al final de la entrada, este jugador es expulsado por el árbitro (a menos que se use un soborno)."
-    },
-    {
-        "name": "Buena Gente",
-        "category": "Rasgo",
-        "description": "Si este jugador tiene Fuerza 3 o menos, puede ser lanzado por un compañero con la habilidad Lanzar Compañero."
-    },
-    {
-        "name": "Echarse a un lado",
-        "category": "Agilidad",
-        "description": "Cuando es empujado, el entrenador elige a qué casilla adyacente libre se mueve en lugar del oponente."
-    },
-    {
-        "name": "Pase Seguro",
-        "category": "Pase",
-        "description": "Si pifia un Pase, no suelta el balón ni hay cambio de turno. Mantiene la posesión y termina su activación."
-    },
-    {
-        "name": "Marcaje",
-        "category": "General",
-        "description": "Puede moverse a la casilla que deja libre un oponente que se aleja con una tirada competitiva de Movimiento."
-    },
-    {
-        "name": "Sucio y Rastrero",
-        "category": "Agilidad",
-        "description": "Al cometer una falta, no es expulsado si saca un doble natural en armadura. Puede seguir moviéndose tras la falta."
-    },
-    {
-        "name": "Canijo",
-        "category": "Rasgo",
-        "description": "Ignora modificadores por ser marcado al Esquivar. Las tiradas de Herida contra él usan la tabla de Canijos."
-    },
-    {
-        "name": "Puñalada",
-        "category": "Rasgo",
-        "description": "En lugar de bloquear, realiza una tirada de armadura sin modificar contra el objetivo. Si rompe armadura, queda derribado y se tira herida."
-    },
-    {
-        "name": "Diminuto",
-        "category": "Rasgo",
-        "description": "Suma +1 a las tiradas de Agilidad para Esquivar. Los oponentes que esquiven hacia su Zona de Defensa no sufren penalización."
-    },
-    {
-        "name": "Enraizarse",
-        "category": "Rasgo",
-        "description": "Al activarse, lanza 1D6. Con un 1, el jugador queda Enraizado: no puede moverse de su casilla hasta el final de la entrada o hasta ser Derribado."
-    },
-    {
-        "name": "Lanzar Compañero",
-        "category": "Rasgo",
-        "description": "Si este jugador tiene Fuerza 5 o más, puede realizar la acción Lanzar Compañero con un compañero que tenga la habilidad Buena Gente."
-    },
-    {
-        "name": "Dos Cabezas",
-        "category": "Mutación",
-        "description": "Suma +1 a las tiradas de Agilidad para Esquivar."
-    },
-    {
-        "name": "Placar",
-        "category": "General",
-        "description": "Cuando se aplica un resultado de 'Ambos Derribados' durante un Bloqueo, este jugador puede elegir ignorarlo y no ser Derribado."
-    },
-    {
-        "name": "Cabeza Dura",
-        "category": "Fuerza",
-        "description": "Solo queda KO con un 9 en la tirada de Herida (8 se trata como Aturdido)."
-    },
-    {
-        "name": "Piernas Muy Largas",
-        "category": "Mutación",
-        "description": "Reduce en 1 los modificadores negativos al Saltar. Suma +2 a las intercepciones."
-    },
-    {
-        "name": "Manos Seguras",
-        "category": "General",
-        "description": "Este jugador puede repetir cualquier intento fallido de recoger el balón. Además, la habilidad Balón Robado no puede usarse contra él."
-    },
-    {
-        "name": "Pies Firmes",
-        "category": "Agilidad",
-        "description": "Una vez por turno de equipo, este jugador puede repetir la tirada de 1D6 al intentar un Ir a por Todo (Rush)."
-    },
-    {
-        "name": "Salvajismo Animal",
-        "category": "Rasgo",
-        "description": "Al activarse, lanza 1D6 (+2 si es Bloqueo/Blitz). Con 1-3, debe atacar a un compañero adyacente para poder activarse."
-    },
-    {
-        "name": "Regeneración",
-        "category": "Rasgo",
-        "description": "Después de una tirada de Casualidad contra este jugador, lanza 1D6. Con un 4+, la Casualidad se descarta y el jugador va a la caja de Reservas."
-    },
-    {
-        "name": "Mantenerse Firme",
-        "category": "Fuerza",
-        "description": "Este jugador puede elegir no ser empujado, ya sea como resultado de un Bloqueo realizado contra él o por un empujón en cadena."
-    },
-    {
-        "name": "Balón Robado",
-        "category": "General",
-        "description": "Si empuja a un oponente con el balón, este lo suelta en la casilla a la que es empujado."
-    },
-    {
-        "name": "Tentáculos",
-        "category": "Mutación",
-        "description": "Cuando un oponente marcado por este jugador intenta moverse, lanza 1D6 + Fuerza de este jugador - Fuerza del oponente. Con 6+, el oponente queda retenido."
-    }
+    // ── GENERAL ─────────────────────────────────────────────────────────────────
+    { keyEN: "Block", name: "Placar", category: "General", description: "Cuando se aplica un resultado 'Ambos Derribados' durante un Bloqueo en el que este jugador participa, este jugador puede elegir ignorar el resultado y no ser Derribado." },
+    { keyEN: "Dauntless", name: "Agallas", category: "General", description: "Cuando este jugador realiza una acción de Bloqueo y el objetivo tiene Fuerza mayor, lanza 1D6 y suma la Fuerza de este jugador. Si el total supera la Fuerza del objetivo, la Fuerza de este jugador se iguala a la del objetivo durante este Bloqueo." },
+    { keyEN: "Dirty Player (+1)", name: "Jugador Sucio (+1)", category: "General", description: "Suma +1 a la tirada de Armadura o de Herida al cometer una Falta. Solo se puede modificar una de las dos tiradas." },
+    { keyEN: "Fend", name: "Apartar", category: "General", description: "Los jugadores oponentes no pueden seguir los bloqueos realizados contra este jugador, incluso si es Derribado. El oponente puede seguir moviéndose si declaró una acción de Blitz." },
+    { keyEN: "Frenzy", name: "Furia", category: "General", description: "Debe seguir al oponente si es empujado. Si el resultado fue 'Empujón' o 'Tropezón', debe realizar un segundo bloqueo contra el mismo objetivo si ambos siguen en pie y adyacentes." },
+    { keyEN: "Kick", name: "Patada", category: "General", description: "Al sacar de centro, puedes elegir dividir por dos la distancia de dispersión del balón, redondeando hacia abajo. El jugador no puede estar en zona ancha ni en la línea de scrimmage." },
+    { keyEN: "Kick-Off Return", name: "A por el balón", category: "General", description: "Un jugador del equipo receptor que no esté en la Línea de Scrimmage podrá usar esta habilidad cuando el balón haya sido pateado. Le permite moverse hasta 3 casillas tras la dispersión del balón, antes de tirar en la tabla de Saque." },
+    { keyEN: "Pass Block", name: "Bloqueo de Pase", category: "General", description: "Cuando el entrenador oponente anuncia que un jugador va a realizar una acción de Pase, este jugador puede moverse hasta 3 casillas para ponerse en posición de interceptar o marcar al lanzador o receptor." },
+    { keyEN: "Pro", name: "Pro", category: "General", description: "Una vez por turno, puede repetir cualquier tirada que haya realizado (excepto Armadura, Herida o Casualidad). Primero lanza 1D6: con 3+, puede repetirla; con 1-2, no puede." },
+    { keyEN: "Shadowing", name: "Marcaje", category: "General", description: "Cuando un oponente que está marcando se aleja, lanza 1D6 + Movimiento de este jugador - Movimiento del oponente. Con 6+ o un 6 natural, puede moverse inmediatamente a la casilla vacada." },
+    { keyEN: "Strip Ball", name: "Balón Robado", category: "General", description: "Al empujar a un oponente con el balón, el resultado 'Empujón' o 'Tropezón' provoca que el oponente suelte el balón en la casilla a la que es empujado, aunque no haya sido Derribado." },
+    { keyEN: "Sure Hands", name: "Manos Seguras", category: "General", description: "Puede repetir un intento fallido de recoger el balón. Además, la habilidad Balón Robado no puede usarse contra este jugador." },
+    { keyEN: "Tackle", name: "Placaje", category: "General", description: "Los jugadores oponentes en la Zona de Defensa de este jugador no pueden usar Esquivar al intentar esquivar desde ella, ni cuando este jugador les lanza un bloqueo con Placaje activo." },
+    { keyEN: "Wrestle", name: "Lucha", category: "General", description: "Puede usar Lucha cuando bloquea o es bloqueado y se elige un resultado 'Ambos Derribados'. Ambos jugadores son colocados Boca Abajo sin tiradas de Armadura. No causa un cambio de turno salvo que el jugador activo lleve el balón." },
+
+    // ── AGILIDAD ─────────────────────────────────────────────────────────────────
+    { keyEN: "Catch", name: "Atrapar", category: "Agilidad", description: "Puede repetir una prueba de Agilidad fallida al intentar atrapar el balón. También permite repetir si suelta un pase en mano o falla una intercepción." },
+    { keyEN: "Defensive", name: "Defensa", category: "Agilidad", description: "Durante el turno de equipo del oponente (no el propio), ningún jugador oponente marcado por este jugador puede usar la habilidad Defensa (Guard)." },
+    { keyEN: "Diving Catch", name: "Recepción en Plancha", category: "Agilidad", description: "Suma +1 a la tirada de atrapar un pase preciso dirigido a su casilla. Además, puede intentar atrapar cualquier pase, saque o devolución de gentío que aiterre en una casilla vacía dentro de su Zona de Defensa." },
+    { keyEN: "Diving Tackle", name: "Placaje de Buceo", category: "Agilidad", description: "Si un oponente marcado por este jugador supera la tirada de Agilidad para Esquivar o Saltar, puede colocarse Boca Abajo en la casilla vacada para restar 2 al resultado de esa tirada." },
+    { keyEN: "Dodge", name: "Esquivar", category: "Agilidad", description: "Una vez por turno de equipo, puede repetir una prueba de Agilidad fallida al intentar Esquivar. Además, afecta al resultado 'Tropezón' en los dados de Bloqueo a favor de este jugador." },
+    { keyEN: "Jump Up", name: "Levantarse", category: "Agilidad", description: "Si está Boca Abajo y declara cualquier acción que no sea Bloqueo, puede levantarse gratis. También puede declarar una acción de Bloqueo Boca Abajo realizando una prueba de Agilidad (+2)." },
+    { keyEN: "Leap", name: "Salto", category: "Agilidad", description: "Durante el movimiento, puede saltar sobre cualquier casilla adyacente, ocupada o no. Reduce en 1 cualquier modificador negativo de Agilidad al saltar, hasta un mínimo de -1." },
+    { keyEN: "Safe Pair of Hands", name: "Manos con Agarre", category: "Agilidad", description: "Si este jugador cae Boca Abajo o es Derribado con el balón, el balón no rebota. En cambio, puede colocarse en cualquier casilla vacía adyacente." },
+    { keyEN: "Sidestep", name: "Echarse a un lado", category: "Agilidad", description: "Cuando es empujado por cualquier motivo, el entrenador elige a qué casilla adyacente libre se mueve en lugar del oponente." },
+    { keyEN: "Sneaky Git", name: "Sucio y Rastrero", category: "Agilidad", description: "Al cometer una Falta, este jugador no es expulsado si saca un doble natural en la tirada de Armadura." },
+    { keyEN: "Sprint", name: "Esprintar", category: "Agilidad", description: "Cuando realiza cualquier acción que incluya movimiento, puede intentar Correr a todo o Correr al Límite (Rush) tres veces en lugar de las dos habituales." },
+    { keyEN: "Sure Feet", name: "Pies Firmes", category: "Agilidad", description: "Una vez por turno de equipo, durante su activación, puede repetir la tirada de 1D6 al intentar Correr al Límite (Rush)." },
+
+    // ── PASE ─────────────────────────────────────────────────────────────────────
+    { keyEN: "Accurate", name: "Preciso", category: "Pase", description: "Aplica un modificador adicional de +1 a la prueba de Habilidad de Pase al realizar un Pase Rápido o un Pase Corto." },
+    { keyEN: "Cannoneer", name: "Cañonero", category: "Pase", description: "Al realizar una acción de Pase Largo o Pase Bomba Larga, aplica un modificador adicional de +1 a la prueba de Habilidad de Pase." },
+    { keyEN: "Cloud Burster", name: "Rompe nubes", category: "Pase", description: "Al realizar una acción de Pase Largo o Pase Bomba Larga, puedes hacer que el entrenador oponente repita un intento de intercepción exitoso." },
+    { keyEN: "Dump-Off", name: "Pase Rápido", category: "Pase", description: "Si es el objetivo de un Bloqueo y lleva el balón, puede realizar inmediatamente un Pase Rápido antes de que se resuelva el bloqueo. Este pase no puede causar un cambio de turno." },
+    { keyEN: "Fumblerooskie", name: "Fumblerooskie", category: "Pase", description: "Al realizar una acción de Movimiento o Blitz con el balón, puede elegir 'soltar' el balón en cualquier casilla que abandone durante su movimiento. No se produce cambio de turno." },
+    { keyEN: "Give and Go", name: "Dar y Correr", category: "Pase", description: "Si realiza una acción de Pase en Mano, su activación no tiene que terminar una vez resuelta. Si no ha agotado su Movimiento, puede seguir moviéndose." },
+    { keyEN: "Hail Mary Pass", name: "Hail Mary Pass", category: "Pase", description: "Puede lanzar el balón a cualquier casilla del campo sin usar la regla de distancia. Con un 1, pifa. Con 2-6, el pase nunca es preciso: el balón dispersa 3 casillas. No se puede interceptar." },
+    { keyEN: "Leader", name: "Líder", category: "Pase", description: "El equipo obtiene una Segunda Oportunidad de equipo adicional que solo puede usarse si al menos un jugador con esta habilidad está en el campo." },
+    { keyEN: "Nerves of Steel", name: "Nervios de Acero", category: "Pase", description: "Ignora cualquier modificador por estar marcado al intentar realizar un Pase, atrapar el balón o intentar interceptarlo." },
+    { keyEN: "On The Ball", name: "Al Acecho", category: "Pase", description: "Cuando el oponente declara una acción de Pase, puede moverse hasta 3 casillas (ignorando su Movimiento normal) antes de la prueba. También puede moverse 3 casillas al inicio de cada serie, antes del saque." },
+    { keyEN: "Pass", name: "Pasar", category: "Pase", description: "Puede repetir una prueba de Habilidad de Pase fallida al realizar una acción de Pase (pase impreciso o pifia)." },
+    { keyEN: "Running Pass", name: "Pase en Carrera", category: "Pase", description: "Si realiza una acción de Pase Rápido, su activación no tiene que terminar. Si no ha agotado su Movimiento, puede seguir moviéndose tras resolver el pase." },
+    { keyEN: "Safe Pass", name: "Pase Seguro", category: "Pase", description: "Si pifa una acción de Pase, el balón no cae y no hay cambio de turno. El jugador retiene la posesión y su activación termina." },
+
+    // ── FUERZA ─────────────────────────────────────────────────────────────────
+    { keyEN: "Arm Bar", name: "Palanca de Brazo", category: "Fuerza", description: "Si un oponente cae al fallar una prueba de Agilidad al Esquivar, Saltar o Rebotar desde una casilla en la que estaba marcado por este jugador, aplica un +1 a la tirada de Armadura o Herida." },
+    { keyEN: "Brawler", name: "Luchador", category: "Fuerza", description: "Al realizar una acción de Bloqueo por sí solo (no como parte de un Blitz), puede repetir un único resultado 'Ambos Derribados'." },
+    { keyEN: "Break Tackle", name: "Romper Placar", category: "Fuerza", description: "Una vez por activación, después de realizar una prueba de Agilidad para Esquivar, puede modifcar el resultado en +1 si su Fuerza es 4 o menos, o en +2 si su Fuerza es 5 o más." },
+    { keyEN: "Grab", name: "Agarrar", category: "Fuerza", description: "Al empujar a un oponente, puede elegir cualquier casilla adyacente libre en lugar de la casilla estándar de empuje. No puede usarse con Furia. Un jugador con Agarrar no puede aprender Furia y viceversa." },
+    { keyEN: "Guard", name: "Defensa", category: "Fuerza", description: "Al realizar una acción de Bloqueo, puede ofrecer apoyos tanto ofensivos como defensivos independientemente de cuántos oponentes lo estén marcando. No puede usarse para apoyar una Falta." },
+    { keyEN: "Juggernaut", name: "Juggernaut", category: "Fuerza", description: "En un Blitz, el oponente no puede usar Apartar, Mantenerse Firme o Lucha. Además, puede tratar un resultado 'Ambos Derribados' como 'Empujón' durante un Blitz." },
+    { keyEN: "Mighty Blow (+1)", name: "Golpe Mortífero (+1)", category: "Fuerza", description: "Cuando un oponente es Derribado como resultado de un bloqueo realizado por este jugador, puede modificar la tirada de Armadura o de Herida en +1. Solo se puede modificar una de las dos tiradas." },
+    { keyEN: "Multiple Block", name: "Placaje Múltiple", category: "Fuerza", description: "Puede lanzar bloqueos contra dos oponentes adyacentes. La Fuerza de cada defensor aumenta en 2. No puede seguir a ninguno de los bloqueos. No puede usarse junto con Furia." },
+    { keyEN: "Piling On", name: "Piling On", category: "Fuerza", description: "Después de realizar un bloqueo que derriba al objetivo, puede repetir la tirada de Armadura o de Herida. El jugador con Piling On queda Boca Abajo en su propia casilla." },
+    { keyEN: "Pile Driver", name: "Martillo", category: "Fuerza", description: "Cuando un oponente es Derribado como resultado de un bloqueo, puede cometer inmediatamente una Falta gratuita contra él. Tras usarla, este jugador queda Boca Abajo y su activación termina." },
+    { keyEN: "Stand Firm", name: "Mantenerse Firme", category: "Fuerza", description: "Puede elegir no ser empujado como resultado de un Bloqueo realizado contra él o de un empujón en cadena." },
+    { keyEN: "Strong Arm", name: "Brazo Fuerte", category: "Fuerza", description: "Aplica un +1 a las pruebas de Habilidad de Pase al realizar una acción Lanzar Compañero. Solo puede tenerla un jugador con el rasgo Lanzar Compañero." },
+    { keyEN: "Thick Skull", name: "Cabeza Dura", category: "Fuerza", description: "Solo puede quedar KO con un 9 en la tirada de Herida (un 8 se trata como Aturdido). Si también tiene el rasgo Canijo, solo queda KO con un 8 (7 = Aturdido)." },
+
+    // ── MUTACIÓN ─────────────────────────────────────────────────────────────────
+    { keyEN: "Big Hand", name: "Mano Grande", category: "Mutación", description: "Ignora modificadores por estar marcado o por lluvia al intentar recoger el balón." },
+    { keyEN: "Claws", name: "Garras", category: "Mutación", description: "Cuando un oponente es Derribado como resultado de un bloqueo de este jugador, cualquier tirada de Armadura de 8 o más (antes de modificadores) rompe automáticamente su armadura." },
+    { keyEN: "Disturbing Presence", name: "Presencia Perturbadora", category: "Mutación", description: "Cualquier jugador a 3 casillas o menos resta -1 a sus tiradas de Pase, Atrapar o Interceptar por cada jugador oponente con esta habilidad en ese rango." },
+    { keyEN: "Extra Arms", name: "Brazos Extras", category: "Mutación", description: "Suma +1 a cualquier intento de recoger, atrapar o interceptar el balón." },
+    { keyEN: "Foul Appearance", name: "Apariencia Asquerosa", category: "Mutación", description: "Cuando un oponente declara un Bloqueo o acción especial contra este jugador, primero debe sacar 2+ en 1D6. Con un 1, la acción no puede realizarse y se pierde." },
+    { keyEN: "Horns", name: "Cuernos", category: "Mutación", description: "Suma +1 a la Fuerza de este jugador para cualquier bloqueo realizado durante una acción de Blitz." },
+    { keyEN: "Iron Hard Skin", name: "Piel de Hierro", category: "Mutación", description: "Los jugadores oponentes no pueden modificar las tiradas de Armadura realizadas contra este jugador. Además, la habilidad Garras no puede usarse contra él." },
+    { keyEN: "Monstrous Mouth", name: "Boca Monstruosa", category: "Mutación", description: "Puede repetir cualquier intento fallido de atrapar el balón. Además, la habilidad Balón Robado no puede usarse contra este jugador." },
+    { keyEN: "Prehensile Tail", name: "Cola Prensil", category: "Mutación", description: "Cuando un oponente activo intenta Esquivar, Saltar o Rebotar desde una casilla en la que está marcado por este jugador, aplica un modificador adicional de -1 a su prueba de Agilidad." },
+    { keyEN: "Tentacles", name: "Tentáculos", category: "Mutación", description: "Cuando un oponente marcado intenta moverse fuera de la Zona de Defensa, lanza 1D6 + Fuerza de este jugador - Fuerza del oponente. Con 6+ o un 6 natural, el oponente queda retenido." },
+    { keyEN: "Two Heads", name: "Dos Cabezas", category: "Mutación", description: "Aplica un modificador de +1 a la prueba de Agilidad al intentar Esquivar." },
+    { keyEN: "Very Long Legs", name: "Piernas Muy Largas", category: "Mutación", description: "Reduce en 1 los modificadores negativos para saltar (mínimo -1). Suma +2 a las intercepciones. Ignora la habilidad Rompe Nubes (Cloud Burster)." },
+
+    // ── RASGOS (EXTRAORDINARY) ─────────────────────────────────────────────────
+    { keyEN: "Always Hungry", name: "Siempre Hambriento", category: "Rasgo", description: "Al intentar Lanzar Compañero, lanza primero 1D6. Con 2+, continúa normalmente. Con 1, intenta comerse al compañero. Lanza otro 1D6: con 1, el compañero es devorado y eliminado definitivamente." },
+    { keyEN: "Animal Savagery", name: "Salvajismo Animal", category: "Rasgo", description: "Al activarse, lanza 1D6 (+2 si Bloqueo o Blitz). Con 1-3, debe Derribar inmediatamente a un compañero adyacente de pie. Si no hay ninguno, su activación termina y pierde su Zona de Defensa." },
+    { keyEN: "Animosity (all team-mates)", name: "Animosidad (todos los compañeros)", category: "Rasgo", description: "Al intentar pasar en mano o pasar a cualquier compañero, lanza 1D6. Con un 1, el jugador se niega y su activación termina." },
+    { keyEN: "Ball & Chain", name: "Bola y Cadena", category: "Rasgo", description: "Solo puede realizar acciones de 'Movimiento Bola y Cadena'. Usa la plantilla de devolución. Pasa automáticamente las pruebas de Esquivar. Debe bloquear a cualquier jugador en pie en su camino. Si cae, se tira herida automáticamente." },
+    { keyEN: "Bloodlust (2+)", name: "Sed de Sangre (2+)", category: "Rasgo", description: "Al activarse, lanza 1D6 (+1 si Bloqueo/Blitz). Con 2+, se activa normalmente. Si falla, puede continuar pero al final de su activación debe morder a un Aprendiz adyacente o se produce un cambio de turno y pierde su Zona de Defensa." },
+    { keyEN: "Bloodlust (3+)", name: "Sed de Sangre (3+)", category: "Rasgo", description: "Al activarse, lanza 1D6 (+1 si Bloqueo/Blitz). Con 3+, se activa normalmente. Si falla, puede continuar pero al final de su activación debe morder a un Aprendiz adyacente o se produce un cambio de turno y pierde su Zona de Defensa." },
+    { keyEN: "Bombardier", name: "Bombardero", category: "Rasgo", description: "Cuando se activa y está de Pie, puede realizar una acción especial 'Lanzar Bomba'. La bomba se lanza como el balón pero: no puede moverse antes, las bombas no rebotan. Si una bomba es atrapada, detona con 4+; con 1-3 debe volver a lanzarse." },
+    { keyEN: "Bone Head", name: "Cabeza de Hueso", category: "Rasgo", description: "Al activarse, lanza 1D6. Con un 1, el jugador olvida qué estaba haciendo, su activación termina y pierde su Zona de Defensa hasta su próxima activación. Con 2+, continúa normalmente." },
+    { keyEN: "Breathe Fire", name: "Escupir Fuego", category: "Rasgo", description: "Una vez por activación, en lugar de un Bloqueo, puede realizar una acción especial Escupir Fuego. Lanza 1D6 contra un oponente de Pie marcado (-1 si FU 5+): 1 = se derriba a sí mismo, 2-3 = nada, 4+ = oponente Boca Abajo, 6 = oponente Derribado." },
+    { keyEN: "Chainsaw", name: "Motosierra", category: "Rasgo", description: "En lugar de bloquear, realiza un Ataque de Motosierra. Lanza 1D6: con 2+, el objetivo es golpeado; con 1, la motosierra da una patada hacia atrás y golpea al propio jugador (cambio de turno). La tirada de Armadura tiene +3." },
+    { keyEN: "Decay", name: "Descomposición", category: "Rasgo", description: "Si sufre un resultado de Casualidad en la tabla de Heridas, hay un modificador de +1 a todas las tiradas contra este jugador en la tabla de Casualidades." },
+    { keyEN: "Drunkard", name: "Borracho", category: "Rasgo", description: "Sufre un penalizador de -1 a la tirada de dado al intentar Correr al Límite (Rush)." },
+    { keyEN: "Fan Favourite", name: "Favorito del Público", category: "Rasgo", description: "Por cada jugador con este rasgo en el campo, el equipo recibe un modificador FAME adicional de +1 para cualquier resultado de la tabla de Saque (pero no para la tirada de Ganancias)." },
+    { keyEN: "Hit and Run", name: "Pegar y Correr", category: "Rasgo", description: "Después de realizar una acción de Bloqueo, puede moverse una casilla libre ignorando Zonas de Defensa, siempre que siga de Pie y no quede marcando ni siendo marcado tras el movimiento." },
+    { keyEN: "Hypnotic Gaze", name: "Mirada Hipnótica", category: "Rasgo", description: "Al final de una acción de Movimiento, puede usar la Mirada Hipnótica contra un oponente adyacente. Realiza una prueba de Agilidad (-1 por cada Zona de Defensa oponente excepto la de la víctima). Si tiene éxito, el oponente pierde su Zona de Defensa y no puede atrapar, interceptar, pasar, asistir ni moverse voluntariamente." },
+    { keyEN: "Kick Team-mate", name: "Patada Team-Mate", category: "Rasgo", description: "Una vez por turno de equipo, además de que otro jugador realice un Pase o Lanzar Compañero, un jugador con este Rasgo puede realizar una acción especial 'Patada a Compañero', siguiendo las reglas de Lanzar Compañero." },
+    { keyEN: "Loner (3+)", name: "Solitario (3+)", category: "Rasgo", description: "Para usar una Segunda Oportunidad de equipo, lanza 1D6. Con 3+, puede usarla normalmente. De lo contrario, el resultado original se mantiene y la Segunda Oportunidad se pierde de todos modos." },
+    { keyEN: "Loner (4+)", name: "Solitario (4+)", category: "Rasgo", description: "Para usar una Segunda Oportunidad de equipo, lanza 1D6. Con 4+, puede usarla normalmente. De lo contrario, el resultado original se mantiene y la Segunda Oportunidad se pierde de todos modos." },
+    { keyEN: "Loner (5+)", name: "Solitario (5+)", category: "Rasgo", description: "Para usar una Segunda Oportunidad de equipo, lanza 1D6. Con 5+, puede usarla normalmente. De lo contrario, el resultado original se mantiene y la Segunda Oportunidad se pierde de todos modos." },
+    { keyEN: "My Ball", name: "My Ball", category: "Rasgo", description: "No puede ceder el balón voluntariamente. No puede realizar Pases, Pases en Mano ni usar ninguna habilidad que implique ceder la posesión. Solo puede perder el balón siendo Derribado o Boca Abajo." },
+    { keyEN: "No Hands", name: "Sin Manos", category: "Rasgo", description: "No puede recoger, interceptar ni llevar el balón y fallará automáticamente cualquier tirada de atrapar. Si intenta recoger el balón, rebota y causa un cambio de turno." },
+    { keyEN: "Pick-Me-Up", name: "Levántame", category: "Rasgo", description: "Al final del turno de equipo del oponente, lanza 1D6 por cada compañero Boca Abajo (no Aturdido) a tres casillas o menos de este jugador de Pie. Con 5+, ese compañero puede levantarse inmediatamente." },
+    { keyEN: "Plague Ridden", name: "Plagado", category: "Rasgo", description: "Una vez por partido, si un jugador oponente con FU 4 o menos muere como resultado de un bloqueo o falta de este jugador y no puede ser salvado, puedes elegir infectarlo con la plaga en lugar de morir." },
+    { keyEN: "Pogo Stick", name: "Pogo Stick", category: "Rasgo", description: "Durante el movimiento, puede saltar sobre cualquier casilla adyacente. Al saltar, puede ignorar los modificadores negativos por estar marcado en la casilla de origen y destino. No puede tener la habilidad Salto (Leap)." },
+    { keyEN: "Projectile Vomit", name: "Vómito Proyectil", category: "Rasgo", description: "En lugar de bloquear, puede realizar una acción especial de Vómito Proyectil. Lanza 1D6: con 2+, el objetivo es afectado; con 1, se cubre a sí mismo. Se realiza una tirada de Armadura sin modificar contra el jugador afectado." },
+    { keyEN: "Really Stupid", name: "Realmente Estúpido", category: "Rasgo", description: "Al activarse, lanza 1D6 (+2 si hay un compañero adyacente de Pie sin este Rasgo). Con 1-3, el jugador olvida qué estaba haciendo, su activación termina y pierde su Zona de Defensa." },
+    { keyEN: "Regeneration", name: "Regeneración", category: "Rasgo", description: "Después de una tirada de Casualidad, lanza 1D6. Con 4+, el resultado se descarta y el jugador va a la caja de Reservas. Con 1-3, el resultado de Casualidad se aplica normalmente." },
+    { keyEN: "Right Stuff", name: "Buena Gente", category: "Rasgo", description: "Si la Fuerza de este jugador es 3 o menos, puede ser lanzado por un compañero con el rasgo Lanzar Compañero." },
+    { keyEN: "Secret Weapon", name: "Arma Secreta", category: "Rasgo", description: "Cuando termina una entrada en la que este jugador participó, es expulsado por cometer una Falta (salvo que se use un soborno para evitarlo)." },
+    { keyEN: "Stab", name: "Puñalada", category: "Rasgo", description: "En lugar de bloquear, realiza una acción especial de Puñalada: realiza una tirada de Armadura sin modificar contra el objetivo. Si se rompe, queda Boca Abajo y se realiza una tirada de Herida sin modificar." },
+    { keyEN: "Stakes", name: "Estacas", category: "Rasgo", description: "Puede sumar +1 a la tirada de Armadura al realizar un ataque de Puñalada contra cualquier jugador de los equipos Khemri, Necromante, No-Muerto o Vampiro." },
+    { keyEN: "Stunty", name: "Canijo", category: "Rasgo", description: "Al Esquivar, ignora los modificadores de -1 por estar marcado en la casilla de destino. Sin embargo, los oponentes que intercepten sus pases aplican +1 a su prueba. Las tiradas de Herida usan la Tabla de Heridas de Canijo." },
+    { keyEN: "Swarming", name: "Enjambre", category: "Rasgo", description: "Al inicio de cada serie, tras el Paso 2, puedes retirar 1D3 jugadores con este Rasgo de la caja de Reservas y colocarlos en el campo (no en la Línea de Scrimmage ni en Zona Ancha). Solo puedes añadir tantos como ya estén en el campo." },
+    { keyEN: "Swoop", name: "Planeo", category: "Rasgo", description: "Si este jugador es lanzado por un compañero, no dispersa antes de aterrizar. En cambio, coloca la plantilla de devolución sobre el jugador y muévelo 1D3 casillas en la dirección determinada por 1D6." },
+    { keyEN: "Take Root", name: "Enraizarse", category: "Rasgo", description: "Al activarse, lanza 1D6. Con un 1, el jugador queda 'Enraizado': no puede moverse de su casilla hasta el final de la entrada o hasta ser Derribado." },
+    { keyEN: "Throw Team-mate", name: "Lanzar Compañero", category: "Rasgo", description: "Si la Fuerza de este jugador es 5 o más, puede realizar una acción Lanzar Compañero con un compañero que tenga el rasgo Buena Gente." },
+    { keyEN: "Titchy", name: "Diminuto", category: "Rasgo", description: "Suma +1 a las pruebas de Agilidad para Esquivar. Sin embargo, los oponentes que esquiven hacia su Zona de Defensa no sufren penalizador por ser marcados por este jugador." },
+    { keyEN: "Trickster", name: "Tramposo", category: "Rasgo", description: "Cuando un oponente está a punto de golpearlo con un Bloqueo o acción especial equivalente, antes de determinar los dados, puede colocarse en cualquier otra casilla adyacente libre. El Bloqueo se resuelve entonces normalmente." },
+    { keyEN: "Unchannelled Fury", name: "Furia Desencadenada", category: "Rasgo", description: "Al activarse, lanza 1D6 (+2 si Bloqueo o Blitz). Con 1-3, el jugador grita incoherentemente y su activación termina de inmediato. Con 4+, continúa normalmente." },
 ];

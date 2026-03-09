@@ -18,7 +18,7 @@ const StarPlayerCard: React.FC<{
     onSelect: () => void
 }> = ({ player, isSelected, onSelect }) => {
     const isElite = player.cost > 250000;
-    const isBrutal = (player.stats?.FU || '0') >= '5' || (player.stats?.FU || 0) >= 5;
+    const isBrutal = Number(player.stats?.FU || 0) >= 5;
 
     return (
         <motion.div

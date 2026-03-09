@@ -1,309 +1,123 @@
 import { Skill } from "../types";
 
+/**
+ * Complete Blood Bowl 2020 skill list in English.
+ * Each entry has a canonical `keyEN` used as the cross-language ID.
+ * Source: Skills.md (official rules)
+ */
 export const skillsData: Skill[] = [
-    {
-        "name": "Dauntless",
-        "category": "General",
-        "description": "When this player performs a Block action, if the target has a higher Strength, roll a D6 and add this player's Strength. If the total exceeds the target's Strength, this player's Strength is increased to match the target's for this block."
-    },
-    {
-        "name": "Claws",
-        "category": "Mutation",
-        "description": "When an Armour roll is made against an opponent as a result of a block by this player, a result of 8+ (before modifiers) breaks their armour, regardless of their actual AV."
-    },
-    {
-        "name": "Bombardier",
-        "category": "Trait",
-        "description": "When activated and if Standing, this player can perform a 'Throw Bomb' action. It's similar to a Pass but cannot move first, bombs don't bounce, and if fumbled, it explodes in the player's square. If caught, it explodes on 4+; on 1-3, it must be thrown again."
-    },
-    {
-        "name": "Break Tackle",
-        "category": "Strength",
-        "description": "Once per activation, when making an Agility test to Dodge, this player may modify the roll by +1 if ST is 4 or less, or +2 if ST is 5 or more."
-    },
-    {
-        "name": "Catch",
-        "category": "Agility",
-        "description": "This player can re-roll a failed Agility test when attempting to catch the ball."
-    },
-    {
-        "name": "Bone Head",
-        "category": "Trait",
-        "description": "When activated, roll a D6. On a 1, the player forgets what they were doing and their activation ends. They lose their Tackle Zone until their next activation."
-    },
-    {
-        "name": "Chainsaw",
-        "category": "Trait",
-        "description": "The player can perform a Chainsaw attack instead of a block. Add +3 to the Armour roll, but may hit themselves on a natural 1."
-    },
-    {
-        "name": "Tackle",
-        "category": "General",
-        "description": "Opponents dodging from this player's Tackle Zone cannot use the Dodge skill. Also applies if this player performs a Block and the result is 'Stumble'."
-    },
-    {
-        "name": "Big Hand",
-        "category": "Mutation",
-        "description": "Ignore modifiers for being marked or rain when attempting to pick up the ball."
-    },
-    {
-        "name": "Ball & Chain",
-        "category": "Trait",
-        "description": "This player can only perform 'Ball & Chain Move' actions using the throw-in template. Automatically passes Dodge tests. Must block any standing player in their path. If they fall, an Injury roll is made automatically."
-    },
-    {
-        "name": "Animosity",
-        "category": "Trait",
-        "description": "Roll a D6 when attempting to hand-off or pass to a teamwork of the listed type. On a 1, the player refuses to do so and their activation ends."
-    },
-    {
-        "name": "Always Hungry",
-        "category": "Trait",
-        "description": "When attempting Throw Team-mate, roll a D6. On a 1, try to eat the team-mate. Roll another D6: on a 1 the team-mate is eaten and permanently removed."
-    },
-    {
-        "name": "Accurate",
-        "category": "Pass",
-        "description": "Add an additional +1 modifier to the Passing Ability test when performing a Quick or Short Pass."
-    },
-    {
-        "name": "Nerves of Steel",
-        "category": "Pass",
-        "description": "The player may ignore any modifier for being Marked when they attempt to perform a Pass action, catch the ball, or interfere with a pass."
-    },
-    {
-        "name": "Grab",
-        "category": "Strength",
-        "description": "Prevents the target from using Sidestep. When pushing, the player may choose any free adjacent square for the opponent."
-    },
-    {
-        "name": "Juggernaut",
-        "category": "Strength",
-        "description": "On a Blitz, can treat 'Both Down' as 'Push Back'. Target cannot use Stand Firm or Wrestle."
-    },
-    {
-        "name": "Foul Appearance",
-        "category": "Mutation",
-        "description": "Any player declaring a Block or special action against this player must first roll 2+ on 1D6 or the action is lost."
-    },
-    {
-        "name": "Guard",
-        "category": "Strength",
-        "description": "This player can offer offensive and defensive assists regardless of how many opposing players are marking them."
-    },
-    {
-        "name": "Hypnotic Gaze",
-        "category": "Trait",
-        "description": "Special action: make an Agility test against a marked opponent. If successful, the opponent loses their Tackle Zone."
-    },
-    {
-        "name": "Mighty Blow (+1)",
-        "category": "Strength",
-        "description": "When an opponent is Knocked Down as a result of a block by this player, you may modify the Armour or Injury roll by +1."
-    },
-    {
-        "name": "Multiple Block",
-        "category": "Strength",
-        "description": "Can perform two simultaneous blocks against marked opponents, but subtracts -2 from Strength."
-    },
-    {
-        "name": "Frenzy",
-        "category": "General",
-        "description": "Must follow up if the opponent is pushed. If the target is still standing, must perform a second block if able."
-    },
-    {
-        "name": "Pass",
-        "category": "Pass",
-        "description": "This player may re-roll a failed Passing Ability test when performing a Pass action."
-    },
-    {
-        "name": "Hail Mary Pass",
-        "category": "Pass",
-        "description": "Pass target can be anywhere on the pitch. Never accurate. Test Mapping Ability to determine if wildly inaccurate or fumbled. Cannot be interfered with."
-    },
-    {
-        "name": "Stand Firm",
-        "category": "General",
-        "description": "May choose not to be pushed back, whether as a result of a Block or chain push."
-    },
-    {
-        "name": "Leap",
-        "category": "Agility",
-        "description": "May jump over any adjacent square (occupied or not). Reduces negative modifiers when jumping by 1."
-    },
-    {
-        "name": "No Hands",
-        "category": "Trait",
-        "description": "The player cannot pick up, intercept, or carry the ball. Automatically fails any catch roll."
-    },
-    {
-        "name": "Horns",
-        "category": "Trait",
-        "description": "On a Blitz, adds +1 to Strength during the block."
-    },
-    {
-        "name": "Extra Arms",
-        "category": "Mutation",
-        "description": "Add +1 when picking up the ball, catching it, or attempting an interception."
-    },
-    {
-        "name": "Leader",
-        "category": "Pass",
-        "description": "Gains a single extra team re-roll, which can only be used if there is at least one player with this skill on the pitch."
-    },
-    {
-        "name": "Prehensile Tail",
-        "category": "Mutation",
-        "description": "Opponents attempting to Dodge or Jump out of this player's Tackle Zone subtract 1 from their Agility test."
-    },
-    {
-        "name": "Diving Tackle",
-        "category": "Agility",
-        "description": "If an opponent marked by this player passes their Agility test to Dodge or Jump, this player can be Placed Prone to subtract 2 from the result."
-    },
-    {
-        "name": "Diving Catch",
-        "category": "Agility",
-        "description": "May attempt to catch the ball if it lands in their Tackle Zone after scattering. Add +1 to catch attempts for accurate pases."
-    },
-    {
-        "name": "Kick",
-        "category": "General",
-        "description": "When kicking off, you may halve the scatter distance of the ball."
-    },
-    {
-        "name": "Loner (4+)",
-        "category": "Trait",
-        "description": "To use a team re-roll, must first roll 4+ on 1D6. If failed, the re-roll is lost and the original result stands."
-    },
-    {
-        "name": "Dump-off",
-        "category": "Pass",
-        "description": "If targeted by a Block and in possession of the ball, may perform a Quick Pass before the block is resolved."
-    },
-    {
-        "name": "Dodge",
-        "category": "Agility",
-        "description": "Once per team turn, may re-roll a failed Agility test when Dodging. Also applies when targeted by a Block if the result is 'Stumble'."
-    },
-    {
-        "name": "Really Stupid",
-        "category": "Trait",
-        "description": "Like Bone Head but fails on 1-3 (4+ success). If an adjacent team-mate lacks this trait, add +2 to the roll."
-    },
-    {
-        "name": "Jump Up",
-        "category": "Agility",
-        "description": "Standing up is free. May attempt to stand up and block with an Agility test (+1)."
-    },
-    {
-        "name": "Disturbing Presence",
-        "category": "Mutation",
-        "description": "Opponents within 3 squares subtract 1 from Pass, Catch, or Intercept tests."
-    },
-    {
-        "name": "Dirty Player (+1)",
-        "category": "General",
-        "description": "Add +1 to Armour or Injury rolls when committing a Foul."
-    },
-    {
-        "name": "Secret Weapon",
-        "category": "Trait",
-        "description": "When a drive ends, this player is Sent-off for committing a Foul (unless a bribe is used)."
-    },
-    {
-        "name": "Right Stuff",
-        "category": "Trait",
-        "description": "If Strength is 3 or less, may be thrown by a team-mate with Throw Team-mate skill."
-    },
-    {
-        "name": "Sidestep",
-        "category": "Agility",
-        "description": "When pushed back, the coach chooses which free adjacent square the player moves to."
-    },
-    {
-        "name": "Safe Pass",
-        "category": "Pass",
-        "description": "If a pass is fumbled, the player keeps the ball and their activation ends. No turnover unless they were forced to fumble."
-    },
-    {
-        "name": "Shadowing",
-        "category": "General",
-        "description": "May move into the square vacated by an opponent who leaves their Tackle Zone with a competitive Movement test."
-    },
-    {
-        "name": "Sneaky Pete",
-        "category": "Agility",
-        "description": "When fouling, not sent-off if a natural double is rolled on armor. May continue moving after the foul."
-    },
-    {
-        "name": "Stunty",
-        "category": "Trait",
-        "description": "Ignores modifiers for being marked when Dodging. Injury rolls against them use the Stunty table."
-    },
-    {
-        "name": "Stab",
-        "category": "Trait",
-        "description": "Instead of blocking, make an unmodified Armour roll against the target. If broken, they are knocked down and an Injury roll is made."
-    },
-    {
-        "name": "Titchy",
-        "category": "Trait",
-        "description": "Add +1 to Agility tests for Dodging. Opponents dodging into their Tackle Zone suffer no penalty."
-    },
-    {
-        "name": "Take Root",
-        "category": "Trait",
-        "description": "When activated, roll a D6. On a 1, the player becomes Rooted: cannot move from their square until the end of the drive or until knocked down."
-    },
-    {
-        "name": "Throw Team-mate",
-        "category": "Trait",
-        "description": "If ST 5 or more, can perform Throw Team-mate action with a team-mate who has the Right Stuff trait."
-    },
-    {
-        "name": "Two Heads",
-        "category": "Mutation",
-        "description": "Add +1 to Agility tests for Dodging."
-    },
-    {
-        "name": "Block",
-        "category": "General",
-        "description": "Can choose to ignore a 'Both Down' result during a Block and not be Knocked Down."
-    },
-    {
-        "name": "Thick Skull",
-        "category": "Strength",
-        "description": "Treated as KO only on a roll of 9 on the Injury table (8 is treated as Stunned)."
-    },
-    {
-        "name": "Very Long Legs",
-        "category": "Mutation",
-        "description": "Reduces negative modifiers for Jumping by 1. Add +2 to Interceptions."
-    },
-    {
-        "name": "Sure Hands",
-        "category": "General",
-        "description": "May re-roll a failed attempt to pick up the ball. Strip Ball skill cannot be used against this player."
-    },
-    {
-        "name": "Sure Feet",
-        "category": "Agility",
-        "description": "Once per team turn, may re-roll the D6 when attempting to Rush (Go For It)."
-    },
-    {
-        "name": "Animal Savagery",
-        "category": "Trait",
-        "description": "When activated, roll a D6 (+2 if Block/Blitz). On 1-3, must attack an adjacent team-mate to proceed."
-    },
-    {
-        "name": "Regeneration",
-        "category": "Trait",
-        "description": "After a Casualty roll, roll a D6. On a 4+, the casualty is discarded and the player is placed in the Reserves box."
-    },
-    {
-        "name": "Tentacles",
-        "category": "Mutation",
-        "description": "When a marked opponent attempts to move, roll 1D6 + this player's ST - opponent's ST. On 6+, the opponent is held."
-    }
+    // ── GENERAL ─────────────────────────────────────────────────────────────────
+    { keyEN: "Block", name: "Block", category: "General", description: "A player with the Block skill is proficient at knocking opponents down. The Block skill, if used, affects the results rolled with the Block dice, as explained in the Blocking rules." },
+    { keyEN: "Dauntless", name: "Dauntless", category: "General", description: "When this player performs a Block action, if the target has a higher Strength (before assists), roll a D6 and add this player's Strength. If the total exceeds the target's Strength, this player's Strength is increased to match the target's for this block." },
+    { keyEN: "Dirty Player (+1)", name: "Dirty Player (+1)", category: "General", description: "Add +1 to any Armour roll or Injury roll made by this player when they commit a Foul. You may only modify one of the dice rolls per foul." },
+    { keyEN: "Fend", name: "Fend", category: "General", description: "Opposing players may not follow up blocks made against this player even if the Fend player is Knocked Down. The opposing player may still continue moving after blocking if they declared a Blitz action." },
+    { keyEN: "Frenzy", name: "Frenzy", category: "General", description: "Must always follow up if the opponent is pushed. If a 'Pushed' or 'Defender Stumbles' result was chosen, the player must immediately throw a second block against the same opponent as long as they are both still standing and adjacent." },
+    { keyEN: "Kick", name: "Kick", category: "General", description: "When this team kicks off, you may choose to halve the number of squares that the ball scatters, rounding down fractions. The player must be set up on the pitch and not in a wide zone or on the line of scrimmage." },
+    { keyEN: "Kick-Off Return", name: "Kick-Off Return", category: "General", description: "A player on the receiving team that is not on the Line of Scrimmage or in an opposing tackle zone may use this skill when the ball has been kicked. It allows the player to move up to 3 squares after the ball has been scattered but before rolling on the Kick-Off table." },
+    { keyEN: "Pass Block", name: "Pass Block", category: "General", description: "When the opposing coach announces that one of their players is going to perform a Pass action, this player may move up to three squares. The move must put this player in a position to attempt an interception or bring their tackle zone on the passer or catcher." },
+    { keyEN: "Pro", name: "Pro", category: "General", description: "Once per turn, a Pro may re-roll any one dice roll they have made (other than Armour, Injury, or Casualty). Before the re-roll, their coach must roll a D6. On 3+, the dice can be re-rolled. On 1 or 2, the dice cannot be re-rolled." },
+    { keyEN: "Shadowing", name: "Shadowing", category: "General", description: "When an opposition player they are Marking moves out of their Tackle Zone, roll a D6 adding this player's MA and subtracting the opposition's MA. On 6+, or a natural 6, this player may immediately move into the vacated square." },
+    { keyEN: "Strip Ball", name: "Strip Ball", category: "General", description: "When blocking an opponent with the ball, applying a 'Pushed' or 'Defender Stumbles' result causes the opposing player to drop the ball in the square they are pushed to, even if they are not Knocked Down." },
+    { keyEN: "Sure Hands", name: "Sure Hands", category: "General", description: "May re-roll a failed attempt to pick up the ball. In addition, the Strip Ball skill cannot be used against this player." },
+    { keyEN: "Tackle", name: "Tackle", category: "General", description: "Opposing players in any of this player's tackle zones cannot use the Dodge skill when they attempt to dodge or when this player throws a block at them using the Tackle skill." },
+    { keyEN: "Wrestle", name: "Wrestle", category: "General", description: "May use Wrestle when blocking or being blocked if a 'Both Down' result is chosen. Instead of applying 'Both Down', both players are Placed Prone without Armour rolls. Does not cause a Turnover unless the active player held the ball." },
+
+    // ── AGILITY ─────────────────────────────────────────────────────────────────
+    { keyEN: "Catch", name: "Catch", category: "Agility", description: "May re-roll a failed Agility test when attempting to catch the ball. Also allows re-rolling if the player drops a hand-off or fails to make an interception." },
+    { keyEN: "Defensive", name: "Defensive", category: "Agility", description: "During the opponent's team turn (but not during your own turn), any opposition player being marked by this player cannot use the Guard skill." },
+    { keyEN: "Diving Catch", name: "Diving Catch", category: "Agility", description: "Add +1 to any catch roll from an accurate pass targeted at this player's square. Also, this player can attempt to catch any pass, kick-off, or crowd throw-in that would land in an empty square within one of their tackle zones." },
+    { keyEN: "Diving Tackle", name: "Diving Tackle", category: "Agility", description: "If an opponent marked by this player passes their Agility test to Dodge or Leap, this player may be Placed Prone in the vacated square to subtract 2 from the result of that roll." },
+    { keyEN: "Dodge", name: "Dodge", category: "Agility", description: "May re-roll one failed Dodge roll per turn. In addition, the Dodge skill affects 'Stumble' results on the Block dice." },
+    { keyEN: "Jump Up", name: "Jump Up", category: "Agility", description: "If the player declares any action other than a Block action, they may stand up for free. May also declare a Block action while Prone by making an Agility test (+2 modifier)." },
+    { keyEN: "Leap", name: "Leap", category: "Agility", description: "During movement, may Leap over any single adjacent square, including unoccupied squares and squares occupied by Standing players. Reduces any negative modifier applied to the Agility test when leaping by 1, to a minimum of -1." },
+    { keyEN: "Safe Pair of Hands", name: "Safe Pair of Hands", category: "Agility", description: "If this player is Knocked Down or Placed Prone while in possession of the ball, the ball does not bounce. Instead, you may place the ball in any unoccupied adjacent square." },
+    { keyEN: "Sidestep", name: "Sidestep", category: "Agility", description: "When pushed back for any reason, you may choose any unoccupied adjacent square to push this player into instead of the square chosen by the opposing coach." },
+    { keyEN: "Sneaky Git", name: "Sneaky Git", category: "Agility", description: "During a Foul action, a player with this skill is not ejected for rolling natural doubles on the Armour roll." },
+    { keyEN: "Sprint", name: "Sprint", category: "Agility", description: "When this player performs any action that includes movement, they may attempt to Rush (Go For It) three times, rather than the usual two." },
+    { keyEN: "Sure Feet", name: "Sure Feet", category: "Agility", description: "Once per team turn, during their activation, this player may re-roll the D6 when attempting to Rush (Go For It)." },
+
+    // ── PASSING ─────────────────────────────────────────────────────────────────
+    { keyEN: "Accurate", name: "Accurate", category: "Passing", description: "Add an additional +1 modifier to the Passing Ability test when performing a Quick Pass or a Short Pass." },
+    { keyEN: "Cannoneer", name: "Cannoneer", category: "Passing", description: "When performing a Long Pass or Long Bomb Pass action, apply an additional +1 modifier to the Passing Ability test." },
+    { keyEN: "Cloud Burster", name: "Cloud Burster", category: "Passing", description: "When performing a Long Pass or Long Bomb Pass action, you may choose to make the opposing coach re-roll a successful attempt to interfere with the pass." },
+    { keyEN: "Dump-Off", name: "Dump-Off", category: "Passing", description: "If nominatred as the target of a Block action while in possession of the ball, may immediately perform a Quick Pass action before the block is resolved. This pass cannot cause a Turnover." },
+    { keyEN: "Fumblerooskie", name: "Fumblerooskie", category: "Passing", description: "When performing a Move or Blitz action while in possession of the ball, may choose to 'drop' the ball in any square they vacate during movement. No Turnover is caused." },
+    { keyEN: "Give and Go", name: "Give and Go", category: "Passing", description: "If this player performs a Hand-off action, their activation does not have to end. If they have not used their full Movement Allowance, they may continue to move after resolving the Hand-off." },
+    { keyEN: "Hail Mary Pass", name: "Hail Mary Pass", category: "Passing", description: "May throw the ball to any square on the pitch — the range ruler is not used. On a 1, the pass is fumbled. On 2-6, the pass is made but is never accurate — the ball automatically scatters three squares. Cannot be intercepted." },
+    { keyEN: "Leader", name: "Leader", category: "Passing", description: "A team with one or more players with this Skill gains a single extra team re-roll, which can only be used if at least one player with this Skill is on the pitch." },
+    { keyEN: "Nerves of Steel", name: "Nerves of Steel", category: "Passing", description: "This player ignores any modifier for being Marked when attempting to Pass, catch, or intercept the ball." },
+    { keyEN: "On The Ball", name: "On The Ball", category: "Passing", description: "When the opposing coach declares a Pass action, this player may move up to 3 squares (ignoring their MA) before the Passing Ability test. Also, during each Start of Drive, one Open player with this Skill may move up to 3 squares." },
+    { keyEN: "Pass", name: "Pass", category: "Passing", description: "May re-roll a failed Passing Ability test when performing a Pass action (inaccurate pass or fumble)." },
+    { keyEN: "Running Pass", name: "Running Pass", category: "Passing", description: "If this player performs a Quick Pass action, their activation does not have to end. If they have not used their full Movement Allowance, they may continue to move after resolving the pass." },
+    { keyEN: "Safe Pass", name: "Safe Pass", category: "Passing", description: "Should this player fumble a Pass action, the ball is not dropped and no Turnover is caused. Instead, this player retains possession and their activation ends." },
+
+    // ── STRENGTH ─────────────────────────────────────────────────────────────────
+    { keyEN: "Arm Bar", name: "Arm Bar", category: "Strength", description: "If an opposition player Falls Over as a result of failing their Agility test when Dodging, Jumping, or Leaping out of a square in which they were being Marked by this player, apply a +1 modifier to either the Armour roll or Injury roll." },
+    { keyEN: "Brawler", name: "Brawler", category: "Strength", description: "When performing a Block action on its own (not as part of a Blitz action), this player may re-roll a single Both Down result." },
+    { keyEN: "Break Tackle", name: "Break Tackle", category: "Strength", description: "Once per activation, when making an Agility test to Dodge, this player may modify the roll by +1 if their ST is 4 or less, or +2 if their ST is 5 or more." },
+    { keyEN: "Grab", name: "Grab", category: "Strength", description: "When blocking results in a push back, may choose any empty adjacent square to push the opponent into. Cannot be used with Frenzy. A player with Grab can never learn Frenzy and vice versa." },
+    { keyEN: "Guard", name: "Guard", category: "Strength", description: "When performing a Block action, this player can offer both offensive and defensive assists regardless of how many opposition players are Marking them. Cannot be used to assist a foul." },
+    { keyEN: "Juggernaut", name: "Juggernaut", category: "Strength", description: "During a Blitz action, the opposing player cannot use Fend, Stand Firm, or Wrestle. This player may also treat a 'Both Down' result as 'Pushed' for blocks made during a Blitz." },
+    { keyEN: "Mighty Blow (+1)", name: "Mighty Blow (+1)", category: "Strength", description: "Add +1 to any Armour or Injury roll when an opponent is Knocked Down as a result of a block by this player. Only one of the dice rolls may be modified." },
+    { keyEN: "Multiple Block", name: "Multiple Block", category: "Strength", description: "May throw blocks against two adjacent opponents. Each defender's strength is increased by 2. Cannot follow up either block. Cannot be used together with Frenzy." },
+    { keyEN: "Piling On", name: "Piling On", category: "Strength", description: "After making a block that Knocks Down the victim, may re-roll the Armour roll or Injury roll for the victim. The Piling On player is then Placed Prone in their own square." },
+    { keyEN: "Pile Driver", name: "Pile Driver", category: "Strength", description: "When an opposition player is Knocked Down as a result of a block, this player may immediately commit a free Foul action against them. After using this Skill, this player is Placed Prone and their activation ends." },
+    { keyEN: "Stand Firm", name: "Stand Firm", category: "Strength", description: "May choose not to be pushed back, whether as a result of a Block action or a chain push." },
+    { keyEN: "Strong Arm", name: "Strong Arm", category: "Strength", description: "Apply a +1 modifier to any Passing Ability test rolls when performing a Throw Team-mate action. Only a player with the Throw Team-mate trait can have this Skill." },
+    { keyEN: "Thick Skull", name: "Thick Skull", category: "Strength", description: "When an Injury roll is made against this player, they can only be KO'd on a roll of 9, and a roll of 8 is treated as Stunned. If this player also has the Stunty trait, they can only be KO'd on a roll of 8 (7 = Stunned)." },
+
+    // ── MUTATION ─────────────────────────────────────────────────────────────────
+    { keyEN: "Big Hand", name: "Big Hand", category: "Mutation", description: "Ignores modifiers for enemy tackle zones or Pouring Rain weather when attempting to pick up the ball." },
+    { keyEN: "Claws", name: "Claws", category: "Mutation", description: "When an opponent is Knocked Down by this player during a block, any Armour roll of 8 or more after modifications automatically breaks armour." },
+    { keyEN: "Disturbing Presence", name: "Disturbing Presence", category: "Mutation", description: "Any player must subtract 1 from the D6 when they pass, intercept, or catch for each opposing player with Disturbing Presence within three squares of them." },
+    { keyEN: "Extra Arms", name: "Extra Arms", category: "Mutation", description: "Add +1 to any attempt to pick up, catch, or intercept the ball." },
+    { keyEN: "Foul Appearance", name: "Foul Appearance", category: "Mutation", description: "When an opposition player declares a Block or special action targeting this player, their coach must first roll a D6. On a 1, the action cannot be performed and is wasted." },
+    { keyEN: "Horns", name: "Horns", category: "Mutation", description: "Adds +1 to this player's Strength for any block(s) made during a Blitz action." },
+    { keyEN: "Iron Hard Skin", name: "Iron Hard Skin", category: "Mutation", description: "Opposing players cannot modify any Armour rolls made against this player. In addition, the Claws skill cannot be used when making an Armour roll against this player." },
+    { keyEN: "Monstrous Mouth", name: "Monstrous Mouth", category: "Mutation", description: "May re-roll any failed attempt to catch the ball. In addition, the Strip Ball skill cannot be used against this player." },
+    { keyEN: "Prehensile Tail", name: "Prehensile Tail", category: "Mutation", description: "When an active opposition player attempts to Dodge, Jump, or Leap from a square in which they are being Marked by this player, apply an additional -1 modifier to their Agility test." },
+    { keyEN: "Tentacles", name: "Tentacles", category: "Mutation", description: "When a marked opposition player moves out of this player's Tackle Zone, roll a D6 adding this player's ST and subtracting the opposition's ST. On 6+, the opposition player is held firmly in place." },
+    { keyEN: "Two Heads", name: "Two Heads", category: "Mutation", description: "Apply a +1 modifier to the Agility test when attempting to Dodge." },
+    { keyEN: "Very Long Legs", name: "Very Long Legs", category: "Mutation", description: "Reduce any negative modifier applied to the Agility test when jumping or leaping by 1 (minimum -1). Also apply a +2 modifier to any interception attempts. Ignores the Cloud Burster skill." },
+
+    // ── EXTRAORDINARY (TRAITS) ────────────────────────────────────────────────────
+    { keyEN: "Always Hungry", name: "Always Hungry", category: "Trait", description: "When performing a Throw Team-mate action, roll a D6 first. On 2+, continue normally. On 1, this player tries to eat their team-mate. Roll again: on 1, the team-mate is eaten and permanently removed." },
+    { keyEN: "Animal Savagery", name: "Animal Savagery", category: "Trait", description: "When activated, roll a D6 (+2 modifier if declaring a Block or Blitz action). On 1-3, must immediately Knock Down an adjacent Standing team-mate. If no adjacent team-mate, activation ends and this player loses their Tackle Zone." },
+    { keyEN: "Animosity (all team-mates)", name: "Animosity (all team-mates)", category: "Trait", description: "When attempting to Hand-off or Pass to any team-mate, roll a D6. On a 1, the player refuses to do so and their activation ends." },
+    { keyEN: "Ball & Chain", name: "Ball & Chain", category: "Trait", description: "The only action this player may perform is a 'Ball and Chain Move'. Move using the throw-in template direction. Automatically passes any Dodge Agility tests. Must perform a Block against any standing player in their path. If they Fall Over, an Injury roll is made automatically." },
+    { keyEN: "Bloodlust (2+)", name: "Bloodlust (2+)", category: "Trait", description: "When activated, roll a D6 (+1 if Block/Blitz). On 2+, activate normally. If lower, may continue but must bite an adjacent Thrall at activation end or a Turnover is caused and this player loses their Tackle Zone." },
+    { keyEN: "Bloodlust (3+)", name: "Bloodlust (3+)", category: "Trait", description: "When activated, roll a D6 (+1 if Block/Blitz). On 3+, activate normally. If lower, may continue but must bite an adjacent Thrall at activation end or a Turnover is caused and this player loses their Tackle Zone." },
+    { keyEN: "Bombardier", name: "Bombardier", category: "Trait", description: "When activated and Standing, may perform a 'Throw Bomb' Special action. A Bomb is thrown and caught like a ball. If caught, it detonates on 4+; on 1-3 it must be thrown again immediately." },
+    { keyEN: "Bone Head", name: "Bone Head", category: "Trait", description: "When activated, roll a D6. On a 1, the player forgets what they were doing and their activation ends. They also lose their Tackle Zone until their next activation." },
+    { keyEN: "Breathe Fire", name: "Breathe Fire", category: "Trait", description: "Once per activation, instead of a Block action, may perform a Breathe Fire Special action. Roll a D6 against a Standing opponent (-1 if ST 5+): 1 = self knocked down, 2-3 = nothing, 4+ = opponent Placed Prone, 6 = opponent Knocked Down." },
+    { keyEN: "Chainsaw", name: "Chainsaw", category: "Trait", description: "Instead of blocking, perform a Chainsaw Attack. Roll a D6: on 2+, the target is hit; on 1, the chainsaw kickbacks and hits this player (Turnover). An Armour roll is made with +3. This player can only use the Chainsaw once per turn." },
+    { keyEN: "Decay", name: "Decay", category: "Trait", description: "If this player suffers a Casualty result on the Injury table, there is a +1 modifier applied to all rolls made against this player on the Casualty table." },
+    { keyEN: "Drunkard", name: "Drunkard", category: "Trait", description: "This player suffers a -1 penalty to the dice roll when attempting to Rush (Go For It)." },
+    { keyEN: "Fan Favourite", name: "Fan Favourite", category: "Trait", description: "For each player with Fan Favourite on the pitch, the team receives an additional +1 FAME modifier for any Kick-Off table results (but not for the Winnings roll)." },
+    { keyEN: "Hit and Run", name: "Hit and Run", category: "Trait", description: "After performing a Block action, may immediately move one free square ignoring Tackle Zones as long as they are still Standing. Must not be Marking or being Marked after the free move." },
+    { keyEN: "Hypnotic Gaze", name: "Hypnotic Gaze", category: "Trait", description: "At the end of a Move action, may target an adjacent opponent. Make an Agility roll (-1 for each opposing tackle zone other than the victim's). If successful, the opponent loses their tackle zone and cannot catch, intercept, pass, assist, or move voluntarily until their next action." },
+    { keyEN: "Kick Team-mate", name: "Kick Team-mate", category: "Trait", description: "Once per team turn, in addition to another player performing a Throw Team-mate or Pass action, a player with this Trait may perform a 'Kick Team-mate' Special action following Throw Team-mate rules." },
+    { keyEN: "Loner (3+)", name: "Loner (3+)", category: "Trait", description: "To use a team re-roll, roll a D6. On 3+, the team re-roll may be used as normal. Otherwise, the original result stands but the team re-roll is still lost." },
+    { keyEN: "Loner (4+)", name: "Loner (4+)", category: "Trait", description: "To use a team re-roll, roll a D6. On 4+, the team re-roll may be used as normal. Otherwise, the original result stands but the team re-roll is still lost." },
+    { keyEN: "Loner (5+)", name: "Loner (5+)", category: "Trait", description: "To use a team re-roll, roll a D6. On 5+, the team re-roll may be used as normal. Otherwise, the original result stands but the team re-roll is still lost." },
+    { keyEN: "My Ball", name: "My Ball", category: "Trait", description: "Cannot willingly give up the ball. May not make Pass, Hand-off actions, or use any Skill that would relinquish possession. Can only lose the ball by being Knocked Down, Placed Prone, or Falling Over." },
+    { keyEN: "No Hands", name: "No Hands", category: "Trait", description: "Cannot pick up, intercept or carry the ball and automatically fails any catch roll. Causes a Turnover if attempting to pick up the ball." },
+    { keyEN: "Pick-Me-Up", name: "Pick-Me-Up", category: "Trait", description: "At the end of the opposition's team turn, roll a D6 for each Prone, non-Stunned team-mate within three squares of a Standing player with this Trait. On a 5+, that Prone player may immediately stand up." },
+    { keyEN: "Plague Ridden", name: "Plague Ridden", category: "Trait", description: "Once per game, if an opposition player with ST 4 or less suffers a Casualty result of DEAD as a result of a block or foul by this player and cannot be saved, you may choose to infect them with the plague instead." },
+    { keyEN: "Pogo Stick", name: "Pogo Stick", category: "Trait", description: "During movement, may Leap over any single adjacent square. When making an Agility test to jump or leap, may ignore negative modifiers for being Marked in the originating and landing squares. Cannot have the Leap skill." },
+    { keyEN: "Projectile Vomit", name: "Projectile Vomit", category: "Trait", description: "Instead of blocking, may perform a Projectile Vomit Special action. Roll a D6: on 2+ the target is hit; on 1, this player covers itself. An unmodifiable Armour roll is made against the player hit." },
+    { keyEN: "Really Stupid", name: "Really Stupid", category: "Trait", description: "When activated, roll a D6 (+2 if adjacent to a Standing team-mate without this Trait). On 1-3, the player forgets and activation ends. They lose their Tackle Zone until next activation." },
+    { keyEN: "Regeneration", name: "Regeneration", category: "Trait", description: "After a Casualty roll, roll a D6. On a 4+, the result is discarded and the player is placed in the Reserves box. On 1-3, the Casualty roll is applied as normal." },
+    { keyEN: "Right Stuff", name: "Right Stuff", category: "Trait", description: "If this player's Strength is 3 or less, they can be thrown by a team-mate with Throw Team-mate." },
+    { keyEN: "Secret Weapon", name: "Secret Weapon", category: "Trait", description: "When a drive in which this player took part ends, this player is Sent-off for committing a Foul (unless a bribe is used to avoid ejection)." },
+    { keyEN: "Stab", name: "Stab", category: "Trait", description: "Instead of blocking, perform a Stab Special action: make an unmodified Armour roll against the target. If broken, the target is Placed Prone and an unmodifiable Injury roll is made." },
+    { keyEN: "Stakes", name: "Stakes", category: "Trait", description: "May add +1 to the Armour roll when making a Stab attack against any player playing for a Khemri, Necromantic, Undead, or Vampire team." },
+    { keyEN: "Stunty", name: "Stunty", category: "Trait", description: "When Dodging, this player ignores any -1 modifiers for being Marked in the destination square. However, opponents interfering with this player's passes apply +1 to their test. Injury rolls against this player use the Stunty Injury table." },
+    { keyEN: "Swarming", name: "Swarming", category: "Trait", description: "During each Start of Drive, after Step 2, you may remove D3 players with this Trait from the Reserves box and set them up on the pitch (not on the Line of Scrimmage or Wide Zones). These extra players must be in the team's half." },
+    { keyEN: "Swoop", name: "Swoop", category: "Trait", description: "If this player is thrown by a team-mate, they do not scatter before landing. Instead, place the Throw-in template over the player and roll D3 squares in a direction determined by rolling a D6." },
+    { keyEN: "Take Root", name: "Take Root", category: "Trait", description: "When activated, roll a D6. On a 1, this player becomes 'Rooted' and cannot move from their current square until the end of the drive or until they are Knocked Down." },
+    { keyEN: "Throw Team-mate", name: "Throw Team-mate", category: "Trait", description: "If this player's Strength is 5 or more, they may perform a Throw Team-mate action, throwing a team-mate with the Right Stuff trait." },
+    { keyEN: "Titchy", name: "Titchy", category: "Trait", description: "Add +1 to any Agility tests when Dodging. However, if an opposition player dodges into a square within this player's Tackle Zone, this player does not count as Marking the moving player for modifier purposes." },
+    { keyEN: "Trickster", name: "Trickster", category: "Trait", description: "When about to be hit by a Block or equivalent Special action, before determining dice count, this player may be placed in any other unoccupied adjacent square. The Block then takes place as normal." },
+    { keyEN: "Unchannelled Fury", name: "Unchannelled Fury", category: "Trait", description: "When activated, roll a D6 (+2 if Block/Blitz). On 1-3, this player rages incoherently and their activation ends immediately. On 4+, they continue normally." },
 ];

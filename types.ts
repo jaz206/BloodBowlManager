@@ -20,12 +20,18 @@ export interface Player {
   position: string;
   cost: number;
   stats: PlayerStats;
-  skills: string;
+  /** Canonical English skill keys — resolved to localized names via the skills data */
+  skillKeys: string[];
+  /** @deprecated Use skillKeys instead. Kept for backward compatibility. */
+  skills?: string;
   primary: string;
   secondary: string;
 }
 
 export interface Skill {
+  /** Canonical English key — used for cross-language lookups and as the ID in Firestore.
+   *  Optional for backward compatibility with the legacy skills.ts file. */
+  keyEN?: string;
   name: string;
   category: string;
   description: string;
@@ -120,6 +126,13 @@ export interface ManagedTeam {
   wanderingApothecaries?: number;
   plagueDoctors?: number;
   mortuaryAssistants?: number;
+  updatedAt?: any;
+  totalTV?: number;
+  record?: {
+    wins: number;
+    draws: number;
+    losses: number;
+  };
 }
 
 export interface DrawingPath {
@@ -261,8 +274,20 @@ export type PlayerPosition = 'Blitzer' | 'Lanzador' | 'Corredor' | 'Línea' | 'R
 
 export interface BoardToken extends Token {
   playerRef?: string;
+  position?: string;
   teamSide: 'home' | 'away';
   teamId?: string;
   playerData?: ManagedPlayer;
   isDown?: boolean;
+}
+
+export interface GameRule {
+  text: string;
+  dice?: string;
+  subRules?: { text: string; dice?: string }[];
+}
+
+export interface GameSection {
+  title: string;
+  rules: GameRule[];
 }

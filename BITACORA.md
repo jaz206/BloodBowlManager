@@ -107,5 +107,14 @@ root/
 *   **Internacionalización Robusta**: Implementación de soporte bilingüe completo para todas las nuevas secciones del Hub.
 *   *Archivos Afectados*: `Oracle/index.tsx`, `LanguageContext.tsx`, `BITACORA.md`.
 
+### [2026-03-09] La Gran Corrección de Datos (Rosters y Encoding)
+*   **Encoding Limpio**: Corrección masiva de mojibake en `data/teams.ts`. Todos los caracteres especiales (tildes, eñes) ahora se muestran correctamente en la UI (`"LÃ­nea"` → `"Línea"`, etc.).
+*   **Elegidos del Caos — Roster Completo**: Añadidas las posiciones faltantes: `Marauder Línea`, `Beastman Renegado` (Horns), y `Chaos Minotauro` (Frenzy/Horns/MB/Unchannelled Fury).
+*   **Humanos — Blitzer Añadido**: Incorporado `Placador Blitzer` (MV7, Block) siguiendo el rulebook BB2020 oficial. El Halfling Hopeful ahora tiene 0-3 correcto.
+*   **Orcos — Roster Fiel a BB2020**: Añadido `Blitzer Orco` (Block, Break Tackle) como posición separada. El `Fortachón Bloqueador` corregido con `Mighty Blow (+1) + Thick Skull` (sin `Tackle` que es del Placador). Eliminada la posición duplicada "Placador" de Orcos.
+*   **Vampiros — Bug Secondary Corregido**: La posición `Vampiros Placador` tenía `secondary: "110000"` (coste colado por error). Corregido a `secondary: "P"`.
+*   **Habitantes del Inframundo — Traducción**: `specialRules` traducido a español.
+*   *Archivos Afectados*: `data/teams.ts`, `scripts/fix_encoding.cjs` (nuevo).
+
 ---
 ¡Por Nuffle, que los dados siempre te favorezcan! 🎲🎲

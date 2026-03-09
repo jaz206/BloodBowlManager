@@ -149,8 +149,8 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory }) => {
                                     setCurrentPage(1);
                                 }}
                                 className={`flex items-center gap-3 px-5 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${activeCategory === cat.id
-                                        ? 'bg-primary text-black shadow-lg shadow-primary/20'
-                                        : 'text-accent-gold hover:bg-white/5 hover:text-white border border-transparent'
+                                    ? 'bg-primary text-black shadow-lg shadow-primary/20'
+                                    : 'text-accent-gold hover:bg-white/5 hover:text-white border border-transparent'
                                     }`}
                             >
                                 <span className="material-symbols-outlined text-sm">{cat.icon}</span>
@@ -170,7 +170,7 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory }) => {
                         {pinnedSkills.map(name => (
                             <div key={name} className="flex items-center justify-between gap-2 py-1 border-b border-white/5 last:border-0">
                                 <span className="text-[10px] text-slate-300 font-black italic uppercase truncate">{name}</span>
-                                <button onClick={() => handlePinSkill({ name, category: '', description: '' })} className="text-slate-600 hover:text-red-400 transition-colors shrink-0">
+                                <button onClick={() => handlePinSkill({ keyEN: name, name, category: '', description: '' })} className="text-slate-600 hover:text-red-400 transition-colors shrink-0">
                                     <span className="material-symbols-outlined text-xs">close</span>
                                 </button>
                             </div>
@@ -253,8 +253,8 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory }) => {
                                     <button
                                         onClick={() => handlePinSkill(featuredSkill)}
                                         className={`w-full py-4 font-black uppercase tracking-widest text-[10px] rounded-2xl transition-all transform hover:scale-105 active:scale-95 shadow-xl italic flex items-center justify-center gap-2 ${pinnedSkills.includes(featuredSkill.name)
-                                                ? 'bg-primary/20 text-primary border border-primary/50'
-                                                : 'bg-primary text-black shadow-primary/10'
+                                            ? 'bg-primary/20 text-primary border border-primary/50'
+                                            : 'bg-primary text-black shadow-primary/10'
                                             }`}
                                     >
                                         <span className="material-symbols-outlined text-sm">{pinnedSkills.includes(featuredSkill.name) ? 'bookmark_added' : 'bookmark_add'}</span>
@@ -299,8 +299,8 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory }) => {
                                 key={page}
                                 onClick={() => setCurrentPage(page)}
                                 className={`size-12 flex items-center justify-center rounded-2xl font-black italic text-xs transition-all ${currentPage === page
-                                        ? 'bg-primary text-black shadow-xl shadow-primary/20'
-                                        : 'bg-surface-dark border border-primary/10 text-accent-gold hover:border-primary'
+                                    ? 'bg-primary text-black shadow-xl shadow-primary/20'
+                                    : 'bg-surface-dark border border-primary/10 text-accent-gold hover:border-primary'
                                     }`}
                             >
                                 {page}

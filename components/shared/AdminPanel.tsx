@@ -5,13 +5,24 @@ import { doc, updateDoc } from 'firebase/firestore';
 import SearchIcon from '../icons/SearchIcon';
 
 const AdminPanel: React.FC = () => {
-    const { teams, starPlayers, heroImage, updateHeroImage, loading, refresh } = useMasterData();
+    const { teams, starPlayers, heroImage, updateHeroImage, loading, refresh, syncMasterData, syncStatus, isFromFirestore, updateMasterItem } = useMasterData();
     const [searchTerm, setSearchTerm] = useState('');
     const [editingItem, setEditingItem] = useState<{ type: 'team' | 'starPlayer' | 'hero', data: any } | null>(null);
     const [isSaving, setIsSaving] = useState(false);
 
     const filteredTeams = teams.filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()));
     const filteredStars = starPlayers.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    const handleSync = async () => {
+        if (!window.confirm('¿Estás seguro de que quieres sobreescribir los datos de Firestore con los archivos estáticos del proyecto?')) return;
+        try {
+            await syncMasterData();
+            alert('Sincronización completada con éxito.');
+        } catch (err: any) {
+            console.error('Error syncing data:', err);
+            alert('Error al sincronizar: ' + (err.message || 'Desconocido. Revisa los permisos de Firestore.'));
+        }
+    };
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -20,16 +31,12 @@ const AdminPanel: React.FC = () => {
         try {
             if (editingItem.type === 'hero') {
                 await updateHeroImage(editingItem.data.url);
-                alert('Imagen de fondo actualizada con éxito.');
-                setEditingItem(null);
-                return;
+            } else if (editingItem.type === 'team') {
+                await updateMasterItem('teams', editingItem.data.name, editingItem.data);
+            } else if (editingItem.type === 'starPlayer') {
+                await updateMasterItem('star_players', editingItem.data.name, editingItem.data);
             }
-            const collectionName = editingItem.type === 'team' ? 'teams_master' : 'star_players_master';
-            const docId = editingItem.data.id || editingItem.data.name;
-            const docRef = doc(db, collectionName, docId);
 
-            const { id, ...dataToSave } = editingItem.data;
-            await updateDoc(docRef, dataToSave);
             alert('Cambios guardados con éxito.');
             setEditingItem(null);
             refresh();
@@ -52,7 +59,12 @@ const AdminPanel: React.FC = () => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
                 <div>
                     <h2 className="text-4xl font-display font-black text-white italic tracking-tighter uppercase">Panel de Control de Nuffle</h2>
-                    <p className="text-premium-gold font-display font-bold uppercase tracking-widest text-xs mt-2">Área de Administración de Datos Maestros</p>
+                    <div className="flex items-center gap-2 mt-2">
+                        <p className="text-premium-gold font-display font-bold uppercase tracking-widest text-xs">Área de Administración de Datos Maestros</p>
+                        <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter ${isFromFirestore ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-orange-500/20 text-orange-400 border border-orange-500/30'}`}>
+                            {isFromFirestore ? 'LIVE: FIRESTORE' : 'LOCAL: STATIC DATA'}
+                        </span>
+                    </div>
                 </div>
                 <div className="flex flex-wrap gap-4">
                     <button
@@ -62,15 +74,15 @@ const AdminPanel: React.FC = () => {
                         Cambiar Fondo Portada
                     </button>
                     <button
-                        onClick={() => {
-                            if (window.confirm('¿Estás seguro de que quieres sobreescribir los datos de Firestore con los archivos estáticos del proyecto?')) {
-                                useMasterData().syncMasterData();
-                                alert('Sincronización iniciada.');
-                            }
-                        }}
-                        className="px-6 py-2 rounded-xl bg-blood-red/20 border border-blood-red/30 text-blood-red font-display font-bold uppercase tracking-widest text-[10px] hover:bg-blood-red hover:text-white transition-all"
+                        onClick={handleSync}
+                        disabled={syncStatus === 'syncing'}
+                        className={`px-6 py-2 rounded-xl border font-display font-bold uppercase tracking-widest text-[10px] transition-all flex items-center gap-2 ${syncStatus === 'syncing'
+                            ? 'bg-zinc-800 border-zinc-700 text-zinc-500 cursor-not-allowed'
+                            : 'bg-blood-red/20 border-blood-red/30 text-blood-red hover:bg-blood-red hover:text-white'
+                            }`}
                     >
-                        Sincronizar Datos Estáticos
+                        {syncStatus === 'syncing' && <span className="w-3 h-3 border-2 border-zinc-500 border-t-white rounded-full animate-spin"></span>}
+                        {syncStatus === 'syncing' ? 'Sincronizando...' : 'Sincronizar a Firebase'}
                     </button>
                 </div>
             </div>

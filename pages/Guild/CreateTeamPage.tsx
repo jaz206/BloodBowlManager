@@ -89,12 +89,16 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
 
     const { skills: allSkills } = useMasterData();
 
-    const handleSkillClick = (skillName: string) => {
-        const cleanName = skillName.replace(/\(\+\d\)/g, '').trim();
-        const found = allSkills.find(s => s.name.toLowerCase() === cleanName.toLowerCase());
-        if (found) {
-            setSelectedSkill(found);
-        }
+    /** Resolve a canonical English key to the localized skill name */
+    const localizeSkill = (keyEN: string): string => {
+        const found = allSkills.find(s => s.keyEN === keyEN);
+        return found?.name ?? keyEN;
+    };
+
+    const handleSkillClick = (keyEN: string) => {
+        const cleanKey = keyEN.replace(/\(\+\d\)/g, '').trim();
+        const found = allSkills.find(s => s.keyEN === keyEN || s.keyEN === cleanKey);
+        if (found) setSelectedSkill(found);
     };
 
     const handleSubmit = () => {
@@ -192,7 +196,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-2">{t('team.create.coach')}</label>
                                 <input
                                     className="w-full bg-black/40 border border-white/5 rounded-2xl text-slate-500 p-4 shadow-inner cursor-not-allowed italic font-medium"
-                                    readonly
+                                    readOnly
                                     type="text"
                                     value={user?.name || 'Coach Unknown'}
                                 />
@@ -243,15 +247,16 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                                                 <td className="py-5 px-2 text-center font-mono font-black text-slate-400">{pos.stats.PS}</td>
                                                 <td className="py-5 px-2 text-center font-mono font-black text-slate-400">{pos.stats.AR}</td>
                                                 <td className="py-5 px-4 text-[11px] text-slate-500 leading-relaxed font-medium italic group-hover:text-slate-300 transition-colors">
-                                                    {pos.skills ? (
+                                                    {pos.skillKeys && pos.skillKeys.length > 0 ? (
                                                         <div className="flex flex-wrap gap-x-2 gap-y-1">
-                                                            {pos.skills.split(',').map((skill, sIdx) => (
+                                                            {pos.skillKeys.map((keyEN, sIdx) => (
                                                                 <button
                                                                     key={sIdx}
-                                                                    onClick={() => handleSkillClick(skill.trim())}
-                                                                    className="hover:text-premium-gold transition-colors cursor-pointer text-left"
+                                                                    onClick={() => handleSkillClick(keyEN)}
+                                                                    className="hover:text-premium-gold transition-colors cursor-pointer text-left underline-offset-2 hover:underline"
+                                                                    title="Ver descripción"
                                                                 >
-                                                                    {skill.trim()}{sIdx < pos.skills.split(',').length - 1 ? ',' : ''}
+                                                                    {localizeSkill(keyEN)}{sIdx < pos.skillKeys.length - 1 ? ',' : ''}
                                                                 </button>
                                                             ))}
                                                         </div>
