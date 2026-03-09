@@ -2,566 +2,1063 @@ import type { StarPlayer } from '../types';
 
 export const starPlayersData: StarPlayer[] = [
   {
-    name: "'Captain' Karina Von Riesz",
-    cost: 230000,
-    stats: { MV: 7, FU: "4", AG: "2+", PS: "4+", AR: "9+" },
-    skills: "Sed de Sangre (2+), Esquivar, Mirada Hipnótica, En pie de un salto, Solitario (4+), Regeneración",
-    specialRules: "Tasty Morsel: Uma vez por partido, si Karina falla uma tirada de Sed de Sangre, puede elegir morder a um jugador rival com FU 3 o menos.",
-    playsFor: ["Selectiva de Sylvania"],
-    image: "https://bloodbowlbase.ru/media/starplayers/CptKarinaVonRiesz1.jpg"
+    "name": "Akhorne The Squirrel",
+    "cost": 80000,
+    "stats": {
+      "MV": 7,
+      "FU": "1",
+      "AG": "2+",
+      "PS": "–",
+      "AR": "6+"
+    },
+    "skills": "Claws, Dauntless, Dodge, Frenzy, Jump Up, Loner (4+), No Ball, Side Step, Stunty, Titchy",
+    "specialRules": "**Blind Rage:** Akhorne may choose to re-roll the D6 when rolling for the Dauntless Skill.",
+    "playsFor": [
+      "Any Team"
+    ]
   },
   {
-    name: "Akhorne The Squirrel",
-    cost: 80000,
-    stats: { MV: 7, FU: "1", AG: "2+", PS: "-", AR: "6+" },
-    skills: "Garras, Agallas, Esquivar, Furia, En pie de un salto, Solitario (4+), Sin manos, Echarse a un lado, Escurridizo, Canijo, Furia Ciega",
-    specialRules: "Un jugador com este rasgo debe placar siempre al jugador más cercano al que pueda llegar. Si hay varios a la misma distancia, el entrenador elige. Si no puede placar, puede realizar otra acción.",
-    playsFor: ["Any Team"],
-    image: "https://www.warhammer.com/app/resources/catalog/product/threeSixty/99120999007_BloodBowlTreemanOTT1360/02-02.jpg",
+    "name": "Anqi Panqi",
+    "cost": 190000,
+    "stats": {
+      "MV": 7,
+      "FU": "4",
+      "AG": "5+",
+      "PS": "6+",
+      "AR": "10+"
+    },
+    "skills": "Block, Grab, Loner (4+), Stand Firm, Unsteady",
+    "specialRules": "**Savage Blow:** Once per game, when Anqi performs a Block Action against an opposition player he may choose to re-roll any number of the Block Dice.",
+    "playsFor": [
+      "Lustrian Superleague"
+    ]
   },
   {
-    name: "Anqi Panqi",
-    cost: 190000,
-    stats: { MV: 7, FU: "4", AG: "5+", PS: "6+", AR: "10+" },
-    skills: "Placar, Apartar, Solitario (4+), Mantenerse firme, Golpe Salvaje",
-    specialRules: "Una vez por partido, después de realizar uma tirada de Armadura como resultado de um placaje de Anqi Panqi, puede modificar la tirada añadiendo su FU. Um 1 natural siempre falla.",
-    playsFor: ["Superliga Lustriana", "Copa Dedal Halfling"],
-    image: "https://i.redd.it/anqi-panqi-is-back-on-tabletop-v0-1nt28dkhxkqd1.png?width=1080&format=png&auto=webp&s=c58d3de9dab93388dafe3e8ddbb81754f562f832",
+    "name": "Barik Farblast",
+    "cost": 80000,
+    "stats": {
+      "MV": 6,
+      "FU": "3",
+      "AG": "4+",
+      "PS": "3+",
+      "AR": "9+"
+    },
+    "skills": "Cannoneer, Hail Mary Pass, Loner (4+), Pass, Secret Weapon, Sure Hands, Thick Skull",
+    "specialRules": "**Blast It!:** Whenever Barik makes a Hail Mary Pass, he may re-roll any Scatter results for determining where the ball lands, and any team-mate attempting to catch the ball applies a +1 modifier to the roll.",
+    "playsFor": [
+      "Old World Classic",
+      "Worlds Edge Superleague"
+    ]
   },
   {
-    name: "Barik Farblast",
-    cost: 80000,
-    stats: { MV: 6, FU: "3", AG: "4+", PS: "3+", AR: "9+" },
-    skills: "Cañonero, Pase a lo loco, Solitario (4+), Pasar, Arma secreta, Brazo fuerte, Manos Seguras, Cabeza Dura",
-    specialRules: "Blast It!: Uma vez por partido, después de um Pase a lo loco, Barik puede repetir la tirada de desviación.",
-    playsFor: ["Clásico del Viejo Mundo", "Superliga del Fin del Mundo"],
-    image: "https://www.warhammer.com/app/resources/catalog/product/920x950/99850999037_BBBarikFarblastLead.jpg?fm=webp&w=670&h=691",
+    "name": "Bilerot Vomitflesh",
+    "cost": 180000,
+    "stats": {
+      "MV": 4,
+      "FU": "5",
+      "AG": "4+",
+      "PS": "6+",
+      "AR": "10+"
+    },
+    "skills": "Dirty Player, Disturbing Presence, Foul Appearance, Lone Fouler, Loner (4+), Regeneration, Unsteady",
+    "specialRules": "**Putrid Regurgitation:** Once per half, Bilerot may use the Projectile Vomit Special Action. This may still be used even if Bilerot has already performed a Block Action this Turn.",
+    "playsFor": [
+      "Favoured of Nurgle"
+    ]
   },
   {
-    name: "Bilerot Vomitflesh",
-    cost: 180000,
-    stats: { MV: 4, FU: "5", AG: "4+", PS: "6+", AR: "10+" },
-    skills: "Jugar Sucio (+1), Presencia perturbadora, Apariencia asquerosa, Solitario (4+)",
-    specialRules: "Putrid Regurgitation: Uma vez por partido, Bilerot puede realizar uma acción especial de Proyectil de Vómito, aunque ya haya realizado uma acción de placaje este turno.",
-    playsFor: ["Elegidos de Nurgle"],
-    image: "https://www.warhammer.com/app/resources/catalog/product/920x950/99850999058_Bilerot1.jpg?fm=webp&w=670&h=691",
+    "name": "The Black Gobbo",
+    "cost": 210000,
+    "stats": {
+      "MV": 6,
+      "FU": "2",
+      "AG": "3+",
+      "PS": "3+",
+      "AR": "8+"
+    },
+    "skills": "Bombardier, Disturbing Presence, Dodge, Loner (3+), Side Step, Sneaky Git, Stab, Stunty",
+    "specialRules": "**Sneakiest of the Lot:** If your team includes the Black Gobbo, then you may declare two Foul Actions per Turn rather than the usual one. However, one of these foul actions must be declared by the Black Gobbo himself.",
+    "playsFor": [
+      "Badlands Brawl",
+      "Underworld Challenge"
+    ]
   },
   {
-    name: "Boa Kon'ssstriktr",
-    cost: 200000,
-    stats: { MV: 6, FU: "3", AG: "3+", PS: "4+", AR: "9+" },
-    skills: "Esquivar, Mirada Hipnótica, Solitario (4+), Cola prensil, Manos seguras, Echarse a un lado",
-    specialRules: "Look into my Eyes: Uma vez por partido, si Boa empieza su turno marcando al portador del balón, tira 1D6. Com 2+, el oponente suelta el balón y Boa lo coge. La activación de Boa termina.",
-    playsFor: ["Superliga Lustriana"],
-    image: "https://bloodbowlbase.ru/media/starplayers/BBBoaKonssstriktrLead.jpg",
+    "name": "Boa Kon’ssstriktr",
+    "cost": 180000,
+    "stats": {
+      "MV": 6,
+      "FU": "3",
+      "AG": "3+",
+      "PS": "4+",
+      "AR": "9+"
+    },
+    "skills": "Dodge, Fend, Hypnotic Gaze, Loner (4+), Prehensile Tail, Safe Pair of Hands, Side Step",
+    "specialRules": "**Look into my Eyes:** Once per game, if Boa begins his activation Marking an opposition player in possession of the ball, he may roll a D6. On a 1, nothing happens. On a 2+ the opposition player losses possession of the ball, Boa immediately gains possession of the ball, and Boa’s activation immediately ends.",
+    "playsFor": [
+      "Lustrian Superleague"
+    ]
   },
   {
-    name: "Bomber Dribblesnot",
-    cost: 50000,
-    stats: { MV: 6, FU: "2", AG: "3+", PS: "3+", AR: "8+" },
-    skills: "Precisión, Bombardero, Esquivar, Solitario (4+), Humanoide bala, Arma secreta, Escurridizo",
-    specialRules: "Kaboom!: Uma vez por partido, si um oponente atrapa uma bomba lanzada por Bomber, puedes decidir que explote inmediatamente.",
-    playsFor: ["Reyerta en las Yermas", "Reto del Inframundo"],
-    image: "https://bloodbowlbase.ru/media/starplayers/BomberDribblesnotLead.jpg",
+    "name": "Bomber Dribblesnot",
+    "cost": 80000,
+    "stats": {
+      "MV": 6,
+      "FU": "2",
+      "AG": "3+",
+      "PS": "3+",
+      "AR": "8+"
+    },
+    "skills": "Accurate, Bombardier, Dodge, Loner (4+), Right Stuff, Secret Weapon, Stunty",
+    "specialRules": "**Kaboom!:** Once per game, if an opposition player catches a bomb thrown by Bomber, you can choose to have it explode rather than the opposition player immediate attempting to throw it again.",
+    "playsFor": [
+      "Badlands Brawl",
+      "Underworld Challenge"
+    ]
   },
   {
-    name: "Bryce 'The Slice' Cambuel",
-    cost: 130000,
-    stats: { MV: 5, FU: "3", AG: "4+", PS: "-", AR: "9+" },
-    skills: "Motosierra, Solitario (4+), Regeneración, Arma secreta, Mantenerse firme, Cabeza Dura",
-    specialRules: "Ghostly Flames: Uma vez por parte, cuando Bryce realiza um ataque de Motosierra como parte de uma Penetración, puede añadir +4 a la tirada de Armadura en lugar de +3.",
-    playsFor: ["Selectiva de Sylvania"],
-    image: "https://bloodbowlbase.ru/media/starplayers/BryceSlice1.jpg",
+    "name": "Bryce ‘The Slice’ Cambuel",
+    "cost": 130000,
+    "stats": {
+      "MV": 5,
+      "FU": "3",
+      "AG": "4+",
+      "PS": "–",
+      "AR": "9+"
+    },
+    "skills": "Chainsaw, Loner (4+), Regeneration, Secret Weapon, Stand Firm, Thick Skull, Ghostly Flames",
+    "specialRules": "**Ghostly Flames:** (Currently Missing from Season 3)",
+    "playsFor": [
+      "Sylvanian Spotlight"
+    ]
   },
   {
-    name: "Cindy Piewhistle",
-    cost: 50000,
-    stats: { MV: 5, FU: "2", AG: "3+", PS: "3+", AR: "7+" },
-    skills: "Precisión, Bombardero, Esquivar, Solitario (4+)",
-    specialRules: "Once per game, Cindy can re-roll a single dice when making a Pass action.",
-    playsFor: ["Copa Dedal Halfling", "Clásico del Viejo Mundo"],
-    image: "https://bloodbowlbase.ru/media/starplayers/CindyPiewhistle01.jpg",
+    "name": "‘Captain’ Karina Von Riesz",
+    "cost": 230000,
+    "stats": {
+      "MV": 7,
+      "FU": "4",
+      "AG": "2+",
+      "PS": "4+",
+      "AR": "9+"
+    },
+    "skills": "Bloodlust (2+), Dodge, Hypnotic Gaze, Jump Up, Loner (4+), Regeneration",
+    "specialRules": "**Tasty Morsel:** Once per game, when Karina fails a Bloodlust roll, she may choose to bite an opposition player with a ST of 3 or lower as if they were a Thrall Lineman team-mate. Karina may not bite Star Players with this special rule.",
+    "playsFor": [
+      "Sylvanian Spotlight"
+    ]
   },
   {
-    name: "Count Luthor von Drakenborg",
-    cost: 340000,
-    stats: { MV: 6, FU: "5", AG: "2+", PS: "3+", AR: "10+" },
-    skills: "Placar, Mirada Hipnótica, Solitario (4+), Regeneración, Echarse a un lado",
-    specialRules: "Star of the Show: Una vez por partido, cuando el Conde Luthor anota un touchdown, su entrenador puede ganar una Segunda Oportunidad de equipo. Si esta Segunda Oportunidad no se ha usado para el final de la siguiente entrada, se pierde.",
-    playsFor: ["Selectiva de Sylvania"],
-    image: "https://bloodbowlbase.ru/media/starplayers/LuthorVonDrakenborg1.jpg",
+    "name": "Count Luthor von Drakenborg",
+    "cost": 300000,
+    "stats": {
+      "MV": 6,
+      "FU": "5",
+      "AG": "2+",
+      "PS": "3+",
+      "AR": "10+"
+    },
+    "skills": "Block, Hypnotic Gaze, Loner (4+), Regeneration, Side Step",
+    "specialRules": "**Star of the Show:** Once per game, when Count Luthor scores a Touchdown, his controlling coach gains one Team Re-roll until the end of the following Drive. If this Team Re-roll has not been used by the end of the next Drive, it is lost.",
+    "playsFor": [
+      "Sylvanian Spotlight"
+    ]
   },
   {
-    name: "Grak and Crumbleberry",
-    cost: 250000,
-    pair: [
-      {
-        name: "Grak",
-        stats: { MV: 5, FU: "5", AG: "4+", PS: "4+", AR: "10+" },
-        skills: "Bone Head, Patear compañero, Solitario (4+), Golpe mortífero (+1), Cabeza dura",
-      },
-      {
-        name: "Crumbleberry",
-        stats: { MV: 5, FU: "2", AG: "3+", PS: "6+", AR: "7+" },
-        skills: "Esquivar, Solitario (4+), Humanoide bala, Escurridizo, Manos seguras",
-      }
-    ],
-    skills: "Dos por Uno",
-    specialRules: "Grak y Crumbleberry deben ser contratados como pareja y cuentan como dos Jugadores Estrella. Sin embargo, si Grak o Crumbleberry es retirado del juego debido a un resultado de KO o Lesión en la tabla de heridas, el otro reemplaza el rasgo Solitario (4+) por el rasgo Solitario (2+).",
-    playsFor: ["Any Team"],
-    image: "https://bloodbowlbase.ru/media/starplayers/GrakCrumbleberry11hw.jpg",
+    "name": "Cindy Piewhistle",
+    "cost": 100000,
+    "stats": {
+      "MV": 5,
+      "FU": "2",
+      "AG": "3+",
+      "PS": "3+",
+      "AR": "7+"
+    },
+    "skills": "Accurate, Bombardier, Dodge, Loner (4+), Secret Weapon, Stunty",
+    "specialRules": "**All You Can Eat:** Once per game, Cindy may perform two Throw Bomb Special Actions rather than one; though she must commit to doing so before making the first Action. If she does, immediately after performing the second Throw Bomb Special Action, roll a D6. On a 1-3, Cindy is immediately Sent-off.",
+    "playsFor": [
+      "Halfling Thimble Cup",
+      "Old World Classic"
+    ]
   },
   {
-    name: "Deeproot Strongbranch",
-    cost: 280000,
-    stats: { MV: 2, FU: "7", AG: "5+", PS: "4+", AR: "11+" },
-    skills: "Placar, Solitario (4+), Golpe mortífero (+2), Mantenerse firme, Brazo fuerte, Cabeza Dura, Lanzar compañero, ¡Tronco va!, Fiable",
-    specialRules: "Timmm-ber!: If Deeproot fails a Really Stupid roll, he does not lose his Tackle Zone.",
-    playsFor: ["Copa Dedal Halfling", "Clásico del Viejo Mundo"],
-    image: "https://bloodbowlbase.ru/media/starplayers/DeeprootStrongbranch01.jpg",
+    "name": "Deeproot Strongbranch",
+    "cost": 280000,
+    "stats": {
+      "MV": 2,
+      "FU": "7",
+      "AG": "5+",
+      "PS": "4+",
+      "AR": "11+"
+    },
+    "skills": "Block, Bullseye, Loner (4+), Mighty Blow, Stand Firm, Strong Arm, Thick Skull, Throw Team-mate, Timmm-ber!",
+    "specialRules": "**Reliable:** If Deeproot makes a Fumbled Throw when performing a Throw Team-mate Action, the player that was being thrown will Bounce as normal but will automatically land safely.",
+    "playsFor": [
+      "Woodland League"
+    ]
   },
   {
-    name: "Dribl & Drull",
-    cost: 190000,
-    pair: [
-      {
-        name: "Dribl",
-        stats: { MV: 8, FU: "2", AG: "3+", PS: "-", AR: "8+" },
-        skills: "Apariencia asquerosa, Solitario (4+), Echarse a un lado, Furtivo, Apuñalar, Escurridizo",
-      },
-      {
-        name: "Drull",
-        stats: { MV: 8, FU: "2", AG: "3+", PS: "-", AR: "8+" },
-        skills: "Recepción en plancha, Solitario (4+), Echarse a un lado, Furtivo, Apuñalar, Escurridizo",
-      }
-    ],
-    specialRules: "Un Par Furtivo: Dribl y Drull deben ser contratados como pareja y cuentan como dos Jugadores Estrella. Adicionalmente, cuando Dribl o Drull realizan una acción de Apuñalar o Falta contra un jugador oponente marcado por ambos, pueden aplicar un modificador de +1 a la tirada de herida.",
-    playsFor: ["Superliga Lustriana"],
-    image: "https://bloodbowlbase.ru/media/starplayers/DrullDrible2.jpg",
+    "name": "Dribl & Drull",
+    "cost": 230000,
+    "stats": {
+      "MV": 8,
+      "FU": "2 & 2",
+      "AG": "3+ & 3+",
+      "PS": "4+ & 4+",
+      "AR": "8+ & 8+"
+    },
+    "skills": "**Dribl:** Dirty Player, Dodge, Loner (4+), Quick Foul, Side Step, Sneaky Git, Stunty. **Drull:** Dodge, Loner (4+), Side Step, Stab, Stunty",
+    "specialRules": "**A Sneaky Pair:** Dribl & Drull must be hired as a pair. Additionally, whenever Dribl or Drull perform either a Foul Action or a Stab Special Action against an opposition player Marked by both Dribl & Drull, they may apply a +1 modifier to the roll.",
+    "playsFor": [
+      "Lustrian Superleague"
+    ]
   },
   {
-    name: "Eldril Sidewinder",
-    cost: 230000,
-    stats: { MV: 8, FU: "3", AG: "2+", PS: "5+", AR: "8+" },
-    skills: "Atrapar, Esquivar, Mirada Hipnótica, Solitario (4+), Nervios de acero, Atento al balón, Mirada hechizante",
-    specialRules: "Mesmerizing Gaze: Once per game, may use Hypnotic Gaze on a player up to 3 squares away.",
-    playsFor: ["Liga de los Reinos Elfos"],
-    image: "https://bloodbowlbase.ru/media/starplayers/BBEldrilSidewinder01.jpg",
+    "name": "Eldril Sidewinder",
+    "cost": 220000,
+    "stats": {
+      "MV": 8,
+      "FU": "3",
+      "AG": "2+",
+      "PS": "3+",
+      "AR": "8+"
+    },
+    "skills": "Catch, Dodge, Hypnotic Gaze, Loner (4+), Nerves Of Steel, On The Ball",
+    "specialRules": "**Mesmerizing Gaze:** Once per half, Eldril may re-roll the dice when performing a Hypnotic Gaze Special Action.",
+    "playsFor": [
+      "Elven Kingdoms League"
+    ]
   },
   {
-    name: "Estelle La Veneaux",
-    cost: 190000,
-    stats: { MV: 6, FU: "3", AG: "3+", PS: "4+", AR: "8+" },
-    skills: "Presencia perturbadora, Esquivar, Luchador, Solitario (4+), Echarse a un lado",
-    specialRules: "Baleful Hex: Once per game, choose an opposition player within 3 squares. On a 2+, that player loses their tackle zones until the start of their next activation.",
-    playsFor: ["Superliga Lustriana"],
-    image: "https://bloodbowlbase.ru/media/starplayers/BBEstellelaVeneauxLead.jpg",
+    "name": "Estelle La Veneaux",
+    "cost": 190000,
+    "stats": {
+      "MV": 6,
+      "FU": "3",
+      "AG": "3+",
+      "PS": "4+",
+      "AR": "8+"
+    },
+    "skills": "Disturbing Presence, Dodge, Guard, Loner (4+), Side Step",
+    "specialRules": "**Baleful Hex:** Once per game, at the beginning of Estelle’s activation, she may select an opposition player within 5 squares and roll a D6. On a 2+, the selected player becomes Distracted and cannot be activated during their team’s next Turn.",
+    "playsFor": [
+      "Lustrian Superleague"
+    ]
   },
   {
-    name: "Frank 'n' Stein",
-    cost: 250000,
-    stats: { MV: 4, FU: "5", AG: "4+", PS: "-", AR: "10+" },
-    skills: "Abrirse paso, Solitario (4+), Golpe mortífero (+1), Regeneración, Mantenerse firme, Cabeza Dura",
-    specialRules: "Brutal Block: This player may re-roll a single Both Down result.",
-    playsFor: ["Clásico del Viejo Mundo", "Selectiva de Sylvania"],
-    image: "https://bloodbowlbase.ru/media/starplayers/FrankNSteinLead.jpg",
+    "name": "Frank ‘n’ Stein",
+    "cost": 250000,
+    "stats": {
+      "MV": 4,
+      "FU": "5",
+      "AG": "4+",
+      "PS": "–",
+      "AR": "10+"
+    },
+    "skills": "Break Tackle, Loner (4+), Mighty Blow (+1), Regeneration, Stand Firm, Thick Skull, Brutal Block",
+    "specialRules": "**Brutal Block:** (Currently Missing from Season 3)",
+    "playsFor": [
+      "Old World Classic",
+      "Sylvanian Spotlight"
+    ]
   },
   {
-    name: "Fungus the Loon",
-    cost: 80000,
-    stats: { MV: 4, FU: "7", AG: "3+", PS: "-", AR: "8+" },
-    skills: "Bola con cadena, Golpe mortífero (+1), Solitario (4+), Sin manos, Arma secreta, Escurridizo",
-    specialRules: "Whirling Dervish: If this player is ever pushed back, they are Knocked Down instead.",
-    playsFor: ["Reyerta en las Yermas", "Reto del Inframundo"],
-    image: "https://bloodbowlbase.ru/media/starplayers/FungusTheLoon.jpg",
+    "name": "Fungus the Loon",
+    "cost": 80000,
+    "stats": {
+      "MV": 4,
+      "FU": "7",
+      "AG": "3+",
+      "PS": "–",
+      "AR": "8+"
+    },
+    "skills": "Ball & Chain, Loner (4+), Mighty Blow, No Ball, Secret Weapon, Stunty",
+    "specialRules": "**Whirling Dervish:** Once per Activation, Fungus may re-roll the D6 when determining which direction he moves in.",
+    "playsFor": [
+      "Badlands Brawl",
+      "Underworld Challenge"
+    ]
   },
   {
-    name: "Glart Smashrip",
-    cost: 195000,
-    stats: { MV: 5, FU: "4", AG: "4+", PS: "-", AR: "9+" },
-    skills: "Placar, Garras, Apartar, Indomable, Solitario (4+), Mantenerse firme",
-    specialRules: "Frenzied Rush: This player does not have to pay a team re-roll to use the Pro skill.",
-    playsFor: ["Elegidos de...", "Reto del Inframundo"],
-    image: "https://bloodbowlbase.ru/media/starplayers/GlartSmashrip01.jpg",
+    "name": "Glart Smashrip",
+    "cost": 175000,
+    "stats": {
+      "MV": 5,
+      "FU": "4",
+      "AG": "4+",
+      "PS": "6+",
+      "AR": "9+"
+    },
+    "skills": "Block, Claws, Grab, Juggernaut, Loner (4+), Stand Firm",
+    "specialRules": "**Frenzied Rush:** Once per half, when Glart declares a Blitz Action he may gain the Frenzy Skill until the end of his activation. Glatt may not use the Grab Skill during a Turn in which he uses this special rule.",
+    "playsFor": [
+      "Underworld Challenge"
+    ]
   },
   {
-    name: "Gloriel Summerbloom",
-    cost: 150000,
-    stats: { MV: 7, FU: "2", AG: "2+", PS: "2+", AR: "8+" },
-    skills: "Precisión, Esquivar, Solitario (3+), Pasar, Echarse a un lado, Manos seguras",
-    specialRules: "Shot to Nothing: This player can attempt to throw the ball even if they are in an opposition player's tackle zone.",
-    playsFor: ["Liga de los Reinos Elfos"],
+    "name": "Gloriel Summerbloom",
+    "cost": 150000,
+    "stats": {
+      "MV": 7,
+      "FU": "2",
+      "AG": "2+",
+      "PS": "2+",
+      "AR": "8+"
+    },
+    "skills": "Accurate, Dodge, Loner (3+), Pass, Side Step, Sure Hands",
+    "specialRules": "**Shot to Nothing:** Once per game, when Gloriel is activated she may use this special rule. If she does, Gloriel gains the Hail Mary Pass Skill until the end of her activation.",
+    "playsFor": [
+      "Elven Kingdoms League"
+    ]
   },
   {
-    name: "Glotl Stop",
-    cost: 270000,
-    stats: { MV: 6, FU: "6", AG: "5+", PS: "-", AR: "10+" },
-    skills: "Ferocidad animal, Furia, Solitario (4+), Golpe mortífero (+1), Cola prensil, Mantenerse firme, Cabeza Dura",
-    specialRules: "Primal Savagery: If this player causes an opposition player to be removed as a casualty, roll a D6. On a 4+, this player may perform another Block action.",
-    playsFor: ["Superliga Lustriana"],
+    "name": "Glotl Stop",
+    "cost": 260000,
+    "stats": {
+      "MV": 6,
+      "FU": "6",
+      "AG": "5+",
+      "PS": "6+",
+      "AR": "10+"
+    },
+    "skills": "Animal Savagery, Frenzy, Loner (4+), Mighty Blow, Prehensile Tail, Stand Firm, Thick Skull",
+    "specialRules": "**Primal Savagery:** One per game, when Glotl fails an Animal Savagery roll, it may lash out at an opposition player rather than a team-mate.",
+    "playsFor": [
+      "Lustrian Superleague"
+    ]
   },
   {
-    name: "Grashnak Blackhoof",
-    cost: 240000,
-    stats: { MV: 6, FU: "6", AG: "4+", PS: "-", AR: "9+" },
-    skills: "Furia, Cuernos, Solitario (4+), Golpe mortífero (+1), Cabeza Dura, Furia descontrolada",
-    specialRules: "Gored by the Bull: If Grashnak pushes an opponent, he may move into the vacated square for free.",
-    playsFor: ["Elegidos de..."],
+    "name": "Grak & Crumbleberry",
+    "cost": 250000,
+    "stats": {
+      "MV": 5,
+      "FU": "5 & 2",
+      "AG": "4+ & 3+",
+      "PS": "4+ & 5+",
+      "AR": "10+ & 7+"
+    },
+    "skills": "**Grak:** Bone Head, Kick Team-mate, Loner (4+), Mighty Blow, Thick Skull. **Crumbleberry:** Dodge, Lethal Flight, Loner (4+), Right Stuff, Stunty, Sure Hands",
+    "specialRules": "**I’ll Carry You:** Grak & Crumbleberry must be hired as a pair. Additionally, once per half, if Grak begins his activation adjacent to Crumbleberry he may pick up Crumbleberry (remove temporarily). At end of activation, place adjacent. Grak gains Break Tackle and Dodge while carrying him.",
+    "playsFor": [
+      "Any Team"
+    ]
   },
   {
-    name: "Gretchen Wachter \"The Blood Bowl Widow\"",
-    cost: 260000,
-    stats: { MV: 7, FU: "3", AG: "2+", PS: "-", AR: "9+" },
-    skills: "Presencia perturbadora, Esquivar, Apariencia asquerosa, En pie de un salto, Solitario (4+), Sin manos, Regeneración, Seguimiento, Echarse a un lado",
-    specialRules: "Incorporeal: This player may move through squares occupied by opposing players.",
-    playsFor: ["Selectiva de Sylvania"],
+    "name": "Grashnak Blackhoof",
+    "cost": 240000,
+    "stats": {
+      "MV": 6,
+      "FU": "6",
+      "AG": "4+",
+      "PS": "6+",
+      "AR": "9+"
+    },
+    "skills": "Frenzy, Horns, Loner (4+), Mighty Blow, Thick Skull, Unchannelled Fury",
+    "specialRules": "**Gored by the Bull:** Once per game when Grashnak performs a Block Action as part of a Blitz Action, he may roll one additional Block Dice (max 3). If Frenzy triggers, the second block also benefits.",
+    "playsFor": [
+      "Chaos Clash"
+    ]
   },
   {
-    name: "Griff Oberwald",
-    cost: 280000,
-    stats: { MV: 7, FU: "4", AG: "2+", PS: "3+", AR: "9+" },
-    skills: "Placar, Esquivar, Zafarse, Solitario (3+), Esprintar, Pies firmes",
-    specialRules: "Consummate Professional: Once per game, Griff may re-roll any one dice roll he has made.",
-    playsFor: ["Copa Dedal Halfling"],
+    "name": "Gretchen Wachter",
+    "cost": 180000,
+    "stats": {
+      "MV": 7,
+      "FU": "3",
+      "AG": "2+",
+      "PS": "–",
+      "AR": "9+"
+    },
+    "skills": "Disturbing Presence, Dodge, Foul Appearance, Jump Up, Loner (4+), No Ball, Regeneration, Shadowing, Side Step",
+    "specialRules": "**Incorporeal:** Once per game, when Gretchen is activated she can use this special rule. Until the end of her activation, Gretchen does not have to make Dodge rolls for leaving a square within an opposition player’s Tackle Zone.",
+    "playsFor": [
+      "Sylvanian Spotlight"
+    ]
   },
   {
-    name: "Grim Ironjaw",
-    cost: 200000,
-    stats: { MV: 5, FU: "4", AG: "3+", PS: "-", AR: "9+" },
-    skills: "Placar, Agallas, Furia, Solitario (4+), Placaje múltiple, Cabeza Dura, Matador",
-    specialRules: "Slayer: This player is automatically removed from the pitch if they are the victim of a casualty.",
-    playsFor: ["Clásico del Viejo Mundo", "Copa Dedal Halfling", "Superliga del Fin del Mundo"],
+    "name": "Griff Oberwald",
+    "cost": 300000,
+    "stats": {
+      "MV": 7,
+      "FU": "4",
+      "AG": "2+",
+      "PS": "3+",
+      "AR": "9+"
+    },
+    "skills": "Block, Dodge, Fend, Loner (3+), Sprint, Sure Feet",
+    "specialRules": "**Consummate Professional:** Once per game, Griff may apply a +1 modifier to an Agility Test he has made. This modifier may be applied after the roll has been made.",
+    "playsFor": [
+      "Old World Classic"
+    ]
   },
   {
-    name: "Grombrindal, the White Dwarf",
-    cost: 210000,
-    stats: { MV: 5, FU: "3", AG: "3+", PS: "4+", AR: "10+" },
-    skills: "Placar, Agallas, Solitario (4+), Golpe mortífero (+1), Mantenerse firme, Cabeza Dura",
-    specialRules: "Wisdom of the White Dwarf: Once per game, an extra team re-roll can be used.",
-    playsFor: ["Copa Dedal Halfling", "Superliga Lustriana", "Clásico del Viejo Mundo", "Superliga del Fin del Mundo"],
+    "name": "Grim Ironjaw",
+    "cost": 200000,
+    "stats": {
+      "MV": 5,
+      "FU": "4",
+      "AG": "3+",
+      "PS": "6+",
+      "AR": "9+"
+    },
+    "skills": "Block, Dauntless, Frenzy, Hatred (Big Guy), Loner (4+), Multiple Block, Thick Skull",
+    "specialRules": "**Slayer:** Once per game, when an opposition Big Guy is Knocked Down as a result of a Block Action performed by Grim, you may apply an additional +1 modifier to either the Armour Roll or the Injury Roll.",
+    "playsFor": [
+      "Worlds Edge Superleague"
+    ]
   },
   {
-    name: "Guffle Pusmaw",
-    cost: 180000,
-    stats: { MV: 5, FU: "4", AG: "4+", PS: "6+", AR: "10+" },
-    skills: "Apariencia asquerosa, Solitario (4+), Boca monstruosa, Nervios de acero, Atento al balón, Peste",
-    specialRules: "Quick Bits: Once per game, Guffle may re-roll a failed attempt to catch the ball.",
-    playsFor: ["Elegidos de Nurgle"],
+    "name": "Grombrindal",
+    "cost": 170000,
+    "stats": {
+      "MV": 5,
+      "FU": "3",
+      "AG": "3+",
+      "PS": "4+",
+      "AR": "10+"
+    },
+    "skills": "Block, Break Tackle, Dauntless, Loner (4+), Mighty Blow, Stand Firm, Sure Feet, Thick Skull",
+    "specialRules": "**Wisdom of the White Dwarf:** Once per game, when Grombrindal is activated he may select one team-mate within 2 squares. The selected team-mate gains one of: Break Tackle, Dauntless, Mighty Blow, or Sure Feet until the end of turn.",
+    "playsFor": [
+      "Halfling Thimble Cup",
+      "Old World Classic",
+      "Worlds Edge Superleague"
+    ]
   },
   {
-    name: "H'thark the Unstoppable",
-    cost: 300000,
-    stats: { MV: 6, FU: "6", AG: "4+", PS: "6+", AR: "10+" },
-    skills: "Placar, Abrirse paso, Placaje defensivo, Indomable, Solitario (4+), Esprintar, Pies firmes, Cabeza Dura",
-    specialRules: "Unstoppable Momentum: This player may continue to move after a Blitz action.",
-    playsFor: ["Reyerta en las Yermas", "Elegidos de Hashut"],
+    "name": "Guffle Pusmaw",
+    "cost": 150000,
+    "stats": {
+      "MV": 5,
+      "FU": "4",
+      "AG": "4+",
+      "PS": "6+",
+      "AR": "10+"
+    },
+    "skills": "Foul Appearance, Loner (4+), Monstrous Mouth, Nerves of Steel, On the Ball, Plague Ridden",
+    "specialRules": "**Quick Bite:** Once per game, if Guffle is Marking an opposition player who catches the ball, he may immediately make an Armour Roll against that player. If broken, Guffle gains the ball. No Turnover.",
+    "playsFor": [
+      "Favoured of Nurgle"
+    ]
   },
   {
-    name: "Hakflem Skuttlespike",
-    cost: 210000,
-    stats: { MV: 9, FU: "3", AG: "2+", PS: "3+", AR: "8+" },
-    skills: "Esquivar, Brazos adicionales, Solitario (4+), Cola prensil, Dos cabezas",
-    specialRules: "Treacherous: This player may use a team re-roll even if they have Loner.",
-    playsFor: ["Elegidos de...", "Reto del Inframundo"],
+    "name": "H’thark the Unstoppable",
+    "cost": 300000,
+    "stats": {
+      "MV": 6,
+      "FU": "6",
+      "AG": "4+",
+      "PS": "6+",
+      "AR": "10+"
+    },
+    "skills": "Block, Break Tackle, Defensive, Juggernaut, Loner (4+), Sprint, Sure Feet, Thick Skull",
+    "specialRules": "**Unstoppable Momentum:** Whenever H’Thark performs a Block Action as part of a Blitz Action, he may re-roll a single Block Dice.",
+    "playsFor": [
+      "Badlands Brawl",
+      "Favoured of Hashut"
+    ]
   },
   {
-    name: "Helmut Wulf",
-    cost: 140000,
-    stats: { MV: 6, FU: "3", AG: "3+", PS: "-", AR: "9+" },
-    skills: "Motosierra, Solitario (4+), Profesional, Arma secreta, Mantenerse firme",
-    specialRules: "Old Pro: Once per game, Helmut may use his Pro skill to re-roll a single die, even if it is part of a multiple dice roll.",
-    playsFor: ["Any Team"],
+    "name": "Hakflem Skuttlespike",
+    "cost": 200000,
+    "stats": {
+      "MV": 8,
+      "FU": "3",
+      "AG": "2+",
+      "PS": "3+",
+      "AR": "8+"
+    },
+    "skills": "Dodge, Extra Arms, Loner (4+), Prehensile Tail, Two Heads",
+    "specialRules": "**Treacherous:** Once per game, if Hakflem is adjacent to a teammate in possession of the ball when activated, he can choose to gain possession. The team-mate is immediately Knocked Down (No Turnover).",
+    "playsFor": [
+      "Underworld Challenge"
+    ]
   },
   {
-    name: "Ivar Eriksson",
-    cost: 245000,
-    stats: { MV: 6, FU: "4", AG: "3+", PS: "4+", AR: "9+" },
-    skills: "Placar, Luchador, Solitario (3+), Placaje defensivo",
-    specialRules: "Raiding Party: Once per half, if Ivar is Standing, he can give a free Move action to D3 teammates.",
-    playsFor: ["Clásico del Viejo Mundo"],
+    "name": "Helmut Wolf",
+    "cost": 140000,
+    "stats": {
+      "MV": 6,
+      "FU": "3",
+      "AG": "3+",
+      "PS": "–",
+      "AR": "9+"
+    },
+    "skills": "Chainsaw, Loner (4+), No Ball, Pro, Secret Weapon, Stand Firm",
+    "specialRules": "**Old Pro:** Once per game, Helmut may use his Pro Skill to re-roll a single dice rolled as art of an Armour Roll.",
+    "playsFor": [
+      "Old World Classic"
+    ]
   },
   {
-    name: "Ivan 'the Animal' Deathshroud",
-    cost: 190000,
-    stats: { MV: 6, FU: "4", AG: "4+", PS: "5+", AR: "9+" },
-    skills: "Placar, Presencia perturbadora, Indomable, Solitario (4+), Regeneración, Robar balón, Placaje defensivo",
-    specialRules: "Dwarfen Scourge: Ivan has a +1 modifier when rolling on the Injury table against Dwarfs.",
-    playsFor: ["Selectiva de Sylvania"],
+    "name": "Ivan Deathshroud",
+    "cost": 210000,
+    "stats": {
+      "MV": 6,
+      "FU": "4",
+      "AG": "4+",
+      "PS": "5+",
+      "AR": "9+"
+    },
+    "skills": "Block, Disturbing Presence, Hatred (Dwarf), Juggernaut, Loner (4+), Regeneration, Strip Ball, Tackle",
+    "specialRules": "**Dwarfen Scourge:** Once per game, when an opposition player is Knocked Down by Ivan, apply +1 to Armour or Injury (+2 if against a Dwarf).",
+    "playsFor": [
+      "Sylvanian Spotlight"
+    ]
   },
   {
-    name: "Jeremiah Kool",
-    cost: 320000,
-    stats: { MV: 8, FU: "3", AG: "1+", PS: "2+", AR: "9+" },
-    skills: "Placar, Esquivar, Recepción en plancha, Soltar el balón, Solitario (4+), Nervios de acero, Atento al balón, Pasar, Echarse a un lado",
-    specialRules: "The Flashing Blade: Jeremiah may attempt to Dodge one additional time per turn.",
-    playsFor: ["Liga de los Reinos Elfos"],
+    "name": "Ivar Eriksson",
+    "cost": 215000,
+    "stats": {
+      "MV": 6,
+      "FU": "4",
+      "AG": "3+",
+      "PS": "4+",
+      "AR": "9+"
+    },
+    "skills": "Block, Guard, Loner (3+), Tackle",
+    "specialRules": "**Raiding Party:** Once per Drive, when Ivar begins his activation he may select one Open team-mate within 5 squares. The selected player may immediately move 1 square to end Marking an opposition player.",
+    "playsFor": [
+      "Old World Classic"
+    ]
   },
   {
-    name: "Jordell Freshbreeze",
-    cost: 250000,
-    stats: { MV: 8, FU: "3", AG: "1+", PS: "3+", AR: "8+" },
-    skills: "Placar, Recepción en plancha, Esquivar, Saltar, Solitario (4+), Echarse a un lado",
-    specialRules: "Swift as the Breeze: Jordell ignores the -1 modifier for moving past opposition players.",
-    playsFor: ["Liga de los Reinos Elfos"],
+    "name": "Jeremiah Kool",
+    "cost": 300000,
+    "stats": {
+      "MV": 8,
+      "FU": "3",
+      "AG": "1+",
+      "PS": "2+",
+      "AR": "9+"
+    },
+    "skills": "Block, Dodge, Diving Catch, Dump-off, Loner (4+), Nerves of Steel, On the Ball, Pass, Sidestep",
+    "specialRules": "**The Flashing Blade:** Once per game, at the start of his activation, Jeremiah may declare a Stab Special Action. After performing it, he may then perform a Move Action.",
+    "playsFor": [
+      "Elven Kingdoms League"
+    ]
   },
   {
-    name: "Karla Von Kill",
-    cost: 210000,
-    stats: { MV: 6, FU: "4", AG: "3+", PS: "4+", AR: "9+" },
-    skills: "Placar, Agallas, Esquivar, En pie de un salto, Solitario (4+), Indomable",
-    specialRules: "Indomitable: Karla is not affected by the Foul Appearance skill.",
-    playsFor: ["Copa Dedal Halfling", "Superliga Lustriana", "Clásico del Viejo Mundo"],
+    "name": "Jordell Freshbreeze",
+    "cost": 280000,
+    "stats": {
+      "MV": 8,
+      "FU": "3",
+      "AG": "1+",
+      "PS": "3+",
+      "AR": "8+"
+    },
+    "skills": "Block, Diving Catch, Dodge, Leap, Loner (4+), Sidestep, Steady Footing",
+    "specialRules": "**Swift as the Breeze:** Once per game, Jordell can choose to pass a single Dodge, Leap, or Rush Test on a 2+, regardless of any modifiers.",
+    "playsFor": [
+      "Elven Kingdoms League",
+      "Woodland League"
+    ]
   },
   {
-    name: "Kiroth Krakeneye",
-    cost: 160000,
-    stats: { MV: 7, FU: "3", AG: "2+", PS: "3+", AR: "9+" },
-    skills: "Presencia perturbadora, Apariencia asquerosa, Solitario (4+), Atento al balón, Placaje defensivo, Tentáculos",
-    specialRules: "Black Ink: Once per game, may target an opposition player within 3 squares. On a 2+, that player may not Pass or Throw a bomb for the rest of the half.",
-    playsFor: ["Liga de los Reinos Elfos"],
+    "name": "Josef Bugman",
+    "cost": 180000,
+    "stats": {
+      "MV": 5,
+      "FU": "3",
+      "AG": "3+",
+      "PS": "4+",
+      "AR": "9+"
+    },
+    "skills": "Block, Drunkard, Fend, Loner (3+), Tackle, Taunt, Thick Skull",
+    "specialRules": "**Dwarfen Grit:** Once per game, when Josef’s armour is broken, you may choose to have the Armour Roll re-rolled.",
+    "playsFor": [
+      "Old World Classic",
+      "Worlds Edge Superleague"
+    ]
   },
   {
-    name: "Kreek 'the Verminator' Rustgouger",
-    cost: 170000,
-    stats: { MV: 5, FU: "7", AG: "4+", PS: "-", AR: "10+" },
-    skills: "Bola con cadena, Solitario (4+), Golpe mortífero (+1), Sin manos, Cola prensil, Arma secreta",
-    specialRules: "I'll Be Back!: Once per game, if Kreek is sent off for using a Secret Weapon, roll a D6. On a 4+, he is placed in Reserves instead.",
-    playsFor: ["Elegidos de...", "Reto del Inframundo"],
+    "name": "Karla Von Kill",
+    "cost": 210000,
+    "stats": {
+      "MV": 6,
+      "FU": "4",
+      "AG": "3+",
+      "PS": "3+",
+      "AR": "9+"
+    },
+    "skills": "Block, Dauntless, Dodge, Jump Up, Loner (4+)",
+    "specialRules": "**Indomitable:** Once per game, when Karla successfully rolls for Dauntless, she may increase her ST characteristic to double that of the target.",
+    "playsFor": [
+      "Lustrian Superleague",
+      "Old World Classic"
+    ]
   },
   {
-    name: "Lord Borak The Despoiler",
-    cost: 260000,
-    stats: { MV: 5, FU: "5", AG: "3+", PS: "5+", AR: "10+" },
-    skills: "Placar, Jugar sucio (+2), Solitario (4+), Golpe mortífero (+1), Furtivo",
-    specialRules: "Lord of Chaos: If Lord Borak is on the pitch, your team gains an extra team re-roll.",
-    playsFor: ["Elegidos de..."],
+    "name": "Kiroth Krakeneye",
+    "cost": 160000,
+    "stats": {
+      "MV": 7,
+      "FU": "3",
+      "AG": "2+",
+      "PS": "3+",
+      "AR": "8+"
+    },
+    "skills": "Disturbing Presence, Foul Appearance, Loner (4+), On the Ball, Tackle, Tentacles",
+    "specialRules": "**Black Ink:** Once per game, at the start of activation, select an opposition player Kiroth is Marking. They become Distracted until next activated.",
+    "playsFor": [
+      "Elven Kingdoms League"
+    ]
   },
   {
-    name: "Lucian and Valen Swift",
-    cost: 340000,
-    pair: [
-      {
-        name: "Lucian Swift",
-        stats: { MV: 7, FU: "3", AG: "2+", PS: "5+", AR: "9+" },
-        skills: "Placar, Solitario (4+), Golpe mortífero (+1), Placaje Defensivo",
-      },
-      {
-        name: "Valen Swift",
-        stats: { MV: 7, FU: "3", AG: "2+", PS: "2+", AR: "8+" },
-        skills: "Precisión, Solitario (4+), Nervios de Acero, Pasar, Pase seguro, Manos Seguras",
-      }
-    ],
-    skills: "Dos por Uno",
-    specialRules: "Deben ser contratados juntos y cuentan como dos jugadores estrella. Además si uno de ellos abandona el campo hasta la zona de heridos, el otro sustituye su habilidad de Solitario por (2+).",
-    playsFor: ["Liga de los Reinos Elfos"],
-    image: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhC_xWJ4s34hKkR7YwMh7G7k0y21X9W6iJjH_7L2D2v02oG99eF0J7X8mF3sY_G3G3e3-L9lB8b7b7kQ8-v-R2u3D7w-M3gS_L_Z7v_G5_Jg/s1600/Lucian%20and%2Valen%20Swift.jpg",
+    "name": "Kreek Rustgouger",
+    "cost": 180000,
+    "stats": {
+      "MV": 4,
+      "FU": "7",
+      "AG": "4+",
+      "PS": "–",
+      "AR": "10+"
+    },
+    "skills": "Ball & Chain, Loner (4+), Mighty Blow, No Ball, Prehensile Tail, Secret Weapon",
+    "specialRules": "**I’ll Be Back!:** The first time Kreek would be Sent-off by Secret Weapon, he is not. Cannot Argue the Call.",
+    "playsFor": [
+      "Underworld Challenge"
+    ]
   },
   {
-    name: "Maple Highgrove",
-    cost: 210000,
-    stats: { MV: 3, FU: "5", AG: "5+", PS: "5+", AR: "11+" },
-    skills: "Peleón, Apartar, Solitario (4+), Golpe mortífero (+1), Mantenerse firme, Tentáculos, Cabeza Dura",
-    specialRules: "Vicious Vines: Once per game, Maple may use their Tentacles skill on any opposition player within 2 squares.",
-    playsFor: ["Copa Dedal Halfling", "Liga de los Reinos Elfos", "Clásico del Viejo Mundo"],
+    "name": "Lord Borak",
+    "cost": 270000,
+    "stats": {
+      "MV": 5,
+      "FU": "5",
+      "AG": "3+",
+      "PS": "5+",
+      "AR": "10+"
+    },
+    "skills": "Block, Dirty Player, Leader, Loner (3+), Mighty Blow, Put the Boot In, Sneaky Git",
+    "specialRules": "**Lord of Chaos:** Once per game, when Lord Borak performs a Block Action he may re-roll a single Block Dice.",
+    "playsFor": [
+      "Chaos Clash"
+    ]
   },
   {
-    name: "Max Spleenripper",
-    cost: 130000,
-    stats: { MV: 5, FU: "4", AG: "4+", PS: "-", AR: "9+" },
-    skills: "Motosierra, Solitario (4+), Arma secreta",
-    specialRules: "Maximum Carnage: If Max causes a casualty with their chainsaw, roll a D6. On a 4+, the opposing coach cannot use their Apothecary.",
-    playsFor: ["Elegidos de Khorne"],
+    "name": "Maple Highgrove",
+    "cost": 210000,
+    "stats": {
+      "MV": 3,
+      "FU": "5",
+      "AG": "5+",
+      "PS": "5+",
+      "AR": "11+"
+    },
+    "skills": "Brawler, Grab, Loner (4+), Mighty Blow, Stand Firm, Tentacles, Thick Skull",
+    "specialRules": "**Vicious Vines:** Once per half, when Maple declares a Block Action he may do so against an opposition player 2 squares away (cannot follow-up).",
+    "playsFor": [
+      "Woodland League"
+    ]
   },
   {
-    name: "Mighty Zug",
-    cost: 220000,
-    stats: { MV: 4, FU: "5", AG: "4+", PS: "6+", AR: "10+" },
-    skills: "Placar, Solitario (4+), Golpe mortífero (+1)",
-    specialRules: "Crushing Blow: When an opponent is Knocked Down by Zug, you may add 1 to the Armour roll.",
-    playsFor: ["Copa Dedal Halfling", "Superliga Lustriana"],
+    "name": "Max Spleenripper",
+    "cost": 130000,
+    "stats": {
+      "MV": 5,
+      "FU": "4",
+      "AG": "4+",
+      "PS": "–",
+      "AR": "9+"
+    },
+    "skills": "Chainsaw, Loner (4+), No Ball, Secret Weapon",
+    "specialRules": "**Maximum Carnage:** Once per game, after Max performs a Chainsaw Attack he may immediately perform another against a different target.",
+    "playsFor": [
+      "Favoured Of Khorne"
+    ]
   },
   {
-    name: "Morg 'n' Thorg",
-    cost: 380000,
-    stats: { MV: 6, FU: "6", AG: "3+", PS: "4+", AR: "11+" },
-    skills: "Placar, Solitario (4+), Golpe mortífero (+2), Cabeza Dura, Lanzar compañero",
-    specialRules: "The Ballista: Once per game, Morg may throw a willing teammate with the Right Stuff skill.",
-    playsFor: ["Any team except Sylvanian Spotlight"],
+    "name": "Mighty Zug",
+    "cost": 220000,
+    "stats": {
+      "MV": 5,
+      "FU": "5",
+      "AG": "4+",
+      "PS": "6+",
+      "AR": "10+"
+    },
+    "skills": "Block, Loner (4+), Mighty Blow",
+    "specialRules": "**Crushing Blow:** Once per game, when an opposition player is Knocked Down by Zug, apply +1 to the Armour Roll.",
+    "playsFor": [
+      "Lustrian Superleague",
+      "Old World Classic"
+    ]
   },
   {
-    name: "Nobbla Blackwart",
-    cost: 120000,
-    stats: { MV: 6, FU: "2", AG: "3+", PS: "-", AR: "8+" },
-    skills: "Placar, Motosierra, Esquivar, Solitario (4+), Arma secreta, Escurridizo",
-    specialRules: "Kick 'em While They're Down!: Nobbla may re-roll a single dice when making an Armour roll for a Foul.",
-    playsFor: ["Reyerta en las Yermas", "Reto del Inframundo"],
+    "name": "Morg ‘n’ Thorg",
+    "cost": 340000380000,
+    "stats": {
+      "MV": 6,
+      "FU": "6",
+      "AG": "3+",
+      "PS": "4+",
+      "AR": "11+"
+    },
+    "skills": "Block, Bullseye, Hatred (Undead), Loner (4+), Mighty Blow, Thick Skull, Throw Team-mate",
+    "specialRules": "**The Ballista:** Once per game, when Morg performs a Throw Team-mate Action, he may re-roll the Passing Ability Test.",
+    "playsFor": [
+      "Any except Sylvanian"
+    ]
   },
   {
-    name: "Puggy Baconbreath",
-    cost: 120000,
-    stats: { MV: 5, FU: "3", AG: "3+", PS: "4+", AR: "7+" },
-    skills: "Placar, Esquivar, Solitario (3+), Nervios de acero, Humanoide bala, Escurridizo",
-    specialRules: "Halfling Luck: Once per game, Puggy may re-roll any one dice roll he has made.",
-    playsFor: ["Copa Dedal Halfling", "Clásico del Viejo Mundo"],
+    "name": "Nobbla Blackwart",
+    "cost": 120000,
+    "stats": {
+      "MV": 6,
+      "FU": "2",
+      "AG": "3+",
+      "PS": "–",
+      "AR": "8+"
+    },
+    "skills": "Block, Chainsaw, Dodge, Loner (4+), No Ball, Secret Weapon, Stunty",
+    "specialRules": "**Kick ’em While They’re Down!:** Once per game, Nobbla may use Chainsaw against a Prone or Stunned player. Does not count as Foul.",
+    "playsFor": [
+      "Badlands Brawl",
+      "Underworld Challenge"
+    ]
   },
   {
-    name: "Rashnak Backstabber",
-    cost: 130000,
-    stats: { MV: 7, FU: "3", AG: "3+", PS: "5+", AR: "8+" },
-    skills: "Solitario (4+), Seguimiento, Echarse a un lado, Furtivo, Apuñalar",
-    specialRules: "Toxin Connoisseur: When Rashnak uses Stab, the Armour roll is made with an additional +1 modifier.",
-    playsFor: ["Reyerta en las Yermas"],
+    "name": "Puggy Baconbreath",
+    "cost": 120000,
+    "stats": {
+      "MV": 5,
+      "FU": "3",
+      "AG": "3+",
+      "PS": "3+",
+      "AR": "8+"
+    },
+    "skills": "Block, Dodge, Loner (3+), Nerves of Steel, Right Stuff, Stunty",
+    "specialRules": "**Halfling Luck:** Once per game, Puggy may re-roll a single dice (not Armor/Injury/Casualty).",
+    "playsFor": [
+      "Halfling Thimble Cup",
+      "Old World Classic"
+    ]
   },
   {
-    name: "Ripper Bolgrot",
-    cost: 250000,
-    stats: { MV: 4, FU: "6", AG: "5+", PS: "4+", AR: "10+" },
-    skills: "Apartar, Solitario (4+), Golpe mortífero (+1), Regeneración, Lanzar compañero",
-    specialRules: "Thinking Man's Troll: Ripper may re-roll a failed Really Stupid roll.",
-    playsFor: ["Reyerta en las Yermas", "Reto del Inframundo"],
+    "name": "Rashnak Backstabber",
+    "cost": 130000,
+    "stats": {
+      "MV": 7,
+      "FU": "3",
+      "AG": "3+",
+      "PS": "5+",
+      "AR": "8+"
+    },
+    "skills": "Loner (4+), Shadowing, Sidestep, Sneaky Git, Stab",
+    "specialRules": "**Toxin Connoisseur:** Once per game, if Rashnak breaks armour with Stab, apply +1 to the Injury Roll.",
+    "playsFor": [
+      "Badlands Brawl"
+    ]
   },
   {
-    name: "Rodney Roachbait",
-    cost: 70000,
-    stats: { MV: 6, FU: "2", AG: "3+", PS: "4+", AR: "7+" },
-    skills: "Atrapar, Recepción en plancha, En pie de un salto, Solitario (4+), Atento al balón, Echarse a un lado, Escurridizo, Lucha",
-    specialRules: "Catch of the Day: Once per game, Rodney may re-roll a failed catch.",
-    playsFor: ["Copa Dedal Halfling"],
+    "name": "Ripper Bolgrot",
+    "cost": 250000,
+    "stats": {
+      "MV": 5,
+      "FU": "6",
+      "AG": "5+",
+      "PS": "4+",
+      "AR": "10+"
+    },
+    "skills": "Bullseye, Grab, Loner (4+), Mighty Blow, Regeneration, Throw Team Mate",
+    "specialRules": "**Thinking Man’s Troll:** Once per half, Ripper may re-roll a single dice (not Armor/Injury/Casualty).",
+    "playsFor": [
+      "Badlands Brawl",
+      "Underworld Challenge"
+    ]
   },
   {
-    name: "Rowana Forestfoot",
-    cost: 160000,
-    stats: { MV: 6, FU: "3", AG: "3+", PS: "4+", AR: "8+" },
-    skills: "Esquivar, Soltar el balón, Luchador, Cuernos, En pie de un salto, Saltar, Solitario (4+)",
-    specialRules: "Bounding Leap: Rowana may move an extra square when using the Leap skill.",
-    playsFor: ["Copa Dedal Halfling"],
+    "name": "Rodney Roachbait",
+    "cost": 70000,
+    "stats": {
+      "MV": 6,
+      "FU": "2",
+      "AG": "3+",
+      "PS": "4+",
+      "AR": "7+"
+    },
+    "skills": "Catch, Diving Catch, Jump Up, Loner (4+), On The Ball, Side Step, Stunty, Wrestle",
+    "specialRules": "**Catch of the Day:** Once per half, if adjacent to ball on ground, on a 3+ Rodney gains possession.",
+    "playsFor": [
+      "Woodland League"
+    ]
   },
   {
-    name: "Roxanna Darknail",
-    cost: 270000,
-    stats: { MV: 8, FU: "3", AG: "1+", PS: "4+", AR: "8+" },
-    skills: "Esquivar, Furia, En pie de un salto, Indomable, Saltar, Solitario (4+)",
-    specialRules: "Burst of Speed: Once per game, Roxanna may move an additional 2 squares.",
-    playsFor: ["Liga de los Reinos Elfos"],
+    "name": "Rowana Forestfoot",
+    "cost": 160000,
+    "stats": {
+      "MV": 6,
+      "FU": "3",
+      "AG": "3+",
+      "PS": "4+",
+      "AR": "8+"
+    },
+    "skills": "Dodge, Dump-Off, Guard, Horns, Jump Up, Leap, Loner (4+)",
+    "specialRules": "**Bounding Leap:** Once per game, Rowana suffers no negative modifiers to Leap and may re-roll the result.",
+    "playsFor": [
+      "Woodland League"
+    ]
   },
   {
-    name: "Rumbelow Sheepskin",
-    cost: 170000,
-    stats: { MV: 6, FU: "3", AG: "3+", PS: "-", AR: "8+" },
-    skills: "Placar, Cuernos, Indomable, Solitario (4+), Sin manos, Placaje defensivo, Cabeza Dura, Embestir",
-    specialRules: "Ram: Rumbelow adds +1 to any Armour rolls he makes against an opponent he pushes back.",
-    playsFor: ["Copa Dedal Halfling", "Clásico del Viejo Mundo", "Superliga del Fin del Mundo"],
+    "name": "Roxanna Darknail",
+    "cost": 270000,
+    "stats": {
+      "MV": 8,
+      "FU": "3",
+      "AG": "1+",
+      "PS": "3+",
+      "AR": "8+"
+    },
+    "skills": "Dodge, Frenzy, Jump Up, Juggernaut, Leap, Loner (4+)",
+    "specialRules": "**Slashing Nails:** Once per half, when Roxanna declares a Blitz Action, she gains the Claws Skill.",
+    "playsFor": [
+      "Elven Kingdoms League"
+    ]
   },
   {
-    name: "Scrappa Sorehead",
-    cost: 130000,
-    stats: { MV: 7, FU: "2", AG: "3+", PS: "5+", AR: "8+" },
-    skills: "Jugar sucio (+1), Esquivar, Solitario (4+), Pogo saltarín, Humanoide bala, Esprintar, Escurridizo, Pies firmes",
-    specialRules: "Yoink!: Once per game, if Scrappa is adjacent to the ball carrier, he may attempt to steal the ball on a 2+.",
-    playsFor: ["Reyerta en las Yermas", "Reto del Inframundo"],
+    "name": "Rumbelow Sheepskin",
+    "cost": 170000,
+    "stats": {
+      "MV": 6,
+      "FU": "3",
+      "AG": "3+",
+      "PS": "5+",
+      "AR": "8+"
+    },
+    "skills": "Block, Horns, Juggernaut, Loner (4+), Tackle, Thick Skull",
+    "specialRules": "**Ram:** Once per game, when Rumbelow knocks down a player, apply +1 to Armour or Injury.",
+    "playsFor": [
+      "Halfling Thimble Cup"
+    ]
   },
   {
-    name: "Scyla Anfingrimm",
-    cost: 200000,
-    stats: { MV: 5, FU: "5", AG: "4+", PS: "-", AR: "10+" },
-    skills: "Garras, Furia, Solitario (4+), Golpe mortífero (+1), Cola prensil, Cabeza Dura, Furia descontrolada",
-    specialRules: "Fury of the Blood God: If Scyla causes an opposition player to be removed as a casualty, roll a D6. On a 4+, Scyla may perform another Block action.",
-    playsFor: ["Elegidos de Khorne"],
+    "name": "Scrappa Sorehead",
+    "cost": 120000,
+    "stats": {
+      "MV": 7,
+      "FU": "2",
+      "AG": "3+",
+      "PS": "4+",
+      "AR": "8+"
+    },
+    "skills": "Dirty Player, Dodge, Loner (4+), Pogo, Right Stuff, Sprint, Stunty, Sure Feet",
+    "specialRules": "**Yoink!:** Once per game, Scrappa can automatically Intercept a pass on a 2+.",
+    "playsFor": [
+      "Badlands Brawl",
+      "Underworld Challenge"
+    ]
   },
   {
-    name: "Skitter Stab-Stab",
-    cost: 150000,
-    stats: { MV: 9, FU: "2", AG: "2+", PS: "4+", AR: "8+" },
-    skills: "Esquivar, Solitario (4+), Cola prensil, Seguimiento, Apuñalar",
-    specialRules: "Master Assassin: When Skitter uses their Stab skill, they may re-roll the Armour roll.",
-    playsFor: ["Elegidos de...", "Reto del Inframundo"],
+    "name": "Scyla Anfingrimm",
+    "cost": 200000,
+    "stats": {
+      "MV": 5,
+      "FU": "5",
+      "AG": "4+",
+      "PS": "6+",
+      "AR": "10+"
+    },
+    "skills": "Claws, Frenzy, Loner (4+), Might Blow, Prehensile Tail, Thick Skull, Unchannelled Fury",
+    "specialRules": "**Fury of the Blood God:** If he rolls a 1 for Unchannelled Fury, he may perform two Block Actions instead.",
+    "playsFor": [
+      "Favoured Of Khorne"
+    ]
   },
   {
-    name: "Skrorg Snowpelt",
-    cost: 250000,
-    stats: { MV: 5, FU: "5", AG: "4+", PS: "-", AR: "9+" },
-    skills: "Garras, Presencia perturbadora, Indomable, Solitario (4+), Golpe mortífero (+1)",
-    specialRules: "Pump Up the Crowd: Once per game, if Skrorg causes a casualty, your team gains a re-roll.",
-    playsFor: ["Clásico del Viejo Mundo"],
+    "name": "Skitter Stab-Stab",
+    "cost": 170000,
+    "stats": {
+      "MV": 9,
+      "FU": "2",
+      "AG": "2+",
+      "PS": "4+",
+      "AR": "8+"
+    },
+    "skills": "Dodge, Loner (4+), Prehensile Tail, Shadowing, Stab",
+    "specialRules": "**Master Assassin:** Oncer per game, when Skitter performs a Stab Special Action, he may choose to re-roll the Armour Roll.",
+    "playsFor": [
+      "Underworld Challenge"
+    ]
   },
   {
-    name: "Skrull Halfheight",
-    cost: 150000,
-    stats: { MV: 6, FU: "3", AG: "4+", PS: "4+", AR: "9+" },
-    skills: "Precisión, Solitario (4+), Nervios de acero, Pasar, Regeneración, Manos seguras, Cabeza Dura",
-    specialRules: "Strong Passing Game: Skrull may re-roll a single dice when making a Pass action.",
-    playsFor: ["Selectiva de Sylvania", "Superliga del Fin del Mundo"],
+    "name": "Skrorg Snowpelt",
+    "cost": 240000,
+    "stats": {
+      "MV": 5,
+      "FU": "5",
+      "AG": "4+",
+      "PS": "6+",
+      "AR": "9+"
+    },
+    "skills": "Block, Claws, Disturbing Presence, Juggernaut, Loner (4+), Mighty Blow",
+    "specialRules": "**Pump Up the Crowd:** Once per game, if Skrorg causes a Casualty, gain one Team Re-roll until end of Drive.",
+    "playsFor": [
+      "Old World Classic",
+      "Worlds Edge Superleague"
+    ]
   },
   {
-    name: "Swiftvine Glimmershard",
-    cost: 110000,
-    stats: { MV: 7, FU: "2", AG: "3+", PS: "5+", AR: "7+" },
-    skills: "Presencia perturbadora, Zafarse, Solitario (4+), Echarse a un lado, Apuñalar, Escurridizo",
-    specialRules: "Furious Outburst: If Swiftvine is Knocked Down, they may immediately perform a free Stab action against an adjacent opponent.",
-    playsFor: ["Copa Dedal Halfling", "Liga de los Reinos Elfos"],
+    "name": "Skrull Halfheight",
+    "cost": 150000,
+    "stats": {
+      "MV": 6,
+      "FU": "3",
+      "AG": "4+",
+      "PS": "3+",
+      "AR": "9+"
+    },
+    "skills": "Accurate, Loner (4+), Nerves of Steel, Pass, Regeneration, Sure Hands, Thick Skull",
+    "specialRules": "**Strong Passing Game:** Once per game, modify a Passing Test by his ST value (max 6).",
+    "playsFor": [
+      "Sylvanian Spotlight",
+      "Worlds Edge Superleague"
+    ]
   },
   {
-    name: "The Black Gobbo",
-    cost: 225000,
-    stats: { MV: 6, FU: "2", AG: "3+", PS: "3+", AR: "9+" },
-    skills: "Bombardero, Presencia perturbadora, Esquivar, Solitario (3+), Echarse a un lado, Furtivo, Apuñalar, Escurridizo",
-    specialRules: "Sneakiest of the Lot: Si tu equipo incluye a Black Gobbo, puedes cometer dos acciones de Falta por turno, siempre que uma la cometa él.",
-    playsFor: ["Reyerta en las Yermas", "Reto del Inframundo"],
+    "name": "The Swift Twins",
+    "cost": 300000,
+    "stats": {
+      "MV": 7,
+      "FU": "3 & 3",
+      "AG": "2+ & 2+",
+      "PS": "3+ & 2+",
+      "AR": "9+ & 9+"
+    },
+    "skills": "**Lucian:** Block, Loner (4+), Mighty Blow, Tackle. **Valen:** Accurate, Loner (4+), Nerves of Steel, Pass, Safe Pass, Sure Hands",
+    "specialRules": "**Working In Tandem:** Must be hired as a pair. Lucian re-rolls block if Valen marks target. Valen ignores range modifiers if passing to Lucian.",
+    "playsFor": [
+      "Elven Kingdoms League"
+    ]
   },
   {
-    name: "Thorsson Stoutmead",
-    cost: 170000,
-    stats: { MV: 6, FU: "3", AG: "4+", PS: "3+", AR: "8+" },
-    skills: "Placar, Borracho, Solitario (4+), Cabeza Dura",
-    specialRules: "Beer Barrel Bash!: Once per game, Thorsson may perform a special action where he throws a beer barrel at an opponent.",
-    playsFor: ["Clásico del Viejo Mundo"],
+    "name": "Swiftvine Glimmershard",
+    "cost": 110000,
+    "stats": {
+      "MV": 7,
+      "FU": "2",
+      "AG": "3+",
+      "PS": "5+",
+      "AR": "7+"
+    },
+    "skills": "Disturbing Presence, Fend, Loner (4+), Side Step, Stab, Stunty",
+    "specialRules": "**Furious Outburst:** Once per half, can teleport 3 squares to Stab an opponent and teleport back. Counts as team's Blitz.",
+    "playsFor": [
+      "Woodland League"
+    ]
   },
   {
-    name: "Varag Ghoul-Chewer",
-    cost: 280000,
-    stats: { MV: 6, FU: "5", AG: "3+", PS: "5+", AR: "10+" },
-    skills: "Placar, En pie de un salto, Solitario (4+), Golpe mortífero (+1), Cabeza Dura",
-    specialRules: "Crushing Blow: When an opponent is Knocked Down by Varag, you may add 1 to the Armour roll.",
-    playsFor: ["Reyerta en las Yermas", "Reto del Inframundo"],
+    "name": "Thorsson Stoutmead",
+    "cost": 170000,
+    "stats": {
+      "MV": 6,
+      "FU": "3",
+      "AG": "4+",
+      "PS": "3+",
+      "AR": "8+"
+    },
+    "skills": "Block, Drunkard, Loner (4+), Thick Skull",
+    "specialRules": "**Beer Barrel Bash!:** Once per Drive, 3+ to knock down a player within 3 squares. Activation ends.",
+    "playsFor": [
+      "Old World Classic",
+      "Worlds Edge Superleague"
+    ]
   },
   {
-    name: "Wilhelm Chaney",
-    cost: 220000,
-    stats: { MV: 8, FU: "4", AG: "3+", PS: "4+", AR: "9+" },
-    skills: "Atrapar, Garras, Furia, Solitario (4+), Regeneración, Lucha",
-    specialRules: "Savage Mauling: Once per game, Wilhelm may re-roll a single Block die.",
-    playsFor: ["Selectiva de Sylvania"],
+    "name": "Varag Ghoul-Chewer",
+    "cost": 260000,
+    "stats": {
+      "MV": 6,
+      "FU": "5",
+      "AG": "3+",
+      "PS": "5+",
+      "AR": "10+"
+    },
+    "skills": "Block, Hatred (Undead), Jump Up, Loner (4+), Mighty Blow, Thick Skull, Unsteady",
+    "specialRules": "**Krump and Smash:** Once per game, when an opposition player is Knocked Down by Varag, he may re-roll the Armour Roll.",
+    "playsFor": [
+      "Badlands Brawl"
+    ]
   },
   {
-    name: "Willow Rosebark",
-    cost: 150000,
-    stats: { MV: 5, FU: "4", AG: "3+", PS: "6+", AR: "9+" },
-    skills: "Agallas, Solitario (4+), Echarse a un lado, Cabeza Dura, Indomable",
-    specialRules: "Indomitable: Willow is not affected by the Foul Appearance skill.",
-    playsFor: ["Liga de los Reinos Elfos"],
+    "name": "Wilhelm Chaney",
+    "cost": 220000,
+    "stats": {
+      "MV": 8,
+      "FU": "4",
+      "AG": "3+",
+      "PS": "4+",
+      "AR": "9+"
+    },
+    "skills": "Catch, Claws, Frenzy, Loner (4+), Regeneration, Wrestle",
+    "specialRules": "**Savage Mauling:** Once per game, when Wilhelm makes in Injury Roll, he may choose to re-roll the result.",
+    "playsFor": [
+      "Sylvanian Spotlight"
+    ]
   },
   {
-    name: "Withergrasp Doubledrool",
-    cost: 170000,
-    stats: { MV: 6, FU: "3", AG: "4+", PS: "4+", AR: "9+" },
-    skills: "Solitario (4+), Cola prensil, Placaje defensivo, Tentáculos, Dos cabezas, Lucha",
-    specialRules: "Watch Out!: Once per game, Withergrasp may move one square after an opposition player has declared an action but before it is carried out.",
-    playsFor: ["Elegidos de..."],
+    "name": "Willow Rosebark",
+    "cost": 160000,
+    "stats": {
+      "MV": 6,
+      "FU": "4",
+      "AG": "3+",
+      "PS": "5+",
+      "AR": "9+"
+    },
+    "skills": "Dauntless, Loner (4+), Side Step, Thick Skull",
+    "specialRules": "**Woodland Fury:** Once per game, when Willow would be Knocked Down, she can re-roll a single Block Dice.",
+    "playsFor": [
+      "Woodland League"
+    ]
   },
   {
-    name: "Zolcath the Zoat",
-    cost: 230000,
-    stats: { MV: 5, FU: "5", AG: "4+", PS: "5+", AR: "10+" },
-    skills: "Presencia perturbadora, Indomable, Solitario (4+), Golpe mortífero (+1), Cola prensil, Regeneración, Pies firmes",
-    specialRules: "Excuse Me, Are You a Zoat?: Once per game, Zolcath may use their Juggernaut skill on a Blitz action even if they are not in an opposition player's tackle zone.",
-    playsFor: ["Superliga Lustriana", "Liga de los Reinos Elfos"],
+    "name": "Withergrasp Doubledrool",
+    "cost": 170000,
+    "stats": {
+      "MV": 6,
+      "FU": "3",
+      "AG": "3+",
+      "PS": "4+",
+      "AR": "9+"
+    },
+    "skills": "Foul Appearance, Loner (4+), Prehensile Tail, Tackle, Tentacles, Two Heads, Wrestle",
+    "specialRules": "**Watch Out!:** The first time each Drive that Withergrasp is targeted by a Block, he counts as having Dodge.",
+    "playsFor": [
+      "Favoured Of Nurgle"
+    ]
   },
   {
-    name: "Zzharg Madeye",
-    cost: 130000,
-    stats: { MV: 4, FU: "4", AG: "4+", PS: "3+", AR: "10+" },
-    skills: "Cañonero, Pase a lo loco, Solitario (4+), Nervios de acero, Arma secreta, Manos seguras, Cabeza Dura",
-    specialRules: "Then I Started Blastin'!: Once per game, Zzharg may perform a free Hail Mary Pass action.",
-    playsFor: ["Reyerta en las Yermas", "Elegidos de Hashut"],
+    "name": "Zolcath the Zoat",
+    "cost": 220000,
+    "stats": {
+      "MV": 5,
+      "FU": "5",
+      "AG": "4+",
+      "PS": "5+",
+      "AR": "10+"
+    },
+    "skills": "Disturbing Presence, Juggernaut, Loner (4+), Mighty Blow, Prehensile Tail, Regeneration, Sure Feet",
+    "specialRules": "**Excuse Me:** Once per game, select an opponent within 3 squares; they lose their Tackle Zone until next activation.",
+    "playsFor": [
+      "Elven / Lustrian Superleague"
+    ]
+  },
+  {
+    "name": "Zzharg Madeye",
+    "cost": 130000,
+    "stats": {
+      "MV": 4,
+      "FU": "4",
+      "AG": "4+",
+      "PS": "3+",
+      "AR": "10+"
+    },
+    "skills": "Cannoneer, Hail Mary Pass, Loner (4+), Nerves of Steel, Secret Weapon, Thick Skull!",
+    "specialRules": "**Blastin’ Solves Everything:** Once per half, 3+ to hit opponent within 3 squares. On 2 coach picks another target. On 1 Zzharg hit. Make Armour Roll.",
+    "playsFor": [
+      "Favoured of Hashut"
+    ]
   }
 ];
