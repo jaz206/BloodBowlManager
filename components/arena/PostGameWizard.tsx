@@ -219,6 +219,19 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
     const { winnings, mvp, team: updatedTeam } = postGameState;
 
     const renderStepContent = () => {
+        const improvedPlayers = updatedTeam.players.filter(p => {
+            const original = initialHomeTeam.players.find(op => op.id === p.id);
+            return p.spp > (original?.spp || 0);
+        });
+
+        const playersWithMNG = updatedTeam.players.filter(p => (p.missNextGame || 0) > 0);
+
+        const playersWithNewInjuries = updatedTeam.players.filter(p => {
+            const originalPlayer = initialHomeTeam.players.find(op => op.id === p.id);
+            if (!originalPlayer) return (p.lastingInjuries || []).length > 0;
+            return (p.lastingInjuries || []).length > (originalPlayer.lastingInjuries || []).length;
+        });
+
         switch (step) {
             case 0:
                 return (
@@ -301,10 +314,6 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                     </div>
                 );
             case 2:
-                const improvedPlayers = updatedTeam.players.filter(p => {
-                    const original = initialHomeTeam.players.find(op => op.id === p.id);
-                    return p.spp > (original?.spp || 0);
-                });
                 return (
                     <div className="space-y-6 animate-fade-in content-center">
                         <div className="flex items-center justify-between px-2">
@@ -343,12 +352,6 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                     </div>
                 );
             case 3:
-                const playersWithMNG = updatedTeam.players.filter(p => (p.missNextGame || 0) > 0);
-                const playersWithNewInjuries = updatedTeam.players.filter(p => {
-                    const originalPlayer = initialHomeTeam.players.find(op => op.id === p.id);
-                    if (!originalPlayer) return (p.lastingInjuries || []).length > 0;
-                    return (p.lastingInjuries || []).length > (originalPlayer.lastingInjuries || []).length;
-                });
                 return (
                     <div className="space-y-6 animate-fade-in overflow-y-auto max-h-[50vh] pr-2 custom-scrollbar">
                         <div className="glass-panel p-6 bg-black/60 border-white/5 space-y-6">

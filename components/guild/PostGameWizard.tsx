@@ -229,6 +229,19 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
     const { winnings, mvp, team: updatedTeam } = postGameState;
 
     const renderStepContent = () => {
+        const improvedPlayers = updatedTeam.players.filter(p => {
+            const original = initialHomeTeam.players.find(op => op.id === p.id);
+            return p.spp > (original?.spp || 0);
+        });
+
+        const playersWithMNG = updatedTeam.players.filter(p => (p.missNextGame || 0) > 0);
+
+        const playersWithNewInjuries = updatedTeam.players.filter(p => {
+            const originalPlayer = initialHomeTeam.players.find(op => op.id === p.id);
+            if (!originalPlayer) return true; // It's a journeyman that got a lasting injury
+            return p.lastingInjuries.length > originalPlayer.lastingInjuries.length;
+        });
+
         switch (step) {
             case 0:
                 return (
@@ -257,10 +270,6 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                 );
             case 2:
                 // SPP check for notification only, spending is done in Dashboard
-                const improvedPlayers = updatedTeam.players.filter(p => {
-                    const original = initialHomeTeam.players.find(op => op.id === p.id);
-                    return p.spp > (original?.spp || 0);
-                });
                 return (
                     <div className="space-y-4">
                         <h3 className="text-xl font-semibold text-amber-400">Paso 3: Progresión de PE</h3>
@@ -280,12 +289,6 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                     </div>
                 );
             case 3:
-                const playersWithMNG = updatedTeam.players.filter(p => (p.missNextGame || 0) > 0);
-                const playersWithNewInjuries = updatedTeam.players.filter(p => {
-                    const originalPlayer = initialHomeTeam.players.find(op => op.id === p.id);
-                    if (!originalPlayer) return true; // It's a journeyman that got a lasting injury
-                    return p.lastingInjuries.length > originalPlayer.lastingInjuries.length;
-                });
                 return (
                     <div className="space-y-4">
                         <h3 className="text-xl font-semibold text-amber-400">Paso 4: Resumen Final</h3>
