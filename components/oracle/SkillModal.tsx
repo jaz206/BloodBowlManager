@@ -23,7 +23,8 @@ const SkillModal: React.FC<SkillModalProps> = ({ skill, onClose }) => {
 
   return (
     <div
-      className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4 animate-fade-in-fast"
+      className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[2000] p-4 animate-fade-in-fast"
+      style={{ zIndex: 2000 }}
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"

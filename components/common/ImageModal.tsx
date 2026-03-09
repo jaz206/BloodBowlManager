@@ -15,7 +15,8 @@ const ImageModal: React.FC<ImageModalProps> = ({ src, alt, onClose }) => {
 
   return (
     <div
-      className="fixed inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center z-[100] p-4 animate-fade-in-fast"
+      className="fixed inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center z-[3000] p-4 animate-fade-in-fast"
+      style={{ zIndex: 3000 }}
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"

@@ -33,7 +33,8 @@ const StarPlayerModal: React.FC<StarPlayerModalProps> = ({ player, onClose }) =>
   return (
     <>
       <div
-        className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in-fast"
+        className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[1000] p-4 animate-fade-in-fast"
+        style={{ zIndex: 1000 }}
         onClick={handleBackdropClick}
         role="dialog"
         aria-modal="true"
