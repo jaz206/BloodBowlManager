@@ -205,35 +205,57 @@ const AdminPanel: React.FC = () => {
                                 </div>
 
                                 {editingItem.type === 'team' && (
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-[10px] font-display font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Coste Segunda Tirada (GP)</label>
-                                            <input
-                                                type="number"
-                                                value={editingItem.data.rerollCost || 0}
-                                                onChange={(e) => setEditingItem({
-                                                    ...editingItem,
-                                                    data: { ...editingItem.data, rerollCost: parseInt(e.target.value) }
-                                                })}
-                                                className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-premium-gold/50 outline-none transition-all"
-                                            />
+                                    <>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-[10px] font-display font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Coste Segunda Tirada (GP)</label>
+                                                <input
+                                                    type="number"
+                                                    value={editingItem.data.rerollCost || 0}
+                                                    onChange={(e) => setEditingItem({
+                                                        ...editingItem,
+                                                        data: { ...editingItem.data, rerollCost: parseInt(e.target.value) }
+                                                    })}
+                                                    className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-premium-gold/50 outline-none transition-all"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] font-display font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Tier / Nivel</label>
+                                                <select
+                                                    value={editingItem.data.tier || 1}
+                                                    onChange={(e) => setEditingItem({
+                                                        ...editingItem,
+                                                        data: { ...editingItem.data, tier: parseInt(e.target.value) }
+                                                    })}
+                                                    className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-premium-gold/50 outline-none transition-all"
+                                                >
+                                                    <option value={1}>Tier 1 (Competitivo)</option>
+                                                    <option value={2}>Tier 2 (Equilibrado)</option>
+                                                    <option value={3}>Tier 3 (Reto/Fun)</option>
+                                                </select>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <label className="block text-[10px] font-display font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Tier / Nivel</label>
-                                            <select
-                                                value={editingItem.data.tier || 1}
-                                                onChange={(e) => setEditingItem({
-                                                    ...editingItem,
-                                                    data: { ...editingItem.data, tier: parseInt(e.target.value) }
-                                                })}
-                                                className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-premium-gold/50 outline-none transition-all"
-                                            >
-                                                <option value={1}>Tier 1 (Competitivo)</option>
-                                                <option value={2}>Tier 2 (Equilibrado)</option>
-                                                <option value={3}>Tier 3 (Reto/Fun)</option>
-                                            </select>
+
+                                        <div className="grid grid-cols-4 gap-4">
+                                            {['MV', 'FU', 'AG', 'PA', 'AV'].map(stat => (
+                                                <div key={stat}>
+                                                    <label className="block text-[10px] font-display font-bold text-slate-500 uppercase tracking-widest mb-1 ml-1">{stat}</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editingItem.data.stats?.[stat] || ''}
+                                                        onChange={(e) => setEditingItem({
+                                                            ...editingItem,
+                                                            data: {
+                                                                ...editingItem.data,
+                                                                stats: { ...editingItem.data.stats, [stat]: e.target.value }
+                                                            }
+                                                        })}
+                                                        className="w-full bg-black/40 border border-white/10 rounded-lg py-2 px-3 text-white text-xs focus:border-premium-gold/50 outline-none"
+                                                    />
+                                                </div>
+                                            ))}
                                         </div>
-                                    </div>
+                                    </>
                                 )}
 
                                 {editingItem.type === 'starPlayer' && (
@@ -256,12 +278,16 @@ const AdminPanel: React.FC = () => {
                                         {editingItem.type === 'team' ? 'Reglas Especiales / Descripción' : 'Habilidades Especiales'}
                                     </label>
                                     <textarea
-                                        value={editingItem.type === 'team' ? (editingItem.data.specialRules || '') : (editingItem.data.skills?.join(', ') || '')}
+                                        value={editingItem.type === 'team'
+                                            ? (editingItem.data.specialRules || '')
+                                            : (Array.isArray(editingItem.data.skills) ? editingItem.data.skills.join(', ') : '')}
                                         onChange={(e) => setEditingItem({
                                             ...editingItem,
                                             data: {
                                                 ...editingItem.data,
-                                                [editingItem.type === 'team' ? 'specialRules' : 'skills']: editingItem.type === 'team' ? e.target.value : e.target.value.split(',').map(s => s.trim())
+                                                [editingItem.type === 'team' ? 'specialRules' : 'skills']: editingItem.type === 'team'
+                                                    ? e.target.value
+                                                    : e.target.value.split(',').map(s => s.trim())
                                             }
                                         })}
                                         className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-premium-gold/50 outline-none transition-all h-24"
