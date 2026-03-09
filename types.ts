@@ -22,41 +22,55 @@ export interface Player {
   stats: PlayerStats;
   /** Canonical English skill keys — resolved to localized names via the skills data */
   skillKeys: string[];
-  /** @deprecated Use skillKeys instead. Kept for backward compatibility. */
-  skills?: string;
   primary: string;
   secondary: string;
+  /** @deprecated Kept for migration */
+  skills?: string;
 }
 
 export interface Skill {
-  /** Canonical English key — used for cross-language lookups and as the ID in Firestore.
-   *  Optional for backward compatibility with the legacy skills.ts file. */
-  keyEN?: string;
-  name: string;
+  keyEN: string; // Now required for the ecosystem
+  name_es: string;
+  name_en: string;
   category: string;
-  description: string;
+  desc_es: string;
+  desc_en: string;
+  /** @deprecated Kept temporarily for migration */
+  name?: string;
+  /** @deprecated Kept temporarily for migration */
+  description?: string;
 }
 
 export interface StarPlayer {
   name: string;
   cost: number;
-  stats?: PlayerStats; // Made optional
-  skills?: string; // Made optional
-  specialRules: string;
+  stats?: PlayerStats;
+  /** List of canonical skill keys (e.g., ["Block", "Dodge"]) */
+  skillKeys?: string[];
+  /** Bilingual special rules */
+  specialRules_es: string;
+  specialRules_en: string;
   playsFor: string[];
   image?: string;
   description?: string;
+  /** @deprecated Use skillKeys instead */
+  skills?: string;
+  /** @deprecated Use specialRules_es/en */
+  specialRules?: string;
   pair?: { name: string; stats: PlayerStats; skills: string; }[];
 }
 
 export interface Team {
   name: string;
-  specialRules: string;
+  specialRules_es: string;
+  specialRules_en: string;
   rerollCost: number;
   tier: number;
   apothecary: string;
   roster: Player[];
   image?: string;
+  /** @deprecated Use specialRules_es/en */
+  specialRules?: string;
   ratings: {
     fuerza: number;
     agilidad: number;
