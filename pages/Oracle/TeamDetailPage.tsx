@@ -37,24 +37,30 @@ const TeamDetailPage: React.FC<TeamDetailPageProps> = ({ team, onBack, onRequest
             </nav>
 
             {/* Hero Section */}
-            <section className="flex flex-col md:flex-row gap-8 items-start mb-12 animate-in fade-in slide-in-from-top-4 duration-700">
+            <section className="flex flex-col md:flex-row gap-8 items-center md:items-start mb-12 animate-in fade-in slide-in-from-top-4 duration-700">
                 <div
                     onClick={() => team.image && setIsFullscreenImage(true)}
-                    className="w-48 h-48 md:w-64 md:h-64 bg-surface-dark rounded-3xl border-2 border-primary/20 p-6 flex items-center justify-center relative overflow-hidden group shadow-[0_20px_60px_rgba(0,0,0,0.5)] cursor-pointer"
+                    className="w-full md:w-[450px] aspect-video bg-surface-dark rounded-3xl border-2 border-primary/20 flex items-center justify-center relative overflow-hidden group shadow-[0_20px_60px_rgba(0,0,0,0.5)] cursor-pointer shrink-0"
                 >
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent group-hover:from-primary/20 transition-all duration-700"></div>
                     {team.image ? (
-                        <img src={team.image} alt={team.name} className="relative z-10 w-full h-full object-contain group-hover:scale-105 transition-transform duration-700" />
+                        <img src={team.image} alt={team.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                     ) : (
-                        <span className="material-symbols-outlined text-primary text-8xl relative z-10 opacity-30">groups</span>
+                        <span className="material-symbols-outlined text-primary text-8xl relative z-10 opacity-30">landscape</span>
                     )}
+
+                    {/* Overlay effects */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity"></div>
+
                     {team.image && (
                         <div className="absolute inset-0 z-20 bg-primary/0 group-hover:bg-primary/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-                            <span className="material-symbols-outlined text-white text-3xl drop-shadow-[0_0_10px_rgba(0,0,0,1)]">zoom_in</span>
+                            <div className="bg-black/40 backdrop-blur-md border border-white/10 px-6 py-3 rounded-full flex items-center gap-3">
+                                <span className="material-symbols-outlined text-primary text-2xl">zoom_in</span>
+                                <span className="text-xs font-black uppercase tracking-widest">Ver Completa</span>
+                            </div>
                         </div>
                     )}
                 </div>
-                <div className="flex-1 space-y-6">
+                <div className="flex-1 space-y-6 pt-4">
                     <div className="flex items-center gap-4">
                         <span className="px-3 py-1.5 bg-primary text-black font-black text-xs rounded uppercase tracking-tighter shadow-lg shadow-primary/20">Tier {team.tier}</span>
                         <h1 className="text-4xl md:text-7xl font-black text-slate-100 tracking-tighter uppercase italic drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)]">

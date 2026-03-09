@@ -62,16 +62,18 @@ const TeamArticle: React.FC<{
                 <div className="lg:col-span-4 flex flex-col items-center text-center border-b lg:border-b-0 lg:border-r border-primary/10 pb-8 lg:pb-0 lg:pr-8">
                     <div
                         onClick={() => team.image && setIsFullscreenImage(true)}
-                        className="size-48 md:size-56 rounded-3xl bg-primary/5 border border-primary/20 flex items-center justify-center mb-6 shadow-[0_0_50px_rgba(245,159,10,0.05)] overflow-hidden group cursor-pointer relative"
+                        className="w-full aspect-[16/9] rounded-2xl bg-primary/5 border border-primary/20 flex items-center justify-center mb-6 shadow-2xl overflow-hidden group cursor-pointer relative"
                     >
                         {team.image ? (
-                            <img src={team.image} alt={team.name} className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-500" />
+                            <img src={team.image} alt={team.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                         ) : (
-                            <span className="material-symbols-outlined text-primary text-8xl opacity-20">groups</span>
+                            <span className="material-symbols-outlined text-primary text-6xl opacity-20">landscape</span>
                         )}
                         {team.image && (
-                            <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
-                                <span className="material-symbols-outlined text-white text-2xl drop-shadow-lg">zoom_in</span>
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-4">
+                                <span className="text-[10px] text-white font-black uppercase tracking-widest flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-sm">zoom_in</span> Ver Completa
+                                </span>
                             </div>
                         )}
                     </div>
