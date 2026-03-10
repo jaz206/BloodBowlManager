@@ -553,73 +553,93 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                 </div>
             </div>
 
-            {/* Team Assets */}
-            <div className="bento-card p-6 border-white/5">
-                <h3 className="text-xl font-display font-bold text-premium-gold mb-6 uppercase tracking-wider flex items-center gap-3">
-                    <span className="w-8 h-8 bg-premium-gold/10 rounded-lg flex items-center justify-center text-sm italic">A</span>
-                    Activos del Equipo
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Rerolls */}
-                    <div className="flex justify-between items-center p-4 bg-black/20 rounded-xl border border-white/5">
-                        <div className="flex flex-col">
-                            <span className="text-[10px] font-display font-bold text-slate-500 uppercase tracking-widest">Segundas Oportunidades</span>
-                            <span className="text-2xl font-display font-black text-white">{team.rerolls}<span className="text-xs text-slate-600 ml-1">/8</span></span>
-                        </div>
-                        <div className="flex gap-2">
-                            <button onClick={handleBuyReroll} disabled={team.rerolls >= 8} className="w-10 h-10 flex items-center justify-center rounded-lg bg-premium-gold text-black transition-premium disabled:opacity-20 hover:scale-105 active:scale-95 shadow-lg shadow-premium-gold/20">+</button>
-                            <button onClick={handleSellReroll} disabled={team.rerolls === 0} className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-white transition-premium disabled:opacity-20 hover:bg-white/10 active:scale-95 text-xl">-</button>
-                        </div>
+            {/* Team Assets & Staff */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 bento-card p-6 border-white/5 h-full">
+                    <h3 className="text-xl font-display font-bold text-premium-gold mb-6 uppercase tracking-wider flex items-center gap-3">
+                        <span className="material-symbols-outlined text-premium-gold">groups</span>
+                        Personal y Apoyo
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <AssetCard
+                            title="Segundas Oportunidades"
+                            value={team.rerolls}
+                            limit={8}
+                            price={baseRoster.rerollCost}
+                            onBuy={handleBuyReroll}
+                            onSell={handleSellReroll}
+                            icon="refresh"
+                            canSell={team.rerolls > 0}
+                        />
+                        <AssetCard
+                            title="Hinchas Dedicados"
+                            value={team.dedicatedFans}
+                            limit={6}
+                            price={10000}
+                            onBuy={handleBuyFan}
+                            onSell={handleSellFan}
+                            icon="campaign"
+                            canSell={team.dedicatedFans > 1}
+                        />
+                        <AssetCard
+                            title="Animadoras"
+                            value={team.cheerleaders}
+                            limit={12}
+                            price={10000}
+                            onBuy={handleBuyCheerleader}
+                            onSell={handleSellCheerleader}
+                            icon="celebration"
+                            canSell={team.cheerleaders > 0}
+                        />
+                        <AssetCard
+                            title="Ayudantes de Entrenador"
+                            value={team.assistantCoaches}
+                            limit={6}
+                            price={10000}
+                            onBuy={handleBuyAssistantCoach}
+                            onSell={handleSellAssistantCoach}
+                            icon="sports"
+                            canSell={team.assistantCoaches > 0}
+                        />
                     </div>
-                    {/* Dedicated Fans */}
-                    <div className="flex justify-between items-center p-4 bg-black/20 rounded-xl border border-white/5">
-                        <div className="flex flex-col">
-                            <span className="text-[10px] font-display font-bold text-slate-500 uppercase tracking-widest">Hinchas</span>
-                            <span className="text-2xl font-display font-black text-white">{team.dedicatedFans}<span className="text-xs text-slate-600 ml-1">/6</span></span>
-                        </div>
-                        <div className="flex gap-2">
-                            <button onClick={handleBuyFan} disabled={team.dedicatedFans >= 6} className="w-10 h-10 flex items-center justify-center rounded-lg bg-premium-gold text-black transition-premium disabled:opacity-20 hover:scale-105 active:scale-95 shadow-lg shadow-premium-gold/20">+</button>
-                            <button onClick={handleSellFan} disabled={team.dedicatedFans <= 1} className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-white transition-premium disabled:opacity-20 hover:bg-white/10 active:scale-95 text-xl">-</button>
-                        </div>
-                    </div>
-                    {/* Cheerleaders */}
-                    <div className="flex justify-between items-center p-4 bg-black/20 rounded-xl border border-white/5">
-                        <div className="flex flex-col">
-                            <span className="text-[10px] font-display font-bold text-slate-500 uppercase tracking-widest">Animadoras</span>
-                            <span className="text-2xl font-display font-black text-white">{team.cheerleaders}</span>
-                        </div>
-                        <div className="flex gap-2">
-                            <button onClick={handleBuyCheerleader} disabled={team.cheerleaders >= 12} className="w-10 h-10 flex items-center justify-center rounded-lg bg-premium-gold text-black transition-premium disabled:opacity-20 hover:scale-105 active:scale-95 shadow-lg shadow-premium-gold/20">+</button>
-                            <button onClick={handleSellCheerleader} disabled={team.cheerleaders === 0} className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-white transition-premium disabled:opacity-20 hover:bg-white/10 active:scale-95 text-xl">-</button>
-                        </div>
-                    </div>
-                    {/* Assistant Coaches */}
-                    <div className="flex justify-between items-center p-4 bg-black/20 rounded-xl border border-white/5">
-                        <div className="flex flex-col">
-                            <span className="text-[10px] font-display font-bold text-slate-500 uppercase tracking-widest">Ayudantes</span>
-                            <span className="text-2xl font-display font-black text-white">{team.assistantCoaches}</span>
-                        </div>
-                        <div className="flex gap-2">
-                            <button onClick={handleBuyAssistantCoach} disabled={team.assistantCoaches >= 6} className="w-10 h-10 flex items-center justify-center rounded-lg bg-premium-gold text-black transition-premium disabled:opacity-20 hover:scale-105 active:scale-95 shadow-lg shadow-premium-gold/20">+</button>
-                            <button onClick={handleSellAssistantCoach} disabled={team.assistantCoaches === 0} className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-white transition-premium disabled:opacity-20 hover:bg-white/10 active:scale-95 text-xl">-</button>
-                        </div>
-                    </div>
-                    {/* Apothecary */}
-                    {baseRoster.apothecary === 'Sí' && (
-                        <div className="flex justify-between items-center p-4 bg-black/20 rounded-xl border border-white/5 md:col-span-2">
-                            <div className="flex flex-col">
-                                <span className="text-[10px] font-display font-bold text-slate-500 uppercase tracking-widest">Boticario</span>
-                                <span className={`text-lg font-display font-black uppercase italic ${team.apothecary ? 'text-green-400' : 'text-blood-red opacity-50'}`}>{team.apothecary ? 'Contratado' : 'Sin Boticario'}</span>
+                </div>
+
+                <div className="bento-card p-6 border-white/5 h-full flex flex-col">
+                    <h3 className="text-xl font-display font-bold text-premium-gold mb-6 uppercase tracking-wider flex items-center gap-3">
+                        <span className="material-symbols-outlined text-premium-gold">medical_services</span>
+                        Servicios Médicos
+                    </h3>
+                    <div className="flex-grow flex flex-col justify-center gap-6">
+                        <div className={`p-6 rounded-2xl border transition-premium text-center ${team.apothecary ? 'bg-green-400/5 border-green-400/20 shadow-[0_0_30px_rgba(74,222,128,0.1)]' : 'bg-black/40 border-white/5 opacity-50'}`}>
+                            <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 ${team.apothecary ? 'bg-green-400 text-black' : 'bg-slate-800 text-slate-500'}`}>
+                                <span className="material-symbols-outlined text-3xl">emergency</span>
                             </div>
-                            <div className="flex gap-3">
+                            <p className={`font-display font-black uppercase tracking-tighter italic text-xl ${team.apothecary ? 'text-white' : 'text-slate-500'}`}>
+                                {team.apothecary ? 'Boticario Activo' : 'Sin Boticario'}
+                            </p>
+                            <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest mt-1">Garantía de Supervivencia</p>
+                        </div>
+
+                        {baseRoster.apothecary === 'Sí' && (
+                            <div className="space-y-3">
                                 {!team.apothecary ? (
-                                    <button onClick={handleBuyApothecary} className="bg-premium-gold text-black font-display font-black uppercase tracking-widest text-[10px] py-3 px-6 rounded-lg transition-premium hover:scale-105 active:scale-95 shadow-xl">Contratar (50,000)</button>
+                                    <button
+                                        onClick={handleBuyApothecary}
+                                        className="w-full bg-premium-gold text-black font-display font-black uppercase tracking-widest text-xs py-4 rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-premium shadow-2xl"
+                                    >
+                                        Contratar (50,000 M.O.)
+                                    </button>
                                 ) : (
-                                    <button onClick={handleSellApothecary} className="bg-white/5 border border-white/10 text-white font-display font-bold uppercase tracking-widest text-[10px] py-3 px-6 rounded-lg transition-premium hover:bg-white/10 active:scale-95">Despedir</button>
+                                    <button
+                                        onClick={handleSellApothecary}
+                                        className="w-full bg-white/5 border border-white/10 text-white font-display font-bold uppercase tracking-widest text-xs py-4 rounded-xl hover:bg-blood-red/20 hover:text-blood-red hover:border-blood-red/50 transition-premium"
+                                    >
+                                        Despedir Personal
+                                    </button>
                                 )}
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -643,11 +663,15 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
 
             {/* Hire Players */}
             <div className="bento-card overflow-hidden border-white/5">
-                <div className="p-6 border-b border-white/5 bg-white/5">
+                <div className="p-6 border-b border-white/5 bg-white/5 flex justify-between items-center">
                     <h3 className="text-xl font-display font-bold text-premium-gold uppercase tracking-wider flex items-center gap-3">
-                        <span className="w-8 h-8 bg-premium-gold/10 rounded-lg flex items-center justify-center text-sm italic">F</span>
-                        Fichar Jugadores
+                        <span className="material-symbols-outlined text-premium-gold">person_add</span>
+                        Mercado de Fichajes
                     </h3>
+                    <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-xl border border-white/5">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase">Tesorería:</span>
+                        <span className="text-xs font-mono font-bold text-green-400">{team.treasury.toLocaleString()} M.O.</span>
+                    </div>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs whitespace-nowrap">
@@ -666,40 +690,63 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
-                            {baseRoster.roster.map(p => (
-                                <tr key={p.position} className="hover:bg-white/5 transition-colors">
-                                    <td className="p-4 font-display font-bold text-white text-base">{p.position}</td>
-                                    <td className="p-4 font-mono text-green-400">{p.cost.toLocaleString()}</td>
-                                    <td className="p-4 text-center font-display font-black text-white text-sm bg-white/5">{p.stats.MV}</td>
-                                    <td className="p-4 text-center font-display font-black text-white text-sm">{p.stats.FU}</td>
-                                    <td className="p-4 text-center font-display font-black text-white text-sm bg-white/5">{p.stats.AG}</td>
-                                    <td className="p-4 text-center font-display font-black text-white text-sm">{p.stats.PS}</td>
-                                    <td className="p-4 text-center font-display font-black text-white text-sm bg-white/5">{p.stats.AR}</td>
-                                    <td className="p-4 whitespace-normal min-w-[200px]">
-                                        <div className="flex flex-wrap gap-1">
-                                            {(p.skills || '').split(', ').map((skill) => {
-                                                const cleanSkillName = skill.trim();
-                                                if (cleanSkillName && cleanSkillName.toLowerCase() !== 'ninguna') {
-                                                    return (
-                                                        <button
-                                                            key={skill}
-                                                            onClick={() => handleSkillClick(cleanSkillName)}
-                                                            className="text-[10px] font-bold px-2 py-0.5 rounded bg-premium-gold/10 text-premium-gold hover:bg-premium-gold hover:text-black transition-premium"
-                                                        >
-                                                            {cleanSkillName}
-                                                        </button>
-                                                    );
-                                                }
-                                                return <span key={skill} className="text-slate-500 italic text-[10px]">{cleanSkillName}</span>;
-                                            })}
-                                        </div>
-                                    </td>
-                                    <td className="p-4 text-center text-slate-400">{countPlayersByPosition(p.position)}<span className="text-[10px] opacity-30 mx-0.5">/</span>{(p?.qty || '0-16').split('-')[1]}</td>
-                                    <td className="p-4 text-right">
-                                        <button onClick={() => handleHirePlayer(p)} className="bg-premium-gold text-black font-display font-black uppercase tracking-widest text-[10px] py-2 px-4 rounded-lg transition-premium hover:scale-105 shadow-xl">Contratar</button>
-                                    </td>
-                                </tr>
-                            ))}
+                            {baseRoster.roster.map(p => {
+                                const currentCount = countPlayersByPosition(p.position);
+                                const limit = parseInt((p?.qty || '0-16').split('-').pop() || '16');
+                                const isFull = currentCount >= limit;
+                                const canAfford = team.isAutoCalculating || team.treasury >= p.cost;
+
+                                return (
+                                    <tr key={p.position} className={`hover:bg-white/5 transition-colors ${isFull ? 'opacity-40 grayscale' : ''}`}>
+                                        <td className="p-4 font-display font-bold text-white text-base">{p.position}</td>
+                                        <td className="p-4 font-mono text-green-400">{p.cost.toLocaleString()}</td>
+                                        <td className="p-4 text-center font-display font-black text-white text-sm bg-white/5">{p.stats.MV}</td>
+                                        <td className="p-4 text-center font-display font-black text-white text-sm">{p.stats.FU}</td>
+                                        <td className="p-4 text-center font-display font-black text-white text-sm bg-white/5">{p.stats.AG}</td>
+                                        <td className="p-4 text-center font-display font-black text-white text-sm">{p.stats.PS}</td>
+                                        <td className="p-4 text-center font-display font-black text-white text-sm bg-white/5">{p.stats.AR}</td>
+                                        <td className="p-4 whitespace-normal min-w-[200px]">
+                                            <div className="flex flex-wrap gap-1">
+                                                {(p.skills || '').split(', ').map((skill) => {
+                                                    const cleanSkillName = skill.trim();
+                                                    if (cleanSkillName && cleanSkillName.toLowerCase() !== 'ninguna') {
+                                                        return (
+                                                            <button
+                                                                key={skill}
+                                                                onClick={() => handleSkillClick(cleanSkillName)}
+                                                                className="text-[10px] font-bold px-2 py-0.5 rounded bg-premium-gold/10 text-premium-gold hover:bg-premium-gold hover:text-black transition-premium"
+                                                            >
+                                                                {cleanSkillName}
+                                                            </button>
+                                                        );
+                                                    }
+                                                    return <span key={skill} className="text-slate-500 italic text-[10px]">{cleanSkillName}</span>;
+                                                })}
+                                            </div>
+                                        </td>
+                                        <td className="p-4 text-center">
+                                            <div className="flex flex-col items-center">
+                                                <span className={`font-display font-bold ${isFull ? 'text-blood-red' : 'text-slate-400'}`}>
+                                                    {currentCount} <span className="text-[10px] opacity-30">/</span> {limit}
+                                                </span>
+                                                {isFull && <span className="text-[8px] text-blood-red uppercase font-black tracking-tighter">Máximo</span>}
+                                            </div>
+                                        </td>
+                                        <td className="p-4 text-right">
+                                            <button
+                                                disabled={isFull || !canAfford}
+                                                onClick={() => handleHirePlayer(p)}
+                                                className={`font-display font-black uppercase tracking-widest text-[10px] py-2.5 px-6 rounded-xl transition-premium shadow-xl ${isFull || !canAfford
+                                                    ? 'bg-white/5 text-slate-600 cursor-not-allowed border border-white/5'
+                                                    : 'bg-premium-gold text-black hover:scale-105 active:scale-95 shadow-premium-gold/20'
+                                                    }`}
+                                            >
+                                                {isFull ? 'Sin Cupo' : !canAfford ? 'Sin Fondos' : 'Contratar'}
+                                            </button>
+                                        </td>
+                                    </tr>
+                                )
+                            })}
                         </tbody>
                     </table>
                 </div>
@@ -835,6 +882,77 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
             </div>
 
 
+            {/* History and Legacy */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bento-card p-6 border-white/5 h-full">
+                    <h3 className="text-xl font-display font-bold text-premium-gold mb-6 uppercase tracking-wider flex items-center gap-3">
+                        <span className="material-symbols-outlined text-premium-gold text-2xl">history_edu</span>
+                        Historial de Batalla
+                    </h3>
+                    <div className="space-y-3">
+                        {team.history && team.history.length > 0 ? (
+                            team.history.map((record, idx) => (
+                                <div key={idx} className="flex justify-between items-center p-4 bg-black/20 rounded-xl border border-white/5 hover:border-white/10 transition-premium group">
+                                    <div className="flex items-center gap-4">
+                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-display font-black italic text-lg ${record.result === 'W' ? 'bg-green-400/20 text-green-400' : record.result === 'L' ? 'bg-blood-red/20 text-blood-red' : 'bg-slate-400/20 text-slate-400'
+                                            }`}>
+                                            {record.result}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-display font-black text-white uppercase italic tracking-tighter">{record.opponentName}</p>
+                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{record.date}</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-xl font-display font-black text-white tracking-widest group-hover:text-premium-gold transition-colors">
+                                        {record.score}
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="py-12 text-center">
+                                <span className="material-symbols-outlined text-slate-700 text-5xl mb-4">pending_actions</span>
+                                <p className="text-slate-500 text-[10px] font-bold uppercase italic tracking-widest block">Aun no hay crónicas de guerra...</p>
+                                <p className="text-slate-600 text-[8px] uppercase tracking-tighter mt-1">Disputa partidos para forjar una leyenda</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <div className="bento-card p-6 border-white/5 h-full">
+                    <h3 className="text-xl font-display font-bold text-premium-gold mb-6 uppercase tracking-wider flex items-center gap-3">
+                        <span className="material-symbols-outlined text-premium-gold text-2xl">military_tech</span>
+                        Estadísticas de Temporada
+                    </h3>
+                    <div className="grid grid-cols-3 gap-4">
+                        <div className="p-4 bg-black/40 rounded-2xl border border-white/5 text-center">
+                            <p className="text-[10px] text-slate-500 uppercase font-bold mb-1">Victorias</p>
+                            <p className="text-3xl font-display font-black text-green-400 italic">{team.record?.wins || 0}</p>
+                        </div>
+                        <div className="p-4 bg-black/40 rounded-2xl border border-white/5 text-center">
+                            <p className="text-[10px] text-slate-500 uppercase font-bold mb-1">Empates</p>
+                            <p className="text-3xl font-display font-black text-slate-400 italic">{team.record?.draws || 0}</p>
+                        </div>
+                        <div className="p-4 bg-black/40 rounded-2xl border border-white/5 text-center">
+                            <p className="text-[10px] text-slate-500 uppercase font-bold mb-1">Derrotas</p>
+                            <p className="text-3xl font-display font-black text-blood-red italic">{team.record?.losses || 0}</p>
+                        </div>
+                    </div>
+                    <div className="mt-8 pt-8 border-t border-white/5">
+                        <div className="flex justify-between items-center mb-4">
+                            <span className="text-[10px] font-display font-bold text-slate-500 uppercase">Progreso del Plantel</span>
+                            <span className="text-[10px] font-mono text-premium-gold font-bold">{team.players.reduce((sum, p) => sum + p.spp, 0)} PE Totales</span>
+                        </div>
+                        <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden border border-white/5">
+                            <div
+                                className="h-full bg-gradient-to-r from-premium-gold to-white shadow-[0_0_10px_rgba(202,138,4,0.5)]"
+                                style={{ width: `${Math.min(100, ((team.players.reduce((sum, p) => sum + p.spp, 0) || 1) / 50) * 100)}%` }}
+                            ></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
             {/* Danger Zone */}
             <div className="bento-card p-6 border-blood-red/20 bg-blood-red/5">
                 <h3 className="text-xl font-display font-bold text-blood-red uppercase tracking-wider mb-2">Zona Peligrosa</h3>
@@ -849,16 +967,39 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
             {selectedSkillForModal && <SkillModal skill={selectedSkillForModal} onClose={() => setSelectedSkillForModal(null)} />}
             {isCrestModalOpen && team.crestImage && <ImageModal src={team.crestImage} alt={`Escudo de ${team.name}`} onClose={() => setIsCrestModalOpen(false)} />}
             {fireConfirmation && (
-                <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 animate-fade-in-fast" onClick={() => setFireConfirmation(null)}>
-                    <div className="bg-slate-800 p-6 rounded-lg shadow-xl border border-slate-700 max-w-sm w-full" onClick={e => e.stopPropagation()}>
-                        <h3 className="text-lg font-bold text-amber-400 mb-4">Confirmar Despido</h3>
-                        <p className="text-slate-300 mb-6">
-                            ¿Estás seguro de que quieres despedir a <span className="font-bold text-white">{fireConfirmation.customName}</span>?
-                            Recibirás la mitad de su coste ({!team.isAutoCalculating ? <span className="font-bold text-green-400">{(fireConfirmation.cost / 2).toLocaleString()} M.O.</span> : '0 M.O.'}) de vuelta.
-                        </p>
-                        <div className="flex justify-end gap-4">
-                            <button onClick={() => setFireConfirmation(null)} className="bg-slate-600 text-white font-bold py-2 px-4 rounded">Cancelar</button>
-                            <button onClick={confirmFirePlayer} className="bg-red-600 text-white font-bold py-2 px-4 rounded">Confirmar</button>
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="glass-panel w-full max-w-sm border-blood-red/20 overflow-hidden shadow-[0_0_50px_rgba(239,68,68,0.2)]">
+                        <div className="p-6 bg-gradient-to-br from-blood-red/20 to-transparent border-b border-blood-red/10">
+                            <div className="w-16 h-16 bg-blood-red/10 rounded-full flex items-center justify-center text-blood-red mb-4 border border-blood-red/20">
+                                <span className="material-symbols-outlined text-3xl">person_remove</span>
+                            </div>
+                            <h3 className="text-2xl font-display font-black text-white italic tracking-tighter uppercase leading-none">Despedir Jugador</h3>
+                            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-2">¿Confirmar disolución de contrato?</p>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <p className="text-slate-300 text-sm leading-relaxed">
+                                Estas a punto de rescindir el contrato de <span className="font-bold text-white uppercase italic">{fireConfirmation.customName}</span>.
+                            </p>
+                            <div className="bg-black/40 p-3 rounded-lg border border-white/5 flex justify-between items-center">
+                                <span className="text-[10px] font-bold text-slate-500 uppercase">Recuperación:</span>
+                                <span className="font-mono font-bold text-green-400">
+                                    {!team.isAutoCalculating ? `+${(fireConfirmation.cost / 2).toLocaleString()} M.O.` : '0 M.O.'}
+                                </span>
+                            </div>
+                        </div>
+                        <div className="p-6 bg-black/20 flex flex-col gap-3">
+                            <button
+                                onClick={confirmFirePlayer}
+                                className="w-full bg-blood-red text-white font-display font-black uppercase tracking-widest py-3 rounded-xl hover:scale-105 transition-premium shadow-xl shadow-blood-red/20"
+                            >
+                                Confirmar Despido
+                            </button>
+                            <button
+                                onClick={() => setFireConfirmation(null)}
+                                className="w-full text-slate-400 font-display font-bold uppercase tracking-widest text-[10px] py-2 hover:text-white transition-premium"
+                            >
+                                Mantener en Plantilla
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -883,3 +1024,44 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
         </div>
     );
 };
+interface AssetCardProps {
+    title: string;
+    value: number;
+    limit: number;
+    price: number;
+    onBuy: () => void;
+    onSell: () => void;
+    icon: string;
+    canSell: boolean;
+}
+
+const AssetCard: React.FC<AssetCardProps> = ({ title, value, limit, price, onBuy, onSell, icon, canSell }) => (
+    <div className='flex flex-col p-4 bg-black/20 rounded-2xl border border-white/5 group hover:border-premium-gold/30 transition-premium'>
+        <div className='flex justify-between items-start mb-4'>
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${value > 0 ? 'bg-premium-gold text-black' : 'bg-white/5 text-slate-500'}`}>
+                <span className='material-symbols-outlined text-xl'>{icon}</span>
+            </div>
+            <div className='text-right'>
+                <span className='text-[10px] font-display font-black text-slate-600 uppercase tracking-widest block'>Nivel</span>
+                <span className='text-2xl font-display font-black text-white italic'>{value}<span className='text-xs text-slate-600 ml-1 not-italic'>/{limit}</span></span>
+            </div>
+        </div>
+        <p className='text-[10px] font-display font-bold text-slate-400 uppercase tracking-[0.1em] mb-4 h-8 overflow-hidden line-clamp-2'>{title}</p>
+        <div className='flex gap-2 mt-auto'>
+            <button
+                onClick={onBuy}
+                disabled={value >= limit}
+                className='flex-grow bg-premium-gold/10 border border-premium-gold/20 text-premium-gold font-display font-black uppercase text-[10px] py-2 rounded-lg hover:bg-premium-gold hover:text-black transition-premium disabled:opacity-20'
+            >
+                +{price.toLocaleString()}
+            </button>
+            <button
+                onClick={onSell}
+                disabled={!canSell}
+                className='w-10 flex items-center justify-center bg-white/5 border border-white/10 text-white font-bold rounded-lg hover:bg-blood-red/20 hover:text-blood-red hover:border-blood-red/50 transition-premium disabled:opacity-20'
+            >
+                -
+            </button>
+        </div>
+    </div>
+);

@@ -18,10 +18,23 @@ const ADVANCEMENT_COSTS: Record<number, Record<AdvancementType, number>> = {
     6: { RandomPrimary: 15, ChosenPrimary: 30, RandomSecondary: 30, ChosenSecondary: 40, Characteristic: 50 },
 };
 
+const CATEGORY_MAP: Record<string, string> = {
+    'G': 'General',
+    'A': 'Agility',
+    'S': 'Strength',
+    'P': 'Passing',
+    'M': 'Mutation'
+};
+
+const getAvailableSkillCategories = (categoriesString: string): string[] => {
+    return categoriesString.split('').map(char => CATEGORY_MAP[char]).filter(Boolean);
+};
+
 export const PlayerAdvancementModal: React.FC<PlayerAdvancementModalProps> = ({ player, isOpen, onClose, onAdvance }) => {
-    const [step, setStep] = useState<'TYPE' | 'SKILL_SELECT' | 'CHARACTERISTIC_RESULT'>('TYPE');
+    const [step, setStep] = useState<'TYPE' | 'SKILL_SELECT' | 'CHARACTERISTIC_ROLL' | 'CHARACTERISTIC_SELECT'>('TYPE');
     const [selectedType, setSelectedType] = useState<AdvancementType | null>(null);
     const [randomSkill, setRandomSkill] = useState<string | null>(null);
+    const [charRoll, setCharRoll] = useState<number | null>(null);
 
     if (!isOpen) return null;
 
@@ -33,9 +46,9 @@ export const PlayerAdvancementModal: React.FC<PlayerAdvancementModalProps> = ({ 
 
         setSelectedType(type);
         if (type === 'RandomPrimary' || type === 'RandomSecondary') {
-            const category = type === 'RandomPrimary' ? player.primary : player.secondary;
+            const categories = getAvailableSkillCategories(type === 'RandomPrimary' ? player.primary : player.secondary);
             const availableSkills = skillsData.filter(h =>
-                h.category.startsWith(category) &&
+                categories.includes(h.category) &&
                 !player.skills.includes(h.name) &&
                 !player.gainedSkills.includes(h.name)
             );
@@ -47,7 +60,7 @@ export const PlayerAdvancementModal: React.FC<PlayerAdvancementModalProps> = ({ 
         } else if (type === 'ChosenPrimary' || type === 'ChosenSecondary') {
             setStep('SKILL_SELECT');
         } else if (type === 'Characteristic') {
-            setStep('CHARACTERISTIC_RESULT');
+            setStep('CHARACTERISTIC_ROLL');
         }
     };
 
@@ -62,6 +75,52 @@ export const PlayerAdvancementModal: React.FC<PlayerAdvancementModalProps> = ({ 
             ...player,
             spp: player.spp - costs[selectedType!],
             gainedSkills: [...player.gainedSkills, skillName],
+            advancements: [...(player.advancements || []), newAdvancement]
+        };
+
+        onAdvance(updatedPlayer);
+        resetAndClose();
+    };
+
+    const handleCharRoll = () => {
+        const roll = (Math.floor(Math.random() * 6) + 1) + (Math.floor(Math.random() * 6) + 1);
+        setCharRoll(roll);
+        setStep('CHARACTERISTIC_SELECT');
+    };
+
+    const confirmCharacteristic = (charName: 'MV' | 'FU' | 'AG' | 'PS' | 'AR') => {
+        const newStats = { ...player.stats };
+
+        if (charName === 'MV') {
+            newStats.MV = Math.min(9, player.stats.MV + 1);
+        } else if (charName === 'FU') {
+            const currentFu = parseInt(player.stats.FU);
+            newStats.FU = Math.min(8, currentFu + 1).toString();
+        } else if (charName === 'AG') {
+            const currentAg = parseInt(player.stats.AG.replace('+', ''));
+            newStats.AG = `${Math.max(1, currentAg - 1)}+`;
+        } else if (charName === 'PS') {
+            if (player.stats.PS === '-') {
+                // Cannot improve PS if it's - (normally)
+            } else {
+                const currentPs = parseInt(player.stats.PS.replace('+', ''));
+                newStats.PS = `${Math.max(1, currentPs - 1)}+`;
+            }
+        } else if (charName === 'AR') {
+            const currentAr = parseInt(player.stats.AR.replace('+', ''));
+            newStats.AR = `${Math.min(11, currentAr + 1)}+`;
+        }
+
+        const newAdvancement: Advancement = {
+            type: 'Characteristic',
+            sppCost: costs.Characteristic,
+            characteristicName: charName
+        };
+
+        const updatedPlayer: ManagedPlayer = {
+            ...player,
+            spp: player.spp - costs.Characteristic,
+            stats: newStats,
             advancements: [...(player.advancements || []), newAdvancement]
         };
 
@@ -146,8 +205,8 @@ export const PlayerAdvancementModal: React.FC<PlayerAdvancementModalProps> = ({ 
                                     <div className="max-h-60 overflow-y-auto pr-2 space-y-1">
                                         {skillsData
                                             .filter(s => {
-                                                const cat = selectedType === 'ChosenPrimary' ? player.primary : player.secondary;
-                                                return s.category.startsWith(cat) && !player.skills.includes(s.name) && !player.gainedSkills.includes(s.name);
+                                                const categories = getAvailableSkillCategories(selectedType === 'ChosenPrimary' ? player.primary : player.secondary);
+                                                return categories.includes(s.category) && !player.skills.includes(s.name) && !player.gainedSkills.includes(s.name);
                                             })
                                             .map(skill => (
                                                 <button
@@ -156,7 +215,7 @@ export const PlayerAdvancementModal: React.FC<PlayerAdvancementModalProps> = ({ 
                                                     className="w-full text-left p-3 rounded-lg bg-white/5 border border-white/5 hover:border-premium-gold/50 hover:bg-premium-gold/5 transition-premium group"
                                                 >
                                                     <div className="font-display font-bold text-white group-hover:text-premium-gold">{skill.name}</div>
-                                                    <div className="text-[10px] text-slate-500 line-clamp-1">{skill.description}</div>
+                                                    <div className="text-[10px] text-slate-500 line-clamp-1 italic opacity-70">{skill.desc_es || skill.description}</div>
                                                 </button>
                                             ))
                                         }
@@ -166,15 +225,69 @@ export const PlayerAdvancementModal: React.FC<PlayerAdvancementModalProps> = ({ 
                         </div>
                     )}
 
-                    {step === 'CHARACTERISTIC_RESULT' && (
-                        <div className="text-center space-y-6">
-                            <p className="text-slate-300 text-sm italic">Próximamente: Integración de tabla de características BB2020.</p>
+                    {step === 'CHARACTERISTIC_ROLL' && (
+                        <div className="text-center space-y-8 py-4">
+                            <div className="w-24 h-24 mx-auto bg-premium-gold/10 rounded-full flex items-center justify-center border-2 border-premium-gold/20 animate-pulse">
+                                <span className="material-symbols-outlined text-premium-gold text-5xl">casino</span>
+                            </div>
+                            <div className="space-y-2">
+                                <p className="text-slate-300 text-sm">Lanza 2D6 para determinar las opciones de mejora de característica.</p>
+                                <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Respetando las limitaciones de Nuffle</p>
+                            </div>
                             <button
-                                onClick={resetAndClose}
-                                className="w-full bg-white/5 border border-white/10 text-white font-display font-black uppercase tracking-widest py-4 rounded-xl hover:bg-white/10 transition-premium"
+                                onClick={handleCharRoll}
+                                className="w-full bg-premium-gold text-black font-display font-black uppercase tracking-widest py-4 rounded-xl shadow-[0_10px_30px_rgba(202,138,4,0.3)] hover:scale-105 transition-premium"
                             >
-                                Volver
+                                Lanzar Dados
                             </button>
+                        </div>
+                    )}
+
+                    {step === 'CHARACTERISTIC_SELECT' && (
+                        <div className="space-y-6">
+                            <div className="flex justify-center items-center gap-4">
+                                <div className="text-6xl font-display font-black text-white italic drop-shadow-xl animate-bounce-in">{charRoll}</div>
+                                <div className="h-10 w-px bg-white/10"></div>
+                                <div className="text-left">
+                                    <p className="text-[10px] text-premium-gold uppercase font-black tracking-widest">Resultado</p>
+                                    <p className="text-xs text-slate-400 font-bold uppercase italic">Tabla de Mejora</p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-2">
+                                <CharOption
+                                    name="Mejorar Movimiento (+1 MV)"
+                                    available={true} // 2-12
+                                    onClick={() => confirmCharacteristic('MV')}
+                                    description="Aumenta el MA hasta un máximo de 9."
+                                />
+                                <CharOption
+                                    name="Mejorar Armadura (+1 AR)"
+                                    available={true} // 2-12
+                                    onClick={() => confirmCharacteristic('AR')}
+                                    description="Aumenta el AV hasta un máximo de 11+."
+                                />
+                                <CharOption
+                                    name="Mejorar Pase (+1 PS)"
+                                    available={charRoll! >= 8 && player.stats.PS !== '-'}
+                                    onClick={() => confirmCharacteristic('PS')}
+                                    description="Reduce la dificultad de Pase (mínimo 1+)."
+                                />
+                                <CharOption
+                                    name="Mejorar Agilidad (+1 AG)"
+                                    available={charRoll! >= 10}
+                                    onClick={() => confirmCharacteristic('AG')}
+                                    description="Reduce la dificultad de Agilidad (mínimo 1+)."
+                                />
+                                <CharOption
+                                    name="Mejorar Fuerza (+1 FU)"
+                                    available={charRoll! === 12}
+                                    onClick={() => confirmCharacteristic('FU')}
+                                    description="Aumenta la Fuerza hasta un máximo de 8."
+                                />
+                            </div>
+
+                            <p className="text-[10px] text-slate-500 italic text-center">Nota: Si no deseas mejorar una característica, puedes elegir una Habilidad Primaria (si el resultado es 2-11) o Secundaria (si es 12) según las reglas oficiales de BB2020.</p>
                         </div>
                     )}
                 </div>
@@ -191,6 +304,25 @@ export const PlayerAdvancementModal: React.FC<PlayerAdvancementModalProps> = ({ 
         </div>
     );
 };
+
+const CharOption: React.FC<{ name: string; available: boolean; onClick: () => void; description: string }> = ({ name, available, onClick, description }) => (
+    <button
+        disabled={!available}
+        onClick={onClick}
+        className={`w-full text-left p-3 rounded-lg border transition-premium ${available
+            ? 'bg-white/5 border-white/10 hover:border-premium-gold/50 hover:bg-premium-gold/5 group'
+            : 'bg-black/20 border-white/5 opacity-40 cursor-not-allowed'
+            }`}
+    >
+        <div className="flex justify-between items-center mb-1">
+            <span className={`font-display font-bold uppercase tracking-tight ${available ? 'text-white group-hover:text-premium-gold' : 'text-slate-600'}`}>
+                {name}
+            </span>
+            {available && <span className="material-symbols-outlined text-sm text-premium-gold opacity-0 group-hover:opacity-100 transition-opacity">add_circle</span>}
+        </div>
+        <p className="text-[10px] text-slate-500">{description}</p>
+    </button>
+);
 
 const AdvancementOption: React.FC<{ title: string; cost: number; available: boolean; onClick: () => void }> = ({ title, cost, available, onClick }) => (
     <button

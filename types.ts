@@ -147,6 +147,13 @@ export interface ManagedTeam {
     draws: number;
     losses: number;
   };
+  history?: Array<{
+    id: string;
+    opponentName: string;
+    score: string;
+    date: string;
+    result: 'W' | 'D' | 'L';
+  }>;
 }
 
 export interface DrawingPath {
