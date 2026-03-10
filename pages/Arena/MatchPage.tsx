@@ -1540,53 +1540,70 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                                                     <h3 className="text-xl font-display font-black text-white uppercase italic">Destino y Entorno</h3>
                                                 </div>
 
-                                                <div className="glass-panel p-6 border-white/10 bg-black/40 space-y-6">
-                                                    <div className="flex justify-between items-start">
-                                                        <div className="space-y-4 flex-1">
-                                                            {/* Clima Box */}
-                                                            <div className={`p-4 rounded-2xl border transition-all ${gameStatus.weather ? 'bg-sky-500/10 border-sky-500/30 shadow-[0_0_20px_rgba(14,165,233,0.1)]' : 'bg-white/5 border-white/5 opacity-50'}`}>
-                                                                <p className="text-[10px] font-display font-black text-sky-400 uppercase tracking-widest mb-2">Clima</p>
-                                                                {gameStatus.weather ? (
-                                                                    <div className="flex items-center gap-3">
-                                                                        <span className="material-symbols-outlined text-2xl text-white">cloud_queue</span>
-                                                                        <h4 className="text-lg font-display font-black text-white uppercase italic">{gameStatus.weather.title}</h4>
-                                                                    </div>
-                                                                ) : (
-                                                                    <p className="text-[10px] text-slate-500 uppercase font-bold italic tracking-wider">Pendiente de Consultar</p>
-                                                                )}
+                                                <div className="glass-panel p-6 border-white/10 bg-black/40 space-y-4">
+                                                    {/* Clima Box + Button */}
+                                                    <div className={`p-4 rounded-2xl border transition-all ${gameStatus.weather ? 'bg-sky-500/10 border-sky-500/30 shadow-[0_0_20px_rgba(14,165,233,0.1)]' : 'bg-white/5 border-white/5'}`}>
+                                                        <p className="text-[10px] font-display font-black text-sky-400 uppercase tracking-widest mb-2">Clima</p>
+                                                        {gameStatus.weather ? (
+                                                            <div className="flex items-center gap-3">
+                                                                <span className="material-symbols-outlined text-2xl text-white">cloud_queue</span>
+                                                                <h4 className="text-lg font-display font-black text-white uppercase italic">{gameStatus.weather.title}</h4>
                                                             </div>
-
-                                                            {/* Fans/Fame Box */}
-                                                            <div className={`p-4 rounded-2xl border transition-all ${fame.home !== 0 || fame.opponent !== 0 ? 'bg-amber-500/10 border-amber-500/30 shadow-[0_0_20px_rgba(245,159,10,0.1)]' : 'bg-white/5 border-white/5 opacity-50'}`}>
-                                                                <p className="text-[10px] font-display font-black text-amber-500 uppercase tracking-widest mb-2">Influencia de FAMA</p>
-                                                                {fame.home !== 0 || fame.opponent !== 0 ? (
-                                                                    <div className="flex justify-around items-center text-center">
-                                                                        <div>
-                                                                            <p className="text-[8px] font-bold text-slate-500 uppercase mb-1">Local</p>
-                                                                            <p className="text-xl font-display font-black text-white leading-none">+{fame.home}</p>
-                                                                        </div>
-                                                                        <div className="w-px h-8 bg-white/10"></div>
-                                                                        <div>
-                                                                            <p className="text-[8px] font-bold text-slate-500 uppercase mb-1">Rival</p>
-                                                                            <p className="text-xl font-display font-black text-white leading-none">+{fame.opponent}</p>
-                                                                        </div>
-                                                                    </div>
-                                                                ) : (
-                                                                    <p className="text-[10px] text-slate-500 uppercase font-bold italic tracking-wider">Sin Registro del Grito</p>
-                                                                )}
-                                                            </div>
-                                                        </div>
+                                                        ) : (
+                                                            <p className="text-[10px] text-slate-500 uppercase font-bold italic tracking-wider mb-3">Pendiente de Consultar</p>
+                                                        )}
                                                     </div>
-
                                                     <button
                                                         disabled={!!gameStatus.weather}
                                                         onClick={() => {
-                                                            // Resolve Weather
-                                                            const die1 = Math.floor(Math.random() * 6) + 1, die2 = Math.floor(Math.random() * 6) + 1, total = die1 + die2;
-                                                            const w = weatherConditions.find(wc => wc.diceRoll === total.toString());
-                                                            if (w) { setGameStatus(prev => ({ ...prev, weather: w })); logEvent('INFO', `Clima Invocado (${total}): ${w.title}`); }
+                                                            const die1 = Math.floor(Math.random() * 6) + 1;
+                                                            const die2 = Math.floor(Math.random() * 6) + 1;
+                                                            const total = die1 + die2;
+                                                            // Range-aware lookup: supports "2", "4-10", "11", "12"
+                                                            const w = weatherConditions.find(wc => {
+                                                                if (wc.diceRoll.includes('-')) {
+                                                                    const [min, max] = wc.diceRoll.split('-').map(Number);
+                                                                    return total >= min && total <= max;
+                                                                }
+                                                                return wc.diceRoll === total.toString();
+                                                            });
+                                                            if (w) {
+                                                                setGameStatus(prev => ({ ...prev, weather: w }));
+                                                                logEvent('INFO', `Clima Invocado (${die1}+${die2}=${total}): ${w.title}`);
+                                                            }
+                                                            playSound('dice');
+                                                        }}
+                                                        className={`w-full font-display font-black py-3 rounded-2xl transition-all flex items-center justify-center gap-3 text-[10px] uppercase tracking-[0.2em] ${gameStatus.weather
+                                                            ? 'bg-green-900/30 text-green-500 border border-green-500/20 cursor-not-allowed opacity-60'
+                                                            : 'bg-sky-500 text-black hover:scale-105 active:scale-95 shadow-lg'
+                                                            }`}
+                                                    >
+                                                        <span className="material-symbols-outlined text-base">{gameStatus.weather ? 'check_circle' : 'thunderstorm'}</span>
+                                                        {gameStatus.weather ? 'Clima Registrado' : 'Tirar Clima (2D6)'}
+                                                    </button>
 
-                                                            // Resolve Fame
+                                                    {/* Fans/Fame Box + Button */}
+                                                    <div className={`p-4 rounded-2xl border transition-all ${fansRoll.home ? 'bg-amber-500/10 border-amber-500/30 shadow-[0_0_20px_rgba(245,159,10,0.1)]' : 'bg-white/5 border-white/5'}`}>
+                                                        <p className="text-[10px] font-display font-black text-amber-500 uppercase tracking-widest mb-2">Influencia de FAMA</p>
+                                                        {fansRoll.home ? (
+                                                            <div className="flex justify-around items-center text-center">
+                                                                <div>
+                                                                    <p className="text-[8px] font-bold text-slate-500 uppercase mb-1">Local</p>
+                                                                    <p className="text-xl font-display font-black text-white leading-none">+{fame.home}</p>
+                                                                </div>
+                                                                <div className="w-px h-8 bg-white/10"></div>
+                                                                <div>
+                                                                    <p className="text-[8px] font-bold text-slate-500 uppercase mb-1">Rival</p>
+                                                                    <p className="text-xl font-display font-black text-white leading-none">+{fame.opponent}</p>
+                                                                </div>
+                                                            </div>
+                                                        ) : (
+                                                            <p className="text-[10px] text-slate-500 uppercase font-bold italic tracking-wider">Sin Registro del Grito</p>
+                                                        )}
+                                                    </div>
+                                                    <button
+                                                        disabled={!!fansRoll.home}
+                                                        onClick={() => {
                                                             const hf = (Math.floor(Math.random() * 6) + 1) + (Math.floor(Math.random() * 6) + 1);
                                                             const of = (Math.floor(Math.random() * 6) + 1) + (Math.floor(Math.random() * 6) + 1);
                                                             const hTotal = liveHomeTeam.dedicatedFans + hf;
@@ -1596,25 +1613,25 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                                                             if (oTotal >= hTotal * 2) oppFame = 2; else if (oTotal > hTotal) oppFame = 1;
                                                             setFame({ home: homeFame, opponent: oppFame });
                                                             setFansRoll({ home: hf.toString(), opponent: of.toString() });
-                                                            logEvent('INFO', `Tirada Hinchas - ${liveHomeTeam.name}: ${hTotal}, ${liveOpponentTeam.name}: ${oTotal}. FAMA: ${homeFame} - ${oppFame}`);
+                                                            logEvent('INFO', `Hinchas - ${liveHomeTeam.name}: ${hTotal} (${homeFame} FAMA), ${liveOpponentTeam.name}: ${oTotal} (${oppFame} FAMA)`);
                                                             playSound('dice');
                                                         }}
-                                                        className={`w-full font-display font-black py-4 rounded-[1.5rem] shadow-xl transition-all flex items-center justify-center gap-3 ${gameStatus.weather
-                                                                ? 'bg-green-900/40 text-green-500 border border-green-500/30 cursor-not-allowed'
-                                                                : 'bg-sky-500 text-black hover:scale-105 active:scale-95'
+                                                        className={`w-full font-display font-black py-3 rounded-2xl transition-all flex items-center justify-center gap-3 text-[10px] uppercase tracking-[0.2em] ${fansRoll.home
+                                                            ? 'bg-green-900/30 text-green-500 border border-green-500/20 cursor-not-allowed opacity-60'
+                                                            : 'bg-amber-500 text-black hover:scale-105 active:scale-95 shadow-lg'
                                                             }`}
                                                     >
-                                                        <span className="material-symbols-outlined text-lg">{gameStatus.weather ? 'check_circle' : 'casino'}</span>
-                                                        <span className="text-[10px] uppercase tracking-[0.2em]">{gameStatus.weather ? 'Oráculos Consultados' : 'Consultar Oráculos'}</span>
+                                                        <span className="material-symbols-outlined text-base">{fansRoll.home ? 'check_circle' : 'groups'}</span>
+                                                        {fansRoll.home ? 'Hinchas Registrados' : 'Tirar Hinchas (2D6+2D6)'}
                                                     </button>
                                                 </div>
                                             </div>
 
-                                            {/* Coin Toss Section - requires oracle roll first */}
-                                            <div className={`space-y-6 transition-all duration-500 ${!gameStatus.weather ? 'opacity-40 pointer-events-none select-none' : 'opacity-100'}`}>
+                                            {/* Coin Toss Section - requires both weather AND fans rolled */}
+                                            <div className={`space-y-6 transition-all duration-500 ${(!gameStatus.weather || !fansRoll.home) ? 'opacity-40 pointer-events-none select-none' : 'opacity-100'}`}>
                                                 <div className="flex items-center gap-4 mb-2">
-                                                    <div className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all ${gameStatus.weather ? 'bg-amber-500/10 border-amber-500/30' : 'bg-white/5 border-white/10'}`}>
-                                                        <span className={`material-symbols-outlined ${gameStatus.weather ? 'text-amber-500' : 'text-slate-600'}`}>toll</span>
+                                                    <div className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all ${(gameStatus.weather && fansRoll.home) ? 'bg-amber-500/10 border-amber-500/30' : 'bg-white/5 border-white/10'}`}>
+                                                        <span className={`material-symbols-outlined ${(gameStatus.weather && fansRoll.home) ? 'text-amber-500' : 'text-slate-600'}`}>toll</span>
                                                     </div>
                                                     <div>
                                                         <h3 className="text-xl font-display font-black text-white uppercase italic">Juicio de la Moneda</h3>
