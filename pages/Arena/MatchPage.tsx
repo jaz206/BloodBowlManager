@@ -1579,6 +1579,7 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                                                     </div>
 
                                                     <button
+                                                        disabled={!!gameStatus.weather}
                                                         onClick={() => {
                                                             // Resolve Weather
                                                             const die1 = Math.floor(Math.random() * 6) + 1, die2 = Math.floor(Math.random() * 6) + 1, total = die1 + die2;
@@ -1598,10 +1599,13 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                                                             logEvent('INFO', `Tirada Hinchas - ${liveHomeTeam.name}: ${hTotal}, ${liveOpponentTeam.name}: ${oTotal}. FAMA: ${homeFame} - ${oppFame}`);
                                                             playSound('dice');
                                                         }}
-                                                        className="w-full bg-sky-500 text-black font-display font-black py-4 rounded-[1.5rem] shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3"
+                                                        className={`w-full font-display font-black py-4 rounded-[1.5rem] shadow-xl transition-all flex items-center justify-center gap-3 ${gameStatus.weather
+                                                                ? 'bg-green-900/40 text-green-500 border border-green-500/30 cursor-not-allowed'
+                                                                : 'bg-sky-500 text-black hover:scale-105 active:scale-95'
+                                                            }`}
                                                     >
-                                                        <span className="material-symbols-outlined text-lg">casino</span>
-                                                        <span className="text-[10px] uppercase tracking-[0.2em]">Consultar Oráculos</span>
+                                                        <span className="material-symbols-outlined text-lg">{gameStatus.weather ? 'check_circle' : 'casino'}</span>
+                                                        <span className="text-[10px] uppercase tracking-[0.2em]">{gameStatus.weather ? 'Oráculos Consultados' : 'Consultar Oráculos'}</span>
                                                     </button>
                                                 </div>
                                             </div>
