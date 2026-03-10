@@ -1606,13 +1606,16 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                                                 </div>
                                             </div>
 
-                                            {/* Coin Toss Section */}
-                                            <div className="space-y-6">
+                                            {/* Coin Toss Section - requires oracle roll first */}
+                                            <div className={`space-y-6 transition-all duration-500 ${!gameStatus.weather ? 'opacity-40 pointer-events-none select-none' : 'opacity-100'}`}>
                                                 <div className="flex items-center gap-4 mb-2">
-                                                    <div className="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
-                                                        <span className="material-symbols-outlined text-amber-500">toll</span>
+                                                    <div className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all ${gameStatus.weather ? 'bg-amber-500/10 border-amber-500/30' : 'bg-white/5 border-white/10'}`}>
+                                                        <span className={`material-symbols-outlined ${gameStatus.weather ? 'text-amber-500' : 'text-slate-600'}`}>toll</span>
                                                     </div>
-                                                    <h3 className="text-xl font-display font-black text-white uppercase italic">Juicio de la Moneda</h3>
+                                                    <div>
+                                                        <h3 className="text-xl font-display font-black text-white uppercase italic">Juicio de la Moneda</h3>
+                                                        {!gameStatus.weather && <p className="text-[9px] font-display font-black text-blood-red/60 uppercase tracking-[0.2em] animate-pulse mt-0.5">Consulta los Oráculos primero ↑</p>}
+                                                    </div>
                                                 </div>
 
                                                 <div className="glass-panel p-6 border-white/10 bg-black/40 space-y-6">
@@ -1675,8 +1678,8 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                                         </div>
                                     </div>
 
-                                    {/* Final Confirmation */}
-                                    {gameStatus.weather && gameStatus.receivingTeam && (
+                                    {/* Final Confirmation - show when receiving team is decided */}
+                                    {gameStatus.receivingTeam && (
                                         <div className="pt-10 border-t border-white/5 flex justify-center animate-bounce-in">
                                             <button
                                                 onClick={() => {
