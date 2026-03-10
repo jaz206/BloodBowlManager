@@ -139,7 +139,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
     }, [team.players]);
 
     const handleSkillClick = (skillName: string) => {
-        const cleanedName = skillName.split('(')[0].trim();
+        const cleanedName = (skillName || '').split('(')[0].trim();
         const foundSkill = skillsData.find(s => s.name.toLowerCase().startsWith(cleanedName.toLowerCase()));
         if (foundSkill) {
             setSelectedSkillForModal(foundSkill);
@@ -351,7 +351,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
     };
 
     const handleHirePlayer = (player: Player) => {
-        const positionLimit = parseInt(player.qty.split('-')[1]);
+        const positionLimit = parseInt((player?.qty || '0-16').split('-')[1]);
         if (countPlayersByPosition(player.position) >= positionLimit) {
             alert(`Ya tienes el máximo de ${player.position}.`);
             return;
@@ -694,7 +694,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                                             })}
                                         </div>
                                     </td>
-                                    <td className="p-4 text-center text-slate-400">{countPlayersByPosition(p.position)}<span className="text-[10px] opacity-30 mx-0.5">/</span>{p.qty.split('-')[1]}</td>
+                                    <td className="p-4 text-center text-slate-400">{countPlayersByPosition(p.position)}<span className="text-[10px] opacity-30 mx-0.5">/</span>{(p?.qty || '0-16').split('-')[1]}</td>
                                     <td className="p-4 text-right">
                                         <button onClick={() => handleHirePlayer(p)} className="bg-premium-gold text-black font-display font-black uppercase tracking-widest text-[10px] py-2 px-4 rounded-lg transition-premium hover:scale-105 shadow-xl">Contratar</button>
                                     </td>
@@ -739,7 +739,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                         <tbody className="divide-y divide-white/5">
                             {team.players.map(p => {
                                 const allSkills = [
-                                    ...(p.skills && p.skills.toLowerCase() !== 'ninguna' ? p.skills.split(', ').map(s => s.trim()) : []),
+                                    ...((p?.skills || '').toLowerCase() !== 'ninguna' ? (p?.skills || '').split(', ').map(s => s.trim()).filter(Boolean) : []),
                                     ...p.gainedSkills
                                 ];
                                 const isBenched = p.isBenched ?? true;

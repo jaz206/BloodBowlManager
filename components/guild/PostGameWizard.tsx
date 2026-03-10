@@ -18,14 +18,14 @@ const SkillSelectionModal: React.FC<SkillSelectionModalProps> = ({ player, roste
     const availableSkills = useMemo(() => {
         if (!basePlayer) return [];
         const categoriesString = skillType === 'Primary' ? basePlayer.primary : basePlayer.secondary;
-        const categories = categoriesString.split('');
+        const categories = (categoriesString || '').split('');
 
         const categoryMap: { [key: string]: string } = {
             G: 'General', A: 'Agilidad', F: 'Fuerza', P: 'Pase', M: 'Mutaciones'
         };
 
         const skillCategories = categories.map(c => categoryMap[c]).filter(Boolean);
-        const currentSkills = new Set([...(player.skills || '').split(', '), ...player.gainedSkills]);
+        const currentSkills = new Set([...(player.skills || '').split(', ').filter(Boolean), ...(player.gainedSkills || [])]);
 
         return skillsData.filter(skill =>
             skillCategories.includes(skill.category) && !currentSkills.has(skill.name)
@@ -119,6 +119,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
     const [skillSelection, setSkillSelection] = useState<{ player: ManagedPlayer, type: 'Primary' | 'Secondary', cost: number } | null>(null);
 
     useEffect(() => {
+        if (!finalHomeTeam || !opponentTeam) return;
         // BB2025 Winnings Logic:
         // Winner: Roll 2D6, pick highest.
         // Draw: Roll 1D6.

@@ -24,7 +24,7 @@ const PlayerModal: React.FC<PlayerModalProps> = ({ player, allSkills, onSave, on
         if (name === "spp" || name === "missNextGame") {
             setEditedPlayer({ ...editedPlayer, [name]: parseInt(value) || 0 });
         } else if (name === "lastingInjuries") {
-            setEditedPlayer({ ...editedPlayer, [name]: value.split(',').map(s => s.trim()).filter(Boolean) });
+            setEditedPlayer({ ...editedPlayer, [name]: (value || '').split(',').map(s => s.trim()).filter(Boolean) });
         } else {
             setEditedPlayer({ ...editedPlayer, [name]: value });
         }

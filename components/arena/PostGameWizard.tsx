@@ -18,14 +18,14 @@ const SkillSelectionModal: React.FC<SkillSelectionModalProps> = ({ player, roste
     const availableSkills = useMemo(() => {
         if (!basePlayer) return [];
         const categoriesString = skillType === 'Primary' ? basePlayer.primary : basePlayer.secondary;
-        const categories = categoriesString.split('');
+        const categories = (categoriesString || '').split('');
 
         const categoryMap: { [key: string]: string } = {
             G: 'General', A: 'Agilidad', F: 'Fuerza', P: 'Pase', M: 'Mutaciones'
         };
 
         const skillCategories = categories.map(c => categoryMap[c]).filter(Boolean);
-        const currentSkills = new Set([...(player.skills || '').split(', '), ...player.gainedSkills]);
+        const currentSkills = new Set([...(player.skills || '').split(', ').filter(Boolean), ...(player.gainedSkills || [])]);
 
         return skillsData.filter(skill =>
             skillCategories.includes(skill.category) && !currentSkills.has(skill.name)
@@ -107,6 +107,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
     }, []);
 
     useEffect(() => {
+        if (!finalHomeTeam || !opponentTeam) return;
         let winningsRoll = 0;
         const d1 = Math.floor(Math.random() * 6) + 1;
         const d2 = Math.floor(Math.random() * 6) + 1;
@@ -128,7 +129,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
         let mvpPlayer: (ManagedPlayer & { teamName: string }) | null = null;
         if (homeEligible.length > 0) {
             const randomMvp = homeEligible[Math.floor(Math.random() * homeEligible.length)];
-            mvpPlayer = { ...randomMvp, teamName: tempTeam.name };
+            mvpPlayer = { ...randomMvp, teamName: tempTeam?.name || 'Local' };
 
             const pIndex = tempTeam.players.findIndex(p => p.id === randomMvp.id);
             if (pIndex !== -1) {
@@ -241,9 +242,9 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                                 <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
                                     <span className="material-symbols-outlined text-6xl text-green-400">payments</span>
                                 </div>
-                                <h4 className="text-[10px] font-display font-black text-green-500 uppercase tracking-widest mb-4">Tesoro de Guerra</h4>
+                                <p className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mb-4">Tesoro de Guerra</p>
                                 <p className="text-3xl font-display font-black text-white italic truncate">{winnings.toLocaleString()} <span className="text-xs not-italic text-green-500 ml-1 uppercase">m.o.</span></p>
-                                <p className="text-[9px] font-display font-black text-slate-500 uppercase tracking-widest mt-2">{updatedTeam.name.split(' ')[0]} se enriquece</p>
+                                <p className="text-[9px] font-display font-black text-slate-500 uppercase tracking-widest mt-2">{(updatedTeam?.name || 'El equipo').split(' ')[0]} se enriquece</p>
                             </div>
                             <div className="glass-panel p-6 bg-premium-gold/5 border-premium-gold/20 relative overflow-hidden group">
                                 <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
@@ -382,8 +383,8 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                                     <h4 className="text-[9px] font-display font-black text-blood-red uppercase tracking-widest">Cicatrices del Combate</h4>
                                     <div className="space-y-2">
                                         {playersWithNewInjuries.map(p => {
-                                            const originalPlayer = initialHomeTeam.players.find(op => op.id === p.id);
-                                            const newInjuries = p.lastingInjuries.filter(inj => !originalPlayer?.lastingInjuries.includes(inj));
+                                            const originalPlayer = initialHomeTeam.players?.find(op => op.id === p.id);
+                                            const newInjuries = (p.lastingInjuries || []).filter(inj => !(originalPlayer?.lastingInjuries || []).includes(inj));
                                             return (
                                                 <div key={p.id} className="flex justify-between items-center p-3 rounded-xl bg-blood-red/10 border border-blood-red/20">
                                                     <span className="text-xs font-display font-black text-slate-200 uppercase">{p.customName}</span>

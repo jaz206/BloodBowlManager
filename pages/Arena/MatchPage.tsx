@@ -54,7 +54,7 @@ interface GameBoardProps {
     onTeamUpdate: (team: ManagedTeam) => void;
 }
 
-type GameState = 'setup' | 'scanning' | 'manual_select' | 'select_team' | 'pre_game' | 'in_progress' | 'post_game' | 'ko_recovery';
+type GameState = 'setup' | 'selection' | 'pre_game' | 'in_progress' | 'post_game' | 'ko_recovery';
 
 interface FoulState {
     step: 'select_fouler_team' | 'select_fouler' | 'select_victim' | 'armor_roll' | 'injury_roll' | 'casualty_roll' | 'lasting_injury_roll' | 'summary';
@@ -256,7 +256,7 @@ const calculateTeamValue = (team: ManagedTeam | null, includeInducementsForPraye
 
 const isEligibleStar = (star: StarPlayer, teamRoster: Team | undefined) => {
     if (!teamRoster) return false;
-    const teamRules = teamRoster.specialRules.split(', ').map((r: string) => r.trim());
+    const teamRules = (teamRoster.specialRules || teamRoster.specialRules_es || '').split(', ').map((r: string) => r.trim());
     const anyTeamRule = star.playsFor.find(r => r.startsWith("Any Team"));
     if (anyTeamRule) {
         if (anyTeamRule.includes("except Sylvanian Spotlight")) return !teamRules.includes("Selectiva de Sylvania");
@@ -386,35 +386,9 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
     useEffect(() => { if (gameStatus.kickoffEvent?.title === 'Clima Cambiante' && !kickoffActionCompleted) setIsChangingWeatherModalOpen(true); }, [gameStatus.kickoffEvent, kickoffActionCompleted]);
 
     useEffect(() => {
-        if (gameState === 'scanning' && scannerContainerRef.current) {
-            scannerRef.current = new Html5Qrcode(scannerContainerRef.current.id);
-            scannerRef.current.start(
-                { facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } },
-                (decodedText: string) => {
-                    try {
-                        const parsedTeam = JSON.parse(decodedText);
-                        const isNewFormat = 'n' in parsedTeam && 'rN' in parsedTeam;
-                        const teamName = isNewFormat ? parsedTeam.n : parsedTeam.name;
-                        const rosterName = isNewFormat ? parsedTeam.rN : parsedTeam.rosterName;
-                        if (!teamName || !rosterName) { alert('Código QR no válido: Faltan datos esenciales.'); return; }
-                        const baseTeam = teamsData.find(t => t.name === rosterName);
-                        if (!baseTeam) { alert(`Facción "${rosterName}" no encontrada.`); return; }
-                        const playersData = isNewFormat ? parsedTeam.pl : parsedTeam.players;
-                        const fullPlayers: ManagedPlayer[] = playersData.map((p: any, i: number) => {
-                            const position = isNewFormat ? p.p : p.position;
-                            const basePlayer = baseTeam.roster.find(bp => bp.position === position);
-                            if (!basePlayer) throw new Error(`Jugador "${position}" no encontrado.`);
-                            return { ...basePlayer, id: Date.now() + i, customName: (isNewFormat ? p.cN : p.customName) || basePlayer.position, spp: (isNewFormat ? p.s : p.spp) || 0, gainedSkills: (isNewFormat ? p.gS : p.gainedSkills) || [], lastingInjuries: (isNewFormat ? p.lI : p.lastingInjuries) || [], status: 'Reserva' };
-                        });
-                        const opponentWithDefaults: ManagedTeam = { name: teamName, rosterName: rosterName, treasury: (isNewFormat ? parsedTeam.t : parsedTeam.treasury) || 0, rerolls: (isNewFormat ? parsedTeam.rr : parsedTeam.rerolls) || 0, dedicatedFans: (isNewFormat ? parsedTeam.df : parsedTeam.dedicatedFans) || 1, cheerleaders: (isNewFormat ? parsedTeam.ch : parsedTeam.cheerleaders) || 0, assistantCoaches: (isNewFormat ? parsedTeam.ac : parsedTeam.assistantCoaches) || 0, apothecary: (isNewFormat ? parsedTeam.ap : parsedTeam.apothecary) || false, players: fullPlayers };
-                        setOpponentTeam(opponentWithDefaults);
-                        setGameState('pre_game');
-                        scannerRef.current.stop();
-                    } catch (e) { alert(`Error al procesar el código QR: ${e instanceof Error ? e.message : 'Error desconocido.'}`); }
-                }, () => { }
-            ).catch((err: any) => { console.error("Error al iniciar escáner", err); alert(`Error al iniciar cámara: ${err}.`); setGameState('select_team'); });
+        if (gameState === 'selection' && scannerContainerRef.current) {
+            // Scanner logic will be triggered by a button in selection view
         }
-        return () => { if (scannerRef.current && scannerRef.current.isScanning) scannerRef.current.stop().catch((e: any) => console.warn("Error al detener escáner.", e)); };
     }, [gameState]);
 
     useEffect(() => {
@@ -447,7 +421,10 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
             if (journeymenNotification || (pendingJourneymen.home.length > 0 || pendingJourneymen.opponent.length > 0)) return;
             const homeNeeded = Math.max(0, 11 - liveHomeTeam.players.length);
             const oppNeeded = Math.max(0, 11 - liveOpponentTeam.players.length);
-            if (homeNeeded === 0 && oppNeeded === 0) { setPreGameStep(1); return; }
+            if (homeNeeded === 0 && oppNeeded === 0) {
+                setPreGameStep(1);
+                return;
+            }
             let newHomeJourneymen: ManagedPlayer[] = [], homeMsg = '';
             if (homeNeeded > 0) {
                 const baseRoster = teamsData.find(t => t.name === liveHomeTeam.rosterName);
@@ -514,9 +491,25 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
             ...extra
         } as GameEvent, ...prev]);
     };
-    const handleHalftime = () => { setTurn(0); setHalf(2); logEvent('INFO', 'Fin de la primera parte. Comienza la segunda parte.'); setGameStatus(prev => ({ ...prev, kickoffEvent: null })); if (firstHalfReceiver) { const secondHalfReceiver = firstHalfReceiver === 'home' ? 'opponent' : 'home'; setGameStatus(prev => ({ ...prev, receivingTeam: secondHalfReceiver })); logEvent('INFO', `Recibe en la segunda parte ${secondHalfReceiver === 'home' ? homeTeam?.name : opponentTeam?.name}.`); setGameState('pre_game'); setPreGameStep(7); } else { setGameState('pre_game'); setPreGameStep(6); } };
+    const handleHalftime = () => {
+        setTurn(0);
+        setHalf(2);
+        logEvent('INFO', 'Fin de la primera parte. Comienza la segunda parte.');
+        setGameStatus(prev => ({ ...prev, kickoffEvent: null }));
+
+        if (firstHalfReceiver) {
+            const secondHalfReceiver = firstHalfReceiver === 'home' ? 'opponent' : 'home';
+            setGameStatus(prev => ({ ...prev, receivingTeam: secondHalfReceiver }));
+            logEvent('INFO', `Recibe en la segunda parte ${secondHalfReceiver === 'home' ? homeTeam?.name : opponentTeam?.name}.`);
+            setGameState('pre_game');
+            setPreGameStep(2); // Deployment
+        } else {
+            setGameState('pre_game');
+            setPreGameStep(1); // Inducements/Fate/Coin Toss
+        }
+    };
     const handleConfirmJourneymen = () => { if (pendingJourneymen.home.length > 0 && liveHomeTeam) { setLiveHomeTeam(prev => prev ? ({ ...prev, players: [...prev.players, ...pendingJourneymen.home] }) : null); logEvent('INFO', `${liveHomeTeam.name} añade ${pendingJourneymen.home.length} Sustituto(s).`); } if (pendingJourneymen.opponent.length > 0 && liveOpponentTeam) { setLiveOpponentTeam(prev => prev ? ({ ...prev, players: [...prev.players, ...pendingJourneymen.opponent] }) : null); logEvent('INFO', `${liveOpponentTeam.name} añade ${pendingJourneymen.opponent.length} Sustituto(s).`); } setJourneymenNotification(null); setPendingJourneymen({ home: [], opponent: [] }); setPreGameStep(1); };
-    const handleSkillClick = useCallback((skillName: string) => { const cleanedName = skillName.split('(')[0].trim(); const foundSkill = skillsData.find(s => s.name.toLowerCase().startsWith(cleanedName.toLowerCase())); if (foundSkill) setSelectedSkillForModal(foundSkill); else console.warn(`Skill not found: ${cleanedName}`); }, []);
+    const handleSkillClick = useCallback((skillName: string) => { const cleanedName = (skillName || '').split('(')[0].trim(); const foundSkill = skillsData.find(s => s.name.toLowerCase().startsWith(cleanedName.toLowerCase())); if (foundSkill) setSelectedSkillForModal(foundSkill); else console.warn(`Skill not found: ${cleanedName}`); }, []);
     const updatePlayerSppAndAction = (player: ManagedPlayer, teamId: 'home' | 'opponent', spp: number, action: SppActionType, description: string) => { const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam; setTeam(prev => { if (!prev) return null; return { ...prev, players: prev.players.map(p => { if (p.id === player.id) { const newActions = { ...(p.sppActions || {}) }; newActions[action] = (newActions[action] || 0) + 1; return { ...p, spp: p.spp + spp, sppActions: newActions }; } return p; }) }; }); logEvent('INFO', `${player.customName} gana ${spp} PE por ${description}.`); setSppModalState({ isOpen: false, type: null, step: 'select_team', teamId: null, selectedPlayer: null }); };
     const updatePlayerStatus = (playerId: number, teamId: 'home' | 'opponent', status: PlayerStatus, statusDetail?: string) => { const setTeamToUpdate = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam; setTeamToUpdate(prevTeam => { if (!prevTeam) return null; return { ...prevTeam, players: prevTeam.players.map(p => p.id === playerId ? { ...p, status, statusDetail: statusDetail || '' } : p) }; }); };
 
@@ -1108,7 +1101,7 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                     <div className="relative z-10 flex flex-col gap-5 w-full max-w-sm px-4">
                         {managedTeams.length > 0 ? (
                             <button
-                                onClick={() => setGameState('select_team')}
+                                onClick={() => setGameState('selection')}
                                 className="peer w-full group relative overflow-hidden bg-gradient-to-b from-premium-gold to-yellow-600 text-black font-display font-black py-5 px-8 rounded-2xl shadow-[0_20px_40px_rgba(245,159,10,0.25)] hover:shadow-[0_25px_50px_rgba(245,159,10,0.4)] transform hover:-translate-y-1 transition-all duration-300"
                             >
                                 <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
@@ -1135,119 +1128,213 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                     </div>
                 </div>
             );
-            case 'select_team': return (
-                <div className="max-w-xl mx-auto py-10 animate-slide-in-up">
-                    <div className="text-center mb-12">
-                        <h2 className="text-3xl font-display font-black text-white uppercase italic tracking-tighter mb-2">Tu <span className="text-sky-400">Escuadra</span></h2>
-                        <p className="text-slate-500 text-sm tracking-wide">Representa a tu casa y reclama la victoria.</p>
-                    </div>
+            case 'selection': {
+                const isScanning = scannerRef.current?.isScanning;
 
-                    <div className="grid gap-4">
-                        {managedTeams.map(team => (
-                            <button
-                                key={team.name}
-                                onClick={() => { setHomeTeam(team); setGameState(hasCamera ? 'scanning' : 'manual_select'); }}
-                                className="group w-full flex items-center gap-6 glass-panel p-5 border-white/5 bg-black/40 hover:bg-sky-500 hover:border-sky-400 transition-all duration-300 transform hover:scale-[1.02] shadow-xl"
-                            >
-                                <div className="relative">
-                                    {team.crestImage ? (
-                                        <img src={team.crestImage} alt="Escudo" className="w-16 h-16 rounded-2xl object-cover bg-black/60 border border-white/10 group-hover:border-black/20" />
-                                    ) : (
-                                        <div className="w-16 h-16 rounded-2xl bg-slate-900 flex items-center justify-center border border-white/10 group-hover:border-black/20">
-                                            <ShieldCheckIcon className="w-8 h-8 text-slate-700 group-hover:text-black/40" />
+                const handleStartScanner = () => {
+                    if (!scannerContainerRef.current) return;
+                    scannerRef.current = new Html5Qrcode(scannerContainerRef.current.id);
+                    scannerRef.current.start(
+                        { facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } },
+                        (decodedText: string) => {
+                            try {
+                                const parsedTeam = JSON.parse(decodedText);
+                                const isNewFormat = 'n' in parsedTeam && 'rN' in parsedTeam;
+                                const teamName = isNewFormat ? parsedTeam.n : parsedTeam.name;
+                                const rosterName = isNewFormat ? parsedTeam.rN : parsedTeam.rosterName;
+                                if (!teamName || !rosterName) { alert('Código QR no válido: Faltan datos esenciales.'); return; }
+                                const baseTeam = teamsData.find(t => t.name === rosterName);
+                                if (!baseTeam) { alert(`Facción "${rosterName}" no encontrada.`); return; }
+                                const playersData = isNewFormat ? parsedTeam.pl : parsedTeam.players;
+                                const fullPlayers: ManagedPlayer[] = playersData.map((p: any, i: number) => {
+                                    const position = isNewFormat ? p.p : p.position;
+                                    const basePlayer = baseTeam.roster.find(bp => bp.position === position);
+                                    if (!basePlayer) throw new Error(`Jugador "${position}" no encontrado.`);
+                                    return { ...basePlayer, id: Date.now() + i, customName: (isNewFormat ? p.cN : p.customName) || basePlayer.position, spp: (isNewFormat ? p.s : p.spp) || 0, gainedSkills: (isNewFormat ? p.gS : p.gainedSkills) || [], lastingInjuries: (isNewFormat ? p.lI : p.lastingInjuries) || [], status: 'Reserva' };
+                                });
+                                const opponentWithDefaults: ManagedTeam = { name: teamName, rosterName: rosterName, treasury: (isNewFormat ? parsedTeam.t : parsedTeam.treasury) || 0, rerolls: (isNewFormat ? parsedTeam.rr : parsedTeam.rerolls) || 0, dedicatedFans: (isNewFormat ? parsedTeam.df : parsedTeam.dedicatedFans) || 1, cheerleaders: (isNewFormat ? parsedTeam.ch : parsedTeam.cheerleaders) || 0, assistantCoaches: (isNewFormat ? parsedTeam.ac : parsedTeam.assistantCoaches) || 0, apothecary: (isNewFormat ? parsedTeam.ap : parsedTeam.apothecary) || false, players: fullPlayers };
+                                setOpponentTeam(opponentWithDefaults);
+                                scannerRef.current.stop();
+                            } catch (e) { alert(`Error al procesar el código QR: ${e instanceof Error ? e.message : 'Error desconocido.'}`); }
+                        }, () => { }
+                    ).catch((err: any) => { console.error("Error al iniciar escáner", err); alert(`Error al iniciar cámara: ${err}.`); });
+                };
+
+                return (
+                    <div className="max-w-6xl mx-auto py-10 px-4 animate-fade-in">
+                        <div className="text-center mb-12">
+                            <h2 className="text-4xl font-display font-black text-white uppercase italic tracking-tighter mb-2">Preparar <span className="text-premium-gold">Confrontación</span></h2>
+                            <p className="text-slate-500 text-sm tracking-wide">Forja el duelo definitivo en la arena de Nuffle.</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+                            {/* Lado Izquierdo: Tu Equipo (Local) */}
+                            <div className="space-y-6">
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="w-10 h-10 rounded-full bg-sky-500/20 border border-sky-500/30 flex items-center justify-center">
+                                        <span className="material-symbols-outlined text-sky-400">house</span>
+                                    </div>
+                                    <h3 className="text-xl font-display font-black text-white uppercase italic">Tu Escuadra</h3>
+                                </div>
+
+                                {homeTeam ? (
+                                    <div className="glass-panel p-6 border-sky-500/30 bg-sky-500/5 relative group">
+                                        <button
+                                            onClick={() => setHomeTeam(null)}
+                                            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/40 text-slate-500 hover:text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
+                                        >
+                                            <span className="material-symbols-outlined text-sm">close</span>
+                                        </button>
+                                        <div className="flex items-center gap-6">
+                                            {homeTeam.crestImage ? (
+                                                <img src={homeTeam.crestImage} alt="Escudo" className="w-20 h-20 rounded-2xl object-cover border-2 border-sky-500/30" />
+                                            ) : (
+                                                <div className="w-20 h-20 rounded-2xl bg-black/60 border-2 border-sky-500/30 flex items-center justify-center">
+                                                    <ShieldCheckIcon className="w-10 h-10 text-sky-500/40" />
+                                                </div>
+                                            )}
+                                            <div>
+                                                <p className="text-2xl font-display font-black text-white uppercase italic leading-tight">{homeTeam.name}</p>
+                                                <p className="text-xs font-bold text-sky-400 uppercase tracking-widest">{homeTeam.rosterName}</p>
+                                                <div className="mt-2 flex gap-3">
+                                                    <span className="text-[10px] font-black bg-black/40 px-3 py-1 rounded-full text-slate-400 border border-white/5 uppercase">TV {calculateTeamValue(homeTeam).toLocaleString()}</span>
+                                                </div>
+                                            </div>
                                         </div>
-                                    )}
+                                    </div>
+                                ) : (
+                                    <div className="grid gap-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                                        {managedTeams.map(team => (
+                                            <button
+                                                key={team.name}
+                                                onClick={() => setHomeTeam(team)}
+                                                className="group w-full flex items-center gap-4 glass-panel p-4 border-white/5 bg-black/20 hover:bg-sky-500/10 hover:border-sky-500/50 transition-all duration-300"
+                                            >
+                                                <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center border border-white/5 overflow-hidden">
+                                                    {team.crestImage ? <img src={team.crestImage} className="w-full h-full object-cover" /> : <ShieldCheckIcon className="w-6 h-6 text-slate-700" />}
+                                                </div>
+                                                <div className="flex-grow text-left">
+                                                    <p className="text-sm font-display font-black text-white uppercase transition-colors">{team.name}</p>
+                                                    <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">{team.rosterName}</p>
+                                                </div>
+                                                <span className="material-symbols-outlined text-slate-700 group-hover:text-sky-400">radio_button_unchecked</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Lado Derecho: El Rival (Oponente) */}
+                            <div className="space-y-6">
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="w-10 h-10 rounded-full bg-red-500/20 border border-red-500/30 flex items-center justify-center">
+                                        <span className="material-symbols-outlined text-red-500">swords</span>
+                                    </div>
+                                    <h3 className="text-xl font-display font-black text-white uppercase italic">El Rival</h3>
                                 </div>
-                                <div className="flex-grow text-left">
-                                    <p className="text-lg font-display font-black text-white group-hover:text-black uppercase italic tracking-tighter transition-colors">{team.name}</p>
-                                    <p className="text-[10px] font-bold text-slate-500 group-hover:text-black/60 uppercase tracking-widest transition-colors">{team.rosterName}</p>
-                                </div>
-                                <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-slate-500 group-hover:text-black group-hover:border-black/20 transition-all">
-                                    <span className="material-symbols-outlined">radio_button_unchecked</span>
-                                </div>
-                            </button>
-                        ))}
-                    </div>
 
-                    <div className="mt-12 text-center">
-                        <button onClick={() => setGameState('setup')} className="text-xs font-display font-black text-slate-500 hover:text-white uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 mx-auto">
-                            <span className="material-symbols-outlined text-sm">arrow_back</span>
-                            Regresar
-                        </button>
-                    </div>
-                </div>
-            );
-            case 'scanning': return (
-                <div className="max-w-lg mx-auto py-10 animate-fade-in">
-                    <div className="text-center mb-8">
-                        <h2 className="text-3xl font-display font-black text-white uppercase italic tracking-tighter mb-2">Buscando <span className="text-red-500">Rival</span></h2>
-                        <p className="text-slate-500 text-sm">Escanea el Sello de Guerra (QR) del oponente para iniciar el duelo.</p>
-                    </div>
-
-                    <div className="relative group">
-                        <div className="absolute -inset-1 bg-gradient-to-r from-red-500 to-orange-500 rounded-[2.5rem] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-                        <div id="qr-reader" ref={scannerContainerRef} className="relative aspect-square bg-black rounded-[2rem] overflow-hidden border-4 border-white/5 shadow-2xl"></div>
-
-                        <div className="absolute inset-0 pointer-events-none border-x-[40px] border-y-[40px] border-black/40"></div>
-                        <div className="absolute top-1/2 left-0 w-full h-1 bg-red-500/40 shadow-[0_0_20px_rgba(239,68,68,0.8)] animate-scan z-10"></div>
-                    </div>
-
-                    <div className="mt-10 flex flex-col gap-4">
-                        <button
-                            onClick={() => setGameState('manual_select')}
-                            className="bg-white/5 border border-white/10 text-white font-display font-black py-4 px-8 rounded-2xl hover:bg-white/10 hover:border-premium-gold/30 transition-all text-sm uppercase tracking-widest"
-                        >
-                            Selección Manual de Rival
-                        </button>
-                        <button onClick={() => setGameState('select_team')} className="text-xs font-display font-black text-slate-500 hover:text-white uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2">
-                            <span className="material-symbols-outlined text-sm">arrow_back</span>
-                            Cancelar
-                        </button>
-                    </div>
-                </div>
-            );
-            case 'manual_select': return (
-                <div className="max-w-xl mx-auto py-10 animate-slide-in-up">
-                    <div className="text-center mb-12">
-                        <h2 className="text-3xl font-display font-black text-white uppercase italic tracking-tighter mb-2">Desafío <span className="text-red-500">Manual</span></h2>
-                        <p className="text-slate-500 text-sm tracking-wide">Selecciona el equipo rival de entre los registrados en el santuario.</p>
-                    </div>
-
-                    <div className="grid gap-3">
-                        {managedTeams.filter(t => t.name !== homeTeam?.name).map(team => (
-                            <button
-                                key={team.name}
-                                onClick={() => handleManualOpponentSelect(team.name)}
-                                className="group w-full flex items-center gap-6 glass-panel p-5 border-white/5 bg-black/40 hover:bg-red-500 hover:border-red-400 transition-all duration-300 transform hover:scale-[1.01] shadow-xl"
-                            >
-                                <div className="relative">
-                                    {team.crestImage ? (
-                                        <img src={team.crestImage} alt="Escudo" className="w-14 h-14 rounded-2xl object-cover bg-black/60 border border-white/10 group-hover:border-black/20" />
-                                    ) : (
-                                        <div className="w-14 h-14 rounded-2xl bg-slate-900 flex items-center justify-center border border-white/10 group-hover:border-black/20">
-                                            <ShieldCheckIcon className="w-7 h-7 text-slate-700 group-hover:text-black/40" />
+                                {opponentTeam ? (
+                                    <div className="glass-panel p-6 border-red-500/30 bg-red-500/5 relative group animate-slide-in-up">
+                                        <button
+                                            onClick={() => setOpponentTeam(null)}
+                                            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/40 text-slate-500 hover:text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
+                                        >
+                                            <span className="material-symbols-outlined text-sm">close</span>
+                                        </button>
+                                        <div className="flex items-center gap-6">
+                                            {opponentTeam.crestImage ? (
+                                                <img src={opponentTeam.crestImage} alt="Escudo" className="w-20 h-20 rounded-2xl object-cover border-2 border-red-500/30" />
+                                            ) : (
+                                                <div className="w-20 h-20 rounded-2xl bg-black/60 border-2 border-red-500/30 flex items-center justify-center">
+                                                    <ShieldCheckIcon className="w-10 h-10 text-red-500/40" />
+                                                </div>
+                                            )}
+                                            <div>
+                                                <p className="text-2xl font-display font-black text-white uppercase italic leading-tight">{opponentTeam.name}</p>
+                                                <p className="text-xs font-bold text-red-400 uppercase tracking-widest">{opponentTeam.rosterName}</p>
+                                                <div className="mt-2 flex gap-3">
+                                                    <span className="text-[10px] font-black bg-black/40 px-3 py-1 rounded-full text-slate-400 border border-white/5 uppercase">TV {calculateTeamValue(opponentTeam).toLocaleString()}</span>
+                                                </div>
+                                            </div>
                                         </div>
-                                    )}
-                                </div>
-                                <div className="flex-grow text-left">
-                                    <p className="text-lg font-display font-black text-white group-hover:text-white uppercase italic tracking-tighter transition-colors">{team.name}</p>
-                                    <p className="text-[10px] font-bold text-slate-500 group-hover:text-white/60 uppercase tracking-widest transition-colors">{team.rosterName}</p>
-                                </div>
-                                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-500 group-hover:bg-black/20 group-hover:text-white group-hover:border-white/20 transition-all">
-                                    <span className="material-symbols-outlined text-sm">swords</span>
-                                </div>
-                            </button>
-                        ))}
-                    </div>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <button
+                                                onClick={handleStartScanner}
+                                                className="flex flex-col items-center justify-center gap-3 p-8 rounded-3xl bg-black/40 border border-white/5 hover:border-premium-gold/50 hover:bg-premium-gold/5 transition-all group"
+                                            >
+                                                <div className="w-14 h-14 rounded-2xl bg-premium-gold/10 flex items-center justify-center border border-premium-gold/30 group-hover:scale-110 transition-transform">
+                                                    <span className="material-symbols-outlined text-3xl text-premium-gold">qr_code_scanner</span>
+                                                </div>
+                                                <span className="text-[10px] font-display font-black text-white uppercase tracking-widest">Escanear Sello</span>
+                                            </button>
+                                            <div className="relative group">
+                                                <div className="absolute inset-0 bg-red-500/5 blur-xl group-hover:bg-red-500/10 transition-all"></div>
+                                                <div className="relative h-full flex flex-col items-center justify-center gap-3 p-8 rounded-3xl bg-black/40 border border-white/5 hover:border-red-500/50 hover:bg-red-500/5 transition-all">
+                                                    <div className="w-14 h-14 rounded-2xl bg-red-500/10 flex items-center justify-center border border-red-500/30 group-hover:rotate-12 transition-transform">
+                                                        <span className="material-symbols-outlined text-3xl text-red-500">list_alt</span>
+                                                    </div>
+                                                    <span className="text-[10px] font-display font-black text-white uppercase tracking-widest">Lista Manual</span>
+                                                </div>
+                                            </div>
+                                        </div>
 
-                    <div className="mt-12 text-center">
-                        <button onClick={() => setGameState('select_team')} className="text-xs font-display font-black text-slate-500 hover:text-white uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 mx-auto">
-                            <span className="material-symbols-outlined text-sm">arrow_back</span>
-                            Regresar
-                        </button>
+                                        <div id="qr-reader" ref={scannerContainerRef} className="w-full aspect-square bg-black/60 rounded-3xl border border-white/5 overflow-hidden empty:hidden"></div>
+
+                                        <div className="grid gap-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar pt-4 border-t border-white/5">
+                                            <p className="text-[9px] font-display font-black text-slate-600 uppercase tracking-widest mb-2">Equipos Disponibles</p>
+                                            {managedTeams.filter(t => t.name !== homeTeam?.name).map(team => (
+                                                <button
+                                                    key={team.name}
+                                                    onClick={() => {
+                                                        const baseTeam = team;
+                                                        const fullPlayers: ManagedPlayer[] = baseTeam.players.map(p => ({ ...p, status: 'Reserva' }));
+                                                        setOpponentTeam({ ...baseTeam, players: fullPlayers });
+                                                    }}
+                                                    className="group w-full flex items-center gap-4 p-3 rounded-2xl bg-white/5 border border-transparent hover:border-red-500/30 hover:bg-red-500/5 transition-all"
+                                                >
+                                                    <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center border border-white/5 overflow-hidden">
+                                                        {team.crestImage ? <img src={team.crestImage} className="w-full h-full object-cover" /> : <ShieldCheckIcon className="w-5 h-5 text-slate-800" />}
+                                                    </div>
+                                                    <div className="flex-grow text-left">
+                                                        <p className="text-xs font-display font-black text-white uppercase">{team.name}</p>
+                                                        <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">{team.rosterName}</p>
+                                                    </div>
+                                                    <span className="material-symbols-outlined text-slate-800 group-hover:text-red-500 text-sm">swords</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {homeTeam && opponentTeam && (
+                            <div className="mt-16 flex flex-col items-center animate-bounce-in">
+                                <button
+                                    onClick={() => setGameState('pre_game')}
+                                    className="group relative overflow-hidden bg-gradient-to-b from-premium-gold to-yellow-600 text-black font-display font-black py-6 px-20 rounded-[2rem] shadow-[0_30px_60px_rgba(245,159,10,0.3)] hover:scale-105 active:scale-95 transition-all duration-300"
+                                >
+                                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                                    <span className="relative flex items-center justify-center gap-4 tracking-[0.4em] uppercase text-sm">
+                                        Entrar al Coliseo
+                                        <span className="material-symbols-outlined font-black">login</span>
+                                    </span>
+                                </button>
+                            </div>
+                        )}
+
+                        <div className="mt-12 text-center">
+                            <button onClick={() => setGameState('setup')} className="text-[10px] font-display font-black text-slate-500 hover:text-white uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-2 mx-auto py-4 px-8 border border-transparent hover:border-white/10 rounded-2xl">
+                                <span className="material-symbols-outlined text-sm">arrow_back</span>
+                                Cancelar Invocación
+                            </button>
+                        </div>
                     </div>
-                </div>
-            );
+                );
+            }
             case 'pre_game': {
                 if (!liveHomeTeam || !liveOpponentTeam) return <div className="flex items-center justify-center py-20 text-premium-gold font-display font-black animate-pulse uppercase tracking-widest">Invocando Equipos...</div>;
                 if (journeymenNotification) return (
@@ -1264,15 +1351,10 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                 );
 
                 const preGameTitles = [
-                    "Levantamiento de Muertos",
-                    "Guerra de Incentivos",
-                    "Clamor del Coliseo",
-                    "Presagio del Cielo",
-                    "Plegarias a Nuffle",
-                    "Juicio de la Moneda",
-                    "Estrategia de Apertura",
-                    "Despliegue de Guerra",
-                    "El Gran Kickoff"
+                    "Levantamiento de Muertos", // 0 (Journeymen)
+                    "El Centro de Mando",       // 1 (Inducements, Fate, Coin Toss)
+                    "Despliegue de Guerra",     // 2 (Deployment)
+                    "El Gran Kickoff"           // 3 (Kickoff Event)
                 ];
 
                 const handleKickoffRoll = () => {
@@ -1303,325 +1385,284 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
 
                         <div className="glass-panel border-white/5 bg-black/40 p-8 shadow-2xl">
                             {preGameStep === 1 && (
-                                <div className='space-y-8 max-w-2xl mx-auto'>
-                                    <div className="grid grid-cols-2 gap-6">
-                                        <div className="bg-sky-500/5 border border-sky-500/20 p-6 rounded-3xl text-center">
-                                            <p className="text-[10px] font-black text-sky-500 uppercase tracking-widest mb-1">{liveHomeTeam.name}</p>
-                                            <p className="text-2xl font-display font-black text-white italic tracking-tighter">{homeTV.toLocaleString()}</p>
-                                            <p className="text-[8px] font-bold text-slate-500 uppercase">Valor de Equipo</p>
+                                <div className='space-y-10 animate-fade-in'>
+                                    {/* Dashboard Layout: Inducements + Fate */}
+                                    <div className="grid grid-cols-1 xl:grid-cols-12 gap-10">
+                                        {/* Left Side: Inducements Market (Col 7) */}
+                                        <div className="xl:col-span-7 space-y-6">
+                                            <div className="flex items-center gap-4 mb-2">
+                                                <div className="w-10 h-10 rounded-full bg-green-500/10 border border-green-500/30 flex items-center justify-center">
+                                                    <span className="material-symbols-outlined text-green-500">payments</span>
+                                                </div>
+                                                <h3 className="text-xl font-display font-black text-white uppercase italic">Mercado de Incentivos</h3>
+                                            </div>
+
+                                            {inducementState.underdog ? (() => {
+                                                const underdogTeam = inducementState.underdog === 'home' ? liveHomeTeam : liveOpponentTeam;
+                                                const baseRoster = teamsData.find(t => t.name === underdogTeam.rosterName);
+                                                const eligibleStars = starPlayersData.filter(star => isEligibleStar(star, baseRoster));
+                                                const bribeCost = baseRoster?.specialRules.includes("Sobornos y corrupción") ? 50000 : 100000;
+                                                const isUndead = ["Nigrománticos", "No Muertos", "Khemri", "Vampiros"].includes(underdogTeam.rosterName);
+                                                const isNurgle = underdogTeam.rosterName === "Nurgle";
+                                                const canHaveApo = baseRoster?.apothecary === "Sí";
+
+                                                const options = [
+                                                    { name: 'reroll', icon: 'refresh', label: 'Reroll Extra', cost: 100000, count: (underdogTeam.liveRerolls || 0) - underdogTeam.rerolls },
+                                                    { name: 'bribe', icon: 'payments', label: 'Soborno', cost: bribeCost, count: underdogTeam.tempBribes || 0 },
+                                                    { name: 'cheerleader', icon: 'campaign', label: 'Animadora', cost: 10000, count: underdogTeam.tempCheerleaders || 0 },
+                                                    { name: 'coach', icon: 'person', label: 'Ayudante', cost: 10000, count: underdogTeam.tempAssistantCoaches || 0 },
+                                                    { name: 'biasedRef', icon: 'gavel', label: 'Árbitro Parcial', cost: 50000, count: underdogTeam.biasedRef ? 1 : 0 },
+                                                ];
+
+                                                if (canHaveApo) options.push({ name: 'wanderingApothecary', icon: 'medical_services', label: 'Boticario', cost: 100000, count: underdogTeam.wanderingApothecaries || 0 });
+                                                if (isUndead) options.push({ name: 'mortuaryAssistant', icon: 'skull', label: 'Asistente Necromante', cost: 100000, count: underdogTeam.mortuaryAssistants || 0 });
+                                                if (isNurgle) options.push({ name: 'plagueDoctor', icon: 'coronavirus', label: 'Médico de la Peste', cost: 100000, count: underdogTeam.plagueDoctors || 0 });
+
+                                                return (
+                                                    <div className="space-y-6">
+                                                        <div className="glass-panel p-6 border-green-500/20 bg-green-500/5 flex items-center justify-between">
+                                                            <div>
+                                                                <p className="text-[10px] font-display font-black text-green-500 uppercase tracking-widest mb-1">Tesoro de Indulgencia</p>
+                                                                <p className="text-3xl font-display font-black text-white italic">
+                                                                    {inducementState.money.toLocaleString()} <span className="text-xs text-green-500/50">m.o.</span>
+                                                                </p>
+                                                            </div>
+                                                            <div className="w-16 h-16 rounded-full bg-black/60 border border-white/10 flex items-center justify-center">
+                                                                <span className="material-symbols-outlined text-green-500 text-3xl">account_balance_wallet</span>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                            <div className="space-y-3">
+                                                                <h4 className="text-[10px] font-display font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Favores y Personal</h4>
+                                                                {options.map(item => (
+                                                                    <div key={item.name} className="flex justify-between items-center bg-white/5 p-3 rounded-2xl border border-white/5 group hover:border-premium-gold/30 transition-all">
+                                                                        <div className="flex items-center gap-3">
+                                                                            <span className="material-symbols-outlined text-lg text-slate-500 group-hover:text-premium-gold">{item.icon}</span>
+                                                                            <div>
+                                                                                <p className="text-[10px] font-bold text-white uppercase tracking-wider">{item.label}</p>
+                                                                                <p className="text-[8px] text-slate-500 font-bold">{item.cost / 1000}k</p>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-3">
+                                                                            <button onClick={() => handleSellInducement(item.name as any, item.cost)} className="w-8 h-8 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all">
+                                                                                <span className="material-symbols-outlined text-sm">remove</span>
+                                                                            </button>
+                                                                            <span className="font-display font-black text-white text-lg w-6 text-center">{item.count}</span>
+                                                                            <button onClick={() => handleBuyInducement(item.name as any, item.cost)} className="w-8 h-8 rounded-xl bg-green-500/10 text-green-500 flex items-center justify-center hover:bg-green-500 hover:text-white transition-all">
+                                                                                <span className="material-symbols-outlined text-sm">add</span>
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+
+                                                            <div className="space-y-4">
+                                                                <h4 className="text-[10px] font-display font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Jugadores Estrella</h4>
+                                                                <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                                                    {eligibleStars.map(star => {
+                                                                        const isHired = inducementState.hiredStars.some(s => s.name === star.name);
+                                                                        return (
+                                                                            <div key={star.name} className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${isHired ? 'bg-premium-gold/10 border-premium-gold/40' : 'bg-white/5 border-white/5 shadow-xl hover:border-white/20'}`}>
+                                                                                <div className="flex-1 min-w-0 mr-4">
+                                                                                    <button onClick={() => setSelectedStarPlayer(star)} className="text-[10px] font-black text-white hover:text-premium-gold uppercase italic tracking-tighter truncate w-full text-left transition-colors">{star.name}</button>
+                                                                                    <p className="text-[8px] font-bold text-slate-500">{star.cost / 1000}k m.o.</p>
+                                                                                </div>
+                                                                                <button
+                                                                                    onClick={() => isHired ? handleFireStar(star) : handleHireStar(star)}
+                                                                                    disabled={!isHired && inducementState.money < star.cost}
+                                                                                    className={`p-2 rounded-xl transition-all ${isHired ? 'text-red-500 hover:bg-red-500/10' : 'text-green-500 hover:bg-green-500/10 disabled:opacity-20'}`}
+                                                                                >
+                                                                                    <span className="material-symbols-outlined text-sm">{isHired ? 'person_remove' : 'person_add'}</span>
+                                                                                </button>
+                                                                            </div>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })() : (
+                                                <div className="glass-panel p-10 border-white/5 bg-white/5 text-center space-y-4">
+                                                    <div className="w-16 h-16 mx-auto bg-white/10 rounded-full flex items-center justify-center mb-2">
+                                                        <span className="material-symbols-outlined text-slate-500 text-3xl">balance</span>
+                                                    </div>
+                                                    <p className="text-slate-400 text-sm font-medium italic">"Los equipos están equilibrados. Nuffle no otorga oro adicional hoy."</p>
+                                                </div>
+                                            )}
                                         </div>
-                                        <div className="bg-red-500/5 border border-red-500/20 p-6 rounded-3xl text-center">
-                                            <p className="text-[10px] font-black text-red-500 uppercase tracking-widest mb-1">{liveOpponentTeam.name}</p>
-                                            <p className="text-2xl font-display font-black text-white italic tracking-tighter">{opponentTV.toLocaleString()}</p>
-                                            <p className="text-[8px] font-bold text-slate-500 uppercase">Valor de Equipo</p>
+
+                                        {/* Right Side: Fate & Environment (Col 5) */}
+                                        <div className="xl:col-span-5 space-y-8">
+                                            {/* Environment Card */}
+                                            <div className="space-y-6">
+                                                <div className="flex items-center gap-4 mb-2">
+                                                    <div className="w-10 h-10 rounded-full bg-sky-500/10 border border-sky-500/30 flex items-center justify-center">
+                                                        <span className="material-symbols-outlined text-sky-400">cyclone</span>
+                                                    </div>
+                                                    <h3 className="text-xl font-display font-black text-white uppercase italic">Destino y Entorno</h3>
+                                                </div>
+
+                                                <div className="glass-panel p-6 border-white/10 bg-black/40 space-y-6">
+                                                    <div className="flex justify-between items-start">
+                                                        <div className="space-y-4 flex-1">
+                                                            {/* Clima Box */}
+                                                            <div className={`p-4 rounded-2xl border transition-all ${gameStatus.weather ? 'bg-sky-500/10 border-sky-500/30 shadow-[0_0_20px_rgba(14,165,233,0.1)]' : 'bg-white/5 border-white/5 opacity-50'}`}>
+                                                                <p className="text-[10px] font-display font-black text-sky-400 uppercase tracking-widest mb-2">Clima</p>
+                                                                {gameStatus.weather ? (
+                                                                    <div className="flex items-center gap-3">
+                                                                        <span className="material-symbols-outlined text-2xl text-white">cloud_queue</span>
+                                                                        <h4 className="text-lg font-display font-black text-white uppercase italic">{gameStatus.weather.title}</h4>
+                                                                    </div>
+                                                                ) : (
+                                                                    <p className="text-[10px] text-slate-500 uppercase font-bold italic tracking-wider">Pendiente de Consultar</p>
+                                                                )}
+                                                            </div>
+
+                                                            {/* Fans/Fame Box */}
+                                                            <div className={`p-4 rounded-2xl border transition-all ${fame.home !== 0 || fame.opponent !== 0 ? 'bg-amber-500/10 border-amber-500/30 shadow-[0_0_20px_rgba(245,159,10,0.1)]' : 'bg-white/5 border-white/5 opacity-50'}`}>
+                                                                <p className="text-[10px] font-display font-black text-amber-500 uppercase tracking-widest mb-2">Influencia de FAMA</p>
+                                                                {fame.home !== 0 || fame.opponent !== 0 ? (
+                                                                    <div className="flex justify-around items-center text-center">
+                                                                        <div>
+                                                                            <p className="text-[8px] font-bold text-slate-500 uppercase mb-1">Local</p>
+                                                                            <p className="text-xl font-display font-black text-white leading-none">+{fame.home}</p>
+                                                                        </div>
+                                                                        <div className="w-px h-8 bg-white/10"></div>
+                                                                        <div>
+                                                                            <p className="text-[8px] font-bold text-slate-500 uppercase mb-1">Rival</p>
+                                                                            <p className="text-xl font-display font-black text-white leading-none">+{fame.opponent}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                ) : (
+                                                                    <p className="text-[10px] text-slate-500 uppercase font-bold italic tracking-wider">Sin Registro del Grito</p>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <button
+                                                        onClick={() => {
+                                                            // Resolve Weather
+                                                            const die1 = Math.floor(Math.random() * 6) + 1, die2 = Math.floor(Math.random() * 6) + 1, total = die1 + die2;
+                                                            const w = weatherConditions.find(wc => wc.diceRoll === total.toString());
+                                                            if (w) { setGameStatus(prev => ({ ...prev, weather: w })); logEvent('INFO', `Clima Invocado (${total}): ${w.title}`); }
+
+                                                            // Resolve Fame
+                                                            const hf = (Math.floor(Math.random() * 6) + 1) + (Math.floor(Math.random() * 6) + 1);
+                                                            const of = (Math.floor(Math.random() * 6) + 1) + (Math.floor(Math.random() * 6) + 1);
+                                                            const hTotal = liveHomeTeam.dedicatedFans + hf;
+                                                            const oTotal = liveOpponentTeam.dedicatedFans + of;
+                                                            let homeFame = 0, oppFame = 0;
+                                                            if (hTotal >= oTotal * 2) homeFame = 2; else if (hTotal > oTotal) homeFame = 1;
+                                                            if (oTotal >= hTotal * 2) oppFame = 2; else if (oTotal > hTotal) oppFame = 1;
+                                                            setFame({ home: homeFame, opponent: oppFame });
+                                                            setFansRoll({ home: hf.toString(), opponent: of.toString() });
+                                                            logEvent('INFO', `Tirada Hinchas - ${liveHomeTeam.name}: ${hTotal}, ${liveOpponentTeam.name}: ${oTotal}. FAMA: ${homeFame} - ${oppFame}`);
+                                                            playSound('dice');
+                                                        }}
+                                                        className="w-full bg-sky-500 text-black font-display font-black py-4 rounded-[1.5rem] shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3"
+                                                    >
+                                                        <span className="material-symbols-outlined text-lg">casino</span>
+                                                        <span className="text-[10px] uppercase tracking-[0.2em]">Consultar Oráculos</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            {/* Coin Toss Section */}
+                                            <div className="space-y-6">
+                                                <div className="flex items-center gap-4 mb-2">
+                                                    <div className="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
+                                                        <span className="material-symbols-outlined text-amber-500">toll</span>
+                                                    </div>
+                                                    <h3 className="text-xl font-display font-black text-white uppercase italic">Juicio de la Moneda</h3>
+                                                </div>
+
+                                                <div className="glass-panel p-6 border-white/10 bg-black/40 space-y-6">
+                                                    {!gameStatus.coinTossWinner ? (
+                                                        <div className="flex gap-4">
+                                                            <button
+                                                                onClick={() => { setGameStatus(p => ({ ...p, coinTossWinner: 'home' })); logEvent('INFO', `Duelo Ganado (Moneda): ${liveHomeTeam.name}`); }}
+                                                                className="flex-1 p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-sky-500/20 hover:border-sky-500/40 transition-all text-center group"
+                                                            >
+                                                                <p className="text-[10px] font-display font-black text-slate-500 group-hover:text-sky-400 uppercase tracking-widest mb-1">Cara (Local)</p>
+                                                                <p className="text-xs font-display font-black text-white uppercase truncate">{liveHomeTeam?.name?.split(' ')[0] || 'Local'}</p>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => { setGameStatus(p => ({ ...p, coinTossWinner: 'opponent' })); logEvent('INFO', `Duelo Ganado (Moneda): ${liveOpponentTeam.name}`); }}
+                                                                className="flex-1 p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-red-500/20 hover:border-red-500/40 transition-all text-center group"
+                                                            >
+                                                                <p className="text-[10px] font-display font-black text-slate-500 group-hover:text-red-400 uppercase tracking-widest mb-1">Cruz (Rival)</p>
+                                                                <p className="text-xs font-display font-black text-white uppercase truncate">{liveOpponentTeam?.name?.split(' ')[0] || 'Rival'}</p>
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="animate-slide-in-up space-y-4">
+                                                            <div className={`p-4 rounded-2xl border ${gameStatus.coinTossWinner === 'home' ? 'bg-sky-500/10 border-sky-500/30' : 'bg-red-500/10 border-red-500/30'} text-center`}>
+                                                                <p className="text-[10px] font-display font-black uppercase tracking-widest opacity-60">Ganador del Sorteo</p>
+                                                                <p className="text-lg font-display font-black text-white uppercase italic">{(gameStatus.coinTossWinner === 'home' ? liveHomeTeam : liveOpponentTeam).name}</p>
+                                                            </div>
+
+                                                            {!gameStatus.receivingTeam ? (
+                                                                <div className="flex gap-3">
+                                                                    <button
+                                                                        onClick={() => { setGameStatus(p => ({ ...p, receivingTeam: gameStatus.coinTossWinner })); logEvent('INFO', `${(gameStatus.coinTossWinner === 'home' ? liveHomeTeam : liveOpponentTeam).name} ha decidido RECIBIR.`); }}
+                                                                        className="flex-1 py-3 rounded-xl bg-premium-gold/10 border border-premium-gold/30 text-premium-gold text-[10px] font-display font-black uppercase tracking-widest hover:bg-premium-gold hover:text-black transition-all"
+                                                                    >
+                                                                        Recibir el Balón
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            const kicker = gameStatus.coinTossWinner;
+                                                                            const receiver = kicker === 'home' ? 'opponent' : 'home';
+                                                                            setGameStatus(p => ({ ...p, receivingTeam: receiver }));
+                                                                            logEvent('INFO', `${(gameStatus.coinTossWinner === 'home' ? liveHomeTeam : liveOpponentTeam).name} ha decidido PATEAR.`);
+                                                                        }}
+                                                                        className="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-[10px] font-display font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all"
+                                                                    >
+                                                                        Patear
+                                                                    </button>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="flex items-center justify-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/5">
+                                                                    <span className="material-symbols-outlined text-green-500 text-sm">check_circle</span>
+                                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                                                        {gameStatus.receivingTeam === 'home' ? liveHomeTeam.name : liveOpponentTeam.name} Recibe
+                                                                    </p>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    {prayersAlert && (
-                                        <div className="bg-premium-gold/10 border border-premium-gold/30 p-4 rounded-2xl flex items-center gap-4 animate-premium-pulse">
-                                            <div className="w-10 h-10 rounded-full bg-premium-gold/20 flex items-center justify-center flex-shrink-0">
-                                                <span className="material-symbols-outlined text-premium-gold">warning</span>
-                                            </div>
-                                            <p className="text-premium-gold font-bold italic text-sm">
-                                                Nuffle te observa: {prayersAlert.underdog} tiene {Math.max(1, Math.floor(prayersAlert.difference / 100000))} Plegaria(s) por diferencia de TV.
-                                            </p>
-                                        </div>
-                                    )}
-
-                                    {inducementState.underdog ? (() => {
-                                        const underdogTeam = inducementState.underdog === 'home' ? liveHomeTeam : liveOpponentTeam;
-                                        const baseRoster = teamsData.find(t => t.name === underdogTeam.rosterName);
-                                        const eligibleStars = starPlayersData.filter(star => isEligibleStar(star, baseRoster));
-                                        const bribeCost = baseRoster?.specialRules.includes("Sobornos y corrupción") ? 50000 : 100000;
-                                        const isUndead = ["Nigrománticos", "No Muertos", "Khemri", "Vampiros"].includes(underdogTeam.rosterName);
-                                        const isNurgle = underdogTeam.rosterName === "Nurgle";
-                                        const canHaveApo = baseRoster?.apothecary === "Sí";
-
-                                        const options = [
-                                            { name: 'reroll', icon: 'refresh', label: 'Reroll Extra', cost: 100000, count: (underdogTeam.liveRerolls || 0) - underdogTeam.rerolls },
-                                            { name: 'bribe', icon: 'payments', label: 'Soborno', cost: bribeCost, count: underdogTeam.tempBribes || 0 },
-                                            { name: 'cheerleader', icon: 'campaign', label: 'Animadora', cost: 10000, count: underdogTeam.tempCheerleaders || 0 },
-                                            { name: 'coach', icon: 'person', label: 'Ayudante', cost: 10000, count: underdogTeam.tempAssistantCoaches || 0 },
-                                            { name: 'biasedRef', icon: 'gavel', label: 'Árbitro Parcial', cost: 50000, count: underdogTeam.biasedRef ? 1 : 0 },
-                                        ];
-
-                                        if (canHaveApo) options.push({ name: 'wanderingApothecary', icon: 'medical_services', label: 'Boticario', cost: 100000, count: underdogTeam.wanderingApothecaries || 0 });
-                                        if (isUndead) options.push({ name: 'mortuaryAssistant', icon: 'skull', label: 'Asistente Necromante', cost: 100000, count: underdogTeam.mortuaryAssistants || 0 });
-                                        if (isNurgle) options.push({ name: 'plagueDoctor', icon: 'coronavirus', label: 'Médico de la Peste', cost: 100000, count: underdogTeam.plagueDoctors || 0 });
-
-                                        return (
-                                            <div className="space-y-8">
-                                                <div className="text-center p-4 bg-black/40 border border-white/5 rounded-2xl">
-                                                    <p className="text-xs text-slate-500 uppercase tracking-widest mb-1">Tesoro de Indulgencia</p>
-                                                    <p className="text-3xl font-display font-black text-green-400 italic">
-                                                        {inducementState.money.toLocaleString()} <span className="text-[10px] lowercase text-green-500/50">m.o.</span>
-                                                    </p>
-                                                </div>
-
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                    <div className="space-y-3">
-                                                        <h4 className="text-[10px] font-display font-black text-premium-gold uppercase tracking-[0.2em] mb-4">Mercado de Favores</h4>
-                                                        {options.map(item => (
-                                                            <div key={item.name} className="flex justify-between items-center bg-white/5 p-3 rounded-2xl border border-white/5 group hover:border-premium-gold/30 transition-all">
-                                                                <div className="flex items-center gap-3">
-                                                                    <span className="material-symbols-outlined text-lg text-slate-500 group-hover:text-premium-gold">{item.icon}</span>
-                                                                    <div>
-                                                                        <p className="text-[10px] font-bold text-white uppercase tracking-wider">{item.label}</p>
-                                                                        <p className="text-[8px] text-slate-500 font-bold">{item.cost / 1000}k</p>
-                                                                    </div>
-                                                                </div>
-                                                                <div className="flex items-center gap-3">
-                                                                    <button onClick={() => handleSellInducement(item.name as any, item.cost)} className="w-8 h-8 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all">
-                                                                        <span className="material-symbols-outlined text-sm">remove</span>
-                                                                    </button>
-                                                                    <span className="font-display font-black text-white text-lg w-6 text-center">{item.count}</span>
-                                                                    <button onClick={() => handleBuyInducement(item.name as any, item.cost)} className="w-8 h-8 rounded-xl bg-green-500/10 text-green-500 flex items-center justify-center hover:bg-green-500 hover:text-white transition-all">
-                                                                        <span className="material-symbols-outlined text-sm">add</span>
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-
-                                                    <div className="space-y-4">
-                                                        <h4 className="text-[10px] font-display font-black text-premium-gold uppercase tracking-[0.2em] mb-4">Jugadores Estrella</h4>
-                                                        <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                                                            {eligibleStars.map(star => {
-                                                                const isHired = inducementState.hiredStars.some(s => s.name === star.name);
-                                                                return (
-                                                                    <div key={star.name} className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${isHired ? 'bg-premium-gold/10 border-premium-gold/40' : 'bg-white/5 border-white/5 shadow-xl hover:border-white/20'}`}>
-                                                                        <div className="flex-1 min-w-0 mr-4">
-                                                                            <button onClick={() => setSelectedStarPlayer(star)} className="text-[10px] font-black text-white hover:text-premium-gold uppercase italic tracking-tighter truncate w-full text-left transition-colors">{star.name}</button>
-                                                                            <p className="text-[8px] font-bold text-slate-500 group-hover:text-slate-400">{star.cost / 1000}k m.o.</p>
-                                                                        </div>
-                                                                        {isHired ? (
-                                                                            <button onClick={() => handleFireStar(star)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-xl transition-all">
-                                                                                <span className="material-symbols-outlined text-sm">person_remove</span>
-                                                                            </button>
-                                                                        ) : (
-                                                                            <button
-                                                                                onClick={() => handleHireStar(star)}
-                                                                                disabled={inducementState.money < star.cost}
-                                                                                className="p-2 text-green-500 hover:bg-green-500/10 rounded-xl transition-all disabled:opacity-20"
-                                                                            >
-                                                                                <span className="material-symbols-outlined text-sm">person_add</span>
-                                                                            </button>
-                                                                        )}
-                                                                    </div>
-                                                                );
-                                                            })}
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div className="pt-6 border-t border-white/5 text-center">
-                                                    <button onClick={() => setPreGameStep(2)} className="bg-premium-gold text-black font-display font-black py-4 px-12 rounded-2xl shadow-[0_20px_40px_rgba(245,159,10,0.1)] hover:scale-105 active:scale-95 transition-all text-xs uppercase tracking-[0.2em]">Sellar Contratos</button>
-                                                </div>
-                                            </div>
-                                        );
-                                    })() : (
-                                        <div className="text-center py-10 space-y-6">
-                                            <div className="w-16 h-16 bg-white/5 rounded-2xl border border-white/10 flex items-center justify-center mx-auto mb-4">
-                                                <span className="material-symbols-outlined text-3xl text-slate-600">balance</span>
-                                            </div>
-                                            <p className="text-slate-500 text-sm font-medium tracking-wide">Equilibrio perfecto. Ningún equipo recibe oro adicional del Tesoro de Nuffle.</p>
-                                            <button onClick={() => setPreGameStep(2)} className="bg-white text-black font-display font-black py-4 px-12 rounded-2xl hover:scale-105 active:scale-95 transition-all text-xs uppercase tracking-[0.2em]">Continuar</button>
+                                    {/* Final Confirmation */}
+                                    {gameStatus.weather && gameStatus.receivingTeam && (
+                                        <div className="pt-10 border-t border-white/5 flex justify-center animate-bounce-in">
+                                            <button
+                                                onClick={() => {
+                                                    // Prepare for deployment
+                                                    setFirstHalfReceiver(gameStatus.receivingTeam);
+                                                    setPreGameStep(2); // Deployment
+                                                    logEvent('INFO', 'Preparativos completados. Entrando en fase de Despliegue.');
+                                                }}
+                                                className="group relative overflow-hidden bg-gradient-to-b from-green-600 to-green-700 text-white font-display font-black py-6 px-24 rounded-[2rem] shadow-[0_20px_40px_rgba(34,197,94,0.2)] hover:scale-105 active:scale-95 transition-all duration-300"
+                                            >
+                                                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                                                <span className="relative flex items-center justify-center gap-4 tracking-[0.4em] uppercase text-sm">
+                                                    Confirmar Estrategia
+                                                    <span className="material-symbols-outlined font-black">shield_with_heart</span>
+                                                </span>
+                                            </button>
                                         </div>
                                     )}
                                 </div>
                             )}
 
                             {preGameStep === 2 && (
-                                <div className='max-w-md mx-auto space-y-8 text-center'>
-                                    <div className="bg-premium-gold/5 border border-premium-gold/20 p-6 rounded-3xl">
-                                        <span className="material-symbols-outlined text-4xl text-premium-gold mb-4">groups</span>
-                                        <p className="text-slate-400 text-sm leading-relaxed italic">"El rugido de la grada puede cambiar el destino de un partido. Suma tus seguidores a la tirada de dados."</p>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-4">
-                                            <div className="text-center">
-                                                <p className="text-[10px] font-black text-sky-500 uppercase tracking-widest mb-1">Local</p>
-                                                <p className="text-[8px] text-slate-500 uppercase font-bold mb-3">Fans: {liveHomeTeam.dedicatedFans}</p>
-                                                <input
-                                                    type="text"
-                                                    pattern="[2-9]|1[0-2]"
-                                                    value={fansRoll.home}
-                                                    onChange={e => setFansRoll(p => ({ ...p, home: e.target.value.replace(/[^0-9]/g, '').slice(0, 2) }))}
-                                                    className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-center font-display font-black text-2xl text-white focus:border-sky-500 outline-none transition-all shadow-inner"
-                                                    placeholder="2D6"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="space-y-4">
-                                            <div className="text-center">
-                                                <p className="text-[10px] font-black text-red-500 uppercase tracking-widest mb-1">Rival</p>
-                                                <p className="text-[8px] text-slate-500 uppercase font-bold mb-3">Fans: {liveOpponentTeam.dedicatedFans}</p>
-                                                <input
-                                                    type="text"
-                                                    pattern="[2-9]|1[0-2]"
-                                                    value={fansRoll.opponent}
-                                                    onChange={e => setFansRoll(p => ({ ...p, opponent: e.target.value.replace(/[^0-9]/g, '').slice(0, 2) }))}
-                                                    className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-center font-display font-black text-2xl text-white focus:border-red-500 outline-none transition-all shadow-inner"
-                                                    placeholder="2D6"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <button
-                                        onClick={() => {
-                                            const homeTotal = liveHomeTeam.dedicatedFans + parseInt(fansRoll.home || '0');
-                                            const oppTotal = liveOpponentTeam.dedicatedFans + parseInt(fansRoll.opponent || '0');
-                                            let homeFame = 0, oppFame = 0;
-                                            if (homeTotal >= oppTotal * 2) homeFame = 2; else if (homeTotal > oppTotal) homeFame = 1;
-                                            if (oppTotal >= homeTotal * 2) oppFame = 2; else if (oppTotal > homeTotal) oppFame = 1;
-                                            setFame({ home: homeFame, opponent: oppFame });
-                                            logEvent('INFO', `Tirada Hinchas - ${liveHomeTeam.name}: ${homeTotal}, ${liveOpponentTeam.name}: ${oppTotal}. FAMA: ${homeFame} - ${oppFame}`);
-                                            setPreGameStep(3);
-                                        }}
-                                        className="w-full bg-premium-gold text-black font-display font-black py-5 rounded-2xl shadow-xl transform hover:scale-[1.02] active:scale-95 transition-all text-xs uppercase tracking-[0.3em]"
-                                    >
-                                        Calcular Influencia de FAMA
-                                    </button>
-                                </div>
-                            )}
-
-                            {preGameStep === 3 && (
-                                <div className='max-w-md mx-auto space-y-10 text-center'>
-                                    <div className="flex flex-col items-center gap-6">
-                                        <div className="w-32 h-32 rounded-[2.5rem] bg-sky-500/10 border-2 border-sky-500/30 flex items-center justify-center shadow-[0_0_60px_rgba(14,165,233,0.1)]">
-                                            <span className="material-symbols-outlined text-6xl text-sky-400 animate-pulse">cloud_queue</span>
-                                        </div>
-                                        <p className="text-slate-400 text-sm max-w-xs">Consulta a los cielos antes de que comience el caos. El clima dictará la dificultad de tus maniobras.</p>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <button
-                                            onClick={() => setIsWeatherModalOpen(true)}
-                                            className="w-full bg-sky-600 text-white font-display font-black py-5 rounded-2xl shadow-[0_20px_40px_rgba(14,165,233,0.2)] hover:bg-sky-500 transition-all text-xs uppercase tracking-[0.3em] flex items-center justify-center gap-3"
-                                        >
-                                            <span className="material-symbols-outlined text-lg">casino</span>
-                                            Invocar Clima
-                                        </button>
-
-                                        {gameStatus.weather && (
-                                            <div className="glass-panel border-sky-400/30 bg-sky-400/5 p-6 animate-slide-in-up">
-                                                <p className="text-[10px] font-black text-sky-400 uppercase tracking-widest mb-1">Presagio Actual</p>
-                                                <h4 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter mb-2">{gameStatus.weather.title}</h4>
-                                                <p className="text-slate-400 text-xs italic leading-relaxed">{gameStatus.weather.description}</p>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {gameStatus.weather && (
-                                        <button onClick={() => setPreGameStep(4)} className="w-full group text-[10px] font-display font-black text-slate-500 hover:text-white uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2">
-                                            Continuar Bajo este Cielo
-                                            <span className="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
-                                        </button>
-                                    )}
-                                </div>
-                            )}
-
-                            {preGameStep === 4 && (
-                                <div className='max-w-md mx-auto space-y-10 text-center'>
-                                    <div className="w-32 h-32 bg-amber-500/10 rounded-full border-2 border-amber-500/30 flex items-center justify-center mx-auto shadow-[0_0_50px_rgba(245,159,10,0.1)]">
-                                        <span className="material-symbols-outlined text-6xl text-amber-500">auto_awesome</span>
-                                    </div>
-                                    <p className="text-slate-400 text-sm">Aquellos que caminan por la senda de la derrota temporal pueden clamar por la misericordia de Nuffle.</p>
-
-                                    <div className="flex flex-col gap-4">
-                                        <button
-                                            onClick={() => setIsPrayersModalOpen(true)}
-                                            className="w-full bg-white/5 border border-white/10 text-white font-display font-black py-5 rounded-2xl hover:bg-white/10 hover:border-premium-gold/30 transition-all text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-3"
-                                        >
-                                            <span className="material-symbols-outlined text-lg text-premium-gold">book_5</span>
-                                            Consultar Plegarias
-                                        </button>
-                                        <button onClick={() => setPreGameStep(5)} className="w-full bg-premium-gold text-black font-display font-black py-5 rounded-2xl shadow-xl hover:scale-[1.02] transition-all text-xs uppercase tracking-[0.3em]">Continuar</button>
-                                    </div>
-                                </div>
-                            )}
-
-                            {preGameStep === 5 && (
-                                <div className='max-w-lg mx-auto space-y-12 text-center'>
-                                    <div className="space-y-4">
-                                        <h3 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter">El Lanzamiento Sagrado</h3>
-                                        <p className="text-slate-500 text-sm tracking-wide">La moneda de la suerte girará en el aire. ¿Qué escuadra dictará el primer golpe?</p>
-                                    </div>
-
-                                    <div className="flex flex-col sm:flex-row gap-6 justify-center">
-                                        <button
-                                            onClick={() => { setGameStatus(p => ({ ...p, coinTossWinner: 'home' })); setPreGameStep(6) }}
-                                            className="group flex-1 aspect-square sm:aspect-auto flex flex-col items-center justify-center gap-4 glass-panel border-sky-400/20 bg-black/60 hover:bg-sky-500 hover:border-sky-400 transition-all duration-500 rounded-[3rem] p-8 shadow-2xl"
-                                        >
-                                            <div className="w-16 h-16 rounded-2xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-center group-hover:bg-black group-hover:border-black transition-all">
-                                                <span className="material-symbols-outlined text-3xl text-sky-400 group-hover:text-sky-500">castle</span>
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] font-black text-sky-500 group-hover:text-black uppercase tracking-widest transition-colors">Gloria Para</p>
-                                                <h4 className="text-lg font-display font-black text-white group-hover:text-black uppercase italic transition-colors leading-tight">{liveHomeTeam.name}</h4>
-                                            </div>
-                                        </button>
-
-                                        <button
-                                            onClick={() => { setGameStatus(p => ({ ...p, coinTossWinner: 'opponent' })); setPreGameStep(6) }}
-                                            className="group flex-1 aspect-square sm:aspect-auto flex flex-col items-center justify-center gap-4 glass-panel border-red-400/20 bg-black/60 hover:bg-red-500 hover:border-red-400 transition-all duration-500 rounded-[3rem] p-8 shadow-2xl"
-                                        >
-                                            <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center group-hover:bg-black group-hover:border-black transition-all">
-                                                <span className="material-symbols-outlined text-3xl text-red-400 group-hover:text-red-500">swords</span>
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] font-black text-red-500 group-hover:text-black uppercase tracking-widest transition-colors">Gloria Para</p>
-                                                <h4 className="text-lg font-display font-black text-white group-hover:text-black uppercase italic transition-colors leading-tight">{liveOpponentTeam.name}</h4>
-                                            </div>
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-
-                            {preGameStep === 6 && gameStatus.coinTossWinner && (
-                                <div className='max-w-md mx-auto space-y-12 text-center'>
-                                    <div className="space-y-4">
-                                        <div className="inline-block px-4 py-1 rounded-full bg-premium-gold/10 border border-premium-gold/30 text-[10px] font-black text-premium-gold uppercase tracking-[0.3em] mb-4">Vencedor del Sorteo</div>
-                                        <h3 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter leading-none">
-                                            {(gameStatus.coinTossWinner === 'home' ? liveHomeTeam.name : liveOpponentTeam.name)}
-                                        </h3>
-                                        <p className="text-slate-500 text-sm">El destino te sonríe. ¿Cómo deseas comenzar tu asedio?</p>
-                                    </div>
-
-                                    <div className="flex gap-4">
-                                        <button
-                                            onClick={() => {
-                                                const receiving = gameStatus.coinTossWinner === 'home' ? 'opponent' : 'home';
-                                                setGameStatus(p => ({ ...p, receivingTeam: receiving }));
-                                                setFirstHalfReceiver(receiving);
-                                                logEvent('INFO', `${(gameStatus.coinTossWinner === 'home' ? liveHomeTeam.name : liveOpponentTeam.name)} elige patear.`);
-                                                setPreGameStep(7);
-                                            }}
-                                            className="flex-1 bg-white/5 border border-white/10 text-white font-display font-black py-6 rounded-2xl hover:bg-white/10 transition-all text-xs uppercase tracking-widest flex flex-col items-center gap-2 group"
-                                        >
-                                            <span className="material-symbols-outlined text-2xl text-slate-500 group-hover:text-white">sports_football</span>
-                                            Patear
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                const receiving = gameStatus.coinTossWinner;
-                                                setGameStatus(p => ({ ...p, receivingTeam: receiving }));
-                                                setFirstHalfReceiver(receiving);
-                                                logEvent('INFO', `${(gameStatus.coinTossWinner === 'home' ? liveHomeTeam.name : liveOpponentTeam.name)} elige recibir.`);
-                                                setPreGameStep(7);
-                                            }}
-                                            className="flex-1 bg-premium-gold text-black font-display font-black py-6 rounded-2xl shadow-xl hover:bg-white transition-all text-xs uppercase tracking-widest flex flex-col items-center gap-2 group"
-                                        >
-                                            <span className="material-symbols-outlined text-2xl text-black">handshake</span>
-                                            Recibir
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-
-                            {preGameStep === 7 && (
                                 <div className="space-y-10">
                                     <div className="text-center max-w-lg mx-auto">
                                         <p className="text-slate-500 text-sm leading-relaxed tracking-wide italic">"Despliega tus tropas. El campo de batalla se tiñe de verde y gloria. Solo 11 guerreros pueden pisar el césped al unísono."</p>
@@ -1702,27 +1743,6 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                                     <div className="flex flex-wrap justify-center gap-6 pt-10 border-t border-white/5">
                                         <button
                                             onClick={() => {
-                                                if (liveHomeTeam.players.filter(p => p.status === 'Activo').length === 0) handleAutoSelectTeam('home');
-                                                if (liveOpponentTeam.players.filter(p => p.status === 'Activo').length === 0) handleAutoSelectTeam('opponent');
-                                                handleSuggestDeployment();
-                                            }}
-                                            className="flex items-center gap-3 bg-white/5 border border-white/10 text-white font-display font-black py-4 px-8 rounded-2xl hover:bg-teal-500/10 hover:border-teal-500/30 hover:text-teal-400 transition-all text-xs uppercase tracking-widest"
-                                        >
-                                            <span className="material-symbols-outlined">shuffle</span>
-                                            Táctica Aleatoria
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                handleAutoSelectTeam('home');
-                                                handleAutoSelectTeam('opponent');
-                                            }}
-                                            className="flex items-center gap-3 bg-premium-gold/10 border border-premium-gold/30 text-premium-gold font-display font-black py-4 px-8 rounded-2xl hover:bg-premium-gold/20 hover:text-white transition-all text-xs uppercase tracking-widest"
-                                        >
-                                            <span className="material-symbols-outlined">bolt</span>
-                                            Despliegue Maestro (Mejores 11)
-                                        </button>
-                                        <button
-                                            onClick={() => {
                                                 const homeOnField = liveHomeTeam.players.filter(p => p.status === 'Activo').length;
                                                 const oppOnField = liveOpponentTeam.players.filter(p => p.status === 'Activo').length;
                                                 const homeAvailable = liveHomeTeam.players.filter(p => p.status !== 'Muerto' && p.status !== 'Lesionado' && (p.missNextGame || 0) <= 0).length;
@@ -1736,17 +1756,29 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                                                 if ((homeOnField < 11 && homeOnField < homeAvailable) || (oppOnField < 11 && oppOnField < oppAvailable)) {
                                                     if (!confirm('Uno de los equipos tiene menos de 11 jugadores en el campo pudiendo desplegar más. ¿Deseas continuar con estas bajas?')) return;
                                                 }
-                                                setPreGameStep(8);
+                                                setPreGameStep(3); // Kickoff Event
+                                                logEvent('INFO', 'Despliegue confirmado. ¡Que ruede el balón!');
                                             }}
                                             className="bg-premium-gold text-black font-display font-black py-4 px-12 rounded-2xl shadow-xl hover:scale-105 transition-all text-xs uppercase tracking-[0.3em]"
                                         >
                                             Confirmar Despliegue
                                         </button>
+
+                                        <button
+                                            onClick={() => {
+                                                if (liveHomeTeam.players.filter(p => p.status === 'Activo').length === 0) handleAutoSelectTeam('home');
+                                                if (liveOpponentTeam.players.filter(p => p.status === 'Activo').length === 0) handleAutoSelectTeam('opponent');
+                                                handleSuggestDeployment();
+                                            }}
+                                            className="bg-white/5 border border-white/10 text-white font-display font-black py-4 px-8 rounded-2xl hover:bg-white/10 transition-all text-xs uppercase tracking-widest"
+                                        >
+                                            Sugerir Despliegue
+                                        </button>
                                     </div>
                                 </div>
                             )}
 
-                            {preGameStep === 8 && (
+                            {preGameStep === 3 && (
                                 <div className='max-w-xl mx-auto space-y-12 text-center py-6'>
                                     {!gameStatus.kickoffEvent ? (
                                         <div className="space-y-10">
@@ -1802,7 +1834,7 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                     setKoRecoveryRolls({});
                     setGameStatus(prev => ({ ...prev, kickoffEvent: null, receivingTeam: prev.receivingTeam === 'home' ? 'opponent' : 'home' }));
                     setTurn(t => t + 1);
-                    setPreGameStep(7);
+                    setPreGameStep(2); // Deployment
                     setGameState('pre_game');
                 };
                 return (
@@ -1880,13 +1912,13 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                                             onClick={() => setActiveTeamId('home')}
                                             className={`flex-1 py-3 rounded-xl text-[10px] font-display font-black uppercase tracking-widest transition-all duration-300 ${activeTeamId === 'home' ? 'bg-sky-500 text-black shadow-[0_0_20px_rgba(14,165,233,0.4)] scale-105' : 'text-slate-500 hover:text-sky-400 hover:bg-sky-500/5'}`}
                                         >
-                                            {liveHomeTeam.name.split(' ')[0]}
+                                            {liveHomeTeam?.name?.split(' ')[0] || 'Local'}
                                         </button>
                                         <button
                                             onClick={() => setActiveTeamId('opponent')}
                                             className={`flex-1 py-3 rounded-xl text-[10px] font-display font-black uppercase tracking-widest transition-all duration-300 ${activeTeamId === 'opponent' ? 'bg-red-600 text-white shadow-[0_0_20px_rgba(220,38,38,0.4)] scale-105' : 'text-slate-500 hover:text-red-400 hover:bg-red-500/5'}`}
                                         >
-                                            {liveOpponentTeam.name.split(' ')[0]}
+                                            {liveOpponentTeam?.name?.split(' ')[0] || 'Rival'}
                                         </button>
                                     </div>
                                 </div>
@@ -2002,7 +2034,7 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                                                 </div>
                                                 <div className="h-10 w-px bg-white/10"></div>
                                                 <div className="flex flex-wrap gap-2">
-                                                    {(selectedPlayerForAction.skills || '').split(',').map((s, i) => (
+                                                    {(selectedPlayerForAction?.skills || '').split(',').map((s, i) => s.trim()).filter(Boolean).map((s, i) => (
                                                         <button
                                                             key={i}
                                                             onClick={() => handleSkillClick(s.trim())}
