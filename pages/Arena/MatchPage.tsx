@@ -560,7 +560,43 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
         setIsTurnoverModalOpen(false);
         handleNextTurn();
     };
-    const handleConfirmPostGame = (finalTeamState: ManagedTeam) => { if (!homeTeam) return; onTeamUpdate(finalTeamState); setGameState('setup'); setHomeTeam(null); setOpponentTeam(null); setLiveHomeTeam(null); setLiveOpponentTeam(null); setGameLog([]); setScore({ home: 0, opponent: 0 }); setTurn(0); setHalf(1); setFame({ home: 0, opponent: 0 }); setFansRoll({ home: '', opponent: '' }); };
+    const handleConfirmPostGame = (finalTeamState: ManagedTeam) => {
+        if (!homeTeam) return;
+
+        // Update History and Records
+        const matchResult = score.home > score.opponent ? 'W' : score.home < score.opponent ? 'L' : 'D';
+        const historyEntry = {
+            id: Date.now().toString(),
+            opponentName: opponentTeam?.name || 'Desconocido',
+            score: `${score.home}-${score.opponent}`,
+            date: new Date().toLocaleDateString('es-ES'),
+            result: matchResult as 'W' | 'D' | 'L'
+        };
+
+        const finalTeamWithStats = {
+            ...finalTeamState,
+            history: [historyEntry, ...(finalTeamState.history || [])].slice(0, 20), // Keep last 20
+            record: {
+                wins: (finalTeamState.record?.wins || 0) + (matchResult === 'W' ? 1 : 0),
+                draws: (finalTeamState.record?.draws || 0) + (matchResult === 'D' ? 1 : 0),
+                losses: (finalTeamState.record?.losses || 0) + (matchResult === 'L' ? 1 : 0),
+            }
+        };
+
+        onTeamUpdate(finalTeamWithStats);
+        setGameState('setup');
+        setHomeTeam(null);
+        setOpponentTeam(null);
+        setLiveHomeTeam(null);
+        setLiveOpponentTeam(null);
+        setGameLog([]);
+        setScore({ home: 0, opponent: 0 });
+        setTurn(0);
+        setHalf(1);
+        setFame({ home: 0, opponent: 0 });
+        setFansRoll({ home: '', opponent: '' });
+        setPlayersMissingNextGame([]);
+    };
     const handleFoulAction = (action: 'next' | 'back') => {
         const { step, foulingPlayer, victimPlayer, armorRollInput, wasExpelled, log, foulingTeamId, injuryRollInput, casualtyRollInput, lastingInjuryRollInput } = foulState;
         if (action === 'back') {
