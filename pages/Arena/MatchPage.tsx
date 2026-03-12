@@ -327,6 +327,10 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
     const [liveHomeTeam, setLiveHomeTeam] = useState<ManagedTeam | null>(null);
     const [liveOpponentTeam, setLiveOpponentTeam] = useState<ManagedTeam | null>(null);
     const [viewingPlayer, setViewingPlayer] = useState<ManagedPlayer | null>(null);
+
+    useEffect(() => {
+        console.log(`MatchPage: Recibidos ${matchReports.length} reportes desde MainApp`);
+    }, [matchReports]);
     const [selectedSkillForModal, setSelectedSkillForModal] = useState<Skill | null>(null);
     const [gameLog, setGameLog] = useState<GameEvent[]>([]);
     const [score, setScore] = useState({ home: 0, opponent: 0 });

@@ -312,3 +312,27 @@ export interface GameSection {
   title: string;
   rules: GameRule[];
 }
+
+export interface MatchReport {
+  id: string;
+  date: string;
+  homeTeam: {
+    id?: string;
+    name: string;
+    rosterName: string;
+    score: number;
+    crestImage?: string;
+  };
+  opponentTeam: {
+    id?: string;
+    name: string;
+    rosterName: string;
+    score: number;
+    crestImage?: string;
+  };
+  gameLog: GameEvent[];
+  weather?: string;
+  spectators?: number;
+  winner?: 'home' | 'opponent' | 'draw';
+  createdAt?: any;
+}

@@ -19,10 +19,10 @@ import ClipboardListIcon from '../icons/ClipboardListIcon';
 import TrophyIcon from '../icons/TrophyIcon';
 import HomeIcon from '../icons/HomeIcon';
 // ── Types & Firebase ──────────────────────────────────────────────────────────
-import type { ManagedTeam, League, Play, GameEvent } from '../../types';
+import type { ManagedTeam, League, Play, GameEvent, MatchReport } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
 import { db } from '../../firebaseConfig';
-import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, query, limit, orderBy } from "firebase/firestore";
+import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, query, limit, orderBy, serverTimestamp } from "firebase/firestore";
 import { useLanguage } from '../../contexts/LanguageContext';
 import LanguageSelector from '../common/LanguageSelector';
 import { useMasterData } from '../../hooks/useMasterData';
@@ -53,6 +53,7 @@ const MainApp: React.FC = () => {
   const [managedTeams, setManagedTeams] = useState<ManagedTeam[]>([]);
   const [leagues, setLeagues] = useState<League[]>([]);
   const [plays, setPlays] = useState<Play[]>([]);
+  const [matchReports, setMatchReports] = useState<MatchReport[]>([]);
   const [recentEvents, setRecentEvents] = useState<GameEvent[]>([]);
 
   const [dataInitiallyLoaded, setDataInitiallyLoaded] = useState(false);
@@ -97,9 +98,46 @@ const MainApp: React.FC = () => {
         }
       );
 
+      const reportsUnsub = onSnapshot(
+        query(
+          collection(db, 'users', user.id, 'matchReports'),
+          orderBy('createdAt', 'desc'),
+          limit(50)
+        ),
+        (snapshot) => {
+          console.log(`MainApp: Recibidos ${snapshot.docs.length} reportes de partido de Firestore`);
+          const reports = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return { id: doc.id, ...data } as MatchReport;
+          });
+          
+          setMatchReports(reports);
+          setSyncState('synced');
+        },
+        (error) => {
+          console.error("MainApp: Error sincronizando reportes de partido:", error);
+          // Si el error es por falta de índice, volvemos a la consulta simple como fallback
+          if (error.message.includes('requires an index')) {
+            console.warn("MainApp: El índice para 'matchReports' aún no existe. Usando consulta sin orden.");
+            onSnapshot(query(collection(db, 'users', user.id, 'matchReports'), limit(50)), (fallbackSnapshot) => {
+              const fallbackReports = fallbackSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as MatchReport[];
+              const sorted = [...fallbackReports].sort((a, b) => {
+                const timeA = (a.createdAt as any)?.seconds || 0;
+                const timeB = (b.createdAt as any)?.seconds || 0;
+                return timeB - timeA;
+              });
+              setMatchReports(sorted);
+            });
+          } else {
+            setSyncState('error');
+          }
+        }
+      );
+
       return () => {
         teamsUnsub();
         playsUnsub();
+        reportsUnsub();
       };
     }
   }, [user, isGuest]);
@@ -197,6 +235,34 @@ const MainApp: React.FC = () => {
       setSyncState('synced');
     } catch (error) {
       console.error("Error deleting play:", error);
+      setSyncState('error');
+    }
+  };
+
+  const handleMatchReportCreate = async (report: Omit<MatchReport, 'id'>) => {
+    if (!user || !db) return;
+    setSyncState('syncing');
+    console.log("MainApp: Creando nuevo reporte de partido...", report);
+    
+    if (isGuest) {
+      setMatchReports(prev => [{ ...report, id: `temp_${Date.now()}` } as MatchReport, ...prev]);
+      setSyncState('synced');
+      return;
+    }
+    try {
+      // Optimistic update
+      const tempId = `temp_${Date.now()}`;
+      const optimisticReport = { ...report, id: tempId, createdAt: { seconds: Math.floor(Date.now() / 1000) } } as unknown as MatchReport;
+      setMatchReports(prev => [optimisticReport, ...prev]);
+
+      const docRef = await addDoc(collection(db, 'users', user.id, 'matchReports'), {
+        ...report,
+        createdAt: serverTimestamp()
+      });
+      console.log("MainApp: Reporte guardado con éxito con ID:", docRef.id);
+      setSyncState('synced');
+    } catch (error) {
+      console.error("MainApp: Error al crear el reporte de partido:", error);
       setSyncState('error');
     }
   };
@@ -316,7 +382,7 @@ const MainApp: React.FC = () => {
                 />
               )}
               {activeView === 'tactical' && <TacticalBoardPage managedTeams={managedTeams} plays={plays} onSavePlay={handlePlaySave} onDeletePlay={handlePlayDelete} />}
-              {activeView === 'arena' && <MatchPage managedTeams={managedTeams} onTeamUpdate={handleTeamUpdate} />}
+              {activeView === 'arena' && <MatchPage managedTeams={managedTeams} matchReports={matchReports} onTeamUpdate={handleTeamUpdate} onMatchReportCreate={handleMatchReportCreate} />}
               {activeView === 'admin' && <AdminPanel />}
               {activeView === 'guide' && <QuickGuide />}
             </div>
