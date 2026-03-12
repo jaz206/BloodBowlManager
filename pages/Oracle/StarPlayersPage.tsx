@@ -276,7 +276,7 @@ const StarPlayers: React.FC = () => {
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 30 }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="w-full max-w-6xl max-h-[90vh] grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12 bg-card-dark border-2 border-primary/30 p-8 md:p-14 rounded-[3rem] shadow-[0_50px_100px_rgba(0,0,0,0.8)] relative overflow-y-auto premium-scrollbar"
+                            className="w-full max-w-6xl max-h-none md:max-h-[85vh] grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12 bg-card-dark border-2 border-primary/30 p-8 md:p-14 rounded-[3rem] shadow-[0_50px_100px_rgba(0,0,0,0.8)] relative overflow-y-auto overflow-x-hidden premium-scrollbar my-auto"
                             onClick={e => e.stopPropagation()}
                         >
                             {/* Close Button */}

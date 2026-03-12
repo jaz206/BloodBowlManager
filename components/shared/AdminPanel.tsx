@@ -602,7 +602,7 @@ const AdminPanel: React.FC = () => {
                                                                 ...editingItem,
                                                                 data: { ...editingItem.data, rerollCost: parseInt(e.target.value) }
                                                             })}
-                                                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none"
+                                                            className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-6 text-white text-sm focus:border-premium-gold/50 outline-none transition-all"
                                                         />
                                                     </div>
                                                     <div className="space-y-4">
@@ -653,8 +653,72 @@ const AdminPanel: React.FC = () => {
                                         )}
 
                                         {/* STARS SPECIFIC */}
-                                        {editingItem.type === 'stars' && (
-                                            <div className="space-y-8">
+                                                {/* IMAGE SECTION (FOLDABLE) */}
+                                                <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] overflow-hidden">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setIsImageExplorerExpanded(!isImageExplorerExpanded)}
+                                                        className="w-full flex items-center justify-between p-6 hover:bg-white/5 transition-colors group/fold"
+                                                    >
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="w-10 h-10 rounded-xl bg-premium-gold/10 border border-premium-gold/20 flex items-center justify-center text-premium-gold">
+                                                                <span className="material-symbols-outlined text-sm">image</span>
+                                                            </div>
+                                                            <div className="text-left">
+                                                                <span className="block text-sm font-display font-black text-white uppercase italic">Imagen de la Estrella</span>
+                                                                <span className="block text-[9px] font-bold text-slate-500 uppercase tracking-tighter">
+                                                                    {isImageExplorerExpanded ? 'Haz clic para plegar' : 'Haz clic para configurar imagen'}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <span className={`material-symbols-outlined text-slate-500 transition-transform duration-500 ${isImageExplorerExpanded ? 'rotate-180' : ''}`}>
+                                                            expand_more
+                                                        </span>
+                                                    </button>
+
+                                                    <AnimatePresence>
+                                                        {isImageExplorerExpanded && (
+                                                            <motion.div
+                                                                initial={{ height: 0, opacity: 0 }}
+                                                                animate={{ height: 'auto', opacity: 1 }}
+                                                                exit={{ height: 0, opacity: 0 }}
+                                                                transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+                                                                className="border-t border-white/5 p-6 space-y-6"
+                                                            >
+                                                                <div className="space-y-4">
+                                                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">URL de Imagen</label>
+                                                                    <div className="flex gap-4 items-center">
+                                                                        <div className="grow">
+                                                                            <input
+                                                                                type="text"
+                                                                                value={editingItem.data.image || ''}
+                                                                                onChange={(e) => setEditingItem({
+                                                                                    ...editingItem,
+                                                                                    data: { ...editingItem.data, image: e.target.value }
+                                                                                })}
+                                                                                className="w-full bg-black/60 border border-white/10 rounded-2xl py-4 px-6 text-[10px] text-slate-400 font-mono focus:border-premium-gold/50 outline-none transition-all"
+                                                                                placeholder="Introduce URL o usa el explorador..."
+                                                                            />
+                                                                        </div>
+                                                                        {editingItem.data.image && (
+                                                                            <div className="w-20 h-20 rounded-2xl border border-white/10 bg-black overflow-hidden flex-shrink-0">
+                                                                                <img src={editingItem.data.image} alt="" className="w-full h-full object-cover" />
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* GitHub Explorer integration or just instructions */}
+                                                                <div className="p-4 bg-premium-gold/5 rounded-xl border border-premium-gold/10">
+                                                                    <p className="text-[9px] text-premium-gold/60 font-medium leading-relaxed">
+                                                                        Tip: Puedes buscar imágenes en el repositorio jaz206/Bloodbowl-image usando el explorador de la pestaña General.
+                                                                    </p>
+                                                                </div>
+                                                            </motion.div>
+                                                        )}
+                                                    </AnimatePresence>
+                                                </div>
+
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                                     <div className="space-y-4">
                                                         <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Precio de Fichaje (GP)</label>
@@ -665,98 +729,141 @@ const AdminPanel: React.FC = () => {
                                                                 ...editingItem,
                                                                 data: { ...editingItem.data, cost: parseInt(e.target.value) }
                                                             })}
-                                                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none"
-                                                        />
-                                                    </div>
-                                                        <div className="space-y-4">
-                                                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Key Habilidades</label>
-                                                            <input
-                                                                type="text"
-                                                                value={Array.isArray(editingItem.data.skillKeys) ? editingItem.data.skillKeys.join(', ') : editingItem.data.skillKeys || ''}
-                                                                onChange={(e) => setEditingItem({
-                                                                    ...editingItem,
-                                                                    data: { ...editingItem.data, skillKeys: e.target.value.split(',').map(s => s.trim()) }
-                                                                })}
-                                                                className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none"
-                                                                placeholder="Block, Dodge..."
-                                                            />
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="space-y-4">
-                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Equipos Compatibles (Facciones)</label>
-                                                        <div className="flex flex-wrap gap-2 p-6 bg-white/[0.02] border border-white/5 rounded-2xl">
-                                                            {[
-                                                                'Any Team', 'Old World Classic', 'Worlds Edge Superleague', 'Lustrian Superleague',
-                                                                'Badlands Brawl', 'Favoured of Nurgle', 'Favoured of Slaanesh', 'Favoured of Khorne',
-                                                                'Favoured of Tzeentch', 'Underworld Challenge', 'Sylvanian Spotlight', 'Elven Kingdoms League'
-                                                            ].map(faction => {
-                                                                const isSelected = (editingItem.data.playsFor || []).includes(faction);
-                                                                return (
-                                                                    <button
-                                                                        key={faction}
-                                                                        type="button"
-                                                                        onClick={() => {
-                                                                            const current = editingItem.data.playsFor || [];
-                                                                            const next = isSelected 
-                                                                                ? current.filter((f: string) => f !== faction)
-                                                                                : [...current, faction];
-                                                                            setEditingItem({
-                                                                                ...editingItem,
-                                                                                data: { ...editingItem.data, playsFor: next }
-                                                                            });
-                                                                        }}
-                                                                        className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${isSelected
-                                                                            ? 'bg-premium-gold text-black shadow-[0_0_10px_rgba(202,138,4,0.3)]'
-                                                                            : 'bg-white/5 text-slate-500 border border-white/5 hover:border-white/20'
-                                                                            }`}
-                                                                    >
-                                                                        {faction}
-                                                                    </button>
-                                                                );
-                                                            })}
-                                                        </div>
-                                                        <p className="text-[9px] text-slate-600 italic px-2">Nota: Selecciona todas las facciones o ligas para las que puede jugar este astro.</p>
-                                                    </div>
-
-                                                    <div className="space-y-4">
-                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Biografía y Trasfondo</label>
-                                                        <textarea
-                                                            value={editingItem.data.description || ''}
-                                                            onChange={(e) => setEditingItem({
-                                                                ...editingItem,
-                                                                data: { ...editingItem.data, description: e.target.value }
-                                                            })}
-                                                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none h-32 resize-none text-[10px] leading-relaxed"
-                                                            placeholder="Describe aquí el trasfondo de la leyenda..."
+                                                            className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-6 text-white text-sm focus:border-premium-gold/50 outline-none transition-all"
                                                         />
                                                     </div>
 
-                                                {/* Stats for Stars */}
-                                                <div className="space-y-4">
-                                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Perfil de Atributos</label>
-                                                    <div className="grid grid-cols-5 gap-4">
-                                                        {['MV', 'FU', 'AG', 'PS', 'AR'].map(stat => (
-                                                            <div key={stat} className="space-y-2">
-                                                                <span className="block text-[9px] font-bold text-slate-600 uppercase text-center">{stat}</span>
-                                                                <input
-                                                                    type="text"
-                                                                    value={editingItem.data.stats?.[stat] || ''}
-                                                                    onChange={(e) => setEditingItem({
-                                                                        ...editingItem,
-                                                                        data: {
-                                                                            ...editingItem.data,
-                                                                            stats: { ...editingItem.data.stats, [stat]: e.target.value }
-                                                                        }
-                                                                    })}
-                                                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-2 px-1 text-center text-white focus:border-premium-gold/50 outline-none font-display font-black"
-                                                                />
-                                                            </div>
-                                                        ))}
+                                                    {/* Attributes Table */}
+                                                    <div className="space-y-4">
+                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Perfil de Atributos</label>
+                                                        <div className="grid grid-cols-5 gap-3 bg-black/40 p-4 rounded-2xl border border-white/5">
+                                                            {['MV', 'FU', 'AG', 'PS', 'AR'].map(stat => (
+                                                                <div key={stat} className="space-y-1">
+                                                                    <span className="block text-[8px] font-bold text-slate-600 uppercase text-center">{stat}</span>
+                                                                    <input
+                                                                        type="text"
+                                                                        value={editingItem.data.stats?.[stat] || ''}
+                                                                        onChange={(e) => setEditingItem({
+                                                                            ...editingItem,
+                                                                            data: {
+                                                                                ...editingItem.data,
+                                                                                stats: { ...editingItem.data.stats, [stat]: e.target.value }
+                                                                            }
+                                                                        })}
+                                                                        className="w-full bg-transparent border-b border-white/10 text-center text-white text-xs py-1 focus:border-premium-gold outline-none font-display font-black transition-colors"
+                                                                    />
+                                                                </div>
+                                                            ))}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        )}
+
+                                                <div className="space-y-4">
+                                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Habilidades Base (Seleccionables)</label>
+                                                    <div className="flex flex-wrap gap-2 p-6 bg-black/40 border border-white/5 rounded-2xl max-h-48 overflow-y-auto custom-scrollbar">
+                                                        {skills.sort((a,b) => (language === 'es' ? (a.name_es || '').localeCompare(b.name_es || '') : (a.name_en || '').localeCompare(b.name_en || ''))).map(skill => {
+                                                            const isSelected = (editingItem.data.skillKeys || []).includes(skill.keyEN);
+                                                            return (
+                                                                <button
+                                                                    key={skill.keyEN}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        const current = editingItem.data.skillKeys || [];
+                                                                        const next = isSelected 
+                                                                            ? current.filter((s: string) => s !== skill.keyEN)
+                                                                            : [...current, skill.keyEN];
+                                                                        setEditingItem({
+                                                                            ...editingItem,
+                                                                            data: { ...editingItem.data, skillKeys: next }
+                                                                        });
+                                                                    }}
+                                                                    className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${isSelected
+                                                                        ? 'bg-sky-500/20 text-sky-400 border-sky-500/30'
+                                                                        : 'bg-white/5 text-slate-500 border-white/5 hover:border-white/20'
+                                                                        }`}
+                                                                >
+                                                                    {language === 'es' ? (skill.name_es || skill.name_en) : skill.name_en}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-4">
+                                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Equipos Compatibles (Facciones)</label>
+                                                    <div className="flex flex-wrap gap-2 p-6 bg-black/40 border border-white/5 rounded-2xl">
+                                                        {[
+                                                            'Any Team', 'Old World Classic', 'Worlds Edge Superleague', 'Lustrian Superleague',
+                                                            'Badlands Brawl', 'Favoured of Nurgle', 'Favoured of Slaanesh', 'Favoured of Khorne',
+                                                            'Favoured of Tzeentch', 'Underworld Challenge', 'Sylvanian Spotlight', 'Elven Kingdoms League'
+                                                        ].map(faction => {
+                                                            const isSelected = (editingItem.data.playsFor || []).includes(faction);
+                                                            return (
+                                                                <button
+                                                                    key={faction}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        const current = editingItem.data.playsFor || [];
+                                                                        const next = isSelected 
+                                                                            ? current.filter((f: string) => f !== faction)
+                                                                            : [...current, faction];
+                                                                        setEditingItem({
+                                                                            ...editingItem,
+                                                                            data: { ...editingItem.data, playsFor: next }
+                                                                        });
+                                                                    }}
+                                                                    className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${isSelected
+                                                                        ? 'bg-premium-gold/20 text-premium-gold border-premium-gold/30'
+                                                                        : 'bg-white/5 text-slate-500 border-white/5 hover:border-white/20'
+                                                                        }`}
+                                                                >
+                                                                    {faction}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+
+                                                {/* Rules and Background */}
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                                    <div className="space-y-4">
+                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Habilidad Maestra (Regla Especial ES)</label>
+                                                        <textarea
+                                                            value={editingItem.data.specialRules_es || ''}
+                                                            onChange={(e) => setEditingItem({
+                                                                ...editingItem,
+                                                                data: { ...editingItem.data, specialRules_es: e.target.value }
+                                                            })}
+                                                            className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none h-24 resize-none text-[10px] leading-relaxed transition-all"
+                                                            placeholder="Regla especial en español..."
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-4">
+                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Master Skill (Special Rule EN)</label>
+                                                        <textarea
+                                                            value={editingItem.data.specialRules_en || ''}
+                                                            onChange={(e) => setEditingItem({
+                                                                ...editingItem,
+                                                                data: { ...editingItem.data, specialRules_en: e.target.value }
+                                                            })}
+                                                            className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none h-24 resize-none text-[10px] leading-relaxed transition-all"
+                                                            placeholder="Special rule in English..."
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-4">
+                                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Biografía y Trasfondo</label>
+                                                    <textarea
+                                                        value={editingItem.data.description || ''}
+                                                        onChange={(e) => setEditingItem({
+                                                            ...editingItem,
+                                                            data: { ...editingItem.data, description: e.target.value }
+                                                        })}
+                                                        className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none h-32 resize-none text-[10px] leading-relaxed transition-all"
+                                                        placeholder="Describe aquí el trasfondo de la leyenda..."
+                                                    />
+                                                </div>
 
                                         {/* SKILLS SPECIFIC (Bilingual) */}
                                         {editingItem.type === 'skills' && (

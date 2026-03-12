@@ -2249,63 +2249,150 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                                 </div>
                             </div>
 
-                            {/* Team Player List Toggler */}
-                            <div className="flex gap-10 mt-auto pt-6 border-t border-white/5">
-                                <div className="flex-1 space-y-3">
+                            {/* Team Player List Toggler - Redesigned for clarity */}
+                            <div className="flex gap-10 mt-auto pt-6 border-t border-white/5 bg-black/20 rounded-t-[3rem] px-8 py-6">
+                                {/* Local Team (Home) */}
+                                <div className="flex-1 space-y-4">
                                     <div className="flex items-center justify-between px-2">
-                                        <h4 className="text-[10px] font-display font-black text-sky-500 uppercase tracking-widest">Plantilla Local</h4>
-                                        <span className="text-[8px] font-bold text-slate-600 uppercase italic">Activos: {liveHomeTeam.players.filter(p => p.status === 'Activo').length}</span>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/30 flex items-center justify-center">
+                                                <span className="material-symbols-outlined text-sky-400 text-sm">house</span>
+                                            </div>
+                                            <h4 className="text-[10px] font-display font-black text-sky-500 uppercase tracking-widest">Plantilla Local</h4>
+                                        </div>
+                                        <span className="text-[8px] font-bold text-slate-600 uppercase italic">Activos: {liveHomeTeam.players.filter(p => p.status === 'Activo').length}/11</span>
                                     </div>
-                                    <div className="flex gap-2 overflow-x-auto pb-4 custom-scrollbar">
-                                        {liveHomeTeam.players.map(p => (
-                                            <div
-                                                key={p.id}
-                                                onClick={() => { setSelectedPlayerForAction(p); setActiveTeamId('home'); }}
-                                                className={`flex-shrink-0 w-14 h-14 rounded-2xl border-2 flex items-center justify-center cursor-pointer transition-all duration-300 transform hover:scale-110 relative ${selectedPlayerForAction?.id === p.id
-                                                    ? 'bg-sky-500 border-sky-300 shadow-[0_0_20px_rgba(14,165,233,0.4)]'
-                                                    : p.status === 'Activo'
-                                                        ? 'bg-black/60 border-white/10 hover:border-sky-500/50'
-                                                        : 'bg-black/40 border-dashed border-white/5 opacity-50'
-                                                    }`}
-                                            >
-                                                <span className={`text-base font-display font-black ${selectedPlayerForAction?.id === p.id ? 'text-black' : 'text-slate-400'}`}>{p.id.toString().slice(-2)}</span>
-                                                {p.status !== 'Activo' && (
-                                                    <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-black border border-white/20 flex items-center justify-center">
-                                                        <span className="material-symbols-outlined text-[10px] text-amber-500">{p.status === 'KO' ? 'hotel' : 'skull'}</span>
+                                    
+                                    <div className="space-y-4">
+                                        {/* Row 1: Titulares (Activos) */}
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between items-center px-1">
+                                                <p className="text-[8px] font-black text-sky-400/60 uppercase tracking-widest">Titulares en Campo</p>
+                                                <span className="text-[8px] font-bold text-slate-500 uppercase">{liveHomeTeam.players.filter(p => p.status === 'Activo').length}/11</span>
+                                            </div>
+                                            <div className="flex gap-2 min-h-[68px] pb-2 overflow-x-auto custom-scrollbar px-1">
+                                                {liveHomeTeam.players.filter(p => p.status === 'Activo').map(p => (
+                                                    <div
+                                                        key={p.id}
+                                                        onClick={() => { setSelectedPlayerForAction(p); setActiveTeamId('home'); }}
+                                                        className={`flex-shrink-0 w-14 h-14 rounded-2xl border-2 flex items-center justify-center cursor-pointer transition-all duration-300 transform hover:scale-110 relative ${selectedPlayerForAction?.id === p.id
+                                                            ? 'bg-sky-500 border-sky-300 shadow-[0_0_20px_rgba(14,165,233,0.5)] z-20'
+                                                            : 'bg-black/60 border-white/10 hover:border-sky-500/50'
+                                                            }`}
+                                                    >
+                                                        <span className={`text-base font-display font-black ${selectedPlayerForAction?.id === p.id ? 'text-black' : 'text-slate-400'}`}>{p.id.toString().slice(-2)}</span>
+                                                        {selectedPlayerForAction?.id === p.id && (
+                                                            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-lg">
+                                                                <span className="material-symbols-outlined text-[10px] text-black font-black">check</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                                {liveHomeTeam.players.filter(p => p.status === 'Activo').length === 0 && (
+                                                    <div className="flex-1 flex items-center justify-center border border-dashed border-white/5 rounded-2xl opacity-20 h-14">
+                                                        <span className="text-[8px] font-bold uppercase">Sin despliegue</span>
                                                     </div>
                                                 )}
                                             </div>
-                                        ))}
+                                        </div>
+
+                                        {/* Row 2: Banquillo/Bajas */}
+                                        <div className="space-y-2">
+                                            <p className="text-[8px] font-black text-slate-700 uppercase tracking-widest px-1">Reservas y Bajas</p>
+                                            <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar min-h-[60px] px-1">
+                                                {liveHomeTeam.players.filter(p => p.status !== 'Activo').map(p => (
+                                                    <div
+                                                        key={p.id}
+                                                        onClick={() => { setSelectedPlayerForAction(p); setActiveTeamId('home'); }}
+                                                        className={`flex-shrink-0 w-11 h-11 rounded-xl border flex items-center justify-center cursor-pointer transition-all duration-300 opacity-60 hover:opacity-100 relative ${selectedPlayerForAction?.id === p.id
+                                                            ? 'bg-sky-500/30 border-sky-500 shadow-lg scale-105 opacity-100'
+                                                            : 'bg-black/40 border-dashed border-white/10'
+                                                            }`}
+                                                    >
+                                                        <span className={`text-xs font-display font-bold ${selectedPlayerForAction?.id === p.id ? 'text-sky-300' : 'text-slate-600'}`}>{p.id.toString().slice(-2)}</span>
+                                                        <div className={`absolute -top-1 -right-1 w-4 h-4 rounded-full bg-black border border-white/20 flex items-center justify-center scale-75 ${p.status === 'KO' ? 'bg-amber-500/10' : 'bg-red-500/10'}`}>
+                                                            <span className="material-symbols-outlined text-[8px] text-amber-500">{p.status === 'KO' ? 'hotel' : 'skull'}</span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="flex-1 space-y-3">
+
+                                {/* Divider */}
+                                <div className="w-px bg-white/5 self-stretch my-4"></div>
+
+                                {/* Rival Team (Opponent) */}
+                                <div className="flex-1 space-y-4">
                                     <div className="flex items-center justify-between px-2 flex-row-reverse">
-                                        <h4 className="text-[10px] font-display font-black text-red-500 uppercase tracking-widest text-right">Plantilla Rival</h4>
-                                        <span className="text-[8px] font-bold text-slate-600 uppercase italic">Activos: {liveOpponentTeam.players.filter(p => p.status === 'Activo').length}</span>
+                                        <div className="flex items-center gap-3 flex-row-reverse">
+                                            <div className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/30 flex items-center justify-center">
+                                                <span className="material-symbols-outlined text-red-500 text-sm">swords</span>
+                                            </div>
+                                            <h4 className="text-[10px] font-display font-black text-red-500 uppercase tracking-widest text-right">Plantilla Rival</h4>
+                                        </div>
+                                        <span className="text-[8px] font-bold text-slate-600 uppercase italic text-left">Activos: {liveOpponentTeam.players.filter(p => p.status === 'Activo').length}/11</span>
                                     </div>
-                                    <div className="flex flex-row-reverse gap-2 overflow-x-auto pb-4 custom-scrollbar">
-                                        {liveOpponentTeam.players.map(p => (
-                                            <div
-                                                key={p.id}
-                                                onClick={() => { setSelectedPlayerForAction(p); setActiveTeamId('opponent'); }}
-                                                className={`flex-shrink-0 w-14 h-14 rounded-2xl border-2 flex items-center justify-center cursor-pointer transition-all duration-300 transform hover:scale-110 relative ${selectedPlayerForAction?.id === p.id
-                                                    ? 'bg-red-600 border-red-400 shadow-[0_0_20px_rgba(220,38,38,0.4)]'
-                                                    : p.status === 'Activo'
-                                                        ? 'bg-black/60 border-white/10 hover:border-red-500/50'
-                                                        : 'bg-black/40 border-dashed border-white/5 opacity-50'
-                                                    }`}
-                                            >
-                                                <span className={`text-base font-display font-black ${selectedPlayerForAction?.id === p.id ? 'text-white' : 'text-slate-400'}`}>{p.id.toString().slice(-2)}</span>
-                                                {p.status !== 'Activo' && (
-                                                    <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-black border border-white/20 flex items-center justify-center">
-                                                        <span className="material-symbols-outlined text-[10px] text-red-500">{p.status === 'KO' ? 'hotel' : 'skull'}</span>
+
+                                    <div className="space-y-4">
+                                        {/* Row 1: Titulares (Activos) */}
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between items-center px-1 flex-row-reverse">
+                                                <p className="text-[8px] font-black text-red-500/60 uppercase tracking-widest">Titulares en Campo</p>
+                                                <span className="text-[8px] font-bold text-slate-500 uppercase">{liveOpponentTeam.players.filter(p => p.status === 'Activo').length}/11</span>
+                                            </div>
+                                            <div className="flex flex-row-reverse gap-2 min-h-[68px] pb-2 overflow-x-auto custom-scrollbar px-1">
+                                                {liveOpponentTeam.players.filter(p => p.status === 'Activo').map(p => (
+                                                    <div
+                                                        key={p.id}
+                                                        onClick={() => { setSelectedPlayerForAction(p); setActiveTeamId('opponent'); }}
+                                                        className={`flex-shrink-0 w-14 h-14 rounded-2xl border-2 flex items-center justify-center cursor-pointer transition-all duration-300 transform hover:scale-110 relative ${selectedPlayerForAction?.id === p.id
+                                                            ? 'bg-red-600 border-red-400 shadow-[0_0_20px_rgba(220,38,38,0.5)] z-20'
+                                                            : 'bg-black/60 border-white/10 hover:border-red-500/50'
+                                                            }`}
+                                                    >
+                                                        <span className={`text-base font-display font-black ${selectedPlayerForAction?.id === p.id ? 'text-white' : 'text-slate-400'}`}>{p.id.toString().slice(-2)}</span>
+                                                        {selectedPlayerForAction?.id === p.id && (
+                                                            <div className="absolute -bottom-1 -left-1 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-lg">
+                                                                <span className="material-symbols-outlined text-[10px] text-black font-black">check</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                                {liveOpponentTeam.players.filter(p => p.status === 'Activo').length === 0 && (
+                                                    <div className="flex-1 flex items-center justify-center border border-dashed border-white/5 rounded-2xl opacity-20 h-14">
+                                                        <span className="text-[8px] font-bold uppercase">Sin despliegue</span>
                                                     </div>
                                                 )}
                                             </div>
-                                        ))}
+                                        </div>
+
+                                        {/* Row 2: Banquillo/Bajas */}
+                                        <div className="space-y-2">
+                                            <p className="text-[8px] font-black text-slate-700 uppercase tracking-widest mr-1 text-right px-1">Reservas y Bajas</p>
+                                            <div className="flex flex-row-reverse gap-2 overflow-x-auto pb-2 custom-scrollbar min-h-[60px] px-1">
+                                                {liveOpponentTeam.players.filter(p => p.status !== 'Activo').map(p => (
+                                                    <div
+                                                        key={p.id}
+                                                        onClick={() => { setSelectedPlayerForAction(p); setActiveTeamId('opponent'); }}
+                                                        className={`flex-shrink-0 w-11 h-11 rounded-xl border flex items-center justify-center cursor-pointer transition-all duration-300 opacity-60 hover:opacity-100 relative ${selectedPlayerForAction?.id === p.id
+                                                            ? 'bg-red-600/30 border-red-500 shadow-lg scale-105 opacity-100'
+                                                            : 'bg-black/40 border-dashed border-white/10'
+                                                            }`}
+                                                    >
+                                                        <span className={`text-xs font-display font-bold ${selectedPlayerForAction?.id === p.id ? 'text-red-300' : 'text-slate-600'}`}>{p.id.toString().slice(-2)}</span>
+                                                        <div className={`absolute -top-1 -left-1 w-4 h-4 rounded-full bg-black border border-white/20 flex items-center justify-center scale-75 ${p.status === 'KO' ? 'bg-amber-500/10' : 'bg-red-500/10'}`}>
+                                                            <span className="material-symbols-outlined text-[8px] text-amber-500">{p.status === 'KO' ? 'hotel' : 'skull'}</span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
+
                         </main>
 
                         {/* SIDEBAR DERECHA: Bitácora y Crónica */}
@@ -2830,6 +2917,7 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                     homeTeam={liveHomeTeam!}
                     opponentTeam={liveOpponentTeam!}
                     gameLog={gameLog}
+                    currentScore={score}
                 />
             )}
             <style>{`
@@ -2843,10 +2931,18 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
         </div>
     );
 };
-const MatchSummaryModal = ({ isOpen, onClose, homeTeam, opponentTeam, gameLog }: { isOpen: boolean, onClose: () => void, homeTeam: ManagedTeam, opponentTeam: ManagedTeam, gameLog: GameEvent[] }) => {
-    const tds = gameLog.filter(e => e.type === 'touchdown');
-    const injuries = gameLog.filter(e => e.type === 'INJURY');
-    const fouls = gameLog.filter(e => e.type === 'FOUL').filter(e => e.description.includes('expulsado'));
+const MatchSummaryModal = ({ isOpen, onClose, homeTeam, opponentTeam, gameLog, currentScore }: { isOpen: boolean, onClose: () => void, homeTeam: ManagedTeam, opponentTeam: ManagedTeam, gameLog: GameEvent[], currentScore: { home: number, opponent: number } }) => {
+    // Normalize event types for filtering
+    const tds = gameLog.filter(e => e.type.toLowerCase() === 'touchdown' || e.type.toLowerCase() === 'td' || e.description.toLowerCase().includes('ha anotado un touchdown'));
+    const injuries = gameLog.filter(e => e.type.toLowerCase() === 'injury' || e.type.toLowerCase() === 'baja');
+    const fouls = gameLog.filter(e => e.type.toLowerCase() === 'foul').filter(e => e.description.toLowerCase().includes('expulsado'));
+
+    // Count touchdowns per team - Fallback to currentScore if log filtering is ambiguous
+    const logHomeScore = tds.filter(e => e.team === 'home').length;
+    const logOpponentScore = tds.filter(e => e.team === 'opponent').length;
+    
+    const homeScoreValue = Math.max(logHomeScore, currentScore.home);
+    const opponentScoreValue = Math.max(logOpponentScore, currentScore.opponent);
 
     const renderEmpty = (text: string) => (
         <div className="py-8 text-center border-2 border-dashed border-white/5 rounded-2xl">
@@ -2855,9 +2951,9 @@ const MatchSummaryModal = ({ isOpen, onClose, homeTeam, opponentTeam, gameLog }:
     );
 
     return (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center z-[100] p-4 animate-fade-in">
-            <div className="glass-panel w-full max-w-4xl max-h-[90vh] overflow-hidden border-premium-gold/30 flex flex-col shadow-[0_0_100px_rgba(245,159,10,0.2)]">
-                <div className="p-8 border-b border-white/10 flex justify-between items-center bg-gradient-to-r from-premium-gold/10 to-transparent">
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-xl flex items-start justify-center overflow-y-auto z-[500] p-4 py-10">
+            <div className="glass-panel max-w-4xl w-full border-premium-gold/30 bg-black/60 shadow-[0_0_100px_rgba(245,159,10,0.2)] animate-slide-in-up">
+                <div className="flex justify-between items-center p-8 border-b border-white/10 bg-gradient-to-r from-premium-gold/10 to-transparent">
                     <div>
                         <h2 className="text-3xl font-display font-black text-white uppercase italic tracking-tighter">Resumen del <span className="text-premium-gold">Encuentro</span></h2>
                         <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Crónica de sangre y gloria en el Coliseo</p>
@@ -2867,20 +2963,22 @@ const MatchSummaryModal = ({ isOpen, onClose, homeTeam, opponentTeam, gameLog }:
                     </button>
                 </div>
 
-                <div className="p-8 overflow-y-auto custom-scrollbar space-y-12">
-                    <div className="grid grid-cols-3 gap-8 items-center max-w-2xl mx-auto">
-                        <div className="text-right">
+                <div className="p-8 space-y-12">
+                    {/* Score Hero */}
+                    <div className="grid grid-cols-3 gap-8 items-center max-w-2xl mx-auto bg-black/40 p-10 rounded-[3rem] border border-white/5 relative overflow-hidden group">
+                        <div className="absolute inset-0 bg-gradient-to-r from-sky-500/5 via-transparent to-red-500/5"></div>
+                        <div className="text-right relative z-10">
                             <p className="text-[10px] font-display font-black text-sky-400 uppercase tracking-widest mb-2">{homeTeam.name}</p>
-                            <div className="text-6xl font-display font-black text-white italic">{gameLog.filter(e => e.type === 'touchdown' && e.metadata?.team === 'home').length}</div>
+                            <div className="text-6xl font-display font-black text-white italic drop-shadow-[0_0_30px_rgba(14,165,233,0.3)]">{homeScoreValue}</div>
                         </div>
-                        <div className="flex flex-col items-center">
+                        <div className="flex flex-col items-center relative z-10">
                             <div className="w-px h-12 bg-premium-gold/30"></div>
-                            <span className="text-[10px] font-display font-black text-premium-gold uppercase tracking-[0.3em] my-4">Marcador Final</span>
+                            <span className="text-[10px] font-display font-black text-premium-gold uppercase tracking-[0.3em] my-4">Final</span>
                             <div className="w-px h-12 bg-premium-gold/30"></div>
                         </div>
-                        <div className="text-left">
+                        <div className="text-left relative z-10">
                             <p className="text-[10px] font-display font-black text-red-500 uppercase tracking-widest mb-2">{opponentTeam.name}</p>
-                            <div className="text-6xl font-display font-black text-white italic">{gameLog.filter(e => e.type === 'touchdown' && e.metadata?.team === 'opponent').length}</div>
+                            <div className="text-6xl font-display font-black text-white italic drop-shadow-[0_0_30px_rgba(220,38,38,0.3)]">{opponentScoreValue}</div>
                         </div>
                     </div>
 
@@ -2895,7 +2993,7 @@ const MatchSummaryModal = ({ isOpen, onClose, homeTeam, opponentTeam, gameLog }:
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 {tds.map((td, i) => (
                                     <div key={i} className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/10 group hover:border-premium-gold/30 transition-all">
-                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center border font-display font-black text-xs ${td.metadata?.team === 'home' ? 'bg-sky-500/20 border-sky-500/30 text-sky-400' : 'bg-red-500/20 border-red-500/30 text-red-500'}`}>
+                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center border font-display font-black text-xs ${td.team === 'home' ? 'bg-sky-500/20 border-sky-500/30 text-sky-400' : 'bg-red-500/20 border-red-500/30 text-red-500'}`}>
                                             TD
                                         </div>
                                         <div>
@@ -2936,33 +3034,6 @@ const MatchSummaryModal = ({ isOpen, onClose, homeTeam, opponentTeam, gameLog }:
                                 })}
                             </div>
                         ) : renderEmpty('Sin bajas mayores registradas')}
-                    </section>
-
-                    <section className="space-y-4">
-                        <div className="flex items-center gap-4 mb-2">
-                            <div className="w-10 h-10 rounded-full bg-red-600/10 border border-red-600/30 flex items-center justify-center">
-                                <span className="material-symbols-outlined text-red-500 text-xl">gavel</span>
-                            </div>
-                            <h3 className="text-sm font-display font-black text-white uppercase tracking-widest">Sentencias del Árbitro</h3>
-                        </div>
-                        {fouls.length > 0 ? (
-                            <div className="grid grid-cols-1 gap-3">
-                                {fouls.map((foul, i) => (
-                                    <div key={i} className="bg-red-600/5 p-4 rounded-2xl border border-red-600/20 flex gap-4 items-center">
-                                        <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center text-white">
-                                            <span className="material-symbols-outlined text-xl">priority_high</span>
-                                        </div>
-                                        <div className="flex-grow">
-                                            <p className="text-xs font-display font-black text-white uppercase">Jugador Expulsado</p>
-                                            <p className="text-[10px] text-slate-400 leading-tight">
-                                                {foul.description}
-                                            </p>
-                                        </div>
-                                        <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">T.{foul.turn}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : renderEmpty('El árbitro ha mirado hacia otro lado')}
                     </section>
                 </div>
             </div>
