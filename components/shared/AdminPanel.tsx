@@ -634,20 +634,47 @@ const AdminPanel: React.FC = () => {
                                                             className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none"
                                                         />
                                                     </div>
+                                                        <div className="space-y-4">
+                                                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Key Habilidades</label>
+                                                            <input
+                                                                type="text"
+                                                                value={Array.isArray(editingItem.data.skillKeys) ? editingItem.data.skillKeys.join(', ') : editingItem.data.skillKeys || ''}
+                                                                onChange={(e) => setEditingItem({
+                                                                    ...editingItem,
+                                                                    data: { ...editingItem.data, skillKeys: e.target.value.split(',').map(s => s.trim()) }
+                                                                })}
+                                                                className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none"
+                                                                placeholder="Block, Dodge..."
+                                                            />
+                                                        </div>
+                                                    </div>
+
                                                     <div className="space-y-4">
-                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Key Habilidades</label>
+                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Equipos Compatibles</label>
                                                         <input
                                                             type="text"
-                                                            value={Array.isArray(editingItem.data.skillKeys) ? editingItem.data.skillKeys.join(', ') : editingItem.data.skillKeys || ''}
+                                                            value={Array.isArray(editingItem.data.playsFor) ? editingItem.data.playsFor.join(', ') : editingItem.data.playsFor || ''}
                                                             onChange={(e) => setEditingItem({
                                                                 ...editingItem,
-                                                                data: { ...editingItem.data, skillKeys: e.target.value.split(',').map(s => s.trim()) }
+                                                                data: { ...editingItem.data, playsFor: e.target.value.split(',').map(s => s.trim()) }
                                                             })}
                                                             className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none"
-                                                            placeholder="Block, Dodge..."
+                                                            placeholder="Chaos Clash, Sylvanian Spotlight..."
                                                         />
                                                     </div>
-                                                </div>
+
+                                                    <div className="space-y-4">
+                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Biografía y Trasfondo</label>
+                                                        <textarea
+                                                            value={editingItem.data.description || ''}
+                                                            onChange={(e) => setEditingItem({
+                                                                ...editingItem,
+                                                                data: { ...editingItem.data, description: e.target.value }
+                                                            })}
+                                                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none h-32 resize-none text-[10px] leading-relaxed"
+                                                            placeholder="Describe aquí el trasfondo de la leyenda..."
+                                                        />
+                                                    </div>
 
                                                 {/* Stats for Stars */}
                                                 <div className="space-y-4">

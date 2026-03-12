@@ -364,6 +364,7 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
     const [ballCarrierId, setBallCarrierId] = useState<number | null>(null);
     const [prayersAlert, setPrayersAlert] = useState<{ underdog: string, difference: number } | null>(null);
     const [activeTab, setActiveTab] = useState<'assistant' | 'narrator'>('assistant');
+    const [isMatchSummaryOpen, setIsMatchSummaryOpen] = useState(false);
 
     const playSound = useCallback((type: 'td' | 'injury' | 'turnover' | 'dice') => {
         // En un entorno real, aquí cargaríamos archivos .mp3 o .wav
@@ -2045,13 +2046,24 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                                 </div>
                             </div>
 
-                            <button
-                                onClick={() => setGameState('post_game')}
-                                className="w-full group relative overflow-hidden text-[10px] font-display font-black uppercase tracking-[0.3em] bg-blood-red/10 border border-blood-red/30 text-blood-red hover:bg-black hover:text-white py-4 px-6 rounded-2xl transition-all shadow-xl mt-auto"
-                            >
-                                <div className="absolute inset-0 bg-blood-red -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-in-out -z-10"></div>
-                                Finalizar Encuentro
-                            </button>
+                            <div className="space-y-3 mt-auto">
+                                <button
+                                    onClick={() => setIsMatchSummaryOpen(true)}
+                                    className="w-full group relative overflow-hidden text-[10px] font-display font-black uppercase tracking-[0.3em] bg-sky-500/10 border border-sky-500/30 text-sky-500 hover:bg-sky-500 hover:text-black py-4 px-6 rounded-2xl transition-all shadow-xl"
+                                >
+                                    <div className="flex items-center justify-center gap-2">
+                                        <span className="material-symbols-outlined text-sm">leaderboard</span>
+                                        Resumen de Encuentro
+                                    </div>
+                                </button>
+                                <button
+                                    onClick={() => setGameState('post_game')}
+                                    className="w-full group relative overflow-hidden text-[10px] font-display font-black uppercase tracking-[0.3em] bg-blood-red/10 border border-blood-red/30 text-blood-red hover:bg-black hover:text-white py-4 px-6 rounded-2xl transition-all shadow-xl"
+                                >
+                                    <div className="absolute inset-0 bg-blood-red -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-in-out -z-10"></div>
+                                    Finalizar Encuentro
+                                </button>
+                            </div>
                         </aside>
 
                         {/* PANEL CENTRAL: Consola de Jugador y Acciones */}
@@ -2070,13 +2082,26 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                                             </div>
                                         </div>
                                         <div className="flex-grow min-w-0">
-                                            <div className="flex items-center gap-4 mb-3">
+                                            <div className="flex items-center gap-4 mb-2">
                                                 <h3 className="text-3xl font-display font-black text-white uppercase italic tracking-tighter truncate leading-none">
                                                     {selectedPlayerForAction.customName}
                                                 </h3>
+                                                <span className={`px-2 py-0.5 rounded text-[8px] font-display font-black uppercase tracking-widest ${activeTeamId === 'home' ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30' : 'bg-red-500/20 text-red-500 border border-red-500/30'}`}>
+                                                    {activeTeamId === 'home' ? liveHomeTeam.name : liveOpponentTeam.name}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-3 mb-3">
                                                 <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[9px] font-display font-black text-slate-500 uppercase tracking-widest leading-none">
                                                     {selectedPlayerForAction.position}
                                                 </span>
+                                                {selectedPlayerForAction.status !== 'Activo' && (
+                                                    <span className={`px-2 py-1 rounded-md text-[9px] font-display font-black uppercase tracking-widest ${selectedPlayerForAction.status === 'KO' ? 'bg-amber-500 text-black' :
+                                                        selectedPlayerForAction.status === 'Expulsado' ? 'bg-red-600 text-white' :
+                                                            'bg-blood-red text-white'
+                                                        }`}>
+                                                        {selectedPlayerForAction.status}: {selectedPlayerForAction.statusDetail || 'Baja en Arena'}
+                                                    </span>
+                                                )}
                                             </div>
                                             <div className="flex gap-8 items-center">
                                                 <div className="flex gap-6">
@@ -2232,13 +2257,23 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                                         <span className="text-[8px] font-bold text-slate-600 uppercase italic">Activos: {liveHomeTeam.players.filter(p => p.status === 'Activo').length}</span>
                                     </div>
                                     <div className="flex gap-2 overflow-x-auto pb-4 custom-scrollbar">
-                                        {liveHomeTeam.players.filter(p => p.status === 'Activo').map(p => (
+                                        {liveHomeTeam.players.map(p => (
                                             <div
                                                 key={p.id}
                                                 onClick={() => { setSelectedPlayerForAction(p); setActiveTeamId('home'); }}
-                                                className={`flex-shrink-0 w-14 h-14 rounded-2xl border-2 flex items-center justify-center cursor-pointer transition-all duration-300 transform hover:scale-110 ${selectedPlayerForAction?.id === p.id ? 'bg-sky-500 border-sky-300 shadow-[0_0_20px_rgba(14,165,233,0.4)]' : 'bg-black/60 border-white/10 hover:border-sky-500/50'}`}
+                                                className={`flex-shrink-0 w-14 h-14 rounded-2xl border-2 flex items-center justify-center cursor-pointer transition-all duration-300 transform hover:scale-110 relative ${selectedPlayerForAction?.id === p.id
+                                                    ? 'bg-sky-500 border-sky-300 shadow-[0_0_20px_rgba(14,165,233,0.4)]'
+                                                    : p.status === 'Activo'
+                                                        ? 'bg-black/60 border-white/10 hover:border-sky-500/50'
+                                                        : 'bg-black/40 border-dashed border-white/5 opacity-50'
+                                                    }`}
                                             >
                                                 <span className={`text-base font-display font-black ${selectedPlayerForAction?.id === p.id ? 'text-black' : 'text-slate-400'}`}>{p.id.toString().slice(-2)}</span>
+                                                {p.status !== 'Activo' && (
+                                                    <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-black border border-white/20 flex items-center justify-center">
+                                                        <span className="material-symbols-outlined text-[10px] text-amber-500">{p.status === 'KO' ? 'hotel' : 'skull'}</span>
+                                                    </div>
+                                                )}
                                             </div>
                                         ))}
                                     </div>
@@ -2249,13 +2284,23 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                                         <span className="text-[8px] font-bold text-slate-600 uppercase italic">Activos: {liveOpponentTeam.players.filter(p => p.status === 'Activo').length}</span>
                                     </div>
                                     <div className="flex flex-row-reverse gap-2 overflow-x-auto pb-4 custom-scrollbar">
-                                        {liveOpponentTeam.players.filter(p => p.status === 'Activo').map(p => (
+                                        {liveOpponentTeam.players.map(p => (
                                             <div
                                                 key={p.id}
                                                 onClick={() => { setSelectedPlayerForAction(p); setActiveTeamId('opponent'); }}
-                                                className={`flex-shrink-0 w-14 h-14 rounded-2xl border-2 flex items-center justify-center cursor-pointer transition-all duration-300 transform hover:scale-110 ${selectedPlayerForAction?.id === p.id ? 'bg-red-600 border-red-400 shadow-[0_0_20px_rgba(220,38,38,0.4)]' : 'bg-black/60 border-white/10 hover:border-red-500/50'}`}
+                                                className={`flex-shrink-0 w-14 h-14 rounded-2xl border-2 flex items-center justify-center cursor-pointer transition-all duration-300 transform hover:scale-110 relative ${selectedPlayerForAction?.id === p.id
+                                                    ? 'bg-red-600 border-red-400 shadow-[0_0_20px_rgba(220,38,38,0.4)]'
+                                                    : p.status === 'Activo'
+                                                        ? 'bg-black/60 border-white/10 hover:border-red-500/50'
+                                                        : 'bg-black/40 border-dashed border-white/5 opacity-50'
+                                                    }`}
                                             >
                                                 <span className={`text-base font-display font-black ${selectedPlayerForAction?.id === p.id ? 'text-white' : 'text-slate-400'}`}>{p.id.toString().slice(-2)}</span>
+                                                {p.status !== 'Activo' && (
+                                                    <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-black border border-white/20 flex items-center justify-center">
+                                                        <span className="material-symbols-outlined text-[10px] text-red-500">{p.status === 'KO' ? 'hotel' : 'skull'}</span>
+                                                    </div>
+                                                )}
                                             </div>
                                         ))}
                                     </div>
@@ -2778,6 +2823,15 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
             )}
             {isTurnoverModalOpen && <TurnoverModal onClose={() => setIsTurnoverModalOpen(false)} onConfirm={handleTurnover} />}
             {isApothecaryModalOpen && injuryState.victimPlayer && <ApothecaryModal player={injuryState.victimPlayer} hasUsedOnKO={(injuryState.victimTeamId === 'home' ? liveHomeTeam?.apothecaryUsedOnKO : liveOpponentTeam?.apothecaryUsedOnKO) || false} onClose={() => { setIsApothecaryModalOpen(false); setInjuryState(prev => ({ ...prev, step: 'regeneration_check' })); }} onPatchUp={() => { setIsApothecaryModalOpen(false); const teamId = injuryState.victimTeamId!; const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam; setTeam(prev => prev ? ({ ...prev, apothecaryUsedOnKO: true }) : null); updatePlayerStatus(injuryState.victimPlayer!.id, teamId, 'Activo', 'Recuperado por Boticario'); setInjuryState(prev => ({ ...prev, step: 'summary', log: [...prev.log, 'Boticario lo recupera (KO -> Reservas).'] })); }} onReroll={() => { setIsApothecaryModalOpen(false); const teamId = injuryState.victimTeamId!; const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam; const team = teamId === 'home' ? liveHomeTeam : liveOpponentTeam; if (team?.apothecary) { setTeam(prev => prev ? ({ ...prev, apothecary: false }) : null); } else if (team?.wanderingApothecaries && team.wanderingApothecaries > 0) { setTeam(prev => prev ? ({ ...prev, wanderingApothecaries: team.wanderingApothecaries - 1 }) : null); } if (injuryState.casualtyRoll) { setInjuryState(prev => ({ ...prev, step: 'casualty_roll', casualtyRollInput: '', log: [...prev.log, 'Boticario repite tirada de lesión.'], casualtyRoll: { ...prev.casualtyRoll!, rerolled: true } })); } else { setInjuryState(prev => ({ ...prev, step: 'injury_roll', injuryRollInput: { die1: '', die2: '' }, log: [...prev.log, 'Boticario repite tirada de herida.'] })); } }} />}
+            {isMatchSummaryOpen && (
+                <MatchSummaryModal
+                    isOpen={isMatchSummaryOpen}
+                    onClose={() => setIsMatchSummaryOpen(false)}
+                    homeTeam={liveHomeTeam!}
+                    opponentTeam={liveOpponentTeam!}
+                    gameLog={gameLog}
+                />
+            )}
             <style>{`
                 @keyframes fade-in-slow { from { opacity: 0; } to { opacity: 1; } }
                 .animate-fade-in-slow { animation: fade-in-slow 0.5s ease-out forwards; }
@@ -2789,4 +2843,131 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
         </div>
     );
 };
+const MatchSummaryModal = ({ isOpen, onClose, homeTeam, opponentTeam, gameLog }: { isOpen: boolean, onClose: () => void, homeTeam: ManagedTeam, opponentTeam: ManagedTeam, gameLog: GameEvent[] }) => {
+    const tds = gameLog.filter(e => e.type === 'touchdown');
+    const injuries = gameLog.filter(e => e.type === 'INJURY');
+    const fouls = gameLog.filter(e => e.type === 'FOUL').filter(e => e.description.includes('expulsado'));
+
+    const renderEmpty = (text: string) => (
+        <div className="py-8 text-center border-2 border-dashed border-white/5 rounded-2xl">
+            <p className="text-[10px] font-display font-black text-slate-600 uppercase tracking-widest">{text}</p>
+        </div>
+    );
+
+    return (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center z-[100] p-4 animate-fade-in">
+            <div className="glass-panel w-full max-w-4xl max-h-[90vh] overflow-hidden border-premium-gold/30 flex flex-col shadow-[0_0_100px_rgba(245,159,10,0.2)]">
+                <div className="p-8 border-b border-white/10 flex justify-between items-center bg-gradient-to-r from-premium-gold/10 to-transparent">
+                    <div>
+                        <h2 className="text-3xl font-display font-black text-white uppercase italic tracking-tighter">Resumen del <span className="text-premium-gold">Encuentro</span></h2>
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Crónica de sangre y gloria en el Coliseo</p>
+                    </div>
+                    <button onClick={onClose} className="w-12 h-12 rounded-2xl bg-black/40 border border-white/10 text-slate-400 hover:text-white flex items-center justify-center transition-all">
+                        <span className="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+
+                <div className="p-8 overflow-y-auto custom-scrollbar space-y-12">
+                    <div className="grid grid-cols-3 gap-8 items-center max-w-2xl mx-auto">
+                        <div className="text-right">
+                            <p className="text-[10px] font-display font-black text-sky-400 uppercase tracking-widest mb-2">{homeTeam.name}</p>
+                            <div className="text-6xl font-display font-black text-white italic">{gameLog.filter(e => e.type === 'touchdown' && e.metadata?.team === 'home').length}</div>
+                        </div>
+                        <div className="flex flex-col items-center">
+                            <div className="w-px h-12 bg-premium-gold/30"></div>
+                            <span className="text-[10px] font-display font-black text-premium-gold uppercase tracking-[0.3em] my-4">Marcador Final</span>
+                            <div className="w-px h-12 bg-premium-gold/30"></div>
+                        </div>
+                        <div className="text-left">
+                            <p className="text-[10px] font-display font-black text-red-500 uppercase tracking-widest mb-2">{opponentTeam.name}</p>
+                            <div className="text-6xl font-display font-black text-white italic">{gameLog.filter(e => e.type === 'touchdown' && e.metadata?.team === 'opponent').length}</div>
+                        </div>
+                    </div>
+
+                    <section className="space-y-4">
+                        <div className="flex items-center gap-4 mb-2">
+                            <div className="w-10 h-10 rounded-full bg-premium-gold/10 border border-premium-gold/30 flex items-center justify-center">
+                                <span className="material-symbols-outlined text-premium-gold text-xl">sports_football</span>
+                            </div>
+                            <h3 className="text-sm font-display font-black text-white uppercase tracking-widest">Touchdowns Añadidos</h3>
+                        </div>
+                        {tds.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {tds.map((td, i) => (
+                                    <div key={i} className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/10 group hover:border-premium-gold/30 transition-all">
+                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center border font-display font-black text-xs ${td.metadata?.team === 'home' ? 'bg-sky-500/20 border-sky-500/30 text-sky-400' : 'bg-red-500/20 border-red-500/30 text-red-500'}`}>
+                                            TD
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-display font-black text-white uppercase">{td.description.split('ha anotado')[0].trim()}</p>
+                                            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Parte {td.half} · Turno {td.turn}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : renderEmpty('Sin Touchdowns registrados')}
+                    </section>
+
+                    <section className="space-y-4">
+                        <div className="flex items-center gap-4 mb-2">
+                            <div className="w-10 h-10 rounded-full bg-blood-red/10 border border-blood-red/30 flex items-center justify-center">
+                                <span className="material-symbols-outlined text-blood-red text-xl">skull</span>
+                            </div>
+                            <h3 className="text-sm font-display font-black text-white uppercase tracking-widest">Informe de Bajas</h3>
+                        </div>
+                        {injuries.length > 0 ? (
+                            <div className="grid grid-cols-1 gap-3">
+                                {injuries.map((injury, i) => {
+                                    const match = injury.description.match(/Herida a (.*?)\. (.*)/);
+                                    const name = match ? match[1] : 'Jugador';
+                                    const description = match ? match[2] : injury.description;
+
+                                    return (
+                                        <div key={i} className="bg-blood-red/5 p-4 rounded-2xl border border-blood-red/20 border-l-4 border-l-blood-red">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <p className="text-xs font-display font-black text-white uppercase">{name}</p>
+                                                <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">P.{injury.half} T.{injury.turn}</span>
+                                            </div>
+                                            <p className="text-[10px] text-slate-400 leading-relaxed italic line-clamp-2 hover:line-clamp-none transition-all cursor-pointer">
+                                                {description}
+                                            </p>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        ) : renderEmpty('Sin bajas mayores registradas')}
+                    </section>
+
+                    <section className="space-y-4">
+                        <div className="flex items-center gap-4 mb-2">
+                            <div className="w-10 h-10 rounded-full bg-red-600/10 border border-red-600/30 flex items-center justify-center">
+                                <span className="material-symbols-outlined text-red-500 text-xl">gavel</span>
+                            </div>
+                            <h3 className="text-sm font-display font-black text-white uppercase tracking-widest">Sentencias del Árbitro</h3>
+                        </div>
+                        {fouls.length > 0 ? (
+                            <div className="grid grid-cols-1 gap-3">
+                                {fouls.map((foul, i) => (
+                                    <div key={i} className="bg-red-600/5 p-4 rounded-2xl border border-red-600/20 flex gap-4 items-center">
+                                        <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center text-white">
+                                            <span className="material-symbols-outlined text-xl">priority_high</span>
+                                        </div>
+                                        <div className="flex-grow">
+                                            <p className="text-xs font-display font-black text-white uppercase">Jugador Expulsado</p>
+                                            <p className="text-[10px] text-slate-400 leading-tight">
+                                                {foul.description}
+                                            </p>
+                                        </div>
+                                        <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">T.{foul.turn}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : renderEmpty('El árbitro ha mirado hacia otro lado')}
+                    </section>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 export default GameBoard;

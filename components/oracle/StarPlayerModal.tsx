@@ -33,7 +33,7 @@ const StarPlayerModal: React.FC<StarPlayerModalProps> = ({ player, onClose }) =>
   return (
     <>
       <div
-        className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[1000] p-4 animate-fade-in-fast"
+        className="fixed inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-start z-[1000] p-4 md:p-10 overflow-y-auto animate-fade-in-fast"
         style={{ zIndex: 1000 }}
         onClick={handleBackdropClick}
         role="dialog"
@@ -165,6 +165,15 @@ const StarPlayerModal: React.FC<StarPlayerModalProps> = ({ player, onClose }) =>
                         ))}
                       </div>
                     </div>
+
+                    {player.description && (
+                      <div className="bento-card border-white/5 bg-white/5 p-6">
+                        <h3 className="text-[10px] font-display font-bold text-slate-500 uppercase tracking-[0.2em] mb-2">Biografía y Trasfondo</h3>
+                        <p className="text-white/70 font-display font-medium italic leading-relaxed text-xs">
+                          {player.description}
+                        </p>
+                      </div>
+                    )}
 
                     <div className="space-y-4">
                       <div className="bento-card border-premium-gold/10 bg-premium-gold/5 p-6">

@@ -267,7 +267,7 @@ const StarPlayers: React.FC = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[150] flex items-center justify-center p-4 md:p-10 bg-black/80 backdrop-blur-md overflow-y-auto"
+                        className="fixed inset-0 z-[150] flex flex-col items-center justify-start p-4 md:p-20 bg-black/80 backdrop-blur-md overflow-y-auto"
                         onClick={() => setSelectedPlayerName(null)}
                     >
                         <motion.section
