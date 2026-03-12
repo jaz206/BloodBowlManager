@@ -59,6 +59,7 @@ const AdminPanel: React.FC = () => {
     const [gitHubImages, setGitHubImages] = useState<any[]>([]);
     const [isLoadingGitHub, setIsLoadingGitHub] = useState(false);
     const [githubSearch, setGithubSearch] = useState('');
+    const [isImageExplorerExpanded, setIsImageExplorerExpanded] = useState(false);
 
     // Filtering logic
     const filteredContent = useMemo(() => {
@@ -453,71 +454,104 @@ const AdminPanel: React.FC = () => {
                                                 <div className="flex justify-between items-end">
                                                     <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Origen de la Imagen</label>
                                                     <span className="text-[9px] font-bold text-premium-gold/50 uppercase tracking-tighter">Repositorio: jaz206/Bloodbowl-image</span>
-                                                </div>
-
-                                                {/* Repo Explorer */}
-                                                <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-6 space-y-6">
-                                                    <div className="flex gap-4">
-                                                        <div className="relative flex-1">
-                                                            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm">search</span>
-                                                            <input
-                                                                type="text"
-                                                                placeholder="Buscar imagen en el repositorio..."
-                                                                value={githubSearch}
-                                                                onChange={(e) => setGithubSearch(e.target.value)}
-                                                                className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-xs text-white focus:border-premium-gold/30 outline-none"
-                                                            />
+                                                                      {/* Repo Explorer (Foldable) */}
+                                                <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] overflow-hidden">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setIsImageExplorerExpanded(!isImageExplorerExpanded)}
+                                                        className="w-full flex items-center justify-between p-6 hover:bg-white/5 transition-colors group/fold"
+                                                    >
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="w-10 h-10 rounded-xl bg-premium-gold/10 border border-premium-gold/20 flex items-center justify-center text-premium-gold">
+                                                                <span className="material-symbols-outlined text-sm">image_search</span>
+                                                            </div>
+                                                            <div className="text-left">
+                                                                <span className="block text-sm font-display font-black text-white uppercase italic">Explorador de GitHub</span>
+                                                                <span className="block text-[9px] font-bold text-slate-500 uppercase tracking-tighter">
+                                                                    {isImageExplorerExpanded ? 'Haz clic para plegar' : 'Haz clic para buscar imágenes en el repositorio'}
+                                                                </span>
+                                                            </div>
                                                         </div>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => { setGithubSearch(''); }}
-                                                            className="px-4 py-2 bg-white/5 rounded-xl text-[10px] font-black hover:bg-white/10 text-slate-400"
-                                                        >
-                                                            Limpiar
-                                                        </button>
-                                                    </div>
+                                                        <span className={`material-symbols-outlined text-slate-500 transition-transform duration-500 ${isImageExplorerExpanded ? 'rotate-180' : ''}`}>
+                                                            expand_more
+                                                        </span>
+                                                    </button>
 
-                                                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 max-h-64 overflow-y-auto custom-scrollbar p-1">
-                                                        {isLoadingGitHub ? (
-                                                            Array(10).fill(0).map((_, i) => (
-                                                                <div key={i} className="aspect-square bg-white/5 animate-pulse rounded-xl border border-white/5"></div>
-                                                            ))
-                                                        ) : (
-                                                            gitHubImages
-                                                                .filter(img => img.name.toLowerCase().includes(githubSearch.toLowerCase()))
-                                                                .map((img) => {
-                                                                    const currentImg = editingItem.type === 'hero' ? editingItem.data.url : editingItem.data.image;
-                                                                    const isSelected = currentImg === img.download_url;
-
-                                                                    return (
+                                                    <AnimatePresence>
+                                                        {isImageExplorerExpanded && (
+                                                            <motion.div
+                                                                initial={{ height: 0, opacity: 0 }}
+                                                                animate={{ height: 'auto', opacity: 1 }}
+                                                                exit={{ height: 0, opacity: 0 }}
+                                                                transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+                                                                className="border-t border-white/5"
+                                                            >
+                                                                <div className="p-6 space-y-6">
+                                                                    <div className="flex gap-4">
+                                                                        <div className="relative flex-1">
+                                                                            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm">search</span>
+                                                                            <input
+                                                                                type="text"
+                                                                                placeholder="Buscar imagen en el repositorio..."
+                                                                                value={githubSearch}
+                                                                                onChange={(e) => setGithubSearch(e.target.value)}
+                                                                                className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-xs text-white focus:border-premium-gold/30 outline-none"
+                                                                            />
+                                                                        </div>
                                                                         <button
-                                                                            key={img.sha}
                                                                             type="button"
-                                                                            onClick={() => {
-                                                                                setEditingItem({
-                                                                                    ...editingItem,
-                                                                                    data: { ...editingItem.data, [editingItem.type === 'hero' ? 'url' : 'image']: img.download_url }
-                                                                                });
-                                                                            }}
-                                                                            className={`group relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${isSelected ? 'border-premium-gold shadow-[0_0_15px_rgba(202,138,4,0.3)]' : 'border-white/10 hover:border-white/30'}`}
+                                                                            onClick={() => { setGithubSearch(''); }}
+                                                                            className="px-4 py-2 bg-white/5 rounded-xl text-[10px] font-black hover:bg-white/10 text-slate-400"
                                                                         >
-                                                                            <img src={img.download_url} alt={img.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
-                                                                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2">
-                                                                                <span className="text-[7px] text-white font-black uppercase text-center break-all leading-tight">
-                                                                                    {img.name.split('.')[0]}
-                                                                                </span>
-                                                                            </div>
-                                                                            {isSelected && (
-                                                                                <div className="absolute top-1 right-1 bg-premium-gold text-black rounded-full w-4 h-4 flex items-center justify-center">
-                                                                                    <span className="material-symbols-outlined text-[10px] font-black">check</span>
-                                                                                </div>
-                                                                            )}
+                                                                            Limpiar
                                                                         </button>
-                                                                    );
-                                                                })
+                                                                    </div>
+
+                                                                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 max-h-64 overflow-y-auto custom-scrollbar p-1">
+                                                                        {isLoadingGitHub ? (
+                                                                            Array(10).fill(0).map((_, i) => (
+                                                                                <div key={i} className="aspect-square bg-white/5 animate-pulse rounded-xl border border-white/5"></div>
+                                                                            ))
+                                                                        ) : (
+                                                                            gitHubImages
+                                                                                .filter(img => img.name.toLowerCase().includes(githubSearch.toLowerCase()))
+                                                                                .map((img) => {
+                                                                                    const currentImg = editingItem.type === 'hero' ? editingItem.data.url : editingItem.data.image;
+                                                                                    const isSelected = currentImg === img.download_url;
+
+                                                                                    return (
+                                                                                        <button
+                                                                                            key={img.sha}
+                                                                                            type="button"
+                                                                                            onClick={() => {
+                                                                                                setEditingItem({
+                                                                                                    ...editingItem,
+                                                                                                    data: { ...editingItem.data, [editingItem.type === 'hero' ? 'url' : 'image']: img.download_url }
+                                                                                                });
+                                                                                            }}
+                                                                                            className={`group relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${isSelected ? 'border-premium-gold shadow-[0_0_15px_rgba(202,138,4,0.3)]' : 'border-white/10 hover:border-white/30'}`}
+                                                                                        >
+                                                                                            <img src={img.download_url} alt={img.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                                                                                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2">
+                                                                                                <span className="text-[7px] text-white font-black uppercase text-center break-all leading-tight">
+                                                                                                    {img.name.split('.')[0]}
+                                                                                                </span>
+                                                                                            </div>
+                                                                                            {isSelected && (
+                                                                                                <div className="absolute top-1 right-1 bg-premium-gold text-black rounded-full w-4 h-4 flex items-center justify-center">
+                                                                                                    <span className="material-symbols-outlined text-[10px] font-black">check</span>
+                                                                                                </div>
+                                                                                            )}
+                                                                                        </button>
+                                                                                    );
+                                                                                })
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </motion.div>
                                                         )}
-                                                    </div>
-                                                </div>
+                                                    </AnimatePresence>
+                                                </div>                              </div>
 
                                                 <div className="relative">
                                                     <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center px-8 opacity-20 pointer-events-none">
@@ -650,17 +684,39 @@ const AdminPanel: React.FC = () => {
                                                     </div>
 
                                                     <div className="space-y-4">
-                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Equipos Compatibles</label>
-                                                        <input
-                                                            type="text"
-                                                            value={Array.isArray(editingItem.data.playsFor) ? editingItem.data.playsFor.join(', ') : editingItem.data.playsFor || ''}
-                                                            onChange={(e) => setEditingItem({
-                                                                ...editingItem,
-                                                                data: { ...editingItem.data, playsFor: e.target.value.split(',').map(s => s.trim()) }
+                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Equipos Compatibles (Facciones)</label>
+                                                        <div className="flex flex-wrap gap-2 p-6 bg-white/[0.02] border border-white/5 rounded-2xl">
+                                                            {[
+                                                                'Any Team', 'Old World Classic', 'Worlds Edge Superleague', 'Lustrian Superleague',
+                                                                'Badlands Brawl', 'Favoured of Nurgle', 'Favoured of Slaanesh', 'Favoured of Khorne',
+                                                                'Favoured of Tzeentch', 'Underworld Challenge', 'Sylvanian Spotlight', 'Elven Kingdoms League'
+                                                            ].map(faction => {
+                                                                const isSelected = (editingItem.data.playsFor || []).includes(faction);
+                                                                return (
+                                                                    <button
+                                                                        key={faction}
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            const current = editingItem.data.playsFor || [];
+                                                                            const next = isSelected 
+                                                                                ? current.filter((f: string) => f !== faction)
+                                                                                : [...current, faction];
+                                                                            setEditingItem({
+                                                                                ...editingItem,
+                                                                                data: { ...editingItem.data, playsFor: next }
+                                                                            });
+                                                                        }}
+                                                                        className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${isSelected
+                                                                            ? 'bg-premium-gold text-black shadow-[0_0_10px_rgba(202,138,4,0.3)]'
+                                                                            : 'bg-white/5 text-slate-500 border border-white/5 hover:border-white/20'
+                                                                            }`}
+                                                                    >
+                                                                        {faction}
+                                                                    </button>
+                                                                );
                                                             })}
-                                                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none"
-                                                            placeholder="Chaos Clash, Sylvanian Spotlight..."
-                                                        />
+                                                        </div>
+                                                        <p className="text-[9px] text-slate-600 italic px-2">Nota: Selecciona todas las facciones o ligas para las que puede jugar este astro.</p>
                                                     </div>
 
                                                     <div className="space-y-4">
