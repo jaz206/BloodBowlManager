@@ -267,9 +267,11 @@ const Teams: React.FC<{
         }
 
         result = [...result].sort((a, b) => {
-            if (sortOrder === 'alpha') return a.name.localeCompare(b.name);
-            if (sortOrder === 'tier_asc') return a.tier - b.tier || a.name.localeCompare(b.name);
-            if (sortOrder === 'tier_desc') return b.tier - a.tier || a.name.localeCompare(b.name);
+            const nameA = a.name || '';
+            const nameB = b.name || '';
+            if (sortOrder === 'alpha') return nameA.localeCompare(nameB);
+            if (sortOrder === 'tier_asc') return a.tier - b.tier || nameA.localeCompare(nameB);
+            if (sortOrder === 'tier_desc') return b.tier - a.tier || nameA.localeCompare(nameB);
             return 0;
         });
 

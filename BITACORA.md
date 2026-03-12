@@ -130,10 +130,16 @@ root/
 ### [2026-03-12] Gestión Masiva y Crónicas de Nuffle
 *   **Exportación/Importación CSV**: Implementado sistema de gestión masiva en el Panel de Administración. Incluye botones de exportación (Teams/Stars) e importación con **barra de progreso real** y manejo de errores fila por fila.
 *   **Sincronización de Partidos**: Optimización de la consulta de Firestore para reportes (`createdAt` desc) y adición de **actualizaciones optimistas** para feedback instantáneo al cerrar partidos.
-*   **El Cronista de Nuffle (News Edition)**: Implementación de `newsGenerator.ts`, un motor narrativo que genera titulares y artículos estilo periódico deportivo basados en los eventos reales del partido.
+*   **El Cronista de Nuffle (News Edition)**: Implementación de `newsGenerator.ts`, un motor narrativo que generates titulares y artículos estilo periódico deportivo basados en los eventos reales del partido.
 *   **Rediseño de Reportes**: Actualización de `MatchSummaryModal` con estética de periódico antiguo (fuentes serif, capitulares, dos columnas) para visualizar la crónica del encuentro.
 *   **Self-Healing Post-Game**: Corrección de error crítico `localeCompare` en la asignación de habilidades post-partido mediante validación de tipos y fallbacks seguros.
 *   *Archivos Afectados*: `AdminPanel.tsx`, `MatchPage.tsx`, `PostGameWizard.tsx`, `newsGenerator.ts`, `types.ts`, `MainApp.tsx`.
+
+### [2026-03-12] Estabilidad de la Arena y Corrección de Datos
+*   **Limpieza de Standing**: Corregido un error de cálculo en `LeaguesPage.tsx` donde los Touchdowns a favor se comparaban contra sí mismos en lugar de contra los recibidos en la lógica de desempate.
+*   **Blindaje contra Nulls (Sorting)**: Implementada una capa de seguridad en todas las funciones de ordenación (`sort`) que utilizan `localeCompare`. Ahora el sistema maneja de forma segura valores `undefined` o `null` en nombres de habilidades, equipos y estrellas, evitando crashes en el Admin Panel y el Wizard Post-Partido.
+*   **Sincronización de Habilidades**: Refinada la lógica de visualización de habilidades en el Panel de Administración para asegurar que se use el nombre localizado (ES/EN) correctamente según el idioma del usuario.
+*   *Archivos Afectados*: `LeaguesPage.tsx`, `AdminPanel.tsx`, `PostGameWizard.tsx` (Guild & Arena), `TeamsPage.tsx`.
 
 ---
 ¡Por Nuffle, que los dados siempre te favorezcan! 🎲🎲

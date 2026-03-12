@@ -28,9 +28,15 @@ const SkillSelectionModal: React.FC<SkillSelectionModalProps> = ({ player, roste
         const currentSkills = new Set([...(player.skills || '').split(', ').filter(Boolean), ...(player.gainedSkills || [])]);
 
         return skillsData.filter(skill => {
-            const skillName = skill.name_es || skill.name || '';
-            return skillCategories.includes(skill.category) && !currentSkills.has(skillName);
-        }).sort((a, b) => (a.name_es || a.name || '').localeCompare(b.name_es || b.name || ''));
+            if (!skill) return false;
+            const skillName = skill.name_es || skill.name_en || skill.name || '';
+            const category = skill.category || '';
+            return skillCategories.includes(category) && !currentSkills.has(skillName);
+        }).sort((a, b) => {
+            const nameA = a.name_es || a.name_en || a.name || '';
+            const nameB = b.name_es || b.name_en || b.name || '';
+            return nameA.localeCompare(nameB);
+        });
 
     }, [basePlayer, skillType, player.gainedSkills, player.skills]);
 
@@ -47,15 +53,18 @@ const SkillSelectionModal: React.FC<SkillSelectionModalProps> = ({ player, roste
                     </button>
                 </div>
                 <div className="p-6 overflow-y-auto space-y-3 custom-scrollbar">
-                    {availableSkills.map(skill => (
-                        <button key={skill.name} onClick={() => onSelect(skill.name)} className="w-full text-left bg-white/5 border border-white/5 p-4 rounded-2xl hover:bg-premium-gold/10 hover:border-premium-gold/30 group transition-all">
-                            <div className="flex justify-between items-center mb-1">
-                                <p className="font-display font-bold text-white group-hover:text-premium-gold transition-colors">{skill.name}</p>
-                                <span className="text-[9px] font-display font-black text-slate-500 uppercase tracking-widest group-hover:text-premium-gold/50">{skill.category}</span>
-                            </div>
-                            <p className="text-xs text-slate-400 group-hover:text-slate-300 leading-relaxed font-display">{skill.description}</p>
-                        </button>
-                    ))}
+                    {availableSkills.map(skill => {
+                        const sName = skill.name_es || skill.name_en || skill.name || 'Habilidad';
+                        return (
+                            <button key={sName} onClick={() => onSelect(sName)} className="w-full text-left bg-white/5 border border-white/5 p-4 rounded-2xl hover:bg-premium-gold/10 hover:border-premium-gold/30 group transition-all">
+                                <div className="flex justify-between items-center mb-1">
+                                    <p className="font-display font-bold text-white group-hover:text-premium-gold transition-colors">{sName}</p>
+                                    <span className="text-[9px] font-display font-black text-slate-500 uppercase tracking-widest group-hover:text-premium-gold/50">{skill.category}</span>
+                                </div>
+                                <p className="text-xs text-slate-400 group-hover:text-slate-300 leading-relaxed font-display">{skill.desc_es || skill.desc_en || skill.description}</p>
+                            </button>
+                        );
+                    })}
                     {availableSkills.length === 0 && (
                         <div className="py-20 text-center opacity-30">
                             <span className="material-symbols-outlined text-5xl mb-4">search_off</span>

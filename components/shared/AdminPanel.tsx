@@ -977,7 +977,11 @@ const AdminPanel: React.FC = () => {
                                                 <div className="space-y-4">
                                                     <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Habilidades Base (Seleccionables)</label>
                                                     <div className="flex flex-wrap gap-2 p-6 bg-black/40 border border-white/5 rounded-2xl max-h-48 overflow-y-auto custom-scrollbar">
-                                                        {skills.sort((a,b) => (language === 'es' ? (a.name_es || '').localeCompare(b.name_es || '') : (a.name_en || '').localeCompare(b.name_en || ''))).map(skill => {
+                                                        {skills.sort((a,b) => {
+                                                            const nameA = language === 'es' ? (a?.name_es || a?.name_en || a?.name || '') : (a?.name_en || a?.name || '');
+                                                            const nameB = language === 'es' ? (b?.name_es || b?.name_en || b?.name || '') : (b?.name_en || b?.name || '');
+                                                            return nameA.localeCompare(nameB);
+                                                        }).map(skill => {
                                                             const isSelected = (editingItem.data.skillKeys || []).includes(skill.keyEN);
                                                             return (
                                                                 <button

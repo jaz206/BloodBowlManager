@@ -151,7 +151,7 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
                 });
             });
             return { name: teamName, p, w, d, l, tdF, tdA, pts: w * 3 + d };
-        }).sort((a, b) => b.pts - a.pts || (b.tdF - b.tdA) - (a.tdF - a.tdF) || b.tdF - a.tdF);
+        }).sort((a, b) => b.pts - a.pts || (b.tdF - b.tdA) - (a.tdF - a.tdA) || b.tdF - a.tdF);
     }, [selectedCompetition]);
 
     const finalWinner = useMemo(() => {

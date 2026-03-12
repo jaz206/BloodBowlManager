@@ -29,7 +29,7 @@ const SkillSelectionModal: React.FC<SkillSelectionModalProps> = ({ player, roste
 
         return skillsData.filter(skill =>
             skillCategories.includes(skill.category) && !currentSkills.has(skill.name)
-        ).sort((a, b) => a.name.localeCompare(b.name));
+        ).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
     }, [basePlayer, skillType, player.gainedSkills, player.skills]);
 
