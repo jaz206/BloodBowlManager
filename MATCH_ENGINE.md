@@ -279,13 +279,14 @@ Touchdown de Orcos
 
 ---
 
-# 📖 Generación de Crónica
+### Generación de Crónica (Sports News Edition)
 
 Al terminar el partido:
 
-1. Se recopilan todos los eventos
-2. Se analizan las acciones importantes
-3. Se genera una narración automática
+1. Se recopilan todos los eventos registrados.
+2. El motor de narrativa `newsGenerator.ts` crea un titular impactante.
+3. Se redacta un artículo estilo prensa deportiva detallando el encuentro.
+4. El reporte se guarda con metadatos de "periódico" para su consulta posterior.
 
 Ejemplo:
 
