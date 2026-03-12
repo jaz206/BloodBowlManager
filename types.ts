@@ -313,6 +313,15 @@ export interface GameSection {
   rules: GameRule[];
 }
 
+export interface MatchStats {
+  passes: { home: number, opponent: number };
+  interceptions: { home: number, opponent: number };
+  fouls: { home: number, opponent: number };
+  expulsions: { home: number, opponent: number };
+  casualties: { home: number, opponent: number };
+  rerollsUsed: { home: number, opponent: number };
+}
+
 export interface MatchReport {
   id: string;
   date: string;
@@ -339,4 +348,5 @@ export interface MatchReport {
   subHeadline?: string;
   article?: string;
   summary?: string;
+  stats?: MatchStats;
 }

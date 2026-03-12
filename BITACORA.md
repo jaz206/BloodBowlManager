@@ -141,5 +141,12 @@ root/
 *   **Sincronización de Habilidades**: Refinada la lógica de visualización de habilidades en el Panel de Administración para asegurar que se use el nombre localizado (ES/EN) correctamente según el idioma del usuario.
 *   *Archivos Afectados*: `LeaguesPage.tsx`, `AdminPanel.tsx`, `PostGameWizard.tsx` (Guild & Arena), `TeamsPage.tsx`.
 
+### [2026-03-12] Mejoras en Crónicas y Reportes de Nuffle
+*   **Enriquecimiento de Datos**: El sistema ahora computa automáticamente estadísticas detalladas al terminar un partido (pases, intercepciones, faltas, expulsiones, bajas y uso de segundas oportunidades).
+*   **Aforo y Clima**: Los reportes ahora incluyen el número de espectadores (calculado según la Fama) y las condiciones climáticas del encuentro.
+*   **Rediseño Inmersivo del Modal**: El modal de resumen de partido ha sido optimizado con un diseño de "Journal" de alta fidelidad, cabecera fija para facilitar el cierre, y desplazamiento vertical contenido para mejorar la usabilidad en dispositivos móviles y tablets.
+*   **Persistencia Reforzada**: Vinculación total de las crónicas con la cuenta del usuario en Firestore, garantizando que el historial de gloria no se pierda al cerrar la sesión.
+*   *Archivos Afectados*: `MatchPage.tsx`, `types.ts`, `MainApp.tsx`.
+
 ---
 ¡Por Nuffle, que los dados siempre te favorezcan! 🎲🎲
