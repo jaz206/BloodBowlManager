@@ -23,6 +23,7 @@ import CasualtyIcon from '../../components/icons/CasualtyIcon';
 import InterferenceIcon from '../../components/icons/InterferenceIcon';
 import PrayersModal from '../../components/arena/PrayersModal';
 import TurnoverModal from '../../components/arena/TurnoverModal';
+import { generateMatchArticle } from '../../utils/newsGenerator';
 import PlayerCardModal from '../../components/arena/PlayerCardModal';
 import { skillsData } from '../../data/skills';
 import SkillModal from '../../components/oracle/SkillModal';
@@ -592,7 +593,9 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
         };
 
         if (onMatchReportCreate && liveHomeTeam && liveOpponentTeam) {
-            onMatchReportCreate({
+            const matchWinner = score.home > score.opponent ? 'home' : score.home < score.opponent ? 'opponent' : 'draw';
+            const baseReport: MatchReport = {
+                id: '', // Will be set by Firebase
                 date: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
                 homeTeam: {
                     id: homeTeam.id,
@@ -610,7 +613,13 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                 },
                 gameLog: gameLog,
                 weather: gameStatus.weather?.title,
-                winner: score.home > score.opponent ? 'home' : score.home < score.opponent ? 'opponent' : 'draw'
+                winner: matchWinner as any
+            };
+
+            const newsData = generateMatchArticle(baseReport);
+            onMatchReportCreate({
+                ...baseReport,
+                ...newsData
             });
         }
 
@@ -1255,6 +1264,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                                         <h4 className="text-lg font-display font-black text-white uppercase italic tracking-tighter leading-none group-hover:text-premium-gold transition-colors">
                                             {report.homeTeam.name} <span className="text-slate-600 px-2">vs</span> {report.opponentTeam.name}
                                         </h4>
+                                        {report.summary && <p className="text-[10px] text-slate-400 mt-2 line-clamp-1 uppercase tracking-wider font-bold">{report.summary}</p>}
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-8">
@@ -1283,6 +1293,9 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                             opponentTeam={{ name: selectedReport.opponentTeam.name, rosterName: selectedReport.opponentTeam.rosterName, crestImage: selectedReport.opponentTeam.crestImage } as any}
                             gameLog={selectedReport.gameLog}
                             currentScore={{ home: selectedReport.homeTeam.score, opponent: selectedReport.opponentTeam.score }}
+                            headline={selectedReport.headline}
+                            subHeadline={selectedReport.subHeadline}
+                            article={selectedReport.article}
                         />
                     )}
                 </div>
@@ -3025,10 +3038,30 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
         </div>
     );
 };
-const MatchSummaryModal = ({ isOpen, onClose, homeTeam, opponentTeam, gameLog, currentScore }: { isOpen: boolean, onClose: () => void, homeTeam: ManagedTeam, opponentTeam: ManagedTeam, gameLog: GameEvent[], currentScore: { home: number, opponent: number } }) => {
+const MatchSummaryModal = ({ 
+    isOpen, 
+    onClose, 
+    homeTeam, 
+    opponentTeam, 
+    gameLog, 
+    currentScore,
+    headline,
+    subHeadline,
+    article
+}: { 
+    isOpen: boolean, 
+    onClose: () => void, 
+    homeTeam: ManagedTeam, 
+    opponentTeam: ManagedTeam, 
+    gameLog: GameEvent[], 
+    currentScore: { home: number, opponent: number },
+    headline?: string,
+    subHeadline?: string,
+    article?: string
+}) => {
     // Normalize event types for filtering
     const tds = gameLog.filter(e => e.type.toLowerCase() === 'touchdown' || e.type.toLowerCase() === 'td' || e.description.toLowerCase().includes('ha anotado un touchdown'));
-    const injuries = gameLog.filter(e => e.type.toLowerCase() === 'injury' || e.type.toLowerCase() === 'baja');
+    const injuries = gameLog.filter(e => e.type.toLowerCase() === 'injury' || e.type.toLowerCase() === 'baja' || e.type.toLowerCase() === 'armor_break');
     const fouls = gameLog.filter(e => e.type.toLowerCase() === 'foul').filter(e => e.description.toLowerCase().includes('expulsado'));
 
     // Count touchdowns per team - Fallback to currentScore if log filtering is ambiguous
@@ -3049,8 +3082,8 @@ const MatchSummaryModal = ({ isOpen, onClose, homeTeam, opponentTeam, gameLog, c
             <div className="glass-panel max-w-4xl w-full border-premium-gold/30 bg-black/60 shadow-[0_0_100px_rgba(245,159,10,0.2)] animate-slide-in-up">
                 <div className="flex justify-between items-center p-8 border-b border-white/10 bg-gradient-to-r from-premium-gold/10 to-transparent">
                     <div>
-                        <h2 className="text-3xl font-display font-black text-white uppercase italic tracking-tighter">Resumen del <span className="text-premium-gold">Encuentro</span></h2>
-                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Crónica de sangre y gloria en el Coliseo</p>
+                        <h2 className="text-3xl font-display font-black text-white uppercase italic tracking-tighter">Crónica de <span className="text-premium-gold">Nuffle</span></h2>
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">El eco de los gritos en la arena</p>
                     </div>
                     <button onClick={onClose} className="w-12 h-12 rounded-2xl bg-black/40 border border-white/10 text-slate-400 hover:text-white flex items-center justify-center transition-all">
                         <span className="material-symbols-outlined">close</span>
@@ -3058,6 +3091,28 @@ const MatchSummaryModal = ({ isOpen, onClose, homeTeam, opponentTeam, gameLog, c
                 </div>
 
                 <div className="p-8 space-y-12">
+                    {/* Newspaper Article Section */}
+                    {headline && (
+                        <div className="border-b-2 border-double border-white/10 pb-8 space-y-4">
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className="h-px flex-grow bg-white/5"></span>
+                                <span className="text-[10px] font-display font-black text-premium-gold uppercase tracking-[0.5em]">Diario Deportivo de Altdorf</span>
+                                <span className="h-px flex-grow bg-white/5"></span>
+                            </div>
+                            <h1 className="text-4xl md:text-5xl font-display font-black text-white uppercase italic leading-tight tracking-tighter text-center">
+                                {headline}
+                            </h1>
+                            {subHeadline && (
+                                <p className="text-sm md:text-base font-bold text-slate-400 uppercase tracking-widest text-center border-y border-white/5 py-2">
+                                    {subHeadline}
+                                </p>
+                            )}
+                            <div className="columns-1 md:columns-2 gap-8 text-slate-300 text-sm leading-relaxed font-serif pt-4 first-letter:text-5xl first-letter:font-display first-letter:font-black first-letter:float-left first-letter:mr-3 first-letter:text-premium-gold">
+                                {article}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Score Hero */}
                     <div className="grid grid-cols-3 gap-8 items-center max-w-2xl mx-auto bg-black/40 p-10 rounded-[3rem] border border-white/5 relative overflow-hidden group">
                         <div className="absolute inset-0 bg-gradient-to-r from-sky-500/5 via-transparent to-red-500/5"></div>
@@ -3076,59 +3131,61 @@ const MatchSummaryModal = ({ isOpen, onClose, homeTeam, opponentTeam, gameLog, c
                         </div>
                     </div>
 
-                    <section className="space-y-4">
-                        <div className="flex items-center gap-4 mb-2">
-                            <div className="w-10 h-10 rounded-full bg-premium-gold/10 border border-premium-gold/30 flex items-center justify-center">
-                                <span className="material-symbols-outlined text-premium-gold text-xl">sports_football</span>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                        <section className="space-y-4">
+                            <div className="flex items-center gap-4 mb-2">
+                                <div className="w-10 h-10 rounded-full bg-premium-gold/10 border border-premium-gold/30 flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-premium-gold text-xl">sports_football</span>
+                                </div>
+                                <h3 className="text-sm font-display font-black text-white uppercase tracking-widest">Touchdowns Añadidos</h3>
                             </div>
-                            <h3 className="text-sm font-display font-black text-white uppercase tracking-widest">Touchdowns Añadidos</h3>
-                        </div>
-                        {tds.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                {tds.map((td, i) => (
-                                    <div key={i} className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/10 group hover:border-premium-gold/30 transition-all">
-                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center border font-display font-black text-xs ${td.team === 'home' ? 'bg-sky-500/20 border-sky-500/30 text-sky-400' : 'bg-red-500/20 border-red-500/30 text-red-500'}`}>
-                                            TD
-                                        </div>
-                                        <div>
-                                            <p className="text-xs font-display font-black text-white uppercase">{td.description.split('ha anotado')[0].trim()}</p>
-                                            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Parte {td.half} · Turno {td.turn}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : renderEmpty('Sin Touchdowns registrados')}
-                    </section>
-
-                    <section className="space-y-4">
-                        <div className="flex items-center gap-4 mb-2">
-                            <div className="w-10 h-10 rounded-full bg-blood-red/10 border border-blood-red/30 flex items-center justify-center">
-                                <span className="material-symbols-outlined text-blood-red text-xl">skull</span>
-                            </div>
-                            <h3 className="text-sm font-display font-black text-white uppercase tracking-widest">Informe de Bajas</h3>
-                        </div>
-                        {injuries.length > 0 ? (
-                            <div className="grid grid-cols-1 gap-3">
-                                {injuries.map((injury, i) => {
-                                    const match = injury.description.match(/Herida a (.*?)\. (.*)/);
-                                    const name = match ? match[1] : 'Jugador';
-                                    const description = match ? match[2] : injury.description;
-
-                                    return (
-                                        <div key={i} className="bg-blood-red/5 p-4 rounded-2xl border border-blood-red/20 border-l-4 border-l-blood-red">
-                                            <div className="flex justify-between items-start mb-2">
-                                                <p className="text-xs font-display font-black text-white uppercase">{name}</p>
-                                                <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">P.{injury.half} T.{injury.turn}</span>
+                            {tds.length > 0 ? (
+                                <div className="space-y-3">
+                                    {tds.map((td, i) => (
+                                        <div key={i} className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/10 group hover:border-premium-gold/30 transition-all">
+                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center border font-display font-black text-xs ${td.team === 'home' ? 'bg-sky-500/20 border-sky-500/30 text-sky-400' : 'bg-red-500/20 border-red-500/30 text-red-500'}`}>
+                                                TD
                                             </div>
-                                            <p className="text-[10px] text-slate-400 leading-relaxed italic line-clamp-2 hover:line-clamp-none transition-all cursor-pointer">
-                                                {description}
-                                            </p>
+                                            <div>
+                                                <p className="text-xs font-display font-black text-white uppercase">{td.description.split('ha anotado')[0].trim()}</p>
+                                                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Parte {td.half} · Turno {td.turn}</p>
+                                            </div>
                                         </div>
-                                    );
-                                })}
+                                    ))}
+                                </div>
+                            ) : renderEmpty('Sin Touchdowns registrados')}
+                        </section>
+
+                        <section className="space-y-4">
+                            <div className="flex items-center gap-4 mb-2">
+                                <div className="w-10 h-10 rounded-full bg-blood-red/10 border border-blood-red/30 flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-blood-red text-xl">skull</span>
+                                </div>
+                                <h3 className="text-sm font-display font-black text-white uppercase tracking-widest">Informe de Bajas</h3>
                             </div>
-                        ) : renderEmpty('Sin bajas mayores registradas')}
-                    </section>
+                            {injuries.length > 0 ? (
+                                <div className="grid grid-cols-1 gap-3">
+                                    {injuries.map((injury, i) => {
+                                        const match = injury.description.match(/Herida a (.*?)\. (.*)/);
+                                        const name = match ? match[1] : 'Jugador';
+                                        const description = match ? match[2] : injury.description;
+
+                                        return (
+                                            <div key={i} className="bg-blood-red/5 p-4 rounded-2xl border border-blood-red/20 border-l-4 border-l-blood-red">
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <p className="text-xs font-display font-black text-white uppercase">{name}</p>
+                                                    <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">P.{injury.half} T.{injury.turn}</span>
+                                                </div>
+                                                <p className="text-[10px] text-slate-400 leading-relaxed italic">
+                                                    {description}
+                                                </p>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ) : renderEmpty('Sin bajas mayores registradas')}
+                        </section>
+                    </div>
 
                     {fouls.length > 0 && (
                         <section className="space-y-4">

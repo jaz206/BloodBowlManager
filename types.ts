@@ -335,4 +335,8 @@ export interface MatchReport {
   spectators?: number;
   winner?: 'home' | 'opponent' | 'draw';
   createdAt?: any;
+  headline?: string;
+  subHeadline?: string;
+  article?: string;
+  summary?: string;
 }

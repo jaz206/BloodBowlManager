@@ -127,12 +127,13 @@ root/
 *   *Archivos Afectados*: `data/teams.ts`, `scripts/fix_encoding.cjs` (nuevo).
 
 ---
-### [2026-03-09] Auditoría UI/UX - Sprint 4: AdminPanel & Zero alert()
-*   **AdminPanel — Sistema Nativo Eliminado**: Sustituidos `window.confirm()` y `alert()` en las sincronizaciones de BD por un modal de confirmación premium + toasts estilizados.
-*   **AdminPanel — Feedback Visual de Sync**: El botón "Sincronización" ahora cambia estado visual (idle ✦ syncing ✦ done ✦ error) + pantalla de progreso flotante bloqueante durante operaciones largas.
-*   **Toast Diferenciado**: Toasts de tipo `success` (dorado) y `error` (rojo) con iconografía adaptada.
-*   **Cero alert() verificado**: Auditoría completa confirmada — ningún componente usa `alert()` o `window.confirm()` nativos.
-*   *Archivos Afectados*: `AdminPanel.tsx`, `BITACORA.md`.
+### [2026-03-12] Gestión Masiva y Crónicas de Nuffle
+*   **Exportación/Importación CSV**: Implementado sistema de gestión masiva en el Panel de Administración. Incluye botones de exportación (Teams/Stars) e importación con **barra de progreso real** y manejo de errores fila por fila.
+*   **Sincronización de Partidos**: Optimización de la consulta de Firestore para reportes (`createdAt` desc) y adición de **actualizaciones optimistas** para feedback instantáneo al cerrar partidos.
+*   **El Cronista de Nuffle (News Edition)**: Implementación de `newsGenerator.ts`, un motor narrativo que genera titulares y artículos estilo periódico deportivo basados en los eventos reales del partido.
+*   **Rediseño de Reportes**: Actualización de `MatchSummaryModal` con estética de periódico antiguo (fuentes serif, capitulares, dos columnas) para visualizar la crónica del encuentro.
+*   **Self-Healing Post-Game**: Corrección de error crítico `localeCompare` en la asignación de habilidades post-partido mediante validación de tipos y fallbacks seguros.
+*   *Archivos Afectados*: `AdminPanel.tsx`, `MatchPage.tsx`, `PostGameWizard.tsx`, `newsGenerator.ts`, `types.ts`, `MainApp.tsx`.
 
 ---
 ¡Por Nuffle, que los dados siempre te favorezcan! 🎲🎲

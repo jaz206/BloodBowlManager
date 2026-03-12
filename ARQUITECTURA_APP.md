@@ -321,23 +321,16 @@ Cada evento alimenta:
 
 ---
 
-# 📖 El Cronista de Nuffle (Narración IA)
+### El Cronista de Nuffle (Narración IA y Periodismo)
 
 Proceso de generación de narrativa:
 
+1. Evento registrado en vivo.
+2. Generación de **Titular y Artículo Deportivo** (`newsGenerator.ts`).
+3. Almacenamiento en `MatchReport` (Firestore).
+4. Visualización en formato Periódico Antiguo.
 
-Evento registrado
-↓
-Se guarda en Firestore
-↓
-IA genera texto narrativo
-↓
-Se añade a la crónica
-
-
-Ejemplo generado:
-
-> Turno 3. El Blitzer Orco rompe la línea humana y deja a un rival inconsciente.
+> **Ejemplo**: "Turno 3. El Blitzer Orco rompe la línea humana. La prensa de Altdorf califica el encuentro como 'Una carnicería necesaria'."
 
 ---
 

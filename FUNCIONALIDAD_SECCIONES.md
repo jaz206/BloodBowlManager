@@ -315,7 +315,7 @@ Cada partido muestra:
 - rival
 - resultado
 - fecha
-- enlace a la crónica
+- **Crónica Deportiva**: Enlace a la narración estilo periódico generada al finalizar.
 
 ---
 
@@ -477,13 +477,9 @@ Generar una crónica narrativa automática del encuentro.
 
 ### Funcionamiento
 
-Cada evento registrado durante el partido se guarda en Firestore.
-
-Después:
-
-1. se recopilan los eventos
-2. se envían a un sistema de generación de texto
-3. se genera una crónica narrativa
+1. **Captura en Vivo**: Cada evento registrado durante el partido se guarda en Firestore.
+2. **Generación Narrativa**: Al finalizar, el sistema procesa el log completo y genera un titular impactante y un artículo detallado.
+3. **Formato Periódico**: El resultado se presenta en el "Diario Deportivo de Altdorf", con maquetación de diario clásico (serif, columnas, capitulares).
 
 ---
 
