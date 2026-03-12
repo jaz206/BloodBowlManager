@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import type { ManagedTeam, GameEvent, GameEventType, ManagedPlayer, WeatherCondition, KickoffEvent, PlayerStatus, StarPlayer, SppActionType, Team, Skill } from '../../types';
+import type { ManagedTeam, GameEvent, GameEventType, ManagedPlayer, WeatherCondition, KickoffEvent, PlayerStatus, StarPlayer, SppActionType, Team, Skill, MatchReport } from '../../types';
 import { weatherConditions } from '../../data/weather';
 import { kickoffEvents } from '../../data/kickoffEvents';
 import { teamsData } from '../../data/teams';
@@ -51,10 +51,12 @@ export interface BlockResolution {
 
 interface GameBoardProps {
     managedTeams: ManagedTeam[];
+    matchReports?: MatchReport[];
     onTeamUpdate: (team: ManagedTeam) => void;
+    onMatchReportCreate?: (report: Omit<MatchReport, 'id'>) => void;
 }
 
-type GameState = 'setup' | 'selection' | 'pre_game' | 'in_progress' | 'post_game' | 'ko_recovery';
+type GameState = 'setup' | 'selection' | 'pre_game' | 'in_progress' | 'post_game' | 'ko_recovery' | 'reports';
 
 interface FoulState {
     step: 'select_fouler_team' | 'select_fouler' | 'select_victim' | 'armor_roll' | 'injury_roll' | 'casualty_roll' | 'lasting_injury_roll' | 'summary';
@@ -316,9 +318,9 @@ const cloneLiveTeam = (team: ManagedTeam): ManagedTeam => {
 
 const initialFoulState: FoulState = { step: 'select_fouler_team', foulingTeamId: null, foulingPlayer: null, victimPlayer: null, armorRoll: null, injuryRoll: null, casualtyRoll: null, lastingInjuryRoll: null, wasExpelled: false, expulsionReason: '', log: [], armorRollInput: { die1: '', die2: '' }, injuryRollInput: { die1: '', die2: '' }, casualtyRollInput: '', lastingInjuryRollInput: '' };
 const initialInjuryState: InjuryState = { step: 'select_victim_team', victimTeamId: null, victimPlayer: null, isStunty: false, armorRoll: null, injuryRoll: null, casualtyRoll: null, lastingInjuryRoll: null, log: [], armorRollInput: { die1: '', die2: '' }, injuryRollInput: { die1: '', die2: '' }, casualtyRollInput: '', lastingInjuryRollInput: '', apothecaryAction: null, regenerationRollInput: '', regenerationRoll: null };
-
-const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactElement => {
+const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], onTeamUpdate, onMatchReportCreate }) => {
     const [gameState, setGameState] = useState<GameState>('setup');
+    const [selectedReport, setSelectedReport] = useState<MatchReport | null>(null);
     const [hasCamera, setHasCamera] = useState<boolean | null>(null);
     const [opponentTeam, setOpponentTeam] = useState<ManagedTeam | null>(null);
     const [homeTeam, setHomeTeam] = useState<ManagedTeam | null>(null);
@@ -577,7 +579,7 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
 
         const finalTeamWithStats = {
             ...finalTeamState,
-            history: [historyEntry, ...(finalTeamState.history || [])].slice(0, 20), // Keep last 20
+            history: [historyEntry, ...(finalTeamState.history || [])].slice(0, 20),
             record: {
                 wins: (finalTeamState.record?.wins || 0) + (matchResult === 'W' ? 1 : 0),
                 draws: (finalTeamState.record?.draws || 0) + (matchResult === 'D' ? 1 : 0),
@@ -585,7 +587,32 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
             }
         };
 
+        if (onMatchReportCreate && liveHomeTeam && liveOpponentTeam) {
+            onMatchReportCreate({
+                date: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                homeTeam: {
+                    id: homeTeam.id,
+                    name: liveHomeTeam.name,
+                    rosterName: liveHomeTeam.rosterName,
+                    score: score.home,
+                    crestImage: liveHomeTeam.crestImage
+                },
+                opponentTeam: {
+                    id: opponentTeam?.id,
+                    name: liveOpponentTeam.name,
+                    rosterName: liveOpponentTeam.rosterName,
+                    score: score.opponent,
+                    crestImage: liveOpponentTeam.crestImage
+                },
+                gameLog: gameLog,
+                weather: gameStatus.weather?.title,
+                winner: score.home > score.opponent ? 'home' : score.home < score.opponent ? 'opponent' : 'draw'
+            });
+        }
+
         onTeamUpdate(finalTeamWithStats);
+
+        // --- Full game state reset (prevents state bleed into next match) ---
         setGameState('setup');
         setHomeTeam(null);
         setOpponentTeam(null);
@@ -597,7 +624,24 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
         setHalf(1);
         setFame({ home: 0, opponent: 0 });
         setFansRoll({ home: '', opponent: '' });
+        setPreGameStep(0);
+        setGameStatus({ weather: null, kickoffEvent: null, coinTossWinner: null, receivingTeam: null });
+        setKickoffActionCompleted(false);
+        setInducementState({ underdog: null, money: 0, hiredStars: [] });
+        setFirstHalfReceiver(null);
         setPlayersMissingNextGame([]);
+        setBallCarrierId(null);
+        setKoRecoveryRolls({});
+        setFoulState(initialFoulState);
+        setInjuryState(initialInjuryState);
+        setSelectedPlayerForAction(null);
+        setSppModalState({ isOpen: false, type: null, step: 'select_team', teamId: null, selectedPlayer: null });
+        setIsMatchSummaryOpen(false);
+        setActiveTab('assistant');
+        setActiveTeamId('home');
+        setRosterViewId('home');
+        setJourneymenNotification(null);
+        setPendingJourneymen({ home: [], opponent: [] });
     };
     const handleFoulAction = (action: 'next' | 'back') => {
         const { step, foulingPlayer, victimPlayer, armorRollInput, wasExpelled, log, foulingTeamId, injuryRollInput, casualtyRollInput, lastingInjuryRollInput } = foulState;
@@ -1163,7 +1207,80 @@ const GameBoard = ({ managedTeams, onTeamUpdate }: GameBoardProps): React.ReactE
                             <span className="material-symbols-outlined text-sm">school</span>
                             Tutorial de Combate
                         </button>
+                        <button
+                            onClick={() => setGameState('reports')}
+                            className="peer-hover:opacity-50 text-[10px] font-display font-black text-slate-500 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 uppercase tracking-[0.3em] transition-all py-4 rounded-xl flex items-center justify-center gap-2"
+                        >
+                            <span className="material-symbols-outlined text-sm">history_edu</span>
+                            Crónicas de Combate
+                        </button>
                     </div>
+                </div>
+            );
+            case 'reports': return (
+                <div className="max-w-4xl mx-auto py-10 px-4 animate-fade-in space-y-8">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h2 className="text-4xl font-display font-black text-white uppercase italic tracking-tighter">Archivo de <span className="text-premium-gold">Crónicas</span></h2>
+                            <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">El eco de los gritos aún resuena en las gradas</p>
+                        </div>
+                        <button onClick={() => setGameState('setup')} className="bg-white/5 hover:bg-white/10 text-slate-400 p-4 rounded-2xl border border-white/10 transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
+                            <span className="material-symbols-outlined text-sm">arrow_back</span>
+                            Cerrar Archivo
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4">
+                        {matchReports.length > 0 ? matchReports.map(report => (
+                            <div
+                                key={report.id}
+                                onClick={() => setSelectedReport(report)}
+                                className="glass-panel p-6 border-white/5 bg-black/40 hover:border-premium-gold/30 hover:bg-premium-gold/5 transition-all cursor-pointer group flex flex-col md:flex-row items-center justify-between gap-6"
+                            >
+                                <div className="flex items-center gap-6 flex-1">
+                                    <div className="flex -space-x-4">
+                                        <div className="w-14 h-14 rounded-2xl bg-black border border-white/10 overflow-hidden shadow-2xl relative z-10 group-hover:scale-105 transition-transform">
+                                            {report.homeTeam.crestImage ? <img src={report.homeTeam.crestImage} className="w-full h-full object-cover" /> : <ShieldCheckIcon className="p-3 text-sky-500/30" />}
+                                        </div>
+                                        <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-white/10 overflow-hidden shadow-2xl relative z-0 group-hover:scale-105 transition-transform delay-75">
+                                            {report.opponentTeam.crestImage ? <img src={report.opponentTeam.crestImage} className="w-full h-full object-cover" /> : <ShieldCheckIcon className="p-3 text-red-500/30" />}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p className="text-[9px] font-display font-black text-slate-500 uppercase tracking-widest mb-1">{report.date}</p>
+                                        <h4 className="text-lg font-display font-black text-white uppercase italic tracking-tighter leading-none group-hover:text-premium-gold transition-colors">
+                                            {report.homeTeam.name} <span className="text-slate-600 px-2">vs</span> {report.opponentTeam.name}
+                                        </h4>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-8">
+                                    <div className="text-center">
+                                        <p className="text-2xl font-display font-black text-white italic tracking-tighter drop-shadow-sm">{report.homeTeam.score} - {report.opponentTeam.score}</p>
+                                        <p className="text-[8px] font-display font-black text-slate-600 uppercase tracking-widest mt-1">Resultado Final</p>
+                                    </div>
+                                    <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-slate-500 group-hover:bg-premium-gold group-hover:text-black transition-all">
+                                        <span className="material-symbols-outlined text-xl">auto_stories</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )) : (
+                            <div className="py-24 text-center glass-panel border-dashed border-white/5 flex flex-col items-center justify-center gap-6 opacity-30">
+                                <span className="material-symbols-outlined text-6xl">history_edu</span>
+                                <p className="text-sm font-display font-black text-slate-500 uppercase tracking-[0.4em]">El pergamino está en blanco</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {selectedReport && (
+                        <MatchSummaryModal
+                            isOpen={!!selectedReport}
+                            onClose={() => setSelectedReport(null)}
+                            homeTeam={{ name: selectedReport.homeTeam.name, rosterName: selectedReport.homeTeam.rosterName, crestImage: selectedReport.homeTeam.crestImage } as any}
+                            opponentTeam={{ name: selectedReport.opponentTeam.name, rosterName: selectedReport.opponentTeam.rosterName, crestImage: selectedReport.opponentTeam.crestImage } as any}
+                            gameLog={selectedReport.gameLog}
+                            currentScore={{ home: selectedReport.homeTeam.score, opponent: selectedReport.opponentTeam.score }}
+                        />
+                    )}
                 </div>
             );
             case 'selection': {
@@ -3008,6 +3125,30 @@ const MatchSummaryModal = ({ isOpen, onClose, homeTeam, opponentTeam, gameLog, c
                             </div>
                         ) : renderEmpty('Sin bajas mayores registradas')}
                     </section>
+
+                    {fouls.length > 0 && (
+                        <section className="space-y-4">
+                            <div className="flex items-center gap-4 mb-2">
+                                <div className="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-amber-500 text-xl">gavel</span>
+                                </div>
+                                <h3 className="text-sm font-display font-black text-white uppercase tracking-widest">Expulsiones</h3>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {fouls.map((foul, i) => (
+                                    <div key={i} className="flex items-center gap-4 bg-amber-500/5 p-4 rounded-2xl border border-amber-500/20 border-l-4 border-l-amber-500">
+                                        <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
+                                            <span className="material-symbols-outlined text-amber-500 text-lg">person_off</span>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-display font-black text-white uppercase leading-tight line-clamp-2">{foul.description}</p>
+                                            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1">Parte {foul.half} · Turno {foul.turn}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                    )}
                 </div>
             </div>
         </div>

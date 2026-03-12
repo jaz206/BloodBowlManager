@@ -231,10 +231,16 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
         return costs[Math.min(advancements, 5)];
     };
 
+    const isDraw = score.home === score.opponent;
+
     const renderStepContent = () => {
+        // Only show players who GAINED spp this match (compare to initialHomeTeam by id)
+        // For Journeymen (no match in initialHomeTeam), show if spp > 0
         const improvedPlayers = updatedTeam.players.filter(p => {
+            if (p.isJourneyman || p.isStarPlayer) return false;
             const original = initialHomeTeam.players.find(op => op.id === p.id);
-            return p.spp > (original?.spp || 0) || (p.spp >= 3);
+            const originalSpp = original?.spp ?? 0;
+            return p.spp > originalSpp;
         });
 
         const playersWithMNG = updatedTeam.players.filter(p => (p.missNextGame || 0) > 0);
@@ -291,7 +297,16 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                             <p className="text-slate-500 text-[10px] italic max-w-[280px] mx-auto leading-relaxed border-t border-white/5 pt-2">"La lealtad se compra con sangre y se mantiene con trofeos."</p>
                         </div>
 
-                        {!fansRoll ? (
+                        {isDraw ? (
+                            <div className="glass-panel p-6 bg-black/60 border-sky-500/30 text-center animate-slide-in-up relative overflow-hidden mt-2 shadow-2xl">
+                                <p className="text-[10px] font-display font-black text-sky-400 uppercase tracking-widest mb-3">Empate — Sin Tirada</p>
+                                <p className="text-slate-500 text-xs italic mb-4">Un empate no altera la lealtad de las masas. Los hinchas permanecen fieles... por ahora.</p>
+                                <div className="flex justify-between items-center bg-white/5 p-3.5 rounded-xl border border-white/5 shadow-inner">
+                                    <span className="text-[9px] font-display font-black text-slate-500 uppercase tracking-widest">Hinchas Consagrados</span>
+                                    <span className="text-2xl font-display font-black text-white tracking-tighter">{updatedTeam.dedicatedFans}</span>
+                                </div>
+                            </div>
+                        ) : !fansRoll ? (
                             <div className="flex justify-center pt-2">
                                 <button
                                     onClick={handleFansRoll}
@@ -321,7 +336,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                                     </div>
                                 </div>
                                 <div className="flex justify-between items-center bg-white/5 p-3.5 rounded-xl border border-white/5 mt-2 shadow-inner relative z-10">
-                                    <span className="text-[9px] font-display font-black text-slate-500 uppercase tracking-widest font-black">Hinchas Consagrados Finales</span>
+                                    <span className="text-[9px] font-display font-black text-slate-500 uppercase tracking-widest">Hinchas Consagrados Finales</span>
                                     <span className="text-2xl font-display font-black text-white tracking-tighter">{updatedTeam.dedicatedFans}</span>
                                 </div>
                             </div>
@@ -515,7 +530,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                         {step < 3 ? (
                             <button
                                 onClick={() => setStep(s => s + 1)}
-                                disabled={step === 1 && !fansRoll}
+                                disabled={step === 1 && !fansRoll && !isDraw}
                                 className="flex-[2] bg-premium-gold text-black font-display font-black py-4 rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all uppercase tracking-widest text-[10px] disabled:opacity-30 disabled:hover:scale-100"
                             >
                                 Siguiente Sello

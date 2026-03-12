@@ -49,6 +49,10 @@ const AdminPanel: React.FC = () => {
     const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
     const [confirmModal, setConfirmModal] = useState<{ title: string; message: string; onConfirm: () => void; danger?: boolean } | null>(null);
     const [syncProgress, setSyncProgress] = useState<'idle' | 'syncing' | 'done' | 'error'>('idle');
+    const [importProgress, setImportProgress] = useState<{ total: number; done: number; errors: string[] } | null>(null);
+    const [isImporting, setIsImporting] = useState(false);
+    const importInputRef = React.useRef<HTMLInputElement>(null);
+    const [importTarget, setImportTarget] = useState<'stars' | 'teams' | null>(null);
 
     const showToast = (text: string, type: 'success' | 'error' = 'success') => {
         setToastMessage({ text, type });
@@ -132,6 +136,154 @@ const AdminPanel: React.FC = () => {
 
         fetchGitHubImages();
     }, [editingItem]);
+
+    // ─── CSV EXPORT ──────────────────────────────────────────────────────────
+    const escapeCSV = (val: any): string => {
+        if (val === null || val === undefined) return '';
+        const str = Array.isArray(val) ? val.join(' | ') : String(val);
+        return str.includes(',') || str.includes('"') || str.includes('\n')
+            ? `"${str.replace(/"/g, '""')}"`
+            : str;
+    };
+
+    const downloadCSV = (filename: string, rows: string[][]) => {
+        const csv = '\uFEFF' + rows.map(r => r.map(escapeCSV).join(',')).join('\r\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = filename; a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    const handleExportStars = () => {
+        const headers = ['name', 'cost', 'MV', 'FU', 'AG', 'PS', 'AR', 'skills', 'playsFor', 'specialRules_es', 'specialRules_en', 'image'];
+        const rows = [headers, ...starPlayers.map(s => [
+            s.name,
+            s.cost,
+            s.stats?.MV ?? '',
+            s.stats?.FU ?? '',
+            s.stats?.AG ?? '',
+            s.stats?.PS ?? '',
+            s.stats?.AR ?? '',
+            s.skills ?? '',
+            Array.isArray(s.playsFor) ? s.playsFor.join(' | ') : '',
+            (s as any).specialRules_es ?? s.specialRules ?? '',
+            (s as any).specialRules_en ?? s.specialRules ?? '',
+            s.image ?? '',
+        ])];
+        downloadCSV(`star_players_${new Date().toISOString().slice(0,10)}.csv`, rows);
+        showToast('✅ CSV de Star Players descargado.');
+    };
+
+    const handleExportTeams = () => {
+        const headers = ['name', 'tier', 'rerollCost', 'fuerza', 'agilidad', 'velocidad', 'armadura', 'pase', 'image'];
+        const rows = [headers, ...teams.map(t => [
+            t.name,
+            (t as any).tier ?? '',
+            (t as any).rerollCost ?? '',
+            (t as any).ratings?.fuerza ?? '',
+            (t as any).ratings?.agilidad ?? '',
+            (t as any).ratings?.velocidad ?? '',
+            (t as any).ratings?.armadura ?? '',
+            (t as any).ratings?.pase ?? '',
+            (t as any).image ?? (t as any).crestImage ?? '',
+        ])];
+        downloadCSV(`teams_${new Date().toISOString().slice(0,10)}.csv`, rows);
+        showToast('✅ CSV de Equipos descargado.');
+    };
+
+    // ─── CSV IMPORT ──────────────────────────────────────────────────────────
+    const parseCSV = (text: string): { headers: string[]; rows: Record<string, string>[] } => {
+        const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').filter(Boolean);
+        const splitLine = (line: string): string[] => {
+            const result: string[] = [];
+            let cur = '', inQ = false;
+            for (let i = 0; i < line.length; i++) {
+                const c = line[i];
+                if (c === '"') { if (inQ && line[i+1] === '"') { cur += '"'; i++; } else inQ = !inQ; }
+                else if (c === ',' && !inQ) { result.push(cur.trim()); cur = ''; }
+                else cur += c;
+            }
+            result.push(cur.trim());
+            return result;
+        };
+        const headers = splitLine(lines[0].replace(/^\uFEFF/, ''));
+        const rows = lines.slice(1).map(l => {
+            const vals = splitLine(l);
+            return Object.fromEntries(headers.map((h, i) => [h, vals[i] ?? '']));
+        });
+        return { headers, rows };
+    };
+
+    const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!importTarget || !e.target.files?.length) return;
+        const file = e.target.files[0];
+        e.target.value = '';
+        const text = await file.text();
+        const { headers, rows } = parseCSV(text);
+
+        const requiredStars = ['name', 'cost'];
+        const requiredTeams = ['name'];
+        const required = importTarget === 'stars' ? requiredStars : requiredTeams;
+        const missing = required.filter(h => !headers.includes(h));
+        if (missing.length) {
+            showToast(`❌ Columnas faltantes: ${missing.join(', ')}`, 'error');
+            return;
+        }
+
+        setIsImporting(true);
+        setImportProgress({ total: rows.length, done: 0, errors: [] });
+        const errs: string[] = [];
+
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            if (!row['name']?.trim()) continue;
+            try {
+                let payload: any;
+                if (importTarget === 'stars') {
+                    payload = {
+                        name: row.name.trim(),
+                        cost: parseInt(row.cost) || 0,
+                        stats: { MV: row.MV, FU: row.FU, AG: row.AG, PS: row.PS, AR: row.AR },
+                        skills: row.skills ?? '',
+                        skillKeys: (row.skills ?? '').split(',').map((s: string) => s.trim()).filter(Boolean),
+                        playsFor: (row.playsFor ?? '').split('|').map((s: string) => s.trim()).filter(Boolean),
+                        specialRules_es: row.specialRules_es ?? '',
+                        specialRules_en: row.specialRules_en ?? '',
+                        image: row.image ?? '',
+                    };
+                    await updateMasterItem('star_players', payload.name, payload);
+                } else {
+                    payload = {
+                        name: row.name.trim(),
+                        tier: parseInt(row.tier) || 1,
+                        rerollCost: parseInt(row.rerollCost) || 0,
+                        ratings: {
+                            fuerza: parseInt(row.fuerza) || 0,
+                            agilidad: parseInt(row.agilidad) || 0,
+                            velocidad: parseInt(row.velocidad) || 0,
+                            armadura: parseInt(row.armadura) || 0,
+                            pase: parseInt(row.pase) || 0,
+                        },
+                        ...(row.image ? { image: row.image, crestImage: row.image } : {}),
+                    };
+                    await updateMasterItem('teams', payload.name, payload);
+                }
+            } catch (err: any) {
+                errs.push(`Fila ${i + 2} (${row.name}): ${err.message ?? 'Error desconocido'}`);
+            }
+            setImportProgress({ total: rows.length, done: i + 1, errors: errs });
+        }
+
+        setIsImporting(false);
+        refresh();
+        if (errs.length === 0) {
+            showToast(`✅ ${rows.length} registros importados correctamente.`);
+            setImportProgress(null);
+        } else {
+            showToast(`⚠️ Importación completada con ${errs.length} errores.`, 'error');
+        }
+    };
 
     const handleSync = async (force = false) => {
         const title = force ? '⚠️ Restablecimiento Total' : '🔄 Sincronización Inteligente';
@@ -342,19 +494,83 @@ const AdminPanel: React.FC = () => {
                         </div>
                     ) : (
                         <>
-                            {/* Search for Content Tabs */}
-                            <div className="relative max-w-xl group">
-                                <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-500 group-focus-within:text-premium-gold transition-colors">
-                                    <SearchIcon className="h-5 w-5" />
+                            {/* Search + CSV toolbar for Content Tabs */}
+                            <div className="flex flex-wrap gap-3 items-center">
+                                <div className="relative flex-1 min-w-[200px] group">
+                                    <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-500 group-focus-within:text-premium-gold transition-colors">
+                                        <SearchIcon className="h-5 w-5" />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        placeholder={`Buscar ${tabs.find(t => t.id === activeTab)?.label.toLowerCase()}...`}
+                                        className="block w-full bg-black/40 border border-white/10 rounded-2xl py-4 pl-14 pr-6 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-premium-gold/30 shadow-2xl transition-all"
+                                    />
                                 </div>
-                                <input
-                                    type="text"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    placeholder={`Buscar ${tabs.find(t => t.id === activeTab)?.label.toLowerCase()}...`}
-                                    className="block w-full bg-black/40 border border-white/10 rounded-2xl py-4 pl-14 pr-6 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-premium-gold/30 shadow-2xl transition-all"
-                                />
+
+                                {(activeTab === 'stars' || activeTab === 'teams') && (
+                                    <div className="flex gap-2">
+                                        {/* Export CSV */}
+                                        <button
+                                            onClick={activeTab === 'stars' ? handleExportStars : handleExportTeams}
+                                            className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-display font-black uppercase tracking-widest text-[10px] hover:bg-emerald-500/20 transition-all whitespace-nowrap shadow-lg"
+                                            title={`Exportar ${activeTab === 'stars' ? 'Star Players' : 'Equipos'} como CSV`}
+                                        >
+                                            <span className="material-symbols-outlined text-sm">download</span>
+                                            Exportar CSV
+                                        </button>
+
+                                        {/* Import CSV */}
+                                        <button
+                                            onClick={() => { setImportTarget(activeTab); importInputRef.current?.click(); }}
+                                            disabled={isImporting}
+                                            className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-sky-500/10 border border-sky-500/30 text-sky-400 font-display font-black uppercase tracking-widest text-[10px] hover:bg-sky-500/20 transition-all whitespace-nowrap shadow-lg disabled:opacity-40"
+                                            title={`Importar ${activeTab === 'stars' ? 'Star Players' : 'Equipos'} desde CSV`}
+                                        >
+                                            <span className="material-symbols-outlined text-sm">upload</span>
+                                            Importar CSV
+                                        </button>
+
+                                        <input
+                                            ref={importInputRef}
+                                            type="file"
+                                            accept=".csv,text/csv"
+                                            className="hidden"
+                                            onChange={handleImportCSV}
+                                        />
+                                    </div>
+                                )}
                             </div>
+
+                            {/* Import Progress Bar */}
+                            {importProgress && (
+                                <div className="glass-panel p-5 border-sky-500/30 bg-black/60 space-y-3 animate-slide-in-up">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-[10px] font-display font-black text-sky-400 uppercase tracking-widest">
+                                            {isImporting ? `Importando... ${importProgress.done} / ${importProgress.total}` : `✅ Completado: ${importProgress.done} filas`}
+                                        </span>
+                                        {!isImporting && (
+                                            <button onClick={() => setImportProgress(null)} className="text-slate-500 hover:text-white text-xs">
+                                                <span className="material-symbols-outlined text-base">close</span>
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="w-full bg-white/5 rounded-full h-2 overflow-hidden">
+                                        <div
+                                            className="h-2 bg-sky-500 rounded-full transition-all duration-300"
+                                            style={{ width: `${importProgress.total ? (importProgress.done / importProgress.total) * 100 : 0}%` }}
+                                        />
+                                    </div>
+                                    {importProgress.errors.length > 0 && (
+                                        <div className="max-h-24 overflow-y-auto space-y-1 custom-scrollbar">
+                                            {importProgress.errors.map((e, i) => (
+                                                <p key={i} className="text-[9px] text-blood-red font-mono">{e}</p>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
                             {/* List Container */}
                             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 custom-scrollbar max-h-[70vh] overflow-y-auto pr-2">
