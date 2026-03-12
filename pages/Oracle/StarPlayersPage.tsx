@@ -276,7 +276,7 @@ const StarPlayers: React.FC = () => {
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 30 }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12 bg-card-dark border-2 border-primary/30 p-8 md:p-14 rounded-[3rem] shadow-[0_50px_100px_rgba(0,0,0,0.8)] relative overflow-hidden"
+                            className="w-full max-w-6xl max-h-[90vh] grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12 bg-card-dark border-2 border-primary/30 p-8 md:p-14 rounded-[3rem] shadow-[0_50px_100px_rgba(0,0,0,0.8)] relative overflow-y-auto premium-scrollbar"
                             onClick={e => e.stopPropagation()}
                         >
                             {/* Close Button */}
@@ -404,6 +404,26 @@ const StarPlayers: React.FC = () => {
             {selectedSkill && (
                 <SkillModal skill={selectedSkill} onClose={() => setSelectedSkill(null)} />
             )}
+
+            <style>{`
+                .premium-scrollbar::-webkit-scrollbar {
+                    width: 6px;
+                }
+                .premium-scrollbar::-webkit-scrollbar-track {
+                    background: rgba(255, 255, 255, 0.02);
+                    border-radius: 10px;
+                }
+                .premium-scrollbar::-webkit-scrollbar-thumb {
+                    background: rgba(245, 159, 10, 0.3);
+                    border-radius: 10px;
+                    border: 2px solid transparent;
+                    background-clip: content-box;
+                }
+                .premium-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: rgba(245, 159, 10, 0.5);
+                    background-clip: content-box;
+                }
+            `}</style>
         </div>
     );
 };

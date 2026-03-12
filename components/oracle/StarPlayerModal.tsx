@@ -59,7 +59,7 @@ const StarPlayerModal: React.FC<StarPlayerModalProps> = ({ player, onClose }) =>
               </svg>
             </button>
           </div>
-          <div className="p-8 overflow-y-auto scrollbar-hide">
+          <div className="p-8 overflow-y-auto premium-scrollbar">
             <div className="flex flex-col md:flex-row gap-8">
               {player.image && (
                 <div className="md:w-1/3 flex-shrink-0 group">
@@ -200,6 +200,23 @@ const StarPlayerModal: React.FC<StarPlayerModalProps> = ({ player, onClose }) =>
           @keyframes slide-in-up { from { transform: translateY(20px) scale(0.98); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
           .animate-fade-in-fast { animation: fade-in-fast 0.2s ease-out forwards; }
           .animate-slide-in-up { animation: slide-in-up 0.3s ease-out forwards; }
+          .premium-scrollbar::-webkit-scrollbar {
+            width: 6px;
+          }
+          .premium-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 10px;
+          }
+          .premium-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(245, 159, 10, 0.3);
+            border-radius: 10px;
+            border: 2px solid transparent;
+            background-clip: content-box;
+          }
+          .premium-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(245, 159, 10, 0.5);
+            background-clip: content-box;
+          }
         `}</style>
       </div>
       {selectedSkill && <SkillModal skill={selectedSkill} onClose={handleCloseSkillModal} />}
