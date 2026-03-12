@@ -810,8 +810,17 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                                                         className="bg-black border border-premium-gold text-white rounded px-2 py-1 outline-none w-full font-display font-bold uppercase italic shadow-[0_0_15px_rgba(202,138,4,0.3)]"
                                                     />
                                                 ) : (
-                                                    <span className="font-display font-black text-white text-base uppercase italic tracking-tight group-hover/row:text-premium-gold transition-colors">{p.customName}</span>
+                                                    <div 
+                                                        onClick={() => handleNameDoubleClick(p)}
+                                                        className="flex items-center gap-2 group/edit cursor-pointer"
+                                                    >
+                                                        <span className="font-display font-black text-white text-base uppercase italic tracking-tight group-hover/row:text-premium-gold transition-colors">
+                                                            {p.customName}
+                                                        </span>
+                                                        <span className="material-symbols-outlined text-[10px] text-white/20 group-hover/edit:text-premium-gold transition-colors">edit</span>
+                                                    </div>
                                                 )}
+
                                             </div>
                                         </td>
                                         <td className="p-4 font-display font-bold text-slate-400 uppercase tracking-widest text-[10px]">{p.position}</td>

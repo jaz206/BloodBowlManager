@@ -99,6 +99,14 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
     const [fansRoll, setFansRoll] = useState<number | null>(null);
     const [postGameState, setPostGameState] = useState<PostGameState | null>(null);
     const [skillSelection, setSkillSelection] = useState<{ player: ManagedPlayer, type: 'Primary' | 'Secondary', cost: number } | null>(null);
+    const [mvpNominations, setMvpNominations] = useState<number[]>([]);
+    const [mvpRoll, setMvpRoll] = useState<number | null>(null);
+    const [noStalling, setNoStalling] = useState(true);
+    const [winningsRolls, setWinningsRolls] = useState({ home: 0, opponent: 0 });
+    const [concession, setConcession] = useState<'none' | 'home' | 'opponent'>('none');
+    const [mvpCount, setMvpCount] = useState(1);
+    const [mvpsAwarded, setMvpsAwarded] = useState(0);
+
 
     const cloneTeamForPostGame = useCallback((team: ManagedTeam): ManagedTeam => {
         const clonedPlayers = team.players.map(p => {
@@ -118,52 +126,50 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
 
     useEffect(() => {
         if (!finalHomeTeam || !opponentTeam) return;
-        let winningsRoll = 0;
-        const d1 = Math.floor(Math.random() * 6) + 1;
-        const d2 = Math.floor(Math.random() * 6) + 1;
+        
+        // Calculate Popularity Factors (BB2025: 1D3 + Dedicated Fans)
+        const rollHome = Math.floor(Math.random() * 3) + 1;
+        const rollOpp = Math.floor(Math.random() * 3) + 1;
+        setWinningsRolls({ home: rollHome, opponent: rollOpp });
 
-        if (score.home > score.opponent) {
-            winningsRoll = Math.max(d1, d2);
-        } else if (score.home < score.opponent) {
-            winningsRoll = Math.min(d1, d2);
-        } else {
-            winningsRoll = d1;
-        }
-
-        const calculatedWinnings = (winningsRoll + finalHomeTeam.dedicatedFans + score.home) * 10000;
+        const popHome = rollHome + finalHomeTeam.dedicatedFans;
+        const popOpp = rollOpp + opponentTeam.dedicatedFans;
+        const totalPop = popHome + popOpp;
+        
+        // Winnings Formula: (Total Pop / 2 + TDs + 1 if no stalling) * 10,000
+        const calculatedWinnings = (Math.ceil(totalPop / 2) + score.home + (noStalling ? 1 : 0)) * 10000;
+        
         const tempTeam = cloneTeamForPostGame(finalHomeTeam);
-
-        const isEligibleForMvp = (p: ManagedPlayer) => !p.isStarPlayer && !p.isJourneyman;
-        const homeEligible = tempTeam.players.filter(isEligibleForMvp);
-
-        let mvpPlayer: (ManagedPlayer & { teamName: string }) | null = null;
-        if (homeEligible.length > 0) {
-            const randomMvp = homeEligible[Math.floor(Math.random() * homeEligible.length)];
-            mvpPlayer = { ...randomMvp, teamName: tempTeam?.name || 'Local' };
-
-            const pIndex = tempTeam.players.findIndex(p => p.id === randomMvp.id);
-            if (pIndex !== -1) {
-                tempTeam.players[pIndex].spp += 4;
-            }
-        }
-
         tempTeam.treasury += calculatedWinnings;
 
+        // MNG Logic
         const mngPlayerIds = new Set(playersMNG.map(p => p.playerId));
         tempTeam.players.forEach(player => {
             if (mngPlayerIds.has(player.id)) {
                 player.missNextGame = (player.missNextGame || 0) + 1;
+                player.status = 'Reserva'; // Recover from MNG next game
             } else if (player.missNextGame && player.missNextGame > 0) {
                 player.missNextGame -= 1;
             }
+            // Reset death status for UI if they were resurrected or similar (though usually they stay dead)
         });
 
         setPostGameState({
             winnings: calculatedWinnings,
-            mvp: mvpPlayer,
+            mvp: null,
             team: tempTeam,
         });
-    }, [finalHomeTeam, opponentTeam, score, fame, playersMNG]);
+
+        // Set MVP count based on concession
+        if (concession === 'opponent') {
+            setMvpCount(2);
+        } else if (concession === 'home') {
+            setMvpCount(0);
+        } else {
+            setMvpCount(1);
+        }
+    }, [finalHomeTeam, opponentTeam, score, playersMNG, noStalling, concession]);
+
 
     const handleConfirm = () => {
         if (!postGameState) return;
@@ -173,6 +179,53 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
         };
         onConfirm(finalTeam);
     };
+
+    const handleToggleNomination = (playerId: number) => {
+        setMvpNominations(prev => {
+            if (prev.includes(playerId)) return prev.filter(id => id !== playerId);
+            if (prev.length >= 6) return prev;
+            return [...prev, playerId];
+        });
+    };
+
+    const handleMvpRoll = () => {
+        if (mvpNominations.length === 0) return;
+        
+        // In BB2025, if you have fewer than 6, you still roll 1D6 and use a mapping.
+        // If nominations < 6, some results might miss or be re-rolled? 
+        // Rule says "Nominate 6... Assign 1-6... Roll D6".
+        // If fewer than 6 are available (dead/etc), rules vary but let's stick to picking from the chosen ones.
+        const roll = Math.floor(Math.random() * 6) + 1;
+        setMvpRoll(roll);
+        
+        // Map roll to nominated player. If roll > nominations.length, we wrap or re-roll.
+        // Standard competitive play: you MUST nominate 6 if possible.
+        const index = (roll - 1) % mvpNominations.length; 
+        const selectedId = mvpNominations[index];
+        
+        setPostGameState(prev => {
+            if (!prev) return null;
+            const updatedPlayers = prev.team.players.map(p => {
+                if (p.id === selectedId) {
+                    return { ...p, spp: p.spp + 4 };
+                }
+                return p;
+            });
+            
+            const mvpPlayer = updatedPlayers.find(p => p.id === selectedId);
+            
+            return {
+                ...prev,
+                mvp: mvpPlayer ? { ...mvpPlayer, teamName: prev.team.name } : null,
+                team: { ...prev.team, players: updatedPlayers }
+            };
+        });
+
+        setMvpsAwarded(prev => prev + 1);
+        setMvpRoll(null); // Reset for next roll if multi-MVP
+        setMvpNominations([]); 
+    };
+
 
     const handleFansRoll = () => {
         const roll = Math.floor(Math.random() * 6) + 1;
@@ -265,37 +318,198 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
             case 0:
                 return (
                     <div className="flex flex-col gap-6 animate-fade-in">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="glass-panel p-5 bg-green-500/5 border-green-500/20 relative overflow-hidden group">
-                                <span className="material-symbols-outlined absolute top-2 right-2 text-4xl text-green-500/10 group-hover:scale-110 transition-transform">database</span>
-                                <p className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mb-3 text-shadow-sm">Recaudación de Guerra</p>
-                                <p className="text-2xl font-display font-black text-white italic truncate tracking-tight">{winnings.toLocaleString()} <span className="text-xs not-italic text-green-500 ml-1 uppercase font-bold">m.o.</span></p>
-                                <p className="text-[8px] font-display font-black text-slate-500 uppercase tracking-widest mt-2 opacity-60">El gremio reclama su parte</p>
-                            </div>
-                            <div className="glass-panel p-5 bg-premium-gold/5 border-premium-gold/20 relative overflow-hidden group">
-                                <span className="material-symbols-outlined absolute top-2 right-2 text-4xl text-premium-gold/10 group-hover:scale-110 transition-transform">military_tech</span>
-                                <h4 className="text-[10px] font-display font-black text-premium-gold uppercase tracking-widest mb-3 text-shadow-sm">Título Honorífico (MJP)</h4>
-                                {mvp ? (
-                                    <>
-                                        <p className="text-lg font-display font-black text-white italic truncate uppercase tracking-tighter">{mvp.customName}</p>
-                                        <div className="flex items-center gap-2 mt-1.5">
-                                            <span className="px-1.5 py-0.5 rounded bg-premium-gold/20 border border-premium-gold/30 text-[8px] font-display font-black text-premium-gold uppercase tracking-tighter shadow-sm">+4 PE</span>
-                                            <span className="text-[9px] text-slate-500 font-bold uppercase tracking-tight">{mvp.position}</span>
+                        <div className="grid grid-cols-1 gap-4">
+                            <div className="glass-panel p-8 bg-black/40 border-white/5 relative overflow-hidden group">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h4 className="text-[10px] font-display font-black text-premium-gold uppercase tracking-[0.3em]">Cálculo de Ganancias</h4>
+                                    <div className="flex items-center gap-2 bg-green-500/10 px-3 py-1 rounded-full border border-green-500/20">
+                                        <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                                        <span className="text-[9px] font-black text-green-400 uppercase tracking-widest">Procedimiento BB2025</span>
+                                    </div>
+                                </div>
+                                
+                                <div className="space-y-4">
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-slate-500 font-display">Popularidad Local ({winningsRolls.home} + {finalHomeTeam.dedicatedFans})</span>
+                                        <span className="text-white font-black">{winningsRolls.home + finalHomeTeam.dedicatedFans}k</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-slate-500 font-display">Popularidad Rival ({winningsRolls.opponent} + {opponentTeam.dedicatedFans})</span>
+                                        <span className="text-white font-black">{winningsRolls.opponent + opponentTeam.dedicatedFans}k</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm py-2 border-y border-white/5">
+                                        <span className="text-slate-500 font-display">Total Fans / 2 (Redondeado arriba)</span>
+                                        <span className="text-white font-black">{Math.ceil((winningsRolls.home + finalHomeTeam.dedicatedFans + winningsRolls.opponent + opponentTeam.dedicatedFans) / 2)}k</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-slate-500 font-display">Touchdowns Anotados</span>
+                                        <span className="text-white font-black">+{score.home}k</span>
+                                    </div>
+                                    <div className="flex justify-between items-center py-2">
+                                        <div className="flex items-center gap-2">
+                                            <input 
+                                                type="checkbox" 
+                                                id="noStalling" 
+                                                checked={noStalling} 
+                                                onChange={(e) => setNoStalling(e.target.checked)}
+                                                className="w-4 h-4 rounded border-white/10 bg-black text-premium-gold focus:ring-premium-gold/30"
+                                            />
+                                            <label htmlFor="noStalling" className="text-slate-500 font-display text-xs cursor-pointer select-none">Bono por No-Stalling (Fair Play)</label>
                                         </div>
-                                    </>
-                                ) : (
-                                    <p className="text-slate-500 italic text-sm py-2">Nadie fue digno del laurel</p>
-                                )}
+                                        <span className="text-green-500 font-black">+{noStalling ? 1 : 0}k</span>
+                                    </div>
+                                </div>
+
+                                <div className="mt-8 pt-6 border-t border-premium-gold/20 text-center">
+                                    <p className="text-4xl font-display font-black text-white italic tracking-tight">{winnings.toLocaleString()} <span className="text-sm not-italic text-green-500 ml-1 uppercase font-bold">m.o.</span></p>
+                                    <p className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mt-2">Tesoro Actualizado</p>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="bg-black/40 border border-white/5 p-5 rounded-3xl text-center shadow-inner mt-2 backdrop-blur-sm">
-                            <p className="text-[9px] font-display font-black text-slate-500 uppercase tracking-widest mb-1.5 opacity-60 tracking-[0.2em]">Tesorería de la Hermandad</p>
-                            <span className="text-xl font-display font-black text-white italic tracking-tighter">{updatedTeam.treasury.toLocaleString()} <span className="text-xs opacity-50 ml-1 uppercase font-bold">m.o.</span></span>
+                        {/* Concession Selector */}
+                        <div className="glass-panel p-8 bg-blood-red/5 border-blood-red/20 relative overflow-hidden group">
+                           <div className="flex justify-between items-center mb-6">
+                                <h4 className="text-[10px] font-display font-black text-blood-red uppercase tracking-[0.3em]">Estado de Finalización</h4>
+                                <div className="flex items-center gap-2 bg-blood-red/10 px-3 py-1 rounded-full border border-blood-red/20">
+                                    <span className="material-symbols-outlined text-[10px] text-blood-red">front_hand</span>
+                                    <span className="text-[9px] font-black text-blood-red uppercase tracking-widest">Procedimiento Especial</span>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <button
+                                    onClick={() => setConcession('none')}
+                                    className={`py-3 px-4 rounded-xl border font-display font-black uppercase text-[10px] tracking-widest transition-all ${concession === 'none' ? 'bg-zinc-800 border-white/20 text-white' : 'bg-transparent border-white/5 text-slate-500 hover:border-white/20'}`}
+                                >
+                                    Final Normal
+                                </button>
+                                <button
+                                    onClick={() => setConcession('home')}
+                                    className={`py-3 px-4 rounded-xl border font-display font-black uppercase text-[10px] tracking-widest transition-all ${concession === 'home' ? 'bg-blood-red text-white border-blood-red shadow-[0_0_15px_rgba(153,27,27,0.4)]' : 'bg-transparent border-white/5 text-slate-500 hover:border-blood-red/50 hover:text-blood-red'}`}
+                                >
+                                    Hemos Concedido
+                                </button>
+                                <button
+                                    onClick={() => setConcession('opponent')}
+                                    className={`py-3 px-4 rounded-xl border font-display font-black uppercase text-[10px] tracking-widest transition-all ${concession === 'opponent' ? 'bg-green-600 text-white border-green-600 shadow-[0_0_15px_rgba(22,163,74,0.4)]' : 'bg-transparent border-white/5 text-slate-500 hover:border-green-600/50 hover:text-green-600'}`}
+                                >
+                                    Rival ha Concedido
+                                </button>
+                            </div>
+                            {concession !== 'none' && (
+                                <p className="mt-4 text-[10px] text-slate-500 italic text-center animate-pulse">
+                                    {concession === 'home' ? '⚠️ Sin MVP para nosotros. El rival recibe +1 MVP.' : '🏆 ¡Victoria por Concesión! Recibimos un segundo MVP (+1 MVP total).'}
+                                </p>
+                            )}
                         </div>
                     </div>
                 );
+
             case 1:
+                if (mvpCount === 0) {
+                    return (
+                        <div className="flex flex-col items-center justify-center p-12 text-center gap-6 animate-fade-in">
+                            <div className="w-24 h-24 rounded-full bg-blood-red/10 border-2 border-blood-red/20 flex items-center justify-center">
+                                <span className="material-symbols-outlined text-blood-red text-5xl">block</span>
+                            </div>
+                            <div className="space-y-2">
+                                <h4 className="text-xl font-display font-black text-white uppercase italic">Sin MVP Galardonado</h4>
+                                <p className="text-slate-500 text-xs italic">Al conceder el partido, el equipo renuncia a cualquier reconocimiento oficial.</p>
+                            </div>
+                            <button onClick={() => setStep(step + 1)} className="px-10 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-display font-black uppercase text-[10px] tracking-[0.2em] hover:bg-white/10 transition-all">
+                                Continuar a Fans
+                            </button>
+                        </div>
+                    );
+                }
+                const eligibleMvp = updatedTeam.players.filter(p => !p.isStarPlayer && !p.isJourneyman);
+                return (
+                    <div className="flex flex-col gap-6 animate-fade-in">
+                         <div className="text-center space-y-2">
+                            <h4 className="text-[10px] font-display font-black text-premium-gold uppercase tracking-[0.3em]">Cónclave de MVP ({mvpsAwarded + 1}/{mvpCount})</h4>
+                            <p className="text-slate-500 text-[10px] italic border-t border-white/5 pt-2">Nomina a 6 guerreros. El destino (1D6) elegirá al más valioso (+4 PE).</p>
+                        </div>
+
+                        {!mvpRoll ? (
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                    {eligibleMvp.map(p => {
+                                        const isNominated = mvpNominations.includes(p.id);
+                                        const nominationIndex = mvpNominations.indexOf(p.id);
+                                        return (
+                                            <button 
+                                                key={p.id} 
+                                                onClick={() => handleToggleNomination(p.id)}
+                                                className={`flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
+                                                    isNominated ? 'bg-premium-gold/20 border-premium-gold shadow-[0_0_15px_rgba(245,159,10,0.2)]' : 'bg-white/5 border-white/5 hover:border-white/20'
+                                                }`}
+                                            >
+                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black ${isNominated ? 'bg-premium-gold text-black' : 'bg-white/10 text-slate-500'}`}>
+                                                    {isNominated ? nominationIndex + 1 : '#'}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className={`text-[11px] font-display font-black uppercase italic truncate ${isNominated ? 'text-white' : 'text-slate-400'}`}>{p.customName}</p>
+                                                    <p className="text-[8px] font-bold text-slate-600 uppercase truncate">{p.position}</p>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                <div className="flex justify-center pt-2">
+                                    <button
+                                        onClick={handleMvpRoll}
+                                        disabled={mvpNominations.length < Math.min(6, eligibleMvp.length)}
+                                        className="group relative bg-premium-gold text-black font-display font-black py-4 px-12 rounded-2xl shadow-[0_15px_30px_rgba(245,159,10,0.3)] hover:scale-105 active:scale-95 disabled:opacity-30 transition-all flex items-center gap-4 uppercase tracking-[0.25em] text-[10px] overflow-hidden"
+                                    >
+                                        <div className="absolute inset-0 bg-white/20 -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
+                                        <span className="material-symbols-outlined text-lg transition-transform group-hover:rotate-180 duration-[800ms] relative z-10">casino</span>
+                                        <span className="relative z-10">
+                                            {mvpNominations.length < Math.min(6, eligibleMvp.length) 
+                                                ? `Nomina a ${Math.min(6, eligibleMvp.length)} jugadores` 
+                                                : `Lanzar Dado para MVP ${mvpsAwarded + 1}`}
+                                        </span>
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="glass-panel p-8 bg-black/60 border-premium-gold/30 text-center animate-slide-in-up relative overflow-hidden shadow-2xl">
+                                 <div className="absolute top-0 right-0 p-4 opacity-[0.05] scale-150 rotate-12">
+                                    <span className="material-symbols-outlined text-8xl text-white">military_tech</span>
+                                </div>
+                                <div className="flex justify-center gap-8 items-center mb-8 relative z-10">
+                                    <div className="w-20 h-20 bg-premium-gold/10 rounded-3xl border-2 border-premium-gold/30 flex flex-col items-center justify-center shadow-inner">
+                                        <span className="text-[10px] font-display font-black text-premium-gold uppercase tracking-widest mb-1">Dado</span>
+                                        <span className="text-4xl font-display font-black text-white">{mvpRoll}</span>
+                                    </div>
+                                    <div className="h-16 w-px bg-white/10"></div>
+                                    <div className="text-left">
+                                        <p className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mb-1">El Elegido de Nuffle</p>
+                                        <p className="text-3xl font-display font-black text-white uppercase italic tracking-tighter leading-none mb-2">
+                                            {mvp?.customName}
+                                        </p>
+                                        <div className="flex items-center gap-2">
+                                            <span className="px-2 py-0.5 rounded bg-premium-gold/20 border border-premium-gold/30 text-[9px] font-display font-black text-premium-gold uppercase">+4 PE DE ESTRELLATO</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button 
+                                    onClick={() => {
+                                        if (mvpsAwarded < mvpCount) {
+                                            setMvpRoll(null);
+                                        } else {
+                                            setStep(step + 1);
+                                        }
+                                    }} 
+                                    className="w-full bg-premium-gold text-black font-display font-black py-4 rounded-xl shadow-xl hover:scale-[1.02] transition-all uppercase tracking-widest text-[10px]"
+                                >
+                                    {mvpsAwarded < mvpCount ? 'Nominar Siguiente MVP' : 'Siguiente Paso (Fans)'}
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                );
+            case 2:
                 return (
                     <div className="flex flex-col gap-6 animate-fade-in content-center">
                         <div className="text-center space-y-3">
@@ -353,14 +567,14 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                         )}
                     </div>
                 );
-            case 2:
+            case 3:
                 return (
                     <div className="space-y-6 animate-fade-in h-full flex flex-col">
                         <div className="flex items-center justify-between px-2">
                             <h4 className="text-[10px] font-display font-black text-premium-gold uppercase tracking-[0.2em]">Registro de Ascensión</h4>
                             <span className="text-[9px] font-display font-black text-slate-500 uppercase">{improvedPlayers.length} Marcados</span>
                         </div>
-                        <div className="flex-1 space-y-3 overflow-y-auto pr-2 custom-scrollbar max-h-[350px]">
+                        <div className="flex-1 space-y-3 overflow-y-auto pr-2 custom-scrollbar max-h-[300px]">
                             {improvedPlayers.map(p => {
                                 const original = initialHomeTeam.players.find(op => op.id === p.id);
                                 const gained = p.spp - (original?.spp || 0);
@@ -413,12 +627,9 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                                 </div>
                             )}
                         </div>
-                        <div className="text-center pt-2">
-                            <p className="text-[10px] font-display font-bold text-slate-500 uppercase italic tracking-widest opacity-60">Gasta tus puntos ahora o consérvalos para el mañana</p>
-                        </div>
                     </div>
                 );
-            case 3:
+            case 4:
                 return (
                     <div className="flex flex-col gap-6 animate-fade-in overflow-y-auto max-h-[420px] pr-1.5 custom-scrollbar">
                         <div className="glass-panel p-6 bg-black/60 border-white/5 space-y-8 relative overflow-hidden shadow-2xl">
@@ -438,18 +649,17 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                             </div>
 
                             <div className="grid grid-cols-2 gap-4 relative z-10">
-                                <div className="bg-white/5 p-4 rounded-2xl border border-white/5 shadow-inner">
+                                <div className="bg-white/5 p-4 rounded-2xl border border-white/5 shadow-inner text-center">
                                     <h4 className="text-[8px] font-display font-black text-sky-500 uppercase tracking-[0.2em] mb-2 opacity-80">Séquito Vital</h4>
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center justify-center gap-3">
                                         <span className="text-xl font-display font-black text-white">{updatedTeam.dedicatedFans}</span>
-                                        <span className="text-[8px] font-display font-black text-slate-500 uppercase leading-tight tracking-wider font-bold">Hinchas<br />Fieles</span>
+                                        <span className="text-[8px] font-display font-black text-slate-500 uppercase leading-tight tracking-wider font-bold text-left">Hinchas<br />Fieles</span>
                                     </div>
                                 </div>
-                                <div className="bg-white/5 p-4 rounded-2xl border border-white/5 text-right flex flex-col items-end shadow-inner">
-                                    <h4 className="text-[8px] font-display font-black text-premium-gold uppercase tracking-[0.2em] mb-2 opacity-80">Rango Grupal</h4>
-                                    <div className="flex items-center gap-3 justify-end">
-                                        <span className="text-[8px] font-display font-black text-slate-500 uppercase leading-tight tracking-wider text-right font-bold">Hitos de<br />Ascensión</span>
-                                        <span className="text-xl font-display font-black text-white">{updatedTeam.players.reduce((acc, p) => acc + (p.gainedSkills?.length || 0), 0)}</span>
+                                <div className="bg-white/5 p-4 rounded-2xl border border-white/5 text-center flex flex-col items-center shadow-inner">
+                                    <h4 className="text-[8px] font-display font-black text-premium-gold uppercase tracking-[0.2em] mb-2 opacity-80">M.V.P.</h4>
+                                    <div className="flex items-center gap-3 justify-center">
+                                         <span className="text-sm font-display font-black text-white italic">{mvp?.customName || 'Pendiente'}</span>
                                     </div>
                                 </div>
                             </div>
@@ -493,7 +703,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
         }
     };
 
-    const steps = ["Recaudación", "Audiencia", "Evolución", "Veredicto"];
+    const steps = ["Recaudación", "MVP", "Audiencia", "Evolución", "Veredicto"];
 
     return (
         <div className="fixed inset-0 bg-black/98 backdrop-blur-3xl z-[150] flex items-center justify-center p-4">

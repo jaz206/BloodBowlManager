@@ -222,7 +222,8 @@ export type GameEventType =
   // Resources
   | 'reroll_used' | 'apothecary_used' | 'bribe_used'
   // Info & Other
-  | 'WEATHER' | 'KICKOFF' | 'TURNOVER' | 'INFO' | 'OTHER';
+  | 'WEATHER' | 'KICKOFF' | 'TURNOVER' | 'INFO' | 'OTHER' | 'DEATH'
+  | 'DEFLECT' | 'THROW_TEAM_MATE';
 
 export interface GameEvent {
   id: number;
@@ -258,7 +259,7 @@ export interface KickoffEvent {
   description: string;
 }
 
-export type SppActionType = 'TD' | 'CASUALTY' | 'PASS' | 'INT' | 'MVP' | 'INTERFERENCE';
+export type SppActionType = 'TD' | 'CASUALTY' | 'PASS' | 'INT' | 'MVP' | 'INTERFERENCE' | 'DEFLECT' | 'THROW_TEAM_MATE';
 
 // Board / Tactical
 export interface InjuryEvent {

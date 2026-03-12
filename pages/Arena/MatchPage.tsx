@@ -78,9 +78,12 @@ interface FoulState {
 }
 
 interface InjuryState {
-    step: 'select_victim_team' | 'select_victim' | 'armor_roll' | 'injury_roll' | 'apothecary' | 'casualty_roll' | 'lasting_injury_roll' | 'regeneration_check' | 'regeneration_roll' | 'staff_reroll_choice' | 'summary';
+    step: 'select_casualty_type' | 'select_attacker_team' | 'select_attacker' | 'select_victim_team' | 'select_victim' | 'armor_roll' | 'injury_roll' | 'apothecary' | 'casualty_roll' | 'lasting_injury_roll' | 'regeneration_check' | 'regeneration_roll' | 'staff_reroll_choice' | 'summary';
     victimTeamId: 'home' | 'opponent' | null;
     victimPlayer: ManagedPlayer | null;
+    attackerTeamId: 'home' | 'opponent' | null;
+    attackerPlayer: ManagedPlayer | null;
+    isCasualty: boolean;
     isStunty: boolean;
     armorRoll: { roll: number; armorBroken: boolean; } | null;
     injuryRoll: { roll: number; result: string; } | null;
@@ -318,7 +321,7 @@ const cloneLiveTeam = (team: ManagedTeam): ManagedTeam => {
 };
 
 const initialFoulState: FoulState = { step: 'select_fouler_team', foulingTeamId: null, foulingPlayer: null, victimPlayer: null, armorRoll: null, injuryRoll: null, casualtyRoll: null, lastingInjuryRoll: null, wasExpelled: false, expulsionReason: '', log: [], armorRollInput: { die1: '', die2: '' }, injuryRollInput: { die1: '', die2: '' }, casualtyRollInput: '', lastingInjuryRollInput: '' };
-const initialInjuryState: InjuryState = { step: 'select_victim_team', victimTeamId: null, victimPlayer: null, isStunty: false, armorRoll: null, injuryRoll: null, casualtyRoll: null, lastingInjuryRoll: null, log: [], armorRollInput: { die1: '', die2: '' }, injuryRollInput: { die1: '', die2: '' }, casualtyRollInput: '', lastingInjuryRollInput: '', apothecaryAction: null, regenerationRollInput: '', regenerationRoll: null };
+const initialInjuryState: InjuryState = { step: 'select_casualty_type', victimTeamId: null, victimPlayer: null, attackerTeamId: null, attackerPlayer: null, isCasualty: false, isStunty: false, armorRoll: null, injuryRoll: null, casualtyRoll: null, lastingInjuryRoll: null, log: [], armorRollInput: { die1: '', die2: '' }, injuryRollInput: { die1: '', die2: '' }, casualtyRollInput: '', lastingInjuryRollInput: '', apothecaryAction: null, regenerationRollInput: '', regenerationRoll: null };
 const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], onTeamUpdate, onMatchReportCreate }) => {
     const [gameState, setGameState] = useState<GameState>('setup');
     const [selectedReport, setSelectedReport] = useState<MatchReport | null>(null);
@@ -360,8 +363,9 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
     const [pendingJourneymen, setPendingJourneymen] = useState<{ home: ManagedPlayer[], opponent: ManagedPlayer[] }>({ home: [], opponent: [] });
     const [activeTeamId, setActiveTeamId] = useState<'home' | 'opponent'>('home');
     const [selectedPlayerForAction, setSelectedPlayerForAction] = useState<ManagedPlayer | null>(null);
-    type SppModalType = 'pass' | 'interference' | 'casualty';
+    type SppModalType = 'pass' | 'interference' | 'casualty' | 'deflect' | 'throw_team_mate';
     const [sppModalState, setSppModalState] = useState<{ isOpen: boolean; type: SppModalType | null; step: 'select_team' | 'select_player' | 'interference_type'; teamId: 'home' | 'opponent' | null; selectedPlayer: ManagedPlayer | null; }>({ isOpen: false, type: null, step: 'select_team', teamId: null, selectedPlayer: null });
+    const [isSequenceGuideOpen, setIsSequenceGuideOpen] = useState(false);
     const [foulState, setFoulState] = useState<FoulState>(initialFoulState);
     const [isInjuryModalOpen, setIsInjuryModalOpen] = useState(false);
     const [injuryState, setInjuryState] = useState<InjuryState>(initialInjuryState);
@@ -519,12 +523,53 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
     };
     const handleConfirmJourneymen = () => { if (pendingJourneymen.home.length > 0 && liveHomeTeam) { setLiveHomeTeam(prev => prev ? ({ ...prev, players: [...prev.players, ...pendingJourneymen.home] }) : null); logEvent('INFO', `${liveHomeTeam.name} añade ${pendingJourneymen.home.length} Sustituto(s).`); } if (pendingJourneymen.opponent.length > 0 && liveOpponentTeam) { setLiveOpponentTeam(prev => prev ? ({ ...prev, players: [...prev.players, ...pendingJourneymen.opponent] }) : null); logEvent('INFO', `${liveOpponentTeam.name} añade ${pendingJourneymen.opponent.length} Sustituto(s).`); } setJourneymenNotification(null); setPendingJourneymen({ home: [], opponent: [] }); setPreGameStep(1); };
     const handleSkillClick = useCallback((skillName: string) => { const cleanedName = (skillName || '').split('(')[0].trim(); const foundSkill = skillsData.find(s => s.name.toLowerCase().startsWith(cleanedName.toLowerCase())); if (foundSkill) setSelectedSkillForModal(foundSkill); else console.warn(`Skill not found: ${cleanedName}`); }, []);
-    const updatePlayerSppAndAction = (player: ManagedPlayer, teamId: 'home' | 'opponent', spp: number, action: SppActionType, description: string) => { const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam; setTeam(prev => { if (!prev) return null; return { ...prev, players: prev.players.map(p => { if (p.id === player.id) { const newActions = { ...(p.sppActions || {}) }; newActions[action] = (newActions[action] || 0) + 1; return { ...p, spp: p.spp + spp, sppActions: newActions }; } return p; }) }; }); logEvent('INFO', `${player.customName} gana ${spp} PE por ${description}.`); setSppModalState({ isOpen: false, type: null, step: 'select_team', teamId: null, selectedPlayer: null }); };
-    const updatePlayerStatus = (playerId: number, teamId: 'home' | 'opponent', status: PlayerStatus, statusDetail?: string) => { const setTeamToUpdate = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam; setTeamToUpdate(prevTeam => { if (!prevTeam) return null; return { ...prevTeam, players: prevTeam.players.map(p => p.id === playerId ? { ...p, status, statusDetail: statusDetail || '' } : p) }; }); };
+    const updatePlayerSppAndAction = (player: ManagedPlayer, teamId: 'home' | 'opponent', spp: number, action: SppActionType, description: string) => {
+        const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
+        setTeam(prev => {
+            if (!prev) return null;
+            return {
+                ...prev,
+                players: prev.players.map(p => {
+                    if (p.id === player.id) {
+                        const newActions = { ...(p.sppActions || {}) };
+                        newActions[action] = (newActions[action] || 0) + 1;
+                        return { ...p, spp: p.spp + spp, sppActions: newActions };
+                    }
+                    return p;
+                })
+            };
+        });
+
+        const actionTypeMap: Record<SppActionType, GameEventType> = {
+            'TD': 'touchdown',
+            'CASUALTY': 'injury_casualty',
+            'PASS': 'pass_complete',
+            'INT': 'interception',
+            'MVP': 'mvp_awarded',
+            'INTERFERENCE': 'INFO',
+            'DEFLECT': 'DEFLECT',
+            'THROW_TEAM_MATE': 'THROW_TEAM_MATE'
+        };
+
+        logEvent(actionTypeMap[action] || 'INFO', `${player.customName} gana ${spp} PE por ${description}.`, { team: teamId, player: player.id });
+        setSppModalState({ isOpen: false, type: null, step: 'select_team', teamId: null, selectedPlayer: null });
+    };
+
+    const updatePlayerStatus = (playerId: number, teamId: 'home' | 'opponent', status: PlayerStatus, statusDetail?: string) => {
+        const setTeamToUpdate = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
+        setTeamToUpdate(prevTeam => {
+            if (!prevTeam) return null;
+            return {
+                ...prevTeam,
+                players: prevTeam.players.map(p => p.id === playerId ? { ...p, status, statusDetail: statusDetail || '' } : p)
+            };
+        });
+    };
 
     const handleSelectTdScorer = (scorer: ManagedPlayer) => {
         if (!tdModalTeam || !liveHomeTeam || !liveOpponentTeam) return;
         const teamName = tdModalTeam === 'home' ? liveHomeTeam.name : liveOpponentTeam.name;
+        
         logEvent('touchdown', `${scorer.customName} ha anotado un Touchdown para ${teamName}!`, { team: tdModalTeam, player: scorer.id });
         setScore(s => ({ ...s, [tdModalTeam]: s[tdModalTeam] + 1 }));
         playSound('td');
@@ -602,8 +647,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                     opponent: gameLog.filter(e => e.team === 'opponent' && (e.type === 'pass_complete' || e.type === 'PASS')).length
                 },
                 interceptions: {
-                    home: gameLog.filter(e => e.team === 'home' && e.type === 'interception').length,
-                    opponent: gameLog.filter(e => e.team === 'opponent' && e.type === 'interception').length
+                    home: gameLog.filter(e => e.team === 'home' && (e.type === 'interception' || e.type === 'INTERCEPTION')).length,
+                    opponent: gameLog.filter(e => e.team === 'opponent' && (e.type === 'interception' || e.type === 'INTERCEPTION')).length
                 },
                 fouls: {
                     home: gameLog.filter(e => e.team === 'home' && (e.type === 'foul_attempt' || e.type === 'FOUL')).length,
@@ -614,8 +659,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                     opponent: gameLog.filter(e => e.team === 'opponent' && (e.type === 'player_sent_off' || e.type === 'EXPULSION')).length
                 },
                 casualties: {
-                    home: gameLog.filter(e => e.team === 'home' && (e.type === 'injury_casualty' || e.type === 'INJURY')).length,
-                    opponent: gameLog.filter(e => e.team === 'opponent' && (e.type === 'injury_casualty' || e.type === 'INJURY')).length
+                    home: gameLog.filter(e => e.team === 'home' && (e.type === 'injury_casualty' || e.type === 'INJURY' || e.type === 'DEATH')).length,
+                    opponent: gameLog.filter(e => e.team === 'opponent' && (e.type === 'injury_casualty' || e.type === 'INJURY' || e.type === 'DEATH')).length
                 },
                 rerollsUsed: {
                     home: gameLog.filter(e => e.team === 'home' && e.type === 'reroll_used').length,
@@ -788,17 +833,23 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                 break;
             }
             case 'summary':
-                if (wasExpelled) { const victimTeamId = foulingTeamId === 'home' ? 'home' : 'opponent'; updatePlayerStatus(foulingPlayer!.id, victimTeamId, 'Expulsado', 'Expulsado por falta'); }
-                logEvent('FOUL', `Falta cometida por ${foulingPlayer?.customName} sobre ${victimPlayer?.customName}. ${foulState.log.join(' ')}`);
+                if (wasExpelled) {
+                    const foulTeamId = foulingTeamId === 'home' ? 'home' : 'opponent';
+                    updatePlayerStatus(foulingPlayer!.id, foulTeamId, 'Expulsado', 'Expulsado por falta');
+                    logEvent('EXPULSION', `¡${foulingPlayer?.customName} expulsado!`, { team: foulTeamId, player: foulingPlayer?.id });
+                }
+
+                logEvent('foul_attempt', `Falta cometida por ${foulingPlayer?.customName} sobre ${victimPlayer?.customName}. ${foulState.log.join(' ')}`, { team: foulingTeamId, player: foulingPlayer?.id });
                 setIsFoulModalOpen(false);
                 setFoulState(initialFoulState);
                 break;
         }
     };
     const handleInjuryAction = (action: 'next' | 'back') => {
-        const { step, victimPlayer, armorRollInput, log, victimTeamId, injuryRollInput, casualtyRollInput, lastingInjuryRollInput, casualtyRoll, apothecaryAction, isStunty, regenerationRollInput } = injuryState;
+        const { step, victimPlayer, armorRollInput, log, victimTeamId, injuryRollInput, casualtyRollInput, lastingInjuryRollInput, casualtyRoll, apothecaryAction, isStunty, regenerationRollInput, attackerPlayer, attackerTeamId, isCasualty } = injuryState;
+        
         if (action === 'back') {
-            const steps: InjuryState['step'][] = ['select_victim_team', 'select_victim', 'armor_roll', 'injury_roll', 'apothecary', 'casualty_roll', 'lasting_injury_roll', 'regeneration_check', 'regeneration_roll', 'staff_reroll_choice', 'summary'];
+            const steps: InjuryState['step'][] = ['select_casualty_type', 'select_attacker_team', 'select_attacker', 'select_victim_team', 'select_victim', 'armor_roll', 'injury_roll', 'apothecary', 'casualty_roll', 'lasting_injury_roll', 'regeneration_check', 'regeneration_roll', 'staff_reroll_choice', 'summary'];
             const currentIndex = steps.indexOf(step);
             if (currentIndex > 0) setInjuryState(prev => ({ ...prev, step: steps[currentIndex - 1] }));
             return;
@@ -808,6 +859,18 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
         const setVictimTeam = victimTeamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
 
         switch (step) {
+            case 'select_casualty_type':
+                // Handled in UI buttons
+                break;
+            case 'select_attacker_team':
+                // Handled in UI buttons
+                break;
+            case 'select_attacker':
+                if (attackerPlayer) setInjuryState(prev => ({ ...prev, step: 'select_victim_team' }));
+                break;
+            case 'select_victim_team':
+                // Handled in UI buttons
+                break;
             case 'select_victim':
                 if (victimPlayer) {
                     const hasStunty = victimPlayer.skills.toLowerCase().includes('escurridizo');
@@ -877,7 +940,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                     setIsApothecaryModalOpen(true);
                     setInjuryState(prev => ({ ...prev, casualtyRoll: { roll, result: event.title, rerolled: false }, step: 'apothecary', log: [...log, logMsg] }));
                 } else {
-                    setInjuryState(prev => ({ ...prev, casualtyRoll: { ...(prev.casualtyRoll!), roll, result: event.title }, step: 'regeneration_check', log: [...log, logMsg] }));
+                    setInjuryState(prev => ({ ...prev, casualtyRoll: { ...(prev.casualtyRoll || {roll: 0, result: '', rerolled: false}), roll, result: event.title }, step: 'regeneration_check', log: [...log, logMsg] }));
                 } break;
             }
             case 'regeneration_check': {
@@ -885,7 +948,6 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                 if (hasRegeneration) {
                     setInjuryState(prev => ({ ...prev, step: 'regeneration_roll' }));
                 } else {
-                    // Skip to status update or lasting injury
                     const eventTitle = injuryState.casualtyRoll?.result;
                     if (eventTitle) {
                         updatePlayerStatus(victimPlayer!.id, victimTeamId!, eventTitle === 'Muerto' ? 'Muerto' : 'Lesionado', eventTitle);
@@ -933,7 +995,21 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
             }
             case 'summary': {
                 const finalLog = injuryState.log.join(' ');
-                logEvent('INJURY', `Herida a ${victimPlayer?.customName}. ${finalLog}`);
+                const casualtyResult = injuryState.casualtyRoll?.result;
+                const isDeath = casualtyResult === 'Muerto';
+                const isRealCasualty = casualtyResult && casualtyResult !== 'Magullado (solo reservas)';
+                
+                if (isDeath) {
+                    logEvent('DEATH', `¡MUERTE! ${victimPlayer?.customName} ha fallecido en el campo.`, { team: victimTeamId!, player: victimPlayer?.id });
+                }
+                
+                if (isCasualty && isRealCasualty && attackerPlayer && attackerTeamId) {
+                    updatePlayerSppAndAction(attackerPlayer, attackerTeamId, 2, 'CASUALTY', `causar una baja a ${victimPlayer?.customName}`);
+                    logEvent('injury_casualty', `Baja causada por ${attackerPlayer.customName} sobre ${victimPlayer?.customName}. ${finalLog}`, { team: attackerTeamId, player: attackerPlayer.id, target: victimPlayer?.id });
+                } else {
+                    logEvent('injury_casualty', `Herida a ${victimPlayer?.customName}. ${finalLog}`, { team: victimTeamId!, player: victimPlayer?.id });
+                }
+
                 setIsInjuryModalOpen(false);
                 setInjuryState(initialInjuryState);
                 break;
@@ -2392,6 +2468,32 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                                     </button>
 
                                     <button
+                                        onClick={() => openSppModal('deflect')}
+                                        className="group relative overflow-hidden bg-sky-950/20 border-2 border-sky-500/20 text-white font-display font-black p-5 rounded-[1.5rem] hover:bg-sky-400 hover:text-black hover:border-sky-300 transition-all duration-500 shadow-xl flex flex-col items-center gap-3"
+                                    >
+                                        <div className="w-12 h-12 bg-sky-500/10 rounded-xl flex items-center justify-center border border-sky-500/30 group-hover:bg-black group-hover:border-black group-hover:scale-110 transition-all duration-300">
+                                            <span className="material-symbols-outlined text-sky-400 text-2xl">front_hand</span>
+                                        </div>
+                                        <span className="uppercase italic text-[9px] tracking-[0.2em]">Desviar Pase</span>
+                                        <div className="absolute -bottom-2 -right-2 opacity-10 translate-y-4 group-hover:translate-y-0 transition-transform duration-700">
+                                            <span className="material-symbols-outlined text-7xl text-white">front_hand</span>
+                                        </div>
+                                    </button>
+
+                                    <button
+                                        onClick={() => openSppModal('throw_team_mate')}
+                                        className="group relative overflow-hidden bg-sky-950/20 border-2 border-sky-500/20 text-white font-display font-black p-5 rounded-[1.5rem] hover:bg-sky-600 hover:text-black hover:border-sky-500 transition-all duration-500 shadow-xl flex flex-col items-center gap-3"
+                                    >
+                                        <div className="w-12 h-12 bg-sky-500/10 rounded-xl flex items-center justify-center border border-sky-500/30 group-hover:bg-black group-hover:border-black group-hover:scale-110 transition-all duration-300">
+                                            <span className="material-symbols-outlined text-sky-500 text-2xl">hail</span>
+                                        </div>
+                                        <span className="uppercase italic text-[9px] tracking-[0.2em]">Lanzar Compañero</span>
+                                        <div className="absolute -bottom-2 -right-2 opacity-10 translate-y-4 group-hover:translate-y-0 transition-transform duration-700">
+                                            <span className="material-symbols-outlined text-7xl text-white">hail</span>
+                                        </div>
+                                    </button>
+
+                                    <button
                                         onClick={handleNextTurn}
                                         className="group relative overflow-hidden bg-premium-gold/5 border-2 border-dashed border-premium-gold/30 text-premium-gold font-display font-black p-5 rounded-[1.5rem] hover:bg-premium-gold hover:text-black hover:border-solid hover:border-premium-gold transition-all duration-500 shadow-xl flex flex-col items-center gap-3"
                                     >
@@ -2418,6 +2520,10 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                                     <button onClick={() => setIsWeatherModalOpen(true)} className="group bg-white/5 border border-white/5 px-6 py-4 rounded-2xl text-[10px) font-display font-black uppercase tracking-widest text-slate-400 hover:text-amber-400 hover:border-amber-400/30 hover:bg-amber-400/5 transition-all flex items-center gap-3">
                                         <span className="material-symbols-outlined text-lg animate-spin-slow">cyclone</span>
                                         Vientos de Nuffle
+                                    </button>
+                                    <button onClick={() => setIsSequenceGuideOpen(true)} className="group bg-premium-gold/5 border border-premium-gold/20 px-6 py-4 rounded-2xl text-[10px] font-display font-black uppercase tracking-widest text-premium-gold hover:bg-premium-gold hover:text-black transition-all flex items-center gap-3 shadow-[0_0_20px_rgba(245,159,10,0.1)]">
+                                        <span className="material-symbols-outlined text-lg">list_alt</span>
+                                        Guía de Secuencia
                                     </button>
                                 </div>
                             </div>
@@ -2739,7 +2845,13 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                             </div>
                             <div>
                                 <h2 className="text-2xl font-display font-black text-white uppercase italic tracking-tighter">Mérito de Guerra</h2>
-                                <p className="text-[10px] font-display font-bold text-premium-gold uppercase tracking-widest">{sppModalState.type === 'pass' ? 'Pase de Precisión' : sppModalState.type === 'interference' ? 'Interferencia' : 'Baja Causada'}</p>
+                                <p className="text-[10px] font-display font-bold text-premium-gold uppercase tracking-widest">
+                                    {sppModalState.type === 'pass' ? 'Pase de Precisión' : 
+                                     sppModalState.type === 'interference' ? 'Interferencia' : 
+                                     sppModalState.type === 'deflect' ? 'Desvío de Pase' :
+                                     sppModalState.type === 'throw_team_mate' ? '¡Volar Compañero!' :
+                                     'Baja Causada'}
+                                </p>
                             </div>
                         </div>
                         <div className="p-6">
@@ -2770,7 +2882,11 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                                         {(sppModalState.teamId === 'home' ? liveHomeTeam : liveOpponentTeam).players.filter(p => p.status === 'Activo').map(p => (
                                             <button key={p.id} onClick={() => {
                                                 if (sppModalState.type === 'interference') setSppModalState(s => ({ ...s, selectedPlayer: p, step: 'interference_type' }));
-                                                else updatePlayerSppAndAction(p, sppModalState.teamId!, sppModalState.type === 'pass' ? 1 : 2, sppModalState.type!.toUpperCase() as SppActionType, sppModalState.type!);
+                                                else {
+                                                    let points = 2; // Default for Casualty/Int
+                                                    if (sppModalState.type === 'pass' || sppModalState.type === 'deflect' || sppModalState.type === 'throw_team_mate') points = 1;
+                                                    updatePlayerSppAndAction(p, sppModalState.teamId!, points, sppModalState.type!.toUpperCase() as SppActionType, sppModalState.type!);
+                                                }
                                             }} className="w-full flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:border-premium-gold/50 hover:bg-premium-gold/5 transition-all group">
                                                 <div className="text-left">
                                                     <p className="text-sm font-display font-bold text-white group-hover:text-premium-gold transition-colors">{p.customName}</p>
@@ -2963,9 +3079,75 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                             {(() => {
                                 if (!liveHomeTeam || !liveOpponentTeam) return null;
                                 switch (injuryState.step) {
+                                    case 'select_casualty_type': return (
+                                        <div className="space-y-6">
+                                            <h3 className="text-xs font-display font-black text-slate-500 uppercase tracking-widest text-center">¿Cuál es el origen de la baja?</h3>
+                                            <div className="grid grid-cols-1 gap-4">
+                                                <button 
+                                                    onClick={() => setInjuryState(prev => ({ ...prev, isCasualty: true, step: 'select_attacker_team' }))}
+                                                    className="group flex items-center gap-6 p-6 bg-white/5 border border-white/5 rounded-[2rem] hover:border-premium-gold/50 hover:bg-premium-gold/5 transition-all text-left"
+                                                >
+                                                    <div className="w-16 h-16 bg-premium-gold/10 rounded-2xl flex items-center justify-center border border-premium-gold/20 group-hover:scale-110 transition-transform">
+                                                        <span className="material-symbols-outlined text-premium-gold text-3xl">sports_kabaddi</span>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xl font-display font-black text-white italic uppercase">Baja en Combate</p>
+                                                        <p className="text-xs text-slate-500 font-bold uppercase tracking-wide">Causada por un Jugador (Otorga 2 PE)</p>
+                                                    </div>
+                                                </button>
+                                                <button 
+                                                    onClick={() => setInjuryState(prev => ({ ...prev, isCasualty: false, step: 'select_victim_team' }))}
+                                                    className="group flex items-center gap-6 p-6 bg-white/5 border border-white/5 rounded-[2rem] hover:border-sky-500/50 hover:bg-sky-500/5 transition-all text-left"
+                                                >
+                                                    <div className="w-16 h-16 bg-sky-500/10 rounded-2xl flex items-center justify-center border border-sky-500/20 group-hover:scale-110 transition-transform">
+                                                        <span className="material-symbols-outlined text-sky-500 text-3xl">psychology_alt</span>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xl font-display font-black text-white italic uppercase">Baja Accidental</p>
+                                                        <p className="text-xs text-slate-500 font-bold uppercase tracking-wide">Esquivas fallidas, terreno o público</p>
+                                                    </div>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    );
+                                    case 'select_attacker_team': return (
+                                        <div className="space-y-6">
+                                            <div className="flex items-center justify-between">
+                                                <h3 className="text-xs font-display font-black text-slate-500 uppercase tracking-widest">¿Quién reclama el honor?</h3>
+                                                <button onClick={() => setInjuryState(prev => ({ ...prev, step: 'select_casualty_type' }))} className="text-[9px] font-display font-bold text-premium-gold uppercase tracking-widest">&larr; Volver</button>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <button onClick={() => setInjuryState(prev => ({ ...prev, attackerTeamId: 'home', step: 'select_attacker' }))} className="bg-white/5 border border-white/5 p-6 rounded-3xl hover:border-sky-500/50 hover:bg-sky-500/10 transition-all group">
+                                                    <span className="text-xs font-display font-black text-sky-500 uppercase tracking-widest block mb-1 opacity-50">Local</span>
+                                                    <p className="text-lg font-display font-black text-white group-hover:text-sky-400 transition-colors uppercase italic">{liveHomeTeam.name}</p>
+                                                </button>
+                                                <button onClick={() => setInjuryState(prev => ({ ...prev, attackerTeamId: 'opponent', step: 'select_attacker' }))} className="bg-white/5 border border-white/5 p-6 rounded-3xl hover:border-red-500/50 hover:bg-red-500/10 transition-all group">
+                                                    <span className="text-xs font-display font-black text-red-500 uppercase tracking-widest block mb-1 opacity-50">Rival</span>
+                                                    <p className="text-lg font-display font-black text-white group-hover:text-red-400 transition-colors uppercase italic">{liveOpponentTeam.name}</p>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    );
+                                    case 'select_attacker': {
+                                        const team = injuryState.attackerTeamId === 'home' ? liveHomeTeam : liveOpponentTeam;
+                                        return (
+                                            <div className="space-y-4">
+                                                <div className="flex items-center justify-between">
+                                                    <h3 className="text-xs font-display font-black text-slate-500 uppercase tracking-widest">El Verdugo</h3>
+                                                    <button onClick={() => setInjuryState(prev => ({ ...prev, step: 'select_attacker_team' }))} className="text-[9px] font-display font-bold text-premium-gold uppercase tracking-widest">&larr; Volver</button>
+                                                </div>
+                                                <div className="max-h-[40vh] overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                                                    {team.players.map(p => <PlayerButton key={p.id} player={p} onSelect={player => setInjuryState(prev => ({ ...prev, attackerPlayer: player, step: 'select_victim_team' }))} />)}
+                                                </div>
+                                            </div>
+                                        );
+                                    }
                                     case 'select_victim_team': return (
                                         <div className="space-y-6">
-                                            <h3 className="text-xs font-display font-black text-slate-500 uppercase tracking-widest">¿Qué estandarte ha tropezado?</h3>
+                                            <div className="flex items-center justify-between">
+                                                <h3 className="text-xs font-display font-black text-slate-500 uppercase tracking-widest">¿Quién ha caído?</h3>
+                                                <button onClick={() => setInjuryState(prev => ({ ...prev, step: injuryState.isCasualty ? 'select_attacker' : 'select_casualty_type' }))} className="text-[9px] font-display font-bold text-premium-gold uppercase tracking-widest">&larr; Volver</button>
+                                            </div>
                                             <div className="grid grid-cols-2 gap-4">
                                                 <button onClick={() => setInjuryState(prev => ({ ...prev, victimTeamId: 'home', step: 'select_victim' }))} className="bg-white/5 border border-white/5 p-6 rounded-3xl hover:border-sky-500/50 hover:bg-sky-500/10 transition-all group">
                                                     <span className="text-xs font-display font-black text-sky-500 uppercase tracking-widest block mb-1 opacity-50">Local</span>
@@ -2986,8 +3168,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                                                     <h3 className="text-xs font-display font-black text-slate-500 uppercase tracking-widest">La Víctima en Suelo</h3>
                                                     <button onClick={() => setInjuryState(prev => ({ ...prev, step: 'select_victim_team' }))} className="text-[9px] font-display font-bold text-premium-gold uppercase tracking-widest">&larr; Volver</button>
                                                 </div>
-                                                <div className="max-h-[50vh] overflow-y-auto space-y-2 pr-2 custom-scrollbar">
-                                                    {team.players.map(p => <PlayerButton key={p.id} player={p} onSelect={player => setInjuryState(prev => ({ ...prev, victimPlayer: player, isStunty: player.skills.includes('Escurridizo'), hasRegeneration: player.skills.includes('Regeneración'), step: 'armor_roll' }))} />)}
+                                                <div className="max-h-[40vh] overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                                                    {team.players.map(p => <PlayerButton key={p.id} player={p} onSelect={player => setInjuryState(prev => ({ ...prev, victimPlayer: player, isStunty: player.skills.includes('Escurridizo'), step: 'armor_roll' }))} />)}
                                                 </div>
                                             </div>
                                         );
@@ -3039,7 +3221,13 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                                                     <p className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mb-1">Víctima Registrada</p>
                                                     <p className="text-xl font-display font-black text-white italic truncate uppercase">{injuryState.victimPlayer?.customName}</p>
                                                 </div>
-                                                <div className="glass-panel p-6 bg-black/60 border-white/5 space-y-2 mt-6">
+                                                {injuryState.isCasualty && injuryState.attackerPlayer && (
+                                                    <div className="text-center">
+                                                        <p className="text-[10px] font-display font-black text-premium-gold uppercase tracking-widest mb-1">Honor Reclamado por</p>
+                                                        <p className="text-lg font-display font-black text-white italic truncate uppercase">{injuryState.attackerPlayer.customName}</p>
+                                                    </div>
+                                                )}
+                                                <div className="glass-panel p-6 bg-black/60 border-white/5 space-y-2 mt-6 max-h-[200px] overflow-y-auto">
                                                     {injuryState.log.map((l, i) => <p key={i} className="text-xs text-slate-400 font-display italic">"{l}"</p>)}
                                                 </div>
                                             </div>
@@ -3055,6 +3243,100 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
             )}
             {isTurnoverModalOpen && <TurnoverModal onClose={() => setIsTurnoverModalOpen(false)} onConfirm={handleTurnover} />}
             {isApothecaryModalOpen && injuryState.victimPlayer && <ApothecaryModal player={injuryState.victimPlayer} hasUsedOnKO={(injuryState.victimTeamId === 'home' ? liveHomeTeam?.apothecaryUsedOnKO : liveOpponentTeam?.apothecaryUsedOnKO) || false} onClose={() => { setIsApothecaryModalOpen(false); setInjuryState(prev => ({ ...prev, step: 'regeneration_check' })); }} onPatchUp={() => { setIsApothecaryModalOpen(false); const teamId = injuryState.victimTeamId!; const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam; setTeam(prev => prev ? ({ ...prev, apothecaryUsedOnKO: true }) : null); updatePlayerStatus(injuryState.victimPlayer!.id, teamId, 'Activo', 'Recuperado por Boticario'); setInjuryState(prev => ({ ...prev, step: 'summary', log: [...prev.log, 'Boticario lo recupera (KO -> Reservas).'] })); }} onReroll={() => { setIsApothecaryModalOpen(false); const teamId = injuryState.victimTeamId!; const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam; const team = teamId === 'home' ? liveHomeTeam : liveOpponentTeam; if (team?.apothecary) { setTeam(prev => prev ? ({ ...prev, apothecary: false }) : null); } else if (team?.wanderingApothecaries && team.wanderingApothecaries > 0) { setTeam(prev => prev ? ({ ...prev, wanderingApothecaries: team.wanderingApothecaries - 1 }) : null); } if (injuryState.casualtyRoll) { setInjuryState(prev => ({ ...prev, step: 'casualty_roll', casualtyRollInput: '', log: [...prev.log, 'Boticario repite tirada de lesión.'], casualtyRoll: { ...prev.casualtyRoll!, rerolled: true } })); } else { setInjuryState(prev => ({ ...prev, step: 'injury_roll', injuryRollInput: { die1: '', die2: '' }, log: [...prev.log, 'Boticario repite tirada de herida.'] })); } }} />}
+            {isSequenceGuideOpen && (
+                <div className="fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center z-[300] p-4" onClick={() => setIsSequenceGuideOpen(false)}>
+                    <div className="glass-panel max-w-2xl w-full max-h-[85vh] border-premium-gold/30 bg-black/90 shadow-4xl flex flex-col overflow-hidden animate-slide-in-up" onClick={e => e.stopPropagation()}>
+                        <div className="p-8 border-b border-white/5 bg-premium-gold/5 flex justify-between items-center">
+                            <div>
+                                <h2 className="text-2xl font-display font-black text-white uppercase italic tracking-tighter">Códice de <span className="text-premium-gold">Batalla</span></h2>
+                                <p className="text-[10px] font-display font-black text-premium-gold uppercase tracking-[0.4em] opacity-60">Secuencia Oficial BB Season 3 (2025)</p>
+                            </div>
+                            <button onClick={() => setIsSequenceGuideOpen(false)} className="w-12 h-12 rounded-2xl bg-white/5 hover:bg-blood-red/20 text-slate-500 hover:text-blood-red transition-all flex items-center justify-center border border-white/5">
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                        <div className="p-8 overflow-y-auto custom-scrollbar space-y-10">
+                            <section className="relative pl-8 border-l-2 border-sky-500/30">
+                                <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-sky-500 shadow-[0_0_10px_rgba(14,165,233,0.5)]"></div>
+                                <h3 className="text-sky-400 font-display font-black uppercase tracking-widest text-sm mb-4">I. Preparación del Sacrificio</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {[
+                                        { t: 'Hinchas', d: 'Lanza 1D3 + Hinchas Dedicados para determinar el Factor de Popularidad.' },
+                                        { t: 'El Clima', d: 'Lanza 2D6 para determinar las condiciones del campo.' },
+                                        { t: 'Jornaleros', d: 'Contrata líneas con Solitario (4+) hasta completar 11 guerreros.' },
+                                        { t: 'Incentivos', d: 'El equipo de menor valor recibe presupuesto para estrellas y sobornos.' }
+                                    ].map((item, i) => (
+                                        <div key={i} className="bg-white/5 p-4 rounded-xl border border-white/5">
+                                            <p className="font-display font-bold text-white text-[11px] uppercase mb-1">{item.t}</p>
+                                            <p className="text-[10px] text-slate-400 leading-relaxed italic">{item.d}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+                            <section className="relative pl-8 border-l-2 border-blood-red/30">
+                                <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-blood-red shadow-[0_0_10px_rgba(239,68,68,0.5)]"></div>
+                                <h3 className="text-blood-red font-display font-black uppercase tracking-widest text-sm mb-4">II. La Danza de la Sangre</h3>
+                                <div className="space-y-4">
+                                    <div className="bg-white/5 p-4 rounded-xl border border-white/5">
+                                        <p className="font-display font-bold text-white text-[11px] uppercase mb-2">Entrada (Drive)</p>
+                                        <p className="text-[10px] text-slate-400 leading-relaxed italic">Despliegue &rarr; Patada Inicial &rarr; Evento (2D6) &rarr; Aterrizaje del balón.</p>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3 text-[10px] font-display font-black text-slate-500">
+                                        <div className="border border-white/5 p-3 rounded-lg text-center uppercase tracking-widest">Blitz (1/Turno)</div>
+                                        <div className="border border-white/5 p-3 rounded-lg text-center uppercase tracking-widest">Pase (1/Turno)</div>
+                                        <div className="border border-white/5 p-3 rounded-lg text-center uppercase tracking-widest">Falta (1/Turno)</div>
+                                        <div className="border border-white/5 p-3 rounded-lg text-center uppercase tracking-widest">Hand-off (1/Turno)</div>
+                                    </div>
+                                </div>
+                            </section>
+                            <section className="relative pl-8 border-l-2 border-premium-gold/30">
+                                <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-premium-gold shadow-[0_0_10px_rgba(245,159,10,0.5)]"></div>
+                                <h3 className="text-premium-gold font-display font-black uppercase tracking-widest text-sm mb-4">III. El Peso de la Experiencia</h3>
+                                <div className="bg-black/40 rounded-2xl border border-premium-gold/10 overflow-hidden">
+                                    <table className="w-full text-left text-[10px]">
+                                        <thead className="bg-premium-gold/10 text-premium-gold font-black uppercase tracking-widest">
+                                            <tr>
+                                                <th className="p-3">Hazaña</th>
+                                                <th className="p-3 text-right">Puntos (PE)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="text-slate-300 divide-y divide-white/5">
+                                            {[
+                                                { a: 'Pase Completado', p: '+1' },
+                                                { a: 'Lanzar Compañero (Superb)', p: '+1' },
+                                                { a: 'Desviar Pase', p: '+1' },
+                                                { a: 'Intercepción', p: '+2' },
+                                                { a: 'Baja (Placaje)', p: '+2' },
+                                                { a: 'Touchdown', p: '+3' },
+                                                { a: 'Jugador Más Valioso (MVP)', p: '+4' }
+                                            ].map((r, i) => (
+                                                <tr key={i} className="hover:bg-white/5 transition-colors">
+                                                    <td className="p-3 italic">{r.a}</td>
+                                                    <td className="p-3 text-right font-black text-premium-gold">{r.p}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </section>
+                            <section className="relative pl-8 border-l-2 border-green-500/30">
+                                <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>
+                                <h3 className="text-green-500 font-display font-black uppercase tracking-widest text-sm mb-4">IV. El Cierre de la Jornada</h3>
+                                <div className="bg-white/5 p-5 rounded-2xl border border-white/5 space-y-4">
+                                    <div className="flex justify-between items-center text-[11px]">
+                                        <span className="text-white font-display font-bold uppercase">Actualizar Hinchas</span>
+                                        <span className="text-slate-500 italic">Victoria: 1D6 ≥ Fans / Derrota: 1D6 &lt; Fans</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-[11px]">
+                                        <span className="text-white font-display font-bold uppercase">Recaudación</span>
+                                        <span className="text-slate-500 italic">(Popularidad/2 + TDs + FairPlay) * 10k</span>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+                </div>
+            )}
             {isMatchSummaryOpen && (
                 <MatchSummaryModal
                     isOpen={isMatchSummaryOpen}
@@ -3105,9 +3387,9 @@ const MatchSummaryModal = ({
     weather?: string
 }) => {
     // Normalize event types for filtering
-    const tds = gameLog.filter(e => e.type.toLowerCase() === 'touchdown' || e.type.toLowerCase() === 'td' || e.description.toLowerCase().includes('ha anotado un touchdown'));
-    const injuries = gameLog.filter(e => e.type.toLowerCase() === 'injury' || e.type.toLowerCase() === 'baja' || e.type.toLowerCase() === 'armor_break');
-    const fouls = gameLog.filter(e => e.type.toLowerCase() === 'foul').filter(e => e.description.toLowerCase().includes('expulsado'));
+    const tds = gameLog.filter(e => e.type === 'touchdown' || e.type === 'TOUCHDOWN' || e.description.toLowerCase().includes('ha anotado un touchdown'));
+    const injuries = gameLog.filter(e => e.type === 'injury_casualty' || e.type === 'INJURY' || e.type === 'DEATH');
+    const fouls = gameLog.filter(e => e.type === 'foul_attempt' || e.type === 'FOUL' || e.type === 'player_sent_off' || e.type === 'EXPULSION');
 
     // Count touchdowns per team - Fallback to currentScore if log filtering is ambiguous
     const logHomeScore = tds.filter(e => e.team === 'home').length;
@@ -3134,8 +3416,8 @@ const MatchSummaryModal = ({
     );
 
     return (
-        <div className="fixed inset-0 bg-black/95 backdrop-blur-xl flex items-center justify-center z-[500] p-4 lg:p-8">
-            <div className="glass-panel max-w-5xl w-full max-h-[90vh] flex flex-col border-premium-gold/30 bg-black/60 shadow-[0_0_100px_rgba(245,159,10,0.2)] animate-slide-in-up overflow-hidden">
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-xl flex items-center justify-center z-[500] p-4 lg:p-12">
+            <div className="glass-panel max-w-6xl w-full max-h-[92vh] flex flex-col border-premium-gold/30 bg-black/60 shadow-[0_0_120px_rgba(245,159,10,0.2)] animate-slide-in-up overflow-hidden">
                 {/* Sticky Header */}
                 <div className="sticky top-0 z-10 flex justify-between items-center p-6 md:p-8 border-b border-white/10 bg-black/80 backdrop-blur-md">
                     <div>
@@ -3245,9 +3527,10 @@ const MatchSummaryModal = ({
                             {injuries.length > 0 ? (
                                 <div className="grid grid-cols-1 gap-3">
                                     {injuries.map((injury, i) => {
-                                        const match = injury.description.match(/Herida a (.*?)\. (.*)/);
-                                        const name = match ? match[1] : 'Jugador';
+                                        const match = injury.description.match(/Herida a (.*?)\. (.*)/) || injury.description.match(/¡MUERTE! (.*?) (.*)/);
+                                        const name = match ? match[1] : (injury.type === 'DEATH' ? '¡ÓBITO!' : 'Jugador');
                                         const description = match ? match[2] : injury.description;
+
 
                                         return (
                                             <div key={i} className="bg-blood-red/5 p-4 rounded-2xl border border-blood-red/20 border-l-4 border-l-blood-red">

@@ -25,6 +25,8 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
     const [cheerleaders, setCheerleaders] = useState(0);
     const [apothecary, setApothecary] = useState(false);
     const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
+    const [crestImage, setCrestImage] = useState<string | null>(null);
+    const [editingPlayerNameId, setEditingPlayerNameId] = useState<number | null>(null);
 
     // Initial Budget
     const startingTreasury = 1000000;
@@ -48,13 +50,50 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
         setAssistantCoaches(0);
         setCheerleaders(0);
         setApothecary(false);
+        setCrestImage(null);
     }, [selectedFactionIdx]);
+
+    const handleCrestUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 200;
+                const MAX_HEIGHT = 200;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width *= MAX_HEIGHT / height;
+                        height = MAX_HEIGHT;
+                    }
+                }
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx?.drawImage(img, 0, 0, width, height);
+                setCrestImage(canvas.toDataURL('image/png'));
+            };
+            img.src = e.target?.result as string;
+        };
+        reader.readAsDataURL(file);
+    };
 
     // Calculations
     const totalCost = useMemo(() => {
         const playersCost = draftedPlayers.reduce((sum, p) => sum + p.cost, 0);
         const rerollCost = rerolls * (currentFaction?.rerollCost || 0);
-        const fansCost = (dedicatedFans - 1) * 10000; // First fan is free in some contexts but here we follow standard purchase: 10k per fan usually for new teams it starts at 1 and it's 10k to increase? Actually standard is starting at 1 for free, or buying? BB2020: 10k per fan. You start with 0 or 1? Standard start is 1 for free usually, but let's assume 10k per unit and user starts at 1. Wait, BB2020 dedicated fans start at 1 and cost 10k to increase.
+        const fansCost = (dedicatedFans - 1) * 10000;
         const staffCost = (assistantCoaches + cheerleaders) * 10000;
         const apoCost = apothecary ? 50000 : 0;
         return playersCost + rerollCost + fansCost + staffCost + apoCost;
@@ -87,6 +126,10 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
         setDraftedPlayers(draftedPlayers.filter(p => p.id !== id));
     };
 
+    const handlePlayerNameUpdate = (id: number, newName: string) => {
+        setDraftedPlayers(draftedPlayers.map(p => p.id === id ? { ...p, customName: newName } : p));
+    };
+
     const { skills: allSkills } = useMasterData();
 
     /** Resolve a canonical English key to the localized skill name */
@@ -104,7 +147,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
     const handleSubmit = () => {
         if (!teamName.trim() || !currentFaction) return;
         if (draftedPlayers.length < 11) {
-            alert("A team must have at least 11 players.");
+            alert("Un equipo debe tener al menos 11 jugadores.");
             return;
         }
 
@@ -118,6 +161,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
             cheerleaders,
             apothecary,
             players: draftedPlayers,
+            crestImage: crestImage || undefined
         };
         onTeamCreate(newTeam);
     };
@@ -192,7 +236,31 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                                     <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500 group-hover:text-premium-gold transition-colors font-bold">expand_more</span>
                                 </div>
                             </div>
-                            <div className="space-y-3 md:col-span-2">
+                            <div className="space-y-3 md:col-span-1">
+                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-2">Escudo del Club</label>
+                                <div className="flex items-center gap-4">
+                                    <div 
+                                        onClick={() => document.getElementById('crest-upload')?.click()}
+                                        className="size-24 bg-black/60 border-2 border-white/10 rounded-2xl flex items-center justify-center cursor-pointer hover:border-premium-gold/50 hover:bg-premium-gold/5 transition-all overflow-hidden relative group shadow-2xl"
+                                    >
+                                        {crestImage ? (
+                                            <img src={crestImage} alt="Crest" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="flex flex-col items-center gap-1">
+                                                <span className="material-symbols-outlined text-slate-700 group-hover:text-premium-gold transition-colors text-4xl">add_photo_alternate</span>
+                                                <span className="text-[8px] font-black text-slate-700 uppercase tracking-widest group-hover:text-premium-gold">Subir Escudo</span>
+                                            </div>
+                                        )}
+                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity border-2 border-premium-gold">
+                                            <span className="material-symbols-outlined text-white text-2xl font-bold">upload_file</span>
+                                        </div>
+                                    </div>
+                                    <input id="crest-upload" type="file" accept="image/*" className="hidden" onChange={handleCrestUpload} />
+                                    <p className="text-[10px] text-slate-500 italic max-w-[180px] leading-relaxed">Personaliza el blasón de tu equipo. <span className="text-premium-gold">Sube una imagen</span> para que tus guerreros la porten con orgullo.</p>
+                                </div>
+
+                            </div>
+                            <div className="space-y-3 md:col-span-1">
                                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-2">{t('team.create.coach')}</label>
                                 <input
                                     className="w-full bg-black/40 border border-white/5 rounded-2xl text-slate-500 p-4 shadow-inner cursor-not-allowed italic font-medium"
@@ -444,20 +512,42 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                                             const totalPosCost = playersOfPos.reduce((s, p) => s + p.cost, 0);
                                             return (
                                                 <div key={posName} className="flex flex-col gap-1">
-                                                    <div className="flex justify-between items-center">
+                                                    <div className="flex justify-between items-center bg-black/20 p-2 rounded-lg border border-white/5 mb-1">
                                                         <span className="text-sm font-black italic uppercase leading-none">{playersOfPos.length}x {posName}</span>
                                                         <span className="font-mono font-black text-sm italic">{totalPosCost / 1000}k</span>
                                                     </div>
-                                                    <div className="flex flex-wrap gap-1">
+                                                    <div className="flex flex-col gap-2 pl-2">
                                                         {playersOfPos.map((p, pIdx) => (
-                                                            <button
-                                                                key={p.id}
-                                                                onClick={() => handleFirePlayer(p.id)}
-                                                                className="text-[8px] bg-black/10 px-1.5 py-0.5 rounded text-black/50 hover:bg-red-900/20 hover:text-red-900 font-bold transition-all"
-                                                                title="Eliminar este jugador"
-                                                            >
-                                                                #{pIdx + 1}
-                                                            </button>
+                                                            <div key={p.id} className="flex items-center gap-2 group/player">
+                                                                <span className="text-[10px] font-bold text-black/40">#{pIdx + 1}</span>
+                                                                {editingPlayerNameId === p.id ? (
+                                                                    <input 
+                                                                        autoFocus
+                                                                        className="flex-1 bg-black/40 border border-premium-gold/30 rounded px-2 py-0.5 text-xs text-white outline-none"
+                                                                        value={p.customName}
+                                                                        onChange={(e) => handlePlayerNameUpdate(p.id, e.target.value)}
+                                                                        onBlur={() => setEditingPlayerNameId(null)}
+                                                                        onKeyDown={(e) => e.key === 'Enter' && setEditingPlayerNameId(null)}
+                                                                    />
+                                                                ) : (
+                                                                    <div 
+                                                                        onClick={() => setEditingPlayerNameId(p.id)}
+                                                                        className="flex-1 flex items-center gap-2 group/name cursor-pointer"
+                                                                    >
+                                                                        <span className="text-[11px] font-bold text-black/70 italic group-hover/name:text-black transition-colors truncate">
+                                                                            {p.customName}
+                                                                        </span>
+                                                                        <span className="material-symbols-outlined text-[10px] text-black/20 group-hover/name:text-black/60 transition-colors">edit</span>
+                                                                    </div>
+                                                                )}
+
+                                                                <button
+                                                                    onClick={() => handleFirePlayer(p.id)}
+                                                                    className="opacity-0 group-hover/player:opacity-100 size-6 bg-red-900/10 rounded flex items-center justify-center text-red-900 hover:bg-red-900 hover:text-white transition-all"
+                                                                >
+                                                                    <span className="material-symbols-outlined text-xs">close</span>
+                                                                </button>
+                                                            </div>
                                                         ))}
                                                     </div>
                                                 </div>
