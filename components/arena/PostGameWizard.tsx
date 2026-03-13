@@ -235,8 +235,6 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
         });
 
         setMvpsAwarded(prev => prev + 1);
-        setMvpRoll(null); // Reset for next roll if multi-MVP
-        setMvpNominations([]); 
     };
 
 
@@ -524,6 +522,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
 
                                 <button 
                                     onClick={() => {
+                                        setMvpNominations([]); 
                                         if (mvpsAwarded < mvpCount) {
                                             setMvpRoll(null);
                                         } else {
@@ -748,7 +747,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                 <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-blood-red/5 blur-[150px] rounded-full animate-pulse delay-700"></div>
             </div>
 
-            <div className="w-full max-w-2xl flex flex-col gap-8">
+            <div className="w-full max-w-xl flex flex-col gap-4 max-h-[90vh] overflow-y-auto custom-scrollbar p-2">
                 {/* Header */}
                 <div className="text-center space-y-2">
                     <div className="text-premium-gold text-[10px] font-display font-black uppercase tracking-[0.5em] opacity-60">Consilio de Posguerra</div>
@@ -766,7 +765,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                 </div>
 
                 {/* Main Content Card */}
-                <div className="glass-panel border-white/5 bg-black/40 p-10 shadow-4xl relative overflow-hidden min-h-[420px] flex flex-col">
+                <div className="glass-panel border-white/5 bg-black/40 p-6 sm:p-8 shadow-4xl relative overflow-hidden min-h-[380px] flex flex-col">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-premium-gold/5 blur-[100px] -z-10"></div>
                     <div className="absolute bottom-0 left-0 w-64 h-64 bg-blood-red/5 blur-[100px] -z-10"></div>
 
@@ -775,7 +774,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                     </div>
 
                     {/* Footer Controls */}
-                    <div className="mt-10 pt-10 border-t border-white/5 flex gap-4">
+                    <div className="mt-6 pt-6 border-t border-white/5 flex gap-3">
                         <button
                             onClick={() => setStep(s => Math.max(0, s - 1))}
                             disabled={step === 0}

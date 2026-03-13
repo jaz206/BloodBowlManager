@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import type { ManagedTeam, ManagedPlayer, Player, Skill } from '../../types';
 import { teamsData } from '../../data/teams';
 import { skillsData } from '../../data/skills';
@@ -9,12 +10,74 @@ import { generateRandomName } from '../../data/randomNames';
 import ShieldCheckIcon from '../../components/icons/ShieldCheckIcon';
 import ImageModal from '../../components/common/ImageModal';
 import UploadIcon from '../../components/icons/UploadIcon';
+import { PlayerAdvancementModal } from '../../components/guild/PlayerAdvancementModal';
+import { useMasterData } from '../../hooks/useMasterData';
 import MedicalCrossIcon from '../../components/icons/MedicalCrossIcon';
 import MiniField from '../../components/common/MiniField';
-import { PlayerAdvancementModal } from '../../components/guild/PlayerAdvancementModal';
-
 
 declare const QRCode: any;
+
+const LEAGUE_MAP: Record<string, string> = {
+    "Superliga Lustria": "Lustrian Superleague",
+    "Pelea de Badlands": "Badlands Brawl",
+    "Clásico del Viejo Mundo": "Old World Classic",
+    "Superliga del Borde del Mundo": "Worlds Edge Superleague",
+    "Favorito de...": "Favoured of",
+    "Copa Halfling Thimble": "Halfling Thimble Cup",
+    "Liga de los Reinos Élficos": "Elven Kingdoms League",
+    "Desafío del Inframundo": "Underworld Challenge",
+    "Foco de Sylvana": "Sylvanian Spotlight",
+    "Liga de Woodland": "Woodland League",
+    "Choque del Caos": "Chaos Clash",
+    "Favorito de Hashut": "Favoured of Hashut",
+    "Favorito de Khorne": "Favoured of Khorne",
+    "Favorito de Nurgle": "Favoured of Nurgle",
+    "Favorito de Slaanesh": "Favoured of Slaanesh",
+    "Favorito de Tzeentch": "Favoured of Tzeentch",
+    "Copa de la Jungla": "Jungle Cup"
+};
+
+interface AssetCardProps {
+    title: string;
+    value: number;
+    limit: number;
+    price: number;
+    onBuy: () => void;
+    onSell: () => void;
+    icon: string;
+    canSell: boolean;
+}
+
+const AssetCard: React.FC<AssetCardProps> = ({ title, value, limit, price, onBuy, onSell, icon, canSell }) => (
+    <div className='flex flex-col p-4 bg-black/20 rounded-2xl border border-white/5 group hover:border-premium-gold/30 transition-premium'>
+        <div className='flex justify-between items-start mb-4'>
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${value > 0 ? 'bg-premium-gold text-black' : 'bg-white/5 text-slate-500'}`}>
+                <span className='material-symbols-outlined text-xl'>{icon}</span>
+            </div>
+            <div className='text-right'>
+                <span className='text-[10px] font-display font-black text-slate-600 uppercase tracking-widest block'>Nivel</span>
+                <span className='text-2xl font-display font-black text-white italic'>{value}<span className='text-xs text-slate-600 ml-1 not-italic'>/{limit}</span></span>
+            </div>
+        </div>
+        <p className='text-[10px] font-display font-bold text-slate-400 uppercase tracking-[0.1em] mb-4 h-8 overflow-hidden line-clamp-2'>{title}</p>
+        <div className='flex gap-2 mt-auto'>
+            <button
+                onClick={onBuy}
+                disabled={value >= limit}
+                className='flex-grow bg-premium-gold/10 border border-premium-gold/20 text-premium-gold font-display font-black uppercase text-[10px] py-2 rounded-lg hover:bg-premium-gold hover:text-black transition-premium disabled:opacity-20'
+            >
+                +{price.toLocaleString()}
+            </button>
+            <button
+                onClick={onSell}
+                disabled={!canSell}
+                className='w-10 flex items-center justify-center bg-white/5 border border-white/10 text-white font-bold rounded-lg hover:bg-blood-red/20 hover:text-blood-red hover:border-blood-red/50 transition-premium disabled:opacity-20'
+            >
+                -
+            </button>
+        </div>
+    </div>
+);
 
 interface TeamDashboardProps {
     team: ManagedTeam;
@@ -33,6 +96,8 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
     const [isCrestModalOpen, setIsCrestModalOpen] = useState(false);
     const [fireConfirmation, setFireConfirmation] = useState<ManagedPlayer | null>(null);
     const [advancingPlayer, setAdvancingPlayer] = useState<ManagedPlayer | null>(null);
+    const { starPlayers } = useMasterData();
+    const [showReference, setShowReference] = useState(false);
 
     const qrCanvasRef = useRef<HTMLCanvasElement>(null);
     const crestInputRef = useRef<HTMLInputElement>(null);
@@ -488,6 +553,25 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
 
     const starterCount = team.players.filter(p => !(p.isBenched ?? true)).length;
 
+    const specialRulesList = useMemo(() => {
+        const rulesStr = baseRoster.specialRules_es || baseRoster.specialRules || '';
+        return rulesStr.split(',').map(s => s.trim()).filter(Boolean);
+    }, [baseRoster]);
+
+    const eligibleStars = useMemo(() => {
+        if (!starPlayers || !specialRulesList.length) return [];
+        return starPlayers.filter(star => {
+            if (star.playsFor.includes("Any Team")) return true;
+            if (star.playsFor.includes(team.rosterName)) return true;
+            return specialRulesList.some(rule => {
+                const eng = LEAGUE_MAP[rule];
+                if (!eng) return false;
+                if (eng === "Favoured of") return star.playsFor.some(p => p.startsWith("Favoured of"));
+                return star.playsFor.includes(eng);
+            });
+        }).sort((a, b) => a.cost - b.cost);
+    }, [starPlayers, specialRulesList, team.rosterName]);
+
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center px-4 pt-4">
@@ -538,6 +622,15 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                         </div>
                     </div>
                     <div className="flex flex-col items-end gap-2">
+                        <div className="flex gap-2 mb-2">
+                            <button 
+                                onClick={() => setShowReference(!showReference)}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-xl border font-display font-black uppercase tracking-widest text-[10px] transition-all ${showReference ? 'bg-primary text-black border-primary' : 'bg-white/5 border-white/10 text-primary hover:bg-white/10'}`}
+                            >
+                                <span className="material-symbols-outlined text-sm">{showReference ? 'visibility_off' : 'info'}</span>
+                                {showReference ? 'Cerrar Info' : 'Info Gameday'}
+                            </button>
+                        </div>
                         {!team.isAutoCalculating && (
                             <div className="bg-black/40 border border-white/5 py-1 px-4 rounded-full">
                                 <p className="text-xs font-display font-bold text-slate-400 uppercase tracking-widest">
@@ -552,6 +645,63 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                     </div>
                 </div>
             </div>
+
+            {/* Gameday Reference (Stars & Rules) */}
+            <AnimatePresence>
+                {showReference && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="overflow-hidden"
+                    >
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                            <div className="bg-zinc-900/60 rounded-3xl border border-primary/20 p-8 shadow-2xl relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                                    <span className="material-symbols-outlined !text-9xl text-primary font-black">gavel</span>
+                                </div>
+                                <h3 className="text-primary font-black uppercase tracking-[0.2em] text-[10px] mb-6 flex items-center gap-2 italic">
+                                    <span className="material-symbols-outlined text-sm">menu_book</span>
+                                    Reglas de Facción y Ligas
+                                </h3>
+                                <div className="flex flex-wrap gap-2 mb-6">
+                                    {specialRulesList.map((rule, idx) => (
+                                        <div key={idx} className="px-4 py-2 bg-black/40 border border-white/5 rounded-xl group/rule hover:border-primary/40 transition-all">
+                                            <p className="text-[10px] text-white font-black uppercase tracking-tight leading-none italic group-hover/rule:text-primary">{rule}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                                <p className="text-slate-500 text-[10px] font-medium italic leading-loose">
+                                    Este equipo compite en las superligas indicadas arriba, lo que define sus incentivos y elegibilidad de Jugadores Estrella para la Temporada 3 de Nuffle.
+                                </p>
+                            </div>
+
+                            <div className="bg-zinc-900/60 rounded-3xl border border-primary/20 p-8 shadow-2xl relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                                    <span className="material-symbols-outlined !text-9xl text-primary font-black">star</span>
+                                </div>
+                                <h3 className="text-primary font-black uppercase tracking-[0.2em] text-[10px] mb-6 flex items-center gap-2 italic">
+                                    <span className="material-symbols-outlined text-sm">person_star</span>
+                                    Estrellas Elegibles
+                                </h3>
+                                <div className="space-y-3 max-h-48 overflow-y-auto custom-scrollbar pr-2">
+                                    {eligibleStars.length > 0 ? eligibleStars.map((star, idx) => (
+                                        <div key={idx} className="flex justify-between items-center p-3 bg-black/20 rounded-xl border border-white/5 hover:border-white/10 transition-all">
+                                            <div className="flex flex-col">
+                                                <span className="text-xs font-black text-white uppercase italic">{star.name}</span>
+                                                <span className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">MV:{star.stats?.MV} FU:{star.stats?.FU} AG:{star.stats?.AG}</span>
+                                            </div>
+                                            <span className="text-premium-gold font-display font-black italic text-lg">{star.cost.toLocaleString()}</span>
+                                        </div>
+                                    )) : (
+                                        <p className="text-slate-600 text-[10px] font-bold uppercase italic py-4">No se detectaron estrellas compatibles.</p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Team Assets & Staff */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1033,44 +1183,3 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
         </div>
     );
 };
-interface AssetCardProps {
-    title: string;
-    value: number;
-    limit: number;
-    price: number;
-    onBuy: () => void;
-    onSell: () => void;
-    icon: string;
-    canSell: boolean;
-}
-
-const AssetCard: React.FC<AssetCardProps> = ({ title, value, limit, price, onBuy, onSell, icon, canSell }) => (
-    <div className='flex flex-col p-4 bg-black/20 rounded-2xl border border-white/5 group hover:border-premium-gold/30 transition-premium'>
-        <div className='flex justify-between items-start mb-4'>
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${value > 0 ? 'bg-premium-gold text-black' : 'bg-white/5 text-slate-500'}`}>
-                <span className='material-symbols-outlined text-xl'>{icon}</span>
-            </div>
-            <div className='text-right'>
-                <span className='text-[10px] font-display font-black text-slate-600 uppercase tracking-widest block'>Nivel</span>
-                <span className='text-2xl font-display font-black text-white italic'>{value}<span className='text-xs text-slate-600 ml-1 not-italic'>/{limit}</span></span>
-            </div>
-        </div>
-        <p className='text-[10px] font-display font-bold text-slate-400 uppercase tracking-[0.1em] mb-4 h-8 overflow-hidden line-clamp-2'>{title}</p>
-        <div className='flex gap-2 mt-auto'>
-            <button
-                onClick={onBuy}
-                disabled={value >= limit}
-                className='flex-grow bg-premium-gold/10 border border-premium-gold/20 text-premium-gold font-display font-black uppercase text-[10px] py-2 rounded-lg hover:bg-premium-gold hover:text-black transition-premium disabled:opacity-20'
-            >
-                +{price.toLocaleString()}
-            </button>
-            <button
-                onClick={onSell}
-                disabled={!canSell}
-                className='w-10 flex items-center justify-center bg-white/5 border border-white/10 text-white font-bold rounded-lg hover:bg-blood-red/20 hover:text-blood-red hover:border-blood-red/50 transition-premium disabled:opacity-20'
-            >
-                -
-            </button>
-        </div>
-    </div>
-);

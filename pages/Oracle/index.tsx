@@ -6,10 +6,11 @@ import Skills from './SkillsPage';
 import StarPlayers from './StarPlayersPage';
 import ProbabilityCalculator from './ProbabilitiesPage';
 import InducementTable from './InducementsPage';
+import RulesPage from './RulesPage';
 import { useLanguage } from '../../contexts/LanguageContext';
 import type { ManagedTeam } from '../../types';
 
-type SubView = 'hub' | 'teams' | 'skills' | 'star_players' | 'calculator' | 'inducements';
+type SubView = 'hub' | 'teams' | 'skills' | 'star_players' | 'calculator' | 'inducements' | 'rules';
 
 const SKILL_CATEGORIES = [
     { id: 'General', label: 'General' },
@@ -301,6 +302,28 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                         </button>
                     </div>
                 </div>
+
+                {/* Rules & Sequences Card */}
+                <div className="lg:col-span-4 bg-zinc-900/60 p-8 rounded-[2.5rem] border border-white/5 flex flex-col justify-between shadow-2xl relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2 group-hover:scale-150 transition-transform duration-1000"></div>
+                    <div>
+                        <div className="flex items-center gap-4 mb-6">
+                            <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                                <span className="material-symbols-outlined font-bold">menu_book</span>
+                            </div>
+                            <h2 className="text-white text-xl font-black uppercase italic tracking-tighter">Manual de Campo</h2>
+                        </div>
+                        <p className="text-slate-500 text-xs font-medium italic leading-relaxed mb-8">
+                            Consulta las secuencias oficiales de Pre-Partido, Post-Partido y Tablas de Eventos de la Season 3.
+                        </p>
+                    </div>
+                    <button
+                        onClick={() => setActiveView('rules')}
+                        className="w-full bg-white/5 border border-white/10 text-white font-black py-4 rounded-xl hover:bg-primary hover:text-black hover:border-primary transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-[10px] italic"
+                    >
+                        Abrir Manual
+                    </button>
+                </div>
             </div>
 
             {/* Quick Links / Recent Rules */}
@@ -400,6 +423,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                                     <InducementTable />
                                 </div>
                             )}
+                            {activeView === 'rules' && <RulesPage />}
                         </div>
                     </motion.div>
                 )}
