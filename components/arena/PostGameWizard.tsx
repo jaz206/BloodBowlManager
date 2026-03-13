@@ -747,53 +747,55 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                 <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-blood-red/5 blur-[150px] rounded-full animate-pulse delay-700"></div>
             </div>
 
-            <div className="w-full max-w-xl flex flex-col gap-4 max-h-[90vh] overflow-y-auto custom-scrollbar p-2">
+            <div className="w-full max-w-lg flex flex-col max-h-[92vh] gap-3 p-2">
                 {/* Header */}
-                <div className="text-center space-y-2">
-                    <div className="text-premium-gold text-[10px] font-display font-black uppercase tracking-[0.5em] opacity-60">Consilio de Posguerra</div>
-                    <h2 className="text-4xl font-display font-black text-white italic tracking-tighter uppercase leading-none">
+                <div className="text-center">
+                    <h2 className="text-2xl font-display font-black text-white italic tracking-tighter uppercase leading-none">
                         Crónica de <span className="text-blood-red">Sangre</span> & Oro
                     </h2>
-                    <div className="flex justify-center gap-1 mt-6">
+                    <div className="flex justify-center gap-1 mt-4">
                         {steps.map((s, i) => (
-                            <div key={i} className="flex flex-col items-center gap-2">
-                                <div className={`h-1.5 rounded-full transition-all duration-700 ${i === step ? 'w-16 bg-premium-gold shadow-[0_0_15px_rgba(245,159,10,0.5)]' : i < step ? 'w-8 bg-premium-gold/30' : 'w-8 bg-white/5'}`}></div>
-                                <span className={`text-[8px] font-display font-black uppercase tracking-widest transition-opacity duration-500 ${i === step ? 'opacity-100 text-white' : 'opacity-30 text-slate-500'}`}>{s}</span>
+                            <div key={i} className="flex flex-col items-center gap-1">
+                                <div className={`h-1 rounded-full transition-all duration-700 ${i === step ? 'w-10 bg-premium-gold shadow-[0_0_10px_rgba(245,159,10,0.5)]' : i < step ? 'w-5 bg-premium-gold/30' : 'w-5 bg-white/5'}`}></div>
+                                <span className={`text-[7px] font-display font-black uppercase tracking-widest transition-opacity duration-500 ${i === step ? 'opacity-100 text-white' : 'opacity-30 text-slate-500'}`}>{s}</span>
                             </div>
                         ))}
                     </div>
                 </div>
 
                 {/* Main Content Card */}
-                <div className="glass-panel border-white/5 bg-black/40 p-6 sm:p-8 shadow-4xl relative overflow-hidden min-h-[380px] flex flex-col">
+                <div className="glass-panel border-white/5 bg-black/40 p-5 sm:p-6 shadow-4xl relative overflow-hidden flex flex-col min-h-0 flex-1">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-premium-gold/5 blur-[100px] -z-10"></div>
                     <div className="absolute bottom-0 left-0 w-64 h-64 bg-blood-red/5 blur-[100px] -z-10"></div>
 
-                    <div className="flex-1 flex flex-col justify-center">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar pr-1">
                         {renderStepContent()}
                     </div>
 
                     {/* Footer Controls */}
-                    <div className="mt-6 pt-6 border-t border-white/5 flex gap-3">
+                    <div className="mt-4 pt-4 border-t border-white/5 flex gap-3 flex-shrink-0">
                         <button
                             onClick={() => setStep(s => Math.max(0, s - 1))}
                             disabled={step === 0}
-                            className="flex-1 bg-white/5 border border-white/10 text-slate-500 font-display font-black py-4 rounded-2xl hover:bg-white/10 hover:text-white disabled:opacity-10 disabled:grayscale transition-all uppercase tracking-widest text-[10px]"
+                            className="flex-1 bg-white/5 border border-white/10 text-slate-500 font-display font-black py-3 rounded-xl hover:bg-white/10 hover:text-white disabled:opacity-10 disabled:grayscale transition-all uppercase tracking-widest text-[10px]"
                         >
                             Antiguo
                         </button>
-                        {step < 3 ? (
+                        {step < 4 ? (
                             <button
                                 onClick={() => setStep(s => s + 1)}
-                                disabled={step === 1 && !fansRoll && !isDraw}
-                                className="flex-[2] bg-premium-gold text-black font-display font-black py-4 rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all uppercase tracking-widest text-[10px] disabled:opacity-30 disabled:hover:scale-100"
+                                disabled={
+                                    (step === 1 && mvpsAwarded < mvpCount) || 
+                                    (step === 2 && !fansRoll && !isDraw)
+                                }
+                                className="flex-[2] bg-premium-gold text-black font-display font-black py-3 rounded-xl shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all uppercase tracking-widest text-[10px] disabled:opacity-20"
                             >
                                 Siguiente Sello
                             </button>
                         ) : (
                             <button
                                 onClick={handleConfirm}
-                                className="flex-[2] bg-green-600 text-black font-display font-black py-4 rounded-2xl shadow-[0_20px_40px_rgba(34,197,94,0.3)] hover:bg-green-500 hover:scale-105 active:scale-95 transition-all uppercase tracking-[0.2em] text-[10px]"
+                                className="flex-[2] bg-green-600 text-black font-display font-black py-3 rounded-xl shadow-[0_10px_20px_rgba(34,197,94,0.3)] hover:bg-green-500 hover:scale-[1.02] active:scale-[0.98] transition-all uppercase tracking-[0.2em] text-[10px]"
                             >
                                 Sellar Destino Final
                             </button>
