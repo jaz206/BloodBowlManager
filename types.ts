@@ -350,4 +350,5 @@ export interface MatchReport {
   article?: string;
   summary?: string;
   stats?: MatchStats;
+  wasConceded?: 'home' | 'opponent' | 'none';
 }

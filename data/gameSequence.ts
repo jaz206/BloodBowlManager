@@ -2,32 +2,31 @@ import type { GameSection } from '../types';
 
 export const gameSequenceData: GameSection[] = [
   {
-    title: "Secuencia Anterior al Partido (Antes de empezar)",
+    title: "Secuencia Anterior al Partido (Pre-Game)",
     rules: [
-      { text: "1. Contratar Sustitutos: Si un equipo no puede alinear al menos 11 jugadores, debe añadir 'Sustitutos' temporales (Líneas con Solitario 4+) hasta tener 11. Su coste se añade temporalmente a la Valoración de Equipo (VE)." },
-      { text: "2. Incentivos: Compara la VE de ambos equipos (incluyendo Sustitutos). El equipo con menor VE recibe la diferencia en monedas de oro para gastar en Incentivos (sobornos, jugadores estrella, etc.)." },
-      { text: "3. Hinchas y FAMA: Cada entrenador tira 2D6 y lo suma a su atributo Hinchas. El que tenga el total más alto gana +1 FAMA (Factor de Aficionados Adicional), o +2 si saca el doble o más. La FAMA afecta a varios eventos." },
-      { text: "4. El Clima: Cada entrenador tira 1D6, se suman ambos resultados y se consulta la Tabla de Clima." },
-      { text: "5. Plegarias a Nuffle: Después de gastar los incentivos, si un equipo sigue teniendo una VE inferior, puede tirar en la Tabla de Plegarias a Nuffle." },
-      { text: "6. Determinar Equipo Pateador: Se tira una moneda. El ganador elige si patea o recibe en la primera parte." },
+      { text: "1. Factor de Hinchas: Cada entrenador tira 1D3 y suma los aficionados ocasionales de su hoja. El total es el Factor de Hinchas para el partido." },
+      { text: "2. El Clima: Se lanzan 2D6 y se consulta la Tabla de Clima.", dice: "2D6" },
+      { text: "3. Contratar Sustitutos: Si un equipo tiene menos de 11 jugadores, añade Sustitutos (Líneas con Solitario 4+) gratis hasta tener 11." },
+      { text: "4. Adquirir Incentivos: El equipo con menor VAE recibe la diferencia en efectivo. Puede gastar hasta 50,000 monedas extra de su propia tesorería." },
+      { text: "5. Determinar Equipo Pateador: Tirada enfrentada (1D6 cada uno). El ganador elige si patea o recibe.", dice: "1D6 vs 1D6" },
     ],
   },
   {
-    title: "Inicio de una Entrada (Patada Inicial)",
+    title: "Inicio de una Entrada (Drive)",
     rules: [
-      { text: "1. Despliegue: Ambos entrenadores colocan a sus jugadores en el campo (máximo 11)." },
-      { text: "2. Patada Inicial: Un jugador del equipo pateador chuta el balón hacia campo rival." },
+      { text: "1. Despliegue: El pateador se coloca primero (mín. 3 en el centro, máx. 2 por banda). Luego el receptor despliega." },
+      { text: "2. La Patada Inicial: Se designa un pateador y se elige casilla objetivo en campo rival." },
       {
-        text: "3. Evento de Patada Inicial: Inmediatamente después de la patada (pero antes de que el balón se desvíe o aterrice), el entrenador del equipo pateador tira 2D6 en la Tabla de Eventos de Patada Inicial y se resuelve el resultado.",
+        text: "3. Evento de Patada Inicial: Mientras el balón vuela, se lanza 2D6 y se consulta la tabla de eventos (¡A la carga!, Indigestión, etc.).",
         dice: "2D6"
       },
-      { text: "4. Desvío del Balón: El entrenador del equipo pateador coloca la plantilla de devolución y tira 1D8 y 1D6 para ver dónde aterriza el balón." , dice: "1D8 + 1D6"},
+      { text: "4. Desvío: El balón se desvía 1D8 (dirección) y 1D6 (distancia). Habilidad Patada reduce a 1D3.", dice: "1D8 + 1D6" },
       {
-        text: "5. Recepción del Balón:",
+        text: "5. Recepción:",
         subRules: [
-          { text: "Si aterriza en una casilla ocupada, ese jugador debe intentar atraparlo." },
-          { text: "Si aterriza en una casilla vacía, rebota una vez.", dice: "1D8" },
-          { text: "Si sale del campo, es un 'Touchback' y lo recibe un jugador del equipo receptor." },
+          { text: "Si cae en casilla ocupada, el jugador intenta atraparlo automáticamente." },
+          { text: "Si cae en casilla vacía, rebota una vez.", dice: "1D8" },
+          { text: "Si sale del campo, es Touchback (el receptor elige quién lo recibe)." },
         ],
       },
     ],
@@ -35,28 +34,23 @@ export const gameSequenceData: GameSection[] = [
   {
     title: "Turno de Equipo",
     rules: [
-      { text: "Un partido se divide en dos partes de 8 turnos cada una." },
+      { text: "Un partido tiene dos partes de 8 turnos cada una." },
       {
-        text: "Durante tu turno, puedes activar a cada jugador una vez para realizar una de las siguientes acciones:",
+        text: "Cada jugador puede activarse una vez para realizar una acción:",
         subRules: [
             { text: "Mover (hasta su MV)" },
-            { text: "Placar (a un jugador adyacente)" },
-            { text: "Penetrar (Mover y luego Placar)" },
-            { text: "Pasar (lanzar el balón)" },
-            { text: "Entregar (dar el balón a un compañero adyacente)" },
-            { text: "Falta (a un jugador adyacente caído)" },
+            { text: "Placar (a un rival adyacente)" },
+            { text: "Blitz (Mover + Placar) - 1 por turno" },
+            { text: "Pase (lanzar el balón) - 1 por turno" },
+            { text: "Entrega en mano (compañero adyacente) - 1 por turno" },
+            { text: "Lanzar Compañero - 1 por turno" },
+            { text: "Falta (a un jugador caído) - 1 por turno" },
         ],
       },
       {
-        text: "¡Turnover! (Cambio de Turno)",
+        text: "¡Turnover! (Cambio de Turno):",
         subRules: [
-            { text: "Tu turno termina inmediatamente si ocurre alguna de las siguientes situaciones:" },
-            { text: "Un jugador de tu equipo es Derribado." },
-            { text: "Un jugador de tu equipo con el balón falla al intentar recogerlo, atraparlo o interferir un pase, y el balón cae al suelo." },
-            { text: "Un Pase es impreciso y aterriza en una casilla no ocupada por un compañero." },
-            { text: "Un jugador es Expulsado por cometer una Falta." },
-            { text: "Se anota un Touchdown." },
-            { text: "Se acaba el tiempo de la parte." },
+            { text: "El turno termina si: un jugador propio es derribado, se falla una recogida/atrapada y el balón cae, o se anota Touchdown." },
         ],
       },
     ],
@@ -64,12 +58,12 @@ export const gameSequenceData: GameSection[] = [
   {
     title: "Secuencia Posterior al Partido",
     rules: [
-      { text: "1. Anotar el Resultado y las Ganancias: Anota el resultado y las ganancias de cada equipo (10,000 M.O. por empate, 30,000 M.O. por victoria)." },
-      { text: "2. Actualizar Hinchas: Tira 1D6. Si ganas y sacas 4+, ganas 1 Hincha. Si pierdes y sacas 1, pierdes 1 Hincha. En cualquier otro caso, no cambia." },
-      { text: "3. Progreso de los Jugadores: Anota los Puntos de Estrella (PE) ganados por cada jugador. Si un jugador tiene suficientes PE, puede subir de nivel y obtener una nueva habilidad o mejora de atributo." },
-      { text: "4. Fichar, Despedir y Retirar Temporalmente: Puedes comprar nuevos jugadores, despedir a los existentes (recibiendo la mitad de su valor) o marcar a los lesionados para que se pierdan el próximo partido." },
-      { text: "5. Errores Costosos: Si tu tesorería supera las 100,000 M.O., debes tirar en la Tabla de Errores Costosos." },
-      { text: "6. Preparar el Próximo Partido: Actualiza la Valoración de Equipo." },
+      { text: "1. Ganancias: Se calcula la Afluencia (suma de Hinchas de ambos). Fórmula: ((Afluencia/2) + TDs + 1*) x 10,000 monedas." },
+      { text: "2. Actualizar Hinchas: Gana: 1D6 ≥ actual (+1). Pierde: 1D6 < actual (-1). Empate: no varía.", dice: "1D6" },
+      { text: "3. Progreso (PE): El entrenador elige a 6 candidatos y lanza 1D6 para asignar los 4 PE del MJP.", dice: "1D6" },
+      { text: "4. Plantilla: Fichar nuevos jugadores, despedir o contratar permanentemente a un Sustituto." },
+      { text: "5. Errores Costosos: Si la tesorería tiene ≥ 100k, tira 1D6 para comprobar pérdidas.", dice: "1D6" },
+      { text: "6. Actualizar VAE: Recalcula el valor total. Los lesionados (MNG) no cuentan para el próximo partido." },
     ],
   },
 ];

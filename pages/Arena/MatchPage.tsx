@@ -28,6 +28,8 @@ import PlayerCardModal from '../../components/arena/PlayerCardModal';
 import { skillsData } from '../../data/skills';
 import SkillModal from '../../components/oracle/SkillModal';
 import ApothecaryModal from '../../components/arena/ApothecaryModal';
+import ConcedeModal from '../../components/arena/ConcedeModal';
+
 import ChevronDownIcon from '../../components/icons/ChevronDownIcon';
 import ShieldCheckIcon from '../../components/icons/ShieldCheckIcon';
 import MiniField from '../../components/common/MiniField';
@@ -377,6 +379,9 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
     const [activeTab, setActiveTab] = useState<'assistant' | 'narrator'>('assistant');
     const [rosterViewId, setRosterViewId] = useState<'home' | 'opponent'>('home');
     const [isMatchSummaryOpen, setIsMatchSummaryOpen] = useState(false);
+    const [isConcedeModalOpen, setIsConcedeModalOpen] = useState(false);
+    const [concessionState, setConcessionState] = useState<'none' | 'home' | 'opponent'>('none');
+
 
     const playSound = useCallback((type: 'td' | 'injury' | 'turnover' | 'dice') => {
         // En un entorno real, aquí cargaríamos archivos .mp3 o .wav
@@ -524,7 +529,9 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
     const handleConfirmJourneymen = () => { if (pendingJourneymen.home.length > 0 && liveHomeTeam) { setLiveHomeTeam(prev => prev ? ({ ...prev, players: [...prev.players, ...pendingJourneymen.home] }) : null); logEvent('INFO', `${liveHomeTeam.name} añade ${pendingJourneymen.home.length} Sustituto(s).`); } if (pendingJourneymen.opponent.length > 0 && liveOpponentTeam) { setLiveOpponentTeam(prev => prev ? ({ ...prev, players: [...prev.players, ...pendingJourneymen.opponent] }) : null); logEvent('INFO', `${liveOpponentTeam.name} añade ${pendingJourneymen.opponent.length} Sustituto(s).`); } setJourneymenNotification(null); setPendingJourneymen({ home: [], opponent: [] }); setPreGameStep(1); };
     const handleSkillClick = useCallback((skillName: string) => { const cleanedName = (skillName || '').split('(')[0].trim(); const foundSkill = skillsData.find(s => s.name.toLowerCase().startsWith(cleanedName.toLowerCase())); if (foundSkill) setSelectedSkillForModal(foundSkill); else console.warn(`Skill not found: ${cleanedName}`); }, []);
     const updatePlayerSppAndAction = (player: ManagedPlayer, teamId: 'home' | 'opponent', spp: number, action: SppActionType, description: string) => {
+        if (player.isStarPlayer) return; // Star Players never gain SPP
         const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
+
         setTeam(prev => {
             if (!prev) return null;
             return {
@@ -693,7 +700,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                 weather: gameStatus.weather?.title,
                 winner: matchWinner as any,
                 stats: stats,
-                spectators: spectators
+                spectators: spectators,
+                wasConceded: concessionState
             };
 
             const newsData = generateMatchArticle(baseReport);
@@ -2312,6 +2320,13 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                                     <div className="absolute inset-0 bg-blood-red -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-in-out -z-10"></div>
                                     Finalizar Encuentro
                                 </button>
+                                <button
+                                    onClick={() => setIsConcedeModalOpen(true)}
+                                    className="w-full group relative overflow-hidden text-[10px] font-display font-black uppercase tracking-[0.3em] bg-white/5 border border-white/10 text-slate-500 hover:text-white py-3 px-6 rounded-2xl transition-all"
+                                >
+                                    Conceder Partido
+                                </button>
+
                             </div>
                         </aside>
 
@@ -2720,7 +2735,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                         </aside>
                     </div>
                 );
-            case 'post_game': if (!homeTeam || !liveHomeTeam || !liveOpponentTeam) return <div>Cargando...</div>; return <PostGameWizardComponent initialHomeTeam={homeTeam} finalHomeTeam={liveHomeTeam} opponentTeam={liveOpponentTeam} score={score} fame={fame.home} playersMNG={playersMissingNextGame.filter(p => p.teamId === 'home')} onConfirm={handleConfirmPostGame} />;
+            case 'post_game': if (!homeTeam || !liveHomeTeam || !liveOpponentTeam) return <div>Cargando...</div>; return <PostGameWizardComponent initialHomeTeam={homeTeam} finalHomeTeam={liveHomeTeam} opponentTeam={liveOpponentTeam} score={score} fame={fame.home} playersMNG={playersMissingNextGame.filter(p => p.teamId === 'home')} onConfirm={handleConfirmPostGame} initialConcession={concessionState} />;
+
             default: return <div>Estado de juego desconocido.</div>;
         }
     };
@@ -3337,7 +3353,31 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                     </div>
                 </div>
             )}
+            {isConcedeModalOpen && liveHomeTeam && liveOpponentTeam && (
+                <ConcedeModal 
+                    onClose={() => setIsConcedeModalOpen(false)} 
+                    onConfirm={(team) => {
+                        const teamName = team === 'home' ? liveHomeTeam.name : liveOpponentTeam.name;
+                        logEvent('INFO', `¡ESCÁNDALO! ${teamName} ha concedido el partido.`);
+                        
+                        // BB2025: Award score to non-conceding team
+                        if (team === 'home') {
+                            setScore(s => ({ home: 0, opponent: s.opponent + s.home + 1 }));
+                        } else {
+                            setScore(s => ({ home: s.home + s.opponent + 1, opponent: 0 }));
+                        }
+
+                        setConcessionState(team);
+                        setIsConcedeModalOpen(false);
+                        setGameState('post_game');
+                    }}
+
+                    homeTeamName={liveHomeTeam.name}
+                    opponentTeamName={liveOpponentTeam.name}
+                />
+            )}
             {isMatchSummaryOpen && (
+
                 <MatchSummaryModal
                     isOpen={isMatchSummaryOpen}
                     onClose={() => setIsMatchSummaryOpen(false)}

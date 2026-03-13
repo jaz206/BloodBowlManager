@@ -85,7 +85,10 @@ interface PostGameWizardProps {
     fame: number;
     playersMNG: { playerId: number }[];
     onConfirm: (finalTeam: ManagedTeam) => void;
+    initialConcession?: 'none' | 'home' | 'opponent';
 }
+
+
 
 interface PostGameState {
     winnings: number;
@@ -93,7 +96,8 @@ interface PostGameState {
     team: ManagedTeam;
 }
 
-const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalHomeTeam, opponentTeam, score, fame, playersMNG, onConfirm }) => {
+const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalHomeTeam, opponentTeam, score, fame, playersMNG, onConfirm, initialConcession }) => {
+
     const [step, setStep] = useState(0);
     const [fansChange, setFansChange] = useState<number>(0);
     const [fansRoll, setFansRoll] = useState<number | null>(null);
@@ -103,7 +107,8 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
     const [mvpRoll, setMvpRoll] = useState<number | null>(null);
     const [noStalling, setNoStalling] = useState(true);
     const [winningsRolls, setWinningsRolls] = useState({ home: 0, opponent: 0 });
-    const [concession, setConcession] = useState<'none' | 'home' | 'opponent'>('none');
+    const [concession, setConcession] = useState<'none' | 'home' | 'opponent'>(initialConcession || 'none');
+
     const [mvpCount, setMvpCount] = useState(1);
     const [mvpsAwarded, setMvpsAwarded] = useState(0);
 
@@ -137,7 +142,9 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
         const totalPop = popHome + popOpp;
         
         // Winnings Formula: (Total Pop / 2 + TDs + 1 if no stalling) * 10,000
-        const calculatedWinnings = (Math.ceil(totalPop / 2) + score.home + (noStalling ? 1 : 0)) * 10000;
+        // BB2025: Conceding team gets 0 winnings.
+        let calculatedWinnings = (Math.ceil(totalPop / 2) + score.home + (noStalling ? 1 : 0)) * 10000;
+        if (concession === 'home') calculatedWinnings = 0;
         
         const tempTeam = cloneTeamForPostGame(finalHomeTeam);
         tempTeam.treasury += calculatedWinnings;
@@ -232,8 +239,11 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
         setFansRoll(roll);
         let change = 0;
 
-        if (score.home > score.opponent) {
-            if (roll > postGameState!.team.dedicatedFans) change = 1;
+        if (concession === 'home') {
+            // BB2025: Conceding team loses 1D3 Dedicated Fans
+            change = -(Math.floor(Math.random() * 3) + 1);
+        } else if (score.home > score.opponent) {
+            if (roll >= postGameState!.team.dedicatedFans) change = 1;
         } else if (score.home < score.opponent) {
             if (roll < postGameState!.team.dedicatedFans) change = -1;
         }
@@ -359,9 +369,15 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                                         <span className="text-green-500 font-black">+{noStalling ? 1 : 0}k</span>
                                     </div>
                                 </div>
-
                                 <div className="mt-8 pt-6 border-t border-premium-gold/20 text-center">
-                                    <p className="text-4xl font-display font-black text-white italic tracking-tight">{winnings.toLocaleString()} <span className="text-sm not-italic text-green-500 ml-1 uppercase font-bold">m.o.</span></p>
+                                    <p className={`text-4xl font-display font-black italic tracking-tight ${concession === 'home' ? 'text-blood-red line-through opacity-50' : 'text-white'}`}>
+                                        {winnings.toLocaleString()} <span className="text-sm not-italic text-green-500 ml-1 uppercase font-bold">m.o.</span>
+                                    </p>
+                                    {concession === 'home' && (
+                                        <p className="text-blood-red font-display font-black text-[10px] uppercase tracking-widest mt-2 animate-pulse">
+                                            Penalización por Concesión (0 m.o.)
+                                        </p>
+                                    )}
                                     <p className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mt-2">Tesoro Actualizado</p>
                                 </div>
                             </div>
@@ -548,20 +564,27 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                                 </div>
                                 <div className="flex justify-center gap-6 items-center mb-6 relative z-10">
                                     <div className="w-16 h-16 bg-white/5 rounded-2xl border-2 border-sky-500/30 flex flex-col items-center justify-center shadow-inner">
-                                        <span className="text-[8px] font-display font-black text-sky-500 uppercase tracking-widest mb-0.5">Dado</span>
+                                        <span className="text-[8px] font-display font-black text-sky-500 uppercase tracking-widest mb-0.5">{concession === 'home' ? 'D3' : 'Dado'}</span>
                                         <span className="text-2xl font-display font-black text-white">{fansRoll}</span>
                                     </div>
                                     <div className="h-10 w-px bg-white/10"></div>
                                     <div className="text-left">
                                         <p className="text-[9px] font-display font-black text-slate-500 uppercase tracking-widest mb-0.5">Resultado</p>
-                                        <p className={`text-xl font-display font-black uppercase italic tracking-tighter leading-none ${fansChange > 0 ? 'text-green-500' : fansChange < 0 ? 'text-blood-red' : 'text-sky-400'}`}>
-                                            {fansChange > 0 ? '¡Nuevos Adeptos!' : fansChange < 0 ? 'Deserción en Masa' : 'Vínculo Estable'}
+                                        <p className={`text-xl font-display font-black uppercase italic tracking-tighter leading-none ${fansChange > 0 ? 'text-green-500' : (fansChange < 0 || concession === 'home') ? 'text-blood-red' : 'text-sky-400'}`}>
+                                            {concession === 'home' ? 'Deserción por Abandono' : (fansChange > 0 ? '¡Nuevos Adeptos!' : fansChange < 0 ? 'Deserción en Masa' : 'Vínculo Estable')}
                                         </p>
                                     </div>
                                 </div>
                                 <div className="flex justify-between items-center bg-white/5 p-3.5 rounded-xl border border-white/5 mt-2 shadow-inner relative z-10">
                                     <span className="text-[9px] font-display font-black text-slate-500 uppercase tracking-widest">Hinchas Consagrados Finales</span>
-                                    <span className="text-2xl font-display font-black text-white tracking-tighter">{updatedTeam.dedicatedFans}</span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-2xl font-display font-black text-white tracking-tighter">{updatedTeam.dedicatedFans}</span>
+                                        {fansChange !== 0 && (
+                                            <span className={`text-xs font-bold ${fansChange > 0 ? 'text-green-500' : 'text-blood-red'}`}>
+                                                ({fansChange > 0 ? '+' : ''}{fansChange})
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         )}

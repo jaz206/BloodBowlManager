@@ -1,160 +1,113 @@
-Guía Técnica: Blood Bowl Season 3 (2025) - Secuencia y Progresión
-1. Secuencia Pre-Partido (Pre-Game Sequence)
-Antes de la patada inicial, los entrenadores deben seguir estos pasos obligatorios:
-Hinchas (The Fans): Cada entrenador lanza 1D3 y suma su característica de Hinchas Dedicados. El resultado es el Factor de Popularidad (asistencia en miles)
-.
-El Clima (The Weather): Se lanzan 2D6 y se consulta la tabla de clima. Los resultados afectan el manejo del balón, los pases y el movimiento (ej. Ventisca penaliza el movimiento extra)
-.
-Contratar Jornaleros (Take on Journeymen): Solo en ligas. Si un equipo tiene menos de 11 jugadores disponibles, recibe "Jornaleros" (Líneas con la habilidad Solitario 4+) hasta completar los 11 jugadores para ese partido
-.
-Incentivos (Inducements): El equipo con el Valor de Equipo Actual (CTV) más bajo recibe dinero en "Petty Cash" igual a la diferencia de valor con su rival. Pueden gastarlo en Jugadores Estrella, Boticarios errantes, Sobornos, etc.
-.
-Sorteo (Determine Kicking Team): Lanzamiento de moneda. El ganador elige si patea o recibe el balón
-.
+# 🩸 Guía Técnica: Secuencia de Partido y Progresión
 
---------------------------------------------------------------------------------
-2. Secuencia del Partido (The Match)
-El partido se divide en dos mitades, cada una de 8 rondas por equipo (16 turnos por mitad en total)
-.
-Inicio de una Entrada (Drive)
-Despliegue (Set-up): El equipo pateador se coloca primero, seguido por el receptor
-.
-La Patada Inicial (The Kick-off): El balón se coloca en el campo contrario y se desvía (Scatter)
-.
-Evento de Patada Inicial: Se lanzan 2D6. Los eventos pueden dar Segundas Oportunidades, mover jugadores o causar invasiones de campo
-.
-Aterrizaje: El balón cae. Si hay un jugador, intenta atraparlo (Agilidad); si no, rebota
-.
-El Turno del Equipo
-Cada jugador puede realizar una acción por turno. El turno termina si se agotan las activaciones o ocurre un Turnover (fallar una acción crítica como recoger el balón o ser derribado)
-.
-Acciones Básicas: Mover, Placar
-.
-Acciones Limitadas (1 por turno de equipo): Penetración (Blitz), Pasar, Entrega en mano (Hand-off), Lanzar compañero, Faltas (Fouls)
-.
+Este documento detalla el flujo oficial de juego y el sistema de desarrollo de jugadores para **Blood Bowl Assistant**, basado en el reglamento de la *Season 3 (2025)*.
 
---------------------------------------------------------------------------------
-3. Secuencia Post-Partido (Post-Game Sequence)
-Se ejecuta tras el pitido final para procesar los resultados de la liga
-:
-Registrar Resultado y Recaudar Ganancias:
-Ganancias (Winnings): Se calculan sumando el Factor de Popularidad de ambos equipos, dividiéndolo por 2, sumando los Touchdowns anotados por tu equipo y sumando +1 si el equipo no hizo "Stalling" (retraso deliberado). El total se multiplica por 10,000 GP
-.
-Actualizar Hinchas Dedicados:
-Si ganaste: Tira 1D6. Si es ≥ tu valor actual, sube +1 (máx. 7)
-.
-Si perdiste: Tira 1D6. Si es < tu valor actual, baja -1 (mín. 1)
-.
-Empate: No cambia
-.
-Progreso de Jugadores (Player Advancement): Se asignan los puntos y se comprueban subidas de nivel (ver secciones 4 y 5).
-Contratar, Despedir y Jubilar: Se compran nuevos jugadores, se despiden los no deseados y se decide si contratar permanentemente a los Jornaleros
-.
-Errores Costosos (Expensive Mistakes): Si el tesoro tiene ≥ 100,000 GP, se tira 1D6 en la tabla de errores para ver si se pierde dinero por incidentes o mala gestión
-.
-Preparar el Próximo Partido: Actualizar el Valor de Equipo (TV) y el CTV
-.
+---
 
---------------------------------------------------------------------------------
-4. Asignación de Puntos (Star Player Points - SPP)
-Los jugadores ganan experiencia realizando acciones exitosas durante el juego
-:
-Acción
-Puntos (SPP)
-Notas
-Pase Completado
-+1
-Solo si es atrapado por un compañero
-.
-Lanzar Compañero
-+1
-Si el compañero aterriza con éxito (Superb Throw)
-.
-Desviar Pase
-+1
-Deflectar un pase enemigo
-.
-Intercepción
-+2
-Capturar un pase enemigo
-.
-Baja (Casualty)
-+2
-Solo por placajes (no faltas, armas o público)
-.
-Touchdown
-+3
-Por cualquier jugador que anote
-.
-Jugador Más Valioso (MVP)
-+4
-Elegido al azar entre 6 nominados del partido
-.
+## 1. Secuencia Anterior al Partido (Pre-Game Sequence)
+Antes de que ruede el balón, se resuelven estos cinco pasos fundamentales:
 
---------------------------------------------------------------------------------
-5. Subida de Nivel y Mejora (Spending SPP)
-Cuando un jugador acumula suficientes SPP, puede gastarlos para mejorar. El coste aumenta según cuántas mejoras ya tenga el jugador
-.
-Tabla de Coste de Adelantos (Advancement Table)
-Nivel
-Mejora
-Primaria Azar
-Primaria Elegida
-Secundaria Elegida
-Atributo
-1
-Experimentado
-3 SPP
-6 SPP
-12 SPP
-18 SPP
-2
-Veterano
-4 SPP
-8 SPP
-14 SPP
-20 SPP
-3
-Estrella Emergente
-6 SPP
-12 SPP
-18 SPP
-24 SPP
-4
-Estrella
-8 SPP
-16 SPP
-20 SPP
-24 SPP
-5
-Súper Estrella
-10 SPP
-20 SPP
-26 SPP
-32 SPP
-6
-Leyenda
-15 SPP
-30 SPP
-40 SPP
-50 SPP
-(Fuente:
-)
-Tipos de Mejora
-Habilidades Primarias/Secundarias: Se eligen según las categorías permitidas para la posición del jugador (A, D, G, M, P, S)
-.
-Mejora de Atributos (Random Characteristic): Se lanza 1D16 en la tabla de atributos
-:
-1-7: +1 AV o +1 MA (o Secundaria).
-8-13: +1 AV, +1 MA o +1 PA (o Secundaria).
-14: +1 AG o +1 PA (o Secundaria).
-15: +1 ST o +1 AG (o Secundaria).
-16: Cualquier atributo a elección (+1).
-Incremento del Valor de Equipo (TV)
-Cada mejora aumenta el coste del jugador en la plantilla
-:
-Habilidad Primaria: +20,000 GP.
-Habilidad Secundaria: +40,000 GP.
-Mejora de Atributo: Varía (+1 AV: 10k, +1 MA/PA: 20k, +1 AG: 30k, +1 ST: 60k).
-Habilidad de Élite: +10,000 GP adicionales
-.
+1.  **Factor de Hinchas (Fans):** Representa cuántos miles de aficionados acuden al estadio.
+    *   **Cálculo:** Cada entrenador tira **1D3** y suma el número de aficionados ocasionales de su Hoja de Plantilla.
+    *   **Efecto:** Influye en eventos de patada inicial y determina las ganancias económicas finales.
+
+2.  **El Clima (The Weather):** Se lanzan **2D6** y se consulta la tabla:
+    *   **2 (Calor Asfixiante):** Posibles desmayos al final de cada entrada.
+    *   **3 (Muy Soleado):** -1 a los chequeos de Pase.
+    *   **4-10 (Clima Perfecto):** Sin efectos.
+    *   **11 (Lluvioso):** -1 a recoger, atrapar o interceptar el balón.
+    *   **12 (Ventisca):** -1 a Forzar la marcha (Rush) y solo pases rápidos o cortos.
+
+3.  **Contratar Sustitutos (Solo en Ligas):** Si un equipo tiene menos de 11 jugadores disponibles:
+    *   Se añaden "Sustitutos" (posiciones de Línea) gratis hasta completar los 11.
+    *   Tienen el rasgo **Solitario (4+)**.
+    *   Suman a la Valoración Actual de Equipo (VAE) para los Incentivos.
+
+4.  **Adquirir Incentivos:** Se compara la VAE de ambos equipos. El equipo con menor valoración recibe la diferencia en efectivo.
+    *   **Novedad S3:** El equipo con menor VAE puede gastar hasta **50,000 monedas de oro adicionales** de su propia tesorería.
+    *   **Ejemplos:** Plegarias a Nuffle (10k), Ayudantes (20k), Animadoras (5k), Sobornos (100k/50k), Star Players.
+
+5.  **Determinar Equipo Pateador:** Tirada enfrentada (1D6 cada uno). El ganador elige quién es el **pateador** (defensa) y quién el **receptor** (ataque).
+
+---
+
+## 2. Inicio de una Entrada (Drive)
+
+### A. Despliegue (Set-up)
+1.  **El Pateador se acomoda primero:** El defensor coloca sus 11 jugadores en su mitad.
+2.  **El Receptor se acomoda segundo:** El atacante despliega después.
+3.  **Restricciones:** Mínimo 3 en la línea de placajes (centro), máximo 2 por banda lateral.
+4.  **Insignificante (Swarming):** Permite añadir 1D3 jugadores adicionales tras el despliegue normal.
+
+### B. La Patada Inicial (Kick-off)
+1.  **Designar Pateador:** Debe ser un jugador que no esté en la línea ni en bandas (si es posible).
+2.  **Colocar el Balón:** Elegir casilla objetivo en la mitad rival.
+3.  **Desvío:** Se lanza 1D8 (dirección) y 1D6 (distancia). *Habilidad Patada: reduce distancia a 1D3*.
+
+### C. Tabla de Eventos de Patada Inicial (2D6)
+Mientras el balón está en el aire, se lanza 2D6 para determinar qué ocurre:
+
+| 2D6 | Evento | Descripción del Efecto |
+|:---:|:---|:---|
+| **2** | **Árbitro Intimidado** | Cada equipo recibe un **Soborno** gratuito que debe usarse antes del final del partido. |
+| **3** | **Tiempo Muerto** | Si el equipo pateador está en su turno 6, 7 u 8, ambos marcadores de turno retroceden un espacio; de lo contrario, avanzan uno. |
+| **4** | **Defensa Sólida** | El pateador puede elegir **1D3+3** jugadores desmarcados para recolocarlos en su campo. |
+| **5** | **Patada Alta** | Un jugador del equipo receptor desmarcado puede colocarse en la casilla donde caerá el balón. |
+| **6** | **Los Hinchas Animan** | Tirada enfrentada (1D6 + Animadoras). El ganador recibe apoyo ofensivo adicional en el primer placaje de su turno. |
+| **7** | **Entrenador Brillante** | Tirada enfrentada (1D6 + Ayudantes). El ganador recibe una **RR gratuita** válida solo para esa entrada. |
+| **8** | **Clima Cambiante** | Se tira de nuevo en la tabla de Clima. Si sale "Clima perfecto", el balón se escora (3 casillas) antes de aterrizar. |
+| **9** | **Anticipación** | El receptor elige **1D3+3** jugadores desmarcados para moverlos una casilla (incluso a la mitad rival). |
+| **10** | **¡A la Carga! (Blitz)** | El pateador activa **1D3+3** jugadores desmarcados para mover. Uno puede hacer Blitz, otro Lanzar Compañero y otro Patear Compañero. |
+| **11** | **Indigestión** | Tirada enfrentada (1D6). El perdedor elige un jugador al azar: con 2+, -1 MV/AR; con 1, va a Reservas por evacuación. |
+| **12** | **Invasión de Campo** | Tirada enfrentada (1D6 + Factor de Hinchas). El perdedor tiene **1D3** jugadores (al azar) Tumbados y Aturdidos. |
+
+Tras resolver el evento, el balón cae (atrapada o rebote) y comienza el turno del receptor.
+
+---
+
+## 3. Secuencia Posterior al Partido (Post-Game Sequence)
+Una vez suena el pitido final, ambos entrenadores deben seguir estos pasos de forma detallada:
+
+### 1. Anotar el Resultado y las Ganancias
+*   **Resultado y Puntos:** Victoria (3 pts), Empate (1 pt), Derrota (0 pts). Registrar TDs anotados y bajas causadas (solo las que generen Puntos de Estrellato).
+*   **Cálculo de Ganancias:** 
+    *   **Afluencia:** Suma del Factor de Hinchas de ambos equipos.
+    *   **Fórmula:** `((Afluencia / 2) + TDs propios + 1*) * 10,000 monedas de oro`.
+    *   *\*Extra (+1):** Si el equipo no Retuvo el Balón en ningún momento del partido.
+    *   El oro se añade inmediatamente a la Tesorería.
+
+### 2. Actualizar Hinchas
+La popularidad del equipo fluctúa según su desempeño:
+*   **Si ganaste:** Tira 1D6. Si es **≥ Hinchas actuales**, aumenta en +1 (máx 7).
+*   **Si perdiste:** Tira 1D6. Si es **< Hinchas actuales**, se reduce en -1 (mín 1).
+*   **Si empataste:** El atributo de Hinchas no varía.
+
+### 3. Progreso de los Jugadores (PE / SPP)
+Los jugadores acumulan **Puntos de Estrellato (PE)**:
+*   **Acciones estándar:**
+    *   Pase completo / Lanzar compañero con éxito: **1 PE**.
+    *   Intercepción: **2 PE**.
+    *   Lesionar a un rival (Casualty): **2 PE**.
+    *   Touchdown: **3 PE**.
+*   **Regla Brutos Brutales (Ej: Orcos Negros, Khorne):** Lesión (**3 PE**) / Touchdown (**2 PE**).
+*   **Mejor Jugador del Partido (MJP):** El entrenador elige a **6 jugadores** que hayan participado; tira 1D6 para asignar **4 PE** a uno de ellos.
+
+**Gastar PE (Mejoras):**
+*   **Habilidad Primaria:** 6 PE (o 3 PE si es al azar).
+*   **Habilidad Secundaria:** 12 PE.
+*   **Mejora de Atributo:** 14 PE (USA **1D8** en lugar de 1D16).
+
+### 4. Plantilla: Fichar, Despedir o Retirar
+*   **Bajas:** Eliminar jugadores muertos.
+*   **Fichajes:** Contratar nuevos jugadores usando el oro de la Tesorería.
+*   **Sustitutos (Journeymen):** Puedes contratar permanentemente a un Sustituto que haya jugado el partido pagando su coste. Conserva sus PE y pierde el rasgo Solitario.
+*   **Retiro Temporal:** Jugadores con heridas graves pueden descansar el resto de la temporada para intentar recuperarse para la siguiente.
+
+### 5. Errores Costosos
+Si tras las ganancias la Tesorería tiene **100,000 monedas o más**, tira **1D6** para determinar si hay mala gestión (pérdida de oro por escándalos o accidentes).
+
+### 6. Actualizar Valoración Actual de Equipo (VAE)
+Recalcula el valor total del equipo:
+*   **Coste de jugadores:** Incluye mejoras (Primaria +20k, Secundaria +40k, Atributos +10k a +60k).
+*   **Extras:** Personal técnico, Segundas Oportunidades e Hinchas.
+*   **Importante:** Los jugadores lesionados (MNG) que se perderán el próximo partido **no cuentan para la VAE** de ese encuentro (ayuda a conseguir más incentivos).

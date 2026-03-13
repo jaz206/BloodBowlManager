@@ -1,661 +1,272 @@
-Block
-(General)
+# Habilidades y Rasgos
 
-A player with the Block skill is proficient at knocking opponents down. The Block skill, if used, affects the results rolled with the Block dice, as explained in the Blocking rules.Dice Games
+---
 
-Dauntless
-(General)
+# HABILIDADES GENERALES (G)
 
-A player with this skill is capable of psyching himself up so he can take on even the very strongest opponent. The skill only works when the player attempts to block an opponent who is stronger than himself. When the skill is used, the coach of the player with the Dauntless skill rolls a D6 and adds it to his strength. If the total is equal to or lower than the opponent’s Strength, the player must block using his normal Strength. If the total is greater, then the player with the Dauntless skill counts as having a Strength equal to his opponent’s when he makes the block. The strength of both players is calculated before any defensive or offensive assists are added but after all other modifiers.
+- **Apartar (Grab)**  
+  Al empujar, el entrenador elige la casilla de destino (de las 3 disponibles). Anula *Echarse a un lado*. No compatible con *Furia*.
 
-Dirty Player
-(General)
+- **Bloquear (Block)** — **[ÉLITE]**  
+  El resultado **"Ambos Derribados"** no afecta a este jugador; permanece de pie si el rival no tiene la habilidad.
 
-A player with this skill has trained long and hard to learn every dirty trick in the book. Add 1 to any Armour roll or Injury roll made by a player with this skill when they make a Foul as part of a Foul Action. Note that you may only modify one of the dice rolls, so if you decide to use Dirty Player to modify the Armour roll, you may not modify the Injury roll as well.
+- **Defensa (Defensive)**  
+  Durante el turno del oponente, anula la habilidad **Defensa de Equipo (Guard)** de cualquier rival que marque a este jugador.
 
-Fend
-(General)
+- **Esquivar (Dodge)** — **[ÉLITE]**  
+  Permite repetir una tirada de Esquiva fallida por turno. Además, convierte **"Defensor Tropieza"** en **"Empujado"**.
 
-This player is very skilled at holding off would-be attackers. Opposing players may not follow-up blocks made against this player even if the Fend player is Knocked Down. The opposing player may still continue moving after blocking if he had declared a Blitz Action.
+- **Furia (Frenzy)**  
+  Obligatorio seguir tras un placaje. Si el rival es empujado, debe realizar un segundo placaje inmediato si sigue adyacente.
 
-Frenzy
-(General)
+- **Liderazgo (Leader)**  
+  Otorga una **Segunda Oportunidad de equipo adicional** mientras el jugador esté en el campo.
 
-A player with this skill is a slavering psychopath who attacks his opponents in an uncontrollable rage. Unless otherwise overridden, this skill must always be used. When making a block, a player with this skill must always follow up if he can. If a ‘Pushed’ or ‘Defender Stumbles’ result was chosen, the player must immediately throw a second block against the same opponent so long as they are both still standing and adjacent. If possible, the player must also follow up this second block. If the frenzied player is performing a Blitz Action then he must pay a square of Movement and must make the second block unless he has no further normal movement and cannot Go For It again.
+- **Marcaje de Sombra (Shadowing)**  
+  Permite seguir a un rival que abandona su zona de defensa.  
+  `1D6 + MV propio - MV rival`, éxito con **6+**.
 
-Kick
-(General)
+- **Patada (Kick)**  
+  Si el jugador no está en los extremos ni en la línea, **divide a la mitad la dispersión** del balón en la patada inicial.
 
-The player is an expert at kicking the ball and can place the kick with great precision. In order to use this skill the player must be set up on the pitch when his team kicks off. The player may not be set up in either wide zone or on the line of scrimmage. Only if all these conditions are met is the player then allowed to take the kick-off. Because his kick is so accurate, you may choose to halve the number of squares that the ball scatters on kick-off, rounding any fractions down (i.e., 1 = 0, 2-3 = 1, 4- 5 = 2, 6 = 3).
+- **Placar (Tackle)**  
+  Los oponentes en su zona de defensa **no pueden usar Esquivar** para salir ni para evitar ser derribados.
 
-Kick-Off Return
-(General)
+- **Profesional (Pro)**  
+  Permite repetir una tirada (excepto **Armadura, Herida o Bajas**) sacando previamente **3+ en 1D6**.
 
-A player on the receiving team that is not on the Line of Scrimmage or in an opposing tackle zone may use this skill when the ball has been kicked. It allows the player to move up to 3 squares after the ball has been scattered but before rolling on the Kick-Off table. Only one player may use this skill each kick-off. This skill may not be used for a touchback kick-off and does not allow the player to cross into the opponent’s half of the pitch.
+- **Provocar (Taunt)**  
+  Una vez por turno, obliga a un rival adyacente con balón a realizar un **bloqueo contra este jugador**.
 
-Pass Block
-(General)
+- **Robar el balón (Strip Ball)**  
+  Con **"Empujado"** o **"Defensor Tropieza"**, el rival **suelta el balón**.
 
-A player with this skill is allowed to move up to three squares when the opposing coach announces that one of his players is going to pass the ball (but not a bomb). The opposing coach may not change his mind about passing once Pass Block’s use is declared. The move is made out of sequence, after the range has been measured, but before any interception attempts have been made. A player may not make the move unless able to reach a legal destination and may not follow a route that would not allow them to reach a legal destination. A legal destination puts the player in a position to attempt an interception, an empty square that is the target of the pass, or with his tackle zone on the thrower or catcher. The player may not stop moving until he has reached a legal destination, has been held fast by Tentacles or has been Knocked Down. The special move is free, and in no way affects the player’s ability to move in a subsequent action. The move is made using all of the normal rules and skills (for example, having to dodge in order to leave opposing players’ tackle zones.) Players with Pass Block may use this skill against a Dump Off pass. If a player performing a Pass Block in their own turn is Knocked Down then this is a turnover, no other players may perform Pass Block moves, and your turn ends as soon as the results of the pass and the block are resolved.
+- **Superar defensas (Break Tackle)**  
+  Permite usar **Fuerza en lugar de Agilidad** para esquivar (una vez por activación).
 
-Pro
-(General)
+- **Valentía (Dauntless)**  
+  Si el rival es más fuerte: `1D6 + FU propia`.  
+  Si supera la FU rival, **la iguala para ese placaje**.
 
-A player with this skill is a hardened veteran. Such players are called professionals or Pros by other Blood Bowl players because they rarely make a mistake. Once per turn, a Pro is allowed to re-roll any one dice roll he has made other than Armour, Injury or Casualty, even if he is Prone or Stunned. However, before the re-roll may be made, his coach must roll a D6.
+- **Zafarse (Fend)**  
+  Los rivales **no pueden seguir (Follow-up)** tras placar a este jugador.
 
-On a roll of 3+ the dice can be re-rolled.
-On a roll of 1 or 2 , the dice cannot be re-rolled.
-Once this player has attempted to use this Skill, they may not use a re-roll from any other source to re-roll this one dice.
+---
 
-Shadowing
-(General)
+# HABILIDADES DE AGILIDAD (A)
 
-This player can use this Skill when an opposition player they are Marking voluntarily moves out of a square within this player’s Tackle Zone. Roll a D6, adding the MA of this player to the roll and then subtracting the MA of the opposition player. If the result is 6 or higher, or if the roll is a natural 6, this player may immediately move into the square vacated by the opposition player (this player does not need to Dodge to make this move). If, however, the result is 5 or lower, or if the roll is a natural 1, this Skill has no further effect. A player may use this Skill any number of times per turn, during either team’s turn. If an opposition player is being Marked by more than one player with this Skill, only one player may use it.
+- **Atrapar (Catch)**  
+  Repite tiradas para **atrapar, entregas o intercepciones**.
 
-Strip Ball
-(General)
+- **Atrapar en picado (Diving Catch)**  
+  Puede atrapar balones que aterricen en casillas adyacentes.  
+  **+1** a atrapar pases precisos.
 
-When a player with this skill blocks an opponent with the ball, applying a !Pushed’ or !Defender Stumbles’ result will cause the opposing player to drop the ball in the square that they are pushed to, even if the opposing player is not Knocked Down.
+- **Echarse a un lado (Sidestep)**  
+  Si es empujado, el entrenador elige la **casilla adyacente vacía** de destino.
 
-Sure Hands
-(General)
+- **El balón es mío (Sure Hands)**  
+  Repite tiradas para **recoger el balón**.  
+  Inmune a **Robar el balón**.
 
-A player with the Sure Hands skill is allowed to re-roll the D6 if he fails to pick up the ball. In addition, the Strip Ball skill will not work against a player with this skill.
+- **En pie de un salto (Jump Up)**  
+  Levantarse cuesta **0 MV**.  
+  Puede placar desde el suelo con **chequeo de Agilidad +2**.
 
-Tackle
-(General)
+- **Equilibrio firme (Steady Footing)**  
+  Puede repetir **una tirada de Esquiva por activación**.
 
-Opposing players who are standing in any of this player’s tackle zones are not allowed to use their Dodge skill if they attempt to dodge out of any of the player’s tackle zones, nor may they use their Dodge skill if the player throws a block at them and uses the Tackle skill.
+- **Esprintar (Sprint)**  
+  Permite realizar hasta **3 acciones de Forzar la marcha (GFI)**.
 
-Wrestle
-(General)
+- **Forcejear (Wrestle)**  
+  En **"Ambos Derribados"**, ambos caen sin tirar armadura.
 
-The player is specially trained in grappling techniques. This player may use Wrestle when he blocks or is blocked and a !Both Down’ result on the Block dice is chosen by either coach. Instead of applying the ‘Both Down’ result, both players are wrestled to the ground. Both players are Placed Prone in their respective squares even if one or both have the Block skill. Do not make Armour rolls for either player. Use of this skill does not cause a turnover unless the active player was holding the ball.Dice Games
+- **Pies firmes (Sure Feet)**  
+  Repite una tirada fallida de **Forzar la marcha** por turno.
 
+- **Placaje defensivo (Diving Tackle)**  
+  El rival resta **-2 a esquivar** para salir de su zona de defensa.  
+  El jugador queda **tumbado** tras usarlo.
 
-AGILITY
+- **Saltar (Leap)**  
+  Permite saltar sobre casillas ocupadas con **chequeo de Agilidad**.
 
-Catch
-(Agility)
+- **Recepción heroica (Nerves of Steel)**  
+  Ignora modificadores por **zonas de defensa** al pasar, atrapar o interceptar.
 
-A player who has the Catch skill is allowed to re-roll the D6 if he fails a catch roll. It also allows the player to re-roll the D6 if he drops a hand-off or fails to make an interception.
+- **Atento al balón (On the Ball)**  
+  Durante un pase o secuencia de patada inicial, puede **moverse hasta 3 casillas gratis**.
 
-Defensive
-(Agility)
+- **Pase precipitado (Dump-off)**  
+  Puede **pasar el bal¨®n justo antes de ser placado**.
 
-During your opponent’s team turn (but not during your own team), any opposition player being marked by this player cannot use the guard skill.
+---
 
-Diving Catch
-(Agility)
+# HABILIDADES DE FUERZA (F)
 
-The player is superb at diving to catch balls others cannot reach and jumping to more easily catch perfect passes. The player may add 1 to any catch roll from an accurate pass targeted to his square. In addition, the player can attempt to catch any pass, kick off or crowd throw-in, but not bouncing ball, that would land in an empty square in one of his tackle zones as if it had landed in his own square without leaving his current square. A failed catch will bounce from the Diving Catch player’s square. If there are two or more players attempting to use this skill then they get in each other’s way and neither can use it.
+- **Brazo fuerte (Strong Arm)**  
+  **+1** al lanzar a un compañero.
 
-Diving Tackle
-(Agility)
+- **Defensa de equipo (Guard)** — **[ÉLITE]**  
+  Da **apoyos ofensivos y defensivos** aunque esté marcado.
 
-The player may use this skill after an opposing player attempts to dodge out of any of his tackle zones. The opposing player must subtract 2 from his Dodge roll for leaving the player’s tackle zone. If a player is attempting to leave the tackle zone of several players that have the Diving Tackle skill, then only one of the opposing players may use Diving Tackle. Diving Tackle may be used on a re-rolled dodge if not declared for use on the first Dodge roll. Once the dodge is resolved but before any armour roll for the opponent (if needed), the Diving Tackle Player is Placed Prone in the square vacated by the dodging player but do not make an Armour or Injury roll for the Diving Tackle player.
+- **Golpe mortífero (+X) (Mighty Blow)** — **[ÉLITE]**  
+  Añade **+X** a Armadura o Herida.
 
-Dodge
-(Agility)
+- **Imparable (Juggernaut)**  
+  En **Blitz**, los rivales no usan **Zafarse, Mantenerse firme ni Forcejear**.
 
-A player with the Dodge skill is adept at slipping away from opponents, and is allowed to re-roll the D6 if he fails to dodge out of any of an opposing player’s tackle zones. However, the player may only re-roll one failed Dodge roll per turn. In addition, the Dodge skill, if used, affects the results rolled on the Block dice, as explained in the Blocking rules.
+- **Lanzar compañero (Throw Team-mate)**  
+  Permite lanzar jugadores con **Humanoide bala**.
 
-Jump Up
-(Agility)
+- **Mantenerse firme (Stand Firm)**  
+  El jugador **elige no ser empujado**.
 
-A player with this skill is able to quickly get back into the  game. If the player declares any Action other than a Block Action he may stand up for free without paying the three squares of movement. The player may also declare a Block Action while Prone which requires an Agility roll with a +2 modifier to see if he can complete the Action. A successful roll means the player can stand up for free and block an adjacent opponent. A failed roll means the Block Action is wasted and the player may not stand up.Games
+- **Multiplicar bloqueo (Multiple Block)**  
+  Permite placar a **dos rivales adyacentes** (FU -2).
 
-Leap
-(Agility)
+---
 
-During their movement, instead of jumping over a single square that is occupied by a Prone or Stunned player, a player with this Skill may choose to Leap over any single adjacent square, including unoccupied squares and squares occupied by Standing players.
+# HABILIDADES DE PASE (P)
 
-Additionally, this player may reduce any negative modifier applied to the Agility test when they attempt to Jump over a Prone or Stunned player, or to Leap over an empty square or a square occupied by a Standing player by 1, to a minimum of -1.
+- **Lanzamiento a lo loco (Hail Mary Pass)**  
+  Lanza a **cualquier distancia** con mayor dispersión.
 
-A player with this Skill cannot also have the Pogo Stick trait.
+- **Pasar (Pass)**  
+  **+1 a tiradas de Pase** y permite repetir una fallida.
 
-Safe Pair of Hands
-(Agility)
+- **Pasar y seguir (Safe Pass)**  
+  Si el pase falla, el balón **cae a sus pies** y no causa Turnover.
 
-If this player is Knocked Down or Placed Prone (but not it they Fall Over) whilst in possession of the ball, the ball does not bounce. Instead, you may place the ball in an unoccupied square adjacent to the one this player occupies when they become Prone. This Skill may still be used if the player is Prone.
+- **Pase seguro (Safe Pair of Hands)**  
+  Si el jugador cae o es derribado, el balón **no rebota**.
 
-Sidestep
-(Agility)
+---
 
-If this player is pushed back for any reason, they are not moved into a square chosen by the opposing coach. Instead you may choose any unoccupied square adjacent to this player. This player is pushed back into that square instead. If there are no unoccupied squares adjacent to this player, this skill cannot be used.
+# 🧬 MUTACIONES (M)
 
-Sneaky Git
-(Agility)
+- **Garras (Claws)**  
+  Rompe armadura automáticamente con **8 natural**.
 
-During a Foul Action a player with this skill is not ejected for rolling natural doubles on the Armour roll.
+- **Tentáculos (Tentacles)**  
+  Impide que rivales se alejen.  
+  `1D6 + FU propia - FU rival`, éxito con **6+**.
 
-Sprint
-(Agility)
+- **Cola prensil (Prehensile Tail)**  
+  Rivales **-1 a Esquivar, Saltar o Brincar**.
 
-When this player performs any action that includes movement, they may attempt to Rush three times, rather than the usual two.
+- **Dos cabezas (Two Heads)**  
+  **+1 a todas las tiradas de Esquiva**.
 
-Sure Feet
-(Agility)
+- **Extremidades extra (Extra Arms)**  
+  **+1 a recoger o atrapar el balón**.
 
-Once per team turn, during their activation, this player may re-roll the D6 when attempting to Rush.
+---
 
+# 🌟 RASGOS
 
-PASSING
+- **Animal Savagery**  
+  Con **1-3 en 1D6**, ataca a un compañero adyacente para poder activarse.
 
-Accurate
-(Passing)
+- **Unchannelled Fury**  
+  Con **1-3**, la activación termina inmediatamente.
 
-The player may add +1 to the D6 roll when Quick Pass or Short Pass.
+- **Bone Head**  
+  Con **1**, el jugador no actúa y queda **Distraído**.
 
-Cannoneer
-(Passing)
+- **Really Stupid**  
+  Falla con **1-2**, salvo que tenga un compañero adyacente.
 
-When this player performs a Long Pass action or a Long Bomb Pass action, you may apply an additional +1 modifier to the Passing Ability test.
+- **Always Hungry**  
+  Al lanzar un compañero, con **1 en 1D6 intenta comérselo**.
 
-Cloud Burster
-(Passing)
+- **Animosity (X)**  
+  Con **1 en 1D6**, se niega a pasar el balón a ciertos compañeros.
 
-When this player performs a Long Pass action or a Long Bomb Pass action, you may choose to make the opposing coach re-roll a successful attempt to interfere with the pass.
+- **Unsteady**  
+  No puede declarar **Asegurar el Balón**.
 
-Dump-Off
-(Passing)
+---
 
-If this player is nominated as the target of a Block action (or a Special action granted by a Skill or Trait that can be performed instead of a Block action) and if they are in possession of the ball, they may immediately perform a Quick Pass action, interrupting the activation of the opposition player performing the Block action (or Special action) to do so. This Quick Pass action cannot cause a Turnover, but otherwise all of the normal rules for passing the ball apply. Once the Quick Pass action is resolved, the active player performs the Block action and their team turn continues.
+# 🛡️ Rasgos de Resistencia
 
-Fumblerooskie
-(Passing)
+- **Thick Skull**  
+  Resultado **9 en heridas → Aturdido**.
 
-When this player performs a Move or Blitz action whilst in possession of the ball, they may choose to ‘drop’ the ball. The ball may be placed in any square the player vacates during their movement and does not bounce. No turnover is caused.
+- **Iron Skin**  
+  No se aplican modificadores a Armadura y **anula Garras**.
 
-Give and Go
-(Passing) (Dungeon Bowl)
+- **Regeneration**  
+  Con **4+**, ignora completamente la baja.
 
-If this player performs a Hand-off action, their activation does not have to end once the Hand-off is resolved. If you wish and if this player has not used their full Movement Allowance, they may continue to move after resolving the Hand-off.
+- **Decay**  
+  **+1 a tiradas de Lesión** contra el jugador.
 
-Hail Mary Pass
-(Passing)
+- **Stunty**  
+  Ignora zonas de defensa al esquivar pero **-1 Armadura**.
 
-The player may throw the ball to any square on the playing pitch, no matter what the range: the range ruler is not used. Roll a D6. On a roll of 1 the player fumbles the throw, and the ball will bounce once from the thrower’s square. On a roll of 2-6, the player may make the pass. The Hail Mary pass may not be intercepted, but it is never accurate – the ball automatically misses and scatters three squares. Note that if you are lucky, the ball will scatter back into the target square! This skill may not be used in a Blizzard or with the Throw Team-Mate skill.
+---
 
-Leader
-(Passing)
+# ⚔️ Rasgos de Ataque
 
-A team which has one or more players with this Skill gains a single extra team re-roll, However, the Leader re-roll can only be used if there is at least one player with this Skill on the pitch (even if the player with this Skill is Prone, Stunned or has lost their Tackle Zone). If all players with this Skill are removed from play before the Leader re-roll is used, is lost. The Leader Re-roll can be carried over into extra time if it is not used, but the team does not receive a new one at the start of extra time. Unlike standard Team Re-rolls, the Leader Re-roll cannot be lost due to a Halfling Master Chef. Otherwise, the Leader re-roll is treated just like a normal team re-roll.
+- **Stab**  
+  Tirada directa de **Armadura sin modificadores**.
 
-Nerves of Steel
-(Passing)
+- **Chainsaw**  
+  **+3 Armadura**. Con **1**, el usuario se hiere.
 
-The player ignores modifiers for enemy tackle zones when he attempts to pass, catch or intercept.
+- **Projectile Vomit**  
+  Ataque especial contra rival adyacente.
 
-On The Ball
-(Passing)
+- **Firebreath**  
+  Con **4+**, el rival cae.
 
-This player may move up to three squares (regardless their MA), following all of the normal movement rules, when the opposing coach declares that one of their player is going to perform a Pass action. This move is made after the range has been measured and the target square declared, but before the active player makes a Passing Ability test. Making this move interrupts the activation of the opposition player performing the Pass action. A player may use this Skill when an opposition player uses the Dump-Off skill, but should this player Fail Over whilst moving, a Turnover is caused. Additionally, during each Start of Drive sequence, after Step 2 but before Step 3, one Open player with this Skill on the receiving team may move up to three squares (regardless of their MA). This Skill may not be used if a touchback is caused when the kick deviates and does not allow the player to cross into their opponent’s half of the pitch.
+- **Ball & Chain**  
+  Movimiento aleatorio y **placajes automáticos**.
 
-Pass
-(Passing)
+---
 
-A player with the Pass skill is allowed to re-roll the D6 if he throws an inaccurate pass or fumbles.
+# 💣 Acciones Especiales
 
-Portal Passer
-(Passing) (Dungeon Bowl)
+- **Bombardier**  
+  Permite **lanzar una bomba**.
 
-During its activation, when this player teleports using a Portal, it may declare a Pass action after determining which Portal it is teleporting to. This Skill may be used even if the player did not declare a Pass action at the beginning of their activation.
+- **Kick Team-mate**  
+  Variante de lanzamiento mediante **patada**.
 
-Running Pass
-(Passing)
+---
 
-If this player performs a Quick Pass action, their activation does not have to end once the pass is resolved. If you wish and if this player has not used their full Movement Allowance, they may continue to move after resolving the pass.
+# 📏 Rasgos de Tamaño
 
-Safe Pass
-(Passing)
+- **Titchy**  
+  **+1 a Esquivar** y no aplica penalizador por marcaje.
 
-Should This player fumble a Pass Action, the ball is not dropped, does not bounce from the square this player occupies, and no Turnover is caused. Instead, this player retains possession of the ball and their activation ends.
+- **Right Stuff**  
+  Puede ser **lanzado por un compañero**.
 
-Wall Thrower
-(Passing) (Dungeon Bowl)
+- **Swoop**  
+  Permite **controlar la dirección de aterrizaje** tras ser lanzado.
 
-When this player throws the ball at the wall, they may apply an additional +1 modifier when testing for the accuracy of the pass.
+---
 
+# 🏟️ Rasgos de Despliegue
 
-STRENGTH
+- **Swarming**  
+  Al inicio de una entrada, el equipo puede añadir **1D3 jugadores extra** desde Reservas.
 
-Arm Bar
-(Strength)
+- **Infected**  
+  Si mata a un rival de FU ≤ 4, genera **un jugador gratis en Reservas**.
 
-If an opposition player Falls Over as a result of failing their Agility test when attempting to Dodge, Jump or Leap out of a square in which they were being Marked by this player, you may apply a +1 modifier to either the armour roll or Injury roll. This modifier may be applied after the roll has been made and may be applied even if this player is row Prone. If the opposition player was being marked by more than one player with this Skill, only one player may use it.
+---
 
-Brawler
-(Strength)
+# ✨ Rasgos de Jugadores Estrella
 
-When this player performs a Block action on its own (but not as part of a Blitz Action), this player may re-roll a single Both Down result.
+- **Incorporeal**  
+  Puede abandonar una zona de defensa **sin tirar Esquiva una vez por activación**.
 
-Break Tackle
-(Strength)
+- **Blind Rage**  
+  Puede **repetir el dado** al usar Valentía.
 
-Once during their activation, after making an Agility test in order to Dodge, this player may modify the dice roll by +1 if their Strength characteristic is 4 or less, or by +2 if their Strength characteristic is 5 or more.Dice Games
-
-Grab
-(Strength)
-
-A player with this skill uses his great strength and prowess to grab his opponent and throw him around. To represent this, only while making a Block Action, if his block results in a push back he may choose any empty square adjacent to his opponent to push back his opponent. When making a Block or Blitz Action, Grab and Side Step will cancel each other out and the standard pushback rules apply. Grab will not work if there are no empty adjacent squares. A player with the Grab skill can never learn or gain the Frenzy skill through any means. Likewise, a player with the Frenzy skill can never learn or gain the Grab skill through any means.
-
-Guard
-(Strength)
-
-When a player performs a Block Action (including as part of a Blitz Action) this player can offer both offensive and defensive assists regardless of how many opposition players are Marking them.
-
-This skill may not be used to assist a foul.
-
-Juggernaut
-(Strength)
-
-A player with this skill is virtually impossible to stop once he is in motion. If this player takes a Blitz Action, the opposing player may not use his Fend, Stand Firm or Wrestle skills against the Juggernaut player’s blocks. The Juggernaut player may also choose to treat a !Both Down’ result as if a !Pushed’ result has been rolled instead for blocks he makes during a Blitz Action.
-
-Mighty Blow
-(Strength)
-
-Add 1 to any Armour or Injury roll made by a player with this skill when an opponent is Knocked Down by this player during a block. Note that you only modify one of the dice rolls, so if you decide to use Mighty Blow to modify the Armour roll, you may not modify the Injury roll as well. Mighty Blow cannot be used with the Stab or Chainsaw skills.
-
-Multiple Block
-(Strength)
-
-At the start of a Block Action a player who is adjacent to at least two opponents may choose to throw blocks against two of them. Make each block in turn as normal except that each defender’s strength is increased by 2. The player cannot follow up either block when using this skill, so Multiple Block can be used instead of Frenzy, but both skills cannot be used together. To have the option to throw the second block the player must still be on his feet after the first block.
-
-Piling On
-(Strength)
-
-The player may use this skill after he has made a block as part of one of his Block or Blitz Actions, but only if the Piling On player is currently standing adjacent to the victim and the victim was Knocked Down. You may re-roll the Armour roll or Injury roll for the victim. The Piling On player is Placed Prone in his own square — it is assumed that he rolls back there after flattening his opponent (do not make an Armour roll for him as he has been cushioned by the other player!). Piling On does not cause a turnover unless the Piling On player is carrying the ball. Piling On cannot be used with the Stab or Chainsaw skills.
-
-Pile Driver
-(Strength)
-
-When an opposition player is Knocked Down by this player as the result of a Block action (on its own or as part of a Blitz action), this player may immediately commit a free Foul action against the Knocked Down player. To use this Skill, this player must be Standing after the block dice result has been selected and applied, and must occupy a square adjacent to the Knocked Down player, After using this Skill, this player is Placed Prone and their activation ends immediately.
-
-Stand Firm
-(Strength)
-
-This player may choose not to be pushed back, either as the result of a Block action made against them or by a chain-push. Using this Skill does not prevent an opposition player with the Frenzy Skill from performing a second Block action if this player is still Standing after the first.
-
-Strong Arm
-(Strength)
-
-This player may apply a +1 modifier to any Passing Ability test rolls they make when performing a Throw Team-mate action. A player that does not have the Throw team-mate trait cannot have this Skill.
-
-Thick Skull
-(Strength)
-
-When an Injury roll is made against this player (even if this player is Prone, Stunned or has lost their Tackle Zone), they can only be KO’d on a roll of 9, and will treat a roll of 8 as stunned result. If this player also has the Stunty trait, they can only be KO’d on a roll of 8, and will treat a roll of 7 as Stunned result. All other results are unaffected.
-
-
-MUTATION
-
-Big Hand
-(Mutation)
-
-One of the player’s hands has grown monstrously large, yet remained completely functional. The player ignores modifier(s) for enemy tackle zones or Pouring Rain weather when he attempts to pick up the ball.
-
-Claws
-(Mutation)
-
-A player with this skill is blessed with a huge crab-like claw or razor sharp talons that make armour useless. When an opponent is Knocked Down by this player during a block, any Armour roll of 8 or more after modifications automatically breaks armour.
-
-Disturbing Presence
-(Mutation)
-
-This player’s presence is very disturbing, whether it is caused by a massive cloud of flies, sprays of soporific musk, an aura of random chaos or intense cold, or a pheromone that causes fear and panic. Regardless of the nature of this mutation, any player must subtract 1 from the D6 when they pass, intercept or catch for each opposing player with Disturbing Presence that is within three squares of them, even if the Disturbing Presence player is Prone or Stunned.
-
-Extra Arms
-(Mutation)
-
-A player with one or more extra arms may add 1 to any attempt to pick up, catch or intercept.
-
-Foul Appearance
-(Mutation)
-
-When an opposition player declares a Block action targeting this player (on its own or as part of a Blitz action), or any Special actions that targets this player, their coach must firs roll a D6, even if this player has lost their Tackle Zone. On a roll of 1, the player cannot perform the declared action and the action is wasted. This Skill may still be used if the player is Prone, Stunned, or has lost their Tackle Zone.
-
-Horns
-(Mutation)
-
-A player with Horns may use them to butt an opponent. Horns adds 1 to the player’s Strength for any block(s) he makes during a Blitz Action.
-
-Iron Hard Skin
-(Mutations)
-
-Opposing players cannot modify any Armour rolls made against this player. In addition, the Claws skill cannot be used when making an Armour roll against this player.
-This Skill may still be used if the player is Prone, Stunned, or has lost their Tackle Zone.
-
-Monstrous Mouth
-(Mutations)
-
-This player may re-roll any failed attempt to catch the ball. In addition, the Strip Ball skill cannot be used against this player.
-
-Prehensile Tail
-(Mutation)
-
-When an active opposition player attempts to Dodge, Jump or Leap in order to vacate a square in which they are being Marked by this player, there is an additional -1 modifier applied to the active player’s Agility test. If the opposition player is being Marked by more than one player with this Mutation, only one player may use it.
-
-Tentacles
-(Mutation)
-
-This player can use this Skill when an opposition player they are Marking voluntarily moves out of a square within this player’s Tackle Zone. Roll a D6, adding the ST of this player to the roll and then subtracting the ST of the opposition player. If the result is 6 or higher, or if the roll is a natural 6, the opposition player is held firmly in place and their movement comes to an end. If, however, the result is 5 or lower, or if the roll is a natural 1, this Skill has no further effect. A player may use this Skill any number or times per turn, during either team’s turn. If an opposition player is being Marked by more than one player with this Skill, only one player may use it.
-
-Two Heads
-(Mutation)
-
-This player may apply a +1 modifier to the Agility test when they attempt to Dodge.
-
-Very Long Legs
-(Mutation)
-
-This player may reduce any negative modifier applied to the Agility test when they attempt to Jump over a Prone or Stunned player (or to Leap over an empty square or a square occupied by a Standing player, if this player has the Leap Skill) by 1, to a minimum of -1. Additionally, this player may apply a +2 modifier to any attempts to interfere with a pass they make. Finally this player ignores the Cloud Burster skill.
-
-
-EXTRAORDINARY
-Discover more
-Dice
-dice
-Best video game consoles
-Always Hungry
-(Extraordinary)
-
-If this player wishes to perform a Throw Team-mate action, roll a D6 after they have finished moving, but before they throw their team-mate. On a roll of 2+, continue with the throw as normal. On a roll of 1, this player will attempt to eat their team-mate. Roll another D6:
-
-On a roll of 1, the team-mate has been eaten and is immediately removed from the Team Draft list. No apothecary can save them and no Regeneration attempts can be made. If the team-mate was in possession of the ball, it will bounce from the square the player occupies.
-On a roll of 2+, the team-mate squirms free and the Throw Team-mate action is automatically fumbled, as described on page 53.
-Animal Savagery
-(Extraordinary)
-
-When this player is activated, even if they are Prone or have lost their Tackle Zone, immediately after declaring the action they will perform but before peforming the action, roll a D6, applying a +2 modifier to the dice roll if you declared the player would perform a Block or Blitz action (or a Special action granted by a Skill or Trait that can be performed instead of a Block action):Dice Games
-
-On a Roll of 1-3, this player lashes out at their team-mates:
-One Standing team-mate of your choice that is currently adjacent to this player is immediately Knocked Down by this player. This does not cause a Turnover unless the Knocked Down player was in possession of the ball. After making an armour roll (and possible Injury roll) against the Knocked Down player, this player may continue their activation and complete their declared action if able, Note that, if this player has any applicable Skills, the coach of the opposing team may use them when making an Armour roll (and possible Injury roll) against the Knocked Down player.
-If this player is not currently adjacent to any Standing team-mates, this player’s activation ends immediately. Additionally, this player loses their Tackle Zone until they are next activated.
-On a roll of 4+, this player continues their activation as normal and completes their declared action.
-If you declared that this player would perform an action which can only be performed once per team turn and this player’s activation ended before the action could be completed, the action is considered to have been performed and no other player on your team may perform the same action this team turn.
-
-Animosity
-(Extraordinary)
-
-This player is jealous of and dislikes certain other players of their team, as shown in brackets after the name of the Skill on this player’s profile. This may be defined by position or race. For example, a Skaven Thrower on an Underworld Denizens team has Animosity (Underworld Goblin Lineman), meaning they suffer Animosity towards any Underworld Goblin Lineman players on their team, Whereas a Skaven Renegade on a Chaos Renegade team has Animosity (all team-mates), meaning they suffer Animosity towards all of their team-mates equally. When this player wishes to perform a Hand-off action to a team-mate of the type listed, or attempts to perform a Pass action and the target square is occupied by a team-mate of the type listed, this player may refuse to do so. Roll a D6. On a roll of 1, this player refuses to perform the action and their activation comes to an end. Animosity does not extend to Mercenaries or Star Players.
-
-Ball & Chain
-(Extraordinary)
-
-When this player is activated, the only action they may perform is a “Ball and Chain Move” special action. There is no limit to how many players with this Trait may perform this Special action each team turn.
-When this player performs this Special action:
-
-Place the Throw-in template over the player, facing towards either End Zone or either sideline as you wish.
-Roll a D6 and move the player one square in the direction indicated.
-A player with Ball and Chain automatically passes any Agility tests they may be required to make in order to Dodge, regardless of any modifiers.
-If this movement takes the player off the pitch, they risk Injury by the crowd
-If this movement takes the player into a square in which the ball is placed, the player is considered to have moved involuntary. Therefore, they may not attempt to pick the ball up and the ball will bounce.
-Repeat this process for each square the player moves.
-If this player would move into a square that is occupied by a Standing player from either team, they must perform a Block action against that player, following the normal rules, but with the following exceptions:
-
-A Ball and Chain player ignores the Foul Appearance Skill
-A Ball and Chain player must follow-up if they push-back another player.
-If this player moves into a square that is occupied by a Prone or Stunned player from either team, for any reason, that player is immediately pushed back and an Armour Roll is made against them.
-This player may Rush. Declare that the player will Rush before placing the Throw-in template and rolling the D6 to determine direction:
-
-If this player Rushes into an occupied square, move them as normal and roll a D6:
-On a roll of 2+, this player moves without mishap.
-On a roll of 1 (before or after modification), the player Falls Over.
-If this player Rushes into a square that is occupied by a standing player from either team, roll a D6:
-On a roll of 2+, this player moves without mishap and will perform a Block action against the player occupying the square as described previously.
-On a roll of 1 (before or after modification), the player occupying the square is pushed back and this player will Fall Over after moving into the vacated square.
-If this player ever Falls Over, is Knocked Down or is placed Prone, an Injury roll is immediately made against them (no Armour roll is required), treating a Stunned result as a KO’d result.
-A player with this Trait cannot also have the Diving Tackle, Frenzy, Grab, Leap, Multiple Block, On the Ball or Shadowing skills. This Trait must still be used if the player is Prone or has lost their Tackle Zone.
-
-Bloodlust
-(Extraordinary)
-
-To keep control of their wits, Vampires need a supply of fresh blood. Whenever a player with this Trait activates, after declaring their action, they must roll a D6, adding 1 to the roll if they declared a Block action or a Blitz action.
-
-If they roll equal to or higher than the number shown In brackets, they may activate as normal.
-
-lf the player rolls lower than the number shown in brackets, or rolls a natural 1,they may contln ue their activation as normal though they may change their declared action to a Move action if they wish. If the player declared an action that can only be perform,ed once per team turn (such as a Blitz action) this wil l
-still count as the one of that action for the team turn. At the end of their activation they may bite an adjacent Thrall Lineman teammate (Standing, Prone or Stunned). lf they bite a Thrall, lmmediatly make an injury roll for the Thrall treating any Casualty result as Badlly Hurt; this will not cause a Turnover unless the Thrall was holding the ball.
-
-If they do not bite a Thrall far any reason then a Turnover is caused, the player wil I lose their Tackle Zone untiI they are next activation, and will immediately drop the ball if they were holding it. lf the player was in the opposing End Zone, no touchdown is scored.
-
-If a player who failed this roll wants to make a Pass action, Hand-off, or score then they must bite a Thrall before they perform the action or score.
-
-Bombardier
-(Extraordinary)
-
-When activated and if they are Standing, this player can perform a “Throw Bomb” Special action. This Special action is neither a Pass action nor a Throw Team-mate action, so does not prevent another player performing one of those actions during the same team turn. However, only a single player with this Trait may perform this Special action each team turn.
-A Bomb can be thrown and caught, and the throw interfered with, just like a ball, using the rules for Pass action as described on page 48, with the following exceptions:
-
-A player may not stand up or move before performing a Throw Bomb action.
-Bombs do not bounce and can come to rest on the ground in an occupied square. Should a player fail to catch a Bomb, it will come to rest on the ground in the square that player occupies.
-If a Bomb is fumbled, it will explode immediately in the square occupied by the player attempting to throw it.
-If a Bomb comes to rest on the ground in an empty square or is caught by an opposite player, no Turnover is caused.
-A player that is in possession of the ball can still catch a Bomb.
-Any Skills that can be used when performing a Pass action can also be used when performing a Throw Bomb Special action, with the exception of On the Ball.
-If a Bomb is caught by a player on either team, roll a D6:
-
-On a roll of 4+, the Bomb explodes immediately, as described below.
-On a roll of 1-3, that player must throw the Bomb again immediately. This throw takes place out of the normal sequence of play.
-Should a Bomb ever leave the pitch, it explodes in the crowd with no effect (on the  game) before the crowd can throw it back.Games
-
-When a Bomb comes to rest on the ground, in either an occupied square, in a square occupied by a player that failed to catch the Bomb or in a square occupid by a Prone or Stunned player, it will explode immediately:
-
-If the Bomb explodes in an occupied square, that player is automatically hit by the explosion.
-Roll a D6 for each player (from either team) that occupies a square adjacet to the one in which the Bomb exploded:
-On a roll of 4+, the player has been hit by the explosion.
-On a roll of 1-3, the player manages to avoid the explosion.
-Any Standing players hit by the explosion are Placed Prone.
-An Armour roll (and possibly an Injury roll as well) is made against any player hit by the explosion, even if they were already Prone or Stunned.
-You may apply a +1 modifier to either the Armour roll or Injury roll. This modifier may be applied after the roll been made.
-If the player performing the Throw Bomb Special action is hit by their bomb and Placed Prone, either as the result of a Fumbled throw or by being hit by the explosion, then a Turnover is caused.
-
-Bone Head
-(Extraordinary)
-
-When this player is activated, even if they are Prone or have lost their Tackle Zone, immediately after declaring the action they will perform but before performing the action, roll a D6:
-
-On a roll of 1, this player forgets what they are doing and their activation ends immediately. Additionally, this player loses their Tackle Zone until they are next activated.
-On a roll of 2+, this player continues their activation as normal and completes their declared action.
-If you declared that this player would perform an action which can only be performed once per team turn and this player’s activation ended before the action could be completed, the action is considered to have been performed and no other player on your team may perform the same action this team turn.
-
-Breathe Fire
-(Extraordinary)
-
-Once per activation, instead of performing a Block action (either on its own or as part of a Blitz action), this player may perform a Breathe Fire Special action. When a Player makes a Breathe Fire Special action they may choose on Standing opposition Player they are Marking and roll a D6, applying a -1 modifier if the target has a ST of 5 or higher:
-
-1, Player performing Breathe Fire is Knocked Down
-2-3, Nothing happen
-4+, Opposition Player is Placed Prone
-6, Opposition Player is Knocked Down
-After the Breath Fire Special action has been resolved, this player’s activation immediately ends.
-
-Chainsaw
-(Extraordinary)
-
-Instead of performing a Block action (on its own or as part of a Blitz action), this player may perform a “Chainsaw Attack” Special action. Exactly as described for a Block action, nominate a single Standing player to be the target of the Chainsaw Attack Special action, There is no limit to how many players with this Trait may perform this Special action each team turn.
-To perform a Chainsaw Attack Special action, roll a D6:
-
-On a roll of 2+, the nominated target is hit by Chainsaw!
-On a roll of 1, the Chainsaw will violently ‘kick-back’ and hit the player wielding it. This will result in a Turnover.
-In either case, an Armour roll is made against the player hit by the Chainsaw, adding +3 to the result.
-If the armour of the player hit is broken, they become Prone and an Injury roll is made against them. This Injury roll cannot be modified in any way.
-If the armour of the player hit is not broken, this Trait has no effect
-This player can only use the Chainsaw once per turn (i.e., Chainsaw cannot be used with Frenzy or Multipe Block) and if used as part of a Blitz action, this player cannot continue moving after using it.
-If this player Fails Over or is Knocked Down, the opposing coach may add +3 to the Armour roll made against the player.
-If an opposition player performs a Block action targeting this player and a Player Down! or a POW! result is applied, +3 is added to the Armour roll. If a Both Down result is applied, +3 is added to both Armour rolls.
-Finally, this player may use their Chainsaw when they perform a Foul action. Roll a D6 for kick-back as described above. Once again, an Armour roll is made against the player hit by the Chainsaw. adding +3 to the score.
-
-Decay
-(Extraordinary)
-
-If this player suffers a Casualty result on the injury table, there is a +1 modifier applied to all rolls made against this player on the Casualty table.
-
-Drunkard
-(Extraordinary)
-
-This player suffers a -1 penality to the dice roll when attempting to Rush.Dice Games
-
-Fan Favorite
-(Extraordinary)
-
-The fans love seeing this player on the pitch so much that even the opposing fans cheer for your team. For each player with Fan Favourite on the pitch your team receives an additional +1 FAME modifier (see page 18) for any Kick-Off table results, but not for the Winnings roll.
-
-Hit and Run
-(Extraordinary)
-
-After a player with this Trait performs a Block action, they may immediately move one free square ignoring Tackle Zones so long as they are still Standing. They must ensure that after this free move, they are not Marked by or Marking any opposition players.
-
-Hypnotic Gaze
-(Extraordinary)
-
-The player has a powerful telepathic ability that he can use to stun an opponent into immobility. The player may use hypnotic gaze at the end of his Move Action on one opposing player who is in an adjacent square. Make an Agility roll for the player with hypnotic gaze, with a -1 modifier for each opposing tackle zone on the player with hypnotic gaze other than the victim’s. If the Agility roll is successful, then the opposing player loses his tackle zones and may not catch, intercept or pass the ball, assist another player on a block or foul, or move voluntarily until the start of his next Action or the drive ends. If the roll fails, then the hypnotic gaze has no effect.
-
-Kick Team-mate
-(Extraordinary)
-
-Once per team turn, in addition to another player performing either a Pass or a Throw Team-mate action, a single player with this Traits on the active team can perform a ‘Kick Team-mate’ Special action, follow the rules for Throw Team-mates actions as described on page 52.
-However, if the Kick Team-mate Special action is fumbled, the kicked player is automatically removed from play and an injury roll is made against them, treating a Stunned result as a KO’d result (note that, if the player that performed this action also has the Mighty Blow (+x) skill, the coach of the opposing team may use that Skill on this Injury roll). If the kicked player was in possession of the ball when removed from play, the ball will bounce from the square they occupied.
-
-Loner
-(Extraordinary)
-
-If this player wishes to use a team re-roll, roll a D6. If you roll equal to or higher than the target number show in brackets, this player may use the team re-roll as normal. Otherwise, the original result stands without being re-rolled but the team re-roll is lost just as if it had been used. This Trait must still be used if the player is Prone or has lost their Tackle Zone.
-
-My Ball
-(Extraordinary)
-
-A player with this Trait may not willingly give up the ball when in possession of it, and so may not make Pass actions, Hand-off actions, or use any other Skill or Trait that would allow them to relinquish possession of the ball. The only way they can lose possession of the ball is by being Knocked Down, Placed Prone, Falling Over or by the effect of a Skill, Trait or special rule of an opposing model.
-
-No Hands
-(Extraordinary)
-
-The player is unable to pick up, intercept or carry the ball and will fail any catch roll automatically, either because he literally has no hands or because his hands are full. If he attempts to pick up the ball then it will bounce, and will cause a turnover if it is his team’s turn.
-
-Pick-Me-Up
-(Extraordinary)
-
-At the end of the opposition’s team turn, roll a D6 for each Prone, non-Stunned team-mate within three squares of a standing player with this Trait. On a 5+, the Prone player may immediately stand up.
-
-Plague Ridden
-(Extraordinary)
-
-Once per  game, if an opposition player with Strength characteristic of 4 or less that does not have the Decay, Regeneration or Stunty traits suffers a Casualty result of 15-16, DEAD as the result of a Block action performed or a Foul action committed by a player with this Trait that belongs to your team, and if that player cannot be saved by an apothecary, you may choose to use this Trait. If you do, that player does not die; they have instead been infected with a virulent plague! If your team has the ‘Favoured of Nurgle’ special rule, a new ‘Rotter Lineman’ player, drawn from the Nurgle roster, can be placed immediately in the Reserves box of your team’s dugout (this may cause a team to have more than 16 players for the remainder of this game). During step 4 of the post-game sequence, this player may be permanently hired, Exactly as you would a Journeyman player that had played for your team.Games
-
-Pogo Stick
-(Extraordinary)
-
-During their movement, instead of jumping over a single square that is occupied by a Prone or Stunned player, as described on page 45, a player with this Trait may choose to Leap over any single adjacent square, including unoccupied square and squares occupied by Standing players. Additionally, when this player makes and Agility test to jump over a Prone or Stunned player, or to Leap over an empty square or a square occupied by a Standing player, they may ignore any negative modifiers that would normally be applied for being Marked in the square they jumped or leaped from and/or for being marked in the square they have jumped or leaped into. A player with this Trait cannot also have the Leap skill.
-
-Projectile Vomit
-(Extraordinary)
-
-Instead of performing a Block action (on its own or as part of a Blitz action), this player may perform a ‘Projectile Vomit’ Special action. Exactly as described for a Block action, nominate a single Standing player to be the target of the Projectile Vomit Special action. There is no limit to how many players with this Trait may perform this Special action each team turn.
-To perform a Projectile Vomit Special action, roll a D6:
-
-On a roll of 2+, this player regurgitates acidic bile onto the nominated target.
-On a roll of 1, this player belches and snorts, before covering itself in acid bile.
-In either case, an armour roll is made against the player hit by the Projectile vomit. This Armour roll cannot be modified in any way.
-If the armour of the player hit is broken, they become Prone and an Injury roll is made against them. This Injury roll cannot be modified in any way.
-If the armour of the playerhit is not broken, this Trait has no effect.
-A player can only perform this Special action once per turn (i.e. Projectile Vomit cannot be used with Frenzy or Multiple Block).
-
-Really Stupid
-(Extraordinary)
-
-When this player is activated, even if they are Prone or have lost their Tackle Zone, immediately after declaring the action they will perform but before performing the action, roll a D6, applying a +2 modifier to the dice roll if this player is currently adjacent to one or more Standing team-mates that do not have this Trait:Dice Games
-
-On a roll of 1-3, this player forgets what they are doing and their activation ends immediately. Additionally, this player loses their Tackle Zone until they are next activated.
-On a roll of 4+, this player continues their activation as normal and completes their declared action.
-Note that if you declared that this player would perform an action which can only be performed once per team turn and this player’s activation ended before the action could be completed, the action is considered to have been performed and no other player on your team may perform the same action this team turn.
-
-Regeneration
-(Extraordinary)
-
-After a Casualty roll has been made against this player, roll a D6. On a roll of 4+, the Casualty roll is dicarded without effect and the player is placed in the Reserves box rather than the Casualty box of their team dugout. On a roll of 1-3, however, the result of the Casualty roll is applied as normal. This Trait may still be used if the player is Prone, Stunned, or has lost their Tackle Zone.
-
-Right Stuff
-(Extraordinary)
-
-If this player also has a Strength characteristic of 3 or less, they can be thrown by a team-mate with the Throw Team-mate skill, as described on page 52. This Trait may still be used if the player is Prone, Stunned, or has lost their Tackle Zone.
-
-Secret Weapon
-(Extraordinary)
-
-When a drive in which this player took part ends, even if this player was not on the pitch at the end of the drive, this player will be Sent-off for committing a Foul, as described on page 63.
-
-Stab
-(Extraordinary)
-
-Instead of performing a Block action (on its own or as part of a Blitz action), this player may perform a ‘Stab’ Special action. Exactly as described for a Block action, nominate a single Standing player to be the target of the Stab Special action. There is no limit to how many players with this Trait may perform this Special action each team turn.
-To perform a Stab Special action, make an unmodified Armour roll against the target:
-
-If the Armour of the player hit is broken, they become Prone and an Injury roll is made against them, This Injury roll cannot be modified in any way.
-If the Armour of the player hit is not broken, this Trait has no effect.
-If Stab is used as part of a Blitz action, the player cannot continue moving after using it.
-
-Stakes
-(Extraordinary)
-
-This player is armed with special stakes that are blessed to cause extra damage to the Undead and those that work with them. This player may add 1 to the Armour roll when they make a Stab attack against any player playing for a Khemri, Necromantic, Undead or Vampire team.
-
-Stunty
-(Extraordinary)
-
-When this player makes an Agility test in order to Dodge, they ignore any -1 modifiers for being Marked in the square they have moved into, unless they also have either the Bombardier trait, the Chainsaw trait or the Swoop trait.
-However, when an opposition player attempts to interfere with a Pass action performed by this player, that player may apply a +1 modifier to their Agility test.
-Finally, player with this Trait are more prone to injury. Therefore, when an Injury roll is made against this player, roll 2D6 and consult the Stunty Injury table, on page 60. This Trait may still be used if the player is Prone, Stunned, or has lost their Tackle Zone.
-
-Swarming
-(Extraordinary)
-
-During each Start of Drive sequence, after Step 2 but before Step 3, you may remove D3 players with this Trait from the Reserves box of your dugout and set them up on the pitch, allowing you to set up more than the usual 11 players. These extra players may not be placed on the Line of Scrimmage or in a Wide Zone. 
-
-Swarming players must be set up in their team’s half.
-When using Swarming, a coach may not set up more players with the Swarming trait onto the pitch than the number of friendly players with the Swarming trait that were already set up. So, if a team had 2 players with the Swarming trait already set up on the pitch, and then rolled for 3 more players to enter the pitch via Swarming, only a maximum of 2 more Swarming players could be set up on the pitch.
-
-Swoop
-(Extraordinary)
-
-If this player is thrown by a team-mate, they do not scatter before landing as they normally would. Instead, you may place the Throw-in template over the player, facing towards either End Zone or either sideline as you wish. The player then moves from the target square D3 squares in a direction determined by rolling a D6 and referring to the Throw-in template.
-
-Take Root
-(Extraordinary)
-
-When this player is activated, even if they are Prone or have lost theio Tackle Zone, immediately after declaring the action they will perform but before performing the action, roll a D6:
-
-On a roll of 1, this player becomes ‘Rooted’:
-A Rooted player cannot move from the square they currently occupy for any reason, voluntarily or otherwise, until the end of this drive, or until they are Knocked Down or Placed Prone.
-A Rooted player may perform any action available to them provided they can do so without moving. For example, a Rooted player may perform a Pass action but may not move before making the pass, and so on.
-On a roll of 2+, this player continues their activation as normal.
-If you declared that this player would perform any action that includes movement (Pass, Hand-off, Blitz or Foul) prior to them becoming Rooted, they may, complete the action if possible. If they cannot, the action is considered to have been performed and no other player on your team may perform the same action this team turn.
-
-Throw Team-Mate
-(Extraordinary)
-
-If this player also has a Strength characteristic of 5 or more, they may perform a Throw Team-mate action, allowing them to throw a team-mate with the Right Stuff trait.
-
-Timmm-ber!
-(Extraordinary)
-
-If the player has a Movement Allowance of 2 or less, apply a +1 modifier to the dice roll when they attempt to stand up (as described on page 44) for each Open, Standing team-mate they are currently adjacent to. A natural 1 is always a failure, no matter how many team-mates are helping. This trait may still be used of the player is prone or has lost tackle zone.Dice Games
-
-Titchy
-(Extraordinary)
-
-This player may apply a +1 modifier to any Agility tests they make in order to Dodge. However, if an opposition player dodges into a square within the Tackle Zone of this player, this player does not count as Marking the moving player for the purpose of calculating Agility test modifiers.
-
-Trickster
-(Extraordinary)
-
-When a player is about to be hit by a Block action or a Special action that replaces a Block action (with the exception of a Block action caused by the Ball & Chain Move Special action), before determinig how many dice are rolled, they may be removed from the pitch ans placed in any other unoccupied square adjacent to the player performing the Block action.. The Block action then takes place as normal. If the player using this Trait is holding the ball and places themselves inthe opposition End Zone, the Block action will still be fully resolved before any touchdown is resolved.
-
-Unchannelled Fury
-(Extraordinary)
-
-When this player is activated, even if they are Prone or have lost their Tackle Zone, immediately after declaring the action they will perform but before performing the action, roll a D6, applying a +2 modifier to the dice roll if you declared the player would perform a Block or Blitz action (or a Special action granted by a Skill or Trait that can be performed instead of a Block action)
-
-On a roll of 1-3, this player rages incoherently at others but achieves little else. Their activation ends immediately.
-On a roll of 4+, this player continues their activation as normal and completes their declared action.
-If you declared that this player would perform an action which can only be performed once per team turn and this player’s activation ended before the action could be completed, the action is considered to have been performed and no other player on your team may perform the same action this team turn.
+- **Tasty Morsel**  
+  Puede **morder a un rival débil** para satisfacer Sed de Sangre.

@@ -10,6 +10,12 @@ export const generateMatchArticle = (report: MatchReport) => {
         `CRÓNICA DE UN CHOQUE BRUTAL`,
     ];
 
+    if (report.wasConceded && report.wasConceded !== 'none') {
+        const concederName = report.wasConceded === 'home' ? homeTeam.name : opponentTeam.name;
+        headlines.push(`¡HUÍDA Y DESHONRA! ${concederName.toUpperCase()} ABANDONA EL CAMPO`);
+        headlines.push(`ESCÁNDALO EN LA ARENA: CONCESIÓN DE ${concederName.toUpperCase()}`);
+    }
+
     const subHeadlines = [
         "Los gritos de la grada aún resuenan en las gradas del estadio local.",
         "Un partido que pasará a los anales de la historia por su violencia y técnica.",
@@ -21,7 +27,7 @@ export const generateMatchArticle = (report: MatchReport) => {
     let development = '';
     const tds = gameLog.filter(e => {
         const type = (e.type as string).toUpperCase();
-        return type === 'TOUCHDOWN' || type === 'TD';
+        return type === 'TOUCHDOWN' || type === 'TD' || type === 'TOUCHDOWN';
     });
     const injuries = gameLog.filter(e => {
         const type = (e.type as string).toUpperCase();
@@ -39,7 +45,11 @@ export const generateMatchArticle = (report: MatchReport) => {
     }
 
     let conclusion = '';
-    if (winner === 'draw') {
+    if (report.wasConceded && report.wasConceded !== 'none') {
+        const winnerName = report.wasConceded === 'home' ? opponentTeam.name : homeTeam.name;
+        const loserName = report.wasConceded === 'home' ? homeTeam.name : opponentTeam.name;
+        conclusion = `Sin embargo, el partido no terminó por el silbato, sino por la deserción. ${loserName} decidió que ya había tenido suficiente carnicería, concediendo la victoria a un triunfante ${winnerName} que se retira entre los vítores de una grada que desprecia la cobardía.`;
+    } else if (winner === 'draw') {
         conclusion = "Al final, el empate deja un sabor agridulce y promete una revancha sangrienta en el futuro.";
     } else {
         const winnerName = winner === 'home' ? homeTeam.name : opponentTeam.name;
