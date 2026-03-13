@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import type { ManagedTeam, ManagedPlayer, Skill } from '../../types';
 import { skillsData } from '../../data/skills';
 import { teamsData } from '../../data/teams';
@@ -40,7 +41,7 @@ const SkillSelectionModal: React.FC<SkillSelectionModalProps> = ({ player, roste
 
     }, [basePlayer, skillType, player.gainedSkills, player.skills]);
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[100] p-4" onClick={onClose}>
             <div className="glass-panel border-premium-gold/30 bg-black/80 max-w-lg w-full max-h-[80vh] flex flex-col shadow-[0_0_100px_rgba(245,159,10,0.1)] overflow-hidden animate-slide-in-up" onClick={e => e.stopPropagation()}>
                 <div className="p-6 border-b border-white/5 bg-premium-gold/5 flex justify-between items-center">
@@ -73,7 +74,8 @@ const SkillSelectionModal: React.FC<SkillSelectionModalProps> = ({ player, roste
                     )}
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 
@@ -740,7 +742,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
 
     const steps = ["Recaudación", "MVP", "Audiencia", "Evolución", "Veredicto"];
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 bg-black/98 backdrop-blur-3xl z-[150] flex items-center justify-center p-4">
             <div className="absolute inset-0 overflow-hidden -z-10 pointer-events-none">
                 <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-premium-gold/5 blur-[150px] rounded-full animate-pulse"></div>
@@ -813,7 +815,8 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                     onSelect={(skillName) => handleSkillSelectionUpdate(skillSelection.player.id, skillName, skillSelection.cost)}
                 />
             )}
-        </div>
+        </div>,
+        document.body
     );
 };
 
