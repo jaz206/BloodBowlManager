@@ -189,8 +189,14 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
 
     const handleToggleNomination = (playerId: number) => {
         setMvpNominations(prev => {
-            if (prev.includes(playerId)) return prev.filter(id => id !== playerId);
-            if (prev.length >= 6) return prev;
+            const isAlreadyNominated = prev.includes(playerId);
+            if (isAlreadyNominated) {
+                return prev.filter(id => id !== playerId);
+            }
+            // Absolute limit of 6 candidates per Blood Bowl 2025 rules
+            if (prev.length >= 6) {
+                return prev;
+            }
             return [...prev, playerId];
         });
     };
@@ -442,8 +448,15 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                 return (
                     <div className="flex flex-col gap-6 animate-fade-in">
                          <div className="text-center space-y-2">
-                            <h4 className="text-[10px] font-display font-black text-premium-gold uppercase tracking-[0.3em]">Cónclave de MVP ({mvpsAwarded + 1}/{mvpCount})</h4>
-                            <p className="text-slate-500 text-[10px] italic border-t border-white/5 pt-2">Nomina a 6 guerreros. El destino (1D6) elegirá al más valioso (+4 PE).</p>
+                            <h4 className="text-[10px] font-display font-black text-premium-gold uppercase tracking-[0.3em]">
+                                Cónclave de MVP: Galardón {mvpsAwarded + 1} de {mvpCount}
+                            </h4>
+                            <div className="flex flex-col items-center gap-1 border-t border-white/5 pt-2">
+                                <p className="text-slate-500 text-[10px] italic">Nomina a 6 guerreros (1D6 elegirá al azar)</p>
+                                <p className="text-white text-[12px] font-display font-black">
+                                    Candidatos: <span className={mvpNominations.length === 6 ? "text-green-500" : "text-premium-gold animate-pulse"}>{mvpNominations.length} / 6</span>
+                                </p>
+                            </div>
                         </div>
 
                         {!mvpRoll ? (
@@ -481,7 +494,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                                         <span className="material-symbols-outlined text-lg transition-transform group-hover:rotate-180 duration-[800ms] relative z-10">casino</span>
                                         <span className="relative z-10">
                                             {mvpNominations.length < Math.min(6, eligibleMvp.length) 
-                                                ? `Nomina a ${Math.min(6, eligibleMvp.length)} jugadores` 
+                                                ? `Faltan ${Math.min(6, eligibleMvp.length) - mvpNominations.length} por elegir` 
                                                 : `Lanzar Dado para MVP ${mvpsAwarded + 1}`}
                                         </span>
                                     </button>
