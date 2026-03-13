@@ -26,6 +26,8 @@ const SppActionIcons: React.FC<{ actions: Partial<Record<SppActionType, number>>
         INTERFERENCE: { icon: <InterferenceIcon />, title: 'Interferencia' },
         INT: { icon: <InterferenceIcon />, title: 'Intercepción' },
         MVP: { icon: <TdIcon />, title: 'MVP' },
+        DEFLECT: { icon: <InterferenceIcon />, title: 'Desvío' },
+        THROW_TEAM_MATE: { icon: <PassIcon />, title: 'Lanzar Compañero' },
     };
 
     return (
