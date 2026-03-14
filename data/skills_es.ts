@@ -119,4 +119,18 @@ export const skillsData: any[] = [
     { keyEN: "Titchy", name: "Diminuto", category: "Rasgo", description: "Suma +1 a las pruebas de Agilidad para Esquivar. Sin embargo, los oponentes que esquiven hacia su Zona de Defensa no sufren penalizador por ser marcados por este jugador." },
     { keyEN: "Trickster", name: "Tramposo", category: "Rasgo", description: "Cuando un oponente está a punto de golpearlo con un Bloqueo o acción especial equivalente, antes de determinar los dados, puede colocarse en cualquier otra casilla adyacente libre. El Bloqueo se resuelve entonces normalmente." },
     { keyEN: "Unchannelled Fury", name: "Furia Desencadenada", category: "Rasgo", description: "Al activarse, lanza 1D6 (+2 si Bloqueo o Blitz). Con 1-3, el jugador grita incoherentemente y su activación termina de inmediato. Con 4+, continúa normalmente." },
+    
+    // ── TRIQUIÑUELAS (T) ───────────────────────────────────────────────────────
+    { keyEN: "Underhanded", name: "Agresor Discreto", category: "Triquiñuelas", description: "Permite repetir una tirada de Armadura fallida al realizar una acción de Falta si no hay defensores prestando apoyos." },
+    { keyEN: "Crunch", name: "Crujir", category: "Triquiñuelas", description: "Habilidad de impacto tras derribar a un oponente." },
+    { keyEN: "Dump-off (T)", name: "Dejada", category: "Triquiñuelas", description: "Permite realizar un pase rápido justo antes de ser bloqueado por un rival. [Temporada 3]" },
+    { keyEN: "Quick Foul", name: "Falta Rápida", category: "Triquiñuelas", description: "Permite realizar una acción de Falta sin terminar la activación del jugador, pudiendo seguir moviéndose después." },
+    { keyEN: "Sneaky Git (T)", name: "Furtivo", category: "Triquiñuelas", description: "Solo es expulsado al cometer una falta si saca un doble en la armadura y además logra romperla. Si saca dobles pero no abre chapa, ya no es expulsado." },
+    { keyEN: "Violent Innovator", name: "Innovador Violento", category: "Triquiñuelas", description: "Si un rival sufre una Lesión debido a una acción especial de este jugador, este gana los Puntos de Estrellato (PE) correspondientes." },
+    { keyEN: "Dirty Player (T)", name: "Jugar Sucio (+X)", category: "Triquiñuelas", description: "Proporciona un bonificador a la tirada de Armadura o Herida al realizar una falta." },
+    { keyEN: "Put the Boot In", name: "Meter la Bota", category: "Triquiñuelas", description: "Permite prestar apoyos ofensivos a una acción de Falta sin importar cuántos rivales estén marcando al jugador." },
+    { keyEN: "Shadowing (T)", name: "Perseguir", category: "Triquiñuelas", description: "Permite seguir a un rival que intenta esquivar para salir de la zona de defensa (1D6 + MV propio - MV rival; éxito con 4+)." },
+    { keyEN: "Eye Gouge", name: "Piquete de Ojos", category: "Triquiñuelas", description: "Al empujar a un rival, este no puede prestar apoyos ofensivos ni defensivos hasta que vuelva a ser activado." },
+    { keyEN: "Saboteur", name: "Saboteador", category: "Triquiñuelas", description: "Si este jugador es derribado, puede intentar sabotear la armadura del atacante; con 4+, el arma explota y el atacante queda Inconsciente." },
+    { keyEN: "Lethal Flight", name: "Vuelo Letal", category: "Triquiñuelas", description: "Habilidad específica para jugadores que son lanzados por compañeros." },
 ];

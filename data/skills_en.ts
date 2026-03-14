@@ -120,4 +120,18 @@ export const skillsData: any[] = [
     { keyEN: "Titchy", name: "Titchy", category: "Trait", description: "Add +1 to any Agility tests when Dodging. However, if an opposition player dodges into a square within this player's Tackle Zone, this player does not count as Marking the moving player for modifier purposes." },
     { keyEN: "Trickster", name: "Trickster", category: "Trait", description: "When about to be hit by a Block or equivalent Special action, before determining dice count, this player may be placed in any other unoccupied adjacent square. The Block then takes place as normal." },
     { keyEN: "Unchannelled Fury", name: "Unchannelled Fury", category: "Trait", description: "When activated, roll a D6 (+2 if Block/Blitz). On 1-3, this player rages incoherently and their activation ends immediately. On 4+, they continue normally." },
+    
+    // ── TRIQUIÑUELAS (T) ───────────────────────────────────────────────────────
+    { keyEN: "Underhanded", name: "Underhanded", category: "Triquiñuelas", description: "May re-roll a failed Armour roll when performing a Foul action if no defenders are providing assists." },
+    { keyEN: "Crunch", name: "Crunch", category: "Triquiñuelas", description: "Impact skill after knocking down an opponent." },
+    { keyEN: "Dump-off (T)", name: "Dump-off", category: "Triquiñuelas", description: "Allows performing a Quick Pass just before being blocked by an opponent. [Season 3]" },
+    { keyEN: "Quick Foul", name: "Quick Foul", category: "Triquiñuelas", description: "Allows performing a Foul action without ending the player's activation, being able to continue moving afterwards." },
+    { keyEN: "Sneaky Git (T)", name: "Sneaky Git", category: "Triquiñuelas", description: "Only ejected when fouling if a natural double is rolled on the Armour roll and it breaks the armour. If doubles are rolled but no break, no ejection occurs." },
+    { keyEN: "Violent Innovator", name: "Violent Innovator", category: "Triquiñuelas", description: "If an opponent suffers an Injury due to a special action by this player, they earn the corresponding Star Player Points (SPP)." },
+    { keyEN: "Dirty Player (T)", name: "Dirty Player", category: "Triquiñuelas", description: "Provides a bonus to the Armour or Injury roll when performing a foul." },
+    { keyEN: "Put the Boot In", name: "Put the Boot In", category: "Triquiñuelas", description: "Allows providing offensive assists to a Foul action regardless of how many opponents are marking the player." },
+    { keyEN: "Shadowing (T)", name: "Shadowing", category: "Triquiñuelas", description: "Allows following an opponent attempting to dodge out of the player's tackle zone (1D6 + own MV - opponent MV; success with 4+)." },
+    { keyEN: "Eye Gouge", name: "Eye Gouge", category: "Triquiñuelas", description: "When pushing an opponent, they cannot provide offensive or defensive assists until they are activated again." },
+    { keyEN: "Saboteur", name: "Saboteur", category: "Triquiñuelas", description: "If this player is knocked down, they can attempt to sabotage the attacker's armour; on a 4+, the weapon explodes and the attacker becomes Unconscious." },
+    { keyEN: "Lethal Flight", name: "Lethal Flight", category: "Triquiñuelas", description: "Specific skill for players who are thrown by teammates." },
 ];

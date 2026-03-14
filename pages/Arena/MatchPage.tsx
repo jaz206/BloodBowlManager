@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import type { ManagedTeam, GameEvent, GameEventType, ManagedPlayer, WeatherCondition, KickoffEvent, PlayerStatus, StarPlayer, SppActionType, Team, Skill, MatchReport, MatchStats } from '../../types';
+import { ELITE_SKILLS } from '../../types';
 import { weatherConditions } from '../../data/weather';
 import { kickoffEvents } from '../../data/kickoffEvents';
 import { teamsData } from '../../data/teams';
@@ -237,12 +238,50 @@ const calculateTeamValue = (team: ManagedTeam | null, includeInducementsForPraye
     if (!baseRoster) return 0;
 
     const playersValue = team.players.reduce((sum, p) => {
-        const skillsValue = p.gainedSkills.reduce((skillSum, skillName) => {
-            if (skillName.toLowerCase().includes('secundaria')) return skillSum + 40000;
-            if (skillName.toLowerCase().includes('solitario')) return skillSum;
-            return skillSum + 20000;
-        }, 0);
-        return sum + p.cost + skillsValue;
+        let improvementsValue = 0;
+        
+        if (p.advancements && p.advancements.length > 0) {
+            improvementsValue = p.advancements.reduce((advSum, adv) => {
+                let baseValue = 0;
+                switch (adv.type) {
+                    case 'RandomPrimary': baseValue = 10000; break;
+                    case 'ChosenPrimary': baseValue = 20000; break;
+                    case 'RandomSecondary': baseValue = 20000; break;
+                    case 'ChosenSecondary': baseValue = 40000; break;
+                    case 'Characteristic':
+                        if (adv.characteristicName === 'FU') baseValue = 40000;
+                        else if (adv.characteristicName === 'AG' || adv.characteristicName === 'PS') baseValue = 20000;
+                        else baseValue = 10000; // MV, AR
+                        break;
+                }
+                
+                // Season 3 Elite Penalty
+                let eliteBonus = 0;
+                if (adv.skillName) {
+                    const skillEntry = skillsData.find(s => s.name === adv.skillName || s.keyEN === adv.skillName);
+                    if (skillEntry && ELITE_SKILLS.includes(skillEntry.keyEN)) {
+                        eliteBonus = 10000;
+                    }
+                }
+                return advSum + baseValue + eliteBonus;
+            }, 0);
+        } else {
+            // Legacy/Initial gainedSkills
+            improvementsValue = p.gainedSkills.reduce((skillSum, skillName) => {
+                if (skillName.toLowerCase().includes('solitario')) return skillSum;
+                let baseValue = skillName.toLowerCase().includes('secundaria') ? 40000 : 20000;
+                
+                // Season 3 Elite Penalty
+                const skillEntry = skillsData.find(s => s.name === skillName || s.keyEN === skillName);
+                if (skillEntry && ELITE_SKILLS.includes(skillEntry.keyEN)) {
+                    baseValue += 10000;
+                }
+                
+                return skillSum + baseValue;
+            }, 0);
+        }
+        
+        return sum + p.cost + improvementsValue;
     }, 0);
 
     const rerollsValue = team.rerolls * baseRoster.rerollCost;

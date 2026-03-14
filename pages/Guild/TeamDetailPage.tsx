@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ManagedTeam, ManagedPlayer, Player, Skill } from '../../types';
+import { ELITE_SKILLS } from '../../types';
 import { teamsData } from '../../data/teams';
 import { skillsData } from '../../data/skills';
 import PlayerModal from '../../components/guild/PlayerModal';
@@ -141,23 +142,44 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
             let improvementsValue = 0;
             if (p.advancements && p.advancements.length > 0) {
                 improvementsValue = p.advancements.reduce((advSum, adv) => {
+                    let baseValue = 0;
                     switch (adv.type) {
-                        case 'RandomPrimary': return advSum + 10000;
-                        case 'ChosenPrimary': return advSum + 20000;
-                        case 'RandomSecondary': return advSum + 20000;
-                        case 'ChosenSecondary': return advSum + 40000;
+                        case 'RandomPrimary': baseValue = 10000; break;
+                        case 'ChosenPrimary': baseValue = 20000; break;
+                        case 'RandomSecondary': baseValue = 20000; break;
+                        case 'ChosenSecondary': baseValue = 40000; break;
                         case 'Characteristic':
-                            if (adv.characteristicName === 'FU') return advSum + 40000;
-                            if (adv.characteristicName === 'AG' || adv.characteristicName === 'PS') return advSum + 20000;
-                            return advSum + 10000; // MV, AR
-                        default: return advSum;
+                            if (adv.characteristicName === 'FU') baseValue = 40000;
+                            else if (adv.characteristicName === 'AG' || adv.characteristicName === 'PS') baseValue = 20000;
+                            else baseValue = 10000; // MV, AR
+                            break;
                     }
+                    
+                    // Add Season 3 Elite Penalty (+10k MO)
+                    let eliteBonus = 0;
+                    if (adv.skillName) {
+                        // Check if the skill name (localized) matches an elite key (EN) or our elite list
+                        const skillEntry = skillsData.find(s => s.name === adv.skillName || s.keyEN === adv.skillName);
+                        if (skillEntry && ELITE_SKILLS.includes(skillEntry.keyEN)) {
+                            eliteBonus = 10000;
+                        }
+                    }
+                    
+                    return advSum + baseValue + eliteBonus;
                 }, 0);
             } else {
                 // Fallback for legacy skills
                 improvementsValue = p.gainedSkills.reduce((skillSum, skillName) => {
-                    if (skillName.toLowerCase().includes('secundaria')) return skillSum + 40000;
-                    return skillSum + 20000;
+                    let baseValue = skillName.toLowerCase().includes('secundaria') ? 40000 : 20000;
+                    
+                    // Add Season 3 Elite Penalty (+10k MO)
+                    let eliteBonus = 0;
+                    const skillEntry = skillsData.find(s => s.name === skillName || s.keyEN === skillName);
+                    if (skillEntry && ELITE_SKILLS.includes(skillEntry.keyEN)) {
+                        eliteBonus = 10000;
+                    }
+                    
+                    return skillSum + baseValue + eliteBonus;
                 }, 0);
             }
             return sum + p.cost + improvementsValue;

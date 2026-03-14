@@ -28,6 +28,13 @@ export interface Player {
   skills?: string;
 }
 
+export const ELITE_SKILLS = ["Block", "Dodge", "Guard", "Mighty Blow (+1)"];
+
+export const getSkillExtraCost = (skillKey: string): number => {
+    if (ELITE_SKILLS.includes(skillKey)) return 10000;
+    return 0;
+};
+
 export interface Skill {
   keyEN: string; // Now required for the ecosystem
   name_es: string;

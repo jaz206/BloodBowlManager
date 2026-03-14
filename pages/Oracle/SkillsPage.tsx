@@ -13,6 +13,7 @@ const Categories = [
     { id: 'Passing', label: 'Pase', icon: 'sports_football' },
     { id: 'Mutation', label: 'Mutación', icon: 'genetics' },
     { id: 'Trait', label: 'Rasgo', icon: 'star' },
+    { id: 'Triquiñuelas', label: 'Triquiñuelas', icon: 'vocal_remover' },
 ];
 
 const OracleTips: Record<string, string> = {
@@ -22,6 +23,7 @@ const OracleTips: Record<string, string> = {
     Passing: 'Pase Seguro y Manos Seguras son la base de cualquier estrategia de bombardeo.',
     Mutation: 'Brazo Extra es la mutación más disruptiva, especialmente en portadores de balón.',
     Trait: 'Los rasgos son exclusivos de ciertos perfiles; consulta siempre la plantilla del equipo.',
+    Triquiñuelas: 'Habilidades especiales de Temporada 3. Perfectas para jugar sucio y sorprender al rival.',
 };
 
 const SkillCard: React.FC<{ skill: Skill; onClick: () => void; isSelected: boolean }> = ({ skill, onClick, isSelected }) => {

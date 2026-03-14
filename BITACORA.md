@@ -148,5 +148,12 @@ root/
 *   **Limpieza de Campo**: Eliminación del footer global para evitar solapamientos con las barras de navegación fijas y uso de React Portals para el Post-Game Wizard, garantizando su visibilidad total.
 *   *Archivos Afectados*: `MatchNarrator.tsx`, `MatchPage.tsx`, `newsGenerator.ts`, `MainApp.tsx`, `PostGameWizard.tsx`.
 
+### 15 de Marzo, 2026: Evolución Season 3 - Élite y Triquiñuelas
+*   **Habilidades de Élite**: Implementado el recargo de **+10,000 MO** en la Valoración de Equipo (VAE) para las habilidades *Placar (Block)*, *Esquivar (Dodge)*, *Defensa (Guard)* y *Golpe mortífero (Mighty Blow)*, siguiendo la normativa de la Temporada 3.
+*   **Categoría Triquiñuelas (T)**: Incorporación de 12 nuevas habilidades especializadas (Agresor Discreto, Crujir, Dejada, Falta Rápida, etc.) en el Oráculo y la base de datos bilingüe.
+*   **Actualización de Lógica de TV**: Refactorización de la lógica de cálculo en `TeamDetailPage` y `MatchPage` para detectar automáticamente habilidades élite y aplicar el recargo sobre el coste base del avance.
+*   **Enciclopedia del Oráculo**: Nueva categoría de filtrado en la sección de Habilidades para facilitar la consulta de las nuevas técnicas de juego sucio.
+*   *Archivos Afectados*: `Skills.md`, `types.ts`, `data/skills.ts`, `TeamDetailPage.tsx`, `MatchPage.tsx`, `SkillsPage.tsx`.
+
 ---
 ¡Por Nuffle, que los dados siempre te favorezcan! 🎲🎲

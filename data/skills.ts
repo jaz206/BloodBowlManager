@@ -942,11 +942,99 @@ export const skillsData: Skill[] = [
     "desc_es": "Una vez por partido, supera una prueba de Esquiva, Salto o A Todo Gas con un 2+ sin importar los modificadores."
   },
   {
+    "keyEN": "Underhanded",
+    "name_en": "Underhanded",
+    "name_es": "Agresor Discreto",
+    "category": "Triquiñuelas",
+    "desc_en": "May re-roll a failed Armour roll when performing a Foul action if no defenders are providing assists.",
+    "desc_es": "Permite repetir una tirada de Armadura fallida al realizar una acción de Falta si no hay defensores prestando apoyos."
+  },
+  {
+    "keyEN": "Crunch",
+    "name_en": "Crunch",
+    "name_es": "Crujir",
+    "category": "Triquiñuelas",
+    "desc_en": "Impact skill after knocking down an opponent.",
+    "desc_es": "Habilidad de impacto tras derribar a un oponente."
+  },
+  {
+    "keyEN": "Dump-off (T)",
+    "name_en": "Dump-off",
+    "name_es": "Dejada",
+    "category": "Triquiñuelas",
+    "desc_en": "Allows performing a Quick Pass just before being blocked by an opponent. [Season 3]",
+    "desc_es": "Permite realizar un pase rápido justo antes de ser bloqueado por un rival. [Temporada 3]"
+  },
+  {
+    "keyEN": "Quick Foul",
+    "name_en": "Quick Foul",
+    "name_es": "Falta Rápida",
+    "category": "Triquiñuelas",
+    "desc_en": "Allows performing a Foul action without ending the player's activation, being able to continue moving afterwards.",
+    "desc_es": "Permite realizar una acción de Falta sin terminar la activación del jugador, pudiendo seguir moviéndose después."
+  },
+  {
+    "keyEN": "Sneaky Git (T)",
+    "name_en": "Sneaky Git",
+    "name_es": "Furtivo",
+    "category": "Triquiñuelas",
+    "desc_en": "Only ejected when fouling if a natural double is rolled on the Armour roll and it breaks the armour. If doubles are rolled but no break, no ejection occurs.",
+    "desc_es": "Solo es expulsado al cometer una falta si saca un doble en la armadura y además logra romperla. Si saca dobles pero no abre chapa, ya no es expulsado."
+  },
+  {
+    "keyEN": "Violent Innovator",
+    "name_en": "Violent Innovator",
+    "name_es": "Innovador Violento",
+    "category": "Triquiñuelas",
+    "desc_en": "If an opponent suffers an Injury due to a special action by this player, they earn the corresponding Star Player Points (SPP).",
+    "desc_es": "Si un rival sufre una Lesión debido a una acción especial de este jugador, este gana los Puntos de Estrellato (PE) correspondientes."
+  },
+  {
+    "keyEN": "Dirty Player (T)",
+    "name_en": "Dirty Player",
+    "name_es": "Jugar Sucio (+X)",
+    "category": "Triquiñuelas",
+    "desc_en": "Provides a bonus to the Armour or Injury roll when performing a foul.",
+    "desc_es": "Proporciona un bonificador a la tirada de Armadura o Herida al realizar una falta."
+  },
+  {
     "keyEN": "Put the Boot In",
     "name_en": "Put the Boot In",
     "name_es": "Meter la Bota",
-    "category": "Trait",
-    "desc_en": "Provides bonuses when performing a Foul action.",
-    "desc_es": "Proporciona bonificaciones al realizar una acción de Falta."
+    "category": "Triquiñuelas",
+    "desc_en": "Allows providing offensive assists to a Foul action regardless of how many opponents are marking the player.",
+    "desc_es": "Permite prestar apoyos ofensivos a una acción de Falta sin importar cuántos rivales estén marcando al jugador."
+  },
+  {
+    "keyEN": "Shadowing (T)",
+    "name_en": "Shadowing",
+    "name_es": "Perseguir",
+    "category": "Triquiñuelas",
+    "desc_en": "Allows following an opponent attempting to dodge out of the player's tackle zone.",
+    "desc_es": "Permite seguir a un rival que intenta esquivar para salir de la zona de defensa (1D6 + MV propio - MV rival; éxito con 4+)."
+  },
+  {
+    "keyEN": "Eye Gouge",
+    "name_en": "Eye Gouge",
+    "name_es": "Piquete de Ojos",
+    "category": "Triquiñuelas",
+    "desc_en": "When pushing an opponent, they cannot provide offensive or defensive assists until they are activated again.",
+    "desc_es": "Al empujar a un oponente, ellos no pueden proporcionar asistencia ofensiva o defensiva hasta que se activen de nuevo."
+  },
+  {
+    "keyEN": "Saboteur",
+    "name_en": "Saboteur",
+    "name_es": "Saboteador",
+    "category": "Triquiñuelas",
+    "desc_en": "If this player is knocked down, they can attempt to sabotage the attacker's armour; on a 4+, the weapon explodes and the attacker becomes Unconscious.",
+    "desc_es": "Si este jugador es derribado, puede intentar sabotear la armadura del atacante; con 4+, el arma explota y el atacante queda Inconsciente."
+  },
+  {
+    "keyEN": "Lethal Flight",
+    "name_en": "Lethal Flight",
+    "name_es": "Vuelo Letal",
+    "category": "Triquiñuelas",
+    "desc_en": "Specific skill for players who are thrown by teammates.",
+    "desc_es": "Habilidad específica para jugadores que son lanzados por compañeros."
   }
 ];

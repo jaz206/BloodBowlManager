@@ -7,14 +7,14 @@
 - **Apartar (Grab)**  
   Al empujar, el entrenador elige la casilla de destino (de las 3 disponibles). Anula *Echarse a un lado*. No compatible con *Furia*.
 
-- **Bloquear (Block)** — **[ÉLITE]**  
-  El resultado **"Ambos Derribados"** no afecta a este jugador; permanece de pie si el rival no tiene la habilidad.
+- **Bloquear (Block)** — **[ÉLITE: +10,000 VAE]**  
+  El resultado **"Ambos Derribados"** no afecta a este jugador; permanece de pie si el rival no tiene la habilidad. Elevada a categoría Élite en Temporada 3 (+10k MO adicionales).
 
 - **Defensa (Defensive)**  
   Durante el turno del oponente, anula la habilidad **Defensa de Equipo (Guard)** de cualquier rival que marque a este jugador.
 
-- **Esquivar (Dodge)** — **[ÉLITE]**  
-  Permite repetir una tirada de Esquiva fallida por turno. Además, convierte **"Defensor Tropieza"** en **"Empujado"**.
+- **Esquivar (Dodge)** — **[ÉLITE: +10,000 VAE]**  
+  Permite repetir una tirada de Esquiva fallida por turno. Además, convierte **"Defensor Tropieza"** en **"Empujado"**. Elevada a categoría Élite en Temporada 3 (+10k MO adicionales).
 
 - **Furia (Frenzy)**  
   Obligatorio seguir tras un placaje. Si el rival es empujado, debe realizar un segundo placaje inmediato si sigue adyacente.
@@ -108,11 +108,11 @@
 - **Brazo fuerte (Strong Arm)**  
   **+1** al lanzar a un compañero.
 
-- **Defensa de equipo (Guard)** — **[ÉLITE]**  
-  Da **apoyos ofensivos y defensivos** aunque esté marcado.
+- **Defensa de equipo (Guard)** — **[ÉLITE: +10,000 VAE]**  
+  Da **apoyos ofensivos y defensivos** aunque esté marcado. Elevada a categoría Élite en Temporada 3 (+10k MO adicionales).
 
-- **Golpe mortífero (+X) (Mighty Blow)** — **[ÉLITE]**  
-  Añade **+X** a Armadura o Herida.
+- **Golpe mortífero (+X) (Mighty Blow)** — **[ÉLITE: +10,000 VAE]**  
+  Añade **+X** a Armadura o Herida. Elevada a categoría Élite en Temporada 3 (+10k MO adicionales).
 
 - **Imparable (Juggernaut)**  
   En **Blitz**, los rivales no usan **Zafarse, Mantenerse firme ni Forcejear**.
@@ -163,6 +163,44 @@
   **+1 a recoger o atrapar el balón**.
 
 ---
+
+# HABILIDADES DE TRIQUIÑUELAS (T)
+
+- **Agresor discreto (Underhanded)**  
+  Permite repetir una tirada de Armadura fallida al realizar una acción de Falta si no hay defensores prestando apoyos.
+
+- **Crujir (Crunch)**  
+  Habilidad de impacto tras derribar a un oponente.
+
+- **Dejada (Dump-off)**  
+  Permite realizar un pase rápido justo antes de ser bloqueado por un rival. Note: Reflejada en esta categoría según reglamentación de Temporada 3.
+
+- **Falta rápida (Quick Foul)**  
+  Permite realizar una acción de Falta sin terminar la activación del jugador, pudiendo seguir moviéndose después.
+
+- **Furtivo (Sneaky Git)**  
+  Solo es expulsado al cometer una falta si saca un doble en la armadura y además logra romperla. Si saca dobles pero no abre chapa, ya no es expulsado.
+
+- **Innovador violento (Violent Innovator)**  
+  Si un rival sufre una Lesión debido a una acción especial de este jugador, este gana los Puntos de Estrellato (PE) correspondientes.
+
+- **Jugar sucio (+X) (Dirty Player)**  
+  Proporciona un bonificador a la tirada de Armadura o Herida al realizar una falta.
+
+- **Meter la bota (Put the Boot In)**  
+  Permite prestar apoyos ofensivos a una acción de Falta sin importar cuántos rivales estén marcando al jugador.
+
+- **Perseguir (Shadowing)**  
+  Permite seguir a un rival que intenta esquivar para salir de la zona de defensa (1D6 + MV propio - MV rival; éxito con 4+).
+
+- **Piquete de ojos (Eye Gouge)**  
+  Al empujar a un rival, este no puede prestar apoyos ofensivos ni defensivos hasta que vuelva a ser activado.
+
+- **Saboteador (Saboteur)**  
+  Si este jugador es derribado, puede intentar sabotear la armadura del atacante; con 4+, el arma explota y el atacante queda Inconsciente.
+
+- **Vuelo letal (Lethal Flight)**  
+  Habilidad específica para jugadores que son lanzados por compañeros.
 
 # 🌟 RASGOS
 
