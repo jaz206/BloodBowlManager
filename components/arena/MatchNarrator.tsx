@@ -9,11 +9,13 @@ interface MatchNarratorProps {
     events: GameEvent[];
     homeTeamName: string;
     awayTeamName: string;
+    initialChronicle?: string | null;
+    onChronicleGenerated?: (text: string | null) => void;
 }
 
-const MatchNarrator: React.FC<MatchNarratorProps> = ({ events, homeTeamName, awayTeamName }) => {
+const MatchNarrator: React.FC<MatchNarratorProps> = ({ events, homeTeamName, awayTeamName, initialChronicle, onChronicleGenerated }) => {
     const [isGenerating, setIsGenerating] = useState(false);
-    const [chronicle, setChronicle] = useState<string | null>(null);
+    const [chronicle, setChronicle] = useState<string | null>(initialChronicle || null);
 
     const epicEvents = useMemo(() => {
         return events.filter(e => [
@@ -97,6 +99,7 @@ const MatchNarrator: React.FC<MatchNarratorProps> = ({ events, homeTeamName, awa
             const fullText = `${headlines[Math.floor(Math.random() * headlines.length)]}\n\n${intros[Math.floor(Math.random() * intros.length)]}${body}${outro}`;
             
             setChronicle(fullText);
+            onChronicleGenerated?.(fullText);
             setIsGenerating(false);
         }, 1500);
     };
@@ -130,7 +133,7 @@ const MatchNarrator: React.FC<MatchNarratorProps> = ({ events, homeTeamName, awa
                     </p>
                     <div className="mt-6 flex justify-end">
                         <button
-                            onClick={() => setChronicle(null)}
+                            onClick={() => { setChronicle(null); onChronicleGenerated?.(null); }}
                             className="text-[10px] font-display font-bold text-slate-500 uppercase tracking-widest hover:text-white transition-colors"
                         >
                             Borrar Crónica

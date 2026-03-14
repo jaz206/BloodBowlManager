@@ -381,6 +381,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
     const [isMatchSummaryOpen, setIsMatchSummaryOpen] = useState(false);
     const [isConcedeModalOpen, setIsConcedeModalOpen] = useState(false);
     const [concessionState, setConcessionState] = useState<'none' | 'home' | 'opponent'>('none');
+    const [currentChronicle, setCurrentChronicle] = useState<string | null>(null);
 
 
     const playSound = useCallback((type: 'td' | 'injury' | 'turnover' | 'dice') => {
@@ -704,10 +705,21 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                 wasConceded: concessionState
             };
 
-            const newsData = generateMatchArticle(baseReport);
+            let finalNewsData;
+            if (currentChronicle) {
+                const parts = currentChronicle.split('\n\n');
+                finalNewsData = {
+                    headline: parts[0] || 'CRÓNICA DE COMBATE',
+                    article: parts.slice(1).join('\n\n'),
+                    summary: `Final: ${liveHomeTeam.name} ${score.home} - ${score.opponent} ${liveOpponentTeam.name}`
+                };
+            } else {
+                finalNewsData = generateMatchArticle(baseReport);
+            }
+
             onMatchReportCreate({
                 ...baseReport,
-                ...newsData
+                ...finalNewsData
             });
         }
 
@@ -723,6 +735,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
         setScore({ home: 0, opponent: 0 });
         setTurn(0);
         setHalf(1);
+        setCurrentChronicle(null);
         setFame({ home: 0, opponent: 0 });
         setFansRoll({ home: '', opponent: '' });
         setPreGameStep(0);
@@ -2726,7 +2739,13 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                                                 </button>
                                             </div>
                                             <div className="flex-1 overflow-y-auto custom-scrollbar pr-6 pb-20">
-                                                <MatchNarrator events={gameLog} homeTeamName={liveHomeTeam.name} awayTeamName={liveOpponentTeam.name} />
+                                                <MatchNarrator 
+                                                    events={gameLog} 
+                                                    homeTeamName={liveHomeTeam.name} 
+                                                    awayTeamName={liveOpponentTeam.name} 
+                                                    initialChronicle={currentChronicle}
+                                                    onChronicleGenerated={setCurrentChronicle}
+                                                />
                                             </div>
                                         </div>
                                     </div>

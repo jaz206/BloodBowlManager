@@ -279,16 +279,16 @@ Touchdown de Orcos
 
 ---
 
-### Generación de Crónica (Sports News Edition)
+### Generación de Crónica (Diario Deportivo "Marca" Edition)
 
 Al terminar el partido:
 
-1. Se recopilan todos los eventos registrados.
-2. El motor de narrativa `newsGenerator.ts` crea un titular impactante.
-3. Se redacta un artículo estilo prensa deportiva detallando el encuentro.
-4. El reporte se guarda con metadatos de "periódico" para su consulta posterior.
-
-Ejemplo:
+1. Se recopilan todos los eventos registrados y se analizan por importancia.
+2. El motor de narrativa `newsGenerator.ts` genera una crónica con **estética de prensa deportiva premium**:
+    - **Titulares Impactantes**: Generados aleatoriamente según el ganador.
+    - **Secciones Estructuradas**: "La Fiesta de la Anotación", "Hospital de Campaña", "Polémica del Partido".
+    - **Narración Dinámica**: El texto incluye menciones a las descripciones de los eventos registrados (qué jugador anotó, cómo fue la lesión).
+3. El reporte se guarda de forma persistente en Firebase, permitiendo que el usuario lo consulte en cualquier momento desde su historial de partidos con formato de periódico (fuentes serif, capitulares).
 
 > Los Orcos dominaron el primer tiempo con una brutal presión sobre la línea humana. En el turno 4, el blitzer Gorbag rompió la defensa rival y anotó el primer touchdown del encuentro.
 
