@@ -24,6 +24,9 @@ Este documento centraliza todas las tablas de consulta rápida para el asistente
 | **+1 AG (Agilidad)** | +30,000 |
 | **+1 FU (Fuerza)** | +60,000 |
 
+> [!IMPORTANT]
+> **Habilidades de Élite (Temporada 3):** Las habilidades **Placar (Block)**, **Esquivar (Dodge)**, **Defensa (Guard)** y **Golpe mortífero (Mighty Blow)** tienen un recargo adicional de **+10,000 MO** sobre su coste normal de mejora.
+
 ---
 
 ## 🎲 2. TABLAS DE JUEGO
@@ -94,12 +97,12 @@ Este documento centraliza todas las tablas de consulta rápida para el asistente
 ## 🛠️ 5. CATEGORÍAS DE HABILIDADES (1D6+1D6)
 *Lanzar 2D6 para determinar la habilidad al azar:*
 
-| D6 | Agilidad | General | Mutación | Pase | Fuerza |
-| :---: | :--- | :--- | :--- | :--- | :--- |
-| **1** | Atrapar | Agallas | Apariencia Asq. | Atento al Balón | Abrirse Paso |
-| **2** | Echarse a un Lado | Equilibrio Firme | Boca Monstruosa | Cañonero | Apartar |
-| **3** | En Pie de un Salto | Forcejear | Brazos Adic. | Líder | Brazo Fuerte |
-| **4** | Esprintar | Furia | Cola Prensil | Nervios de Acero | Cabeza Dura |
-| **5** | Esquivar | Manos Seguras | Cuernos | Partenubes | Defensa |
-| **6** | Pies Firmes | Placar | Dos Cabezas | Pasar | Golpe Mortífero |
-| **7+** | Saltar | Zafarse | Tentáculos | Precisión | Mantenerse Firme |
+| D6 | Agilidad | General | Mutación | Pase | Fuerza | Triquiñuelas |
+| :---: | :--- | :--- | :--- | :--- | :--- | :--- |
+| **1** | Atrapar | Agallas | Apariencia Asq. | Atento al Balón | Abrirse Paso | Agresor Discr. |
+| **2** | Echarse a un Lado | Equilibrio Firme | Boca Monstruosa | Cañonero | Apartar | Crujir |
+| **3** | En Pie de un Salto | Forcejear | Brazos Adic. | Líder | Brazo Fuerte | Dejada |
+| **4** | Esprintar | Furia | Cola Prensil | Nervios de Acero | Cabeza Dura | Falta Rápida |
+| **5** | Esquivar | Manos Seguras | Cuernos | Partenubes | Defensa | Furtivo |
+| **6** | Pies Firmes | Placar | Dos Cabezas | Pasar | Golpe Mortífero | Jugar Sucio |
+| **7+** | Saltar | Zafarse | Tentáculos | Precisión | Mantenerse Firme | Perseguir |

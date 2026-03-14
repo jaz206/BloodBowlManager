@@ -99,6 +99,7 @@ Categorías:
 - Agilidad
 - Pase
 - Mutación
+- Triquiñuelas
 
 ---
 
