@@ -3420,6 +3420,10 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                     player={viewingPlayer}
                     isBallCarrier={ballCarrierId === viewingPlayer.id}
                     onBallToggle={() => handleBallToggle(viewingPlayer.id)}
+                    onConditionToggle={(condition) => {
+                        const teamId = liveHomeTeam?.players.some(p => p.id === viewingPlayer.id) ? 'home' : 'opponent';
+                        handleUpdatePlayerCondition(viewingPlayer.id, teamId, condition);
+                    }}
                     onClose={() => setViewingPlayer(null)}
                 />
             )}

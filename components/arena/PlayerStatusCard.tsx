@@ -66,11 +66,14 @@ const PlayerStatusCard: React.FC<PlayerStatusCardProps> = ({ player, playerNumbe
             : 'text-white';
 
     return (
-        <div className={`bento-card p-4 transition-premium border ${config.bg} ${config.shadow} group/card`}>
-            <div className="flex justify-between items-start mb-3">
+        <div className={`bento-card p-4 transition-premium border ${config.bg} ${config.shadow} group/card relative overflow-hidden ${player.isDistracted ? 'border-red-500 shadow-[inset_0_0_20px_rgba(239,68,68,0.2)]' : ''}`}>
+            {player.isDistracted && (
+                <div className="absolute inset-0 bg-red-500/5 animate-pulse pointer-events-none"></div>
+            )}
+            <div className="flex justify-between items-start mb-3 relative z-10">
                 <div className="flex items-center gap-3 flex-grow min-w-0">
                     {playerNumber && (
-                        <div className="flex-shrink-0 w-8 h-8 bg-black/40 border border-white/10 rounded-lg flex items-center justify-center text-xs font-display font-bold text-premium-gold">
+                        <div className={`flex-shrink-0 w-8 h-8 bg-black/40 border rounded-lg flex items-center justify-center text-xs font-display font-bold ${player.isDistracted ? 'border-red-500/50 text-red-500' : 'border-white/10 text-premium-gold'}`}>
                             {playerNumber}
                         </div>
                     )}
@@ -80,7 +83,7 @@ const PlayerStatusCard: React.FC<PlayerStatusCardProps> = ({ player, playerNumbe
                             onClick={() => onViewPlayer(player)}
                             className="font-display font-bold text-lg text-left hover:text-premium-gold transition-colors outline-none truncate"
                         >
-                            <span className={nameClass}>
+                            <span className={player.isDistracted ? 'text-red-500' : nameClass}>
                                 {player.customName}
                             </span>
                         </button>
@@ -92,13 +95,13 @@ const PlayerStatusCard: React.FC<PlayerStatusCardProps> = ({ player, playerNumbe
                         {(player.isDistracted || player.hasIndigestion) && (
                             <div className="flex gap-1.5 mt-1">
                                 {player.isDistracted && (
-                                    <span className="flex items-center gap-1 text-[8px] font-black text-red-500 uppercase bg-red-500/10 px-1.5 py-0.5 rounded border border-red-500/20 animate-pulse">
-                                        <span className="material-symbols-outlined text-[10px]">block</span> Distraído
+                                    <span className="flex items-center gap-1 text-[8px] font-black text-white uppercase bg-red-600 px-1.5 py-0.5 rounded shadow-[0_0_10px_rgba(220,38,38,0.5)]">
+                                        <span className="material-symbols-outlined text-[10px] font-black">block</span> Distraído
                                     </span>
                                 )}
                                 {player.hasIndigestion && (
-                                    <span className="flex items-center gap-1 text-[8px] font-black text-amber-500 uppercase bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
-                                        <span className="material-symbols-outlined text-[10px]">restaurant</span> -1 MV/AR
+                                    <span className="flex items-center gap-1 text-[8px] font-black text-black uppercase bg-amber-500 px-1.5 py-0.5 rounded shadow-[0_0_10px_rgba(245,159,10,0.3)]">
+                                        <span className="material-symbols-outlined text-[10px] font-black">restaurant</span> -1 MV/AR
                                     </span>
                                 )}
                             </div>
