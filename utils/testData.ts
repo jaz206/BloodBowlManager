@@ -76,5 +76,24 @@ export const getGuestTeams = (): ManagedTeam[] => {
     crestImage: 'https://i.pinimg.com/736x/c4/15/c0/c415c0a781138589868249c294e95b4a.jpg'
   };
 
+  // Add snapshots for testing
+  humanTeam.snapshots = [
+    {
+      id: 'snap-1',
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
+      teamState: { ...humanTeam, name: 'Reikland Reavers (Veteranos)', treasury: 50000 }
+    }
+  ];
+
+  orcTeam.snapshots = [
+    {
+      id: 'snap-2',
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(), // 12 hours ago
+      teamState: { ...orcTeam, name: 'Orcland Raiders (Campeones)', treasury: 200000 }
+    }
+  ];
+
+
   return [humanTeam, orcTeam];
 };
+
