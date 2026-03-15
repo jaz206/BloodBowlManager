@@ -148,13 +148,14 @@ root/
 *   **Limpieza de Campo**: Eliminación del footer global para evitar solapamientos con las barras de navegación fijas y uso de React Portals para el Post-Game Wizard, garantizando su visibilidad total.
 *   *Archivos Afectados*: `MatchNarrator.tsx`, `MatchPage.tsx`, `newsGenerator.ts`, `MainApp.tsx`, `PostGameWizard.tsx`.
 
-### 15 de Marzo, 2026: Evolución Season 3 - Élite, Triquiñuelas y Estabilidad
+### 15 de Marzo, 2026: Evolución Season 3 — Élite, Triquiñuelas y Crónicas de Cabalvisión
 *   **Habilidades de Élite**: Implementado el recargo de **+10,000 MO** en la Valoración de Equipo (VAE) para las habilidades *Placar (Block)*, *Esquivar (Dodge)*, *Defensa (Guard)* y *Golpe mortífero (Mighty Blow)*, siguiendo la normativa de la Temporada 3.
 *   **Categoría Triquiñuelas (T)**: Incorporación de 12 nuevas habilidades especializadas (Agresor Discreto, Crujir, Dejada, Falta Rápida, etc.) en el Oráculo y la base de datos bilingüe.
+*   **Crónicas de Cabalvisión**: Refactorización del motor narrativo (`newsGenerator.ts` y `MatchNarrator.tsx`) para adoptar un estilo de cronista veterano. Los eventos técnicos ahora se transforman en relatos épicos y viscerales, eliminando tecnicismos como "tirada" o "dado".
+*   **Blindaje de Estabilidad**: Solución a errores críticos `TypeError` que causaban crashes al entrar en la Arena o calcular el valor de equipos sin reglas especiales definidas.
 *   **Lógica de Concesión BB2025**: Implementación total del protocolo de rendición. Los equipos que conceden reciben **0 ganancias** y pierden **1D3 Fans Dedicados**, mientras que el ganador obtiene un MVP adicional.
-*   **Auto-Limpieza Post-Partido**: Sistema de reseteo integral de estados que limpia el log, turnos, heridos y estados temporales (sobornos, incentivos) al finalizar un encuentro, garantizando que no haya "sangrado de datos" entre sesiones.
-*   **Refinamiento de la Arena**: Reorganización estructural de `MatchPage.tsx` para solucionar avisos de "hoisting" en componentes como `MatchSummaryModal` y optimización de las pestañas de Narrador y Asistente.
-*   *Archivos Afectados*: `Skills.md`, `types.ts`, `data/skills.ts`, `utils/teamUtils.ts`, `MatchPage.tsx`, `PostGameWizard.tsx`, `BITACORA.md`.
+*   **Normalización de Formatos**: Sincronización de las verificaciones de habilidades para soportar tanto el nuevo sistema de claves (`skillKeys`) como el antiguo formato de cadenas, garantizando compatibilidad total.
+*   *Archivos Afectados*: `newsGenerator.ts`, `MatchNarrator.tsx`, `utils/teamUtils.ts`, `MatchPage.tsx`, `types.ts`, `data/skills.ts`, `BITACORA.md`.
 
 ---
 ¡Por Nuffle, que los dados siempre te favorezcan! 🎲🎲

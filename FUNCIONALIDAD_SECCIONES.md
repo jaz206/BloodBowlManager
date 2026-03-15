@@ -479,7 +479,7 @@ Generar una crónica narrativa automática del encuentro.
 ### Funcionamiento
 
 1. **Captura en Vivo**: Cada evento registrado durante el partido se guarda en Firestore.
-2. **Generación Narrativa**: Al finalizar, el sistema procesa el log completo y genera un titular impactante y un artículo detallado.
+2. **Generación Narrativa (Estilo Cabalvisión)**: Al finalizar, el sistema procesa el log completo y transforma los datos técnicos en relatos épicos. Se eliminan los números y tecnicismos, convirtiendo "heridas" en crónicas viscerales de huesos rotos y "touchdowns" en hazañas legendarias.
 3. **Formato Periódico**: El resultado se presenta en el "Diario Deportivo de Altdorf", con maquetación de diario clásico (serif, columnas, capitulares).
 
 ---

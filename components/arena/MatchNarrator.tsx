@@ -4,6 +4,7 @@ import BookOpenIcon from '../icons/BookOpenIcon';
 import FireIcon from '../icons/FireIcon';
 import TdIcon from '../icons/TdIcon';
 import CasualtyIcon from '../icons/CasualtyIcon';
+import { transformToEpic } from '../../utils/newsGenerator';
 
 interface MatchNarratorProps {
     events: GameEvent[];
@@ -22,7 +23,7 @@ const MatchNarrator: React.FC<MatchNarratorProps> = ({ events, homeTeamName, awa
             'touchdown', 'TOUCHDOWN',
             'injury', 'INJURY', 'injury_casualty', 'injury_ko',
             'turnover', 'TURNOVER',
-            'foul', 'FOUL', 'foul_success'
+            'foul', 'FOUL', 'foul_success', 'DEATH'
         ].includes(e.type));
     }, [events]);
 
@@ -38,63 +39,53 @@ const MatchNarrator: React.FC<MatchNarratorProps> = ({ events, homeTeamName, awa
 
             const headlines = winner 
                 ? [
-                    `¡BAÑO DE SANGRE Y GLORIA! ${winner.toUpperCase()} CONQUISTA EL EMPARRILLADO ANTE ${loser.toUpperCase()}`,
+                    `¡BAÑO DE SANGRE Y GLORIA! ${winner.toUpperCase()} CONQUISTA EL EMPARRILLADO`,
                     `¡EXHIBICIÓN HISTÓRICA! ${winner.toUpperCase()} APLASTA LAS ESPERANZAS DE ${loser.toUpperCase()}`,
-                    `¡LOCURA EN EL ESTADIO! ${winner.toUpperCase()} SE IMPONE EN UN DUELO DE TITANES CONTRA ${loser.toUpperCase()}`
+                    `¡LOCURA EN EL ESTADIO! ${winner.toUpperCase()} SE IMPONE EN UN DUELO DE TITANES`
                 ]
                 : [
-                    `¡COMBATE NULO! SANGRE Y SUDOR PERO SIN VENCEDOR ENTRE ${homeTeamName.toUpperCase()} Y ${awayTeamName.toUpperCase()}`,
+                    `¡COMBATE NULO! SANGRE Y SUDOR ENTRE ${homeTeamName.toUpperCase()} Y ${awayTeamName.toUpperCase()}`,
                     `¡TABLAS EN EL INFIERNO! ${homeTeamName.toUpperCase()} Y ${awayTeamName.toUpperCase()} SE REPARTEN LOS GOLPES`,
                 ];
 
             const intros = [
-                `El ambiente era eléctrico desde el silbatazo inicial. Los aficionados llenaban las gradas sabiendo que el choque entre ${homeTeamName} y ${awayTeamName} no iba a decepcionar a los paladares más exigentes de la violencia deportiva.`,
-                `Nuffle sonrió hoy desde las alturas. En una tarde donde el olor a linimento y sangre fresca dominaba el aire, ${homeTeamName} y ${awayTeamName} nos regalaron un espectáculo brutal.`,
-                `Si alguien dudaba de por qué este es el deporte rey del Viejo Mundo, el partido de hoy entre ${homeTeamName} y ${awayTeamName} despejó cualquier interrogante a base de placajes rompehuesos y fintas imposibles.`
+                `El ambiente era eléctrico. Los aficionados sabían que el choque entre ${homeTeamName} y ${awayTeamName} no iba a decepcionar a los paladares más exigentes de la violencia deportiva.`,
+                `Nuffle sonrió hoy desde las alturas. El olor a linimento y sangre fresca dominaba el aire en este duelo entre ${homeTeamName} y ${awayTeamName}.`,
+                `Si alguien dudaba de por qué este es el deporte rey, el partido de hoy entre ${homeTeamName} y ${awayTeamName} despejó cualquier interrogante.`
             ];
 
             let body = "";
             
-            // Group events
-            const tds = events.filter(e => String(e.type).toLowerCase() === 'touchdown').reverse(); // oldest first roughly if assumed append-top
-            const casualties = events.filter(e => String(e.type).toLowerCase().includes('injury_casualty'));
-            const fouls = events.filter(e => String(e.type).toLowerCase().includes('foul_success') || String(e.type).toLowerCase().includes('foul'));
+            const tds = events.filter(e => String(e.type).toLowerCase() === 'touchdown');
+            const casualties = events.filter(e => String(e.type).toLowerCase().includes('injury_casualty') || e.type === 'DEATH');
+            const fouls = events.filter(e => String(e.type).toLowerCase().includes('foul_success') || e.type === 'EXPULSION');
 
             if (tds.length > 0) {
                 body += "\n\nLA FIESTA DE LA ANOTACIÓN\n";
                 tds.forEach((td, i) => {
-                    const prefix = i === 0 ? "El marcador se inauguró cuando" : (i === tds.length -1 && tds.length > 1 ? "Para poner la estocada final, presenciamos cómo" : "La locura continuó cuando");
-                    let textClean = td.description.replace('!', '.').replace('¡', '');
-                    body += `${prefix} ${textClean.charAt(0).toLowerCase() + textClean.slice(1)} Una jugada maestra que sin duda ocupará las portadas de Cabalvisión la próxima semana. `;
+                    const prefix = i === 0 ? "El marcador se inauguró cuando" : "La locura continuó cuando";
+                    body += `${prefix} ${transformToEpic(td).toLowerCase()} `;
                 });
             }
 
             if (casualties.length > 0) {
                 body += "\n\nHOSPITAL DE CAMPAÑA\n";
-                body += `Pero este deporte no va solo de proteger el óvalo. La enfermería tuvo trabajo extra y los boticarios sudaron la gota gorda. `;
+                body += `La enfermería tuvo trabajo extra. `;
                 casualties.slice(0, 3).forEach(cas => {
-                    let textClean = cas.description.replace('!', '.').replace('¡', '');
-                    body += `Las gradas enmudecieron por un segundo tras ver cómo ${textClean.charAt(0).toLowerCase() + textClean.slice(1)} `;
+                    body += `${transformToEpic(cas)} `;
                 });
-                if (casualties.length > 3) {
-                    body += `¡Y eso fue solo el calentamiento! Una verdadera sangría sobre el tapete verde. `;
-                }
             }
 
             if (fouls.length > 0) {
                 body += "\n\nLA POLÉMICA DEL PARTIDO\n";
-                let firstFoul = fouls[0].description.replace('!', '.').replace('¡', '');
-                body += `¿Y qué sería de un gran partido sin su buena dosis de juego sucio? El colegiado, que parecía haber extraviado el silbato, ignoró las airadas protestas cuando ${firstFoul.charAt(0).toLowerCase() + firstFoul.slice(1)} `;
-                if (fouls.length > 1) {
-                    body += `La tensión fue en aumento, convirtiendo algunas trincheras del campo en una auténtica pelea de taberna. `;
-                }
+                body += `¿Y qué sería de un gran partido sin su dosis de juego sucio? El colegiado ignoró las protestas cuando ${transformToEpic(fouls[0]).toLowerCase()} `;
             }
 
             const finalHome = events.find(e => e.type === 'match_end' && e.description.includes('Resultado Final:'))?.description.match(/\d+ - \d+/)?.[0] || `${homeScore}-${awayScore}`;
 
             const outro = winner 
-                ? `\n\nAl dictado del cronómetro, ${winner} cantó victoria definitiva en la Arena. El cuerpo técnico perdedor tendrá que dar muchas explicaciones a la directiva esta misma noche, mientras que los ganadores ya celebran en la taberna local con rondas infinitas de Bugman's XXXXXX. ¡Un partido para los anales de la historia!`
-                : `\n\nCon el pitido de cierre, el luminoso reflejó el inamovible empate. Ambos séquitos regresan a los vestuarios lamiéndose las heridas, sabiendo que en el próximo cruce, los Dioses del Caos exigirán un vencedor absoluto.`;
+                ? `\n\nAl dictado del cronómetro, ${winner} cantó victoria definitiva. Los ganadores ya celebran en la taberna local con rondas infinitas de Bugman's. ¡Un partido para la historia!`
+                : `\n\nCon el pitido de cierre, el luminoso reflejó un inamovible empate. Ambos séquitos regresan a los vestuarios lamiéndose las heridas.`;
 
             const fullText = `${headlines[Math.floor(Math.random() * headlines.length)]}\n\n${intros[Math.floor(Math.random() * intros.length)]}${body}${outro}`;
             

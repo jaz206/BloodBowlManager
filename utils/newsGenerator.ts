@@ -1,5 +1,64 @@
 import { MatchReport, GameEvent } from '../types';
 
+/**
+ * Transforma descripciones técnicas en pura poesía de sangre y barro (estilo Cabalvisión).
+ */
+export const transformToEpic = (event: GameEvent): string => {
+    const desc = event.description.toLowerCase();
+    
+    // CASUALTIES & DEATHS
+    if (desc.includes('muerte') || event.type === 'DEATH') {
+        const name = event.description.split('!')[1]?.trim() || 'el jugador';
+        const options = [
+            `Nuffle reclamó el alma de ${name} en un impacto que hizo temblar los cimientos del estadio. Su último aliento se mezcló con el barro.`,
+            `El sonido del cuello de ${name} quebrándose fue como música para las gradas. Los camilleros solo podrán recoger pedazos de lo que fue una promesa.`,
+            `Un impacto definitivo. ${name} exhaló su último suspiro mientras sus compañeros contemplaban, atónitos, la brevedad de la gloria en este juego.`
+        ];
+        return options[Math.floor(Math.random() * options.length)];
+    }
+
+    if (desc.includes('herida') || desc.includes('lesión') || event.type === 'INJURY' || event.type === 'injury_casualty') {
+        const options = [
+            `El crujido de los huesos de la víctima se escuchó desde los palcos de lujo. Una carnicería necesaria para el espectáculo.`,
+            `Su armadura voló en mil pedazos bajo una fuerza bruta inhumana. La enfermería ya está preparando la sierra.`,
+            `Un grito de agonía desgarró el aire cuando el impacto encontró su objetivo. Ese jugador no volverá a caminar igual.`
+        ];
+        return options[Math.floor(Math.random() * options.length)];
+    }
+
+    // TOUCHDOWNS
+    if (desc.includes('touchdown') || event.type === 'TOUCHDOWN' || event.type === 'touchdown') {
+        const options = [
+            `Atravesó la línea de gol en un estallido de velocidad y sudor, dejando a los defensas mordiendo el polvo.`,
+            `Una internada magistral que culminó con el balón besando el césped de la zona de anotación. ¡Pura magia en el emparrillado!`,
+            `Con la gracia de un bailarín y la mala leche de un ogro, consiguió la anotación que hace rugir a las masas.`
+        ];
+        return options[Math.floor(Math.random() * options.length)];
+    }
+
+    // FOULS & EXPULSIONS
+    if (desc.includes('falta') || desc.includes('foul') || event.type === 'EXPULSION' || desc.includes('expulsión')) {
+        const options = [
+            `El reglamento se convirtió en una sugerencia cuando el baco se hundió en las costillas del rival caído.`,
+            `¿Fue un golpe bajo? Quizás, pero para cuando el árbitro quiso mirar, el daño ya estaba hecho y la sangre corría.`,
+            `Un acto de justicia poética (o juego sucio, según a quién preguntes) que terminó con el infractor camino de las duchas.`
+        ];
+        return options[Math.floor(Math.random() * options.length)];
+    }
+
+    // PASSES & INTERCEPTIONS
+    if (desc.includes('intercepción') || desc.includes('interception')) {
+        return `¡Un robo de guante blanco! El esferoide cambió de manos en pleno vuelo, cortando la respiración de toda la grada.`;
+    }
+
+    if (desc.includes('pase') || desc.includes('pass')) {
+        return `El balón surcó los aires dibujando una parábola perfecta antes de encontrar unas manos ansiosas de gloria.`;
+    }
+
+    // Default cleaning
+    return event.description.replace('!', '.').replace('¡', '').trim();
+};
+
 export const generateMatchArticle = (report: MatchReport) => {
     const { homeTeam, opponentTeam, gameLog, winner, weather } = report;
     
@@ -33,46 +92,38 @@ export const generateMatchArticle = (report: MatchReport) => {
     }
 
     const subHeadlines = [
-        "Las gradas rugieron ante un despliegue de violencia gratuita y técnica exquisita que dignifica este deporte.",
+        "Las gradas rugieron ante un despliegue de violencia gratuita y técnica exquisita.",
         "Nuffle dictó sentencia en una tarde donde la estrategia se escribió con sudor y se selló con hematomas.",
-        "Un duelo de alta tensión donde cada yarda ganada se pagó con el precio del dolor y la gloria.",
-        "La táctica y la furia se fundieron en un abrazo mortal sobre el césped recién cortado (y pronto ensangrentado)."
+        "Un duelo de alta tensión donde cada yarda ganada se pagó con el precio del dolor.",
+        "La táctica y la furia se fundieron en un abrazo mortal sobre el césped recién cortado."
     ];
 
     const intros = [
         `La tarde se presentaba con ese aroma inconfundible a día grande. Bajo un cielo ${weather || 'amenazador'}, ${homeTeam.name} y ${opponentTeam.name} saltaron al campo con el cuchillo entre los dientes. Lo que siguió fue una oda al Blood Bowl más puro, ese donde los esquemas saltan por los aires al primer crujido de costillas. `,
-        `Abran paso a los gladiadores. El coliseo estaba a reventar para presenciar el duelo entre ${homeTeam.name} y ${opponentTeam.name}. No hubo tregua ni piedad desde el primer silbato. En el emparrillado, cada centímetro era una trinchera y cada posesión un tesoro custodiado con la vida. `,
-        `Si existe un paraíso para los amantes del contacto extremo, hoy estuvo ubicado en esta Arena. ${homeTeam.name} y ${opponentTeam.name} nos recordaron por qué el Blood Bowl es el deporte de los dioses. Crónica de una batalla anunciada que cumplió con creces las expectativas de los paladares más exigentes. `
+        `Abran paso a los gladiadores. El coliseo estaba a reventar para presenciar el duelo entre ${homeTeam.name} y ${opponentTeam.name}. No hubo tregua ni piedad desde el primer silbato. En el emparrillado, cada centímetro era una trinchera. `,
+        `Si existe un paraíso para los amantes del contacto extremo, hoy estuvo ubicado en esta Arena. ${homeTeam.name} y ${opponentTeam.name} nos recordaron por qué el Blood Bowl es el deporte de los dioses. `
     ];
 
     let body = "";
     
-    // Group events and clean names/descriptions
-    const cleanDescription = (desc: string) => desc.replace('!', '.').replace('¡', '').trim();
-
     const tds = gameLog.filter(e => String(e.type).toLowerCase() === 'touchdown' || String(e.type).toLowerCase() === 'td').reverse();
-    const casualties = gameLog.filter(e => String(e.type).toLowerCase().includes('injury') || String(e.type).toLowerCase().includes('casualty'));
-    const fouls = gameLog.filter(e => String(e.type).toLowerCase().includes('foul') || String(e.type).toLowerCase().includes('expulsion'));
+    const casualties = gameLog.filter(e => String(e.type).toLowerCase().includes('injury') || String(e.type).toLowerCase().includes('casualty') || String(e.type) === 'DEATH');
+    const fouls = gameLog.filter(e => e.type === 'EXPULSION' || String(e.type).toLowerCase().includes('foul'));
     const superbActions = gameLog.filter(e => String(e.type).toLowerCase() === 'interception' || String(e.type).toLowerCase() === 'pass_complete');
 
     if (tds.length > 0) {
         body += "\n\nMAGIA EN LA ZONA DE ANOTACIÓN\n";
         tds.forEach((td, i) => {
-            const prefix = i === 0 ? "La cuenta se abrió de forma magistral cuando" : (i === tds.length -1 && tds.length > 1 ? "La puntilla definitiva llegó de la mano de" : "La sangría no se detuvo y");
-            const desc = cleanDescription(td.description);
-            body += `${prefix} ${desc.charAt(0).toLowerCase() + desc.slice(1)}. Una jugada que será analizada por los expertos de Cabalvisión durante meses. `;
+            const prefix = i === 0 ? "La cuenta se abrió de forma magistral cuando" : (i === tds.length -1 && tds.length > 1 ? "La puntilla definitiva llegó cuando" : "La sangría no se detuvo y");
+            body += `${prefix} ${transformToEpic(td).toLowerCase()}. `;
         });
-    } else {
-        body += "\n\nDEFENSAS DE HIERRO Y CIERRE TOTAL\n";
-        body += `Fue un partido de colmillo retorcido en las zonas rojas. Las defensas se impusieron con una disciplina espartana, convirtiendo cada intento de Touchdown en un muro infranqueable de carne y mala leche. No hubo fisuras, solo resistencia pura. `;
     }
 
     if (casualties.length > 0) {
         body += "\n\nPARTE MÉDICO: LA ENFERMERÍA NO DA ABASTO\n";
-        body += `La dureza del choque se cobró su peaje en el físico de los jugadores. Los camilleros fueron los protagonistas secundarios de una tarde accidentada. `;
+        body += `La dureza del choque se cobró su peaje. Los camilleros fueron los protagonistas secundarios de una tarde accidentada. `;
         casualties.slice(0, 3).forEach(cas => {
-            const desc = cleanDescription(cas.description);
-            body += `El silencio se hizo en la grada cuando ${desc.charAt(0).toLowerCase() + desc.slice(1)}. Un impacto que se escuchó hasta en los palcos de lujo. `;
+            body += `${transformToEpic(cas)} `;
         });
         if (casualties.length > 3) {
             body += `Al final, un total de ${casualties.length} bajas confirmadas dejan claro que hoy nadie vino a hacer amigos. `;
@@ -81,19 +132,17 @@ export const generateMatchArticle = (report: MatchReport) => {
 
     if (superbActions.length > 0) {
         body += "\n\nDETALLES DE CALIDAD\n";
-        const bestAction = cleanDescription(superbActions[0].description);
-        body += `Más allá de los golpes, hubo espacio para la estética. ${bestAction.charAt(0).toLowerCase() + bestAction.slice(1)} fue el momento 'premium' de un encuentro que también tuvo su dosis de finura táctica. `;
+        body += `Más allá de los golpes, hubo espacio para la estética. ${transformToEpic(superbActions[0])} `;
     }
 
     if (fouls.length > 0) {
         body += "\n\nPOLÉMICA Y JUEGO SUBTERRÁNEO\n";
-        const firstFoul = cleanDescription(fouls[0].description);
-        body += `¿Hubo juego sucio? No pregunten al árbitro, que estuvo 'despistado' en momentos clave. La tensión estalló cuando ${firstFoul.charAt(0).toLowerCase() + firstFoul.slice(1)}. El reglamento se convirtió en una sugerencia y el césped en una taberna tras la medianoche. `;
+        body += `¿Hubo juego sucio? No pregunten al árbitro, que estuvo 'despistado'. La tensión estalló en múltiples ocasiones. ${transformToEpic(fouls[0])} `;
     }
 
     const outro = victor 
-        ? `\n\nCon el silbatazo final, la justicia (o la fortuna de Nuffle) coronó a ${victor}. El vestuario perdedor era un poema de frustración, mientras que los ganadores ya preparan los barriles de cerveza para celebrar una victoria que cimenta su estatus en la liga.`
-        : `\n\nEl cronómetro se agotó con un empate que sabe a poco para unos y a gloria para otros. ${homeTeam.name} y ${opponentTeam.name} se retiraron lamiéndose las heridas, sabiendo que este duelo no se ha cerrado, solo se ha pospuesto para una futura revancha sangrienta.`;
+        ? `\n\nCon el silbatazo final, la justicia (o la fortuna de Nuffle) coronó a ${victor}. Los ganadores ya preparan los barriles de cerveza para celebrar una victoria que cimenta su estatus en la liga.`
+        : `\n\nEl cronómetro se agotó con un empate que sabe a poco. ${homeTeam.name} y ${opponentTeam.name} se retiraron lamiéndose las heridas, sabiendo que este duelo no se ha cerrado, solo se ha pospuesto.`;
 
     const generatedArticle = `${intros[Math.floor(Math.random() * intros.length)]}${body}${outro}`;
 
@@ -101,6 +150,6 @@ export const generateMatchArticle = (report: MatchReport) => {
         headline: headlines[Math.floor(Math.random() * headlines.length)],
         subHeadline: subHeadlines[Math.floor(Math.random() * subHeadlines.length)],
         article: generatedArticle,
-        summary: `Ficha Técnica: ${homeTeam.name} ${homeScore} - ${awayScore} ${opponentTeam.name}. Total: ${tds.length} TD(s), ${casualties.length} Lesión(es).`
+        summary: `Ficha Técnica: ${homeTeam.name} ${homeScore} - ${awayScore} ${opponentTeam.name}.`
     };
 };
