@@ -13,6 +13,8 @@ Este documento centraliza todas las tablas de consulta rápida para el asistente
 | **Habilidad Secundaria** | - | 12 PE |
 | **Mejora de Atributo** | 14 PE (1D8) | - |
 
+*Nota: Al tirar **1D8** para mejora de atributo, un resultado de **8** permite al entrenador elegir libremente aumentar cualquier atributo permitido.*
+
 ### Aumento de Valoración (VAE / CTV)
 | Atributo/Mejora | Coste |
 | :--- | :--- |
@@ -47,7 +49,7 @@ Este documento centraliza todas las tablas de consulta rápida para el asistente
 | **3** | **Tiempo Muerto** | Se suma/resta 1 turno al marcador de ambos. |
 | **4** | **Defensa Sólida** | El pateador redespliega 1D3+3 jugadores. |
 | **5** | **Patada Alta** | El receptor coloca un jugador bajo el balón. |
-| **6** | **Hinchas Animan** | Ganador de tirada (1D6+Animadoras) gana apoyo ofensivo. |
+| **6** | **Hinchas Animan** | Tirada enfrentada (1D6+Animadoras). El ganador recibe un **apoyo ofensivo adicional** en el primer placaje de su turno. |
 | **7** | **Entrenador Brillante** | Ganador de tirada (1D6+Ayudantes) gana 1 RR extra. |
 | **8** | **Clima Cambiante** | Nueva tirada de clima. Si es perfecto, el balón se escora (3). |
 | **9** | **Anticipación** | El receptor mueve 1D3+3 jugadores (1 casilla). |
@@ -97,7 +99,7 @@ Este documento centraliza todas las tablas de consulta rápida para el asistente
 ## 🛠️ 5. CATEGORÍAS DE HABILIDADES (1D6+1D6)
 *Lanzar 2D6 para determinar la habilidad al azar:*
 
-| D6 | Agilidad | General | Mutación | Pase | Fuerza | Triquiñuelas |
+| Resultado | Agilidad | General | Mutación | Pase | Fuerza | Triquiñuelas |
 | :---: | :--- | :--- | :--- | :--- | :--- | :--- |
 | **1** | Atrapar | Agallas | Apariencia Asq. | Atento al Balón | Abrirse Paso | Agresor Discr. |
 | **2** | Echarse a un Lado | Equilibrio Firme | Boca Monstruosa | Cañonero | Apartar | Crujir |
@@ -105,4 +107,9 @@ Este documento centraliza todas las tablas de consulta rápida para el asistente
 | **4** | Esprintar | Furia | Cola Prensil | Nervios de Acero | Cabeza Dura | Falta Rápida |
 | **5** | Esquivar | Manos Seguras | Cuernos | Partenubes | Defensa | Furtivo |
 | **6** | Pies Firmes | Placar | Dos Cabezas | Pasar | Golpe Mortífero | Jugar Sucio |
-| **7+** | Saltar | Zafarse | Tentáculos | Precisión | Mantenerse Firme | Perseguir |
+| **7** | Saltar | Zafarse | Tentáculos | Precisión | Mantenerse Firme | Perseguir |
+| **8** | Zafarse | Placaje | Garras | Pase Seguro | Multiplacaje | Innovador viol. |
+| **9** | - | - | - | - | - | Meter la bota |
+| **10** | - | - | - | - | - | Piquete de ojos |
+| **11** | - | - | - | - | - | Saboteador |
+| **12** | - | - | - | - | - | Vuelo letal |

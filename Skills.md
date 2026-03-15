@@ -7,14 +7,14 @@
 - **Apartar (Grab)**  
   Al empujar, el entrenador elige la casilla de destino (de las 3 disponibles). Anula *Echarse a un lado*. No compatible con *Furia*.
 
-- **Bloquear (Block)** — **[ÉLITE: +10,000 VAE]**  
-  El resultado **"Ambos Derribados"** no afecta a este jugador; permanece de pie si el rival no tiene la habilidad. Elevada a categoría Élite en Temporada 3 (+10k MO adicionales).
+- **Placar (Block)** — **[ÉLITE: +10,000 MO adicionales a la VAE]**  
+  El resultado **"Ambos Derribados"** no afecta a este jugador; permanece de pie si el rival no tiene la habilidad. Elevada a categoría Élite en Temporada 3. (Anteriormente listado como Bloquear).
 
 - **Defensa (Defensive)**  
   Durante el turno del oponente, anula la habilidad **Defensa de Equipo (Guard)** de cualquier rival que marque a este jugador.
 
-- **Esquivar (Dodge)** — **[ÉLITE: +10,000 VAE]**  
-  Permite repetir una tirada de Esquiva fallida por turno. Además, convierte **"Defensor Tropieza"** en **"Empujado"**. Elevada a categoría Élite en Temporada 3 (+10k MO adicionales).
+- **Esquivar (Dodge)** — **[ÉLITE: +10,000 MO adicionales a la VAE]**  
+  Permite repetir una tirada de Esquiva fallida por turno. Además, convierte **"Defensor Tropieza" (Pow-Push)** en **"Empujado"**. Elevada a categoría Élite en Temporada 3.
 
 - **Furia (Frenzy)**  
   Obligatorio seguir tras un placaje. Si el rival es empujado, debe realizar un segundo placaje inmediato si sigue adyacente.
@@ -29,8 +29,8 @@
 - **Patada (Kick)**  
   Si el jugador no está en los extremos ni en la línea, **divide a la mitad la dispersión** del balón en la patada inicial.
 
-- **Placar (Tackle)**  
-  Los oponentes en su zona de defensa **no pueden usar Esquivar** para salir ni para evitar ser derribados.
+- **Placaje (Tackle)**  
+  Los oponentes en su zona de defensa **no pueden usar Esquivar** para salir ni para evitar ser derribados. (Anteriormente listado como Placar).
 
 - **Profesional (Pro)**  
   Permite repetir una tirada (excepto **Armadura, Herida o Bajas**) sacando previamente **3+ en 1D6**.
@@ -108,11 +108,11 @@
 - **Brazo fuerte (Strong Arm)**  
   **+1** al lanzar a un compañero.
 
-- **Defensa de equipo (Guard)** — **[ÉLITE: +10,000 VAE]**  
-  Da **apoyos ofensivos y defensivos** aunque esté marcado. Elevada a categoría Élite en Temporada 3 (+10k MO adicionales).
+- **Defensa (Guard)** — **[ÉLITE: +10,000 MO adicionales a la VAE]**  
+  Da **apoyos ofensivos y defensivos** aunque esté marcado por otros rivales. Elevada a categoría Élite en Temporada 3.
 
-- **Golpe mortífero (+X) (Mighty Blow)** — **[ÉLITE: +10,000 VAE]**  
-  Añade **+X** a Armadura o Herida. Elevada a categoría Élite en Temporada 3 (+10k MO adicionales).
+- **Golpe mortífero (+X) (Mighty Blow)** — **[ÉLITE: +10,000 MO adicionales a la VAE]**  
+  Añade **+X** a la tirada de Armadura o de Herida tras un placaje exitoso. Elevada a categoría Élite en Temporada 3.
 
 - **Imparable (Juggernaut)**  
   En **Blitz**, los rivales no usan **Zafarse, Mantenerse firme ni Forcejear**.
@@ -200,7 +200,8 @@
   Si este jugador es derribado, puede intentar sabotear la armadura del atacante; con 4+, el arma explota y el atacante queda Inconsciente.
 
 - **Vuelo letal (Lethal Flight)**  
-  Habilidad específica para jugadores que son lanzados por compañeros.
+  Si un compañero lanza a este jugador, puede sumar +1 a la tirada de aterrizaje y el daño por impacto a rivales aumenta.
+
 
 # 🌟 RASGOS
 
@@ -222,8 +223,8 @@
 - **Animosity (X)**  
   Con **1 en 1D6**, se niega a pasar el balón a ciertos compañeros.
 
-- **Unsteady**  
-  No puede declarar **Asegurar el Balón**.
+- **Tembloroso (Unsteady)**  
+  Este jugador tiene prohibido declarar la acción de **Asegurar el balón**. Además, tiene un penalizador de -1 a cualquier tirada de Agilidad.
 
 ---
 

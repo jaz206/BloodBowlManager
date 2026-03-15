@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import type { ManagedTeam } from '../../types';
 import TeamCreator from './CreateTeamPage';
 import { TeamDashboard } from './TeamDetailPage';
+import { calculateTeamValue } from '../../utils/teamUtils';
 import UploadIcon from '../../components/icons/UploadIcon';
 import DownloadIcon from '../../components/icons/DownloadIcon';
 import ShieldCheckIcon from '../../components/icons/ShieldCheckIcon';
@@ -36,21 +37,7 @@ const sanitizeTeamForExport = (team: ManagedTeam): Omit<ManagedTeam, 'id'> => {
 };
 
 
-const calculateTV = (team: ManagedTeam) => {
-    let total = 0;
-    // Base cost of players
-    team.players.forEach(p => { total += p.cost; });
-    // Rerolls (usually 60k average, but better to check if we have the cost. For now using a standard 60k if not specified)
-    total += (team.rerolls || 0) * 60000;
-    // Staff & Fans
-    total += (team.cheerleaders || 0) * 10000;
-    total += (team.assistantCoaches || 0) * 10000;
-    total += (team.dedicatedFans || 0) * 10000;
-    if (team.apothecary) total += 50000;
-
-    // In Blood Bowl 2020 TV is usually total / 1000
-    return total;
-};
+const calculateTV = (team: ManagedTeam) => calculateTeamValue(team);
 
 interface TeamManagerProps {
     teams: ManagedTeam[];
@@ -60,9 +47,10 @@ interface TeamManagerProps {
     requestedRoster?: string | null;
     onRosterRequestHandled?: () => void;
     isGuest: boolean;
+    matchReports: any[];
 }
 
-const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUpdate, onTeamDelete, requestedRoster, onRosterRequestHandled = () => { }, isGuest }) => {
+const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUpdate, onTeamDelete, requestedRoster, onRosterRequestHandled = () => { }, isGuest, matchReports }) => {
     const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
     const [isCreating, setIsCreating] = useState(requestedRoster !== null && requestedRoster !== undefined);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -231,6 +219,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                     onDeleteRequest={requestTeamDelete}
                     onBack={() => setSelectedTeamId(null)}
                     isGuest={isGuest}
+                    matchReports={matchReports}
                 />
                 <style>{`
                     @keyframes fade-in-slow {

@@ -28,7 +28,7 @@ export interface Player {
   skills?: string;
 }
 
-export const ELITE_SKILLS = ["Block", "Dodge", "Guard", "Mighty Blow (+1)"];
+export const ELITE_SKILLS = ["Block", "Dodge", "Guard", "Mighty Blow (+1)", "Mighty Blow (+2)", "Mighty Blow"];
 
 export const getSkillExtraCost = (skillKey: string): number => {
     if (ELITE_SKILLS.includes(skillKey)) return 10000;

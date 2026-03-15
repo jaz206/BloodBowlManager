@@ -245,9 +245,10 @@ const MainApp: React.FC = () => {
     console.log("MainApp: Creando nuevo reporte de partido...", report);
     
     if (isGuest) {
-      setMatchReports(prev => [{ ...report, id: `temp_${Date.now()}` } as MatchReport, ...prev]);
+      const tempId = `temp_${Date.now()}`;
+      setMatchReports(prev => [{ ...report, id: tempId } as MatchReport, ...prev]);
       setSyncState('synced');
-      return;
+      return tempId;
     }
     try {
       // Optimistic update
@@ -261,9 +262,11 @@ const MainApp: React.FC = () => {
       });
       console.log("MainApp: Reporte guardado con éxito con ID:", docRef.id);
       setSyncState('synced');
+      return docRef.id;
     } catch (error) {
       console.error("MainApp: Error al crear el reporte de partido:", error);
       setSyncState('error');
+      return null;
     }
   };
 
@@ -379,6 +382,7 @@ const MainApp: React.FC = () => {
                   requestedRoster={requestedRoster}
                   onRosterRequestHandled={() => setRequestedRoster(null)}
                   isGuest={isGuest}
+                  matchReports={matchReports}
                 />
               )}
               {activeView === 'tactical' && <TacticalBoardPage managedTeams={managedTeams} plays={plays} onSavePlay={handlePlaySave} onDeletePlay={handlePlayDelete} />}

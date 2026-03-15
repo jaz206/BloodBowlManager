@@ -90,6 +90,7 @@ Pase
 Recoger balón
 Falta
 Touchdown
+Asegurar el Balón
 
 
 Cada botón abre un pequeño menú para registrar el resultado.
@@ -145,6 +146,12 @@ Esto genera eventos:
 armor_break
 injury_ko
 
+### Estado Distraído (Distracted)
+El sistema unifica bajo este nombre los efectos de **Bone Head (Cabeza Dura)**, **Really Stupid (Realmente Estúpido)** y **Hypnotic Gaze (Mirada Hipnótica)**. Un jugador distraído:
+- Pierde su Zona de Defensa (visualizar con aura roja tachada).
+- No puede prestar apoyos ni interceptar.
+- El asistente anula automáticamente su contribución defensiva en cálculos de placaje.
+
 
 ---
 
@@ -174,6 +181,13 @@ Opciones:
 Pase completado
 Pase fallido
 Intercepción
+
+### Acción Especial: Asegurar el Balón
+Acción disponible para jugadores que inician su activación cerca del balón suelto.
+- **Lógica:** Movimiento gratuito hacia el balón (si está a alcance).
+- **Efecto:** Recogida automática con un resultado de **2+ en 1D6** (ignora chequeos de Agilidad estándar).
+- **Consecuencia:** La activación del jugador termina inmediatamente.
+- **Restricción:** No disponible para jugadores con el rasgo **Gran Tipo (Big Guy)** ni jugadores **Temblorosos (Unsteady)**.
 
 
 ---
@@ -215,6 +229,12 @@ Esto genera evento:
 
 
 turn_end
+
+### Regla de Retener el Balón (Stalling)
+El asistente monitorea si un jugador está en disposición de anotar sin realizar tiradas de dados pero decide no hacerlo.
+- **Alerta de Sistema:** Si se detecta stalling, el jugador recibe un aviso visual.
+- **Chequeo de Turnover:** Al final de la activación, el sistema tira **1D6**.
+- **Fallo:** Si el resultado es **≥ al número del turno actual del equipo**, el jugador es derribado automáticamente, pierde el balón y se produce un **Turnover**.
 
 
 Y cambia el equipo activo.

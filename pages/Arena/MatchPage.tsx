@@ -30,6 +30,7 @@ import { skillsData } from '../../data/skills';
 import SkillModal from '../../components/oracle/SkillModal';
 import ApothecaryModal from '../../components/arena/ApothecaryModal';
 import ConcedeModal from '../../components/arena/ConcedeModal';
+import { calculateTeamValue } from '../../utils/teamUtils';
 
 import ChevronDownIcon from '../../components/icons/ChevronDownIcon';
 import ShieldCheckIcon from '../../components/icons/ShieldCheckIcon';
@@ -57,7 +58,7 @@ interface GameBoardProps {
     managedTeams: ManagedTeam[];
     matchReports?: MatchReport[];
     onTeamUpdate: (team: ManagedTeam) => void;
-    onMatchReportCreate?: (report: Omit<MatchReport, 'id'>) => void;
+    onMatchReportCreate?: (report: Omit<MatchReport, 'id'>) => Promise<string | null>;
 }
 
 type GameState = 'setup' | 'selection' | 'pre_game' | 'in_progress' | 'post_game' | 'ko_recovery' | 'reports';
@@ -232,73 +233,6 @@ const DoubleDiceInputStep = ({ title, value, onChange, onNext, onBack, label, on
     );
 };
 
-const calculateTeamValue = (team: ManagedTeam | null, includeInducementsForPrayers = false): number => {
-    if (!team) return 0;
-    const baseRoster = teamsData.find(t => t.name === team.rosterName);
-    if (!baseRoster) return 0;
-
-    const playersValue = team.players.reduce((sum, p) => {
-        let improvementsValue = 0;
-        
-        if (p.advancements && p.advancements.length > 0) {
-            improvementsValue = p.advancements.reduce((advSum, adv) => {
-                let baseValue = 0;
-                switch (adv.type) {
-                    case 'RandomPrimary': baseValue = 10000; break;
-                    case 'ChosenPrimary': baseValue = 20000; break;
-                    case 'RandomSecondary': baseValue = 20000; break;
-                    case 'ChosenSecondary': baseValue = 40000; break;
-                    case 'Characteristic':
-                        if (adv.characteristicName === 'FU') baseValue = 40000;
-                        else if (adv.characteristicName === 'AG' || adv.characteristicName === 'PS') baseValue = 20000;
-                        else baseValue = 10000; // MV, AR
-                        break;
-                }
-                
-                // Season 3 Elite Penalty
-                let eliteBonus = 0;
-                if (adv.skillName) {
-                    const skillEntry = skillsData.find(s => s.name === adv.skillName || s.keyEN === adv.skillName);
-                    if (skillEntry && ELITE_SKILLS.includes(skillEntry.keyEN)) {
-                        eliteBonus = 10000;
-                    }
-                }
-                return advSum + baseValue + eliteBonus;
-            }, 0);
-        } else {
-            // Legacy/Initial gainedSkills
-            improvementsValue = p.gainedSkills.reduce((skillSum, skillName) => {
-                if (skillName.toLowerCase().includes('solitario')) return skillSum;
-                let baseValue = skillName.toLowerCase().includes('secundaria') ? 40000 : 20000;
-                
-                // Season 3 Elite Penalty
-                const skillEntry = skillsData.find(s => s.name === skillName || s.keyEN === skillName);
-                if (skillEntry && ELITE_SKILLS.includes(skillEntry.keyEN)) {
-                    baseValue += 10000;
-                }
-                
-                return skillSum + baseValue;
-            }, 0);
-        }
-        
-        return sum + p.cost + improvementsValue;
-    }, 0);
-
-    const rerollsValue = team.rerolls * baseRoster.rerollCost;
-    const apothecaryValue = team.apothecary && baseRoster.apothecary === "Sí" ? 50000 : 0;
-    const staffValue = (team.cheerleaders + team.assistantCoaches) * 10000;
-    const fansValue = (team.dedicatedFans - 1) * 10000;
-
-    let totalValue = playersValue + rerollsValue + apothecaryValue + staffValue + fansValue;
-
-    if (includeInducementsForPrayers) {
-        const tempStaffValue = ((team.tempCheerleaders || 0) + (team.tempAssistantCoaches || 0)) * 10000;
-        const tempBribesValue = (team.tempBribes || 0) * (baseRoster.specialRules.includes("Sobornos y corrupción") ? 50000 : 100000);
-        totalValue += tempStaffValue + tempBribesValue;
-    }
-
-    return totalValue;
-};
 
 
 const isEligibleStar = (star: StarPlayer, teamRoster: Team | undefined) => {
@@ -363,6 +297,225 @@ const cloneLiveTeam = (team: ManagedTeam): ManagedTeam => {
 
 const initialFoulState: FoulState = { step: 'select_fouler_team', foulingTeamId: null, foulingPlayer: null, victimPlayer: null, armorRoll: null, injuryRoll: null, casualtyRoll: null, lastingInjuryRoll: null, wasExpelled: false, expulsionReason: '', log: [], armorRollInput: { die1: '', die2: '' }, injuryRollInput: { die1: '', die2: '' }, casualtyRollInput: '', lastingInjuryRollInput: '' };
 const initialInjuryState: InjuryState = { step: 'select_casualty_type', victimTeamId: null, victimPlayer: null, attackerTeamId: null, attackerPlayer: null, isCasualty: false, isStunty: false, armorRoll: null, injuryRoll: null, casualtyRoll: null, lastingInjuryRoll: null, log: [], armorRollInput: { die1: '', die2: '' }, injuryRollInput: { die1: '', die2: '' }, casualtyRollInput: '', lastingInjuryRollInput: '', apothecaryAction: null, regenerationRollInput: '', regenerationRoll: null };
+const MatchSummaryModal = ({ 
+    isOpen, 
+    onClose, 
+    homeTeam, 
+    opponentTeam, 
+    gameLog, 
+    currentScore,
+    headline,
+    subHeadline,
+    article,
+    stats,
+    spectators,
+    weather
+}: { 
+    isOpen: boolean, 
+    onClose: () => void, 
+    homeTeam: ManagedTeam, 
+    opponentTeam: ManagedTeam, 
+    gameLog: GameEvent[], 
+    currentScore: { home: number, opponent: number },
+    headline?: string,
+    subHeadline?: string,
+    article?: string,
+    stats?: MatchStats,
+    spectators?: number,
+    weather?: string
+}) => {
+    // Normalize event types for filtering
+    const tds = gameLog.filter(e => e.type === 'touchdown' || e.type === 'TOUCHDOWN' || e.description.toLowerCase().includes('ha anotado un touchdown'));
+    const injuries = gameLog.filter(e => e.type === 'injury_casualty' || e.type === 'INJURY' || e.type === 'DEATH');
+    const fouls = gameLog.filter(e => e.type === 'foul_attempt' || e.type === 'FOUL' || e.type === 'player_sent_off' || e.type === 'EXPULSION');
+
+    // Count touchdowns per team - Fallback to currentScore if log filtering is ambiguous
+    const logHomeScore = tds.filter(e => e.team === 'home').length;
+    const logOpponentScore = tds.filter(e => e.team === 'opponent').length;
+    
+    const homeScoreValue = Math.max(logHomeScore, currentScore.home);
+    const opponentScoreValue = Math.max(logOpponentScore, currentScore.opponent);
+
+    const renderEmpty = (text: string) => (
+        <div className="py-8 text-center border-2 border-dashed border-white/5 rounded-2xl">
+            <p className="text-[10px] font-display font-black text-slate-600 uppercase tracking-widest">{text}</p>
+        </div>
+    );
+
+    const StatMiniCard = ({ label, home, away, icon, color = "premium-gold" }: { label: string, home: number, away: number, icon: string, color?: string }) => (
+        <div className="bg-black/40 border border-white/5 p-4 rounded-2xl flex flex-col items-center gap-2 group hover:border-premium-gold/20 transition-all">
+            <span className={`material-symbols-outlined text-${color} text-lg mb-1`}>{icon}</span>
+            <div className="flex items-center gap-3 w-full justify-between px-2">
+                <span className="text-xl font-display font-black text-white">{home}</span>
+                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{label}</span>
+                <span className="text-xl font-display font-black text-white">{away}</span>
+            </div>
+        </div>
+    );
+
+    return (
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-xl flex items-center justify-center z-[500] p-4 lg:p-12">
+            <div className="glass-panel max-w-6xl w-full max-h-[92vh] flex flex-col border-premium-gold/30 bg-black/60 shadow-[0_0_120px_rgba(245,159,10,0.2)] animate-slide-in-up overflow-hidden">
+                {/* Sticky Header */}
+                <div className="sticky top-0 z-10 flex justify-between items-center p-6 md:p-8 border-b border-white/10 bg-black/80 backdrop-blur-md">
+                    <div>
+                        <h2 className="text-2xl md:text-3xl font-display font-black text-white uppercase italic tracking-tighter">Crónica de <span className="text-premium-gold">Nuffle</span></h2>
+                        <div className="flex items-center gap-4 mt-1">
+                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">El eco de los gritos en la arena</p>
+                            {spectators && (
+                                <span className="text-[10px] font-bold text-sky-400 uppercase tracking-widest bg-sky-500/10 px-2 py-0.5 rounded-full border border-sky-500/20">
+                                    🏟️ {spectators.toLocaleString()} Espectadores
+                                </span>
+                            )}
+                            {weather && (
+                                <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                                    ☀️ {weather}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                    <button onClick={onClose} className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-black/40 border border-white/10 text-slate-400 hover:text-white flex items-center justify-center transition-all hover:scale-110 active:scale-95">
+                        <span className="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+
+                <div className="flex-grow overflow-y-auto custom-scrollbar p-6 md:p-8 space-y-12">
+                    {/* Newspaper Article Section */}
+                    {headline && (
+                        <div className="border-b-2 border-double border-white/10 pb-8 space-y-4">
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className="h-px flex-grow bg-white/5"></span>
+                                <span className="text-[10px] font-display font-black text-premium-gold uppercase tracking-[0.5em]">Diario Deportivo de Altdorf</span>
+                                <span className="h-px flex-grow bg-white/5"></span>
+                            </div>
+                            <h1 className="text-4xl md:text-5xl font-display font-black text-white uppercase italic leading-tight tracking-tighter text-center">
+                                {headline}
+                            </h1>
+                            {subHeadline && (
+                                <p className="text-sm md:text-base font-bold text-slate-400 uppercase tracking-widest text-center border-y border-white/5 py-2">
+                                    {subHeadline}
+                                </p>
+                            )}
+                            <div className="columns-1 md:columns-2 gap-8 text-slate-300 text-sm leading-relaxed font-serif pt-4 first-letter:text-5xl first-letter:font-display first-letter:font-black first-letter:float-left first-letter:mr-3 first-letter:text-premium-gold">
+                                {article}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Score Hero */}
+                    <div className="grid grid-cols-3 gap-8 items-center max-w-2xl mx-auto bg-black/40 p-8 md:p-10 rounded-[2rem] md:rounded-[3rem] border border-white/5 relative overflow-hidden group">
+                        <div className="absolute inset-0 bg-gradient-to-r from-sky-500/5 via-transparent to-red-500/5"></div>
+                        <div className="text-right relative z-10">
+                            <p className="text-[10px] font-display font-black text-sky-400 uppercase tracking-widest mb-2 line-clamp-1">{homeTeam.name}</p>
+                            <div className="text-5xl md:text-6xl font-display font-black text-white italic drop-shadow-[0_0_30px_rgba(14,165,233,0.3)]">{homeScoreValue}</div>
+                        </div>
+                        <div className="flex flex-col items-center relative z-10">
+                            <div className="w-px h-10 md:h-12 bg-premium-gold/30"></div>
+                            <span className="text-[10px] font-display font-black text-premium-gold uppercase tracking-[0.3em] my-3 md:my-4">Final</span>
+                            <div className="w-px h-10 md:h-12 bg-premium-gold/30"></div>
+                        </div>
+                        <div className="text-left relative z-10">
+                            <p className="text-[10px] font-display font-black text-red-500 uppercase tracking-widest mb-2 line-clamp-1">{opponentTeam.name}</p>
+                            <div className="text-5xl md:text-6xl font-display font-black text-white italic drop-shadow-[0_0_30px_rgba(220,38,38,0.3)]">{opponentScoreValue}</div>
+                        </div>
+                    </div>
+
+                    {/* Quick Stats Grid */}
+                    {stats && (
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <StatMiniCard label="Pases" home={stats.passes.home} away={stats.passes.opponent} icon="pbolt" />
+                            <StatMiniCard label="Interc." home={stats.interceptions.home} away={stats.interceptions.opponent} icon="gesture" />
+                            <StatMiniCard label="Faltas" home={stats.fouls.home} away={stats.fouls.opponent} icon="gavel" color="amber-500" />
+                            <StatMiniCard label="Bajas" home={stats.casualties.home} away={stats.casualties.opponent} icon="skull" color="blood-red" />
+                        </div>
+                    )}
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                        <section className="space-y-4">
+                            <div className="flex items-center gap-4 mb-2">
+                                <div className="w-10 h-10 rounded-full bg-premium-gold/10 border border-premium-gold/30 flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-premium-gold text-xl">sports_football</span>
+                                </div>
+                                <h3 className="text-sm font-display font-black text-white uppercase tracking-widest">Touchdowns Añadidos</h3>
+                            </div>
+                            {tds.length > 0 ? (
+                                <div className="space-y-3">
+                                    {tds.map((td, i) => (
+                                        <div key={i} className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/10 group hover:border-premium-gold/30 transition-all">
+                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center border font-display font-black text-xs ${td.team === 'home' ? 'bg-sky-500/20 border-sky-500/30 text-sky-400' : 'bg-red-500/20 border-red-500/30 text-red-500'}`}>
+                                                TD
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-display font-black text-white uppercase line-clamp-1">{td.description.split('ha anotado')[0].trim()}</p>
+                                                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Parte {td.half} · Turno {td.turn}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : renderEmpty('Sin Touchdowns registrados')}
+                        </section>
+
+                        <section className="space-y-4">
+                            <div className="flex items-center gap-4 mb-2">
+                                <div className="w-10 h-10 rounded-full bg-blood-red/10 border border-blood-red/30 flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-blood-red text-xl">skull</span>
+                                </div>
+                                <h3 className="text-sm font-display font-black text-white uppercase tracking-widest">Informe de Bajas</h3>
+                            </div>
+                            {injuries.length > 0 ? (
+                                <div className="grid grid-cols-1 gap-3">
+                                    {injuries.map((injury, i) => {
+                                        const match = injury.description.match(/Herida a (.*?)\. (.*)/) || injury.description.match(/¡MUERTE! (.*?) (.*)/);
+                                        const name = match ? match[1] : (injury.type === 'DEATH' ? '¡ÓBITO!' : 'Jugador');
+                                        const description = match ? match[2] : injury.description;
+
+
+                                        return (
+                                            <div key={i} className="bg-blood-red/5 p-4 rounded-2xl border border-blood-red/20 border-l-4 border-l-blood-red">
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <p className="text-xs font-display font-black text-white uppercase line-clamp-1">{name}</p>
+                                                    <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest min-w-max ml-2">P.{injury.half} T.{injury.turn}</span>
+                                                </div>
+                                                <p className="text-[10px] text-slate-400 leading-relaxed italic">
+                                                    {description}
+                                                </p>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ) : renderEmpty('Sin bajas mayores registradas')}
+                        </section>
+                    </div>
+
+                    {(fouls.length > 0) && (
+                        <section className="space-y-4">
+                            <div className="flex items-center gap-4 mb-2">
+                                <div className="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-amber-500 text-xl">gavel</span>
+                                </div>
+                                <h3 className="text-sm font-display font-black text-white uppercase tracking-widest">Incidentes Disciplinarios</h3>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {fouls.map((foul, i) => (
+                                    <div key={i} className="flex items-center gap-4 bg-amber-500/5 p-4 rounded-2xl border border-amber-500/20 border-l-4 border-l-amber-500">
+                                        <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
+                                            <span className="material-symbols-outlined text-amber-500 text-lg">person_off</span>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-display font-black text-white uppercase leading-tight line-clamp-2">{foul.description}</p>
+                                            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1">Parte {foul.half} · Turno {foul.turn}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], onTeamUpdate, onMatchReportCreate }) => {
     const [gameState, setGameState] = useState<GameState>('setup');
     const [selectedReport, setSelectedReport] = useState<MatchReport | null>(null);
@@ -661,7 +814,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
         setIsTurnoverModalOpen(false);
         handleNextTurn();
     };
-    const handleConfirmPostGame = (finalTeamState: ManagedTeam) => {
+    const handleConfirmPostGame = async (finalTeamState: ManagedTeam) => {
         if (!homeTeam) return;
 
         // Update History and Records
@@ -718,8 +871,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
             // Calculate Spectators based on fame (approximation)
             const baseSpectators = (fame.home + fame.opponent) * 1000 + 10000;
             const spectators = isNaN(baseSpectators) ? 10000 : baseSpectators;
-
-            const baseReport: MatchReport = {
+            const baseReport: any = {
                 id: '', // Will be set by Firebase
                 date: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
                 homeTeam: {
@@ -731,14 +883,14 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                 },
                 opponentTeam: {
                     id: opponentTeam?.id,
-                    name: liveOpponentTeam.name,
-                    rosterName: liveOpponentTeam.rosterName,
+                    name: liveOpponentTeam?.name || 'Desconocido',
+                    rosterName: liveOpponentTeam?.rosterName || 'Rival',
                     score: score.opponent,
-                    crestImage: liveOpponentTeam.crestImage
+                    crestImage: liveOpponentTeam?.crestImage
                 },
                 gameLog: gameLog,
                 weather: gameStatus.weather?.title,
-                winner: matchWinner as any,
+                winner: score.home > score.opponent ? 'home' : score.home < score.opponent ? 'opponent' : 'draw',
                 stats: stats,
                 spectators: spectators,
                 wasConceded: concessionState
@@ -750,16 +902,18 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                 finalNewsData = {
                     headline: parts[0] || 'CRÓNICA DE COMBATE',
                     article: parts.slice(1).join('\n\n'),
-                    summary: `Final: ${liveHomeTeam.name} ${score.home} - ${score.opponent} ${liveOpponentTeam.name}`
+                    summary: `Final: ${liveHomeTeam.name} ${score.home} - ${score.opponent} ${liveOpponentTeam?.name}`
                 };
             } else {
-                finalNewsData = generateMatchArticle(baseReport);
+                finalNewsData = generateMatchArticle(baseReport as MatchReport);
             }
 
-            onMatchReportCreate({
+            const reportId = await onMatchReportCreate!({
                 ...baseReport,
                 ...finalNewsData
             });
+
+            if (reportId) historyEntry.id = reportId; // Link report to history
         }
 
         onTeamUpdate(finalTeamWithStats);
@@ -3454,224 +3608,6 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                 .animate-fade-in-fast { animation: fade-in-fast 0.2s ease-out forwards; }
                 .animate-slide-in-up { animation: slide-in-up 0.3s ease-out forwards; }
             `}</style>
-        </div>
-    );
-};
-const MatchSummaryModal = ({ 
-    isOpen, 
-    onClose, 
-    homeTeam, 
-    opponentTeam, 
-    gameLog, 
-    currentScore,
-    headline,
-    subHeadline,
-    article,
-    stats,
-    spectators,
-    weather
-}: { 
-    isOpen: boolean, 
-    onClose: () => void, 
-    homeTeam: ManagedTeam, 
-    opponentTeam: ManagedTeam, 
-    gameLog: GameEvent[], 
-    currentScore: { home: number, opponent: number },
-    headline?: string,
-    subHeadline?: string,
-    article?: string,
-    stats?: MatchStats,
-    spectators?: number,
-    weather?: string
-}) => {
-    // Normalize event types for filtering
-    const tds = gameLog.filter(e => e.type === 'touchdown' || e.type === 'TOUCHDOWN' || e.description.toLowerCase().includes('ha anotado un touchdown'));
-    const injuries = gameLog.filter(e => e.type === 'injury_casualty' || e.type === 'INJURY' || e.type === 'DEATH');
-    const fouls = gameLog.filter(e => e.type === 'foul_attempt' || e.type === 'FOUL' || e.type === 'player_sent_off' || e.type === 'EXPULSION');
-
-    // Count touchdowns per team - Fallback to currentScore if log filtering is ambiguous
-    const logHomeScore = tds.filter(e => e.team === 'home').length;
-    const logOpponentScore = tds.filter(e => e.team === 'opponent').length;
-    
-    const homeScoreValue = Math.max(logHomeScore, currentScore.home);
-    const opponentScoreValue = Math.max(logOpponentScore, currentScore.opponent);
-
-    const renderEmpty = (text: string) => (
-        <div className="py-8 text-center border-2 border-dashed border-white/5 rounded-2xl">
-            <p className="text-[10px] font-display font-black text-slate-600 uppercase tracking-widest">{text}</p>
-        </div>
-    );
-
-    const StatMiniCard = ({ label, home, away, icon, color = "premium-gold" }: { label: string, home: number, away: number, icon: string, color?: string }) => (
-        <div className="bg-black/40 border border-white/5 p-4 rounded-2xl flex flex-col items-center gap-2 group hover:border-premium-gold/20 transition-all">
-            <span className={`material-symbols-outlined text-${color} text-lg mb-1`}>{icon}</span>
-            <div className="flex items-center gap-3 w-full justify-between px-2">
-                <span className="text-xl font-display font-black text-white">{home}</span>
-                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{label}</span>
-                <span className="text-xl font-display font-black text-white">{away}</span>
-            </div>
-        </div>
-    );
-
-    return (
-        <div className="fixed inset-0 bg-black/95 backdrop-blur-xl flex items-center justify-center z-[500] p-4 lg:p-12">
-            <div className="glass-panel max-w-6xl w-full max-h-[92vh] flex flex-col border-premium-gold/30 bg-black/60 shadow-[0_0_120px_rgba(245,159,10,0.2)] animate-slide-in-up overflow-hidden">
-                {/* Sticky Header */}
-                <div className="sticky top-0 z-10 flex justify-between items-center p-6 md:p-8 border-b border-white/10 bg-black/80 backdrop-blur-md">
-                    <div>
-                        <h2 className="text-2xl md:text-3xl font-display font-black text-white uppercase italic tracking-tighter">Crónica de <span className="text-premium-gold">Nuffle</span></h2>
-                        <div className="flex items-center gap-4 mt-1">
-                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">El eco de los gritos en la arena</p>
-                            {spectators && (
-                                <span className="text-[10px] font-bold text-sky-400 uppercase tracking-widest bg-sky-500/10 px-2 py-0.5 rounded-full border border-sky-500/20">
-                                    🏟️ {spectators.toLocaleString()} Espectadores
-                                </span>
-                            )}
-                            {weather && (
-                                <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
-                                    ☀️ {weather}
-                                </span>
-                            )}
-                        </div>
-                    </div>
-                    <button onClick={onClose} className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-black/40 border border-white/10 text-slate-400 hover:text-white flex items-center justify-center transition-all hover:scale-110 active:scale-95">
-                        <span className="material-symbols-outlined">close</span>
-                    </button>
-                </div>
-
-                <div className="flex-grow overflow-y-auto custom-scrollbar p-6 md:p-8 space-y-12">
-                    {/* Newspaper Article Section */}
-                    {headline && (
-                        <div className="border-b-2 border-double border-white/10 pb-8 space-y-4">
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className="h-px flex-grow bg-white/5"></span>
-                                <span className="text-[10px] font-display font-black text-premium-gold uppercase tracking-[0.5em]">Diario Deportivo de Altdorf</span>
-                                <span className="h-px flex-grow bg-white/5"></span>
-                            </div>
-                            <h1 className="text-4xl md:text-5xl font-display font-black text-white uppercase italic leading-tight tracking-tighter text-center">
-                                {headline}
-                            </h1>
-                            {subHeadline && (
-                                <p className="text-sm md:text-base font-bold text-slate-400 uppercase tracking-widest text-center border-y border-white/5 py-2">
-                                    {subHeadline}
-                                </p>
-                            )}
-                            <div className="columns-1 md:columns-2 gap-8 text-slate-300 text-sm leading-relaxed font-serif pt-4 first-letter:text-5xl first-letter:font-display first-letter:font-black first-letter:float-left first-letter:mr-3 first-letter:text-premium-gold">
-                                {article}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Score Hero */}
-                    <div className="grid grid-cols-3 gap-8 items-center max-w-2xl mx-auto bg-black/40 p-8 md:p-10 rounded-[2rem] md:rounded-[3rem] border border-white/5 relative overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-r from-sky-500/5 via-transparent to-red-500/5"></div>
-                        <div className="text-right relative z-10">
-                            <p className="text-[10px] font-display font-black text-sky-400 uppercase tracking-widest mb-2 line-clamp-1">{homeTeam.name}</p>
-                            <div className="text-5xl md:text-6xl font-display font-black text-white italic drop-shadow-[0_0_30px_rgba(14,165,233,0.3)]">{homeScoreValue}</div>
-                        </div>
-                        <div className="flex flex-col items-center relative z-10">
-                            <div className="w-px h-10 md:h-12 bg-premium-gold/30"></div>
-                            <span className="text-[10px] font-display font-black text-premium-gold uppercase tracking-[0.3em] my-3 md:my-4">Final</span>
-                            <div className="w-px h-10 md:h-12 bg-premium-gold/30"></div>
-                        </div>
-                        <div className="text-left relative z-10">
-                            <p className="text-[10px] font-display font-black text-red-500 uppercase tracking-widest mb-2 line-clamp-1">{opponentTeam.name}</p>
-                            <div className="text-5xl md:text-6xl font-display font-black text-white italic drop-shadow-[0_0_30px_rgba(220,38,38,0.3)]">{opponentScoreValue}</div>
-                        </div>
-                    </div>
-
-                    {/* Quick Stats Grid */}
-                    {stats && (
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <StatMiniCard label="Pases" home={stats.passes.home} away={stats.passes.opponent} icon="pbolt" />
-                            <StatMiniCard label="Interc." home={stats.interceptions.home} away={stats.interceptions.opponent} icon="gesture" />
-                            <StatMiniCard label="Faltas" home={stats.fouls.home} away={stats.fouls.opponent} icon="gavel" color="amber-500" />
-                            <StatMiniCard label="Bajas" home={stats.casualties.home} away={stats.casualties.opponent} icon="skull" color="blood-red" />
-                        </div>
-                    )}
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                        <section className="space-y-4">
-                            <div className="flex items-center gap-4 mb-2">
-                                <div className="w-10 h-10 rounded-full bg-premium-gold/10 border border-premium-gold/30 flex items-center justify-center">
-                                    <span className="material-symbols-outlined text-premium-gold text-xl">sports_football</span>
-                                </div>
-                                <h3 className="text-sm font-display font-black text-white uppercase tracking-widest">Touchdowns Añadidos</h3>
-                            </div>
-                            {tds.length > 0 ? (
-                                <div className="space-y-3">
-                                    {tds.map((td, i) => (
-                                        <div key={i} className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/10 group hover:border-premium-gold/30 transition-all">
-                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center border font-display font-black text-xs ${td.team === 'home' ? 'bg-sky-500/20 border-sky-500/30 text-sky-400' : 'bg-red-500/20 border-red-500/30 text-red-500'}`}>
-                                                TD
-                                            </div>
-                                            <div>
-                                                <p className="text-xs font-display font-black text-white uppercase line-clamp-1">{td.description.split('ha anotado')[0].trim()}</p>
-                                                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Parte {td.half} · Turno {td.turn}</p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : renderEmpty('Sin Touchdowns registrados')}
-                        </section>
-
-                        <section className="space-y-4">
-                            <div className="flex items-center gap-4 mb-2">
-                                <div className="w-10 h-10 rounded-full bg-blood-red/10 border border-blood-red/30 flex items-center justify-center">
-                                    <span className="material-symbols-outlined text-blood-red text-xl">skull</span>
-                                </div>
-                                <h3 className="text-sm font-display font-black text-white uppercase tracking-widest">Informe de Bajas</h3>
-                            </div>
-                            {injuries.length > 0 ? (
-                                <div className="grid grid-cols-1 gap-3">
-                                    {injuries.map((injury, i) => {
-                                        const match = injury.description.match(/Herida a (.*?)\. (.*)/) || injury.description.match(/¡MUERTE! (.*?) (.*)/);
-                                        const name = match ? match[1] : (injury.type === 'DEATH' ? '¡ÓBITO!' : 'Jugador');
-                                        const description = match ? match[2] : injury.description;
-
-
-                                        return (
-                                            <div key={i} className="bg-blood-red/5 p-4 rounded-2xl border border-blood-red/20 border-l-4 border-l-blood-red">
-                                                <div className="flex justify-between items-start mb-2">
-                                                    <p className="text-xs font-display font-black text-white uppercase line-clamp-1">{name}</p>
-                                                    <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest min-w-max ml-2">P.{injury.half} T.{injury.turn}</span>
-                                                </div>
-                                                <p className="text-[10px] text-slate-400 leading-relaxed italic">
-                                                    {description}
-                                                </p>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            ) : renderEmpty('Sin bajas mayores registradas')}
-                        </section>
-                    </div>
-
-                    {(fouls.length > 0) && (
-                        <section className="space-y-4">
-                            <div className="flex items-center gap-4 mb-2">
-                                <div className="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
-                                    <span className="material-symbols-outlined text-amber-500 text-xl">gavel</span>
-                                </div>
-                                <h3 className="text-sm font-display font-black text-white uppercase tracking-widest">Incidentes Disciplinarios</h3>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                {fouls.map((foul, i) => (
-                                    <div key={i} className="flex items-center gap-4 bg-amber-500/5 p-4 rounded-2xl border border-amber-500/20 border-l-4 border-l-amber-500">
-                                        <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
-                                            <span className="material-symbols-outlined text-amber-500 text-lg">person_off</span>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs font-display font-black text-white uppercase leading-tight line-clamp-2">{foul.description}</p>
-                                            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1">Parte {foul.half} · Turno {foul.turn}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </section>
-                    )}
-                </div>
-            </div>
         </div>
     );
 };

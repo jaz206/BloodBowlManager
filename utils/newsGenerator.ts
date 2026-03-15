@@ -13,77 +13,87 @@ export const generateMatchArticle = (report: MatchReport) => {
     if (report.wasConceded && report.wasConceded !== 'none') {
         const concederName = report.wasConceded === 'home' ? homeTeam.name : opponentTeam.name;
         headlines = [
-            `¡HUÍDA Y DESHONRA! ${concederName.toUpperCase()} ABANDONA EL CAMPO ANTE EL TERROR`,
-            `ESCÁNDALO EN LA ARENA: VERGONZOSA RENDICIÓN DE ${concederName.toUpperCase()}`
+            `CRÓNICA NEGRA: ${concederName.toUpperCase()} LANZA LA TOALLA EN UN ACTO DE COBARDÍA HISTÓRICA`,
+            `¡DESHONRA EN LA ARENA! LA RENDICIÓN DE ${concederName.toUpperCase()} MANCHA EL BALÓN`,
+            `PÁNICO Y RETIRADA: ${concederName.toUpperCase()} HUYE DEL CÉSPED ANTE LA SUPERIORIDAD RIVAL`
         ];
     } else if (victor) {
         headlines = [
-            `¡BAÑO DE SANGRE Y GLORIA! ${victor.toUpperCase()} CONQUISTA EL EMPARRILLADO ANTE ${loser.toUpperCase()}`,
-            `¡EXHIBICIÓN HISTÓRICA! ${victor.toUpperCase()} APLASTA LAS ESPERANZAS DE ${loser.toUpperCase()}`,
-            `¡LOCURA EN EL ESTADIO! ${victor.toUpperCase()} SE IMPONE EN UN DUELO DE TITANES CONTRA ${loser.toUpperCase()}`
+            `ÉPICA Y SANGRE: ${victor.toUpperCase()} IMPONE SU LEY EN UN PARTIDO PARA EL RECUERDO`,
+            `¡CÁTEDRA DE BLOOD BOWL! ${victor.toUpperCase()} DESARTICULA A UN DESCONOCIDO ${loser.toUpperCase()}`,
+            `EL TRONO DE NUFFLE TIENE DUEÑO: EXHIBICIÓN TOTAL DE ${victor.toUpperCase()}`,
+            `TORMENTA PERFECTA: ${victor.toUpperCase()} PASA POR ENCIMA DE ${loser.toUpperCase()} CON UN JUEGO DEVASTADOR`
         ];
     } else {
         headlines = [
-            `¡COMBATE NULO! SANGRE Y SUDOR PERO SIN VENCEDOR ENTRE ${homeTeam.name.toUpperCase()} Y ${opponentTeam.name.toUpperCase()}`,
-            `¡TABLAS EN EL INFIERNO! ${homeTeam.name.toUpperCase()} Y ${opponentTeam.name.toUpperCase()} SE REPARTEN LOS GOLPES`,
+            `GUERRA SIN VENCEDOR: ${homeTeam.name.toUpperCase()} Y ${opponentTeam.name.toUpperCase()} FIRMAN LAS TABLAS EN EL INFIERNO`,
+            `BATALLA DE DESGASTE: NADIE CEDE EN EL CHOQUE DE TRENES ENTRE ${homeTeam.name.toUpperCase()} Y ${opponentTeam.name.toUpperCase()}`,
+            `REPARTO DE GOLPES Y PUNTOS: EL EMPREARRILLADO NO DICTA SENTENCIA`,
         ];
     }
 
     const subHeadlines = [
-        "Un partido que pasará a los anales de la historia por su violencia y técnica despiadada.",
-        "Los gritos de la grada aún resuenan y el césped sigue teñido de un intenso rojo carmesí.",
-        "Nuffle sonrió a los valientes en una tarde donde la táctica se diluyó en un baño de sangre."
+        "Las gradas rugieron ante un despliegue de violencia gratuita y técnica exquisita que dignifica este deporte.",
+        "Nuffle dictó sentencia en una tarde donde la estrategia se escribió con sudor y se selló con hematomas.",
+        "Un duelo de alta tensión donde cada yarda ganada se pagó con el precio del dolor y la gloria.",
+        "La táctica y la furia se fundieron en un abrazo mortal sobre el césped recién cortado (y pronto ensangrentado)."
     ];
 
     const intros = [
-        `El ambiente era eléctrico desde el silbatazo inicial bajo un clima ${weather || 'inclemente'}. Los aficionados abarrotaron el coliseo sabiendo que el choque entre ${homeTeam.name} y ${opponentTeam.name} no decepcionaría a los paladares más crudos. `,
-        `En una tarde donde el olor a linimento, cerveza enana y sangre fresca dominaba el aire, ${homeTeam.name} y ${opponentTeam.name} nos regalaron un espectáculo brutal bajo los dominios territoriales de Nuffle. `,
-        `Si algún elfo estirado dudaba de por qué este es el deporte rey del Viejo Mundo, este partido despejó las dudas a base de placajes rompehuesos y fintas imposibles. `
+        `La tarde se presentaba con ese aroma inconfundible a día grande. Bajo un cielo ${weather || 'amenazador'}, ${homeTeam.name} y ${opponentTeam.name} saltaron al campo con el cuchillo entre los dientes. Lo que siguió fue una oda al Blood Bowl más puro, ese donde los esquemas saltan por los aires al primer crujido de costillas. `,
+        `Abran paso a los gladiadores. El coliseo estaba a reventar para presenciar el duelo entre ${homeTeam.name} y ${opponentTeam.name}. No hubo tregua ni piedad desde el primer silbato. En el emparrillado, cada centímetro era una trinchera y cada posesión un tesoro custodiado con la vida. `,
+        `Si existe un paraíso para los amantes del contacto extremo, hoy estuvo ubicado en esta Arena. ${homeTeam.name} y ${opponentTeam.name} nos recordaron por qué el Blood Bowl es el deporte de los dioses. Crónica de una batalla anunciada que cumplió con creces las expectativas de los paladares más exigentes. `
     ];
 
     let body = "";
     
-    // Group events
-    const tds = gameLog.filter(e => String(e.type).toLowerCase() === 'touchdown').reverse();
-    const casualties = gameLog.filter(e => String(e.type).toLowerCase().includes('injury_casualty'));
-    const fouls = gameLog.filter(e => String(e.type).toLowerCase().includes('foul_success') || String(e.type).toLowerCase().includes('foul'));
+    // Group events and clean names/descriptions
+    const cleanDescription = (desc: string) => desc.replace('!', '.').replace('¡', '').trim();
+
+    const tds = gameLog.filter(e => String(e.type).toLowerCase() === 'touchdown' || String(e.type).toLowerCase() === 'td').reverse();
+    const casualties = gameLog.filter(e => String(e.type).toLowerCase().includes('injury') || String(e.type).toLowerCase().includes('casualty'));
+    const fouls = gameLog.filter(e => String(e.type).toLowerCase().includes('foul') || String(e.type).toLowerCase().includes('expulsion'));
+    const superbActions = gameLog.filter(e => String(e.type).toLowerCase() === 'interception' || String(e.type).toLowerCase() === 'pass_complete');
 
     if (tds.length > 0) {
-        body += "\n\nLA FIESTA DE LA ANOTACIÓN\n";
+        body += "\n\nMAGIA EN LA ZONA DE ANOTACIÓN\n";
         tds.forEach((td, i) => {
-            const prefix = i === 0 ? "El marcador se inauguró cuando" : (i === tds.length -1 && tds.length > 1 ? "Para poner la estocada final, presenciamos cómo" : "La sangría de puntos continuó cuando");
-            let textClean = td.description.replace('!', '.').replace('¡', '');
-            body += `${prefix} ${textClean.charAt(0).toLowerCase() + textClean.slice(1)} Una jugada maestra que sin duda ocupará las portadas de Cabalvisión la próxima semana. `;
+            const prefix = i === 0 ? "La cuenta se abrió de forma magistral cuando" : (i === tds.length -1 && tds.length > 1 ? "La puntilla definitiva llegó de la mano de" : "La sangría no se detuvo y");
+            const desc = cleanDescription(td.description);
+            body += `${prefix} ${desc.charAt(0).toLowerCase() + desc.slice(1)}. Una jugada que será analizada por los expertos de Cabalvisión durante meses. `;
         });
     } else {
-        body += "\n\nMURO DE CARNE Y HUESO\n";
-        body += `Fue un partido extremadamente correoso en las trincheras, una auténtica odisea donde avanzar cada yarda se cobraba en cuervos y moretones. La defensa reinó sobre el ataque en estado puro. `;
+        body += "\n\nDEFENSAS DE HIERRO Y CIERRE TOTAL\n";
+        body += `Fue un partido de colmillo retorcido en las zonas rojas. Las defensas se impusieron con una disciplina espartana, convirtiendo cada intento de Touchdown en un muro infranqueable de carne y mala leche. No hubo fisuras, solo resistencia pura. `;
     }
 
     if (casualties.length > 0) {
-        body += "\n\nHOSPITAL DE CAMPAÑA\n";
-        body += `Pero este deporte no va solo de proteger el óvalo pigmeo. La enfermería tuvo trabajo extra y los boticarios sudaron la gota gorda. `;
+        body += "\n\nPARTE MÉDICO: LA ENFERMERÍA NO DA ABASTO\n";
+        body += `La dureza del choque se cobró su peaje en el físico de los jugadores. Los camilleros fueron los protagonistas secundarios de una tarde accidentada. `;
         casualties.slice(0, 3).forEach(cas => {
-            let textClean = cas.description.replace('!', '.').replace('¡', '');
-            body += `Las gradas enmudecieron por un segundo tras ver cómo ${textClean.charAt(0).toLowerCase() + textClean.slice(1)} `;
+            const desc = cleanDescription(cas.description);
+            body += `El silencio se hizo en la grada cuando ${desc.charAt(0).toLowerCase() + desc.slice(1)}. Un impacto que se escuchó hasta en los palcos de lujo. `;
         });
         if (casualties.length > 3) {
-            body += `¡Y eso fue solo el triste calentamiento! Se registraron ${casualties.length} bajas confirmadas. `;
+            body += `Al final, un total de ${casualties.length} bajas confirmadas dejan claro que hoy nadie vino a hacer amigos. `;
         }
+    }
+
+    if (superbActions.length > 0) {
+        body += "\n\nDETALLES DE CALIDAD\n";
+        const bestAction = cleanDescription(superbActions[0].description);
+        body += `Más allá de los golpes, hubo espacio para la estética. ${bestAction.charAt(0).toLowerCase() + bestAction.slice(1)} fue el momento 'premium' de un encuentro que también tuvo su dosis de finura táctica. `;
     }
 
     if (fouls.length > 0) {
-        body += "\n\nLA POLÉMICA DEL PARTIDO\n";
-        let firstFoul = fouls[0].description.replace('!', '.').replace('¡', '');
-        body += `¿Y qué sería de un gran partido sin su buena dosis de juego sucio? La grada enloqueció y el colegiado desvió la mirada sospechosamente cuando ${firstFoul.charAt(0).toLowerCase() + firstFoul.slice(1)} `;
-        if (fouls.length > 1) {
-            body += `La tensión fue en constante aumento, convirtiendo ciertas franjas del césped en una pelea barriobajera que terminó con quejas a la comisión de reglas. `;
-        }
+        body += "\n\nPOLÉMICA Y JUEGO SUBTERRÁNEO\n";
+        const firstFoul = cleanDescription(fouls[0].description);
+        body += `¿Hubo juego sucio? No pregunten al árbitro, que estuvo 'despistado' en momentos clave. La tensión estalló cuando ${firstFoul.charAt(0).toLowerCase() + firstFoul.slice(1)}. El reglamento se convirtió en una sugerencia y el césped en una taberna tras la medianoche. `;
     }
 
     const outro = victor 
-        ? `\n\nAl dictado inexorable del cronómetro, ${victor} cantó victoria definitiva en la Arena. El cuerpo técnico perdedor tendrá que dar exhaustivas explicaciones a la directiva esta noche, mientras que los ganadores ya celebran su legado con rondas infinitas en la taberna.`
-        : `\n\nCon el pitido de cierre, el luminoso reflejó el inamovible y desgastador empate. Ambos séquitos regresan a los vestuarios lamiéndose las heridas, sabiendo que Nuffle exigirá un vencedor la próxima vez.`;
+        ? `\n\nCon el silbatazo final, la justicia (o la fortuna de Nuffle) coronó a ${victor}. El vestuario perdedor era un poema de frustración, mientras que los ganadores ya preparan los barriles de cerveza para celebrar una victoria que cimenta su estatus en la liga.`
+        : `\n\nEl cronómetro se agotó con un empate que sabe a poco para unos y a gloria para otros. ${homeTeam.name} y ${opponentTeam.name} se retiraron lamiéndose las heridas, sabiendo que este duelo no se ha cerrado, solo se ha pospuesto para una futura revancha sangrienta.`;
 
     const generatedArticle = `${intros[Math.floor(Math.random() * intros.length)]}${body}${outro}`;
 
@@ -91,6 +101,6 @@ export const generateMatchArticle = (report: MatchReport) => {
         headline: headlines[Math.floor(Math.random() * headlines.length)],
         subHeadline: subHeadlines[Math.floor(Math.random() * subHeadlines.length)],
         article: generatedArticle,
-        summary: `Final: ${homeTeam.name} ${homeScore} - ${awayScore} ${opponentTeam.name}. ${tds.length} TDs, ${casualties.length} bajas mayores.`
+        summary: `Ficha Técnica: ${homeTeam.name} ${homeScore} - ${awayScore} ${opponentTeam.name}. Total: ${tds.length} TD(s), ${casualties.length} Lesión(es).`
     };
 };

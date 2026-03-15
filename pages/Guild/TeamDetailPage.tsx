@@ -15,6 +15,8 @@ import { PlayerAdvancementModal } from '../../components/guild/PlayerAdvancement
 import { useMasterData } from '../../hooks/useMasterData';
 import MedicalCrossIcon from '../../components/icons/MedicalCrossIcon';
 import MiniField from '../../components/common/MiniField';
+import { calculateTeamValue } from '../../utils/teamUtils';
+import type { MatchReport } from '../../types';
 
 declare const QRCode: any;
 
@@ -88,7 +90,7 @@ interface TeamDashboardProps {
     isGuest: boolean;
 }
 
-export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, onDeleteRequest, onBack, isGuest }) => {
+export const TeamDashboard: React.FC<TeamDashboardProps & { matchReports?: MatchReport[] }> = ({ team, onUpdate, onDeleteRequest, onBack, isGuest, matchReports = [] }) => {
     const [editingPlayer, setEditingPlayer] = useState<ManagedPlayer | null>(null);
     const [showQr, setShowQr] = useState(false);
     const [selectedSkillForModal, setSelectedSkillForModal] = useState<Skill | null>(null);
@@ -99,6 +101,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
     const [advancingPlayer, setAdvancingPlayer] = useState<ManagedPlayer | null>(null);
     const { starPlayers } = useMasterData();
     const [showReference, setShowReference] = useState(false);
+    const [selectedReport, setSelectedReport] = useState<MatchReport | null>(null);
 
     const qrCanvasRef = useRef<HTMLCanvasElement>(null);
     const crestInputRef = useRef<HTMLInputElement>(null);
@@ -135,63 +138,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
         }
     }, [showQr, team]);
 
-    const teamValue = useMemo(() => {
-        if (!baseRoster) return 0;
-
-        const playersValue = team.players.reduce((sum, p) => {
-            let improvementsValue = 0;
-            if (p.advancements && p.advancements.length > 0) {
-                improvementsValue = p.advancements.reduce((advSum, adv) => {
-                    let baseValue = 0;
-                    switch (adv.type) {
-                        case 'RandomPrimary': baseValue = 10000; break;
-                        case 'ChosenPrimary': baseValue = 20000; break;
-                        case 'RandomSecondary': baseValue = 20000; break;
-                        case 'ChosenSecondary': baseValue = 40000; break;
-                        case 'Characteristic':
-                            if (adv.characteristicName === 'FU') baseValue = 40000;
-                            else if (adv.characteristicName === 'AG' || adv.characteristicName === 'PS') baseValue = 20000;
-                            else baseValue = 10000; // MV, AR
-                            break;
-                    }
-                    
-                    // Add Season 3 Elite Penalty (+10k MO)
-                    let eliteBonus = 0;
-                    if (adv.skillName) {
-                        // Check if the skill name (localized) matches an elite key (EN) or our elite list
-                        const skillEntry = skillsData.find(s => s.name === adv.skillName || s.keyEN === adv.skillName);
-                        if (skillEntry && ELITE_SKILLS.includes(skillEntry.keyEN)) {
-                            eliteBonus = 10000;
-                        }
-                    }
-                    
-                    return advSum + baseValue + eliteBonus;
-                }, 0);
-            } else {
-                // Fallback for legacy skills
-                improvementsValue = p.gainedSkills.reduce((skillSum, skillName) => {
-                    let baseValue = skillName.toLowerCase().includes('secundaria') ? 40000 : 20000;
-                    
-                    // Add Season 3 Elite Penalty (+10k MO)
-                    let eliteBonus = 0;
-                    const skillEntry = skillsData.find(s => s.name === skillName || s.keyEN === skillName);
-                    if (skillEntry && ELITE_SKILLS.includes(skillEntry.keyEN)) {
-                        eliteBonus = 10000;
-                    }
-                    
-                    return skillSum + baseValue + eliteBonus;
-                }, 0);
-            }
-            return sum + p.cost + improvementsValue;
-        }, 0);
-
-        const rerollsValue = team.rerolls * baseRoster.rerollCost;
-        const apothecaryValue = team.apothecary && baseRoster.apothecary === "Sí" ? 50000 : 0;
-        const dedicatedFansValue = (team.dedicatedFans - 1) * 10000;
-        const cheerleadersValue = team.cheerleaders * 10000;
-        const assistantCoachesValue = team.assistantCoaches * 10000;
-        return playersValue + rerollsValue + apothecaryValue + cheerleadersValue + assistantCoachesValue + dedicatedFansValue;
-    }, [team, baseRoster]);
+    const teamValue = useMemo(() => calculateTeamValue(team), [team]);
 
     const playersForField = useMemo(() => {
         const starters = team.players.filter(p => !(p.isBenched ?? true));
@@ -1073,7 +1020,17 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                     <div className="space-y-3">
                         {team.history && team.history.length > 0 ? (
                             team.history.map((record, idx) => (
-                                <div key={idx} className="flex justify-between items-center p-4 bg-black/20 rounded-xl border border-white/5 hover:border-white/10 transition-premium group">
+                                <div 
+                                    key={idx} 
+                                    onClick={() => {
+                                        const report = matchReports.find(r => 
+                                            r.opponentTeam.name === record.opponentName && 
+                                            `${r.homeTeam.score}-${r.opponentTeam.score}` === record.score
+                                        );
+                                        if (report) setSelectedReport(report);
+                                    }}
+                                    className={`flex justify-between items-center p-4 bg-black/20 rounded-xl border border-white/5 hover:border-premium-gold/30 transition-premium group ${matchReports.some(r => r.opponentTeam.name === record.opponentName && `${r.homeTeam.score}-${r.opponentTeam.score}` === record.score) ? 'cursor-pointer' : 'cursor-default'}`}
+                                >
                                     <div className="flex items-center gap-4">
                                         <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-display font-black italic text-lg ${record.result === 'W' ? 'bg-green-400/20 text-green-400' : record.result === 'L' ? 'bg-blood-red/20 text-blood-red' : 'bg-slate-400/20 text-slate-400'
                                             }`}>
@@ -1084,8 +1041,13 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
                                             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{record.date}</p>
                                         </div>
                                     </div>
-                                    <div className="text-xl font-display font-black text-white tracking-widest group-hover:text-premium-gold transition-colors">
-                                        {record.score}
+                                    <div className="flex items-center gap-3">
+                                        {matchReports.some(r => r.opponentTeam.name === record.opponentName && `${r.homeTeam.score}-${r.opponentTeam.score}` === record.score) && (
+                                            <span className="material-symbols-outlined text-premium-gold text-sm animate-pulse">menu_book</span>
+                                        )}
+                                        <div className="text-xl font-display font-black text-white tracking-widest group-hover:text-premium-gold transition-colors">
+                                            {record.score}
+                                        </div>
                                     </div>
                                 </div>
                             ))
@@ -1147,6 +1109,71 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ team, onUpdate, on
             {advancingPlayer && <PlayerAdvancementModal player={advancingPlayer} isOpen={!!advancingPlayer} onAdvance={handleSavePlayer} onClose={() => setAdvancingPlayer(null)} />}
             {selectedSkillForModal && <SkillModal skill={selectedSkillForModal} onClose={() => setSelectedSkillForModal(null)} />}
             {isCrestModalOpen && team.crestImage && <ImageModal src={team.crestImage} alt={`Escudo de ${team.name}`} onClose={() => setIsCrestModalOpen(false)} />}
+            
+            {/* Match Chronicle Modal */}
+            <AnimatePresence>
+                {selectedReport && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[150] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4"
+                        onClick={() => setSelectedReport(null)}
+                    >
+                        <motion.div 
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.9, y: 20 }}
+                            className="glass-panel max-w-2xl w-full max-h-[90vh] overflow-y-auto border-premium-gold/30 bg-black/80 shadow-[0_0_100px_rgba(202,138,4,0.15)] flex flex-col"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="sticky top-0 p-6 border-b border-white/5 bg-black/60 backdrop-blur-md flex justify-between items-center z-10">
+                                <div>
+                                    <h3 className="text-2xl font-display font-black text-white italic tracking-tighter uppercase leading-none">Crónica de la Jornada</h3>
+                                    <p className="text-[10px] text-premium-gold font-bold uppercase tracking-widest mt-1">{selectedReport.date}</p>
+                                </div>
+                                <button onClick={() => setSelectedReport(null)} className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-blood-red/20 hover:text-blood-red transiton-all">
+                                    <span className="material-symbols-outlined">close</span>
+                                </button>
+                            </div>
+                            <div className="p-8 space-y-8">
+                                <div className="text-center space-y-4">
+                                    <h4 className="text-3xl font-display font-black text-white italic leading-none">{selectedReport.headline}</h4>
+                                    <p className="text-slate-400 font-medium italic text-lg leading-relaxed">{selectedReport.subHeadline}</p>
+                                </div>
+                                
+                                <div className="grid grid-cols-3 gap-4 items-center py-6 border-y border-white/5">
+                                    <div className="text-center space-y-2">
+                                        <div className="w-16 h-16 mx-auto rounded-xl bg-black/40 border border-white/5 p-2">
+                                            {selectedReport.homeTeam.crestImage ? <img src={selectedReport.homeTeam.crestImage} className="w-full h-full object-contain" /> : <span className="material-symbols-outlined text-3xl opacity-20">shield</span>}
+                                        </div>
+                                        <p className="text-[10px] font-black text-white uppercase truncate">{selectedReport.homeTeam.name}</p>
+                                    </div>
+                                    <div className="text-center">
+                                        <p className="text-4xl font-display font-black text-premium-gold italic tracking-[0.2em]">{selectedReport.homeTeam.score}-{selectedReport.opponentTeam.score}</p>
+                                        <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-2">Marcador Final</p>
+                                    </div>
+                                    <div className="text-center space-y-2">
+                                        <div className="w-16 h-16 mx-auto rounded-xl bg-black/40 border border-white/5 p-2">
+                                            {selectedReport.opponentTeam.crestImage ? <img src={selectedReport.opponentTeam.crestImage} className="w-full h-full object-contain" /> : <span className="material-symbols-outlined text-3xl opacity-20">shield</span>}
+                                        </div>
+                                        <p className="text-[10px] font-black text-white uppercase truncate">{selectedReport.opponentTeam.name}</p>
+                                    </div>
+                                </div>
+
+                                <div className="prose prose-invert max-w-none">
+                                    <div className="text-slate-300 text-sm leading-[1.8] font-display whitespace-pre-line italic first-letter:text-5xl first-letter:font-black first-letter:text-premium-gold first-letter:mr-3 first-letter:float-left">
+                                        {selectedReport.article}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="p-6 bg-black/40 border-t border-white/5 flex justify-center">
+                                <p className="text-[10px] font-display font-black text-slate-600 uppercase tracking-[0.3em]">Cortesía del Oráculo de Nuffle • Edición Limitada</p>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
             {fireConfirmation && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
                     <div className="glass-panel w-full max-w-sm border-blood-red/20 overflow-hidden shadow-[0_0_50px_rgba(239,68,68,0.2)]">
