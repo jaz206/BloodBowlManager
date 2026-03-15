@@ -3398,7 +3398,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                                                     <button onClick={() => setInjuryState(prev => ({ ...prev, step: 'select_victim_team' }))} className="text-[9px] font-display font-bold text-premium-gold uppercase tracking-widest">&larr; Volver</button>
                                                 </div>
                                                 <div className="max-h-[40vh] overflow-y-auto space-y-2 pr-2 custom-scrollbar">
-                                                    {team.players.map(p => <PlayerButton key={p.id} player={p} onSelect={player => setInjuryState(prev => ({ ...prev, victimPlayer: player, isStunty: player.skills.includes('Escurridizo'), step: 'armor_roll' }))} />)}
+                                                    {team.players.map(p => <PlayerButton key={p.id} player={p} onSelect={player => setInjuryState(prev => ({ ...prev, victimPlayer: player, isStunty: player.skillKeys?.includes('Stunty') || player.skills?.includes('Escurridizo'), step: 'armor_roll' }))} />)}
                                                 </div>
                                             </div>
                                         );
