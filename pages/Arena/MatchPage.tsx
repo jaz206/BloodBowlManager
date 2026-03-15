@@ -2195,6 +2195,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                                         {[liveHomeTeam, liveOpponentTeam].map((team, index) => {
                                             const teamId = index === 0 ? 'home' : 'opponent';
+                                            if (!team) return null;
                                             const onField = team.players.filter(p => p.status === 'Activo');
                                             const onBench = team.players.filter(p => p.status === 'Reserva');
                                             const accentColor = teamId === 'home' ? 'sky' : 'red';

@@ -3,7 +3,8 @@ import { ManagedTeam, ELITE_SKILLS } from '../types';
 import { skillsData } from '../data/skills';
 import { teamsData } from '../data/teams';
 
-export const calculateTeamValue = (team: ManagedTeam, includeInducements = false): number => {
+export const calculateTeamValue = (team: ManagedTeam | null | undefined, includeInducements = false): number => {
+    if (!team) return 0;
     const baseRoster = teamsData.find(t => t.name === team.rosterName);
     if (!baseRoster) return 0;
 
