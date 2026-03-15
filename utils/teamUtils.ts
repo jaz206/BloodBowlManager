@@ -40,7 +40,7 @@ export const calculateTeamValue = (team: ManagedTeam | null | undefined, include
             // Fallback for legacy skills
             improvementsValue = (p.gainedSkills || []).reduce((skillSum, skillName) => {
                 // Heuristic for secondary skills if not explicitly marked
-                const isSecondary = skillName.toLowerCase().includes('secundaria');
+                const isSecondary = skillName?.toLowerCase().includes('secundaria');
                 let baseValue = isSecondary ? 40000 : 20000;
                 
                 // Add Season 3 Elite Penalty (+10k MO)
@@ -71,7 +71,7 @@ export const calculateTeamValue = (team: ManagedTeam | null | undefined, include
         
         // Add bribes (50k for specific teams, 100k for others)
         if (team.tempBribes) {
-            const bribeCost = baseRoster.specialRules.includes("Sobornos y corrupción") ? 50000 : 100000;
+            const bribeCost = (baseRoster.specialRules || []).includes("Sobornos y corrupción") ? 50000 : 100000;
             total += team.tempBribes * bribeCost;
         }
     }
