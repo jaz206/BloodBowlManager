@@ -497,7 +497,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                     </button>
                   </div>
                   <div className="grid grid-cols-5 gap-1 text-center mb-2">
-                    {['MV', 'FU', 'AG', 'PS', 'AR'].map(stat => (
+                    {['MV', 'FU', 'AG', 'PA', 'AR'].map(stat => (
                       <div key={stat} className="flex flex-col">
                         <span className="text-[8px] text-slate-600 font-bold">{stat}</span>
                         <span className="text-[10px] text-slate-100 font-black">{(selectedPlayer.stats as any)[stat]}</span>

@@ -24,7 +24,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "3",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -41,7 +41,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "3",
           "AG": "3+",
-          "PS": "3+",
+          "PA": "3+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -61,7 +61,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "4",
           "AG": "3+",
-          "PS": "5+",
+          "PA": "5+",
           "AR": "9+"
         },
         "skillKeys": [
@@ -79,7 +79,7 @@ export const teamsData: Team[] = [
           "MV": 7,
           "FU": "3",
           "AG": "3+",
-          "PS": "5+",
+          "PA": "5+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -117,7 +117,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "2",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -137,7 +137,7 @@ export const teamsData: Team[] = [
           "MV": 4,
           "FU": "4",
           "AG": "4+",
-          "PS": "5+",
+          "PA": "5+",
           "AR": "10+"
         },
         "skillKeys": [
@@ -155,7 +155,7 @@ export const teamsData: Team[] = [
           "MV": 4,
           "FU": "5",
           "AG": "5+",
-          "PS": "5+",
+          "PA": "5+",
           "AR": "10+"
         },
         "skillKeys": [
@@ -197,7 +197,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "3",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "9+"
         },
         "skillKeys": [
@@ -214,7 +214,7 @@ export const teamsData: Team[] = [
           "MV": 5,
           "FU": "4",
           "AG": "3+",
-          "PS": "5+",
+          "PA": "5+",
           "AR": "10+"
         },
         "skillKeys": [
@@ -231,7 +231,7 @@ export const teamsData: Team[] = [
           "MV": 5,
           "FU": "5",
           "AG": "4+",
-          "PS": "-",
+          "PA": "-",
           "AR": "9+"
         },
         "skillKeys": [
@@ -271,7 +271,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "3",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -288,7 +288,7 @@ export const teamsData: Team[] = [
           "MV": 4,
           "FU": "3",
           "AG": "4+",
-          "PS": "6+",
+          "PA": "6+",
           "AR": "10+"
         },
         "skillKeys": [
@@ -307,7 +307,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "4",
           "AG": "4+",
-          "PS": "6+",
+          "PA": "6+",
           "AR": "10+"
         },
         "skillKeys": [
@@ -326,7 +326,7 @@ export const teamsData: Team[] = [
           "MV": 5,
           "FU": "5",
           "AG": "4+",
-          "PS": "-",
+          "PA": "-",
           "AR": "9+"
         },
         "skillKeys": [
@@ -348,7 +348,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "3",
           "AG": "3+",
-          "PS": "5+",
+          "PA": "5+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -385,7 +385,7 @@ export const teamsData: Team[] = [
           "MV": 7,
           "FU": "3",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -402,7 +402,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "3",
           "AG": "2+",
-          "PS": "3+",
+          "PA": "3+",
           "AR": "9+"
         },
         "skillKeys": [
@@ -419,7 +419,7 @@ export const teamsData: Team[] = [
           "MV": 5,
           "FU": "5",
           "AG": "4+",
-          "PS": "5+",
+          "PA": "5+",
           "AR": "10+"
         },
         "skillKeys": [
@@ -440,7 +440,7 @@ export const teamsData: Team[] = [
           "MV": 5,
           "FU": "3",
           "AG": "3+",
-          "PS": "5+",
+          "PA": "5+",
           "AR": "10+"
         },
         "skillKeys": [
@@ -457,7 +457,7 @@ export const teamsData: Team[] = [
           "MV": 4,
           "FU": "5",
           "AG": "5+",
-          "PS": "5+",
+          "PA": "5+",
           "AR": "10+"
         },
         "skillKeys": [
@@ -480,7 +480,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "2",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -500,7 +500,7 @@ export const teamsData: Team[] = [
           "MV": 5,
           "FU": "5",
           "AG": "4+",
-          "PS": "-",
+          "PA": "-",
           "AR": "9+"
         },
         "skillKeys": [
@@ -522,7 +522,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "3",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "9+"
         },
         "skillKeys": [
@@ -539,7 +539,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "3",
           "AG": "3+",
-          "PS": "3+",
+          "PA": "3+",
           "AR": "9+"
         },
         "skillKeys": [
@@ -558,7 +558,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "5",
           "AG": "4+",
-          "PS": "-",
+          "PA": "-",
           "AR": "9+"
         },
         "skillKeys": [
@@ -598,7 +598,7 @@ export const teamsData: Team[] = [
           "MV": 7,
           "FU": "3",
           "AG": "2+",
-          "PS": "3+",
+          "PA": "3+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -615,7 +615,7 @@ export const teamsData: Team[] = [
           "MV": 7,
           "FU": "3",
           "AG": "2+",
-          "PS": "5+",
+          "PA": "5+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -633,7 +633,7 @@ export const teamsData: Team[] = [
           "MV": 7,
           "FU": "3",
           "AG": "2+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "9+"
         },
         "skillKeys": [
@@ -650,7 +650,7 @@ export const teamsData: Team[] = [
           "MV": 7,
           "FU": "3",
           "AG": "2+",
-          "PS": "5+",
+          "PA": "5+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -669,7 +669,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "3",
           "AG": "2+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "9+"
         },
         "skillKeys": [
@@ -705,7 +705,7 @@ export const teamsData: Team[] = [
           "MV": 4,
           "FU": "3",
           "AG": "4+",
-          "PS": "5+",
+          "PA": "5+",
           "AR": "10+"
         },
         "skillKeys": [
@@ -724,7 +724,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "3",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "9+"
         },
         "skillKeys": [
@@ -742,7 +742,7 @@ export const teamsData: Team[] = [
           "MV": 5,
           "FU": "3",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "10+"
         },
         "skillKeys": [
@@ -760,7 +760,7 @@ export const teamsData: Team[] = [
           "MV": 5,
           "FU": "3",
           "AG": "4+",
-          "PS": "-",
+          "PA": "-",
           "AR": "9+"
         },
         "skillKeys": [
@@ -780,7 +780,7 @@ export const teamsData: Team[] = [
           "MV": 4,
           "FU": "7",
           "AG": "5+",
-          "PS": "-",
+          "PA": "-",
           "AR": "11+"
         },
         "skillKeys": [
@@ -823,7 +823,7 @@ export const teamsData: Team[] = [
           "MV": 8,
           "FU": "3",
           "AG": "2+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -841,7 +841,7 @@ export const teamsData: Team[] = [
           "MV": 7,
           "FU": "3",
           "AG": "2+",
-          "PS": "3+",
+          "PA": "3+",
           "AR": "9+"
         },
         "skillKeys": [
@@ -859,7 +859,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "3",
           "AG": "2+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -876,7 +876,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "3",
           "AG": "2+",
-          "PS": "2+",
+          "PA": "2+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -912,7 +912,7 @@ export const teamsData: Team[] = [
           "MV": 5,
           "FU": "2",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "7+"
         },
         "skillKeys": [
@@ -932,7 +932,7 @@ export const teamsData: Team[] = [
           "MV": 5,
           "FU": "2",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -952,7 +952,7 @@ export const teamsData: Team[] = [
           "MV": 5,
           "FU": "2",
           "AG": "3+",
-          "PS": "3+",
+          "PA": "3+",
           "AR": "7+"
         },
         "skillKeys": [
@@ -972,7 +972,7 @@ export const teamsData: Team[] = [
           "MV": 7,
           "FU": "2",
           "AG": "2+",
-          "PS": "-",
+          "PA": "-",
           "AR": "6+"
         },
         "skillKeys": [
@@ -992,7 +992,7 @@ export const teamsData: Team[] = [
           "MV": 2,
           "FU": "6",
           "AG": "5+",
-          "PS": "5+",
+          "PA": "5+",
           "AR": "11+"
         },
         "skillKeys": [
@@ -1033,7 +1033,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "2",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -1053,7 +1053,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "2",
           "AG": "3+",
-          "PS": "6+",
+          "PA": "6+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -1072,7 +1072,7 @@ export const teamsData: Team[] = [
           "MV": 3,
           "FU": "7",
           "AG": "3+",
-          "PS": "-",
+          "PA": "-",
           "AR": "8+"
         },
         "skillKeys": [
@@ -1092,7 +1092,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "2",
           "AG": "3+",
-          "PS": "-",
+          "PA": "-",
           "AR": "8+"
         },
         "skillKeys": [
@@ -1111,7 +1111,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "2",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -1130,7 +1130,7 @@ export const teamsData: Team[] = [
           "MV": 4,
           "FU": "5",
           "AG": "5+",
-          "PS": "5+",
+          "PA": "5+",
           "AR": "10+"
         },
         "skillKeys": [
@@ -1153,7 +1153,7 @@ export const teamsData: Team[] = [
           "MV": 7,
           "FU": "2",
           "AG": "3+",
-          "PS": "5+",
+          "PA": "5+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -1191,7 +1191,7 @@ export const teamsData: Team[] = [
           "MV": 5,
           "FU": "2",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "7+"
         },
         "skillKeys": [
@@ -1210,7 +1210,7 @@ export const teamsData: Team[] = [
           "MV": 5,
           "FU": "2",
           "AG": "3+",
-          "PS": "3+",
+          "PA": "3+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -1229,7 +1229,7 @@ export const teamsData: Team[] = [
           "MV": 2,
           "FU": "6",
           "AG": "5+",
-          "PS": "5+",
+          "PA": "5+",
           "AR": "11+"
         },
         "skillKeys": [
@@ -1251,7 +1251,7 @@ export const teamsData: Team[] = [
           "MV": 5,
           "FU": "2",
           "AG": "3+",
-          "PS": "5+",
+          "PA": "5+",
           "AR": "7+"
         },
         "skillKeys": [
@@ -1291,7 +1291,7 @@ export const teamsData: Team[] = [
           "MV": 7,
           "FU": "3",
           "AG": "2+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "9+"
         },
         "skillKeys": [
@@ -1308,7 +1308,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "3",
           "AG": "2+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "9+"
         },
         "skillKeys": [
@@ -1325,7 +1325,7 @@ export const teamsData: Team[] = [
           "MV": 8,
           "FU": "3",
           "AG": "2+",
-          "PS": "5+",
+          "PA": "5+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -1342,7 +1342,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "3",
           "AG": "2+",
-          "PS": "2+",
+          "PA": "2+",
           "AR": "9+"
         },
         "skillKeys": [
@@ -1380,7 +1380,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "3",
           "AG": "3+",
-          "PS": "2+",
+          "PA": "2+",
           "AR": "9+"
         },
         "skillKeys": [
@@ -1398,7 +1398,7 @@ export const teamsData: Team[] = [
           "MV": 8,
           "FU": "2",
           "AG": "3+",
-          "PS": "5+",
+          "PA": "5+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -1416,7 +1416,7 @@ export const teamsData: Team[] = [
           "MV": 7,
           "FU": "3",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "9+"
         },
         "skillKeys": [
@@ -1433,7 +1433,7 @@ export const teamsData: Team[] = [
           "MV": 5,
           "FU": "5",
           "AG": "4+",
-          "PS": "5+",
+          "PA": "5+",
           "AR": "10+"
         },
         "skillKeys": [
@@ -1454,7 +1454,7 @@ export const teamsData: Team[] = [
           "MV": 7,
           "FU": "3",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "9+"
         },
         "skillKeys": [
@@ -1471,7 +1471,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "3",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "9+"
         },
         "skillKeys": [
@@ -1488,7 +1488,7 @@ export const teamsData: Team[] = [
           "MV": 5,
           "FU": "2",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "7+"
         },
         "skillKeys": [
@@ -1526,7 +1526,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "5",
           "AG": "5+",
-          "PS": "-",
+          "PA": "-",
           "AR": "10+"
         },
         "skillKeys": [
@@ -1547,7 +1547,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "4",
           "AG": "5+",
-          "PS": "6+",
+          "PA": "6+",
           "AR": "10+"
         },
         "skillKeys": [
@@ -1564,7 +1564,7 @@ export const teamsData: Team[] = [
           "MV": 7,
           "FU": "2",
           "AG": "3+",
-          "PS": "3+",
+          "PA": "3+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -1584,7 +1584,7 @@ export const teamsData: Team[] = [
           "MV": 8,
           "FU": "2",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -1621,7 +1621,7 @@ export const teamsData: Team[] = [
           "MV": 4,
           "FU": "3",
           "AG": "4+",
-          "PS": "-",
+          "PA": "-",
           "AR": "9+"
         },
         "skillKeys": [
@@ -1638,7 +1638,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "3",
           "AG": "3+",
-          "PS": "-",
+          "PA": "-",
           "AR": "9+"
         },
         "skillKeys": [
@@ -1659,7 +1659,7 @@ export const teamsData: Team[] = [
           "MV": 7,
           "FU": "3",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -1676,7 +1676,7 @@ export const teamsData: Team[] = [
           "MV": 4,
           "FU": "4",
           "AG": "4+",
-          "PS": "-",
+          "PA": "-",
           "AR": "10+"
         },
         "skillKeys": [
@@ -1695,7 +1695,7 @@ export const teamsData: Team[] = [
           "MV": 8,
           "FU": "3",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "9+"
         },
         "skillKeys": [
@@ -1733,7 +1733,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "3",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -1752,7 +1752,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "4",
           "AG": "4+",
-          "PS": "-",
+          "PA": "-",
           "AR": "9+"
         },
         "skillKeys": [
@@ -1769,7 +1769,7 @@ export const teamsData: Team[] = [
           "MV": 5,
           "FU": "5",
           "AG": "4+",
-          "PS": "-",
+          "PA": "-",
           "AR": "9+"
         },
         "skillKeys": [
@@ -1790,7 +1790,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "3",
           "AG": "3+",
-          "PS": "5+",
+          "PA": "5+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -1809,7 +1809,7 @@ export const teamsData: Team[] = [
           "MV": 5,
           "FU": "1",
           "AG": "3+",
-          "PS": "-",
+          "PA": "-",
           "AR": "6+"
         },
         "skillKeys": [
@@ -1830,7 +1830,7 @@ export const teamsData: Team[] = [
           "MV": 7,
           "FU": "3",
           "AG": "3+",
-          "PS": "3+",
+          "PA": "3+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -1869,7 +1869,7 @@ export const teamsData: Team[] = [
           "MV": 4,
           "FU": "4",
           "AG": "4+",
-          "PS": "6+",
+          "PA": "6+",
           "AR": "10+"
         },
         "skillKeys": [
@@ -1889,7 +1889,7 @@ export const teamsData: Team[] = [
           "MV": 4,
           "FU": "5",
           "AG": "5+",
-          "PS": "-",
+          "PA": "-",
           "AR": "10+"
         },
         "skillKeys": [
@@ -1913,7 +1913,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "3",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "9+"
         },
         "skillKeys": [
@@ -1932,7 +1932,7 @@ export const teamsData: Team[] = [
           "MV": 5,
           "FU": "3",
           "AG": "3+",
-          "PS": "6+",
+          "PA": "6+",
           "AR": "9+"
         },
         "skillKeys": [
@@ -1969,7 +1969,7 @@ export const teamsData: Team[] = [
           "MV": 5,
           "FU": "5",
           "AG": "4+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "10+"
         },
         "skillKeys": [
@@ -1989,7 +1989,7 @@ export const teamsData: Team[] = [
           "MV": 5,
           "FU": "1",
           "AG": "3+",
-          "PS": "5+",
+          "PA": "5+",
           "AR": "6+"
         },
         "skillKeys": [
@@ -2010,7 +2010,7 @@ export const teamsData: Team[] = [
           "MV": 5,
           "FU": "5",
           "AG": "4+",
-          "PS": "5+",
+          "PA": "5+",
           "AR": "10+"
         },
         "skillKeys": [
@@ -2049,7 +2049,7 @@ export const teamsData: Team[] = [
           "MV": 7,
           "FU": "3",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "9+"
         },
         "skillKeys": [
@@ -2067,7 +2067,7 @@ export const teamsData: Team[] = [
           "MV": 8,
           "FU": "2",
           "AG": "3+",
-          "PS": "6+",
+          "PA": "6+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -2086,7 +2086,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "3",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "9+"
         },
         "skillKeys": [
@@ -2103,7 +2103,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "3",
           "AG": "3+",
-          "PS": "3+",
+          "PA": "3+",
           "AR": "9+"
         },
         "skillKeys": [
@@ -2122,7 +2122,7 @@ export const teamsData: Team[] = [
           "MV": 5,
           "FU": "2",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "7+"
         },
         "skillKeys": [
@@ -2142,7 +2142,7 @@ export const teamsData: Team[] = [
           "MV": 5,
           "FU": "3",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "10+"
         },
         "skillKeys": [
@@ -2161,7 +2161,7 @@ export const teamsData: Team[] = [
           "MV": 4,
           "FU": "3",
           "AG": "4+",
-          "PS": "5+",
+          "PA": "5+",
           "AR": "10+"
         },
         "skillKeys": [
@@ -2181,7 +2181,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "3",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "9+"
         },
         "skillKeys": [
@@ -2200,7 +2200,7 @@ export const teamsData: Team[] = [
           "MV": 5,
           "FU": "3",
           "AG": "4+",
-          "PS": "-",
+          "PA": "-",
           "AR": "9+"
         },
         "skillKeys": [
@@ -2240,7 +2240,7 @@ export const teamsData: Team[] = [
           "MV": 5,
           "FU": "3",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "10+"
         },
         "skillKeys": [
@@ -2257,7 +2257,7 @@ export const teamsData: Team[] = [
           "MV": 4,
           "FU": "5",
           "AG": "5+",
-          "PS": "5+",
+          "PA": "5+",
           "AR": "10+"
         },
         "skillKeys": [
@@ -2280,7 +2280,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "2",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -2299,7 +2299,7 @@ export const teamsData: Team[] = [
           "MV": 5,
           "FU": "3",
           "AG": "3+",
-          "PS": "3+",
+          "PA": "3+",
           "AR": "9+"
         },
         "skillKeys": [
@@ -2318,7 +2318,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "3",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "10+"
         },
         "skillKeys": [
@@ -2337,7 +2337,7 @@ export const teamsData: Team[] = [
           "MV": 5,
           "FU": "4",
           "AG": "4+",
-          "PS": "-",
+          "PA": "-",
           "AR": "10+"
         },
         "skillKeys": [
@@ -2375,7 +2375,7 @@ export const teamsData: Team[] = [
           "MV": 5,
           "FU": "3",
           "AG": "4+",
-          "PS": "6+",
+          "PA": "6+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -2393,7 +2393,7 @@ export const teamsData: Team[] = [
           "MV": 7,
           "FU": "3",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -2410,7 +2410,7 @@ export const teamsData: Team[] = [
           "MV": 3,
           "FU": "5",
           "AG": "5+",
-          "PS": "-",
+          "PA": "-",
           "AR": "10+"
         },
         "skillKeys": [
@@ -2428,7 +2428,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "3",
           "AG": "3+",
-          "PS": "5+",
+          "PA": "5+",
           "AR": "9+"
         },
         "skillKeys": [
@@ -2446,7 +2446,7 @@ export const teamsData: Team[] = [
           "MV": 4,
           "FU": "3",
           "AG": "4+",
-          "PS": "-",
+          "PA": "-",
           "AR": "9+"
         },
         "skillKeys": [
@@ -2482,7 +2482,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "5",
           "AG": "4+",
-          "PS": "-",
+          "PA": "-",
           "AR": "9+"
         },
         "skillKeys": [
@@ -2503,7 +2503,7 @@ export const teamsData: Team[] = [
           "MV": 7,
           "FU": "3",
           "AG": "3+",
-          "PS": "5+",
+          "PA": "5+",
           "AR": "9+"
         },
         "skillKeys": [
@@ -2520,7 +2520,7 @@ export const teamsData: Team[] = [
           "MV": 9,
           "FU": "2",
           "AG": "2+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -2537,7 +2537,7 @@ export const teamsData: Team[] = [
           "MV": 7,
           "FU": "3",
           "AG": "3+",
-          "PS": "2+",
+          "PA": "2+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -2555,7 +2555,7 @@ export const teamsData: Team[] = [
           "MV": 7,
           "FU": "3",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -2591,7 +2591,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "3",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "9+"
         },
         "skillKeys": [
@@ -2609,7 +2609,7 @@ export const teamsData: Team[] = [
           "MV": 7,
           "FU": "2",
           "AG": "2+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -2628,7 +2628,7 @@ export const teamsData: Team[] = [
           "MV": 7,
           "FU": "3",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "9+"
         },
         "skillKeys": [
@@ -2648,7 +2648,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "5",
           "AG": "5+",
-          "PS": "-",
+          "PA": "-",
           "AR": "10+"
         },
         "skillKeys": [
@@ -2688,7 +2688,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "3",
           "AG": "4+",
-          "PS": "6+",
+          "PA": "6+",
           "AR": "9+"
         },
         "skillKeys": [
@@ -2707,7 +2707,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "3",
           "AG": "4+",
-          "PS": "3+",
+          "PA": "3+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -2727,7 +2727,7 @@ export const teamsData: Team[] = [
           "MV": 5,
           "FU": "3",
           "AG": "4+",
-          "PS": "6+",
+          "PA": "6+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -2745,7 +2745,7 @@ export const teamsData: Team[] = [
           "MV": 4,
           "FU": "5",
           "AG": "5+",
-          "PS": "-",
+          "PA": "-",
           "AR": "10+"
         },
         "skillKeys": [
@@ -2782,7 +2782,7 @@ export const teamsData: Team[] = [
           "MV": 4,
           "FU": "5",
           "AG": "5+",
-          "PS": "5+",
+          "PA": "5+",
           "AR": "10+"
         },
         "skillKeys": [
@@ -2805,7 +2805,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "2",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -2824,7 +2824,7 @@ export const teamsData: Team[] = [
           "MV": 7,
           "FU": "3",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -2841,7 +2841,7 @@ export const teamsData: Team[] = [
           "MV": 7,
           "FU": "3",
           "AG": "3+",
-          "PS": "2+",
+          "PA": "2+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -2860,7 +2860,7 @@ export const teamsData: Team[] = [
           "MV": 7,
           "FU": "3",
           "AG": "3+",
-          "PS": "5+",
+          "PA": "5+",
           "AR": "9+"
         },
         "skillKeys": [
@@ -2878,7 +2878,7 @@ export const teamsData: Team[] = [
           "MV": 9,
           "FU": "2",
           "AG": "2+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -2896,7 +2896,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "5",
           "AG": "4+",
-          "PS": "-",
+          "PA": "-",
           "AR": "9+"
         },
         "skillKeys": [
@@ -2917,7 +2917,7 @@ export const teamsData: Team[] = [
           "MV": 5,
           "FU": "1",
           "AG": "3+",
-          "PS": "5+",
+          "PA": "5+",
           "AR": "6+"
         },
         "skillKeys": [
@@ -2958,7 +2958,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "3",
           "AG": "3+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -2975,7 +2975,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "4",
           "AG": "2+",
-          "PS": "5+",
+          "PA": "5+",
           "AR": "9+"
         },
         "skillKeys": [
@@ -2995,7 +2995,7 @@ export const teamsData: Team[] = [
           "MV": 8,
           "FU": "3",
           "AG": "2+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -3014,7 +3014,7 @@ export const teamsData: Team[] = [
           "MV": 6,
           "FU": "4",
           "AG": "2+",
-          "PS": "2+",
+          "PA": "2+",
           "AR": "9+"
         },
         "skillKeys": [
@@ -3034,7 +3034,7 @@ export const teamsData: Team[] = [
           "MV": 5,
           "FU": "5",
           "AG": "4+",
-          "PS": "-",
+          "PA": "-",
           "AR": "10+"
         },
         "skillKeys": [
@@ -3074,7 +3074,7 @@ export const teamsData: Team[] = [
           "MV": 8,
           "FU": "2",
           "AG": "2+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -3092,7 +3092,7 @@ export const teamsData: Team[] = [
           "MV": 7,
           "FU": "3",
           "AG": "2+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -3109,7 +3109,7 @@ export const teamsData: Team[] = [
           "MV": 7,
           "FU": "3",
           "AG": "2+",
-          "PS": "2+",
+          "PA": "2+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -3126,7 +3126,7 @@ export const teamsData: Team[] = [
           "MV": 8,
           "FU": "3",
           "AG": "2+",
-          "PS": "4+",
+          "PA": "4+",
           "AR": "8+"
         },
         "skillKeys": [
@@ -3145,7 +3145,7 @@ export const teamsData: Team[] = [
           "MV": 2,
           "FU": "6",
           "AG": "5+",
-          "PS": "5+",
+          "PA": "5+",
           "AR": "11+"
         },
         "skillKeys": [

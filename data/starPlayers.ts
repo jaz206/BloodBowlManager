@@ -8,7 +8,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 7,
       "FU": "1",
       "AG": "2+",
-      "PS": "–",
+      "PA": "–",
       "AR": "6+"
     },
     "skills": "Claws, Dauntless, Dodge, Frenzy, Jump Up, Loner (4+), No Hands, Side Step, Stunty, Titchy",
@@ -39,7 +39,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 7,
       "FU": "4",
       "AG": "5+",
-      "PS": "6+",
+      "PA": "6+",
       "AR": "10+"
     },
     "skills": "Block, Grab, Loner (4+), Stand Firm, Unsteady",
@@ -65,7 +65,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 6,
       "FU": "3",
       "AG": "4+",
-      "PS": "3+",
+      "PA": "3+",
       "AR": "9+"
     },
     "skills": "Cannoneer, Hail Mary Pass, Loner (4+), Pass, Secret Weapon, Sure Hands, Thick Skull",
@@ -94,7 +94,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 4,
       "FU": "5",
       "AG": "4+",
-      "PS": "6+",
+      "PA": "6+",
       "AR": "10+"
     },
     "skills": "Dirty Player (+1), Disturbing Presence, Foul Appearance, Lone Fouler, Loner (4+), Regeneration, Unsteady",
@@ -122,7 +122,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 6,
       "FU": "2",
       "AG": "3+",
-      "PS": "3+",
+      "PA": "3+",
       "AR": "8+"
     },
     "skills": "Bombardier, Disturbing Presence, Dodge, Loner (3+), Side Step, Sneaky Git, Stab, Stunty",
@@ -151,7 +151,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 6,
       "FU": "3",
       "AG": "3+",
-      "PS": "4+",
+      "PA": "4+",
       "AR": "9+"
     },
     "skills": "Dodge, Fend, Hypnotic Gaze, Loner (4+), Prehensile Tail, Safe Pair of Hands, Side Step",
@@ -179,7 +179,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 6,
       "FU": "2",
       "AG": "3+",
-      "PS": "3+",
+      "PA": "3+",
       "AR": "8+"
     },
     "skills": "Accurate, Bombardier, Dodge, Loner (4+), Right Stuff, Secret Weapon, Stunty",
@@ -208,7 +208,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 5,
       "FU": "3",
       "AG": "4+",
-      "PS": "–",
+      "PA": "–",
       "AR": "9+"
     },
     "skills": "Chainsaw, Loner (4+), Regeneration, Secret Weapon, Stand Firm, Thick Skull, Ghostly Flames",
@@ -235,7 +235,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 7,
       "FU": "4",
       "AG": "2+",
-      "PS": "4+",
+      "PA": "4+",
       "AR": "9+"
     },
     "skills": "Bloodlust (2+), Dodge, Hypnotic Gaze, Jump Up, Loner (4+), Regeneration",
@@ -262,7 +262,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 6,
       "FU": "5",
       "AG": "2+",
-      "PS": "3+",
+      "PA": "3+",
       "AR": "10+"
     },
     "skills": "Block, Hypnotic Gaze, Loner (4+), Regeneration, Side Step",
@@ -288,7 +288,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 5,
       "FU": "2",
       "AG": "3+",
-      "PS": "3+",
+      "PA": "3+",
       "AR": "7+"
     },
     "skills": "Accurate, Bombardier, Dodge, Loner (4+), Secret Weapon, Stunty",
@@ -316,7 +316,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 2,
       "FU": "7",
       "AG": "5+",
-      "PS": "4+",
+      "PA": "4+",
       "AR": "11+"
     },
     "skills": "Block, Bullseye, Loner (4+), Mighty Blow (+1), Stand Firm, Strong Arm, Thick Skull, Throw Team-mate, Timmm-ber!",
@@ -346,7 +346,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 8,
       "FU": "2 & 2",
       "AG": "3+ & 3+",
-      "PS": "4+ & 4+",
+      "PA": "4+ & 4+",
       "AR": "8+ & 8+"
     },
     "skills": "**Dribl:** Dirty Player, Dodge, Loner (4+), Quick Foul, Side Step, Sneaky Git, Stunty. **Drull:** Dodge, Stab, Stunty",
@@ -375,7 +375,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 8,
       "FU": "3",
       "AG": "2+",
-      "PS": "3+",
+      "PA": "3+",
       "AR": "8+"
     },
     "skills": "Catch, Dodge, Hypnotic Gaze, Loner (4+), Nerves of Steel, On The Ball",
@@ -402,7 +402,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 6,
       "FU": "3",
       "AG": "3+",
-      "PS": "4+",
+      "PA": "4+",
       "AR": "8+"
     },
     "skills": "Disturbing Presence, Dodge, Guard, Loner (4+), Side Step",
@@ -428,7 +428,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 4,
       "FU": "5",
       "AG": "4+",
-      "PS": "–",
+      "PA": "–",
       "AR": "10+"
     },
     "skills": "Break Tackle, Loner (4+), Mighty Blow (+1), Regeneration, Stand Firm, Thick Skull, Brutal Block",
@@ -456,7 +456,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 4,
       "FU": "7",
       "AG": "3+",
-      "PS": "–",
+      "PA": "–",
       "AR": "8+"
     },
     "skills": "Ball & Chain, Loner (4+), Mighty Blow (+1), No Hands, Secret Weapon, Stunty",
@@ -484,7 +484,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 5,
       "FU": "4",
       "AG": "4+",
-      "PS": "6+",
+      "PA": "6+",
       "AR": "9+"
     },
     "skills": "Block, Claws, Grab, Juggernaut, Loner (4+), Stand Firm",
@@ -511,7 +511,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 7,
       "FU": "2",
       "AG": "2+",
-      "PS": "2+",
+      "PA": "2+",
       "AR": "8+"
     },
     "skills": "Accurate, Dodge, Loner (3+), Pass, Side Step, Sure Hands",
@@ -537,7 +537,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 6,
       "FU": "6",
       "AG": "5+",
-      "PS": "6+",
+      "PA": "6+",
       "AR": "10+"
     },
     "skills": "Animal Savagery, Frenzy, Loner (4+), Mighty Blow (+1), Prehensile Tail, Stand Firm, Thick Skull",
@@ -564,7 +564,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 5,
       "FU": "5 & 2",
       "AG": "4+ & 3+",
-      "PS": "4+ & 5+",
+      "PA": "4+ & 5+",
       "AR": "10+ & 7+"
     },
     "skills": "**Grak:** Bone Head, Kick Team-mate, Loner (4+), Mighty Blow (+1), Thick Skull. **Crumbleberry:** Dodge, Lethal Flight, Right Stuff, Stunty, Sure Hands",
@@ -594,7 +594,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 6,
       "FU": "6",
       "AG": "4+",
-      "PS": "6+",
+      "PA": "6+",
       "AR": "9+"
     },
     "skills": "Frenzy, Horns, Loner (4+), Mighty Blow (+1), Thick Skull, Unchannelled Fury",
@@ -620,7 +620,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 7,
       "FU": "3",
       "AG": "2+",
-      "PS": "–",
+      "PA": "–",
       "AR": "9+"
     },
     "skills": "Disturbing Presence, Dodge, Foul Appearance, Jump Up, Loner (4+), No Hands, Regeneration, Shadowing, Side Step",
@@ -649,7 +649,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 7,
       "FU": "4",
       "AG": "2+",
-      "PS": "3+",
+      "PA": "3+",
       "AR": "9+"
     },
     "skills": "Block, Dodge, Fend, Loner (3+), Sprint, Sure Feet",
@@ -675,7 +675,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 5,
       "FU": "4",
       "AG": "3+",
-      "PS": "6+",
+      "PA": "6+",
       "AR": "9+"
     },
     "skills": "Block, Dauntless, Frenzy, Hatred (Big Guy), Loner (4+), Multiple Block, Thick Skull",
@@ -702,7 +702,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 5,
       "FU": "3",
       "AG": "3+",
-      "PS": "4+",
+      "PA": "4+",
       "AR": "10+"
     },
     "skills": "Block, Break Tackle, Dauntless, Loner (4+), Mighty Blow (+1), Stand Firm, Sure Feet, Thick Skull",
@@ -732,7 +732,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 5,
       "FU": "4",
       "AG": "4+",
-      "PS": "6+",
+      "PA": "6+",
       "AR": "10+"
     },
     "skills": "Foul Appearance, Loner (4+), Monstrous Mouth, Nerves of Steel, On The Ball, Plague Ridden",
@@ -758,7 +758,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 6,
       "FU": "6",
       "AG": "4+",
-      "PS": "6+",
+      "PA": "6+",
       "AR": "10+"
     },
     "skills": "Block, Break Tackle, Defensive, Juggernaut, Loner (4+), Sprint, Sure Feet, Thick Skull",
@@ -787,7 +787,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 8,
       "FU": "3",
       "AG": "2+",
-      "PS": "3+",
+      "PA": "3+",
       "AR": "8+"
     },
     "skills": "Dodge, Extra Arms, Loner (4+), Prehensile Tail, Two Heads",
@@ -812,7 +812,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 6,
       "FU": "3",
       "AG": "3+",
-      "PS": "–",
+      "PA": "–",
       "AR": "9+"
     },
     "skills": "Chainsaw, Loner (4+), No Hands, Pro, Secret Weapon, Stand Firm",
@@ -838,7 +838,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 6,
       "FU": "4",
       "AG": "4+",
-      "PS": "5+",
+      "PA": "5+",
       "AR": "9+"
     },
     "skills": "Block, Disturbing Presence, Hatred (Dwarf), Juggernaut, Loner (4+), Regeneration, Strip Ball, Tackle",
@@ -866,7 +866,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 6,
       "FU": "4",
       "AG": "3+",
-      "PS": "4+",
+      "PA": "4+",
       "AR": "9+"
     },
     "skills": "Block, Guard, Loner (3+), Tackle",
@@ -890,7 +890,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 8,
       "FU": "3",
       "AG": "1+",
-      "PS": "2+",
+      "PA": "2+",
       "AR": "9+"
     },
     "skills": "Block, Dodge, Diving Catch, Dump-off, Loner (4+), Nerves of Steel, On The Ball, Pass, Side Step",
@@ -919,7 +919,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 8,
       "FU": "3",
       "AG": "1+",
-      "PS": "3+",
+      "PA": "3+",
       "AR": "8+"
     },
     "skills": "Block, Diving Catch, Dodge, Leap, Loner (4+), Side Step, Steady Footing",
@@ -947,7 +947,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 5,
       "FU": "3",
       "AG": "3+",
-      "PS": "4+",
+      "PA": "4+",
       "AR": "9+"
     },
     "skills": "Block, Drunkard, Fend, Loner (3+), Tackle, Taunt, Thick Skull",
@@ -975,7 +975,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 6,
       "FU": "4",
       "AG": "3+",
-      "PS": "3+",
+      "PA": "3+",
       "AR": "9+"
     },
     "skills": "Block, Dauntless, Dodge, Jump Up, Loner (4+)",
@@ -1001,7 +1001,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 7,
       "FU": "3",
       "AG": "2+",
-      "PS": "3+",
+      "PA": "3+",
       "AR": "8+"
     },
     "skills": "Disturbing Presence, Foul Appearance, Loner (4+), On The Ball, Tackle, Tentacles",
@@ -1027,7 +1027,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 4,
       "FU": "7",
       "AG": "4+",
-      "PS": "–",
+      "PA": "–",
       "AR": "10+"
     },
     "skills": "Ball & Chain, Loner (4+), Mighty Blow (+1), No Hands, Prehensile Tail, Secret Weapon",
@@ -1053,7 +1053,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 5,
       "FU": "5",
       "AG": "3+",
-      "PS": "5+",
+      "PA": "5+",
       "AR": "10+"
     },
     "skills": "Block, Dirty Player (+1), Leader, Loner (3+), Mighty Blow (+1), Put the Boot In, Sneaky Git",
@@ -1080,7 +1080,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 3,
       "FU": "5",
       "AG": "5+",
-      "PS": "5+",
+      "PA": "5+",
       "AR": "11+"
     },
     "skills": "Brawler, Grab, Loner (4+), Mighty Blow (+1), Stand Firm, Tentacles, Thick Skull",
@@ -1107,7 +1107,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 5,
       "FU": "4",
       "AG": "4+",
-      "PS": "–",
+      "PA": "–",
       "AR": "9+"
     },
     "skills": "Chainsaw, Loner (4+), No Hands, Secret Weapon",
@@ -1131,7 +1131,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 5,
       "FU": "5",
       "AG": "4+",
-      "PS": "6+",
+      "PA": "6+",
       "AR": "10+"
     },
     "skills": "Block, Loner (4+), Mighty Blow (+1)",
@@ -1155,7 +1155,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 6,
       "FU": "6",
       "AG": "3+",
-      "PS": "4+",
+      "PA": "4+",
       "AR": "11+"
     },
     "skills": "Block, Bullseye, Hatred (Undead), Loner (4+), Mighty Blow (+1), Thick Skull, Throw Team-mate",
@@ -1182,7 +1182,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 6,
       "FU": "2",
       "AG": "3+",
-      "PS": "–",
+      "PA": "–",
       "AR": "8+"
     },
     "skills": "Block, Chainsaw, Dodge, Loner (4+), No Hands, Secret Weapon, Stunty",
@@ -1210,7 +1210,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 5,
       "FU": "3",
       "AG": "3+",
-      "PS": "3+",
+      "PA": "3+",
       "AR": "8+"
     },
     "skills": "Block, Dodge, Loner (3+), Nerves of Steel, Right Stuff, Stunty",
@@ -1237,7 +1237,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 7,
       "FU": "3",
       "AG": "3+",
-      "PS": "5+",
+      "PA": "5+",
       "AR": "8+"
     },
     "skills": "Loner (4+), Shadowing, Side Step, Sneaky Git, Stab",
@@ -1262,7 +1262,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 5,
       "FU": "6",
       "AG": "5+",
-      "PS": "4+",
+      "PA": "4+",
       "AR": "10+"
     },
     "skills": "Bullseye, Grab, Loner (4+), Mighty Blow (+1), Regeneration, Throw Team-mate",
@@ -1289,7 +1289,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 6,
       "FU": "2",
       "AG": "3+",
-      "PS": "4+",
+      "PA": "4+",
       "AR": "7+"
     },
     "skills": "Catch, Diving Catch, Jump Up, Loner (4+), On The Ball, Side Step, Stunty, Wrestle",
@@ -1317,7 +1317,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 6,
       "FU": "3",
       "AG": "3+",
-      "PS": "4+",
+      "PA": "4+",
       "AR": "8+"
     },
     "skills": "Dodge, Dump-Off, Guard, Horns, Jump Up, Leap, Loner (4+)",
@@ -1344,7 +1344,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 8,
       "FU": "3",
       "AG": "1+",
-      "PS": "3+",
+      "PA": "3+",
       "AR": "8+"
     },
     "skills": "Dodge, Frenzy, Jump Up, Juggernaut, Leap, Loner (4+)",
@@ -1370,7 +1370,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 6,
       "FU": "3",
       "AG": "3+",
-      "PS": "5+",
+      "PA": "5+",
       "AR": "8+"
     },
     "skills": "Block, Horns, Juggernaut, Loner (4+), Tackle, Thick Skull",
@@ -1396,7 +1396,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 7,
       "FU": "2",
       "AG": "3+",
-      "PS": "4+",
+      "PA": "4+",
       "AR": "8+"
     },
     "skills": "Dirty Player (+1), Dodge, Loner (4+), Pogo Stick, Right Stuff, Sprint, Stunty, Sure Feet",
@@ -1425,7 +1425,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 5,
       "FU": "5",
       "AG": "4+",
-      "PS": "6+",
+      "PA": "6+",
       "AR": "10+"
     },
     "skills": "Claws, Frenzy, Loner (4+), Mighty Blow (+1), Prehensile Tail, Thick Skull, Unchannelled Fury",
@@ -1452,7 +1452,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 9,
       "FU": "2",
       "AG": "2+",
-      "PS": "4+",
+      "PA": "4+",
       "AR": "8+"
     },
     "skills": "Dodge, Loner (4+), Prehensile Tail, Shadowing, Stab",
@@ -1477,7 +1477,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 5,
       "FU": "5",
       "AG": "4+",
-      "PS": "6+",
+      "PA": "6+",
       "AR": "9+"
     },
     "skills": "Block, Claws, Disturbing Presence, Juggernaut, Loner (4+), Mighty Blow (+1)",
@@ -1504,7 +1504,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 6,
       "FU": "3",
       "AG": "4+",
-      "PS": "3+",
+      "PA": "3+",
       "AR": "9+"
     },
     "skills": "Accurate, Loner (4+), Nerves of Steel, Pass, Regeneration, Sure Hands, Thick Skull",
@@ -1532,7 +1532,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 7,
       "FU": "3 & 3",
       "AG": "2+ & 2+",
-      "PS": "3+ & 2+",
+      "PA": "3+ & 2+",
       "AR": "9+ & 9+"
     },
     "skills": "**Lucian:** Block, Loner (4+), Mighty Blow (+1), Tackle. **Valen:** Accurate, Nerves of Steel, Pass, Safe Pass, Sure Hands",
@@ -1561,7 +1561,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 7,
       "FU": "2",
       "AG": "3+",
-      "PS": "5+",
+      "PA": "5+",
       "AR": "7+"
     },
     "skills": "Disturbing Presence, Fend, Loner (4+), Side Step, Stab, Stunty",
@@ -1587,7 +1587,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 6,
       "FU": "3",
       "AG": "4+",
-      "PS": "3+",
+      "PA": "3+",
       "AR": "8+"
     },
     "skills": "Block, Drunkard, Loner (4+), Thick Skull",
@@ -1612,7 +1612,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 6,
       "FU": "5",
       "AG": "3+",
-      "PS": "5+",
+      "PA": "5+",
       "AR": "10+"
     },
     "skills": "Block, Hatred (Undead), Jump Up, Loner (4+), Mighty Blow (+1), Thick Skull, Unsteady",
@@ -1639,7 +1639,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 8,
       "FU": "4",
       "AG": "3+",
-      "PS": "4+",
+      "PA": "4+",
       "AR": "9+"
     },
     "skills": "Catch, Claws, Frenzy, Loner (4+), Regeneration, Wrestle",
@@ -1665,7 +1665,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 6,
       "FU": "4",
       "AG": "3+",
-      "PS": "5+",
+      "PA": "5+",
       "AR": "9+"
     },
     "skills": "Dauntless, Loner (4+), Side Step, Thick Skull",
@@ -1689,7 +1689,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 6,
       "FU": "3",
       "AG": "3+",
-      "PS": "4+",
+      "PA": "4+",
       "AR": "9+"
     },
     "skills": "Foul Appearance, Loner (4+), Prehensile Tail, Tackle, Tentacles, Two Heads, Wrestle",
@@ -1716,7 +1716,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 5,
       "FU": "5",
       "AG": "4+",
-      "PS": "5+",
+      "PA": "5+",
       "AR": "10+"
     },
     "skills": "Disturbing Presence, Juggernaut, Loner (4+), Mighty Blow (+1), Prehensile Tail, Regeneration, Sure Feet",
@@ -1743,7 +1743,7 @@ export const starPlayersData: StarPlayer[] = [
       "MV": 4,
       "FU": "4",
       "AG": "4+",
-      "PS": "3+",
+      "PA": "3+",
       "AR": "10+"
     },
     "skills": "Cannoneer, Hail Mary Pass, Loner (4+), Nerves of Steel, Secret Weapon, Thick Skull",

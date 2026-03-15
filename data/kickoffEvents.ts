@@ -57,4 +57,4 @@ export const kickoffEvents: KickoffEvent[] = [
     title: 'Invasión de Campo',
     description: 'Tirada enfrentada (1D6 + Factor de Hinchas). El perdedor elige aleatoriamente 1D3 jugadores de su equipo que estén en el campo; todos los jugadores elegidos quedan Tumbados y Aturdidos.'
   }
-];
+];

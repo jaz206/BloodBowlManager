@@ -822,7 +822,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps & { matchReports?: Match
                                         <td className="p-4 text-center font-display font-black text-white text-sm bg-white/5">{p.stats.MV}</td>
                                         <td className="p-4 text-center font-display font-black text-white text-sm">{p.stats.FU}</td>
                                         <td className="p-4 text-center font-display font-black text-white text-sm bg-white/5">{p.stats.AG}</td>
-                                        <td className="p-4 text-center font-display font-black text-white text-sm">{p.stats.PS}</td>
+                                        <td className="p-4 text-center font-display font-black text-white text-sm">{p.stats.PA}</td>
                                         <td className="p-4 text-center font-display font-black text-white text-sm bg-white/5">{p.stats.AR}</td>
                                         <td className="p-4 whitespace-normal min-w-[200px]">
                                             <div className="flex flex-wrap gap-1">
@@ -946,7 +946,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps & { matchReports?: Match
                                         <td className="p-4 text-center font-display font-black text-white text-sm bg-white/5">{p.stats.MV}</td>
                                         <td className="p-4 text-center font-display font-black text-white text-sm">{p.stats.FU}</td>
                                         <td className="p-4 text-center font-display font-black text-white text-sm bg-white/5">{p.stats.AG}</td>
-                                        <td className="p-4 text-center font-display font-black text-white text-sm">{p.stats.PS}</td>
+                                        <td className="p-4 text-center font-display font-black text-white text-sm">{p.stats.PA}</td>
                                         <td className="p-4 text-center font-display font-black text-white text-sm bg-white/5">{p.stats.AR}</td>
                                         <td className="p-4">
                                             <button

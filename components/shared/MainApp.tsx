@@ -26,6 +26,7 @@ import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, query, limit
 import { useLanguage } from '../../contexts/LanguageContext';
 import LanguageSelector from '../common/LanguageSelector';
 import { useMasterData } from '../../hooks/useMasterData';
+import { getGuestTeams } from '../../utils/testData';
 
 type View = 'home' | 'oracle' | 'starplayers' | 'guild' | 'tactical' | 'arena' | 'leagues' | 'guide' | 'admin';
 type SyncStatus = 'synced' | 'syncing' | 'error';
@@ -74,7 +75,7 @@ const MainApp: React.FC = () => {
 
   useEffect(() => {
     if (isGuest || !user || !db) {
-      setManagedTeams([]);
+      setManagedTeams(getGuestTeams());
       setPlays([]);
       setDataInitiallyLoaded(true);
       setSyncState('synced');

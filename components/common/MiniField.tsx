@@ -123,10 +123,24 @@ const MiniField: React.FC<MiniFieldProps> = ({ players, teamColor, onPlayerMove,
                             left: `${(player.fieldPosition.x + 0.5) / GRID_COLS * 100}%`,
                         }}
                     >
-                        <div className={`w-full h-full rounded-full ${teamColor} border-2 ${isKO ? 'border-yellow-400' : isInjured ? 'border-red-600' : 'border-white/80'} shadow-lg flex items-center justify-center text-white font-bold text-[10px] overflow-hidden`}>
+                        <div className={`w-full h-full rounded-full ${teamColor} border-2 ${isKO ? 'border-yellow-400' : isInjured ? 'border-red-600' : 'border-white/80'} shadow-lg flex items-center justify-center text-white font-bold text-[10px] overflow-hidden relative`}>
                             {index + 1}
+                            {/* Distracted Overlay */}
+                            {player.isDistracted && (
+                                <div className="absolute inset-0 bg-red-600/40 flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-white text-xs font-black">block</span>
+                                </div>
+                            )}
                         </div>
                         {hasBall && <div className="ball-indicator animate-bounce"></div>}
+                        
+                        {/* Indigestion Indicator */}
+                        {player.hasIndigestion && (
+                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-amber-500 rounded-full flex items-center justify-center border border-black shadow-sm z-20">
+                                <span className="material-symbols-outlined text-[10px] text-black font-black">restaurant</span>
+                            </div>
+                        )}
+
                         {!isActive && (
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                                 <span className="text-[8px] bg-black/60 px-1 rounded text-white font-black uppercase">

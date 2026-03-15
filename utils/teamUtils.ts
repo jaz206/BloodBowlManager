@@ -1,5 +1,5 @@
 
-import { ManagedTeam, ELITE_SKILLS } from '../types';
+import { ManagedTeam, ELITE_SKILLS, ManagedTeamSnapshot } from '../types';
 import { skillsData } from '../data/skills';
 import { teamsData } from '../data/teams';
 
@@ -19,9 +19,11 @@ export const calculateTeamValue = (team: ManagedTeam | null | undefined, include
                     case 'RandomSecondary': baseValue = 20000; break;
                     case 'ChosenSecondary': baseValue = 40000; break;
                     case 'Characteristic':
-                        if (adv.characteristicName === 'FU') baseValue = 40000;
-                        else if (adv.characteristicName === 'AG' || adv.characteristicName === 'PS') baseValue = 20000;
-                        else baseValue = 10000; // MV, AR
+                        // Season 3 Cost Table (Attribute increments)
+                        if (adv.characteristicName === 'FU') baseValue = 60000;
+                        else if (adv.characteristicName === 'AG') baseValue = 30000;
+                        else if (adv.characteristicName === 'PA' || adv.characteristicName === 'MV') baseValue = 20000;
+                        else baseValue = 10000; // AR
                         break;
                 }
                 
@@ -77,4 +79,16 @@ export const calculateTeamValue = (team: ManagedTeam | null | undefined, include
     }
 
     return total;
+};
+
+export const createTeamSnapshot = (team: ManagedTeam, matchId?: string): ManagedTeamSnapshot => {
+    // Deep clone the team but exclude snapshots to avoid circular/deep nesting
+    const { snapshots, ...teamState } = JSON.parse(JSON.stringify(team));
+    
+    return {
+        id: new Date().getTime().toString(),
+        timestamp: new Date().toISOString(),
+        matchId,
+        teamState: teamState as any
+    };
 };

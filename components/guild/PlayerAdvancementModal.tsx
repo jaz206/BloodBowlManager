@@ -88,7 +88,7 @@ export const PlayerAdvancementModal: React.FC<PlayerAdvancementModalProps> = ({ 
         setStep('CHARACTERISTIC_SELECT');
     };
 
-    const confirmCharacteristic = (charName: 'MV' | 'FU' | 'AG' | 'PS' | 'AR') => {
+    const confirmCharacteristic = (charName: 'MV' | 'FU' | 'AG' | 'PA' | 'AR') => {
         const newStats = { ...player.stats };
 
         if (charName === 'MV') {
@@ -99,12 +99,12 @@ export const PlayerAdvancementModal: React.FC<PlayerAdvancementModalProps> = ({ 
         } else if (charName === 'AG') {
             const currentAg = parseInt(player.stats.AG.replace('+', ''));
             newStats.AG = `${Math.max(1, currentAg - 1)}+`;
-        } else if (charName === 'PS') {
-            if (player.stats.PS === '-') {
+        } else if (charName === 'PA') {
+            if (player.stats.PA === '-') {
                 // Cannot improve PS if it's - (normally)
             } else {
-                const currentPs = parseInt(player.stats.PS.replace('+', ''));
-                newStats.PS = `${Math.max(1, currentPs - 1)}+`;
+                const currentPs = parseInt(player.stats.PA.replace('+', ''));
+                newStats.PA = `${Math.max(1, currentPs - 1)}+`;
             }
         } else if (charName === 'AR') {
             const currentAr = parseInt(player.stats.AR.replace('+', ''));
@@ -269,8 +269,8 @@ export const PlayerAdvancementModal: React.FC<PlayerAdvancementModalProps> = ({ 
                                 />
                                 <CharOption
                                     name="Mejorar Pase (+1 PS)"
-                                    available={charRoll! >= 8 && player.stats.PS !== '-'}
-                                    onClick={() => confirmCharacteristic('PS')}
+                                    available={charRoll! >= 8 && player.stats.PA !== '-'}
+                                    onClick={() => confirmCharacteristic('PA')}
                                     description="Reduce la dificultad de Pase (mínimo 1+)."
                                 />
                                 <CharOption

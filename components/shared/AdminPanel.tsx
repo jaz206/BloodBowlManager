@@ -156,14 +156,14 @@ const AdminPanel: React.FC = () => {
     };
 
     const handleExportStars = () => {
-        const headers = ['name', 'cost', 'MV', 'FU', 'AG', 'PS', 'AR', 'skills', 'playsFor', 'specialRules_es', 'specialRules_en', 'image'];
+        const headers = ['name', 'cost', 'MV', 'FU', 'AG', 'PA', 'AR', 'skills', 'playsFor', 'specialRules_es', 'specialRules_en', 'image'];
         const rows = [headers, ...starPlayers.map(s => [
             s.name,
             s.cost,
             s.stats?.MV ?? '',
             s.stats?.FU ?? '',
             s.stats?.AG ?? '',
-            s.stats?.PS ?? '',
+            s.stats?.PA ?? '',
             s.stats?.AR ?? '',
             s.skills ?? '',
             Array.isArray(s.playsFor) ? s.playsFor.join(' | ') : '',
@@ -244,7 +244,7 @@ const AdminPanel: React.FC = () => {
                     payload = {
                         name: row.name.trim(),
                         cost: parseInt(row.cost) || 0,
-                        stats: { MV: row.MV, FU: row.FU, AG: row.AG, PS: row.PS, AR: row.AR },
+                        stats: { MV: row.MV, FU: row.FU, AG: row.AG, PA: row.PA, AR: row.AR },
                         skills: row.skills ?? '',
                         skillKeys: (row.skills ?? '').split(',').map((s: string) => s.trim()).filter(Boolean),
                         playsFor: (row.playsFor ?? '').split('|').map((s: string) => s.trim()).filter(Boolean),
@@ -953,7 +953,7 @@ const AdminPanel: React.FC = () => {
                                                     <div className="space-y-4">
                                                         <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Perfil de Atributos</label>
                                                         <div className="grid grid-cols-5 gap-3 bg-black/40 p-4 rounded-2xl border border-white/5">
-                                                            {['MV', 'FU', 'AG', 'PS', 'AR'].map(stat => (
+                                                            {['MV', 'FU', 'AG', 'PA', 'AR'].map(stat => (
                                                                 <div key={stat} className="space-y-1">
                                                                     <span className="block text-[8px] font-bold text-slate-600 uppercase text-center">{stat}</span>
                                                                     <input

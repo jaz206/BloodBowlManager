@@ -74,7 +74,7 @@ const PlayerDetailPanel: React.FC<PlayerDetailPanelProps> = ({ playerToken, onCl
                                 <span className="font-mono">MV: {player.stats.MV}</span>
                                 <span className="font-mono">FU: {player.stats.FU}</span>
                                 <span className="font-mono">AG: {player.stats.AG}</span>
-                                <span className="font-mono">PS: {player.stats.PS}</span>
+                                <span className="font-mono">PS: {player.stats.PA}</span>
                                 <span className="font-mono">AR: {player.stats.AR}</span>
                                 <span className="font-bold text-amber-300 font-mono">PE: {player.spp}</span>
                             </div>

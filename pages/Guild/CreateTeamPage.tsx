@@ -312,7 +312,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                                                 <td className="py-5 px-2 text-center font-mono font-black text-slate-400">{pos.stats.MV}</td>
                                                 <td className="py-5 px-2 text-center font-mono font-black text-slate-400">{pos.stats.FU}</td>
                                                 <td className="py-5 px-2 text-center font-mono font-black text-slate-400">{pos.stats.AG}</td>
-                                                <td className="py-5 px-2 text-center font-mono font-black text-slate-400">{pos.stats.PS}</td>
+                                                <td className="py-5 px-2 text-center font-mono font-black text-slate-400">{pos.stats.PA}</td>
                                                 <td className="py-5 px-2 text-center font-mono font-black text-slate-400">{pos.stats.AR}</td>
                                                 <td className="py-5 px-4 text-[11px] text-slate-500 leading-relaxed font-medium italic group-hover:text-slate-300 transition-colors">
                                                     {pos.skillKeys && pos.skillKeys.length > 0 ? (

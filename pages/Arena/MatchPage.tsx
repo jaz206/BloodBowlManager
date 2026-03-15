@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import type { ManagedTeam, GameEvent, GameEventType, ManagedPlayer, WeatherCondition, KickoffEvent, PlayerStatus, StarPlayer, SppActionType, Team, Skill, MatchReport, MatchStats } from '../../types';
+import type { ManagedTeam, GameEvent, GameEventType, ManagedPlayer, WeatherCondition, KickoffEvent, PlayerStatus, StarPlayer, SppActionType, Team, Skill, MatchReport, MatchStats, ManagedTeamSnapshot } from '../../types';
 import { ELITE_SKILLS } from '../../types';
 import { weatherConditions } from '../../data/weather';
 import { kickoffEvents } from '../../data/kickoffEvents';
@@ -41,9 +41,7 @@ import DiceIcon from '../../components/icons/DiceIcon';
 import BallIcon from '../../components/icons/BallIcon';
 
 
-const playSound = (type: string) => {
-    console.log(`Playing sound: ${type}`);
-};
+
 
 declare const Html5Qrcode: any;
 declare const XLSX: any;
@@ -556,6 +554,13 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
     const [journeymenNotification, setJourneymenNotification] = useState<string | null>(null);
     const [pendingJourneymen, setPendingJourneymen] = useState<{ home: ManagedPlayer[], opponent: ManagedPlayer[] }>({ home: [], opponent: [] });
     const [activeTeamId, setActiveTeamId] = useState<'home' | 'opponent'>('home');
+    const [turnActions, setTurnActions] = useState<{
+        home: { blitz: boolean; pass: boolean; foul: boolean; handoff: boolean; };
+        opponent: { blitz: boolean; pass: boolean; foul: boolean; handoff: boolean; };
+    }>({
+        home: { blitz: false, pass: false, foul: false, handoff: false },
+        opponent: { blitz: false, pass: false, foul: false, handoff: false }
+    });
     const [selectedPlayerForAction, setSelectedPlayerForAction] = useState<ManagedPlayer | null>(null);
     type SppModalType = 'pass' | 'interference' | 'casualty' | 'deflect' | 'throw_team_mate';
     const [sppModalState, setSppModalState] = useState<{ isOpen: boolean; type: SppModalType | null; step: 'select_team' | 'select_player' | 'interference_type'; teamId: 'home' | 'opponent' | null; selectedPlayer: ManagedPlayer | null; }>({ isOpen: false, type: null, step: 'select_team', teamId: null, selectedPlayer: null });
@@ -574,6 +579,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
     const [isConcedeModalOpen, setIsConcedeModalOpen] = useState(false);
     const [concessionState, setConcessionState] = useState<'none' | 'home' | 'opponent'>('none');
     const [currentChronicle, setCurrentChronicle] = useState<string | null>(null);
+    const [matchMode, setMatchMode] = useState<'friendly' | 'competition'>('competition');
+    const [selectingSnapshotFor, setSelectingSnapshotFor] = useState<{ team: ManagedTeam, side: 'home' | 'opponent' } | null>(null);
 
 
     const playSound = useCallback((type: 'td' | 'injury' | 'turnover' | 'dice') => {
@@ -592,6 +599,43 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
     const scannerContainerRef = useRef<HTMLDivElement>(null);
     const homeTV = useMemo(() => calculateTeamValue(liveHomeTeam), [liveHomeTeam]);
     const opponentTV = useMemo(() => calculateTeamValue(liveOpponentTeam), [liveOpponentTeam]);
+
+    const handleUpdatePlayerCondition = (playerId: number, teamId: 'home' | 'opponent', field: 'isDistracted' | 'hasIndigestion') => {
+        const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
+        setTeam(prev => {
+            if (!prev) return null;
+            return {
+                ...prev,
+                players: prev.players.map(p => p.id === playerId ? { ...p, [field]: !p[field] } : p)
+            };
+        });
+        
+        if (selectedPlayerForAction?.id === playerId) {
+            setSelectedPlayerForAction(prev => prev ? ({ ...prev, [field]: !prev[field] }) : null);
+        }
+        
+        const conditionName = field === 'isDistracted' ? 'Distraído' : 'Indigestión';
+        logEvent('INFO', `Estado ${conditionName} toggled para jugador.`);
+    };
+
+    const handleStrategicAction = (action: 'blitz' | 'pass' | 'foul' | 'handoff') => {
+        if (turnActions[activeTeamId][action]) return;
+        
+        // Trigger specific modals if applicable
+        if (action === 'foul') {
+            setIsFoulModalOpen(true);
+        } else if (action === 'pass') {
+            openSppModal('pass');
+        }
+
+        setTurnActions(prev => ({
+            ...prev,
+            [activeTeamId]: { ...prev[activeTeamId], [action]: true }
+        }));
+        
+        const teamName = activeTeamId === 'home' ? liveHomeTeam?.name : liveOpponentTeam?.name;
+        logEvent('INFO', `[S3] ${teamName} utiliza su acción de ${action.toUpperCase()} este turno.`);
+    };
 
     useEffect(() => { Html5Qrcode.getCameras().then((d: any[]) => setHasCamera(!!(d && d.length))).catch(() => setHasCamera(false)); }, []);
     useEffect(() => { if (gameStatus.kickoffEvent?.title === 'Clima Cambiante' && !kickoffActionCompleted) setIsChangingWeatherModalOpen(true); }, [gameStatus.kickoffEvent, kickoffActionCompleted]);
@@ -807,7 +851,23 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
         }
     };
 
-    const handleNextTurn = () => { if (turn < 8) { const newTurn = turn + 1; setTurn(newTurn); logEvent('INFO', `Comienza el turno ${newTurn} de la parte ${half}.`); } else if (half === 1) { handleHalftime(); } else { logEvent('INFO', '¡Fin del partido!'); setGameState('post_game'); } };
+    const handleNextTurn = () => { 
+        if (turn < 8) { 
+            const newTurn = turn + 1; 
+            setTurn(newTurn); 
+            // Reset strategic actions for the new turn
+            setTurnActions(prev => ({
+                ...prev,
+                [activeTeamId]: { blitz: false, pass: false, foul: false, handoff: false }
+            }));
+            logEvent('INFO', `Comienza el turno ${newTurn} de la parte ${half}. Las acciones estratégicas se han restablecido.`); 
+        } else if (half === 1) { 
+            handleHalftime(); 
+        } else { 
+            logEvent('INFO', '¡Fin del partido!'); 
+            setGameState('post_game'); 
+        } 
+    };
     const handleTurnover = (reason: string) => {
         logEvent('TURNOVER', `Cambio de turno: ${reason}.`);
         playSound('turnover');
@@ -817,108 +877,94 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
     const handleConfirmPostGame = async (finalTeamState: ManagedTeam) => {
         if (!homeTeam) return;
 
-        // Update History and Records
-        const matchResult = score.home > score.opponent ? 'W' : score.home < score.opponent ? 'L' : 'D';
-        const historyEntry = {
-            id: Date.now().toString(),
-            opponentName: opponentTeam?.name || 'Desconocido',
-            score: `${score.home}-${score.opponent}`,
-            date: new Date().toLocaleDateString('es-ES'),
-            result: matchResult as 'W' | 'D' | 'L'
-        };
+        // Si es un partido amistoso, NO guardamos cambios permanentes en el equipo
+        if (matchMode === 'friendly') {
+            logEvent('INFO', 'Partido Amistoso finalizado. No se guardarán cambios en el Roster principal.');
+            // Podríamos querer guardar el reporte, pero el usuario dice "sin corromper datos de liga"
+            // Por ahora, reseteamos el estado del juego sin llamar a onTeamUpdate
+        } else {
+            // Update History and Records
+            const matchResult = score.home > score.opponent ? 'W' : score.home < score.opponent ? 'L' : 'D';
+            const historyEntry = {
+                id: Date.now().toString(),
+                opponentName: opponentTeam?.name || 'Desconocido',
+                score: `${score.home}-${score.opponent}`,
+                date: new Date().toLocaleDateString('es-ES'),
+                result: matchResult as 'W' | 'D' | 'L'
+            };
 
-        const finalTeamWithStats = {
-            ...finalTeamState,
-            history: [historyEntry, ...(finalTeamState.history || [])].slice(0, 20),
-            record: {
-                wins: (finalTeamState.record?.wins || 0) + (matchResult === 'W' ? 1 : 0),
-                draws: (finalTeamState.record?.draws || 0) + (matchResult === 'D' ? 1 : 0),
-                losses: (finalTeamState.record?.losses || 0) + (matchResult === 'L' ? 1 : 0),
-            }
-        };
-
-        if (onMatchReportCreate && liveHomeTeam && liveOpponentTeam) {
-            const matchWinner = score.home > score.opponent ? 'home' : score.home < score.opponent ? 'opponent' : 'draw';
-            
-            // Calculate Match Stats
-            const stats = {
-                passes: {
-                    home: gameLog.filter(e => e.team === 'home' && (e.type === 'pass_complete' || e.type === 'PASS')).length,
-                    opponent: gameLog.filter(e => e.team === 'opponent' && (e.type === 'pass_complete' || e.type === 'PASS')).length
-                },
-                interceptions: {
-                    home: gameLog.filter(e => e.team === 'home' && (e.type === 'interception' || e.type === 'INTERCEPTION')).length,
-                    opponent: gameLog.filter(e => e.team === 'opponent' && (e.type === 'interception' || e.type === 'INTERCEPTION')).length
-                },
-                fouls: {
-                    home: gameLog.filter(e => e.team === 'home' && (e.type === 'foul_attempt' || e.type === 'FOUL')).length,
-                    opponent: gameLog.filter(e => e.team === 'opponent' && (e.type === 'foul_attempt' || e.type === 'FOUL')).length
-                },
-                expulsions: {
-                    home: gameLog.filter(e => e.team === 'home' && (e.type === 'player_sent_off' || e.type === 'EXPULSION')).length,
-                    opponent: gameLog.filter(e => e.team === 'opponent' && (e.type === 'player_sent_off' || e.type === 'EXPULSION')).length
-                },
-                casualties: {
-                    home: gameLog.filter(e => e.team === 'home' && (e.type === 'injury_casualty' || e.type === 'INJURY' || e.type === 'DEATH')).length,
-                    opponent: gameLog.filter(e => e.team === 'opponent' && (e.type === 'injury_casualty' || e.type === 'INJURY' || e.type === 'DEATH')).length
-                },
-                rerollsUsed: {
-                    home: gameLog.filter(e => e.team === 'home' && e.type === 'reroll_used').length,
-                    opponent: gameLog.filter(e => e.team === 'opponent' && e.type === 'reroll_used').length
+            const finalTeamWithStats = {
+                ...finalTeamState,
+                history: [historyEntry, ...(finalTeamState.history || [])].slice(0, 20),
+                record: {
+                    wins: (finalTeamState.record?.wins || 0) + (matchResult === 'W' ? 1 : 0),
+                    draws: (finalTeamState.record?.draws || 0) + (matchResult === 'D' ? 1 : 0),
+                    losses: (finalTeamState.record?.losses || 0) + (matchResult === 'L' ? 1 : 0),
                 }
             };
 
-            // Calculate Spectators based on fame (approximation)
-            const baseSpectators = (fame.home + fame.opponent) * 1000 + 10000;
-            const spectators = isNaN(baseSpectators) ? 10000 : baseSpectators;
-            const baseReport: any = {
-                id: '', // Will be set by Firebase
-                date: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-                homeTeam: {
-                    id: homeTeam.id,
-                    name: liveHomeTeam.name,
-                    rosterName: liveHomeTeam.rosterName,
-                    score: score.home,
-                    crestImage: liveHomeTeam.crestImage
-                },
-                opponentTeam: {
-                    id: opponentTeam?.id,
-                    name: liveOpponentTeam?.name || 'Desconocido',
-                    rosterName: liveOpponentTeam?.rosterName || 'Rival',
-                    score: score.opponent,
-                    crestImage: liveOpponentTeam?.crestImage
-                },
-                gameLog: gameLog,
-                weather: gameStatus.weather?.title,
-                winner: score.home > score.opponent ? 'home' : score.home < score.opponent ? 'opponent' : 'draw',
-                stats: stats,
-                spectators: spectators,
-                wasConceded: concessionState
-            };
-
-            let finalNewsData;
-            if (currentChronicle) {
-                const parts = currentChronicle.split('\n\n');
-                finalNewsData = {
-                    headline: parts[0] || 'CRÓNICA DE COMBATE',
-                    article: parts.slice(1).join('\n\n'),
-                    summary: `Final: ${liveHomeTeam.name} ${score.home} - ${score.opponent} ${liveOpponentTeam?.name}`
+            if (onMatchReportCreate && liveHomeTeam && liveOpponentTeam) {
+                const stats = {
+                    passes: {
+                        home: gameLog.filter(e => e.team === 'home' && (e.type === 'pass_complete' || e.type === 'PASS')).length,
+                        opponent: gameLog.filter(e => e.team === 'opponent' && (e.type === 'pass_complete' || e.type === 'PASS')).length
+                    },
+                    interceptions: {
+                        home: gameLog.filter(e => e.team === 'home' && (e.type === 'interception' || e.type === 'INTERCEPTION')).length,
+                        opponent: gameLog.filter(e => e.team === 'opponent' && (e.type === 'interception' || e.type === 'INTERCEPTION')).length
+                    },
+                    fouls: {
+                        home: gameLog.filter(e => e.team === 'home' && (e.type === 'foul_attempt' || e.type === 'FOUL')).length,
+                        opponent: gameLog.filter(e => e.team === 'opponent' && (e.type === 'foul_attempt' || e.type === 'FOUL')).length
+                    },
+                    expulsions: {
+                        home: gameLog.filter(e => e.team === 'home' && (e.type === 'player_sent_off' || e.type === 'EXPULSION')).length,
+                        opponent: gameLog.filter(e => e.team === 'opponent' && (e.type === 'player_sent_off' || e.type === 'EXPULSION')).length
+                    },
+                    casualties: {
+                        home: gameLog.filter(e => e.team === 'home' && (e.type === 'injury_casualty' || e.type === 'INJURY' || e.type === 'DEATH')).length,
+                        opponent: gameLog.filter(e => e.team === 'opponent' && (e.type === 'injury_casualty' || e.type === 'INJURY' || e.type === 'DEATH')).length
+                    },
+                    rerollsUsed: {
+                        home: gameLog.filter(e => e.team === 'home' && e.type === 'reroll_used').length,
+                        opponent: gameLog.filter(e => e.team === 'opponent' && e.type === 'reroll_used').length
+                    }
                 };
-            } else {
-                finalNewsData = generateMatchArticle(baseReport as MatchReport);
+
+                const baseSpectators = (fame.home + fame.opponent) * 1000 + 10000;
+                const spectators = isNaN(baseSpectators) ? 10000 : baseSpectators;
+                const baseReport: any = {
+                    date: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                    homeTeam: { id: homeTeam.id, name: liveHomeTeam.name, rosterName: liveHomeTeam.rosterName, score: score.home, crestImage: liveHomeTeam.crestImage },
+                    opponentTeam: { id: opponentTeam?.id, name: liveOpponentTeam?.name || 'Desconocido', rosterName: liveOpponentTeam?.rosterName || 'Rival', score: score.opponent, crestImage: liveOpponentTeam?.crestImage },
+                    gameLog: gameLog,
+                    weather: gameStatus.weather?.title,
+                    winner: score.home > score.opponent ? 'home' : score.home < score.opponent ? 'opponent' : 'draw',
+                    stats,
+                    spectators,
+                    wasConceded: concessionState
+                };
+
+                let finalNewsData;
+                if (currentChronicle) {
+                    const parts = currentChronicle.split('\n\n');
+                    finalNewsData = { headline: parts[0] || 'CRÓNICA DE COMBATE', article: parts.slice(1).join('\n\n'), summary: `Final: ${liveHomeTeam.name} ${score.home} - ${score.opponent} ${liveOpponentTeam?.name}` };
+                } else {
+                    finalNewsData = generateMatchArticle(baseReport as MatchReport);
+                }
+
+                const reportId = await onMatchReportCreate!({ ...baseReport, ...finalNewsData });
+                if (reportId) historyEntry.id = reportId;
             }
 
-            const reportId = await onMatchReportCreate!({
-                ...baseReport,
-                ...finalNewsData
-            });
-
-            if (reportId) historyEntry.id = reportId; // Link report to history
+            onTeamUpdate(finalTeamWithStats);
         }
 
-        onTeamUpdate(finalTeamWithStats);
+        // --- Full game state reset ---
+        resetGameState();
+    };
 
-        // --- Full game state reset (prevents state bleed into next match) ---
+    const resetGameState = () => {
         setGameState('setup');
         setHomeTeam(null);
         setOpponentTeam(null);
@@ -949,6 +995,86 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
         setRosterViewId('home');
         setJourneymenNotification(null);
         setPendingJourneymen({ home: [], opponent: [] });
+        setMatchMode('competition'); // Reset default mode
+    };
+
+    const SnapshotSelectionModal = ({ open, info, onClose }: { open: boolean, info: { team: ManagedTeam, side: 'home' | 'opponent' } | null, onClose: () => void }) => {
+        if (!open || !info) return null;
+
+        const handleSelect = (snapshot: ManagedTeamSnapshot | 'current') => {
+            let finalTeamState: ManagedTeam;
+            if (snapshot === 'current') {
+                finalTeamState = info.team;
+            } else {
+                // We reconstruct the team using the snapshot's state
+                // But we preserve the original object's non-state properties if any (like snapshots array)
+                finalTeamState = { 
+                    ...snapshot.teamState, 
+                    snapshots: info.team.snapshots 
+                } as ManagedTeam;
+            }
+
+            if (info.side === 'home') setHomeTeam(finalTeamState);
+            else {
+                const fullPlayers: ManagedPlayer[] = finalTeamState.players.map(p => ({ ...p, status: 'Reserva' as PlayerStatus }));
+                setOpponentTeam({ ...finalTeamState, players: fullPlayers });
+            }
+            onClose();
+        };
+
+        return (
+            <div className="fixed inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center z-[600] p-4">
+                <div className="glass-panel max-w-lg w-full p-8 border-sky-500/30 bg-black/60 animate-bounce-in">
+                    <div className="flex justify-between items-start mb-6">
+                        <div>
+                            <h3 className="text-2xl font-display font-black text-white uppercase italic tracking-tighter">Seleccionar <span className="text-sky-400">Estado</span></h3>
+                            <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Modo Amistoso: Elige una versión del equipo</p>
+                        </div>
+                        <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/5 text-slate-500 hover:text-white flex items-center justify-center">
+                            <span className="material-symbols-outlined text-sm">close</span>
+                        </button>
+                    </div>
+
+                    <div className="space-y-3">
+                        <button 
+                            onClick={() => handleSelect('current')}
+                            className="w-full text-left p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-sky-500/50 hover:bg-sky-500/5 transition-all group"
+                        >
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <p className="text-sm font-display font-black text-white uppercase group-hover:text-sky-400">Estado Actual</p>
+                                    <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">El roster tal como está ahora</p>
+                                </div>
+                                <span className="material-symbols-outlined text-sky-500 opacity-0 group-hover:opacity-100 transition-opacity">radio_button_checked</span>
+                            </div>
+                        </button>
+
+                        <div className="pt-4 border-t border-white/5">
+                            <p className="text-[9px] font-display font-black text-slate-600 uppercase tracking-widest mb-3">Snapshots Disponibles</p>
+                            <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                {info.team.snapshots?.map(snapshot => (
+                                    <button 
+                                        key={snapshot.id}
+                                        onClick={() => handleSelect(snapshot)}
+                                        className="w-full text-left p-4 rounded-2xl bg-black/40 border border-white/5 hover:border-sky-500/30 hover:bg-sky-500/5 transition-all group"
+                                    >
+                                        <div className="flex justify-between items-center">
+                                            <div>
+                                                <p className="text-sm font-display font-black text-white uppercase italic">Snapshot {new Date(snapshot.timestamp).toLocaleDateString()}</p>
+                                                <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1">
+                                                    TV {calculateTeamValue(snapshot.teamState as any).toLocaleString()} · {new Date(snapshot.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </p>
+                                            </div>
+                                            <span className="material-symbols-outlined text-sky-500/30 group-hover:text-sky-400">history</span>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
     };
     const handleFoulAction = (action: 'next' | 'back') => {
         const { step, foulingPlayer, victimPlayer, armorRollInput, wasExpelled, log, foulingTeamId, injuryRollInput, casualtyRollInput, lastingInjuryRollInput } = foulState;
@@ -1660,11 +1786,41 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                     ).catch((err: any) => { console.error("Error al iniciar escáner", err); alert(`Error al iniciar cámara: ${err}.`); });
                 };
 
+                const handleSelectTeamInternal = (team: ManagedTeam, side: 'home' | 'opponent') => {
+                    if (matchMode === 'friendly' && team.snapshots && team.snapshots.length > 0) {
+                        setSelectingSnapshotFor({ team, side });
+                    } else {
+                        if (side === 'home') setHomeTeam(team);
+                        else {
+                            const fullPlayers: ManagedPlayer[] = team.players.map(p => ({ ...p, status: 'Reserva' as PlayerStatus }));
+                            setOpponentTeam({ ...team, players: fullPlayers });
+                        }
+                    }
+                };
+
                 return (
                     <div className="max-w-6xl mx-auto py-10 px-4 animate-fade-in">
-                        <div className="text-center mb-12">
+                        <div className="text-center mb-10">
                             <h2 className="text-4xl font-display font-black text-white uppercase italic tracking-tighter mb-2">Preparar <span className="text-premium-gold">Confrontación</span></h2>
                             <p className="text-slate-500 text-sm tracking-wide">Forja el duelo definitivo en la arena de Nuffle.</p>
+                            
+                            {/* Mode Selector */}
+                            <div className="flex justify-center mt-6">
+                                <div className="bg-black/40 p-1 rounded-2xl border border-white/10 flex gap-2">
+                                    <button 
+                                        onClick={() => setMatchMode('competition')}
+                                        className={`px-6 py-2 rounded-xl font-display font-black text-[10px] uppercase tracking-widest transition-all ${matchMode === 'competition' ? 'bg-premium-gold text-black shadow-lg shadow-premium-gold/20' : 'text-slate-500 hover:text-white'}`}
+                                    >
+                                        Competición
+                                    </button>
+                                    <button 
+                                        onClick={() => setMatchMode('friendly')}
+                                        className={`px-6 py-2 rounded-xl font-display font-black text-[10px] uppercase tracking-widest transition-all ${matchMode === 'friendly' ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/20' : 'text-slate-500 hover:text-white'}`}
+                                    >
+                                        Amistoso
+                                    </button>
+                                </div>
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
@@ -1707,7 +1863,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                                         {managedTeams.map(team => (
                                             <button
                                                 key={team.name}
-                                                onClick={() => setHomeTeam(team)}
+                                                onClick={() => handleSelectTeamInternal(team, 'home')}
                                                 className="group w-full flex items-center gap-4 glass-panel p-4 border-white/5 bg-black/20 hover:bg-sky-500/10 hover:border-sky-500/50 transition-all duration-300"
                                             >
                                                 <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center border border-white/5 overflow-hidden">
@@ -1788,11 +1944,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                                             {managedTeams.filter(t => t.name !== homeTeam?.name).map(team => (
                                                 <button
                                                     key={team.name}
-                                                    onClick={() => {
-                                                        const baseTeam = team;
-                                                        const fullPlayers: ManagedPlayer[] = baseTeam.players.map(p => ({ ...p, status: 'Reserva' }));
-                                                        setOpponentTeam({ ...baseTeam, players: fullPlayers });
-                                                    }}
+                                                    onClick={() => handleSelectTeamInternal(team, 'opponent')}
                                                     className="group w-full flex items-center gap-4 p-3 rounded-2xl bg-white/5 border border-transparent hover:border-red-500/30 hover:bg-red-500/5 transition-all"
                                                 >
                                                     <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center border border-white/5 overflow-hidden">
@@ -2574,34 +2726,68 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                                                     </span>
                                                 )}
                                             </div>
-                                            <div className="flex gap-4 items-center">
-                                                <div className="flex gap-4">
-                                                    {[
-                                                        { l: 'MA', v: selectedPlayerForAction.stats.MV },
-                                                        { l: 'ST', v: selectedPlayerForAction.stats.FU },
-                                                        { l: 'AG', v: selectedPlayerForAction.stats.AG },
-                                                        { l: 'AV', v: selectedPlayerForAction.stats.AR }
-                                                    ].map(s => (
-                                                        <div key={s.l} className="flex flex-col items-center">
-                                                            <span className="text-[8px] text-premium-gold/50 font-display font-black uppercase tracking-widest leading-none mb-1">{s.l}</span>
-                                                            <span className="text-base font-display font-black text-white leading-none">{s.v}</span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                                <div className="h-8 w-px bg-white/10"></div>
-                                                <div className="flex flex-wrap gap-1.5">
-                                                    {(selectedPlayerForAction?.skills || '').split(',').map((s, i) => s.trim()).filter(Boolean).map((s, i) => (
+                                                <div className="flex gap-4 items-center">
+                                                    <div className="flex gap-4">
+                                                        {[
+                                                            { l: 'MA', v: selectedPlayerForAction.stats.MV, penalty: selectedPlayerForAction.hasIndigestion ? -1 : 0 },
+                                                            { l: 'ST', v: selectedPlayerForAction.stats.FU },
+                                                            { l: 'AG', v: selectedPlayerForAction.stats.AG },
+                                                            { l: 'PA', v: selectedPlayerForAction.stats.PA },
+                                                            { l: 'AV', v: selectedPlayerForAction.stats.AR, penalty: selectedPlayerForAction.hasIndigestion ? -1 : 0 }
+                                                        ].map(s => (
+                                                            <div key={s.l} className="flex flex-col items-center min-w-[32px]">
+                                                                <span className="text-[8px] text-premium-gold/50 font-display font-black uppercase tracking-widest leading-none mb-1">{s.l}</span>
+                                                                <span className={`text-base font-display font-black leading-none ${s.penalty ? 'text-red-500' : 'text-white'}`}>
+                                                                    {s.penalty ? (parseInt(s.v as string) + s.penalty) : s.v}
+                                                                </span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                    <div className="h-8 w-px bg-white/10"></div>
+                                                    
+                                                    {/* Condition Toggles */}
+                                                    <div className="flex gap-2">
                                                         <button
-                                                            key={i}
-                                                            onClick={() => handleSkillClick(s.trim())}
-                                                            className="text-[10px] font-display font-bold text-sky-400 hover:text-white hover:bg-sky-400/10 px-2 py-1 rounded-md transition-all border border-transparent hover:border-sky-400/30"
+                                                            onClick={() => handleUpdatePlayerCondition(selectedPlayerForAction.id, activeTeamId, 'isDistracted')}
+                                                            className={`p-2 rounded-xl border transition-all flex items-center gap-1.5 ${selectedPlayerForAction.isDistracted ? 'bg-red-500/20 border-red-500 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.2)]' : 'bg-white/5 border-white/10 text-slate-500 hover:border-white/20'}`}
+                                                            title="Distraído (Sin Zona de Defensa/Habilidades)"
                                                         >
-                                                            {s.trim()}
+                                                            <span className="material-symbols-outlined text-sm">{selectedPlayerForAction.isDistracted ? 'block' : 'psychology'}</span>
+                                                            <span className="text-[8px] font-black uppercase tracking-tighter">Distraído</span>
                                                         </button>
-                                                    ))}
+                                                        <button
+                                                            onClick={() => handleUpdatePlayerCondition(selectedPlayerForAction.id, activeTeamId, 'hasIndigestion')}
+                                                            className={`p-2 rounded-xl border transition-all flex items-center gap-1.5 ${selectedPlayerForAction.hasIndigestion ? 'bg-amber-500/20 border-amber-500 text-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'bg-white/5 border-white/10 text-slate-500 hover:border-white/20'}`}
+                                                            title="Indigestión (-1 MV, -1 AR)"
+                                                        >
+                                                            <span className="material-symbols-outlined text-sm">restaurant</span>
+                                                            <span className="text-[8px] font-black uppercase tracking-tighter">Indigestión</span>
+                                                        </button>
+                                                    </div>
+
+                                                    <div className="h-8 w-px bg-white/10"></div>
+                                                    <div className="flex flex-wrap gap-1.5">
+                                                        {[
+                                                            ...(selectedPlayerForAction.skillKeys || []),
+                                                            ...(selectedPlayerForAction.gainedSkills || [])
+                                                        ].map((keyOrName, i) => {
+                                                            const skillEntry = skillsData.find(s => s.keyEN === keyOrName || s.name_es === keyOrName || s.name_en === keyOrName);
+                                                            const displayName = skillEntry?.name_es || keyOrName;
+                                                            return (
+                                                                <button
+                                                                    key={i}
+                                                                    onClick={() => handleSkillClick(skillEntry?.keyEN || keyOrName)}
+                                                                    className={`text-[10px] font-display font-bold px-2 py-1 rounded-md transition-all border border-transparent ${selectedPlayerForAction.isDistracted ? 'text-slate-600 line-through opacity-50 cursor-not-allowed' : 'text-sky-400 hover:text-white hover:bg-sky-400/10 hover:border-sky-400/30'}`}
+                                                                    disabled={selectedPlayerForAction.isDistracted}
+                                                                    title={skillEntry?.desc_es || ''}
+                                                                >
+                                                                    {displayName}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
                                         <button
                                             onClick={() => setSelectedPlayerForAction(null)}
                                             className="w-12 h-12 rounded-2xl bg-white/5 hover:bg-blood-red/20 text-slate-500 hover:text-blood-red transition-all flex items-center justify-center border border-white/5"
@@ -2651,8 +2837,9 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                                     </button>
 
                                     <button
-                                        onClick={() => setIsFoulModalOpen(true)}
-                                        className="group relative overflow-hidden bg-amber-950/20 border-2 border-amber-500/20 text-white font-display font-black p-5 rounded-[1.5rem] hover:bg-amber-600 hover:text-black hover:border-amber-400 transition-all duration-500 shadow-xl flex flex-col items-center gap-3"
+                                        onClick={() => handleStrategicAction('foul')}
+                                        disabled={turnActions[activeTeamId].foul}
+                                        className={`group relative overflow-hidden text-white font-display font-black p-5 rounded-[1.5rem] transition-all duration-500 shadow-xl flex flex-col items-center gap-3 ${turnActions[activeTeamId].foul ? 'bg-white/5 border-2 border-white/5 opacity-40 cursor-not-allowed' : 'bg-amber-950/20 border-2 border-amber-500/20 hover:bg-amber-600 hover:text-black hover:border-amber-400'}`}
                                     >
                                         <div className="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center border border-amber-500/30 group-hover:bg-black group-hover:border-black group-hover:scale-110 transition-all duration-300">
                                             <span className="material-symbols-outlined text-amber-500 text-2xl">skull</span>
@@ -2660,6 +2847,74 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                                         <span className="uppercase italic text-[9px] tracking-[0.2em]">Cometer Falta</span>
                                         <div className="absolute -bottom-2 -right-2 opacity-5 translate-y-4 group-hover:translate-y-0 transition-transform duration-700">
                                             <span className="material-symbols-outlined text-7xl text-white">skull</span>
+                                        </div>
+                                    </button>
+
+                                    <button
+                                        onClick={() => handleStrategicAction('blitz')}
+                                        disabled={turnActions[activeTeamId].blitz}
+                                        className={`group relative overflow-hidden text-white font-display font-black p-5 rounded-[1.5rem] transition-all duration-500 shadow-xl flex flex-col items-center gap-3 ${turnActions[activeTeamId].blitz ? 'bg-white/5 border-2 border-white/5 opacity-40 cursor-not-allowed' : 'bg-amber-950/20 border-2 border-amber-500/20 hover:bg-amber-600 hover:text-black hover:border-amber-400'}`}
+                                    >
+                                        <div className="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center border border-amber-500/30 group-hover:bg-black group-hover:border-black group-hover:scale-110 transition-all duration-300">
+                                            <span className="material-symbols-outlined text-amber-500 text-2xl">bolt</span>
+                                        </div>
+                                        <span className="uppercase italic text-[9px] tracking-[0.2em]">Realizar Blitz</span>
+                                        <div className="absolute -bottom-2 -right-2 opacity-5 translate-y-4 group-hover:translate-y-0 transition-transform duration-700">
+                                            <span className="material-symbols-outlined text-7xl text-white">bolt</span>
+                                        </div>
+                                    </button>
+
+                                    <button
+                                        onClick={() => handleStrategicAction('handoff')}
+                                        disabled={turnActions[activeTeamId].handoff}
+                                        className={`group relative overflow-hidden text-white font-display font-black p-5 rounded-[1.5rem] transition-all duration-500 shadow-xl flex flex-col items-center gap-3 ${turnActions[activeTeamId].handoff ? 'bg-white/5 border-2 border-white/5 opacity-40 cursor-not-allowed' : 'bg-green-950/20 border-2 border-green-500/20 hover:bg-green-600 hover:text-black hover:border-green-400'}`}
+                                    >
+                                        <div className="w-12 h-12 bg-green-500/10 rounded-xl flex items-center justify-center border border-green-500/30 group-hover:bg-black group-hover:border-black group-hover:scale-110 transition-all duration-300">
+                                            <span className="material-symbols-outlined text-green-500 text-2xl">pan_tool</span>
+                                        </div>
+                                        <span className="uppercase italic text-[9px] tracking-[0.2em]">Entregar Balón</span>
+                                        <div className="absolute -bottom-2 -right-2 opacity-10 translate-y-4 group-hover:translate-y-0 transition-transform duration-700">
+                                            <span className="material-symbols-outlined text-7xl text-white">pan_tool</span>
+                                        </div>
+                                    </button>
+
+                                    <button
+                                        onClick={() => handleStrategicAction('pass')}
+                                        disabled={turnActions[activeTeamId].pass}
+                                        className={`group relative overflow-hidden text-white font-display font-black p-5 rounded-[1.5rem] transition-all duration-500 shadow-xl flex flex-col items-center gap-3 ${turnActions[activeTeamId].pass ? 'bg-white/5 border-2 border-white/5 opacity-40 cursor-not-allowed' : 'bg-sky-950/20 border-2 border-sky-500/20 hover:bg-sky-500 hover:text-black hover:border-sky-400'}`}
+                                    >
+                                        <div className="w-12 h-12 bg-sky-500/10 rounded-xl flex items-center justify-center border border-sky-500/30 group-hover:bg-black group-hover:border-black group-hover:scale-110 transition-all duration-300">
+                                            <PassIcon className="w-6 h-6 text-sky-400" />
+                                        </div>
+                                        <span className="uppercase italic text-[9px] tracking-[0.2em]">Lanzar Pase</span>
+                                        <div className="absolute -bottom-2 -right-2 opacity-10 translate-y-4 group-hover:translate-y-0 transition-transform duration-700">
+                                            <PassIcon className="w-16 h-16 text-white" />
+                                        </div>
+                                    </button>
+
+                                    <button
+                                        onClick={() => logEvent('INFO', `¡ASEGURAR BALÓN! ${selectedPlayerForAction?.customName || 'Un jugador'} protege el cuero con su vida.`, { team: activeTeamId, player: selectedPlayerForAction?.id })}
+                                        className={`group relative overflow-hidden bg-sky-950/20 border-2 border-sky-500/20 text-white font-display font-black p-5 rounded-[1.5rem] hover:bg-sky-500 hover:text-black transition-all duration-500 shadow-xl flex flex-col items-center gap-3`}
+                                    >
+                                        <div className="w-12 h-12 bg-sky-500/10 rounded-xl flex items-center justify-center border border-sky-500/30 group-hover:bg-black group-hover:border-black group-hover:scale-110 transition-all duration-300">
+                                            <span className="material-symbols-outlined text-sky-400 text-2xl">shield</span>
+                                        </div>
+                                        <span className="uppercase italic text-[9px] tracking-[0.2em]">Asegurar Balón</span>
+                                        <div className="absolute -bottom-2 -right-2 opacity-10 translate-y-4 group-hover:translate-y-0 transition-transform duration-700">
+                                            <span className="material-symbols-outlined text-7xl text-white">shield</span>
+                                        </div>
+                                    </button>
+
+                                    <button
+                                        onClick={() => logEvent('INFO', `¡STALLING CHECK! El árbitro vigila el reloj mientras ${selectedPlayerForAction?.customName || 'un jugador'} pierde tiempo.`, { team: activeTeamId, player: selectedPlayerForAction?.id })}
+                                        className={`group relative overflow-hidden bg-amber-950/20 border-2 border-amber-500/20 text-white font-display font-black p-5 rounded-[1.5rem] hover:bg-amber-500 hover:text-black transition-all duration-500 shadow-xl flex flex-col items-center gap-3`}
+                                    >
+                                        <div className="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center border border-amber-500/30 group-hover:bg-black group-hover:border-black group-hover:scale-110 transition-all duration-300">
+                                            <span className="material-symbols-outlined text-amber-500 text-2xl">timer</span>
+                                        </div>
+                                        <span className="uppercase italic text-[9px] tracking-[0.2em]">Stalling Check</span>
+                                        <div className="absolute -bottom-2 -right-2 opacity-10 translate-y-4 group-hover:translate-y-0 transition-transform duration-700">
+                                            <span className="material-symbols-outlined text-7xl text-white">timer</span>
                                         </div>
                                     </button>
 
@@ -2673,19 +2928,6 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                                         <span className="uppercase italic text-[9px] tracking-[0.2em]">¡TURNOVER!</span>
                                         <div className="absolute -bottom-2 -right-2 opacity-10 translate-y-4 group-hover:translate-y-0 transition-transform duration-700">
                                             <span className="material-symbols-outlined text-7xl text-white">bolt</span>
-                                        </div>
-                                    </button>
-
-                                    <button
-                                        onClick={() => openSppModal('pass')}
-                                        className="group relative overflow-hidden bg-sky-950/20 border-2 border-sky-500/20 text-white font-display font-black p-5 rounded-[1.5rem] hover:bg-sky-500 hover:text-black hover:border-sky-400 transition-all duration-500 shadow-xl flex flex-col items-center gap-3"
-                                    >
-                                        <div className="w-12 h-12 bg-sky-500/10 rounded-xl flex items-center justify-center border border-sky-500/30 group-hover:bg-black group-hover:border-black group-hover:scale-110 transition-all duration-300">
-                                            <PassIcon className="w-6 h-6 text-sky-400" />
-                                        </div>
-                                        <span className="uppercase italic text-[9px] tracking-[0.2em]">Lanzar Pase</span>
-                                        <div className="absolute -bottom-2 -right-2 opacity-10 translate-y-4 group-hover:translate-y-0 transition-transform duration-700">
-                                            <PassIcon className="w-16 h-16 text-white" />
                                         </div>
                                     </button>
 
@@ -2735,11 +2977,11 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                                         <span className="material-symbols-outlined text-lg transition-transform group-hover:rotate-12">edit_note</span>
                                         Intervención Divina
                                     </button>
-                                    <button onClick={() => setIsPrayersModalOpen(true)} className="group bg-white/5 border border-white/5 px-6 py-4 rounded-2xl text-[10px) font-display font-black uppercase tracking-widest text-slate-400 hover:text-sky-400 hover:border-sky-400/30 hover:bg-sky-400/5 transition-all flex items-center gap-3">
+                                    <button onClick={() => setIsPrayersModalOpen(true)} className="group bg-white/5 border border-white/5 px-6 py-4 rounded-2xl text-[10px] font-display font-black uppercase tracking-widest text-slate-400 hover:text-sky-400 hover:border-sky-400/30 hover:bg-sky-400/5 transition-all flex items-center gap-3">
                                         <span className="material-symbols-outlined text-lg transition-transform group-hover:scale-110">auto_awesome</span>
                                         Plegarias
                                     </button>
-                                    <button onClick={() => setIsWeatherModalOpen(true)} className="group bg-white/5 border border-white/5 px-6 py-4 rounded-2xl text-[10px) font-display font-black uppercase tracking-widest text-slate-400 hover:text-amber-400 hover:border-amber-400/30 hover:bg-amber-400/5 transition-all flex items-center gap-3">
+                                    <button onClick={() => setIsWeatherModalOpen(true)} className="group bg-white/5 border border-white/5 px-6 py-4 rounded-2xl text-[10px] font-display font-black uppercase tracking-widest text-slate-400 hover:text-amber-400 hover:border-amber-400/30 hover:bg-amber-400/5 transition-all flex items-center gap-3">
                                         <span className="material-symbols-outlined text-lg animate-spin-slow">cyclone</span>
                                         Vientos de Nuffle
                                     </button>
@@ -3601,6 +3843,11 @@ const GameBoard: React.FC<GameBoardProps> = ({ managedTeams, matchReports = [], 
                     weather={gameStatus.weather?.title}
                 />
             )}
+            <SnapshotSelectionModal 
+                open={!!selectingSnapshotFor} 
+                info={selectingSnapshotFor} 
+                onClose={() => setSelectingSnapshotFor(null)} 
+            />
             <style>{`
                 @keyframes fade-in-slow { from { opacity: 0; } to { opacity: 1; } }
                 .animate-fade-in-slow { animation: fade-in-slow 0.5s ease-out forwards; }

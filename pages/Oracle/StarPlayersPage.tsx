@@ -71,7 +71,7 @@ const StarPlayerCard: React.FC<{
                         <StatBox label="MA" value={player.stats.MV} />
                         <StatBox label="ST" value={player.stats.FU} />
                         <StatBox label="AG" value={player.stats.AG} />
-                        <StatBox label="PA" value={player.stats.PS || '-'} />
+                        <StatBox label="PA" value={player.stats.PA || '-'} />
                         <StatBox label="AV" value={player.stats.AR} />
                     </div>
                 )}

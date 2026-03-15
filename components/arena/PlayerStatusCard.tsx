@@ -88,6 +88,21 @@ const PlayerStatusCard: React.FC<PlayerStatusCardProps> = ({ player, playerNumbe
                             <p className="text-[10px] font-display text-slate-500 uppercase tracking-widest truncate">{player.position}</p>
                             <SppActionIcons actions={player.sppActions || {}} />
                         </div>
+                        {/* S3 condition indicators */}
+                        {(player.isDistracted || player.hasIndigestion) && (
+                            <div className="flex gap-1.5 mt-1">
+                                {player.isDistracted && (
+                                    <span className="flex items-center gap-1 text-[8px] font-black text-red-500 uppercase bg-red-500/10 px-1.5 py-0.5 rounded border border-red-500/20 animate-pulse">
+                                        <span className="material-symbols-outlined text-[10px]">block</span> Distraído
+                                    </span>
+                                )}
+                                {player.hasIndigestion && (
+                                    <span className="flex items-center gap-1 text-[8px] font-black text-amber-500 uppercase bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
+                                        <span className="material-symbols-outlined text-[10px]">restaurant</span> -1 MV/AR
+                                    </span>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
                 <div className="text-right flex flex-col items-end">

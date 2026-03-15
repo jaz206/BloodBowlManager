@@ -11,7 +11,7 @@ export interface PlayerStats {
   MV: number;
   FU: string;
   AG: string;
-  PS: string;
+  PA: string;
   AR: string;
 }
 
@@ -119,6 +119,16 @@ export interface ManagedPlayer extends Player {
   isStarPlayer?: boolean;
   isJourneyman?: boolean;
   advancements?: Advancement[];
+  // S3 Condition States
+  isDistracted?: boolean;
+  hasIndigestion?: boolean;
+}
+
+export interface ManagedTeamSnapshot {
+  id: string;
+  timestamp: string;
+  matchId?: string;
+  teamState: Omit<ManagedTeam, 'snapshots'>; // Prevent deep nesting
 }
 
 export interface ManagedTeam {
@@ -161,6 +171,7 @@ export interface ManagedTeam {
     date: string;
     result: 'W' | 'D' | 'L';
   }>;
+  snapshots?: ManagedTeamSnapshot[];
 }
 
 export interface DrawingPath {

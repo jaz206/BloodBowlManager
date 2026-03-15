@@ -124,7 +124,7 @@ const TeamArticle: React.FC<{
                                         <td className="py-5 px-2 text-center text-slate-400 font-display font-bold">{player.stats.MV}</td>
                                         <td className="py-5 px-2 text-center text-slate-200 font-display font-black">{player.stats.FU}</td>
                                         <td className="py-5 px-2 text-center text-slate-400 font-mono italic">{player.stats.AG}</td>
-                                        <td className="py-5 px-2 text-center text-slate-400 font-mono italic">{player.stats.PS}</td>
+                                        <td className="py-5 px-2 text-center text-slate-400 font-mono italic">{player.stats.PA}</td>
                                         <td className="py-5 px-2 text-center text-slate-400 font-mono italic">{player.stats.AR}</td>
                                         <td className="py-5 px-2">
                                             <div className="flex flex-wrap gap-1">
