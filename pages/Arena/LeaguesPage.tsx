@@ -185,13 +185,49 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
     };
 
     const handleJoinCompetition = () => {
-        if (!joinModalState.comp || !joinModalState.teamToJoin || !user) return;
+        if (!joinModalState.comp || !user) return;
+        
+        let teamName = joinModalState.teamToJoin;
+        
+        // Fallback to first managed team if none selected but available
+        if (!teamName && managedTeams.length > 0) {
+            teamName = managedTeams[0].name;
+        }
+
+        if (!teamName) {
+            setConfirmation({
+                title: "Sin equipo",
+                message: "Debes crear al menos un equipo en el Gremio para unirte a una liga.",
+                onConfirm: () => setConfirmation(null),
+                type: 'info'
+            });
+            return;
+        }
+
         const cleanComp = cloneCompetition(joinModalState.comp);
+        
+        // Check if team already exists in competition
+        if (cleanComp.teams.some(t => t.teamName === teamName)) {
+            setConfirmation({
+                title: "Equipo duplicado",
+                message: "Este equipo ya está inscrito en la competición.",
+                onConfirm: () => setConfirmation(null),
+                type: 'info'
+            });
+            return;
+        }
+
         const updatedComp = {
             ...cleanComp,
-            teams: [...cleanComp.teams, { teamName: joinModalState.teamToJoin, ownerId: user.id, ownerName: user.name }]
+            teams: [...cleanComp.teams, { teamName, ownerId: user.id, ownerName: user.name }]
         };
         onCompetitionUpdate(updatedComp);
+        
+        // Update local state if we are in detail view
+        if (selectedCompetition && selectedCompetition.id === updatedComp.id) {
+            setSelectedCompetition(updatedComp);
+        }
+
         setJoinModalState({ comp: null, teamToJoin: '' });
     };
 
@@ -417,10 +453,22 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
 
                 {selectedCompetition.status === 'Open' && (
                     <div className="bg-zinc-900/20 border border-white/5 p-10 rounded-[2.5rem]">
-                        <h3 className="text-xl font-black text-white italic tracking-tighter uppercase mb-8 flex items-center gap-3">
-                            <span className="material-symbols-outlined font-bold text-primary">groups</span>
-                            Equipos Inscritos <span className="text-primary font-black ml-1">({selectedCompetition.teams.length})</span>
-                        </h3>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
+                            <h3 className="text-xl font-black text-white italic tracking-tighter uppercase flex items-center gap-3">
+                                <span className="material-symbols-outlined font-bold text-primary">groups</span>
+                                Equipos Inscritos <span className="text-primary font-black ml-1">({selectedCompetition.teams.length})</span>
+                            </h3>
+
+                            {!selectedCompetition.teams.some(t => t.ownerId === user?.id) && (
+                                <button
+                                    onClick={() => setJoinModalState({ comp: selectedCompetition, teamToJoin: managedTeams[0]?.name || '' })}
+                                    className="bg-primary text-black font-black py-3 px-8 rounded-2xl text-[10px] uppercase tracking-widest transition-all hover:scale-105 shadow-lg shadow-primary/20"
+                                >
+                                    Inscribir mi Equipo
+                                </button>
+                            )}
+                        </div>
+                        
                         {selectedCompetition.teams.length > 0 ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                                 {selectedCompetition.teams.map(t => (
@@ -437,7 +485,7 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
                             </div>
                         ) : (
                             <div className="text-center py-10">
-                                <p className="text-slate-500 font-bold italic uppercase tracking-widest text-xs">Esperando aspirantes... ¡Comparte el nombre de la liga!</p>
+                                <p className="text-slate-500 font-bold italic uppercase tracking-widest text-xs">Esperando aspirantes... ¡Únete o invita a otros coaches!</p>
                             </div>
                         )}
                     </div>
@@ -724,8 +772,18 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
                                         onChange={e => setJoinModalState(s => ({ ...s, teamToJoin: e.target.value }))}
                                         className="w-full bg-black/60 border border-white/10 rounded-2xl py-4 px-4 text-white focus:ring-2 focus:ring-primary/50 outline-none transition-all font-bold"
                                     >
-                                        {managedTeams.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
+                                        <option value="" disabled>Selecciona un equipo...</option>
+                                        {managedTeams.length > 0 ? (
+                                            managedTeams.map(t => <option key={t.id || t.name} value={t.name}>{t.name}</option>)
+                                        ) : (
+                                            <option disabled>No tienes equipos en el Gremio</option>
+                                        )}
                                     </select>
+                                    {managedTeams.length === 0 && (
+                                        <p className="text-[9px] text-amber-500 italic mt-1 px-4">
+                                            Primero debes forjar un equipo en el Gremio para poder inscribirlo.
+                                        </p>
+                                    )}
                                 </div>
                             </div>
 
