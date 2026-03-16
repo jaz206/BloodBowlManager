@@ -20,6 +20,7 @@ interface InjuryEngineContext {
     setIsApothecaryModalOpen: (isOpen: boolean) => void;
     initialInjuryState: InjuryState;
     playSound: (type: 'td' | 'injury' | 'turnover' | 'dice') => void;
+    turn: number;
 }
 
 /**
@@ -229,10 +230,26 @@ export const handleInjuryActionLogic = (ctx: InjuryEngineContext, action: 'next'
             const finalLog = injuryState.log.join(' ');
             const casualtyResult = injuryState.casualtyRoll?.result;
             const isDeath = casualtyResult === 'Muerto';
-            const isRealCasualty = casualtyResult && casualtyResult !== 'Magullado (solo reservas)';
+            const isGraveInjury = casualtyResult && ['Gravemente Herido', 'Lesion Seria', 'Lesion Permanente'].includes(casualtyResult);
+            const isRealCasualty = casualtyResult && casualtyResult !== 'Malherido';
 
             if (isDeath) {
                 logEvent('DEATH', `¡MUERTE! ${victimPlayer?.customName} ha fallecido en el campo.`, { team: victimTeamId!, player: victimPlayer?.id });
+            }
+
+            // Devolver el Favor (Sección 5 Manual S3)
+            if (isGraveInjury) {
+                const hateRoll = Math.floor(Math.random() * 6) + 1;
+                if (hateRoll >= 4) {
+                    const attackerName = attackerPlayer?.customName || 'un rival desconocido';
+                    setVictimTeam(prev => prev ? ({
+                        ...prev,
+                        players: prev.players.map(p => p.id === victimPlayer!.id ? {
+                            ...p, gainedSkills: [...(p.gainedSkills || []), `Odio (${attackerPlayer?.position || 'Rival'}) (S3)`]
+                        } : p)
+                    }) : null);
+                    logEvent('SKILL_GAIN', `¡DEVOLVER EL FAVOR! ${victimPlayer?.customName} gana el rasgo Odio tras una lesión grave (Dado ${hateRoll} >= 4).`, { team: victimTeamId!, player: victimPlayer?.id });
+                }
             }
 
             if (isCasualty && isRealCasualty && attackerPlayer && attackerTeamId) {
@@ -247,4 +264,14 @@ export const handleInjuryActionLogic = (ctx: InjuryEngineContext, action: 'next'
             break;
         }
     }
+};
+
+/**
+ * checkBoneHeadS3 — Aplica la lógica de S3 para Cabeza Dura.
+ */
+export const checkBoneHeadS3 = (dieRoll: number, player: ManagedPlayer): { success: boolean; isDistracted: boolean } => {
+    if (dieRoll === 1) {
+        return { success: false, isDistracted: true };
+    }
+    return { success: dieRoll >= 2, isDistracted: false };
 };

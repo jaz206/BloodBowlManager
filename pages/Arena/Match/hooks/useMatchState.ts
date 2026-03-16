@@ -7,7 +7,8 @@ import {
     SppModalState, 
     TurnActions,
     InducementState,
-    GameStatusState
+    GameStatusState,
+    InteractionSequenceState
 } from '../types/match.types';
 import { 
     ManagedTeam, 
@@ -151,6 +152,18 @@ export const useMatchState = (props: GameBoardProps) => {
     const [prayersAlert, setPrayersAlert] = useState<{ underdog: string, difference: number } | null>(null);
     const [journeymenNotification, setJourneymenNotification] = useState<string | null>(null);
     const [selectingSnapshotFor, setSelectingSnapshotFor] = useState<{ team: ManagedTeam, side: 'home' | 'opponent' } | null>(null);
+    
+    // ESTADO DE SECUENCIA S3 (Vínculo de Nuffle)
+    const [interactionState, setInteractionState] = useState<InteractionSequenceState>({
+        mode: 'idle',
+        pending: {
+            actorId: null,
+            actionType: null,
+            objectiveId: null,
+            diceResult: null,
+            manualMode: true
+        }
+    });
 
     // VALOR DE EQUIPO DINÁMICO
     const homeTV = useMemo(() => liveHomeTeam ? calculateTeamValue(liveHomeTeam) : 0, [liveHomeTeam]);
@@ -268,6 +281,7 @@ export const useMatchState = (props: GameBoardProps) => {
         prayersAlert, setPrayersAlert,
         journeymenNotification, setJourneymenNotification,
         selectingSnapshotFor, setSelectingSnapshotFor,
+        interactionState, setInteractionState,
         homeTV,
         opponentTV,
         playSound,

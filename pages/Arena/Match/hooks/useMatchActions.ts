@@ -11,7 +11,7 @@ import {
 import { handleFoulActionLogic } from '../engine/foulEngine';
 import { handleInjuryActionLogic } from '../engine/injuryEngine';
 import { updatePlayerSppActionLogic } from '../engine/sppEngine';
-import { handleHalftimeLogic, handleNextTurnLogic } from '../engine/matchEngine';
+import { handleHalftimeLogic, handleNextTurnLogic, checkStalling } from '../engine/matchEngine';
 import { skillsData } from '../../../../data/skills';
 import { teamsData } from '../../../../data/teams';
 
@@ -30,7 +30,7 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
         setIsInjuryModalOpen, setInjuryState, injuryState,
         setIsApothecaryModalOpen, setSelectedSkillForModal,
         setBallCarrierId, setSelectedPlayerForAction, selectedPlayerForAction,
-        tdModalTeam
+        tdModalTeam, setInteractionState, setIsTurnoverModalOpen
     } = state;
 
     // ─── UTILIDADES CORE ─────────────────────────────────────────────────────
@@ -92,9 +92,10 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
         handleHalftimeLogic({
             turn, half, setTurn, setHalf, logEvent,
             setGameStatus, firstHalfReceiver,
-            homeTeam, opponentTeam, setGameState
+            homeTeam, opponentTeam, setGameState,
+            setInteractionState
         });
-    }, [turn, half, setTurn, setHalf, logEvent, setGameStatus, firstHalfReceiver, homeTeam, opponentTeam, setGameState]);
+    }, [turn, half, setTurn, setHalf, logEvent, setGameStatus, firstHalfReceiver, homeTeam, opponentTeam, setGameState, setInteractionState]);
 
     /** Avanza al siguiente turno alternando el equipo activo. */
     const handleNextTurn = useCallback(() => {
@@ -125,9 +126,10 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
             setLiveHomeTeam, setLiveOpponentTeam,
             updatePlayerStatus, updatePlayerSppAndAction,
             logEvent, setIsInjuryModalOpen,
-            setIsApothecaryModalOpen, initialInjuryState, playSound
+            setIsApothecaryModalOpen, initialInjuryState, playSound,
+            turn
         }, action);
-    }, [injuryState, setInjuryState, liveHomeTeam, liveOpponentTeam, setLiveHomeTeam, setLiveOpponentTeam, updatePlayerStatus, updatePlayerSppAndAction, logEvent, setIsInjuryModalOpen, setIsApothecaryModalOpen, playSound]);
+    }, [injuryState, setInjuryState, liveHomeTeam, liveOpponentTeam, setLiveHomeTeam, setLiveOpponentTeam, updatePlayerStatus, updatePlayerSppAndAction, logEvent, setIsInjuryModalOpen, setIsApothecaryModalOpen, playSound, turn]);
 
     // ─── ACCIONES DE UI ──────────────────────────────────────────────────────
 
@@ -215,6 +217,102 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
         }
     }, [tdModalTeam, liveHomeTeam, liveOpponentTeam, logEvent, setScore, playSound, updatePlayerSppAndAction, setIsTdModalOpen, setTdModalTeam, turn, half, handleHalftime, setGameState]);
 
+    /** Registra un turnover y avanza al siguiente turno. */
+    const handleTurnover = useCallback((reason: string) => {
+        logEvent('TURNOVER', `Cambio de turno: ${reason}.`);
+        playSound('turnover');
+        setIsTurnoverModalOpen(false);
+        handleNextTurn();
+    }, [logEvent, playSound, handleNextTurn, setIsTurnoverModalOpen]);
+
+    /** Orquestador de lógica Season 3 tras recibir resultados de dados. */
+    const handleS3Action = useCallback((pending: any, result: any) => {
+        const { actionType, actorId, objectiveId } = pending;
+        const actor = (activeTeamId === 'home' ? liveHomeTeam : liveOpponentTeam)?.players.find(p => p.id === actorId);
+        const objective = (activeTeamId === 'home' ? liveOpponentTeam : liveHomeTeam)?.players.find(p => p.id === objectiveId);
+
+        if (!actor) return;
+
+        switch (actionType) {
+            case 'TOUCHDOWN':
+                handleSelectTdScorer(actor);
+                break;
+            case 'BLOCK':
+                if (result === 'Calavera') {
+                    handleTurnover(`jugador ${actor.customName} derribado en placaje`);
+                } else if (result === 'Ambos') {
+                    // Si actor no tiene Placaje -> turnover
+                    const hasBlock = actor.skillKeys.includes('BLOCK') || actor.gainedSkills.includes('BLOCK');
+                    if (!hasBlock) handleTurnover(`${actor.customName} derribado por Ambos Derribados`);
+                } else if (result === 'Zaca!') {
+                    setIsInjuryModalOpen(true);
+                    setInjuryState({
+                        ...initialInjuryState,
+                        attackerPlayer: actor,
+                        attackerTeamId: activeTeamId,
+                        victimPlayer: objective || null,
+                        victimTeamId: activeTeamId === 'home' ? 'opponent' : 'home',
+                        step: 'armor_roll'
+                    });
+                }
+                break;
+            case 'DODGE': {
+                const roll = parseInt(result);
+                if (roll < 2) {
+                    handleTurnover(`fallo al esquivar por parte de ${actor.customName}`);
+                }
+                break;
+            }
+            case 'PASS': {
+                const roll = parseInt(result);
+                if (roll === 1) {
+                    handleTurnover(`¡FUMBLE! ${actor.customName} pierde el balón`);
+                } else if (roll >= 2) {
+                    logEvent('SUCCESS', `${actor.customName} realiza un pase con éxito.`);
+                    updatePlayerSppAndAction(actor, activeTeamId, 1, 'PASS', 'pase completado');
+                }
+                break;
+            }
+            case 'HANDOFF': {
+                const roll = parseInt(result);
+                if (roll < 2) {
+                    handleTurnover(`fallo en la entrega de ${actor.customName}`);
+                } else {
+                    logEvent('SUCCESS', `${actor.customName} entrega el balón con éxito.`);
+                }
+                break;
+            }
+            case 'MOVE': {
+                // Chequear Stalling
+                const roll = parseInt(result);
+                const stalling = checkStalling(turn, roll);
+                if (stalling.isTurnover) {
+                    handleTurnover(stalling.description);
+                }
+                break;
+            }
+            case 'BONE_HEAD': {
+                const roll = parseInt(result);
+                if (roll === 1) {
+                    handleUpdatePlayerCondition(actor.id, activeTeamId, 'isDistracted');
+                    logEvent('INFO', `¡Cabeza Dura! ${actor.customName} queda distraído.`);
+                }
+                break;
+            }
+            case 'SECURE_BALL': {
+                const roll = parseInt(result);
+                if (roll < 2) {
+                    handleTurnover(`fallo al asegurar el balón por parte de ${actor.customName}`);
+                } else {
+                    setBallCarrierId(actor.id);
+                }
+                break;
+            }
+            default:
+                logEvent('S3_ACTION', `Acción ${actionType} registrada para ${actor.customName}. Resultado: ${result}`);
+        }
+    }, [activeTeamId, liveHomeTeam, liveOpponentTeam, handleSelectTdScorer, handleTurnover, setIsInjuryModalOpen, setInjuryState, handleUpdatePlayerCondition, logEvent, setBallCarrierId]);
+
     /** Alterna el estado Activo/Reserva de un jugador durante el despliegue. */
     const handlePlayerStatusToggle = useCallback((player: ManagedPlayer, teamId: 'home' | 'opponent') => {
         const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
@@ -223,7 +321,7 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
             const newStatus: PlayerStatus = player.status === 'Activo' ? 'Reserva' : 'Activo';
 
             if (newStatus === 'Activo' && prevTeam.players.filter(p => p.status === 'Activo').length >= 11) {
-                return prevTeam; // sin alert — la UI debe indicarlo visualmente
+                return prevTeam; 
             }
 
             return {
@@ -284,7 +382,6 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
 
     /** Transiciona de pre_game a in_progress al inicio de cada drive. */
     const handleStartDrive = useCallback(() => {
-        const { setPreGameStep } = state as any;
         setGameState('in_progress');
         const isFirstTurnOfHalf = turn === 0;
         if (isFirstTurnOfHalf) {
@@ -293,15 +390,7 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
         } else {
             logEvent('INFO', `Comienza la patada del turno ${turn}.`);
         }
-    }, [turn, half, setTurn, setGameState, logEvent, state]);
-
-    /** Registra un turnover y avanza al siguiente turno. */
-    const handleTurnover = useCallback((reason: string) => {
-        logEvent('TURNOVER', `Cambio de turno: ${reason}.`);
-        playSound('turnover');
-        (state as any).setIsTurnoverModalOpen(false);
-        handleNextTurn();
-    }, [logEvent, playSound, handleNextTurn, state]);
+    }, [turn, half, setTurn, setGameState, logEvent]);
 
     /** Compra un incentivo del mercado de pre_game. */
     const handleBuyInducement = useCallback((name: string, cost: number) => {
@@ -409,26 +498,16 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
                 }))
             };
         });
-        const teamName = teamId === 'home' ? liveHomeTeam?.name : liveOpponentTeam?.name;
-        logEvent('INFO', `${teamName}: 11 inicial sugerido.`);
-    }, [setLiveHomeTeam, setLiveOpponentTeam, liveHomeTeam, liveOpponentTeam, logEvent]);
+    }, [setLiveHomeTeam, setLiveOpponentTeam]);
 
     /** Maneja la selección de equipo (local o visitante), gestionando snapshots en modo amistoso. */
     const handleSelectTeamInternal = useCallback((team: ManagedTeam, side: 'home' | 'opponent') => {
         const { setSelectingSnapshotFor, setHomeTeam, setOpponentTeam, matchMode } = state as any;
-        
         if (matchMode === 'friendly' && team.snapshots && team.snapshots.length > 0) {
             setSelectingSnapshotFor({ team, side });
         } else {
-            if (side === 'home') {
-                setHomeTeam(team);
-            } else {
-                const fullPlayers: ManagedPlayer[] = team.players.map(p => ({ 
-                    ...p, 
-                    status: 'Reserva' as PlayerStatus 
-                }));
-                setOpponentTeam({ ...team, players: fullPlayers });
-            }
+            if (side === 'home') setHomeTeam(team);
+            else setOpponentTeam({ ...team, players: team.players.map(p => ({ ...p, status: 'Reserva' })) });
         }
     }, [state]);
 
@@ -441,14 +520,10 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
             const teamName = isNewFormat ? parsedTeam.n : parsedTeam.name;
             const rosterName = isNewFormat ? parsedTeam.rN : parsedTeam.rosterName;
 
-            if (!teamName || !rosterName) {
-                throw new Error('Código QR no válido: Faltan datos esenciales.');
-            }
+            if (!teamName || !rosterName) throw new Error('Código QR no válido.');
 
             const baseTeam = teamsData.find((t: any) => t.name === rosterName);
-            if (!baseTeam) {
-                throw new Error(`Facción "${rosterName}" no encontrada.`);
-            }
+            if (!baseTeam) throw new Error(`Facción "${rosterName}" no encontrada.`);
 
             const playersData = isNewFormat ? parsedTeam.pl : parsedTeam.players;
             const fullPlayers: ManagedPlayer[] = playersData.map((p: any, i: number) => {
@@ -466,9 +541,8 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
                 };
             });
 
-            const opponentWithDefaults: ManagedTeam = { 
-                name: teamName, 
-                rosterName: rosterName, 
+            setOpponentTeam({ 
+                name: teamName, rosterName: rosterName, 
                 treasury: (isNewFormat ? parsedTeam.t : parsedTeam.treasury) || 0, 
                 rerolls: (isNewFormat ? parsedTeam.rr : parsedTeam.rerolls) || 0, 
                 dedicatedFans: (isNewFormat ? parsedTeam.df : parsedTeam.dedicatedFans) || 1, 
@@ -476,12 +550,10 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
                 assistantCoaches: (isNewFormat ? parsedTeam.ac : parsedTeam.assistantCoaches) || 0, 
                 apothecary: (isNewFormat ? parsedTeam.ap : parsedTeam.apothecary) || false, 
                 players: fullPlayers 
-            };
-
-            setOpponentTeam(opponentWithDefaults);
+            });
             return true;
         } catch (e: any) {
-            alert(`Error al procesar el código QR: ${e instanceof Error ? e.message : 'Error desconocido.'}`);
+            alert(`Error QR: ${e instanceof Error ? e.message : 'Error.'}`);
             return false;
         }
     }, [state]);
@@ -493,17 +565,19 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
                 if (!prev) return null;
                 const active = prev.players.filter((p: any) => p.status === 'Activo');
                 const cols = [1, 2, 3, 4, 5, 6, 7];
-                const updatedPlayers = prev.players.map((p: any) => {
-                    if (p.status !== 'Activo') return p;
-                    const idx = active.findIndex((a: any) => a.id === p.id);
-                    return { ...p, fieldPosition: { x: cols[idx % cols.length] || 1, y: Math.floor(idx / 7) + 1 } };
-                });
-                return { ...prev, players: updatedPlayers };
+                return {
+                    ...prev,
+                    players: prev.players.map((p: any) => {
+                        if (p.status !== 'Activo') return p;
+                        const idx = active.findIndex((a: any) => a.id === p.id);
+                        return { ...p, fieldPosition: { x: cols[idx % cols.length] || 1, y: Math.floor(idx / 7) + 1 } };
+                    })
+                };
             });
         };
         suggestForTeam(setLiveHomeTeam);
         suggestForTeam(setLiveOpponentTeam);
-        logEvent('INFO', 'Despliegue sugerido aplicado a ambos equipos.');
+        logEvent('INFO', 'Despliegue sugerido aplicado.');
     }, [setLiveHomeTeam, setLiveOpponentTeam, logEvent]);
 
     /** Maneja la tirada de recuperación de un jugador KO. 4+ recupera al banquillo. */
@@ -511,9 +585,7 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
         const { setKoRecoveryRolls } = state as any;
         const roll = Math.floor(Math.random() * 6) + 1;
         const success = roll >= 4;
-        
         setKoRecoveryRolls((prev: any) => ({ ...prev, [player.id]: { roll, success } }));
-        
         if (success) {
             const teamId = liveHomeTeam?.players.some(p => p.id === player.id) ? 'home' : 'opponent';
             updatePlayerStatus(player.id, teamId, 'Reserva');
@@ -523,15 +595,10 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
     /** Reinicia el estado necesario para comenzar una nueva patada tras un TD o fin de mitad. */
     const handleStartNextDrive = useCallback(() => {
         const { setKoRecoveryRolls, setGameStatus, setTurn, setPreGameStep } = state as any;
-        
         setKoRecoveryRolls({});
-        setGameStatus((prev: any) => ({ 
-            ...prev, 
-            kickoffEvent: null, 
-            receivingTeam: prev.receivingTeam === 'home' ? 'opponent' : 'home' 
-        }));
+        setGameStatus((prev: any) => ({ ...prev, kickoffEvent: null, receivingTeam: prev.receivingTeam === 'home' ? 'opponent' : 'home' }));
         setTurn((t: number) => t + 1);
-        setPreGameStep(2); // Deployment
+        setPreGameStep(2); 
         setGameState('pre_game');
     }, [state, setGameState]);
 
@@ -548,162 +615,56 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
             setPendingJourneymen, setMatchMode
         } = state as any;
 
-        setLiveHomeTeam(null);
-        setLiveOpponentTeam(null);
-        setGameLog([]);
-        setScore({ home: 0, opponent: 0 });
-        setTurn(0);
-        setHalf(1);
-        setCurrentChronicle(null);
-        setFame({ home: 0, opponent: 0 });
-        setFansRoll({ home: '', opponent: '' });
-        setPreGameStep(0);
-        setGameStatus({ weather: null, kickoffEvent: null, coinTossWinner: null, receivingTeam: null });
-        setKickoffActionCompleted(false);
-        setInducementState({ underdog: null, money: 0, hiredStars: [] });
-        setFirstHalfReceiver(null);
-        setPlayersMissingNextGame([]);
-        setBallCarrierId(null);
-        setKoRecoveryRolls({});
-        setFoulState(initialFoulState);
-        setInjuryState(initialInjuryState);
-        setSelectedPlayerForAction(null);
-        setSppModalState({ isOpen: false, type: null, step: 'select_team', teamId: null, selectedPlayer: null });
-        setIsMatchSummaryOpen(false);
-        setActiveTab('assistant');
-        setActiveTeamId('home');
-        setRosterViewId('home');
-        setJourneymenNotification(null);
-        setPendingJourneymen({ home: [], opponent: [] });
-        setMatchMode('competition');
-        setGameState('setup');
+        setLiveHomeTeam(null); setLiveOpponentTeam(null); setGameLog([]);
+        setScore({ home: 0, opponent: 0 }); setTurn(0); setHalf(1);
+        setCurrentChronicle(null); setFame({ home: 0, opponent: 0 }); setFansRoll({ home: '', opponent: '' });
+        setPreGameStep(0); setGameStatus({ weather: null, kickoffEvent: null, coinTossWinner: null, receivingTeam: null });
+        setKickoffActionCompleted(false); setInducementState({ underdog: null, money: 0, hiredStars: [] });
+        setFirstHalfReceiver(null); setPlayersMissingNextGame([]); setBallCarrierId(null);
+        setKoRecoveryRolls({}); setFoulState(initialFoulState); setInjuryState(initialInjuryState);
+        setSelectedPlayerForAction(null); setSppModalState({ isOpen: false, type: null, step: 'select_team', teamId: null, selectedPlayer: null });
+        setIsMatchSummaryOpen(false); setActiveTab('assistant'); setActiveTeamId('home');
+        setRosterViewId('home'); setJourneymenNotification(null); setPendingJourneymen({ home: [], opponent: [] });
+        setMatchMode('competition'); setGameState('setup');
     }, [state, setGameState]);
 
     /** Finaliza el partido, guarda reportes y actualiza el equipo en la liga. */
     const handleConfirmPostGame = useCallback(async (finalTeamState: any) => {
-        const {
-            matchMode, score, fame, gameLog, gameStatus,
-            concessionState, currentChronicle
-        } = state as any;
-        const { onMatchReportCreate, onTeamUpdate } = _props;
-
+        const { matchMode, score, fame, gameLog, gameStatus, concessionState, currentChronicle } = state as any;
         if (!homeTeam) return;
 
         if (matchMode === 'friendly') {
-            logEvent('INFO', 'Partido Amistoso finalizado. No se guardarán cambios permanentes.');
+            logEvent('INFO', 'Partido Amistoso finalizado.');
         } else {
             const matchResult = score.home > score.opponent ? 'W' : score.home < score.opponent ? 'L' : 'D';
-            const historyEntry = {
-                id: Date.now().toString(),
-                opponentName: opponentTeam?.name || 'Desconocido',
-                score: `${score.home}-${score.opponent}`,
-                date: new Date().toLocaleDateString('es-ES'),
-                result: matchResult as 'W' | 'D' | 'L'
-            };
+            const historyEntry = { id: Date.now().toString(), opponentName: opponentTeam?.name || 'Desconocido', score: `${score.home}-${score.opponent}`, date: new Date().toLocaleDateString('es-ES'), result: matchResult as 'W' | 'D' | 'L' };
+            const finalTeamWithStats = { ...finalTeamState, history: [historyEntry, ...(finalTeamState.history || [])].slice(0, 20), record: { wins: (finalTeamState.record?.wins || 0) + (matchResult === 'W' ? 1 : 0), draws: (finalTeamState.record?.draws || 0) + (matchResult === 'D' ? 1 : 0), losses: (finalTeamState.record?.losses || 0) + (matchResult === 'L' ? 1 : 0) } };
 
-            const finalTeamWithStats = {
-                ...finalTeamState,
-                history: [historyEntry, ...(finalTeamState.history || [])].slice(0, 20),
-                record: {
-                    wins: (finalTeamState.record?.wins || 0) + (matchResult === 'W' ? 1 : 0),
-                    draws: (finalTeamState.record?.draws || 0) + (matchResult === 'D' ? 1 : 0),
-                    losses: (finalTeamState.record?.losses || 0) + (matchResult === 'L' ? 1 : 0),
-                }
-            };
-
-            if (onMatchReportCreate && liveHomeTeam && liveOpponentTeam) {
+            if (_props.onMatchReportCreate && liveHomeTeam && liveOpponentTeam) {
                 const stats = {
-                    passes: {
-                        home: gameLog.filter((e: any) => e.team === 'home' && (e.type === 'pass_complete' || e.type === 'PASS')).length,
-                        opponent: gameLog.filter((e: any) => e.team === 'opponent' && (e.type === 'pass_complete' || e.type === 'PASS')).length
-                    },
-                    interceptions: {
-                        home: gameLog.filter((e: any) => e.team === 'home' && (e.type === 'interception' || e.type === 'INTERCEPTION')).length,
-                        opponent: gameLog.filter((e: any) => e.team === 'opponent' && (e.type === 'interception' || e.type === 'INTERCEPTION')).length
-                    },
-                    fouls: {
-                        home: gameLog.filter((e: any) => e.team === 'home' && (e.type === 'foul_attempt' || e.type === 'FOUL')).length,
-                        opponent: gameLog.filter((e: any) => e.team === 'opponent' && (e.type === 'foul_attempt' || e.type === 'FOUL')).length
-                    },
-                    expulsions: {
-                        home: gameLog.filter((e: any) => e.team === 'home' && (e.type === 'player_sent_off' || e.type === 'EXPULSION')).length,
-                        opponent: gameLog.filter((e: any) => e.team === 'opponent' && (e.type === 'player_sent_off' || e.type === 'EXPULSION')).length
-                    },
-                    casualties: {
-                        home: gameLog.filter((e: any) => e.team === 'home' && (e.type === 'injury_casualty' || e.type === 'INJURY' || e.type === 'DEATH')).length,
-                        opponent: gameLog.filter((e: any) => e.team === 'opponent' && (e.type === 'injury_casualty' || e.type === 'INJURY' || e.type === 'DEATH')).length
-                    },
-                    rerollsUsed: {
-                        home: gameLog.filter((e: any) => e.team === 'home' && e.type === 'reroll_used').length,
-                        opponent: gameLog.filter((e: any) => e.team === 'opponent' && e.type === 'reroll_used').length
-                    }
+                    passes: { home: gameLog.filter((e: any) => e.team === 'home' && (e.type === 'pass_complete' || e.type === 'PASS')).length, opponent: gameLog.filter((e: any) => e.team === 'opponent' && (e.type === 'pass_complete' || e.type === 'PASS')).length },
+                    casualties: { home: gameLog.filter((e: any) => e.team === 'home' && (e.type === 'injury_casualty' || e.type === 'INJURY')).length, opponent: gameLog.filter((e: any) => e.team === 'opponent' && (e.type === 'injury_casualty' || e.type === 'INJURY')).length }
                 };
-
-                const baseSpectators = (fame.home + fame.opponent) * 1000 + 10000;
-                const spectators = isNaN(baseSpectators) ? 10000 : baseSpectators;
-                const baseReport: any = {
-                    date: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-                    homeTeam: { id: homeTeam.id, name: liveHomeTeam.name, rosterName: liveHomeTeam.rosterName, score: score.home, crestImage: liveHomeTeam.crestImage },
-                    opponentTeam: { id: opponentTeam?.id, name: liveOpponentTeam?.name || 'Desconocido', rosterName: liveOpponentTeam?.rosterName || 'Rival', score: score.opponent, crestImage: liveOpponentTeam?.crestImage },
-                    gameLog,
-                    weather: gameStatus.weather?.title,
-                    winner: score.home > score.opponent ? 'home' : score.home < score.opponent ? 'opponent' : 'draw',
-                    stats,
-                    spectators,
-                    wasConceded: concessionState
-                };
-
+                const baseReport: any = { date: historyEntry.date, homeTeam: { id: homeTeam.id, name: liveHomeTeam.name, score: score.home }, opponentTeam: { id: opponentTeam?.id, name: liveOpponentTeam?.name, score: score.opponent }, gameLog, weather: gameStatus.weather?.title, winner: matchResult, stats, wasConceded: concessionState };
                 let finalNewsData;
                 if (currentChronicle) {
                     const parts = currentChronicle.split('\n\n');
-                    finalNewsData = { headline: parts[0] || 'CRÓNICA DE COMBATE', article: parts.slice(1).join('\n\n'), summary: `Final: ${liveHomeTeam.name} ${score.home} - ${score.opponent} ${liveOpponentTeam?.name}` };
+                    finalNewsData = { headline: parts[0], article: parts.slice(1).join('\n\n'), summary: `Final: ${liveHomeTeam.name} ${score.home} - ${score.opponent} ${liveOpponentTeam?.name}` };
                 } else {
                     finalNewsData = (await import('../../../../utils/newsGenerator')).generateMatchArticle(baseReport as any);
                 }
-
-                const reportId = await onMatchReportCreate({ ...baseReport, ...finalNewsData });
+                const reportId = await _props.onMatchReportCreate({ ...baseReport, ...finalNewsData });
                 if (reportId) historyEntry.id = reportId;
             }
-
-            onTeamUpdate(finalTeamWithStats);
+            _props.onTeamUpdate(finalTeamWithStats);
         }
-
         resetGameState();
     }, [state, _props, homeTeam, opponentTeam, liveHomeTeam, liveOpponentTeam, logEvent, resetGameState]);
 
     return {
-        logEvent,
-        updatePlayerStatus,
-        updatePlayerSppAndAction,
-        handleHalftime,
-        handleNextTurn,
-        handleFoulAction,
-        handleInjuryAction,
-        handleSkillClick,
-        handleBallToggle,
-        handleUpdatePlayerCondition,
-        openSppModal,
-        handleStrategicAction,
-        handleSelectTdScorer,
-        handlePlayerStatusToggle,
-        handlePlayerMove,
-        useReroll,
-        // Pre-game
-        handleConfirmJourneymen,
-        handleStartDrive,
-        handleTurnover,
-        handleBuyInducement,
-        handleSellInducement,
-        handleHireStar,
-        handleFireStar,
-        handleAutoSelectTeam,
-        handleSuggestDeployment,
-        handleSelectTeamInternal,
-        handleProcessQrCode,
-        // Post-game & Recovery
-        handleConfirmPostGame,
-        resetGameState,
-        rollKoRecovery,
-        handleStartNextDrive
+        logEvent, updatePlayerStatus, updatePlayerSppAndAction, handleHalftime, handleNextTurn, handleFoulAction, handleInjuryAction, handleSkillClick, handleBallToggle, handleUpdatePlayerCondition,
+        openSppModal, handleStrategicAction, handleSelectTdScorer, handleS3Action, handlePlayerStatusToggle, handlePlayerMove, useReroll, handleConfirmJourneymen, handleStartDrive,
+        handleTurnover, handleBuyInducement, handleSellInducement, handleHireStar, handleFireStar, handleAutoSelectTeam, handleSuggestDeployment, handleSelectTeamInternal,
+        handleProcessQrCode, handleConfirmPostGame, resetGameState, rollKoRecovery, handleStartNextDrive
     };
 };

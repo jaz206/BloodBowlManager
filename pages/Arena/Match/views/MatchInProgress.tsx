@@ -5,6 +5,7 @@ import TdIcon from '../../../../components/icons/TdIcon';
 import PassIcon from '../../../../components/icons/PassIcon';
 import CasualtyIcon from '../../../../components/icons/CasualtyIcon';
 import GameLog from '../log/GameLog';
+import S3ActionOrchestrator from '../components/S3ActionOrchestrator';
 
 /**
  * MatchInProgress — consola completa del partido activo.
@@ -305,90 +306,13 @@ const MatchInProgress: React.FC = () => {
                     )}
                 </div>
 
-                {/* Center Action Grid */}
+                {/* Center Action Grid - S3 ORCHESTRATOR */}
                 <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar pb-8">
-                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-
-                        {/* TD */}
-                        <ActionButton icon={<TdIcon className="w-6 h-6 text-green-500" />} label="Cantar Touchdown" color="green" onClick={() => setIsTdModalOpen(true)} />
-
-                        {/* Lesión */}
-                        <ActionButton icon={<CasualtyIcon className="w-6 h-6 text-orange-500" />} label="Registrar Baja" color="orange" onClick={() => setIsInjuryModalOpen(true)} />
-
-                        {/* Falta */}
-                        <ActionButton
-                            icon={<span className="material-symbols-outlined text-amber-500 text-2xl">skull</span>}
-                            label="Cometer Falta" color="amber"
-                            onClick={() => handleStrategicAction('foul')}
-                            disabled={actions.foul}
-                        />
-
-                        {/* Blitz */}
-                        <ActionButton
-                            icon={<span className="material-symbols-outlined text-amber-500 text-2xl">bolt</span>}
-                            label="Realizar Blitz" color="amber"
-                            onClick={() => handleStrategicAction('blitz')}
-                            disabled={actions.blitz}
-                        />
-
-                        {/* Pase de Mano */}
-                        <ActionButton
-                            icon={<span className="material-symbols-outlined text-green-500 text-2xl">pan_tool</span>}
-                            label="Entregar Balón" color="green"
-                            onClick={() => handleStrategicAction('handoff')}
-                            disabled={actions.handoff}
-                        />
-
-                        {/* Pase */}
-                        <ActionButton
-                            icon={<PassIcon className="w-6 h-6 text-sky-400" />}
-                            label="Lanzar Pase" color="sky"
-                            onClick={() => handleStrategicAction('pass')}
-                            disabled={actions.pass}
-                        />
-
-                        {/* Asegurar Balón */}
-                        <ActionButton
-                            icon={<span className="material-symbols-outlined text-sky-400 text-2xl">shield</span>}
-                            label="Asegurar Balón" color="sky"
-                            onClick={() => logEvent('INFO', `¡ASEGURAR BALÓN! ${selectedPlayerForAction?.customName || 'Un jugador'} protege el cuero.`, { team: activeTeamId, player: selectedPlayerForAction?.id })}
-                        />
-
-                        {/* Stalling */}
-                        <ActionButton
-                            icon={<span className="material-symbols-outlined text-amber-500 text-2xl">timer</span>}
-                            label="Stalling Check" color="amber"
-                            onClick={() => logEvent('INFO', `¡STALLING CHECK! ${selectedPlayerForAction?.customName || 'Un jugador'} pierde tiempo.`, { team: activeTeamId, player: selectedPlayerForAction?.id })}
-                        />
-
-                        {/* Turnover */}
-                        <ActionButton
-                            icon={<span className="material-symbols-outlined text-2xl">error</span>}
-                            label="¡TURNOVER!" color="blood-red"
-                            onClick={() => setIsTurnoverModalOpen(true)}
-                        />
-
-                        {/* Desviar Pase */}
-                        <ActionButton
-                            icon={<span className="material-symbols-outlined text-sky-400 text-2xl">front_hand</span>}
-                            label="Desviar Pase" color="sky"
-                            onClick={() => openSppModal('deflect')}
-                        />
-
-                        {/* Lanzar Compañero */}
-                        <ActionButton
-                            icon={<span className="material-symbols-outlined text-sky-500 text-2xl">hail</span>}
-                            label="Lanzar Compañero" color="sky"
-                            onClick={() => openSppModal('throw_team_mate')}
-                        />
-
-                        {/* Cambiar Turno */}
-                        <ActionButton
-                            icon={<span className="material-symbols-outlined text-2xl">forward</span>}
-                            label="Cambiar Turno" color="premium-gold"
-                            onClick={handleNextTurn}
-                            dashed
-                        />
+                    <div className="glass-panel p-6 border-white/5 bg-black/40 h-full relative overflow-hidden group">
+                         {/* Luz de ambiente S3 */}
+                        <div className="absolute -top-24 -left-24 w-64 h-64 bg-primary/5 blur-[100px] rounded-full group-hover:bg-primary/10 transition-all duration-1000"></div>
+                        
+                        <S3ActionOrchestrator />
                     </div>
 
                     {/* Event Quick Bar */}

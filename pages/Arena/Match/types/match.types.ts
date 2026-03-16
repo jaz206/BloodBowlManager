@@ -11,6 +11,23 @@ import type {
 
 export type GameState = 'setup' | 'selection' | 'pre_game' | 'in_progress' | 'post_game' | 'ko_recovery' | 'reports';
 
+export type InteractionMode = 'idle' | 'selecting_actor' | 'selecting_action' | 'selecting_objective' | 'awaiting_dice' | 'processing';
+
+export type S3ActionType = 'BLOCK' | 'FOUL' | 'PASS' | 'HANDOFF' | 'TOUCHDOWN' | 'SECURE_BALL' | 'DODGE' | 'MOVE' | 'RUSH' | 'BONE_HEAD' | 'LEAP';
+
+export interface PendingS3Action {
+    actorId: number | null;
+    actionType: S3ActionType | null;
+    objectiveId: number | null;
+    diceResult: any | null;
+    manualMode: boolean;
+}
+
+export interface InteractionSequenceState {
+    mode: InteractionMode;
+    pending: PendingS3Action;
+}
+
 export interface BlockResolution {
     knockDowns: { id: number; isTurnoverSource: boolean }[];
     ballBecomesLoose: boolean;

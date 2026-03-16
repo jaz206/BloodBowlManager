@@ -12,6 +12,7 @@ interface MatchEngineContext {
     homeTeam: ManagedTeam | null;
     opponentTeam: ManagedTeam | null;
     logEvent: (type: any, description: string, extra?: any) => void;
+    setInteractionState: React.Dispatch<React.SetStateAction<any>>;
 }
 
 interface NextTurnContext {
@@ -85,4 +86,35 @@ export const handleNextTurnLogic = (ctx: NextTurnContext) => {
         home: { blitz: false, pass: false, foul: false, handoff: false },
         opponent: { blitz: false, pass: false, foul: false, handoff: false }
     });
+};
+
+/**
+ * getS3SppRewards — devuelve los PE según la acción y si el equipo tiene Brutos Brutales.
+ */
+export const getS3SppRewards = (action: 'TD' | 'CASUALTY' | 'PASS' | 'INTERCEPTION', hasBrutosBrutales: boolean): number => {
+    switch (action) {
+        case 'TD':
+            return hasBrutosBrutales ? 2 : 3;
+        case 'CASUALTY':
+            return hasBrutosBrutales ? 3 : 2;
+        case 'PASS':
+            return 1;
+        case 'INTERCEPTION':
+            return 2;
+        default:
+            return 0;
+    }
+};
+
+/**
+ * checkStalling — aplica la lógica de Turn-over si un jugador "está haciendo tiempo".
+ */
+export const checkStalling = (turn: number, dieRoll: number): { isTurnover: boolean; description: string } => {
+    const isTurnover = dieRoll >= turn;
+    return {
+        isTurnover,
+        description: isTurnover 
+            ? `¡Stalling detectado! El jugador es derribado por la furia de Nuffle (Dado ${dieRoll} >= Turno ${turn}).`
+            : `El jugador evita el castigo por Stalling (Dado ${dieRoll} < Turno ${turn}).`
+    };
 };
