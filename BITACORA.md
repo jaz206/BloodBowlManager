@@ -164,6 +164,14 @@ root/
 *   **Snapshots en Amistosos**: Integración del selector de snapshots en la Arena para permitir duelos entre equipos en diferentes momentos de su historia (ej: "Reikland 2024 vs Reikland 2025").
 *   *Archivos Afectados*: `TeamDetailPage.tsx`, `MatchPage.tsx`, `PlayerCardModal.tsx`, `PlayerStatusCard.tsx`, `types.ts`, `testData.ts`.
 
+### [2026-03-16] Temporada 3: Ligas de Élite y Evolución por Azar
+*   **Gestor de Ligas Premium**: Rediseño total de la creación de competiciones. Ahora incluye un panel de orquestación con contador de equipos (ej: 4/12), tarjeta de resumen dinámica "Estilo Diario" y selectores de reglamento (BB2020, Sevens).
+*   **Sistema de Invitaciones**: Implementada la funcionalidad de "Generar Invitación" para copiar enlaces directos al portapapeles, facilitando el reclutamiento por servicios de mensajería como WhatsApp.
+*   **Evolución por Azar (S3)**: El asistente post-partido ahora permite asignar Habilidades Aleatorias con costes diferenciados para Primarias y Secundarias, además de automatizar las tiradas en las Tablas de Características (D16) con descuento automático de SPP.
+*   **Ajuste de VAE (Habilidades de Élite)**: Sincronización de los costes de +10k en el valor de equipo para habilidades críticas, asegurando que las competiciones sean equilibradas desde el primer día.
+*   **Blindaje de Inscripción**: Corregida la lógica que impedía a los dueños de ligas inscribir sus propios equipos. Ahora el sistema detecta si eres el creador y te ofrece el botón "Inscribir mi Equipo" directamente.
+*   *Archivos Afectados*: `LeaguesPage.tsx`, `PostGameWizard.tsx`, `MainApp.tsx`, `LanguageContext.tsx`.
+
 ### [2026-03-16] Gran Refactorización de la Arena (Arquitectura Modular)
 *   **MatchPage Orchestrator**: Refactorización radical de `MatchPage.tsx`, que pasó de ser un monolito de +3,500 líneas a un orquestador ligero. Ahora utiliza `MatchProvider` para inyectar el estado y delega el renderizado a `MatchOrchestrator.tsx`.
 *   **Segmentación del Motor**: Extracción de la lógica de negocio a `pages/Arena/Match/engine/` (`matchEngine.ts`, `injuryEngine.ts`, `foulEngine.ts`, `sppEngine.ts`), permitiendo testeo unitario y claridad en las reglas.

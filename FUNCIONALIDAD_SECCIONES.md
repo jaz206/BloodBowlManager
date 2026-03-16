@@ -391,22 +391,23 @@ Gestionar competiciones y registrar lo que ocurre durante los partidos.
 
 ## Gestor de Ligas
 
-### Funcionalidad
+### Funcionalidad de Creación
+Permite organizar el caos del Viejo Mundo mediante:
 
-Permite crear:
-
-- ligas
-- torneos
-- temporadas
+- **Nueva Liga (Round Robin)**: Todos contra todos con calendario automático.
+- **Nuevo Torneo (Eliminatoria)**: Cuadro de competición generado por azar.
+- **Generador de Invitaciones**: Enlaces directos para WhatsApp/Discord que permiten unirse a la liga con un clic.
+- **Configuración de Reglamento**: Soporte para BB2020 (Oficial), BB2016 (Clásico) y Sevens (Rápido).
+- **Control de Reglas Avanzadas**: Gestión de Muerte Súbita, Incentivos permitidos y tiempo límite por turno.
 
 ---
 
 ### Cada liga contiene
-
-- equipos participantes
-- clasificación
-- calendario de partidos
-- historial de resultados
+- **Gestión de Participantes**: Listado con distinción entre equipos locales (del usuario) y externos.
+- **Contador de Cupos**: Visualización en tiempo real del llenado de la liga (ej: 4/12).
+- **Clasificación Dinámica**: Tabla de puntos con desempates automáticos por Touchdowns.
+- **Calendario / Cuadro**: Gestión interactiva de resultados con guardado de actas.
+- **Resumen Élite**: Tarjeta visual que resume las reglas clave antes de empezar la carnicería.
 
 ---
 
