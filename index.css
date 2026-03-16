@@ -56,18 +56,34 @@ h4,
     border-radius: 1.5rem;
 }
 
+.glass {
+    background: rgba(10, 10, 10, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(245, 159, 10, 0.1);
+}
+
 .bento-card {
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 1.25rem;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #0f172a;
+    border: 1px solid rgba(245, 159, 10, 0.2);
+    border-radius: 0.75rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .bento-card:hover {
-    border-color: rgba(202, 138, 4, 0.3);
+    border-color: #f59f0a;
+    background: rgba(245, 159, 10, 0.05);
     transform: translateY(-2px);
-    background: rgba(0, 0, 0, 0.5);
-    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 10px 30px -10px rgba(245, 159, 10, 0.2);
+}
+
+@keyframes spin-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+    animation: spin-slow 12s linear infinite;
 }
 
 /* Premium Scrollbar */
