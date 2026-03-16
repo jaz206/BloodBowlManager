@@ -140,6 +140,34 @@ export const generateMatchArticle = (report: MatchReport) => {
         body += `¿Hubo juego sucio? No pregunten al árbitro, que estuvo 'despistado'. La tensión estalló en múltiples ocasiones. ${transformToEpic(fouls[0])} `;
     }
 
+    const s3Incidents = gameLog.filter(e => e.description.includes('¡INCIDENCIA S3!'));
+    if (s3Incidents.length > 0) {
+        body += "\n\nCRÁNICAS DE LA TEMPORADA 3: CAOS EN EL VESTUARIO\n";
+        body += "No todo fueron golpes y carreras; el extraño clima de esta temporada dejó su huella. ";
+        
+        s3Incidents.forEach(inc => {
+            const isDistracted = inc.description.toLowerCase().includes('distraído');
+            const isIndigestion = inc.description.toLowerCase().includes('indigestión');
+            const playerName = inc.description.match(/! (.*?) sufre/)?.[1] || "Un jugador";
+
+            if (isDistracted) {
+                const options = [
+                    `${playerName} se quedó mirando fijamente una mosca que pasaba por allí en el momento más inoportuno. ¡Alguien debería recordarle que hay un partido en juego!`,
+                    `¿Es un pájaro? ¿Es un avión? No, es ${playerName} perdiendo el hilo del partido mientras contemplaba las nubes.`,
+                    `La concentración de ${playerName} brilló por su ausencia. Parecía más interesado en el vendedor de perritos calientes que en el balón.`
+                ];
+                body += `${options[Math.floor(Math.random() * options.length)]} `;
+            } else if (isIndigestion) {
+                const options = [
+                    `A ${playerName} le pasó factura el estofado de trolls de la noche anterior. Su movimiento en el campo era... accidentado.`,
+                    `Se comenta que ${playerName} visitó demasiadas veces el puesto de tartas antes del partido. Su armadura parecía apretarle más de la cuenta.`,
+                    `Con una mano en el estómago y la otra en el balón, ${playerName} intentó ocultar su malestar, pero Nuffle no perdona una digestión pesada.`
+                ];
+                body += `${options[Math.floor(Math.random() * options.length)]} `;
+            }
+        });
+    }
+
     const outro = victor 
         ? `\n\nCon el silbatazo final, la justicia (o la fortuna de Nuffle) coronó a ${victor}. Los ganadores ya preparan los barriles de cerveza para celebrar una victoria que cimenta su estatus en la liga.`
         : `\n\nEl cronómetro se agotó con un empate que sabe a poco. ${homeTeam.name} y ${opponentTeam.name} se retiraron lamiéndose las heridas, sabiendo que este duelo no se ha cerrado, solo se ha pospuesto.`;

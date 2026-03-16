@@ -123,12 +123,12 @@ const MiniField: React.FC<MiniFieldProps> = ({ players, teamColor, onPlayerMove,
                             left: `${(player.fieldPosition.x + 0.5) / GRID_COLS * 100}%`,
                         }}
                     >
-                        <div className={`w-full h-full rounded-full ${teamColor} border-2 ${isKO ? 'border-yellow-400' : isInjured ? 'border-red-600' : 'border-white/80'} shadow-lg flex items-center justify-center text-white font-bold text-[10px] overflow-hidden relative`}>
+                        <div className={`w-full h-full rounded-full ${teamColor} border-2 ${isKO ? 'border-yellow-400' : isInjured ? 'border-red-600' : 'border-white/80'} shadow-lg flex items-center justify-center text-white font-bold text-[10px] overflow-hidden relative ${player.isDistracted ? 'ring-4 ring-red-500 ring-opacity-100 animate-pulse shadow-[0_0_20px_rgba(239,68,68,0.8)]' : player.hasIndigestion ? 'ring-4 ring-amber-500 ring-opacity-100 animate-pulse shadow-[0_0_20px_rgba(245,158,11,0.8)]' : ''}`}>
                             {index + 1}
                             {/* Distracted Overlay */}
                             {player.isDistracted && (
-                                <div className="absolute inset-0 bg-red-600/40 flex items-center justify-center">
-                                    <span className="material-symbols-outlined text-white text-xs font-black">block</span>
+                                <div className="absolute inset-0 bg-red-600/20 flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-white text-[10px] font-black drop-shadow-md">psychology_alt</span>
                                 </div>
                             )}
                         </div>

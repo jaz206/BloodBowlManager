@@ -13,7 +13,7 @@ interface PlayerCardModalProps {
   onConditionToggle?: (condition: 'isDistracted' | 'hasIndigestion') => void;
 }
 
-const SkillButton: React.FC<{ skillName: string; onSkillClick: (name: string) => void }> = ({ skillName, onSkillClick }) => {
+const SkillButton: React.FC<{ skillName: string; onSkillClick: (name: string) => void; disabled?: boolean }> = ({ skillName, onSkillClick, disabled }) => {
   const cleanSkillName = skillName.split('(')[0].trim();
   const hasDescription = skillsData.some(s => s.name.toLowerCase().startsWith(cleanSkillName.toLowerCase()));
 
@@ -21,13 +21,16 @@ const SkillButton: React.FC<{ skillName: string; onSkillClick: (name: string) =>
     return (
       <button
         onClick={() => onSkillClick(cleanSkillName)}
-        className="bg-sky-500/10 border border-sky-500/20 text-sky-400 text-[10px] font-display font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg hover:bg-sky-500/20 hover:border-sky-500/40 transition-premium"
+        disabled={disabled}
+        className={`text-[10px] font-display font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg transition-premium border ${disabled 
+          ? 'bg-white/5 border-white/5 text-slate-600 line-through cursor-not-allowed opacity-50' 
+          : 'bg-sky-500/10 border-sky-500/20 text-sky-400 hover:bg-sky-500/20 hover:border-sky-500/40'}`}
       >
         {skillName}
       </button>
     );
   }
-  return <span className="bg-white/5 border border-white/10 text-white/40 text-[10px] font-display font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg">{skillName}</span>;
+  return <span className={`border text-[10px] font-display font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg ${disabled ? 'bg-black/20 border-white/5 text-slate-800 line-through' : 'bg-white/5 border-white/10 text-white/40'}`}>{skillName}</span>;
 };
 
 const PlayerCardModal: React.FC<PlayerCardModalProps> = ({ player, onClose, isBallCarrier, onBallToggle, onConditionToggle }) => {
@@ -91,7 +94,7 @@ const PlayerCardModal: React.FC<PlayerCardModalProps> = ({ player, onClose, isBa
                     : 'bg-white/5 border-white/10 text-slate-500 hover:border-red-500/50 hover:text-red-400'
                     }`}
                 >
-                  <span className={`material-symbols-outlined text-3xl mb-2 transition-transform duration-500 ${player.isDistracted ? 'scale-110' : 'group-hover:rotate-12'}`}>block</span>
+                  <span className={`material-symbols-outlined text-3xl mb-2 transition-transform duration-500 ${player.isDistracted ? 'scale-110' : 'group-hover:rotate-12'}`}>psychology_alt</span>
                   <span className="text-[10px] font-display font-black uppercase tracking-widest">Distraído</span>
                   {player.isDistracted && <div className="absolute top-2 right-2 w-2 h-2 bg-white rounded-full animate-ping"></div>}
                 </button>
@@ -123,7 +126,7 @@ const PlayerCardModal: React.FC<PlayerCardModalProps> = ({ player, onClose, isBa
                     }
                     if (stat === 'AR') {
                       const arValue = parseInt((value as string).replace('+', ''));
-                      displayValue = `${arValue + 1}+`;
+                      displayValue = `${Math.max(1, arValue - 1)}+`;
                       isModified = true;
                     }
                   }
@@ -146,7 +149,7 @@ const PlayerCardModal: React.FC<PlayerCardModalProps> = ({ player, onClose, isBa
               <div className="flex flex-wrap gap-2">
                 {allSkills.length > 0 ? allSkills.map((skill, index) => (
                   <div key={`${skill}-${index}`} className="flex items-center">
-                    <SkillButton skillName={skill} onSkillClick={handleSkillClick} />
+                    <SkillButton skillName={skill} onSkillClick={handleSkillClick} disabled={player.isDistracted} />
                   </div>
                 )) : <span className="text-white/20 font-display font-medium italic">Sin habilidades especiales</span>}
               </div>

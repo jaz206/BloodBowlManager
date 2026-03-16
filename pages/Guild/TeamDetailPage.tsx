@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { ManagedTeam, ManagedPlayer, Player, Skill } from '../../types';
+import type { ManagedTeam, ManagedPlayer, Player, Skill, ManagedTeamSnapshot } from '../../types';
 import { ELITE_SKILLS } from '../../types';
 import { teamsData } from '../../data/teams';
 import { skillsData } from '../../data/skills';
@@ -102,6 +102,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps & { matchReports?: Match
     const { starPlayers } = useMasterData();
     const [showReference, setShowReference] = useState(false);
     const [selectedReport, setSelectedReport] = useState<MatchReport | null>(null);
+    const [snapshotToRestore, setSnapshotToRestore] = useState<ManagedTeamSnapshot | null>(null);
 
     const qrCanvasRef = useRef<HTMLCanvasElement>(null);
     const crestInputRef = useRef<HTMLInputElement>(null);
@@ -518,6 +519,38 @@ export const TeamDashboard: React.FC<TeamDashboardProps & { matchReports?: Match
 
     const handleDeleteTeam = () => {
         onDeleteRequest(team.id!);
+    };
+
+    const handleCreateSnapshot = () => {
+        const { snapshots, ...teamStateWithoutSnapshots } = team;
+        const newSnapshot: ManagedTeamSnapshot = {
+            id: Date.now().toString(),
+            timestamp: new Date().toISOString(),
+            teamState: teamStateWithoutSnapshots
+        };
+        onUpdate({
+            ...team,
+            snapshots: [newSnapshot, ...(team.snapshots || [])]
+        });
+    };
+
+    const handleDeleteSnapshot = (snapshotId: string) => {
+        onUpdate({
+            ...team,
+            snapshots: team.snapshots?.filter(s => s.id !== snapshotId)
+        });
+    };
+
+    const handleRestoreSnapshot = () => {
+        if (!snapshotToRestore) return;
+        const restoredTeam = {
+            ...snapshotToRestore.teamState,
+            id: team.id,
+            ownerId: team.ownerId,
+            snapshots: team.snapshots
+        } as ManagedTeam;
+        onUpdate(restoredTeam);
+        setSnapshotToRestore(null);
     };
 
     const starterCount = team.players.filter(p => !(p.isBenched ?? true)).length;
@@ -1096,6 +1129,83 @@ export const TeamDashboard: React.FC<TeamDashboardProps & { matchReports?: Match
             </div>
 
 
+            {/* Timeline / Snapshots Section */}
+            <div className="bento-card p-6 border-white/5 bg-black/40">
+                <div className="flex flex-wrap justify-between items-center mb-8 gap-4">
+                    <div>
+                        <h3 className="text-2xl font-display font-black text-premium-gold uppercase tracking-tighter italic flex items-center gap-3">
+                            <span className="material-symbols-outlined text-premium-gold text-3xl">history</span>
+                            Línea de Tiempo del Gremio
+                        </h3>
+                        <p className="text-[10px] font-display font-bold text-slate-500 uppercase tracking-widest mt-1">Gestión de puntos de restauración y estados históricos.</p>
+                    </div>
+                    <button 
+                        onClick={handleCreateSnapshot}
+                        className="group relative bg-sky-500/10 border border-sky-500/20 text-sky-400 font-display font-black uppercase text-[11px] px-6 py-3 rounded-2xl hover:bg-sky-500 hover:text-black transition-all duration-300 flex items-center gap-2 shadow-[0_0_20px_rgba(14,165,233,0.1)] hover:shadow-[0_0_25px_rgba(14,165,233,0.3)] active:scale-95"
+                    >
+                        <span className="material-symbols-outlined text-sm group-hover:rotate-12 transition-transform">camera</span>
+                        Capturar Estado Actual
+                    </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {team.snapshots && team.snapshots.length > 0 ? (
+                        team.snapshots.map((snapshot) => (
+                            <div key={snapshot.id} className="group/snap relative bg-white/5 border border-white/5 rounded-[2rem] p-6 hover:border-sky-500/30 transition-all duration-300 overflow-hidden shadow-xl">
+                                <div className="absolute top-0 right-0 p-4 opacity-0 group-hover/snap:opacity-100 transition-opacity">
+                                    <button 
+                                        onClick={() => handleDeleteSnapshot(snapshot.id)}
+                                        className="w-8 h-8 rounded-full bg-blood-red/10 text-blood-red flex items-center justify-center hover:bg-blood-red hover:text-white transition-all"
+                                        title="Eliminar snapshot"
+                                    >
+                                        <span className="material-symbols-outlined text-sm">delete</span>
+                                    </button>
+                                </div>
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="w-12 h-12 rounded-2xl bg-black/40 flex items-center justify-center border border-white/5">
+                                        <span className="material-symbols-outlined text-sky-400 text-2xl">event_available</span>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-display font-black text-white italic uppercase tracking-tighter">Cápsula de Tiempo</p>
+                                        <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">
+                                            {new Date(snapshot.timestamp).toLocaleDateString()} — {new Date(snapshot.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="space-y-3 mb-6">
+                                    <div className="flex justify-between text-[10px]">
+                                        <span className="text-slate-500 font-bold uppercase">VAE:</span>
+                                        <span className="text-white font-black">{calculateTeamValue(snapshot.teamState as ManagedTeam).toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex justify-between text-[10px]">
+                                        <span className="text-slate-500 font-bold uppercase">Jugadores:</span>
+                                        <span className="text-white font-black">{snapshot.teamState.players.length}</span>
+                                    </div>
+                                    {snapshot.matchId && (
+                                        <div className="bg-premium-gold/10 border border-premium-gold/20 px-3 py-1 rounded-lg">
+                                            <p className="text-[8px] text-premium-gold font-black uppercase italic">Generado en Partido</p>
+                                        </div>
+                                    )}
+                                </div>
+                                <button 
+                                    onClick={() => setSnapshotToRestore(snapshot)}
+                                    className="w-full bg-white/5 border border-white/10 text-white font-display font-black uppercase text-[10px] tracking-widest py-3 rounded-xl hover:bg-sky-500 hover:text-black hover:border-sky-500 transition-all active:scale-95"
+                                >
+                                    Restaurar Equipo
+                                </button>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="col-span-full py-16 text-center border-2 border-dashed border-white/5 rounded-[2.5rem]">
+                            <span className="material-symbols-outlined text-slate-700 text-6xl mb-4">restore</span>
+                            <p className="text-slate-500 text-xs font-display font-bold uppercase italic tracking-widest">No hay puntos de restauración guardados</p>
+                            <p className="text-slate-600 text-[10px] uppercase tracking-tighter mt-2 max-w-xs mx-auto">Captura el estado actual para poder volver atrás en el tiempo si las cosas se tuercen en el campo.</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+
             {/* Danger Zone */}
             <div className="bento-card p-6 border-blood-red/20 bg-blood-red/5">
                 <h3 className="text-xl font-display font-bold text-blood-red uppercase tracking-wider mb-2">Zona Peligrosa</h3>
@@ -1168,12 +1278,58 @@ export const TeamDashboard: React.FC<TeamDashboardProps & { matchReports?: Match
                                 </div>
                             </div>
                             <div className="p-6 bg-black/40 border-t border-white/5 flex justify-center">
-                                <p className="text-[10px] font-display font-black text-slate-600 uppercase tracking-[0.3em]">Cortesía del Oráculo de Nuffle • Edición Limitada</p>
                             </div>
                         </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {snapshotToRestore && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="glass-panel w-full max-w-md border-sky-500/20 overflow-hidden shadow-[0_0_70px_rgba(14,165,233,0.2)]">
+                        <div className="p-8 bg-gradient-to-br from-sky-500/20 to-transparent border-b border-sky-500/10">
+                            <div className="w-16 h-16 bg-sky-500/10 rounded-full flex items-center justify-center text-sky-400 mb-6 border border-sky-500/20 shadow-[0_0_20px_rgba(14,165,233,0.3)]">
+                                <span className="material-symbols-outlined text-3xl">restore</span>
+                            </div>
+                            <h3 className="text-3xl font-display font-black text-white italic tracking-tighter uppercase leading-none">Viaje en el Tiempo</h3>
+                            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-2 italic">Advertencia de Nuffle: El estado actual se perderá.</p>
+                        </div>
+                        <div className="p-8 space-y-6">
+                            <p className="text-slate-300 text-sm leading-relaxed">
+                                Estas a punto de restaurar la franquicia al estado capturado el <span className="text-white font-bold">{new Date(snapshotToRestore.timestamp).toLocaleDateString()}</span>.
+                            </p>
+                            <div className="bg-black/60 p-4 rounded-2xl border border-white/5 space-y-3 shadow-inner">
+                                <div className="flex justify-between items-center text-[11px]">
+                                    <span className="text-slate-500 font-bold uppercase tracking-widest">Tesorería Restaurada:</span>
+                                    <span className="font-mono text-green-400 font-bold">{snapshotToRestore.teamState.treasury.toLocaleString()} M.O.</span>
+                                </div>
+                                <div className="flex justify-between items-center text-[11px]">
+                                    <span className="text-slate-500 font-bold uppercase tracking-widest">Plantilla:</span>
+                                    <span className="text-white font-black">{snapshotToRestore.teamState.players.length} Jugadores</span>
+                                </div>
+                            </div>
+                            <p className="text-[10px] text-amber-500 font-bold italic text-center p-3 bg-amber-500/5 rounded-xl border border-amber-500/10">
+                                Tip: La línea de tiempo se conservará, permitiéndote volver al presente si capturas el estado actual antes de restaurar.
+                            </p>
+                        </div>
+                        <div className="p-8 bg-black/20 flex flex-col gap-4">
+                            <button
+                                onClick={handleRestoreSnapshot}
+                                className="w-full bg-sky-500 text-black font-display font-black uppercase tracking-widest py-4 rounded-2xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-sky-500/20"
+                            >
+                                Confirmar Restauración
+                            </button>
+                            <button
+                                onClick={() => setSnapshotToRestore(null)}
+                                className="w-full text-slate-500 font-display font-bold uppercase tracking-widest text-xs py-2 hover:text-white transition-premium"
+                            >
+                                Cancelar y Mantener el Presente
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {fireConfirmation && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
                     <div className="glass-panel w-full max-w-sm border-blood-red/20 overflow-hidden shadow-[0_0_50px_rgba(239,68,68,0.2)]">

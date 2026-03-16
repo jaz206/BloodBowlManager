@@ -204,21 +204,35 @@ pages
 ├── Home
 │
 ├── Oracle
-│ Teams
-│ Skills
-│ StarPlayers
-│ Probabilities
-│ Inducements
+│   ├── Teams
+│   ├── Skills
+│   ├── StarPlayers
+│   ├── Probabilities
+│   └── Inducements
 │
 ├── Guild
-│ Teams
-│ TeamDetail
-│ CreateTeam
+│   ├── Teams
+│   ├── TeamDetail
+│   └── CreateTeam
 │
 └── Arena
-Leagues
-Match
-MatchHistory
+    ├── Leagues
+    ├── MatchHistory
+    └── Match
+        ├── MatchPage.tsx
+        ├── MatchOrchestrator.tsx
+        ├── context/
+        ├── hooks/
+        ├── engine/
+        ├── views/
+        ├── log/
+        ├── types/
+        └── components/
+            ├── Sidebars/
+            └── modals/
+                ├── rules/
+                ├── system/
+                └── shared/
 
 hooks
 

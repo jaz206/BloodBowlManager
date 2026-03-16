@@ -59,6 +59,7 @@ const MatchNarrator: React.FC<MatchNarratorProps> = ({ events, homeTeamName, awa
             const tds = events.filter(e => String(e.type).toLowerCase() === 'touchdown');
             const casualties = events.filter(e => String(e.type).toLowerCase().includes('injury_casualty') || e.type === 'DEATH');
             const fouls = events.filter(e => String(e.type).toLowerCase().includes('foul_success') || e.type === 'EXPULSION');
+            const s3Incidents = events.filter(e => e.description.includes('¡INCIDENCIA S3!'));
 
             if (tds.length > 0) {
                 body += "\n\nLA FIESTA DE LA ANOTACIÓN\n";
@@ -66,6 +67,17 @@ const MatchNarrator: React.FC<MatchNarratorProps> = ({ events, homeTeamName, awa
                     const prefix = i === 0 ? "El marcador se inauguró cuando" : "La locura continuó cuando";
                     body += `${prefix} ${transformToEpic(td).toLowerCase()} `;
                 });
+            }
+
+            if (s3Incidents.length > 0) {
+                body += "\n\nANECDOTARIO DE LA TEMPORADA\n";
+                body += "Nuffle pareció divertirse con los problemas mundanos de los jugadores. ";
+                const inc = s3Incidents[0]; // Just take one for the chronicle to keep it concise
+                if (inc.description.includes('Distraído')) {
+                    body += `¡Vaya despiste! El público no daba crédito cuando alguien perdió la noción de la realidad en pleno césped. `;
+                } else {
+                    body += `Los problemas intestinales marcaron el ritmo de algunos, dejando un rastro de duda (y algo más) en la arena. `;
+                }
             }
 
             if (casualties.length > 0) {
@@ -147,7 +159,12 @@ const MatchNarrator: React.FC<MatchNarratorProps> = ({ events, homeTeamName, awa
                                 {e.type.toLowerCase() === 'touchdown' && <TdIcon className="w-5 h-5 text-green-400" />}
                                 {e.type.toLowerCase().includes('injury') && <CasualtyIcon className="w-5 h-5 text-blood-red" />}
                                 {e.type.toLowerCase() === 'turnover' && <FireIcon className="w-5 h-5 text-amber-500" />}
-                                {e.type.toLowerCase().includes('foul') && <div className="w-5 h-5 bg-red-600 rounded blur-sm opacity-50 group-hover:opacity-100 transition-opacity" />}
+                                {e.description.includes('¡INCIDENCIA S3!') && (
+                                    <span className="material-symbols-outlined text-premium-gold text-xl">
+                                        {e.description.includes('Distraído') ? 'psychology_alt' : 'restaurant'}
+                                    </span>
+                                )}
+                                {(e.type.toLowerCase().includes('foul') && !e.description.includes('¡INCIDENCIA S3!')) && <div className="w-5 h-5 bg-red-600 rounded blur-sm opacity-50 group-hover:opacity-100 transition-opacity" />}
                             </div>
                             <div>
                                 <p className="text-[10px] font-display font-black text-slate-500 uppercase tracking-[0.2em] mb-1">

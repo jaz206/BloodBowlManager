@@ -96,7 +96,7 @@ const PlayerStatusCard: React.FC<PlayerStatusCardProps> = ({ player, playerNumbe
                             <div className="flex gap-1.5 mt-1">
                                 {player.isDistracted && (
                                     <span className="flex items-center gap-1 text-[8px] font-black text-white uppercase bg-red-600 px-1.5 py-0.5 rounded shadow-[0_0_10px_rgba(220,38,38,0.5)]">
-                                        <span className="material-symbols-outlined text-[10px] font-black">block</span> Distraído
+                                        <span className="material-symbols-outlined text-[10px] font-black">psychology_alt</span> Distraído
                                     </span>
                                 )}
                                 {player.hasIndigestion && (

@@ -157,5 +157,30 @@ root/
 *   **Normalización de Formatos**: Sincronización de las verificaciones de habilidades para soportar tanto el nuevo sistema de claves (`skillKeys`) como el antiguo formato de cadenas, garantizando compatibilidad total.
 *   *Archivos Afectados*: `newsGenerator.ts`, `MatchNarrator.tsx`, `utils/teamUtils.ts`, `MatchPage.tsx`, `types.ts`, `data/skills.ts`, `BITACORA.md`.
 
+### 15 de Marzo, 2026: Línea de Tiempo y Estados de la S3 (Arena & Gremio)
+*   **Línea de Tiempo del Gremio**: Implementación de un sistema de "Cápsulas de Tiempo" (Snapshots) que permite a los entrenadores guardar el estado exacto de su equipo (jugadores, tesorería, staff) y restaurarlo en el futuro.
+*   **Gestión de Snapshots**: Interfaz premium en la ficha de equipo con previsualización de datos históricos y modal de confirmación épico ("Viaje en el Tiempo") para evitar restauraciones accidentales.
+*   **Estados Season 3 (S3)**: Implementación de los estados *Distraído* (Aura roja, sin zona de defensa) e *Indigestión* (-1 MV, -1 AR) con indicadores visuales interactivos en la Arena.
+*   **Snapshots en Amistosos**: Integración del selector de snapshots en la Arena para permitir duelos entre equipos en diferentes momentos de su historia (ej: "Reikland 2024 vs Reikland 2025").
+*   *Archivos Afectados*: `TeamDetailPage.tsx`, `MatchPage.tsx`, `PlayerCardModal.tsx`, `PlayerStatusCard.tsx`, `types.ts`, `testData.ts`.
+
+### [2026-03-16] Gran Refactorización de la Arena (Arquitectura Modular)
+*   **MatchPage Orchestrator**: Refactorización radical de `MatchPage.tsx`, que pasó de ser un monolito de +3,500 líneas a un orquestador ligero. Ahora utiliza `MatchProvider` para inyectar el estado y delega el renderizado a `MatchOrchestrator.tsx`.
+*   **Motores de Lógica (Engines)**: Extracción de la lógica de negocio a archivos especializados en `pages/Arena/Match/engine/`:
+    *   `injuryEngine.ts`: Gestión de bajas y resolución de armadura.
+    *   `foulEngine.ts`: Lógica de faltas y expulsiones.
+    *   `sppEngine.ts`: Atribución de puntos de estrellato.
+    *   `matchEngine.ts`: Flujo central del partido.
+*   **Hooks de Estado y Acción**: División del estado en hooks atómicos y memorizados:
+    *   `useMatchState.ts`: Inicialización y definición del estado reactivo.
+    *   `useMatchActions.ts`: Funciones de negocio optimizadas con `useCallback`.
+    *   `useMatch.ts`: Hook de consumo simplificado.
+*   **Vistas por Etapas (Stages)**: Despliegue de cada fase del juego en componentes dedicados en `pages/Arena/Match/views/` (`SelectionStage`, `PreGameStage`, `MatchInProgress`, `PostGameStage`, etc.).
+*   **Categorización de Modales**: Reorganización de los 16 modales del partido en carpetas semánticas:
+    *   `modals/rules/`: Modales vinculados a mecánicas de juego.
+    *   `modals/system/`: Modales de gestión administrativa del partido.
+*   **Blindaje ante Build**: Corrección de múltiples errores de importación circular, rutas relativas y dependencias externas (`html5-qrcode`) para asegurar un despliegue exitoso.
+*   *Archivos Afectados*: `MatchPage.tsx`, `MatchOrchestrator.tsx`, `MatchContext.tsx`, y toda la estructura de `/pages/Arena/Match/`.
+
 ---
 ¡Por Nuffle, que los dados siempre te favorezcan! 🎲🎲
