@@ -42,7 +42,7 @@ const SkillSelectionModal: React.FC<SkillSelectionModalProps> = ({ player, roste
     }, [basePlayer, skillType, player.gainedSkills, player.skills]);
 
     return createPortal(
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[100] p-4" onClick={onClose}>
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[500] p-4" onClick={onClose}>
             <div className="glass-panel border-premium-gold/30 bg-black/80 max-w-lg w-full max-h-[80vh] flex flex-col shadow-[0_0_100px_rgba(245,159,10,0.1)] overflow-hidden animate-slide-in-up" onClick={e => e.stopPropagation()}>
                 <div className="p-6 border-b border-white/5 bg-premium-gold/5 flex justify-between items-center">
                     <div>

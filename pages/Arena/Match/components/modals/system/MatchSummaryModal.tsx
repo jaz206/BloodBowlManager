@@ -28,7 +28,12 @@ const MatchSummaryModal: React.FC<MatchSummaryModalProps> = (props) => {
     const gameLog = props.gameLog || context.gameLog || [];
     const score = props.currentScore || context.score;
     const weather = props.weather || context.gameStatus?.weather?.title;
-    const fame = context.fame; // We usually don't have this in reports, so fallback to logic below
+    const fame = context.fame;
+
+    // Chronic logic: use props for historical, currentChronicle for live
+    const chronicArticle = props.article || (context.currentChronicle ? context.currentChronicle.split('\n\n').slice(1).join('\n\n') : undefined);
+    const chronicHeadline = props.headline || (context.currentChronicle ? context.currentChronicle.split('\n\n')[0] : undefined);
+    const hasArticle = !!(chronicArticle || props.article);
     
     if (!isModalOpen || !homeTeam || !opponentTeam) return null;
 
@@ -89,11 +94,11 @@ const MatchSummaryModal: React.FC<MatchSummaryModalProps> = (props) => {
         <div className="fixed inset-0 bg-black/95 backdrop-blur-xl flex items-center justify-center z-[500] p-4 lg:p-12">
             <div className="glass-panel max-w-6xl w-full max-h-[92vh] flex flex-col border-premium-gold/30 bg-black/60 shadow-[0_0_120px_rgba(245,159,10,0.2)] animate-slide-in-up overflow-hidden">
                 {/* Clean News Layout if article provided */}
-                {props.article && (
+                {hasArticle && (
                     <div className="flex justify-between items-center p-6 bg-premium-gold/5 border-b border-premium-gold/20">
                         <div className="flex flex-col">
                             <h1 className="text-4xl md:text-5xl font-serif font-black text-white italic tracking-tighter leading-tight drop-shadow-md">
-                                {props.headline || 'CRÓNICA DE LA ARENA'}
+                                {chronicHeadline || 'CRÓNICA DE LA ARENA'}
                             </h1>
                             <p className="text-xs font-serif font-bold text-premium-gold uppercase tracking-[0.2em] mt-2 italic">
                                 {props.subHeadline || 'Reporte oficial de Nuffle News'}
@@ -105,7 +110,7 @@ const MatchSummaryModal: React.FC<MatchSummaryModalProps> = (props) => {
                     </div>
                 )}
 
-                {!props.article && (
+                {!hasArticle && (
                     <div className="sticky top-0 z-10 flex justify-between items-center p-6 md:p-8 border-b border-white/10 bg-black/80 backdrop-blur-md">
                         <div>
                             <h2 className="text-2xl md:text-3xl font-display font-black text-white uppercase italic tracking-tighter">Crónica de <span className="text-premium-gold">Nuffle</span></h2>
@@ -130,12 +135,12 @@ const MatchSummaryModal: React.FC<MatchSummaryModalProps> = (props) => {
                 <div className="flex-grow overflow-y-auto custom-scrollbar p-6 md:p-8 space-y-12 bg-pattern-dots">
                     
                     {/* Newspaper Article Section */}
-                    {props.article && (
+                    {hasArticle && (
                         <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
                             <div className="flex flex-col md:flex-row gap-8 items-start">
                                 <div className="flex-grow space-y-6">
                                     <div className="font-serif text-slate-200 text-lg leading-relaxed first-letter:text-7xl first-letter:font-black first-letter:text-premium-gold first-letter:mr-4 first-letter:float-left first-letter:mt-1 space-y-6">
-                                        {props.article.split('\n\n').map((para, i) => (
+                                        {chronicArticle?.split('\n\n').map((para, i) => (
                                             <p key={i} className="mb-4">{para}</p>
                                         ))}
                                     </div>

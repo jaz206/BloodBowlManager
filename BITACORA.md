@@ -172,7 +172,9 @@ root/
 *   **Resolución de Bloqueo "Initializing System"**: Corregido el error que impedía cargar la selección de equipo al añadir el caso `setup` en el orquestador y asegurar que las utilidades de cálculo de VAE (`calculateTeamValue`) estén disponibles en el contexto.
 *   **Crónicas Históricas**: Refactorización de `MatchSummaryModal.tsx` para permitir la visualización de reportes archivados mediante props, manteniendo la compatibilidad con el modo de juego en vivo vía contexto.
 *   **Suministro de Datos Seguro**: Implementación de guards para `managedTeams` y simplificación de importaciones estáticas para evitar problemas de resolución de módulos en el build de producción.
-*   *Archivos Afectados*: `MatchPage.tsx`, `MatchOrchestrator.tsx`, `useMatchState.ts`, `MatchContext.tsx`, `SelectionStage.tsx`, `MatchSummaryModal.tsx`, y todos los componentes en `Match/components/modals/`.
+*   **Estabilización del Flujo Pre-Game**: Corregido el bloqueo en "Invocando Equipos..." y "Levantamiento de Muertos" mediante la inicialización automática de equipos en vivo (`liveHomeTeam`/`liveOpponentTeam`), cálculo de incentivos (underdog) y avance forzado al Paso 1 (Centro de Mando) cuando no hay heridos.
+*   **Compatibilidad con Vercel (Producción)**: Corregidas más de 20 rutas de importación relativas en los modales y componentes de Arena que causaban fallos en el proceso de build tras la reestructuración de subcarpetas.
+*   *Archivos Afectados*: `useMatchState.ts`, `SelectionStage.tsx`, `PreGameStage.tsx`, `MatchOrchestrator.tsx`, y múltiples archivos en `Match/components/modals/`.
 
 ---
 ¡Por Nuffle, que los dados siempre te favorezcan! 🎲🎲
