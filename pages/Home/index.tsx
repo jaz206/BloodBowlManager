@@ -90,10 +90,10 @@ const Home: React.FC<HomeProps> = ({ onNavigate, onCreateTeam, managedTeams, mat
 
                     <div className="grid grid-cols-2 gap-4 relative z-10">
                         {[
-                            { icon: 'groups', title: 'Equipos', sub: 'Enciclopedia', view: 'oracle', payload: '' },
-                            { icon: 'bolt', title: 'Codex', sub: 'Habilidades', view: 'oracle', payload: 'Habilidades' },
-                            { icon: 'star', title: 'Estrellas', sub: 'Legendarios', view: 'oracle', payload: 'Star Player' },
-                            { icon: 'calculate', title: 'Calculadora', sub: 'Probabilidades', view: 'oracle', payload: 'Calculadora' }
+                            { icon: 'groups', title: 'Equipos', sub: 'Enciclopedia', view: 'oracle', payload: 'teams' },
+                            { icon: 'bolt', title: 'Codex', sub: 'Habilidades', view: 'oracle', payload: 'skills' },
+                            { icon: 'star', title: 'Estrellas', sub: 'Legendarios', view: 'oracle', payload: 'stars' },
+                            { icon: 'calculate', title: 'Calculadora', sub: 'Probabilidades', view: 'oracle', payload: 'calculator' }
                         ].map(item => (
                             <button 
                                 key={item.title}

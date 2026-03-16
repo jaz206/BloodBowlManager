@@ -36,16 +36,18 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
     // Update search term when initialSearchTerm changes from outside
     React.useEffect(() => {
         if (initialSearchTerm) {
-            if (initialSearchTerm === 'Habilidades') {
-                setActiveView('skills');
-                setHubSearchTerm('');
-            } else if (initialSearchTerm === 'Star Player') {
-                setActiveView('star_players');
-                setHubSearchTerm('');
-            } else if (initialSearchTerm === 'Calculadora') {
-                setActiveView('calculator');
-                setHubSearchTerm('');
+            const navigationalPayloads = ['teams', 'skills', 'stars', 'calculator', 'rules', 'Habilidades', 'Star Player', 'Calculadora'];
+            
+            if (navigationalPayloads.includes(initialSearchTerm)) {
+                if (initialSearchTerm === 'teams') setActiveView('teams');
+                else if (initialSearchTerm === 'skills' || initialSearchTerm === 'Habilidades') setActiveView('skills');
+                else if (initialSearchTerm === 'stars' || initialSearchTerm === 'Star Player') setActiveView('star_players');
+                else if (initialSearchTerm === 'calculator' || initialSearchTerm === 'Calculadora') setActiveView('calculator');
+                else if (initialSearchTerm === 'rules') setActiveView('rules');
+                
+                setHubSearchTerm(''); // Clear search if it was a tab navigation
             } else {
+                // If it's actual text, stay in hub and search (unless we are already in a subview, then maybe we want to search there?)
                 setHubSearchTerm(initialSearchTerm);
             }
         }
