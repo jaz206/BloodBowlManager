@@ -3,7 +3,7 @@ import { useMatchState } from '../hooks/useMatchState';
 import { useMatchActions } from '../hooks/useMatchActions';
 import { GameBoardProps } from '../types/match.types';
 
-type MatchContextType = ReturnType<typeof useMatchState> & ReturnType<typeof useMatchActions>;
+type MatchContextType = ReturnType<typeof useMatchState> & ReturnType<typeof useMatchActions> & GameBoardProps;
 
 const MatchContext = createContext<MatchContextType | undefined>(undefined);
 
@@ -13,7 +13,8 @@ export const MatchProvider: React.FC<{ children: ReactNode; props: GameBoardProp
 
     const value = {
         ...state,
-        ...actions
+        ...actions,
+        ...props
     };
 
     return (

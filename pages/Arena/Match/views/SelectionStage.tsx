@@ -6,26 +6,18 @@ declare const Html5Qrcode: any;
 
 const SelectionStage: React.FC = () => {
     const { 
-        state, 
-        actions, 
-        managedTeams,
-        calculateTeamValue 
-    } = useMatch();
-    
-    const { 
         homeTeam, 
         opponentTeam, 
         matchMode,
         setHomeTeam,
         setOpponentTeam,
         setMatchMode,
-        setGameState
-    } = state;
-    
-    const { 
+        setGameState,
+        managedTeams,
+        calculateTeamValue,
         handleSelectTeamInternal, 
         handleProcessQrCode 
-    } = actions;
+    } = useMatch();
 
     const scannerRef = useRef<any>(null);
     const scannerContainerRef = useRef<HTMLDivElement>(null);
@@ -119,7 +111,7 @@ const SelectionStage: React.FC = () => {
                         </div>
                     ) : (
                         <div className="grid gap-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                            {managedTeams.map(team => (
+                            {(managedTeams || []).map(team => (
                                 <button
                                     key={team.name}
                                     onClick={() => handleSelectTeamInternal(team, 'home')}
@@ -135,6 +127,9 @@ const SelectionStage: React.FC = () => {
                                     <span className="material-symbols-outlined text-slate-700 group-hover:text-sky-400">radio_button_unchecked</span>
                                 </button>
                             ))}
+                            {(!managedTeams || managedTeams.length === 0) && (
+                                <p className="text-center text-slate-600 text-xs py-10 uppercase font-display font-black tracking-widest italic">No se han invocado escuadras todavía</p>
+                            )}
                         </div>
                     )}
                 </div>

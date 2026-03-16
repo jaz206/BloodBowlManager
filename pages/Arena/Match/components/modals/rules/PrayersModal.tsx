@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { useMatch } from '../../context/MatchContext';
-import { prayersData } from '../../../../../data/prayers';
-import type { Prayer } from '../../../../../types';
+import { useMatch } from '../../../context/MatchContext';
+import { prayersData } from '../../../../../../data/prayers';
+import type { Prayer } from '../../../../../../types';
 
 const PrayersModal: React.FC = () => {
     const {

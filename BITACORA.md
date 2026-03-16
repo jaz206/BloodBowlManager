@@ -166,21 +166,13 @@ root/
 
 ### [2026-03-16] Gran Refactorización de la Arena (Arquitectura Modular)
 *   **MatchPage Orchestrator**: Refactorización radical de `MatchPage.tsx`, que pasó de ser un monolito de +3,500 líneas a un orquestador ligero. Ahora utiliza `MatchProvider` para inyectar el estado y delega el renderizado a `MatchOrchestrator.tsx`.
-*   **Motores de Lógica (Engines)**: Extracción de la lógica de negocio a archivos especializados en `pages/Arena/Match/engine/`:
-    *   `injuryEngine.ts`: Gestión de bajas y resolución de armadura.
-    *   `foulEngine.ts`: Lógica de faltas y expulsiones.
-    *   `sppEngine.ts`: Atribución de puntos de estrellato.
-    *   `matchEngine.ts`: Flujo central del partido.
-*   **Hooks de Estado y Acción**: División del estado en hooks atómicos y memorizados:
-    *   `useMatchState.ts`: Inicialización y definición del estado reactivo.
-    *   `useMatchActions.ts`: Funciones de negocio optimizadas con `useCallback`.
-    *   `useMatch.ts`: Hook de consumo simplificado.
-*   **Vistas por Etapas (Stages)**: Despliegue de cada fase del juego en componentes dedicados en `pages/Arena/Match/views/` (`SelectionStage`, `PreGameStage`, `MatchInProgress`, `PostGameStage`, etc.).
-*   **Categorización de Modales**: Reorganización de los 16 modales del partido en carpetas semánticas:
-    *   `modals/rules/`: Modales vinculados a mecánicas de juego.
-    *   `modals/system/`: Modales de gestión administrativa del partido.
-*   **Blindaje ante Build**: Corrección de múltiples errores de importación circular, rutas relativas y dependencias externas (`html5-qrcode`) para asegurar un despliegue exitoso.
-*   *Archivos Afectados*: `MatchPage.tsx`, `MatchOrchestrator.tsx`, `MatchContext.tsx`, y toda la estructura de `/pages/Arena/Match/`.
+*   **Segmentación del Motor**: Extracción de la lógica de negocio a `pages/Arena/Match/engine/` (`matchEngine.ts`, `injuryEngine.ts`, `foulEngine.ts`, `sppEngine.ts`), permitiendo testeo unitario y claridad en las reglas.
+*   **Vistas por Etapa**: División de las fases del partido en componentes independientes en `pages/Arena/Match/views/` (`SelectionStage`, `PreGameStage`, `MatchInProgress`, `PostGameStage`, `ReportsStage`, `KoRecoveryStage`).
+*   **Reorganización de Modales**: Reubicación de todos los modales en subcarpetas semánticas (`rules/`, `system/`, `shared/`) dentro de `components/modals/`, mejorando la mantenibilidad y reduciendo el ruido en el directorio raíz.
+*   **Resolución de Bloqueo "Initializing System"**: Corregido el error que impedía cargar la selección de equipo al añadir el caso `setup` en el orquestador y asegurar que las utilidades de cálculo de VAE (`calculateTeamValue`) estén disponibles en el contexto.
+*   **Crónicas Históricas**: Refactorización de `MatchSummaryModal.tsx` para permitir la visualización de reportes archivados mediante props, manteniendo la compatibilidad con el modo de juego en vivo vía contexto.
+*   **Suministro de Datos Seguro**: Implementación de guards para `managedTeams` y simplificación de importaciones estáticas para evitar problemas de resolución de módulos en el build de producción.
+*   *Archivos Afectados*: `MatchPage.tsx`, `MatchOrchestrator.tsx`, `useMatchState.ts`, `MatchContext.tsx`, `SelectionStage.tsx`, `MatchSummaryModal.tsx`, y todos los componentes en `Match/components/modals/`.
 
 ---
 ¡Por Nuffle, que los dados siempre te favorezcan! 🎲🎲

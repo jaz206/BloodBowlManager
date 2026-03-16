@@ -1,6 +1,6 @@
 import React from 'react';
-import { useMatch } from '../../context/MatchContext';
-import { ManagedTeam, ManagedTeamSnapshot, ManagedPlayer, PlayerStatus } from '../../../../../types';
+import { useMatch } from '../../../context/MatchContext';
+import { ManagedTeam, ManagedTeamSnapshot, ManagedPlayer, PlayerStatus } from '../../../../../../types';
 
 const SnapshotSelectionModal: React.FC = () => {
     const {

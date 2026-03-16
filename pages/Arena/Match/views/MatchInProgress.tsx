@@ -23,7 +23,7 @@ const MatchInProgress: React.FC = () => {
         handleStrategicAction, handleNextTurn, openSppModal,
         handleUpdatePlayerCondition, logEvent,
         useReroll
-    } = useMatch() as any;
+    } = useMatch();
 
     if (!liveHomeTeam || !liveOpponentTeam) {
         return (

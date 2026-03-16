@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useMatch } from '../../context/MatchContext';
-import { skillsData } from '../../../../../data/skills';
+import { useMatch } from '../../../context/MatchContext';
+import { skillsData } from '../../../../../../data/skills';
 import SkillModal from '../../../../../components/oracle/SkillModal';
-import { ManagedPlayer, Skill } from '../../../../../types';
+import { ManagedPlayer, Skill } from '../../../../../../types';
 
 const SkillButton: React.FC<{ skillName: string; onSkillClick: (name: string) => void; disabled?: boolean }> = ({ skillName, onSkillClick, disabled }) => {
     const cleanSkillName = skillName.split('(')[0].trim();

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useMatch } from '../../context/MatchContext';
+import { useMatch } from '../../../context/MatchContext';
 
 const WeatherModal: React.FC = () => {
     const {

@@ -10,30 +10,36 @@ import ReportsStage from './views/ReportsStage';
 import SelectionStage from './views/SelectionStage';
 
 // Modals
-import PrayersModal from './components/modals/PrayersModal';
-import WeatherModal from './components/modals/WeatherModal';
-import TdModal from './components/modals/TdModal';
-import CustomEventModal from './components/modals/CustomEventModal';
-import SequenceGuideModal from './components/modals/SequenceGuideModal';
-import TurnoverModal from './components/modals/TurnoverModal';
-import SnapshotSelectionModal from './components/modals/SnapshotSelectionModal';
-import ApothecaryModal from './components/modals/ApothecaryModal';
-import PlayerCardModal from './components/modals/PlayerCardModal';
-import StarPlayerModal from './components/modals/StarPlayerModal';
-import SkillModal from './components/modals/SkillModal';
 // rules/
 import FoulModal from './components/modals/rules/FoulModal';
 import InjuryModal from './components/modals/rules/InjuryModal';
 import SppActionModal from './components/modals/rules/SppActionModal';
+import ApothecaryModal from './components/modals/rules/ApothecaryModal';
+import PrayersModal from './components/modals/rules/PrayersModal';
+import TdModal from './components/modals/rules/TdModal';
+import TurnoverModal from './components/modals/rules/TurnoverModal';
+import WeatherModal from './components/modals/rules/WeatherModal';
+
 // system/
 import ConcedeModal from './components/modals/system/ConcedeModal';
 import MatchSummaryModal from './components/modals/system/MatchSummaryModal';
+import CustomEventModal from './components/modals/system/CustomEventModal';
+import SequenceGuideModal from './components/modals/system/SequenceGuideModal';
+import SnapshotSelectionModal from './components/modals/system/SnapshotSelectionModal';
+
+// shared/
+import PlayerCardModal from './components/modals/shared/PlayerCardModal';
+import StarPlayerModal from './components/modals/shared/StarPlayerModal';
+import SkillModal from './components/modals/shared/SkillModal';
 
 const MatchOrchestrator: React.FC = () => {
     const { gameState } = useMatch();
+    
+    console.log("[MatchOrchestrator] Current gameState:", gameState);
 
     const renderContent = () => {
         switch (gameState) {
+            case 'setup':
             case 'selection':
                 return <SelectionStage />;
             case 'pre_game':
@@ -56,6 +62,7 @@ const MatchOrchestrator: React.FC = () => {
                         </div>
                         <h2 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter">Inicializando Sistema</h2>
                         <p className="text-slate-500 max-w-md text-center">Nuffle está tirando los dados para determinar el destino de este encuentro. Un momento...</p>
+                        <p className="text-[10px] text-blood-red/40 font-mono">Estado detectado: {String(gameState)}</p>
                     </div>
                 );
         }

@@ -13,6 +13,7 @@ import { handleInjuryActionLogic } from '../engine/injuryEngine';
 import { updatePlayerSppActionLogic } from '../engine/sppEngine';
 import { handleHalftimeLogic, handleNextTurnLogic } from '../engine/matchEngine';
 import { skillsData } from '../../../../data/skills';
+import { teamsData } from '../../../../data/teams';
 
 /**
  * useMatchActions — encapsula toda la lógica de acciones del partido.
@@ -444,7 +445,6 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
                 throw new Error('Código QR no válido: Faltan datos esenciales.');
             }
 
-            const { teamsData } = require('../../../../data/teams');
             const baseTeam = teamsData.find((t: any) => t.name === rosterName);
             if (!baseTeam) {
                 throw new Error(`Facción "${rosterName}" no encontrada.`);

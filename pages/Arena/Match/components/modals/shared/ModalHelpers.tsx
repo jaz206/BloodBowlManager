@@ -1,5 +1,5 @@
 import React from 'react';
-import { ManagedPlayer } from '../../../../../types';
+import { ManagedPlayer } from '../../../../../../types';
 import DiceIcon from '../../../../../components/icons/DiceIcon';
 
 export const PlayerButton: React.FC<{ player: ManagedPlayer, onSelect: (p: ManagedPlayer) => void, disabled?: boolean }> = ({ player, onSelect, disabled }) => (

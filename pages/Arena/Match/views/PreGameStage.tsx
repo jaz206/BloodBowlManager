@@ -36,7 +36,7 @@ const isEligibleStar = (star: StarPlayer, teamRoster: Team | undefined) => {
 // SubComponent: JourneymenNotification
 // ────────────────────────────────────────────────────────────
 const JourneymenNotification: React.FC = () => {
-    const { journeymenNotification, handleConfirmJourneymen } = useMatch() as any;
+    const { journeymenNotification, handleConfirmJourneymen } = useMatch();
     if (!journeymenNotification) return null;
     return (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
@@ -68,7 +68,7 @@ const CommandCenterStep: React.FC = () => {
         setFirstHalfReceiver, setPreGameStep,
         handleBuyInducement, handleSellInducement,
         handleHireStar, handleFireStar, setSelectedStarPlayer
-    } = useMatch() as any;
+    } = useMatch();
 
     if (!liveHomeTeam || !liveOpponentTeam) return null;
 
@@ -352,7 +352,7 @@ const DeploymentStep: React.FC = () => {
         liveHomeTeam, liveOpponentTeam, ballCarrierId, logEvent,
         setPreGameStep, handlePlayerMove, handlePlayerStatusToggle,
         handleAutoSelectTeam, handleSuggestDeployment, setViewingPlayer, handleSkillClick
-    } = useMatch() as any;
+    } = useMatch();
 
     if (!liveHomeTeam || !liveOpponentTeam) return null;
 
@@ -484,7 +484,7 @@ const KickoffStep: React.FC = () => {
     const {
         gameStatus, setGameStatus, kickoffActionCompleted, setKickoffActionCompleted,
         logEvent, playSound, handleStartDrive
-    } = useMatch() as any;
+    } = useMatch();
 
     const handleKickoffRoll = () => {
         setKickoffActionCompleted(false);

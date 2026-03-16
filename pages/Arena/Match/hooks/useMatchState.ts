@@ -62,7 +62,7 @@ export const initialInjuryState: InjuryState = {
 
 export const useMatchState = (props: GameBoardProps) => {
     // ESTADOS DE NAVEGACIÓN Y CONFIGURACIÓN
-    const [gameState, setGameState] = useState<GameState>('setup');
+    const [gameState, setGameState] = useState<GameState>('selection');
     const [matchMode, setMatchMode] = useState<'friendly' | 'competition'>('competition');
     const [activeTab, setActiveTab] = useState<'assistant' | 'narrator'>('assistant');
     const [rosterViewId, setRosterViewId] = useState<'home' | 'opponent'>('home');
@@ -161,6 +161,21 @@ export const useMatchState = (props: GameBoardProps) => {
         audio.play().catch(() => {});
     };
 
+    // SINCRONIZACIÓN INICIAL CON PROPS
+    useEffect(() => {
+        if (props.managedTeams && props.managedTeams.length > 0 && !homeTeam) {
+            // Si solo hay un equipo o queremos pre-cargar el primero
+            if (props.managedTeams.length === 1) {
+                setHomeTeam(props.managedTeams[0]);
+            }
+        }
+    }, [props.managedTeams, homeTeam]);
+
+    // Log de estado para depuración (opcional, pero útil ahora)
+    useEffect(() => {
+        console.log("[MatchState] Cambiado a:", gameState);
+    }, [gameState]);
+
     return {
         gameState, setGameState,
         matchMode, setMatchMode,
@@ -216,6 +231,7 @@ export const useMatchState = (props: GameBoardProps) => {
         selectingSnapshotFor, setSelectingSnapshotFor,
         homeTV,
         opponentTV,
-        playSound
+        playSound,
+        calculateTeamValue
     };
 };

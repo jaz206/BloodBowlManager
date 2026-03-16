@@ -1,7 +1,7 @@
 import React from 'react';
-import { useMatch } from '../../context/MatchContext';
-import TdIcon from '../../../../../components/icons/TdIcon';
-import ShieldCheckIcon from '../../../../../components/icons/ShieldCheckIcon';
+import { useMatch } from '../../../context/MatchContext';
+import TdIcon from '../../../../../../components/icons/TdIcon';
+import ShieldCheckIcon from '../../../../../../components/icons/ShieldCheckIcon';
 
 const TdModal: React.FC = () => {
     const {

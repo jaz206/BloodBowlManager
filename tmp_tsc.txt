@@ -1,0 +1,55 @@
+﻿pages/Arena/Match/MatchOrchestrator.tsx(1,8): error TS1259: Module '"C:/Users/jazex/Documents/Antigravity/BloodBowlManager/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+pages/Arena/Match/MatchOrchestrator.tsx(2,26): error TS6142: Module './context/MatchContext' was resolved to 'C:/Users/jazex/Documents/Antigravity/BloodBowlManager/pages/Arena/Match/context/MatchContext.tsx', but '--jsx' is not set.
+pages/Arena/Match/MatchOrchestrator.tsx(5,26): error TS6142: Module './views/PreGameStage' was resolved to 'C:/Users/jazex/Documents/Antigravity/BloodBowlManager/pages/Arena/Match/views/PreGameStage.tsx', but '--jsx' is not set.
+pages/Arena/Match/MatchOrchestrator.tsx(6,29): error TS6142: Module './views/MatchInProgress' was resolved to 'C:/Users/jazex/Documents/Antigravity/BloodBowlManager/pages/Arena/Match/views/MatchInProgress.tsx', but '--jsx' is not set.
+pages/Arena/Match/MatchOrchestrator.tsx(7,27): error TS6142: Module './views/PostGameStage' was resolved to 'C:/Users/jazex/Documents/Antigravity/BloodBowlManager/pages/Arena/Match/views/PostGameStage.tsx', but '--jsx' is not set.
+pages/Arena/Match/MatchOrchestrator.tsx(8,29): error TS6142: Module './views/KoRecoveryStage' was resolved to 'C:/Users/jazex/Documents/Antigravity/BloodBowlManager/pages/Arena/Match/views/KoRecoveryStage.tsx', but '--jsx' is not set.
+pages/Arena/Match/MatchOrchestrator.tsx(9,26): error TS6142: Module './views/ReportsStage' was resolved to 'C:/Users/jazex/Documents/Antigravity/BloodBowlManager/pages/Arena/Match/views/ReportsStage.tsx', but '--jsx' is not set.
+pages/Arena/Match/MatchOrchestrator.tsx(10,28): error TS6142: Module './views/SelectionStage' was resolved to 'C:/Users/jazex/Documents/Antigravity/BloodBowlManager/pages/Arena/Match/views/SelectionStage.tsx', but '--jsx' is not set.
+pages/Arena/Match/MatchOrchestrator.tsx(14,23): error TS6142: Module './components/modals/rules/FoulModal' was resolved to 'C:/Users/jazex/Documents/Antigravity/BloodBowlManager/pages/Arena/Match/components/modals/rules/FoulModal.tsx', but '--jsx' is not set.
+pages/Arena/Match/MatchOrchestrator.tsx(15,25): error TS6142: Module './components/modals/rules/InjuryModal' was resolved to 'C:/Users/jazex/Documents/Antigravity/BloodBowlManager/pages/Arena/Match/components/modals/rules/InjuryModal.tsx', but '--jsx' is not set.
+pages/Arena/Match/MatchOrchestrator.tsx(16,28): error TS6142: Module './components/modals/rules/SppActionModal' was resolved to 'C:/Users/jazex/Documents/Antigravity/BloodBowlManager/pages/Arena/Match/components/modals/rules/SppActionModal.tsx', but '--jsx' is not set.
+pages/Arena/Match/MatchOrchestrator.tsx(17,29): error TS6142: Module './components/modals/rules/ApothecaryModal' was resolved to 'C:/Users/jazex/Documents/Antigravity/BloodBowlManager/pages/Arena/Match/components/modals/rules/ApothecaryModal.tsx', but '--jsx' is not set.
+pages/Arena/Match/MatchOrchestrator.tsx(18,26): error TS6142: Module './components/modals/rules/PrayersModal' was resolved to 'C:/Users/jazex/Documents/Antigravity/BloodBowlManager/pages/Arena/Match/components/modals/rules/PrayersModal.tsx', but '--jsx' is not set.
+pages/Arena/Match/MatchOrchestrator.tsx(19,21): error TS6142: Module './components/modals/rules/TdModal' was resolved to 'C:/Users/jazex/Documents/Antigravity/BloodBowlManager/pages/Arena/Match/components/modals/rules/TdModal.tsx', but '--jsx' is not set.
+pages/Arena/Match/MatchOrchestrator.tsx(20,27): error TS6142: Module './components/modals/rules/TurnoverModal' was resolved to 'C:/Users/jazex/Documents/Antigravity/BloodBowlManager/pages/Arena/Match/components/modals/rules/TurnoverModal.tsx', but '--jsx' is not set.
+pages/Arena/Match/MatchOrchestrator.tsx(21,26): error TS6142: Module './components/modals/rules/WeatherModal' was resolved to 'C:/Users/jazex/Documents/Antigravity/BloodBowlManager/pages/Arena/Match/components/modals/rules/WeatherModal.tsx', but '--jsx' is not set.
+pages/Arena/Match/MatchOrchestrator.tsx(24,26): error TS6142: Module './components/modals/system/ConcedeModal' was resolved to 'C:/Users/jazex/Documents/Antigravity/BloodBowlManager/pages/Arena/Match/components/modals/system/ConcedeModal.tsx', but '--jsx' is not set.
+pages/Arena/Match/MatchOrchestrator.tsx(25,31): error TS6142: Module './components/modals/system/MatchSummaryModal' was resolved to 'C:/Users/jazex/Documents/Antigravity/BloodBowlManager/pages/Arena/Match/components/modals/system/MatchSummaryModal.tsx', but '--jsx' is not set.
+pages/Arena/Match/MatchOrchestrator.tsx(26,30): error TS6142: Module './components/modals/system/CustomEventModal' was resolved to 'C:/Users/jazex/Documents/Antigravity/BloodBowlManager/pages/Arena/Match/components/modals/system/CustomEventModal.tsx', but '--jsx' is not set.
+pages/Arena/Match/MatchOrchestrator.tsx(27,32): error TS6142: Module './components/modals/system/SequenceGuideModal' was resolved to 'C:/Users/jazex/Documents/Antigravity/BloodBowlManager/pages/Arena/Match/components/modals/system/SequenceGuideModal.tsx', but '--jsx' is not set.
+pages/Arena/Match/MatchOrchestrator.tsx(28,36): error TS6142: Module './components/modals/system/SnapshotSelectionModal' was resolved to 'C:/Users/jazex/Documents/Antigravity/BloodBowlManager/pages/Arena/Match/components/modals/system/SnapshotSelectionModal.tsx', but '--jsx' is not set.
+pages/Arena/Match/MatchOrchestrator.tsx(31,29): error TS6142: Module './components/modals/shared/PlayerCardModal' was resolved to 'C:/Users/jazex/Documents/Antigravity/BloodBowlManager/pages/Arena/Match/components/modals/shared/PlayerCardModal.tsx', but '--jsx' is not set.
+pages/Arena/Match/MatchOrchestrator.tsx(32,29): error TS6142: Module './components/modals/shared/StarPlayerModal' was resolved to 'C:/Users/jazex/Documents/Antigravity/BloodBowlManager/pages/Arena/Match/components/modals/shared/StarPlayerModal.tsx', but '--jsx' is not set.
+pages/Arena/Match/MatchOrchestrator.tsx(33,24): error TS6142: Module './components/modals/shared/SkillModal' was resolved to 'C:/Users/jazex/Documents/Antigravity/BloodBowlManager/pages/Arena/Match/components/modals/shared/SkillModal.tsx', but '--jsx' is not set.
+pages/Arena/Match/MatchOrchestrator.tsx(44,24): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+pages/Arena/Match/MatchOrchestrator.tsx(47,24): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+pages/Arena/Match/MatchOrchestrator.tsx(50,24): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+pages/Arena/Match/MatchOrchestrator.tsx(52,24): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+pages/Arena/Match/MatchOrchestrator.tsx(54,24): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+pages/Arena/Match/MatchOrchestrator.tsx(56,24): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+pages/Arena/Match/MatchOrchestrator.tsx(59,21): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+pages/Arena/Match/MatchOrchestrator.tsx(60,25): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+pages/Arena/Match/MatchOrchestrator.tsx(61,29): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+pages/Arena/Match/MatchOrchestrator.tsx(63,25): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+pages/Arena/Match/MatchOrchestrator.tsx(64,25): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+pages/Arena/Match/MatchOrchestrator.tsx(65,25): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+pages/Arena/Match/MatchOrchestrator.tsx(72,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+pages/Arena/Match/MatchOrchestrator.tsx(75,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+pages/Arena/Match/MatchOrchestrator.tsx(80,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+pages/Arena/Match/MatchOrchestrator.tsx(81,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+pages/Arena/Match/MatchOrchestrator.tsx(82,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+pages/Arena/Match/MatchOrchestrator.tsx(83,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+pages/Arena/Match/MatchOrchestrator.tsx(84,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+pages/Arena/Match/MatchOrchestrator.tsx(85,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+pages/Arena/Match/MatchOrchestrator.tsx(86,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+pages/Arena/Match/MatchOrchestrator.tsx(87,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+pages/Arena/Match/MatchOrchestrator.tsx(88,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+pages/Arena/Match/MatchOrchestrator.tsx(89,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+pages/Arena/Match/MatchOrchestrator.tsx(90,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+pages/Arena/Match/MatchOrchestrator.tsx(91,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+pages/Arena/Match/MatchOrchestrator.tsx(92,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+pages/Arena/Match/MatchOrchestrator.tsx(93,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+pages/Arena/Match/MatchOrchestrator.tsx(94,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+pages/Arena/Match/MatchOrchestrator.tsx(95,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+pages/Arena/Match/MatchOrchestrator.tsx(98,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
