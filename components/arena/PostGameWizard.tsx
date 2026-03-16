@@ -283,6 +283,51 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
         setSkillSelection(null);
     };
 
+    const handleRandomSkill = (player: ManagedPlayer, type: 'Primary' | 'Secondary', cost: number) => {
+        const baseTeam = teamsData.find(t => t.name === initialHomeTeam.rosterName);
+        const basePlayer = baseTeam?.roster.find(p => p.position === player.position);
+        if (!basePlayer) return;
+
+        const categoriesString = type === 'Primary' ? basePlayer.primary : basePlayer.secondary;
+        const categories = (categoriesString || '').split('');
+        const categoryMap: { [key: string]: string } = { G: 'General', A: 'Agilidad', F: 'Fuerza', P: 'Pase', M: 'Mutaciones' };
+        const skillCategories = categories.map(c => categoryMap[c]).filter(Boolean);
+        const currentSkills = new Set([...(player.skills || '').split(', ').filter(Boolean), ...(player.gainedSkills || [])]);
+
+        const available = skillsData.filter(s => skillCategories.includes(s.category || '') && !currentSkills.has(s.name_es || s.name_en || s.name || ''));
+        if (available.length === 0) return;
+
+        const randomSkill = available[Math.floor(Math.random() * available.length)];
+        const skillName = randomSkill.name_es || randomSkill.name_en || randomSkill.name || 'Habilidad';
+
+        handleSkillSelectionUpdate(player.id, skillName, cost);
+    };
+
+    const handleCharacteristicImprovement = (player: ManagedPlayer, cost: number) => {
+        const roll = Math.floor(Math.random() * 16) + 1; // 1D16 for characteristic table
+        let result = "";
+        
+        if (roll <= 7) result = "Elegir Hab. Primaria";
+        else if (roll <= 12) result = "Elegir Hab. Secundaria";
+        else if (roll <= 13) result = "Mejora Movimiento (+1 MV) o Armadura (+1 AR)";
+        else if (roll <= 14) result = "Mejora Pase (+1 PA) o Agilidad (+1 AG)";
+        else if (roll <= 15) result = "Mejora Fuerza (+1 FU)";
+        else result = "Cualquier Mejora (+1 Caract. o Hab. Secundaria)";
+
+        alert(`Resultado de Mejora (Dado: ${roll}):\n\n${result}\n\nNota: Aplica la mejora manualmente en el perfil del jugador.`);
+        
+        setPostGameState(prev => {
+            if (!prev) return null;
+            return {
+                ...prev,
+                team: {
+                    ...prev.team,
+                    players: prev.team.players.map(p => p.id === player.id ? { ...p, spp: p.spp - cost } : p)
+                }
+            };
+        });
+    };
+
     if (!postGameState) {
         return (
             <div className="fixed inset-0 bg-black/95 backdrop-blur-xl flex items-center justify-center z-[100] p-4">
@@ -638,20 +683,45 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                                         </div>
 
                                         {/* Advancement Controls */}
-                                        <div className="flex gap-2 border-t border-white/5 pt-3.5 mt-1.5">
+                                        <div className="flex flex-col gap-2 border-t border-white/5 pt-3.5 mt-1.5">
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => handleRandomSkill(p, 'Primary', costs.rp)}
+                                                    disabled={p.spp < costs.rp}
+                                                    className="flex-1 py-1.5 rounded-xl bg-sky-500/5 border border-sky-500/20 text-[8px] font-display font-black text-sky-400 hover:bg-sky-500 hover:text-black disabled:opacity-10 transition-all uppercase tracking-widest"
+                                                >
+                                                    Azar P. ({costs.rp})
+                                                </button>
+                                                <button
+                                                    onClick={() => setSkillSelection({ player: p, type: 'Primary', cost: costs.cp })}
+                                                    disabled={p.spp < costs.cp}
+                                                    className="flex-1 py-1.5 rounded-xl bg-sky-500/10 border border-sky-500/40 text-[8px] font-display font-black text-sky-400 hover:bg-sky-500 hover:text-black disabled:opacity-10 transition-all uppercase tracking-widest"
+                                                >
+                                                    Elegir P. ({costs.cp})
+                                                </button>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => handleRandomSkill(p, 'Secondary', costs.rs)}
+                                                    disabled={p.spp < costs.rs}
+                                                    className="flex-1 py-1.5 rounded-xl bg-purple-500/5 border border-purple-500/20 text-[8px] font-display font-black text-purple-400 hover:bg-purple-500 hover:text-black disabled:opacity-10 transition-all uppercase tracking-widest"
+                                                >
+                                                    Azar S. ({costs.rs})
+                                                </button>
+                                                <button
+                                                    onClick={() => setSkillSelection({ player: p, type: 'Secondary', cost: costs.cs })}
+                                                    disabled={p.spp < costs.cs}
+                                                    className="flex-1 py-1.5 rounded-xl bg-purple-500/10 border border-purple-500/40 text-[8px] font-display font-black text-purple-400 hover:bg-purple-500 hover:text-black disabled:opacity-10 transition-all uppercase tracking-widest"
+                                                >
+                                                    Elegir S. ({costs.cs})
+                                                </button>
+                                            </div>
                                             <button
-                                                onClick={() => setSkillSelection({ player: p, type: 'Primary', cost: costs.cp })}
-                                                disabled={p.spp < costs.cp}
-                                                className="flex-1 py-2 rounded-xl bg-sky-500/10 border border-sky-500/30 text-[9px] font-display font-black text-sky-400 uppercase tracking-widest hover:bg-sky-500 hover:text-black disabled:opacity-20 transition-all shadow-lg"
+                                                onClick={() => handleCharacteristicImprovement(p, costs.ch)}
+                                                disabled={p.spp < costs.ch}
+                                                className="w-full py-2 rounded-xl bg-premium-gold/5 border border-premium-gold/20 text-[8px] font-display font-black text-premium-gold hover:bg-premium-gold hover:text-black disabled:opacity-10 transition-all uppercase tracking-widest shadow-lg"
                                             >
-                                                Primaria ({costs.cp})
-                                            </button>
-                                            <button
-                                                onClick={() => setSkillSelection({ player: p, type: 'Secondary', cost: costs.cs })}
-                                                disabled={p.spp < costs.cs}
-                                                className="flex-1 py-1.5 rounded-xl bg-purple-500/10 border border-purple-500/30 text-[9px] font-display font-black text-purple-400 uppercase tracking-widest hover:bg-purple-500 hover:text-black disabled:opacity-20 transition-all shadow-lg"
-                                            >
-                                                Secund. ({costs.cs})
+                                                🎲 Tirar Característica ({costs.ch})
                                             </button>
                                         </div>
                                     </div>

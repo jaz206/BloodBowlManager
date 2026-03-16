@@ -13,7 +13,7 @@ interface HomeProps {
     matchReports?: MatchReport[];
 }
 
-const Home: React.FC<HomeProps> = ({ onNavigate, onCreateTeam, managedTeams, matchReports = [], heroImage }) => {
+const Home: React.FC<HomeProps> = ({ onNavigate, onCreateTeam, managedTeams, competitions = [], matchReports = [], heroImage }) => {
     const { t } = useLanguage();
     const { user } = useAuth();
     
@@ -155,7 +155,39 @@ const Home: React.FC<HomeProps> = ({ onNavigate, onCreateTeam, managedTeams, mat
                     </div>
                 </section>
 
-                {/* 3. Arena - Main Entry (Full Width on Desktop) */}
+                {/* 3. Ligas Card */}
+                <section className="glass-panel rounded-[2rem] p-8 border-l-4 border-l-amber-500 flex flex-col hover:border-amber-500/40 transition-all duration-500 shadow-2xl relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-10 opacity-[0.02] scale-150 rotate-12 transition-transform duration-1000 group-hover:scale-[1.7] group-hover:rotate-0">
+                        <span className="material-symbols-outlined text-9xl">trophy</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-4 mb-4 relative z-10">
+                        <div className="w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 shadow-inner">
+                            <span className="material-symbols-outlined text-amber-500 text-3xl font-bold">trophy</span>
+                        </div>
+                        <h3 className="text-2xl font-display font-black text-white uppercase italic tracking-tight">{t('home.cards.leagues.title')}</h3>
+                    </div>
+
+                    <p className="text-slate-400 text-sm mb-8 relative z-10 font-medium leading-relaxed">
+                        {t('home.cards.leagues.desc')}
+                    </p>
+
+                    <div className="mt-auto space-y-3 relative z-10">
+                        <div className="flex items-center justify-between px-2 mb-2">
+                            <span className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest">{t('nav.leagues')} Activas</span>
+                            <span className="text-xs font-display font-black text-amber-500">{competitions.length}</span>
+                        </div>
+                        <button 
+                            onClick={() => onNavigate('leagues')}
+                            className="w-full bg-amber-500 hover:bg-white text-black font-display font-black py-4 rounded-xl uppercase tracking-widest transition-all shadow-xl flex items-center justify-center gap-3 border border-amber-400 group/btn-l"
+                        >
+                            <span className="material-symbols-outlined text-xl group-hover/btn-l:scale-110 transition-transform">military_tech</span>
+                            {t('home.cards.leagues.btn')}
+                        </button>
+                    </div>
+                </section>
+
+                {/* 4. Arena - Main Entry (Full Width on Desktop) */}
                 <section 
                     onClick={() => onNavigate('arena')}
                     className="glass-panel lg:col-span-2 rounded-[3.5rem] p-10 md:p-14 flex flex-col md:flex-row items-center justify-around gap-12 relative overflow-hidden group cursor-pointer border border-premium-gold/10 hover:border-premium-gold/40 transition-all duration-700 bg-gradient-to-br from-premium-gold/5 via-transparent to-blood-red/5 shadow-3xl"

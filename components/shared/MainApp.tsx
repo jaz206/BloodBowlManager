@@ -5,6 +5,7 @@ import OraclePage from '../../pages/Oracle/index';
 import GuildPage from '../../pages/Guild/index';
 import TacticalBoardPage from '../../pages/Guild/TacticalBoardPage';
 import MatchPage from '../../pages/Arena/MatchPage';
+import { Leagues as LeaguesPage } from '../../pages/Arena/LeaguesPage';
 // ── Components / Common ───────────────────────────────────────────────────────
 import UserProfile from '../common/UserProfile';
 import SyncStatusIndicator from '../common/SyncStatusIndicator';
@@ -18,8 +19,9 @@ import UsersIcon from '../icons/UsersIcon';
 import ClipboardListIcon from '../icons/ClipboardListIcon';
 import TrophyIcon from '../icons/TrophyIcon';
 import HomeIcon from '../icons/HomeIcon';
+import StadiumIcon from '../icons/StadiumIcon';
 // ── Types & Firebase ──────────────────────────────────────────────────────────
-import type { ManagedTeam, League, Play, GameEvent, MatchReport } from '../../types';
+import type { ManagedTeam, League, Play, GameEvent, MatchReport, Competition } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
 import { db } from '../../firebaseConfig';
 import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, query, limit, orderBy, serverTimestamp } from "firebase/firestore";
@@ -271,6 +273,59 @@ const MainApp: React.FC = () => {
     }
   };
 
+  const handleCompetitionCreate = async (newCompData: Omit<Competition, 'id'>) => {
+    if (!user || !db) return;
+    setSyncState('syncing');
+    try {
+      if (isGuest) {
+        setLeagues(prev => [...prev, { ...newCompData, id: `temp_comp_${Date.now()}` } as League]);
+      } else {
+        await addDoc(collection(db, 'leagues'), {
+          ...newCompData,
+          createdAt: serverTimestamp()
+        });
+      }
+      setSyncState('synced');
+    } catch (error) {
+      console.error("Error creating competition:", error);
+      setSyncState('error');
+    }
+  };
+
+  const handleCompetitionUpdate = async (updatedComp: Competition) => {
+    if (!user || !db || !updatedComp.id) return;
+    setSyncState('syncing');
+    try {
+      if (isGuest) {
+        setLeagues(prev => prev.map(c => c.id === updatedComp.id ? updatedComp as League : c));
+      } else {
+        const compRef = doc(db, 'leagues', updatedComp.id);
+        const { id, ...data } = updatedComp;
+        await updateDoc(compRef, data);
+      }
+      setSyncState('synced');
+    } catch (error) {
+      console.error("Error updating competition:", error);
+      setSyncState('error');
+    }
+  };
+
+  const handleCompetitionDelete = async (compId: string) => {
+    if (!user || !db) return;
+    setSyncState('syncing');
+    try {
+      if (isGuest) {
+        setLeagues(prev => prev.filter(c => c.id !== compId));
+      } else {
+        await deleteDoc(doc(db, 'leagues', compId));
+      }
+      setSyncState('synced');
+    } catch (error) {
+      console.error("Error deleting competition:", error);
+      setSyncState('error');
+    }
+  };
+
   const NavButton: React.FC<{
     view: View;
     label: string;
@@ -341,8 +396,9 @@ const MainApp: React.FC = () => {
             <NavButton view="home" label={t('nav.home')} icon={<HomeIcon />} />
             <NavButton view="oracle" label={t('nav.oracle')} icon={<BookOpenIcon />} />
             <NavButton view="guild" label={t('nav.guild')} icon={<UsersIcon />} />
+            <NavButton view="leagues" label={t('nav.leagues')} icon={<TrophyIcon />} />
+            <NavButton view="arena" label={t('nav.arena')} icon={<StadiumIcon />} />
             <NavButton view="tactical" label={t('nav.tactical')} icon={<ClipboardListIcon />} />
-            <NavButton view="arena" label={t('nav.arena')} icon={<TrophyIcon />} />
           </div>
         </nav>
 
@@ -389,6 +445,16 @@ const MainApp: React.FC = () => {
               )}
               {activeView === 'tactical' && <TacticalBoardPage managedTeams={managedTeams} plays={plays} onSavePlay={handlePlaySave} onDeletePlay={handlePlayDelete} />}
               {activeView === 'arena' && <MatchPage managedTeams={managedTeams} matchReports={matchReports} onTeamUpdate={handleTeamUpdate} onMatchReportCreate={handleMatchReportCreate} />}
+              {activeView === 'leagues' && (
+                <LeaguesPage
+                  managedTeams={managedTeams}
+                  initialCompetitions={leagues}
+                  onCompetitionCreate={handleCompetitionCreate}
+                  onCompetitionUpdate={handleCompetitionUpdate}
+                  onCompetitionDelete={handleCompetitionDelete}
+                  isGuest={isGuest}
+                />
+              )}
               {activeView === 'admin' && <AdminPanel />}
               {activeView === 'guide' && <QuickGuide />}
             </div>
