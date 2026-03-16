@@ -365,6 +365,7 @@ const MainApp: React.FC = () => {
                   competitions={leagues as any}
                   recentEvents={recentEvents}
                   heroImage={heroImage}
+                  matchReports={matchReports}
                 />
               )}
               {activeView === 'oracle' && (

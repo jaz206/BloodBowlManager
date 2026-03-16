@@ -115,6 +115,9 @@ const translations: Record<Language, Record<string, string>> = {
         'home.search.tag.dodge': 'Esquivar',
         'home.search.tag.wrestle': 'Forcejeo',
         'home.search.tag.rules': 'Reglas 2024',
+        'home.stats.totalMatches': 'Partidos Totales',
+        'home.stats.wins': 'Victorias',
+        'home.stats.casualties': 'Bajas Causadas',
     },
     en: {
         'nav.home': 'Home',
@@ -222,6 +225,9 @@ const translations: Record<Language, Record<string, string>> = {
         'home.search.tag.dodge': 'Dodge',
         'home.search.tag.wrestle': 'Wrestle',
         'home.search.tag.rules': '2024 Rules',
+        'home.stats.totalMatches': 'Total Matches',
+        'home.stats.wins': 'Total Wins',
+        'home.stats.casualties': 'Total Casualties',
     }
 };
 
