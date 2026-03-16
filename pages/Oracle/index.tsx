@@ -36,7 +36,18 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
     // Update search term when initialSearchTerm changes from outside
     React.useEffect(() => {
         if (initialSearchTerm) {
-            setHubSearchTerm(initialSearchTerm);
+            if (initialSearchTerm === 'Habilidades') {
+                setActiveView('skills');
+                setHubSearchTerm('');
+            } else if (initialSearchTerm === 'Star Player') {
+                setActiveView('star_players');
+                setHubSearchTerm('');
+            } else if (initialSearchTerm === 'Calculadora') {
+                setActiveView('calculator');
+                setHubSearchTerm('');
+            } else {
+                setHubSearchTerm(initialSearchTerm);
+            }
         }
     }, [initialSearchTerm]);
 
@@ -387,11 +398,16 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                                 { id: 'skills', label: t('oracle.tabs.skills') },
                                 { id: 'star_players', label: t('oracle.tabs.stars') },
                                 { id: 'calculator', label: t('oracle.tabs.oracle') },
-                                { id: 'inducements', label: t('oracle.tabs.inducements') }
+                                { id: 'inducements', label: t('oracle.tabs.inducements') },
+                                { id: 'rules', label: 'Manual' }
                             ].map(tab => (
                                 <button
                                     key={tab.id}
-                                    onClick={() => setActiveView(tab.id as SubView)}
+                                    onClick={() => {
+                                        setActiveView(tab.id as SubView);
+                                        if (tab.id !== 'skills') setHubSearchTerm('');
+                                        setSelectedHubTeam(null);
+                                    }}
                                     className={`flex-1 py-4 px-2 text-center transition-all duration-300 relative font-display uppercase tracking-widest text-[10px] font-black ${activeView === tab.id ? 'text-premium-gold' : 'text-slate-500 hover:text-white'}`}
                                 >
                                     {tab.label}
