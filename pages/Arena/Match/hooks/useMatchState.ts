@@ -164,12 +164,51 @@ export const useMatchState = (props: GameBoardProps) => {
     // SINCRONIZACIÓN INICIAL CON PROPS
     useEffect(() => {
         if (props.managedTeams && props.managedTeams.length > 0 && !homeTeam) {
-            // Si solo hay un equipo o queremos pre-cargar el primero
             if (props.managedTeams.length === 1) {
                 setHomeTeam(props.managedTeams[0]);
             }
         }
     }, [props.managedTeams, homeTeam]);
+
+    // INICIALIZACIÓN DE EQUIPOS EN VIVO AL EMPEZAR EL PRE-GAME
+    useEffect(() => {
+        if (gameState === 'pre_game' && homeTeam && !liveHomeTeam) {
+            console.log("[MatchState] Inicializando equipos en vivo...");
+            
+            const initLiveTeam = (team: ManagedTeam): ManagedTeam => ({
+                ...team,
+                players: team.players.map(p => ({
+                    ...p,
+                    status: (p.status === 'Muerto' || p.status === 'Lesionado') ? p.status : 'Reserva',
+                    fieldPosition: null
+                })),
+                liveRerolls: team.rerolls || 0
+            });
+
+            setLiveHomeTeam(initLiveTeam(homeTeam));
+            if (opponentTeam) {
+                setLiveOpponentTeam(initLiveTeam(opponentTeam));
+            }
+
+            // CALCULAR INCENTIVOS (UNDERDOG) Y AVANZAR
+            const hTV = calculateTeamValue(homeTeam);
+            const oTV = opponentTeam ? calculateTeamValue(opponentTeam) : 0;
+            const diff = oTV - hTV; // Positivo si local es underdog
+
+            if (Math.abs(diff) >= 10000) {
+                setInducementState({
+                    underdog: diff > 0 ? 'home' : 'opponent',
+                    money: Math.abs(diff),
+                    hiredStars: []
+                });
+            } else {
+                setInducementState({ underdog: null, money: 0, hiredStars: [] });
+            }
+
+            // Saltamos a paso 1 (Mercado) si no hay heridos procesados por JourneymenNotification
+            setPreGameStep(1);
+        }
+    }, [gameState, homeTeam, opponentTeam, liveHomeTeam]);
 
     // Log de estado para depuración (opcional, pero útil ahora)
     useEffect(() => {
