@@ -1,6 +1,6 @@
 import React from 'react';
 import { useMatch } from '../../../context/MatchContext';
-import SkillModalBase from '../../../../../components/oracle/SkillModal';
+import SkillModalBase from '../../../../../../components/oracle/SkillModal';
 
 const SkillModal: React.FC = () => {
     const { 

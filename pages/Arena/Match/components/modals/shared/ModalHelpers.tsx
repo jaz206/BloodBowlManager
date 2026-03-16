@@ -1,6 +1,6 @@
 import React from 'react';
 import { ManagedPlayer } from '../../../../../../types';
-import DiceIcon from '../../../../../components/icons/DiceIcon';
+import DiceIcon from '../../../../../../components/icons/DiceIcon';
 
 export const PlayerButton: React.FC<{ player: ManagedPlayer, onSelect: (p: ManagedPlayer) => void, disabled?: boolean }> = ({ player, onSelect, disabled }) => (
     <button onClick={() => onSelect(player)} className="bento-card w-full text-left p-4 disabled:opacity-30 disabled:cursor-not-allowed group" disabled={disabled}>
