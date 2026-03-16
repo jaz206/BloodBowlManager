@@ -195,14 +195,15 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
     }, [activeTeamId, turnActions, liveHomeTeam, liveOpponentTeam, logEvent, setIsFoulModalOpen, openSppModal, setTurnActions]);
 
     /** Registra un touchdown y avanza el estado del partido. */
-    const handleSelectTdScorer = useCallback((scorer: ManagedPlayer) => {
-        if (!tdModalTeam || !liveHomeTeam || !liveOpponentTeam) return;
-        const teamName = tdModalTeam === 'home' ? liveHomeTeam.name : liveOpponentTeam.name;
+    const handleSelectTdScorer = useCallback((scorer: ManagedPlayer, teamIdOverride?: 'home' | 'opponent') => {
+        const teamId = teamIdOverride || tdModalTeam;
+        if (!teamId || !liveHomeTeam || !liveOpponentTeam) return;
+        const teamName = teamId === 'home' ? liveHomeTeam.name : liveOpponentTeam.name;
 
-        logEvent('touchdown', `¡${scorer.customName} anota un TD para ${teamName}!`, { team: tdModalTeam, player: scorer.id });
-        setScore(s => ({ ...s, [tdModalTeam]: s[tdModalTeam] + 1 }));
+        logEvent('touchdown', `¡${scorer.customName} anota un TD para ${teamName}!`, { team: teamId, player: scorer.id });
+        setScore(s => ({ ...s, [teamId]: s[teamId] + 1 }));
         playSound('td');
-        updatePlayerSppAndAction(scorer, tdModalTeam, 3, 'TD', `anotar un TD para ${teamName}`);
+        updatePlayerSppAndAction(scorer, teamId, 3, 'TD', `anotar un TD para ${teamName}`);
         setIsTdModalOpen(false);
         setTdModalTeam(null);
 
@@ -228,14 +229,27 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
     /** Orquestador de lógica Season 3 tras recibir resultados de dados. */
     const handleS3Action = useCallback((pending: any, result: any) => {
         const { actionType, actorId, objectiveId } = pending;
-        const actor = (activeTeamId === 'home' ? liveHomeTeam : liveOpponentTeam)?.players.find(p => p.id === actorId);
-        const objective = (activeTeamId === 'home' ? liveOpponentTeam : liveHomeTeam)?.players.find(p => p.id === objectiveId);
+        
+        let actor = (activeTeamId === 'home' ? liveHomeTeam : liveOpponentTeam)?.players.find(p => p.id === actorId);
+        if (!actor) actor = (activeTeamId === 'home' ? liveOpponentTeam : liveHomeTeam)?.players.find(p => p.id === actorId);
+        
+        let objective = (activeTeamId === 'home' ? liveOpponentTeam : liveHomeTeam)?.players.find(p => p.id === objectiveId);
+        if (!objective) objective = (activeTeamId === 'home' ? liveHomeTeam : liveOpponentTeam)?.players.find(p => p.id === objectiveId);
 
         if (!actor) return;
 
+        // Log genérico de la acción registrada
+        const actionLabel = actionType === 'FOUL' ? 'Falta' : 
+                          actionType === 'BLOCK' ? 'Placaje' : 
+                          actionType === 'PASS' ? 'Pase' : 
+                          actionType === 'RUSH' ? 'Ir a por todos' : 
+                          actionType === 'DODGE' ? 'Esquiva' : actionType;
+                          
+        logEvent('INFO', `[S3] ${actor.customName} realiza ${actionLabel} ${objective ? 'contra ' + objective.customName : ''}. Dado: ${result}.`);
+
         switch (actionType) {
             case 'TOUCHDOWN':
-                handleSelectTdScorer(actor);
+                handleSelectTdScorer(actor, activeTeamId);
                 break;
             case 'BLOCK':
                 if (result === 'Calavera') {
@@ -256,6 +270,32 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
                     });
                 }
                 break;
+            case 'FOUL': {
+                const roll = parseInt(result);
+                if (!objective) return;
+                
+                // Marcar acción de falta como usada
+                setTurnActions(prev => ({ ...prev, [activeTeamId]: { ...prev[activeTeamId], foul: true } }));
+
+                const arString = objective.stats.AR;
+                const arValue = parseInt(arString.replace('+', ''));
+                
+                if (roll > arValue) {
+                    logEvent('SUCCESS', `¡ARMADURA ROTA! La falta de ${actor.customName} sobre ${objective.customName} ha funcionado (Resultado: ${roll} > AR: ${arString}).`);
+                    setIsInjuryModalOpen(true);
+                    setInjuryState({
+                        ...initialInjuryState,
+                        attackerPlayer: actor,
+                        attackerTeamId: activeTeamId,
+                        victimPlayer: objective,
+                        victimTeamId: activeTeamId === 'home' ? 'opponent' : 'home',
+                        step: 'injury_roll' // Saltamos directamente a la tirada de lesión
+                    });
+                } else {
+                    logEvent('INFO', `La falta de ${actor.customName} no ha logrado penetrar la armadura de ${objective.customName} (Resultado: ${roll} <= AR: ${arString}).`);
+                }
+                break;
+            }
             case 'DODGE': {
                 const roll = parseInt(result);
                 if (roll < 2) {
@@ -265,6 +305,10 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
             }
             case 'PASS': {
                 const roll = parseInt(result);
+                
+                // Marcar acción de pase como usada
+                setTurnActions(prev => ({ ...prev, [activeTeamId]: { ...prev[activeTeamId], pass: true } }));
+
                 if (roll === 1) {
                     handleTurnover(`¡FUMBLE! ${actor.customName} pierde el balón`);
                 } else if (roll >= 2) {
@@ -273,8 +317,21 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
                 }
                 break;
             }
+            case 'RUSH': {
+                const roll = parseInt(result);
+                if (roll === 1) {
+                    handleTurnover(`¡TROPIEZO! ${actor.customName} cae al intentar ir A Por Ellos.`);
+                } else {
+                    logEvent('INFO', `${actor.customName} corre extra con éxito.`);
+                }
+                break;
+            }
             case 'HANDOFF': {
                 const roll = parseInt(result);
+
+                // Marcar acción de entrega como usada
+                setTurnActions(prev => ({ ...prev, [activeTeamId]: { ...prev[activeTeamId], handoff: true } }));
+
                 if (roll < 2) {
                     handleTurnover(`fallo en la entrega de ${actor.customName}`);
                 } else {

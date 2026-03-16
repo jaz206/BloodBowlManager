@@ -3,17 +3,20 @@ import { useMatch } from '../context/MatchContext';
 import { S3ActionType, InteractionMode } from '../types/match.types';
 import { ManagedPlayer, ELITE_SKILLS } from '../../../../types';
 
-const ACTIONS: { type: S3ActionType; label: string; icon: string; needsObjective: boolean; color: string; attribute?: 'AG' | 'FU' | 'PA' }[] = [
-    { type: 'BLOCK', label: 'Bloqueo', icon: 'back_hand', needsObjective: true, color: 'bg-orange-600', attribute: 'FU' },
-    { type: 'PASS', label: 'Pase', icon: 'shortcut', needsObjective: true, color: 'bg-sky-600', attribute: 'PA' },
-    { type: 'HANDOFF', label: 'Entrega', icon: 'front_hand', needsObjective: true, color: 'bg-green-600', attribute: 'AG' },
-    { type: 'FOUL', label: 'Falta', icon: 'gavel', needsObjective: true, color: 'bg-red-700', attribute: 'FU' },
-    { type: 'TOUCHDOWN', label: 'Touchdown', icon: 'sports_score', needsObjective: false, color: 'bg-yellow-500' },
-    { type: 'SECURE_BALL', label: 'Asegurar Balón', icon: 'inventory_2', needsObjective: false, color: 'bg-emerald-600' },
-    { type: 'DODGE', label: 'Esquivar', icon: 'directions_run', needsObjective: false, color: 'bg-indigo-600', attribute: 'AG' },
-    { type: 'MOVE', label: 'Mover', icon: 'footprint', needsObjective: false, color: 'bg-blue-600' },
-    { type: 'BONE_HEAD', label: 'Cabeza Dura', icon: 'psychology', needsObjective: false, color: 'bg-stone-600' },
+const ACTIONS: { type: S3ActionType; label: string; icon: string; needsObjective: boolean; color: string; attribute?: 'AG' | 'FU' | 'PA'; diceType: '1d6' | '2d6' | 'block' }[] = [
+    { type: 'BLOCK', label: 'Bloqueo', icon: 'back_hand', needsObjective: true, color: 'bg-orange-600', attribute: 'FU', diceType: 'block' },
+    { type: 'PASS', label: 'Pase', icon: 'shortcut', needsObjective: true, color: 'bg-sky-600', attribute: 'PA', diceType: '1d6' },
+    { type: 'HANDOFF', label: 'Entrega', icon: 'front_hand', needsObjective: true, color: 'bg-green-600', attribute: 'AG', diceType: '1d6' },
+    { type: 'FOUL', label: 'Falta', icon: 'gavel', needsObjective: true, color: 'bg-red-700', attribute: 'FU', diceType: '2d6' },
+    { type: 'TOUCHDOWN', label: 'Touchdown', icon: 'sports_score', needsObjective: false, color: 'bg-yellow-500', diceType: '1d6' },
+    { type: 'SECURE_BALL', label: 'Asegurar Balón', icon: 'inventory_2', needsObjective: false, color: 'bg-emerald-600', diceType: '1d6' },
+    { type: 'DODGE', label: 'Esquivar', icon: 'directions_run', needsObjective: false, color: 'bg-indigo-600', attribute: 'AG', diceType: '1d6' },
+    { type: 'RUSH', label: 'A por ellos', icon: 'speed', needsObjective: false, color: 'bg-rose-600', diceType: '1d6' },
+    { type: 'MOVE', label: 'Mover', icon: 'footprint', needsObjective: false, color: 'bg-blue-600', diceType: '1d6' },
+    { type: 'BONE_HEAD', label: 'Cabeza Dura', icon: 'psychology', needsObjective: false, color: 'bg-stone-600', diceType: '1d6' },
 ];
+
+const BLOCK_FACES = ['Calavera', 'Ambos', 'Empujón', 'Empujón', 'Flecha', 'Zaca!'];
 
 const S3ActionOrchestrator: React.FC = () => {
     const { 
@@ -71,20 +74,8 @@ const S3ActionOrchestrator: React.FC = () => {
     };
 
     const handleDiceResult = (result: any) => {
-        // En un futuro disparará el matchEngine, ahora solo logueamos
-        const actionData = ACTIONS.find(a => a.type === pending.actionType);
-        const actor = activeTeam?.players.find(p => p.id === pending.actorId);
-        const objective = opponentTeam?.players.find(p => p.id === pending.objectiveId);
-
-        logEvent('S3_ACTION', `[Turno S3] ${actor?.customName} realiza ${actionData?.label}${objective ? ' contra ' + objective.customName : ''}. Resultado: ${result}`, {
-            actorId: pending.actorId,
-            action: pending.actionType,
-            objectiveId: pending.objectiveId,
-            result
-        });
-
-        playSound('dice');
         handleS3Action(pending, result);
+        playSound('dice');
 
         // Reset
         setInteractionState({
@@ -208,6 +199,20 @@ const S3ActionOrchestrator: React.FC = () => {
                                     </button>
                                 ))}
                             </div>
+                        ) : ACTIONS.find(a => a.type === pending.actionType)?.diceType === '2d6' ? (
+                            <div className="grid grid-cols-4 gap-3 max-w-sm">
+                                {[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(n => (
+                                    <button 
+                                        key={n} 
+                                        onClick={() => handleDiceResult(n)}
+                                        className={`w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-black transition-all border
+                                            ${n >= 9 ? 'bg-red-600/20 border-red-600/40 text-red-500 hover:bg-red-600/40' : 'bg-white/5 border-white/10 text-white hover:bg-primary/20 hover:border-primary/40'}
+                                        `}
+                                    >
+                                        {n}
+                                    </button>
+                                ))}
+                            </div>
                         ) : (
                             <div className="grid grid-cols-3 gap-3">
                                 {[1, 2, 3, 4, 5, 6].map(n => (
@@ -225,7 +230,17 @@ const S3ActionOrchestrator: React.FC = () => {
                         <div className="w-full h-px bg-white/5 my-4"></div>
                         
                         <button 
-                            onClick={() => handleDiceResult(Math.floor(Math.random() * 6) + 1)}
+                            onClick={() => {
+                                const actionData = ACTIONS.find(a => a.type === pending.actionType);
+                                if (actionData?.diceType === 'block') {
+                                    const face = BLOCK_FACES[Math.floor(Math.random() * 6)];
+                                    handleDiceResult(face);
+                                } else if (actionData?.diceType === '2d6') {
+                                    handleDiceResult((Math.floor(Math.random() * 6) + 1) + (Math.floor(Math.random() * 6) + 1));
+                                } else {
+                                    handleDiceResult(Math.floor(Math.random() * 6) + 1);
+                                }
+                            }}
                             className="w-full bg-primary text-black font-black py-4 rounded-2xl text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all"
                         >
                             Lanzamiento Digital (App)
