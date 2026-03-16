@@ -26,6 +26,7 @@ const cloneCompetition = (comp: Competition): Competition => {
         ownerId: comp.ownerId,
         ownerName: comp.ownerName,
         status: comp.status,
+        rules: comp.rules ? { ...comp.rules } : undefined,
     };
     if (comp.schedule) {
         newComp.schedule = {};
@@ -126,6 +127,14 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
 
     const [newCompetitionName, setNewCompetitionName] = useState('');
     const [newCompetitionFormat, setNewCompetitionFormat] = useState<'Liguilla' | 'Torneo'>('Liguilla');
+    const [newCompReglamento, setNewCompReglamento] = useState<'BB2020' | 'BB2016' | 'Sevens'>('BB2020');
+    const [newCompMuerteSubita, setNewCompMuerteSubita] = useState(false);
+    const [newCompIncentivos, setNewCompIncentivos] = useState<'Todos' | 'Reducidos' | 'Ninguno'>('Todos');
+    const [newCompTiempoTurno, setNewCompTiempoTurno] = useState(4);
+    const [newCompMercenarios, setNewCompMercenarios] = useState(true);
+    const [ownerTeamToJoin, setOwnerTeamToJoin] = useState<string>('');
+    const [isSelectingOwnerTeam, setIsSelectingOwnerTeam] = useState(false);
+
     const [joinModalState, setJoinModalState] = useState<{ comp: Competition | null; teamToJoin: string }>({ comp: null, teamToJoin: '' });
     const [scoreModalState, setScoreModalState] = useState<{ isOpen: boolean; roundIndex: string; matchIndex: number; matchup: Matchup; } | null>(null);
     const [confirmation, setConfirmation] = useState<{ title: string; message: string; onConfirm: () => void; type?: 'danger' | 'info' } | null>(null);
@@ -170,16 +179,34 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
             });
             return;
         }
+
+        const teams: CompetitionTeam[] = [];
+        if (ownerTeamToJoin) {
+            teams.push({
+                teamName: ownerTeamToJoin,
+                ownerId: user.id,
+                ownerName: user.name
+            });
+        }
+
         const newCompetition: Omit<Competition, 'id'> = {
             name: newCompetitionName.trim(),
             format: newCompetitionFormat,
-            teams: [],
+            teams,
             ownerId: user.id,
             ownerName: user.name,
             status: 'Open',
+            rules: {
+                reglamento: newCompReglamento,
+                muerteSubita: newCompMuerteSubita,
+                incentivos: newCompIncentivos,
+                tiempoTurno: newCompTiempoTurno,
+                mercenarios: newCompMercenarios
+            }
         };
         onCompetitionCreate(newCompetition);
         setNewCompetitionName('');
+        setOwnerTeamToJoin('');
         setView('list');
         setActiveTab('my');
     };
@@ -326,63 +353,284 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
     };
 
     const renderCreateView = () => (
-        <div className="p-4 sm:p-8 max-w-lg mx-auto">
-            <button
-                onClick={() => setView('list')}
-                className="flex items-center gap-2 text-primary font-black uppercase tracking-widest text-[10px] mb-8 hover:underline group italic transition-all"
-            >
-                <span className="material-symbols-outlined font-bold transform group-hover:-translate-x-1 transition-transform">arrow_back</span>
-                Volver a la lista
-            </button>
+        <div className="max-w-[1200px] mx-auto w-full p-4 sm:p-6 lg:p-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {/* Header Section */}
+            <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+                <div>
+                    <div className="flex items-center gap-3 mb-2">
+                        <span className="px-2 py-0.5 rounded bg-primary/20 text-primary text-[10px] font-bold uppercase tracking-widest">Configuración</span>
+                    </div>
+                    <h1 className="text-4xl font-black text-white tracking-tight uppercase italic">Nueva <span className="text-primary">Competición</span></h1>
+                    <p className="text-slate-400 mt-2 font-medium italic">Crea una liga legendaria o un torneo de eliminación directa en el Viejo Mundo.</p>
+                </div>
+                <button
+                    onClick={() => setView('list')}
+                    className="flex items-center gap-2 text-primary font-black uppercase tracking-widest text-[10px] hover:underline group italic transition-all shrink-0"
+                >
+                    <span className="material-symbols-outlined font-bold transform group-hover:-translate-x-1 transition-transform">arrow_back</span>
+                    Volver a la lista
+                </button>
+            </div>
 
-            <div className="bg-zinc-900/40 border border-white/5 rounded-[2.5rem] p-10 shadow-2xl backdrop-blur-xl relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2"></div>
+            {/* Selector Component */}
+            <div className="flex mb-10">
+                <div className="flex h-12 w-full max-w-md items-center justify-center rounded-xl bg-zinc-900 border border-white/10 p-1.5 shadow-xl">
+                    <button
+                        onClick={() => setNewCompetitionFormat('Liguilla')}
+                        className={`flex h-full grow items-center justify-center rounded-lg px-4 transition-all text-[10px] font-bold uppercase tracking-widest italic gap-2 ${newCompetitionFormat === 'Liguilla' ? 'bg-primary text-black' : 'text-slate-400 hover:text-white'}`}
+                    >
+                        <span className="material-symbols-outlined text-sm font-bold">trophy</span> Nueva Liga
+                    </button>
+                    <button
+                        onClick={() => setNewCompetitionFormat('Torneo')}
+                        className={`flex h-full grow items-center justify-center rounded-lg px-4 transition-all text-[10px] font-bold uppercase tracking-widest italic gap-2 ${newCompetitionFormat === 'Torneo' ? 'bg-primary text-black' : 'text-slate-400 hover:text-white'}`}
+                    >
+                        <span className="material-symbols-outlined text-sm font-bold">bolt</span> Nuevo Torneo
+                    </button>
+                </div>
+            </div>
 
-                <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter mb-8">
-                    Nueva <span className="text-primary italic">Competición</span>
-                </h2>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                {/* Left Column: Configuration */}
+                <div className="lg:col-span-7 space-y-8">
+                    <section className="bg-zinc-900/40 rounded-[2rem] border border-white/5 p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2 group-hover:bg-primary/10 transition-colors"></div>
+                        
+                        <div className="flex items-center gap-3 mb-8">
+                            <span className="material-symbols-outlined text-primary font-bold">settings</span>
+                            <h3 className="text-xl font-bold text-white uppercase italic tracking-tight">Configuración General</h3>
+                        </div>
 
-                <div className="space-y-8">
-                    <div className="space-y-3">
-                        <label htmlFor="compName" className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] italic">Nombre de la liga</label>
-                        <div className="relative">
-                            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold">trophy</span>
-                            <input
-                                id="compName"
-                                type="text"
-                                value={newCompetitionName}
-                                onChange={e => setNewCompetitionName(e.target.value)}
-                                placeholder="P. Ej: Copa del Caos 2024"
-                                className="w-full bg-black/60 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white focus:ring-2 focus:ring-primary/50 outline-none transition-all placeholder:text-slate-700 font-bold"
-                            />
+                        <div className="space-y-6">
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-2">Nombre de la Competición</label>
+                                <div className="relative">
+                                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold">edit_note</span>
+                                    <input
+                                        type="text"
+                                        value={newCompetitionName}
+                                        onChange={e => setNewCompetitionName(e.target.value)}
+                                        className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white focus:ring-2 focus:ring-primary/50 outline-none transition-all placeholder:text-slate-700 font-bold"
+                                        placeholder="Ej: Copa de los Reinos del Caos"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-2">Formato</label>
+                                    <div className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-4 text-slate-300 font-bold text-sm">
+                                        {newCompetitionFormat === 'Liguilla' ? 'Round Robin (Todos contra todos)' : 'Eliminatoria Directa'}
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-2">Reglamento</label>
+                                    <div className="relative">
+                                        <select 
+                                            value={newCompReglamento}
+                                            onChange={(e) => setNewCompReglamento(e.target.value as any)}
+                                            className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-4 text-white focus:ring-2 focus:ring-primary/50 outline-none transition-all font-bold appearance-none"
+                                        >
+                                            <option value="BB2020">BB2020 (Official)</option>
+                                            <option value="BB2016">BB2016 (Classic)</option>
+                                            <option value="Sevens">Sevens (Rápido)</option>
+                                        </select>
+                                        <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">expand_more</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section className="bg-zinc-900/40 rounded-[2rem] border border-white/5 p-8 shadow-2xl backdrop-blur-xl group">
+                        <div className="flex items-center justify-between mb-8">
+                            <div className="flex items-center gap-3">
+                                <span className="material-symbols-outlined text-primary font-bold">groups</span>
+                                <h3 className="text-xl font-bold text-white uppercase italic tracking-tight">Gestión de Participantes</h3>
+                            </div>
+                            <span className="bg-primary/10 text-primary border border-primary/20 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest italic">
+                                {ownerTeamToJoin ? '1' : '0'} / 12 Equipos
+                            </span>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row gap-4 mb-8">
+                            <button 
+                                onClick={() => setIsSelectingOwnerTeam(true)}
+                                className="flex-1 flex items-center justify-center gap-2 bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest italic transition-all shadow-lg shadow-primary/5"
+                            >
+                                <span className="material-symbols-outlined text-[20px] font-bold">add_circle</span>
+                                Mis Equipos
+                            </button>
+                            <button 
+                                onClick={() => {
+                                    navigator.clipboard.writeText(`${window.location.origin}?join=invite_${Date.now()}`);
+                                    setConfirmation({
+                                        title: "Enlace Copiado",
+                                        message: "¡Enlace de invitación copiado al portapapeles! Envíalo a otros coaches por WhatsApp o Discord.",
+                                        onConfirm: () => setConfirmation(null),
+                                        type: 'info'
+                                    });
+                                }}
+                                className="flex-1 flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest italic transition-all"
+                            >
+                                <span className="material-symbols-outlined text-[20px] font-bold">link</span>
+                                Generar Invitación
+                            </button>
+                        </div>
+
+                        {isSelectingOwnerTeam && (
+                            <div className="mb-6 p-6 bg-black/60 rounded-3xl border border-primary/20 animate-in zoom-in-95 duration-200">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h4 className="text-[10px] font-black text-primary uppercase tracking-widest">Selecciona tu equipo para unirlo</h4>
+                                    <button onClick={() => setIsSelectingOwnerTeam(false)} className="text-slate-500 hover:text-white">
+                                        <span className="material-symbols-outlined text-sm">close</span>
+                                    </button>
+                                </div>
+                                <div className="grid grid-cols-1 gap-2">
+                                    {managedTeams.length > 0 ? (
+                                        managedTeams.map(team => (
+                                            <button
+                                                key={team.name}
+                                                onClick={() => { setOwnerTeamToJoin(team.name); setIsSelectingOwnerTeam(false); }}
+                                                className="w-full text-left p-4 rounded-xl border border-white/5 hover:border-primary/50 hover:bg-primary/5 transition-all flex items-center justify-between group"
+                                            >
+                                                <span className="text-white font-bold italic uppercase text-xs">{team.name}</span>
+                                                <span className="material-symbols-outlined text-primary opacity-0 group-hover:opacity-100 transition-opacity">add</span>
+                                            </button>
+                                        ))
+                                    ) : (
+                                        <p className="text-center py-4 text-slate-500 text-[10px] font-bold uppercase italic">No tienes equipos en el Gremio</p>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="space-y-4">
+                            {ownerTeamToJoin ? (
+                                <div className="flex items-center justify-between p-5 rounded-2xl bg-black/40 border border-white/5 group/host transition-all hover:border-primary/30">
+                                    <div className="flex items-center gap-4">
+                                        <div className="size-14 bg-zinc-900 rounded-xl border border-white/5 flex items-center justify-center overflow-hidden shrink-0">
+                                            <span className="material-symbols-outlined text-primary text-3xl font-bold">shield</span>
+                                        </div>
+                                        <div>
+                                            <h4 className="font-black text-white uppercase italic text-sm tracking-tight">{ownerTeamToJoin}</h4>
+                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Host: {user?.name}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-primary/60 bg-primary/5 px-3 py-1.5 rounded-lg border border-primary/10 italic">Host</span>
+                                        <button onClick={() => setOwnerTeamToJoin('')} className="text-slate-600 hover:text-red-500 transition-colors p-2">
+                                            <span className="material-symbols-outlined font-bold">delete</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="p-8 text-center bg-black/20 rounded-2xl border border-dashed border-white/5">
+                                    <p className="text-slate-500 font-bold italic uppercase tracking-widest text-xs">Aún no has inscrito ninguno de tus equipos</p>
+                                </div>
+                            )}
+
+                            <div className="p-8 text-center bg-black/20 rounded-2xl border border-dashed border-white/5">
+                                <p className="text-slate-500 font-bold italic uppercase tracking-widest text-xs">Esperando más aspirantes...</p>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                {/* Right Column: Summary & Actions */}
+                <div className="lg:col-span-5 space-y-6">
+                    <div className="bg-primary rounded-[2.5rem] p-10 text-zinc-900 relative overflow-hidden group shadow-2xl shadow-primary/20">
+                        {/* Background Pattern Decor */}
+                        <div className="absolute -right-10 -bottom-10 text-zinc-900/5 pointer-events-none">
+                            <span className="material-symbols-outlined text-[240px] rotate-12 font-black">emoji_events</span>
+                        </div>
+                        
+                        <div className="relative z-10">
+                            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] mb-4 opacity-70 italic">Resumen de Élite</h4>
+                            <div className="text-5xl font-black mb-8 tracking-tighter uppercase italic break-words leading-none">
+                                {newCompetitionName || 'Copa sin nombre'}
+                            </div>
+                            
+                            <ul className="space-y-4 mb-10 text-sm font-black uppercase italic tracking-tight">
+                                <li className="flex items-center gap-3 pb-4 border-b border-zinc-900/10">
+                                    <span className="material-symbols-outlined text-xl font-bold">check_circle</span> 
+                                    Formato {newCompetitionFormat}
+                                </li>
+                                <li className="flex items-center gap-3 pb-4 border-b border-zinc-900/10">
+                                    <span className="material-symbols-outlined text-xl font-bold">check_circle</span> 
+                                    Reglamento {newCompReglamento}
+                                </li>
+                                <li className="flex items-center gap-3">
+                                    <span className="material-symbols-outlined text-xl font-bold">check_circle</span> 
+                                    {ownerTeamToJoin ? '1' : '0'} Participante{ownerTeamToJoin !== '' ? '' : 's'}
+                                </li>
+                            </ul>
+
+                            <button
+                                onClick={handleCreateCompetition}
+                                disabled={!newCompetitionName.trim()}
+                                className="w-full bg-zinc-900 text-primary py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-sm hover:scale-[1.02] active:scale-95 transition-all shadow-2xl shadow-black/20 disabled:opacity-50 disabled:scale-100 italic"
+                            >
+                                Empezar Competición
+                            </button>
+                            <p className="text-center text-[10px] font-black uppercase tracking-widest mt-6 opacity-60 italic">Esto guardará la liga y permitirá unirse a otros</p>
                         </div>
                     </div>
 
-                    <div className="space-y-3">
-                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] italic">Formato de juego</label>
-                        <div className="grid grid-cols-2 gap-4">
-                            {['Liguilla', 'Torneo'].map(f => (
-                                <button
-                                    key={f}
-                                    onClick={() => setNewCompetitionFormat(f as any)}
-                                    className={`py-4 rounded-2xl border transition-all font-black text-[10px] uppercase tracking-widest italic ${newCompetitionFormat === f
-                                        ? 'bg-primary text-black border-primary shadow-lg shadow-primary/20'
-                                        : 'bg-white/5 border-white/10 text-slate-400 hover:border-white/20'}`}
+                    {/* Rule Preview Card */}
+                    <div className="bg-zinc-900/40 border border-white/5 rounded-[2rem] p-8 backdrop-blur-xl">
+                        <h4 className="text-white font-black italic uppercase tracking-widest text-sm mb-6 flex items-center gap-3">
+                            <span className="material-symbols-outlined text-primary text-xl font-bold">history_edu</span>
+                            Detalles de Reglas
+                        </h4>
+                        <div className="space-y-2">
+                            <div className="flex justify-between items-center py-4 border-b border-white/5 group">
+                                <span className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Muerte Súbita</span>
+                                <button 
+                                    onClick={() => setNewCompMuerteSubita(!newCompMuerteSubita)}
+                                    className={`font-black uppercase tracking-widest text-[10px] italic px-3 py-1 rounded-lg transition-all ${newCompMuerteSubita ? 'bg-primary text-black' : 'bg-primary/5 text-primary border border-primary/10'}`}
                                 >
-                                    {f}
+                                    {newCompMuerteSubita ? 'Habilitado' : 'Desactivado'}
                                 </button>
-                            ))}
+                            </div>
+                            <div className="flex justify-between items-center py-4 border-b border-white/5">
+                                <span className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Incentivos</span>
+                                <select 
+                                    value={newCompIncentivos}
+                                    onChange={(e) => setNewCompIncentivos(e.target.value as any)}
+                                    className="bg-transparent text-white font-black uppercase tracking-widest text-[10px] italic outline-none text-right"
+                                >
+                                    <option value="Todos">Todos</option>
+                                    <option value="Reducidos">Reducidos</option>
+                                    <option value="Ninguno">Ninguno</option>
+                                </select>
+                            </div>
+                            <div className="flex justify-between items-center py-4 border-b border-white/5">
+                                <span className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Tiempo por Turno</span>
+                                <div className="flex items-center gap-2">
+                                    <button onClick={() => setNewCompTiempoTurno(Math.max(1, newCompTiempoTurno - 1))} className="text-primary font-bold opacity-50 hover:opacity-100">-</button>
+                                    <span className="text-white font-black uppercase tracking-widest text-[10px] italic w-20 text-center">{newCompTiempoTurno} Minutos</span>
+                                    <button onClick={() => setNewCompTiempoTurno(Math.min(10, newCompTiempoTurno + 1))} className="text-primary font-bold opacity-50 hover:opacity-100">+</button>
+                                </div>
+                            </div>
+                            <div className="flex justify-between items-center py-4">
+                                <span className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Mercenarios</span>
+                                <button 
+                                    onClick={() => setNewCompMercenarios(!newCompMercenarios)}
+                                    className={`font-black uppercase tracking-widest text-[10px] italic underline decoration-primary/30 underline-offset-4 transition-all ${newCompMercenarios ? 'text-white' : 'text-slate-600'}`}
+                                >
+                                    {newCompMercenarios ? 'Habilitado' : 'Desactivado'}
+                                </button>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="pt-4">
-                        <button
-                            onClick={handleCreateCompetition}
-                            className="w-full py-5 bg-primary text-black font-black rounded-2xl shadow-xl shadow-primary/10 hover:scale-[1.02] active:scale-95 transition-all uppercase italic tracking-tighter text-sm flex items-center justify-center gap-3"
-                        >
-                            <span className="material-symbols-outlined font-bold">add_circle</span>
-                            Crear Competición
-                        </button>
+                    {/* Info box */}
+                    <div className="flex gap-4 p-6 rounded-[2rem] bg-primary/5 border border-primary/10">
+                        <span className="material-symbols-outlined text-primary font-bold shrink-0">info</span>
+                        <p className="text-[11px] text-slate-400 font-medium leading-relaxed italic">
+                            Los calendarios se generan de forma equilibrada una vez iniciada la competición para asegurar la mejor experiencia competitiva.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -413,9 +661,16 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
                         <h2 className="text-4xl md:text-5xl font-black text-white italic truncate tracking-tighter uppercase pt-2">
                             {selectedCompetition.name}
                         </h2>
-                        <div className="flex items-center gap-3 text-slate-500 font-bold uppercase tracking-widest text-[10px]">
-                            <span className="material-symbols-outlined text-sm font-bold">military_tech</span>
-                            {selectedCompetition.format} • Org: {selectedCompetition.ownerName}
+                        <div className="flex flex-wrap items-center gap-4 text-slate-500 font-bold uppercase tracking-widest text-[10px]">
+                            <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-sm font-bold text-primary">military_tech</span> {selectedCompetition.format}</span>
+                            <span className="w-1 h-1 rounded-full bg-slate-700"></span>
+                            <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-sm font-bold text-primary">person</span> {selectedCompetition.ownerName}</span>
+                            {selectedCompetition.rules && (
+                                <>
+                                    <span className="w-1 h-1 rounded-full bg-slate-700"></span>
+                                    <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-sm font-bold text-primary">gavel</span> {selectedCompetition.rules.reglamento}</span>
+                                </>
+                            )}
                         </div>
                     </div>
 
@@ -451,45 +706,97 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
                     )}
                 </div>
 
-                {selectedCompetition.status === 'Open' && (
-                    <div className="bg-zinc-900/20 border border-white/5 p-10 rounded-[2.5rem]">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
-                            <h3 className="text-xl font-black text-white italic tracking-tighter uppercase flex items-center gap-3">
-                                <span className="material-symbols-outlined font-bold text-primary">groups</span>
-                                Equipos Inscritos <span className="text-primary font-black ml-1">({selectedCompetition.teams.length})</span>
-                            </h3>
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        <div className="lg:col-span-8 bg-zinc-900/20 border border-white/5 p-10 rounded-[2.5rem]">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
+                                <h3 className="text-xl font-black text-white italic tracking-tighter uppercase flex items-center gap-3">
+                                    <span className="material-symbols-outlined font-bold text-primary">groups</span>
+                                    Equipos Inscritos <span className="text-primary font-black ml-1">({selectedCompetition.teams.length})</span>
+                                </h3>
 
-                            {!selectedCompetition.teams.some(t => t.ownerId === user?.id) && (
-                                <button
-                                    onClick={() => setJoinModalState({ comp: selectedCompetition, teamToJoin: managedTeams[0]?.name || '' })}
-                                    className="bg-primary text-black font-black py-3 px-8 rounded-2xl text-[10px] uppercase tracking-widest transition-all hover:scale-105 shadow-lg shadow-primary/20"
-                                >
-                                    Inscribir mi Equipo
-                                </button>
+                                {!selectedCompetition.teams.some(t => t.ownerId === user?.id) && (
+                                    <button
+                                        onClick={() => setJoinModalState({ comp: selectedCompetition, teamToJoin: managedTeams[0]?.name || '' })}
+                                        className="bg-primary text-black font-black py-3 px-8 rounded-2xl text-[10px] uppercase tracking-widest transition-all hover:scale-105 shadow-lg shadow-primary/20"
+                                    >
+                                        Inscribir mi Equipo
+                                    </button>
+                                )}
+                            </div>
+                            
+                            {selectedCompetition.teams.length > 0 ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {selectedCompetition.teams.map(t => (
+                                        <div key={t.ownerId + t.teamName} className="p-5 bg-black/40 border border-white/5 rounded-2xl flex items-center gap-4 group hover:border-primary/30 transition-all">
+                                            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black text-sm italic">
+                                                {t.teamName.charAt(0)}
+                                            </div>
+                                            <div>
+                                                <p className="font-black text-white uppercase italic tracking-tight">{t.teamName}</p>
+                                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{t.ownerName}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-10">
+                                    <p className="text-slate-500 font-bold italic uppercase tracking-widest text-xs">Esperando aspirantes... ¡Únete o invita a otros coaches!</p>
+                                </div>
                             )}
                         </div>
-                        
-                        {selectedCompetition.teams.length > 0 ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                                {selectedCompetition.teams.map(t => (
-                                    <div key={t.ownerId + t.teamName} className="p-5 bg-black/40 border border-white/5 rounded-2xl flex items-center gap-4 group hover:border-primary/30 transition-all">
-                                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black text-sm italic">
-                                            {t.teamName.charAt(0)}
+
+                        <div className="lg:col-span-4 space-y-6">
+                            {selectedCompetition.rules && (
+                                <div className="bg-zinc-900/40 border border-white/5 rounded-[2rem] p-8 backdrop-blur-xl">
+                                    <h4 className="text-white font-black italic uppercase tracking-widest text-sm mb-6 flex items-center gap-3">
+                                        <span className="material-symbols-outlined text-primary text-xl font-bold">history_edu</span>
+                                        Reglas
+                                    </h4>
+                                    <div className="space-y-4">
+                                        <div className="flex justify-between items-center py-2 border-b border-white/5">
+                                            <span className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Muerte Súbita</span>
+                                            <span className={`font-black uppercase tracking-widest text-[10px] italic ${selectedCompetition.rules.muerteSubita ? 'text-primary' : 'text-slate-600'}`}>
+                                                {selectedCompetition.rules.muerteSubita ? 'Habilitado' : 'Desactivado'}
+                                            </span>
                                         </div>
-                                        <div>
-                                            <p className="font-black text-white uppercase italic tracking-tight">{t.teamName}</p>
-                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{t.ownerName}</p>
+                                        <div className="flex justify-between items-center py-2 border-b border-white/5">
+                                            <span className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Incentivos</span>
+                                            <span className="text-white font-black uppercase tracking-widest text-[10px] italic">{selectedCompetition.rules.incentivos}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center py-2 border-b border-white/5">
+                                            <span className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Turno</span>
+                                            <span className="text-white font-black uppercase tracking-widest text-[10px] italic">{selectedCompetition.rules.tiempoTurno} min</span>
+                                        </div>
+                                        <div className="flex justify-between items-center py-2">
+                                            <span className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Mercenarios</span>
+                                            <span className={`font-black uppercase tracking-widest text-[10px] italic ${selectedCompetition.rules.mercenarios ? 'text-white' : 'text-slate-600'}`}>
+                                                {selectedCompetition.rules.mercenarios ? 'Habilitado' : 'Desactivado'}
+                                            </span>
                                         </div>
                                     </div>
-                                ))}
+                                </div>
+                            )}
+
+                            <div className="p-8 bg-primary/5 border border-primary/20 rounded-[2rem] text-center">
+                                <span className="material-symbols-outlined text-primary text-4xl mb-3">share</span>
+                                <h4 className="text-white font-black italic uppercase tracking-widest text-xs mb-4">Invita a más rivales</h4>
+                                <button 
+                                    onClick={() => {
+                                        navigator.clipboard.writeText(`${window.location.origin}?join=${selectedCompetition.id}`);
+                                        setConfirmation({
+                                            title: "Enlace Copiado",
+                                            message: "¡Enlace de invitación copiado al portapapeles!",
+                                            onConfirm: () => setConfirmation(null),
+                                            type: 'info'
+                                        });
+                                    }}
+                                    className="w-full bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary py-3 rounded-xl font-black text-[10px] uppercase tracking-widest italic transition-all"
+                                >
+                                    Copiar Enlace
+                                </button>
                             </div>
-                        ) : (
-                            <div className="text-center py-10">
-                                <p className="text-slate-500 font-bold italic uppercase tracking-widest text-xs">Esperando aspirantes... ¡Únete o invita a otros coaches!</p>
-                            </div>
-                        )}
+                        </div>
                     </div>
-                )}
 
                 {selectedCompetition.status !== 'Open' && (
                     <div className="space-y-12">
@@ -673,26 +980,35 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
                             {myCompetitions.map(c => (
                                 <div
                                     key={c.id}
-                                    className="group bg-zinc-900/40 border border-white/5 p-6 rounded-3xl hover:bg-zinc-800/60 transition-all flex justify-between items-center relative overflow-hidden"
+                                    className="group bg-zinc-900/40 border border-white/5 p-6 rounded-[2rem] hover:bg-zinc-800/60 transition-all flex justify-between items-center relative overflow-hidden"
                                 >
-                                    <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2"></div>
-                                    <div className="relative z-10 flex flex-col gap-1 min-w-0">
-                                        <h3 className="text-lg font-black text-white uppercase italic tracking-tight truncate group-hover:text-primary transition-colors">
-                                            {c.name}
-                                        </h3>
-                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                                            {c.ownerId === user?.id ? 'Tu liga' : `Org: ${c.ownerName}`} • {c.format}
-                                        </p>
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2 group-hover:bg-primary/10 transition-colors"></div>
+                                    <div className="relative z-10 flex flex-col gap-2 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                            <span className={`w-2 h-2 rounded-full ${c.status === 'Open' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : (c.status === 'In Progress' ? 'bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.5)]' : 'bg-slate-500')}`} />
+                                            <h3 className="text-xl font-black text-white uppercase italic tracking-tight truncate group-hover:text-primary transition-colors">
+                                                {c.name}
+                                            </h3>
+                                        </div>
+                                        <div className="flex flex-wrap items-center gap-3 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                                            <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">military_tech</span> {c.format}</span>
+                                            <span className="w-1 h-1 rounded-full bg-slate-700"></span>
+                                            <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">person</span> {c.ownerId === user?.id ? 'Tu liga' : c.ownerName}</span>
+                                            {c.rules && (
+                                                <>
+                                                    <span className="w-1 h-1 rounded-full bg-slate-700"></span>
+                                                    <span className="flex items-center gap-1 text-primary/60"><span className="material-symbols-outlined text-[14px]">gavel</span> {c.rules.reglamento}</span>
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
                                     <div className="flex items-center gap-4 relative z-10 shrink-0">
-                                        <span className={`text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest ${c.status === 'Open' ? 'bg-green-500/10 text-green-500 border border-green-500/20' :
-                                            (c.status === 'In Progress' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' : 'bg-white/5 text-slate-400')
-                                            }`}>
-                                            {c.status}
-                                        </span>
+                                        <div className="text-right hidden sm:block">
+                                            <span className="block text-[10px] font-black text-white/40 uppercase tracking-widest italic">{c.teams.length} Equipos</span>
+                                        </div>
                                         <button
                                             onClick={() => { setSelectedCompetition(c); setView('detail'); }}
-                                            className="w-10 h-10 rounded-xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center hover:bg-primary hover:text-black transition-all"
+                                            className="w-12 h-12 rounded-2xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center hover:bg-primary hover:text-black transition-all shadow-lg hover:shadow-primary/20"
                                         >
                                             <span className="material-symbols-outlined font-bold">arrow_forward</span>
                                         </button>
@@ -714,16 +1030,27 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
                     {joinableCompetitions.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {joinableCompetitions.map(c => (
-                                <div key={c.id} className="bg-zinc-900/40 border border-white/5 p-6 rounded-3xl flex justify-between items-center group">
-                                    <div className="min-w-0">
-                                        <p className="text-lg font-black text-white italic uppercase truncate group-hover:text-primary transition-colors">{c.name}</p>
-                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em]">{c.ownerName} • {c.format}</p>
+                                <div key={c.id} className="bg-zinc-900/40 border border-white/5 p-6 rounded-[2rem] flex justify-between items-center group relative overflow-hidden">
+                                     <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2"></div>
+                                    <div className="min-w-0 relative z-10 space-y-2">
+                                        <p className="text-xl font-black text-white italic uppercase truncate group-hover:text-primary transition-colors">{c.name}</p>
+                                        <div className="flex flex-wrap items-center gap-3 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                                            <span className="flex items-center gap-1">{c.ownerName}</span>
+                                            <span className="w-1 h-1 rounded-full bg-slate-700"></span>
+                                            <span className="flex items-center gap-1">{c.format}</span>
+                                            {c.rules && (
+                                                <>
+                                                    <span className="w-1 h-1 rounded-full bg-slate-700"></span>
+                                                    <span className="text-primary/60">{c.rules.reglamento}</span>
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
                                     <button
                                         onClick={() => setJoinModalState({ comp: c, teamToJoin: managedTeams[0]?.name || '' })}
-                                        className="bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-black font-black py-2 px-6 rounded-xl text-[10px] uppercase tracking-widest transition-all"
+                                        className="relative z-10 bg-primary/10 hover:bg-primary text-primary hover:text-black px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border border-primary/20"
                                     >
-                                        Unirse
+                                        Inscribirse
                                     </button>
                                 </div>
                             ))}

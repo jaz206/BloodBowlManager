@@ -204,6 +204,14 @@ export interface Matchup {
   played?: boolean;
 }
 
+export interface CompetitionRules {
+  reglamento: 'BB2020' | 'BB2016' | 'Sevens';
+  muerteSubita: boolean;
+  incentivos: 'Todos' | 'Reducidos' | 'Ninguno';
+  tiempoTurno: number;
+  mercenarios: boolean;
+}
+
 export interface Competition {
   id: string;
   name: string;
@@ -215,6 +223,7 @@ export interface Competition {
   schedule?: Record<string, Matchup[]> | null;
   bracket?: Record<string, Matchup[]> | null;
   createdAt?: any;
+  rules?: CompetitionRules;
 }
 
 export type League = Competition;
