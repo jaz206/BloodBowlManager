@@ -57,24 +57,50 @@ h4,
 }
 
 .glass {
-    background: rgba(10, 10, 10, 0.8);
+    background: rgba(255, 255, 255, 0.03);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(245, 159, 10, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.bento-card {
-    background: #0f172a;
-    border: 1px solid rgba(245, 159, 10, 0.2);
-    border-radius: 0.75rem;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+.glass-dark {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(212, 175, 55, 0.15);
 }
 
-.bento-card:hover {
-    border-color: #f59f0a;
-    background: rgba(245, 159, 10, 0.05);
-    transform: translateY(-2px);
-    box-shadow: 0 10px 30px -10px rgba(245, 159, 10, 0.2);
+.gold-glow {
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.25);
+    border-bottom: 3px solid #d4af37;
+}
+
+.btn-pe {
+    background: linear-gradient(135deg, #d4af37 0%, #f59f0a 100%);
+    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+}
+
+.btn-pe:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}
+
+.warning-badge {
+    background: #ef4444;
+    color: white;
+    font-size: 8px;
+    font-weight: 900;
+    padding: 1px 4px;
+    border-radius: 4px;
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    z-index: 20;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
 }
 
 @keyframes spin-slow {

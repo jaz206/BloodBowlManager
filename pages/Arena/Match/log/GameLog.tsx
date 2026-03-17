@@ -7,7 +7,11 @@ import { formatLogEntry } from './logFormatter';
  * Muestra los eventos en orden cronológico inverso con color e icono por tipo.
  * Auto-scroll al evento más reciente.
  */
-const GameLog: React.FC = () => {
+interface GameLogProps {
+    hideHeader?: boolean;
+}
+
+const GameLog: React.FC<GameLogProps> = ({ hideHeader }) => {
     const { gameLog, handleExportLog } = useMatch() as any;
     const topRef = useRef<HTMLDivElement>(null);
 
@@ -19,27 +23,29 @@ const GameLog: React.FC = () => {
     return (
         <div className="flex flex-col h-full">
             {/* Header */}
-            <div className="flex items-center justify-between mb-3 px-1 shrink-0">
-                <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-premium-gold text-base">receipt_long</span>
-                    <h4 className="text-[10px] font-display font-black text-slate-400 uppercase tracking-widest">
-                        Bitácora
-                    </h4>
-                    <span className="text-[8px] bg-white/5 text-slate-500 px-2 py-0.5 rounded-full font-bold">
-                        {gameLog.length}
-                    </span>
+            {!hideHeader && (
+                <div className="flex items-center justify-between mb-3 px-1 shrink-0">
+                    <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-premium-gold text-base">receipt_long</span>
+                        <h4 className="text-[10px] font-display font-black text-slate-400 uppercase tracking-widest">
+                            Bitácora
+                        </h4>
+                        <span className="text-[8px] bg-white/5 text-slate-500 px-2 py-0.5 rounded-full font-bold">
+                            {gameLog.length}
+                        </span>
+                    </div>
+                    {handleExportLog && (
+                        <button
+                            onClick={handleExportLog}
+                            className="text-[8px] font-display font-black text-slate-500 hover:text-premium-gold transition-colors uppercase tracking-widest flex items-center gap-1"
+                            title="Exportar a Excel"
+                        >
+                            <span className="material-symbols-outlined text-sm">download</span>
+                            XLSX
+                        </button>
+                    )}
                 </div>
-                {handleExportLog && (
-                    <button
-                        onClick={handleExportLog}
-                        className="text-[8px] font-display font-black text-slate-500 hover:text-premium-gold transition-colors uppercase tracking-widest flex items-center gap-1"
-                        title="Exportar a Excel"
-                    >
-                        <span className="material-symbols-outlined text-sm">download</span>
-                        XLSX
-                    </button>
-                )}
-            </div>
+            )}
 
             {/* Log entries */}
             <div className="flex-1 overflow-y-auto space-y-1 pr-1 custom-scrollbar">

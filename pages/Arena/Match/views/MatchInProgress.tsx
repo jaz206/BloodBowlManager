@@ -1,35 +1,29 @@
 import React, { useState } from 'react';
 import { useMatch } from '../context/MatchContext';
-import { skillsData } from '../../../../data/skills';
-import TdIcon from '../../../../components/icons/TdIcon';
-import PassIcon from '../../../../components/icons/PassIcon';
-import CasualtyIcon from '../../../../components/icons/CasualtyIcon';
 import GameLog from '../log/GameLog';
-import { S3ActionType, InteractionMode } from '../types/match.types';
-import { ManagedPlayer, ELITE_SKILLS } from '../../../../types';
+import { S3ActionType } from '../types/match.types';
+import { ManagedPlayer } from '../../../../types';
 
 /**
- * MatchInProgress — Elite Match Console Edition.
- * Diseño premium basado en el mockup solicitado por el usuario.
+ * MatchInProgress — Arena Console V2 "Midnight & Gold"
+ * Implementación premium basada en el mockup de la consola de motor de partido.
  */
 const MatchInProgress: React.FC = () => {
     const {
         liveHomeTeam, liveOpponentTeam,
         score, turn, half, activeTeamId, setActiveTeamId,
         selectedPlayerForAction, setSelectedPlayerForAction,
-        turnActions, rosterViewId, setRosterViewId,
+        rosterViewId, setRosterViewId,
         setIsTdModalOpen, setIsInjuryModalOpen, setIsPrayersModalOpen,
         setIsWeatherModalOpen, setIsSequenceGuideOpen,
-        setIsMatchSummaryOpen, setIsConcedeModalOpen, setGameState,
-        handleStrategicAction, handleNextTurn, handleUpdatePlayerCondition, 
+        setIsMatchSummaryOpen, setIsConcedeModalOpen, 
+        handleNextTurn, handleUpdatePlayerCondition, 
         logEvent, useReroll, interactionState, setInteractionState, handleS3Action, playSound
     } = useMatch();
 
-    const [distance, setDistance] = useState<number | null>(4); // Placeholder para lógica de distancia futura
-
     if (!liveHomeTeam || !liveOpponentTeam) {
         return (
-            <div className="flex items-center justify-center min-h-screen bg-black">
+            <div className="flex items-center justify-center min-h-screen bg-midnight">
                 <div className="text-primary font-display font-black text-center animate-pulse tracking-[0.5em] uppercase">
                     Invocando escuadras...
                 </div>
@@ -39,44 +33,39 @@ const MatchInProgress: React.FC = () => {
 
     const { mode, pending } = interactionState;
     const activeTeam = activeTeamId === 'home' ? liveHomeTeam : liveOpponentTeam;
-    const opponentTeam = activeTeamId === 'home' ? liveOpponentTeam : liveHomeTeam;
+    // El equipo que NO es el activo
+    const idleTeam = activeTeamId === 'home' ? liveOpponentTeam : liveHomeTeam;
 
-    // Helper para disparar acciones S3
-    const handleTriggerAction = (type: S3ActionType) => {
+    // Determinar quién recibe y quién patea (simplificado para UI)
+    const receivingTeam = liveHomeTeam; // Por defecto
+    const kickingTeam = liveOpponentTeam;
+
+    const handleTriggerAction = (type: S3ActionType | string) => {
         if (!selectedPlayerForAction) {
             logEvent('WARNING', 'Selecciona primero un jugador en la plantilla.');
             return;
         }
-        
-        // Mapeo similar a S3ActionOrchestrator
-        if (type === 'PASS' && selectedPlayerForAction.stats.PA === '-') {
-            logEvent('WARNING', `¡BLOCKED! ${selectedPlayerForAction.customName} no puede pasar.`);
-            return;
-        }
 
+        // Acciones que abren modales específicos
+        if (type === 'TD') { setIsTdModalOpen(true); return; }
+        if (type === 'CAS') { setIsInjuryModalOpen(true); return; }
+
+        // Acciones S3 con orquestación
         const needsObjective = ['BLOCK', 'PASS', 'HANDOFF', 'FOUL'].includes(type);
         
         if (needsObjective) {
             setInteractionState(prev => ({
                 ...prev,
                 mode: 'selecting_objective',
-                pending: { ...prev.pending, actorId: selectedPlayerForAction.id, actionType: type }
+                pending: { ...prev.pending, actorId: selectedPlayerForAction.id, actionType: type as S3ActionType }
             }));
         } else {
             setInteractionState(prev => ({
                 ...prev,
                 mode: 'awaiting_dice',
-                pending: { ...prev.pending, actorId: selectedPlayerForAction.id, actionType: type }
+                pending: { ...prev.pending, actorId: selectedPlayerForAction.id, actionType: type as S3ActionType }
             }));
         }
-    };
-
-    const handleSelectObjectiveInternal = (player: ManagedPlayer) => {
-        setInteractionState(prev => ({
-            ...prev,
-            mode: 'awaiting_dice',
-            pending: { ...prev.pending, objectiveId: player.id }
-        }));
     };
 
     const handleDiceResultInternal = (result: any) => {
@@ -90,483 +79,430 @@ const MatchInProgress: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col h-screen max-w-[1600px] mx-auto overflow-hidden text-slate-100 font-display selection:bg-primary selection:text-black">
+        <div className="font-display min-h-screen overflow-hidden flex flex-col bg-midnight text-diente-orco selection:bg-primary selection:text-midnight">
             
-            {/* ── HEADER: Scoreboard y Reloj ── */}
-            <header className="flex items-center justify-between border-b border-primary/20 bg-background-dark px-6 py-3 shrink-0">
-                <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-3">
-                        <span className="material-symbols-outlined text-primary text-3xl">sports_football</span>
-                        <h1 className="text-xl font-black uppercase tracking-tighter text-slate-100">
-                            Elite Match <span className="text-primary">Console</span>
-                        </h1>
-                    </div>
-                    <div className="h-8 w-[1px] bg-primary/20"></div>
+            {/* ── HEADER: Global Scoreboard & Field Status Pill ── */}
+            <header className="w-full border-b border-white/5 glass px-6 py-2 flex flex-col gap-2 z-50">
+                <div className="flex items-center justify-between">
                     <div className="flex items-center gap-8">
-                        <div className="flex flex-col">
-                            <span className="text-[10px] uppercase text-slate-500 font-bold">Marcador</span>
-                            <span className="text-xl font-black tabular-nums tracking-widest text-primary">
-                                {score.home.toString().padStart(2, '0')} - {score.opponent.toString().padStart(2, '0')}
-                            </span>
+                        <div className="flex items-center gap-4">
+                            {/* Home Team Display */}
+                            <div className="flex flex-col items-end">
+                                <div className="flex items-center gap-1.5">
+                                    <span className="text-[8px] px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded-sm font-black border border-green-500/30 uppercase tracking-tighter">Receptor</span>
+                                    <span className="text-[10px] uppercase tracking-widest text-primary font-bold">Local</span>
+                                </div>
+                                <span className="text-xl font-black text-diente-orco uppercase truncate max-w-[150px]">{liveHomeTeam.name}</span>
+                            </div>
+                            <div className="bg-primary/10 p-2 rounded-lg border border-primary/30">
+                                {liveHomeTeam.crestImage ? (
+                                    <img src={liveHomeTeam.crestImage} className="w-10 h-10 object-contain" alt="Logo Local" />
+                                ) : (
+                                    <div className="w-10 h-10 flex items-center justify-center text-primary font-black">BB</div>
+                                )}
+                            </div>
+
+                            {/* Score Display */}
+                            <div className="flex items-center gap-3 px-6 py-1 bg-black/60 rounded-full border border-gold/20">
+                                <span className="text-3xl font-black text-gold">{score.home}</span>
+                                <span className="text-slate-600 font-bold">-</span>
+                                <span className="text-3xl font-black text-slate-400">{score.opponent}</span>
+                            </div>
+
+                            {/* Opponent Display */}
+                            <div className="bg-slate-900/50 p-2 rounded-lg border border-white/5">
+                                {liveOpponentTeam.crestImage ? (
+                                    <img src={liveOpponentTeam.crestImage} className="w-10 h-10 object-contain" alt="Logo Rival" />
+                                ) : (
+                                    <div className="w-10 h-10 flex items-center justify-center text-slate-500 font-black">??</div>
+                                )}
+                            </div>
+                            <div className="flex flex-col items-start">
+                                <div className="flex items-center gap-1.5">
+                                    <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Rival</span>
+                                    <span className="text-[8px] px-1.5 py-0.5 bg-red-500/20 text-red-400 rounded-sm font-black border border-red-500/30 uppercase tracking-tighter">Pateador</span>
+                                </div>
+                                <span className="text-xl font-black text-slate-500 uppercase truncate max-w-[150px]">{liveOpponentTeam.name}</span>
+                            </div>
                         </div>
-                        <div className="flex flex-col">
-                            <span className="text-[10px] uppercase text-slate-500 font-bold">Turno</span>
-                            <span className="text-xl font-black tabular-nums text-slate-100">{turn} / 8</span>
+                    </div>
+
+                    <div className="flex items-center gap-6">
+                        {/* Roster Switcher (Plantilla A / B) */}
+                        <div className="flex bg-black/40 rounded-xl p-1 border border-white/5">
+                            <button 
+                                onClick={() => setRosterViewId('home')}
+                                className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${rosterViewId === 'home' ? 'gold-glow bg-white/5 text-gold tracking-wide' : 'text-slate-500 hover:text-slate-300'}`}
+                            >
+                                PLANTILLA A
+                            </button>
+                            <button 
+                                onClick={() => setRosterViewId('opponent')}
+                                className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${rosterViewId === 'opponent' ? 'gold-glow bg-white/5 text-gold tracking-wide' : 'text-slate-500 hover:text-slate-300'}`}
+                            >
+                                PLANTILLA B
+                            </button>
                         </div>
-                        <div className="flex flex-col">
-                            <span className="text-[10px] uppercase text-slate-500 font-bold">Periodo</span>
-                            <span className="text-sm font-bold text-primary uppercase">{half === 1 ? '1ª Parte' : '2ª Parte'}</span>
+                        <div className="h-10 w-px bg-white/5 mx-2"></div>
+                        <div className="flex flex-col items-center">
+                            <span className="text-[10px] uppercase tracking-[0.2em] text-primary font-bold">TURNO</span>
+                            <span className="text-xl font-black italic tracking-tighter text-diente-orco">{turn} / 8</span>
                         </div>
+                        <button onClick={() => setIsMatchSummaryOpen(true)} className="size-10 rounded-full glass flex items-center justify-center hover:bg-white/10 text-slate-400">
+                             <span className="material-symbols-outlined text-sm">settings</span>
+                        </button>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2 bg-red-900/30 border border-red-500/50 px-3 py-1.5 rounded text-red-500 transition-all">
-                        <div className="size-2 rounded-full bg-red-500 animate-pulse"></div>
-                        <span className="text-xs font-black uppercase tracking-widest">Reloj Activo</span>
-                    </div>
-                    
-                    <button 
-                        onClick={() => setActiveTeamId(activeTeamId === 'home' ? 'opponent' : 'home')}
-                        className={`flex items-center gap-3 p-1 pr-4 rounded-full border transition-all ${activeTeamId === 'home' ? 'bg-sky-500/10 border-sky-500/30' : 'bg-red-500/10 border-red-500/30'}`}
-                    >
-                        <div className="size-8 rounded-full bg-black/60 flex items-center justify-center border border-white/10 overflow-hidden">
-                           {activeTeam.crestImage ? <img src={activeTeam.crestImage} className="w-full h-full object-cover" /> : <span className="material-symbols-outlined text-xs text-white/40 italic">shield</span>}
+                {/* ── Status Pill ── */}
+                <div className="flex items-center justify-center -mt-1">
+                    <div className="glass-dark px-4 py-1.5 rounded-full flex items-center gap-6 border border-gold/10 shadow-lg text-[10px] font-bold uppercase tracking-wider animate-in slide-in-from-top-4 duration-500">
+                        {/* Weather */}
+                        <div className="flex items-center gap-2 text-blue-400">
+                            <span className="material-symbols-outlined text-sm">water_drop</span>
+                            <span>Clima: <span className="text-blue-300">Despejado</span></span>
                         </div>
-                        <span className="text-xs font-bold uppercase tracking-tighter truncate max-w-[120px]">
-                            {activeTeam.name}
-                        </span>
-                    </button>
-                    
-                    <button onClick={() => setIsMatchSummaryOpen(true)} className="size-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-slate-700 transition-colors" title="Ajustes">
-                        <span className="material-symbols-outlined text-sm">settings</span>
-                    </button>
+                        <div className="w-px h-3 bg-white/10"></div>
+                        {/* Period */}
+                        <div className="flex items-center gap-2 text-slate-400">
+                            <span className="material-symbols-outlined text-sm">schedule</span>
+                            <span>Periodo: <span className="text-diente-orco">{half === 1 ? '1ª Parte' : '2ª Parte'}</span></span>
+                        </div>
+                        <div className="w-px h-3 bg-white/10"></div>
+                        {/* Inducements */}
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                                <span className="text-primary tracking-tighter">Recursos:</span>
+                                <div className="flex items-center gap-1.5">
+                                    <span className="flex items-center gap-1 bg-white/5 px-2 py-0.5 rounded border border-white/5" title="Rerolls">
+                                        <span className="material-symbols-outlined text-[12px] text-gold">replay</span>
+                                        <span className="text-gold">{activeTeam.liveRerolls}</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </header>
 
-            {/* ── MAIN CONTENT ── */}
-            <main className="flex flex-1 overflow-hidden bg-[#050505]">
+            {/* ── MAIN AREA ── */}
+            <main className="flex flex-1 overflow-hidden p-6 gap-6">
                 
-                {/* Aside Izquierdo: Match Log */}
-                <aside className="w-80 border-r border-primary/10 bg-black/20 overflow-hidden flex flex-col p-4 gap-4">
-                    <div className="flex items-center justify-between border-b border-primary/20 pb-2">
-                        <h3 className="text-xs font-black uppercase tracking-widest text-primary font-display">Match Log</h3>
-                        <span className="text-[10px] text-slate-500 uppercase font-display">Crónica del encuentro</span>
-                    </div>
-                    <div className="flex-1 overflow-y-auto custom-scrollbar pr-1">
-                        <GameLog hideHeader />
-                    </div>
-                    <button 
-                        onClick={handleNextTurn}
-                        className="w-full py-4 rounded bg-primary text-black font-black uppercase tracking-widest text-xs hover:brightness-110 active:scale-95 transition-all shadow-[0_0_20px_rgba(245,159,10,0.2)]"
-                    >
-                        Finalizar Turno
-                    </button>
-                </aside>
-
-                {/* Central: Control Grid and Pitch */}
-                <section className="flex-1 flex flex-col overflow-y-auto p-6 gap-6 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/5 to-transparent">
-                    
-                    {/* Action Panel: Categorizado S3 */}
-                    <div className="grid grid-cols-4 gap-4 shrink-0">
-                        {/* Movimiento */}
-                        <ActionCategory title="Movimiento">
-                            <ActionButton 
-                                label="Mover / Esquiva" icon="directions_run" 
-                                onClick={() => handleTriggerAction('MOVE')} 
-                                isActive={pending.actionType === 'MOVE'} 
-                            />
-                            <ActionButton 
-                                label="Rush" icon="bolt" 
-                                onClick={() => handleTriggerAction('RUSH')} 
-                                isActive={pending.actionType === 'RUSH'} 
-                            />
-                        </ActionCategory>
-
-                        {/* Combate */}
-                        <ActionCategory title="Combate">
-                            <ActionButton 
-                                label="Placaje (Block)" icon="casino" 
-                                onClick={() => handleTriggerAction('BLOCK')} 
-                                isActive={pending.actionType === 'BLOCK'} 
-                                hasExtraDice
-                            />
-                            <ActionButton 
-                                label="Falta" icon="gavel" 
-                                onClick={() => handleTriggerAction('FOUL')} 
-                                isActive={pending.actionType === 'FOUL'} 
-                                isDanger
-                            />
-                        </ActionCategory>
-
-                        {/* Balón */}
-                        <ActionCategory title="Balón">
-                            <ActionButton 
-                                label="Recoger / Pase" icon="sports_rugby" 
-                                onClick={() => handleTriggerAction('PASS')} 
-                                isActive={pending.actionType === 'PASS'} 
-                            />
-                            <ActionButton 
-                                label="Asegurador" icon="verified_user" 
-                                onClick={() => handleTriggerAction('SECURE_BALL')} 
-                                isActive={pending.actionType === 'SECURE_BALL'} 
-                                subtext="Éxito 2+"
-                                highlight
-                            />
-                        </ActionCategory>
-
-                        {/* Objetivo */}
-                        <div className="space-y-2">
-                            <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest px-1">Objetivo</span>
-                            <button 
-                                onClick={() => handleTriggerAction('TOUCHDOWN')}
-                                className="w-full h-[104px] bento-card rounded-lg border-2 border-primary border-dashed flex flex-col items-center justify-center gap-2 group transition-all"
-                            >
-                                <span className="material-symbols-outlined text-primary text-3xl group-hover:scale-110 transition-transform">workspace_premium</span>
-                                <span className="text-sm font-black uppercase italic text-primary">Touchdown</span>
-                            </button>
+                {/* ── Left: Roster Grid ── */}
+                <section className="flex-1 flex flex-col gap-6 overflow-hidden">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-xs font-bold tracking-[0.3em] uppercase text-slate-500 flex items-center gap-2">
+                            <span className="material-symbols-outlined text-primary text-lg">groups</span>
+                            Gestión de Plantilla
+                        </h2>
+                        <div className="flex gap-4 text-[10px] font-bold uppercase text-slate-500">
+                            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(245,159,10,0.5)]"></span> Activos</span>
+                            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-slate-700"></span> Agotados / Bajas</span>
                         </div>
                     </div>
 
-                    {/* Ficha y Mapa Táctico */}
-                    <div className="flex gap-6 flex-1 min-h-0">
-                        
-                        {/* Player Card (Detallado) */}
-                        <div className="w-64 glass rounded-2xl p-5 flex flex-col gap-4 animate-slide-in-up shrink-0">
-                            {selectedPlayerForAction ? (
-                                <>
-                                    <div className="flex items-center gap-3 border-b border-primary/20 pb-4">
-                                        <div className="size-12 rounded bg-primary flex items-center justify-center text-xl font-black text-black shadow-lg">
-                                            #{selectedPlayerForAction.id.toString().slice(-2)}
-                                        </div>
-                                        <div className="min-w-0">
-                                            <h4 className="font-black text-slate-100 uppercase tracking-tighter text-base truncate">{selectedPlayerForAction.customName}</h4>
-                                            <p className="text-[9px] text-primary font-bold uppercase truncate">{selectedPlayerForAction.position}</p>
-                                        </div>
-                                    </div>
-
-                                    {/* Attributes Grid */}
-                                    <div className="grid grid-cols-5 gap-1 text-center">
-                                        {[
-                                            { l: 'MA', v: selectedPlayerForAction.stats.MV, red: selectedPlayerForAction.hasIndigestion },
-                                            { l: 'ST', v: selectedPlayerForAction.stats.FU },
-                                            { l: 'AG', v: selectedPlayerForAction.stats.AG + '+' },
-                                            { l: 'PA', v: selectedPlayerForAction.stats.PA === '-' ? '-' : selectedPlayerForAction.stats.PA + '+' },
-                                            { l: 'AR', v: selectedPlayerForAction.stats.AR + '+', red: selectedPlayerForAction.hasIndigestion }
-                                        ].map(s => (
-                                            <div key={s.l} className="bg-slate-900/60 rounded p-1.5 border border-white/5">
-                                                <p className="text-[8px] text-slate-500 font-bold uppercase">{s.l}</p>
-                                                <p className={`font-black text-xs ${s.red ? 'text-amber-500 underline' : 'text-slate-100'}`}>{s.v}</p>
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    {/* Skills Section */}
-                                    <div className="space-y-2 flex-grow overflow-y-auto custom-scrollbar pr-1">
-                                        <p className="text-[10px] font-black uppercase text-primary tracking-widest">Habilidades</p>
-                                        <div className="grid grid-cols-1 gap-1.5">
-                                            {[...(selectedPlayerForAction.skillKeys || []), ...(selectedPlayerForAction.gainedSkills || [])].map((s, i) => (
-                                                <div key={i} className={`flex items-center gap-2 p-2 bg-slate-900/40 border border-white/5 rounded hover:border-primary/50 transition-colors group ${selectedPlayerForAction.isDistracted ? 'opacity-30 grayscale' : ''}`}>
-                                                    <span className="material-symbols-outlined text-primary text-sm group-hover:rotate-12 transition-transform">auto_fix_high</span>
-                                                    <span className={`text-[10px] font-bold text-slate-300 uppercase tracking-tighter ${selectedPlayerForAction.isDistracted ? 'line-through' : ''}`}>{s}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* S3 States (Toggleable in Console) */}
-                                    <div className="flex flex-col gap-1.5 mt-auto pt-4 border-t border-white/5">
-                                        <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Estados S3</p>
-                                        <div className="flex flex-col gap-1.5">
-                                            <button 
-                                                onClick={() => handleUpdatePlayerCondition(selectedPlayerForAction.id, activeTeamId, 'isDistracted')}
-                                                className={`flex items-center justify-between p-2.5 rounded transition-all ${selectedPlayerForAction.isDistracted ? 'bg-red-500 text-black font-black' : 'bg-red-900/10 border border-red-500/20 text-red-500/60'}`}
-                                            >
-                                                <span className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest">
-                                                    <span className="material-symbols-outlined text-sm">block</span> DISTRAÍDO
-                                                </span>
-                                                <span className="text-[8px] opacity-70">{selectedPlayerForAction.isDistracted ? 'ACTIVO' : 'NO'}</span>
-                                            </button>
-                                            <button 
-                                                onClick={() => handleUpdatePlayerCondition(selectedPlayerForAction.id, activeTeamId, 'hasIndigestion')}
-                                                className={`flex items-center justify-between p-2.5 rounded transition-all ${selectedPlayerForAction.hasIndigestion ? 'bg-amber-500 text-black font-black' : 'bg-amber-900/10 border border-amber-500/20 text-amber-500/50'}`}
-                                            >
-                                                <span className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest">
-                                                    <span className="material-symbols-outlined text-sm">sick</span> INDIGESTIÓN
-                                                </span>
-                                                <span className="text-[8px] opacity-70">-1 MA/AR</span>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-4 opacity-40">
-                                    <span className="material-symbols-outlined text-4xl text-slate-600">group_off</span>
-                                    <p className="text-xs font-black uppercase tracking-widest text-slate-500">Selecciona un Guerrero para analizar sus datos</p>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* MiniField & Roster Overlay */}
-                        <div className="flex-1 flex flex-col gap-4">
-                            <div className="flex-1 glass rounded-2xl relative overflow-hidden bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] group">
-                                
-                                {/* Secuencia de Acciones (Overlay) */}
-                                {mode !== 'idle' && (
-                                    <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-8 animate-fade-in text-center">
-                                        <div className="max-w-md w-full space-y-8">
-                                            <div>
-                                                <p className="text-[10px] font-black text-primary uppercase tracking-[0.4em] mb-2 font-display">Vínculo de Nuffle</p>
-                                                <h2 className="text-4xl font-display font-black text-white italic uppercase tracking-tighter">
-                                                    {mode === 'selecting_objective' && "¿A quién golpear?"}
-                                                    {mode === 'awaiting_dice' && "Entrada de Resultados"}
-                                                </h2>
-                                            </div>
-
-                                            {mode === 'selecting_objective' && (
-                                                <div className="grid grid-cols-4 gap-3 overflow-y-auto max-h-[50vh] p-2 custom-scrollbar">
-                                                    {opponentTeam.players.filter(p => p.status === 'Activo').map(p => (
-                                                        <button 
-                                                            key={p.id} 
-                                                            onClick={() => handleSelectObjectiveInternal(p)}
-                                                            className="flex flex-col items-center justify-center p-4 bg-red-600/5 border border-red-600/20 rounded-2xl hover:bg-red-500 hover:text-black transition-all group scale-100 hover:scale-105"
-                                                        >
-                                                            <span className="text-xl font-black mb-1">#{p.id.toString().slice(-2)}</span>
-                                                            <span className="text-[8px] font-bold uppercase opacity-60 truncate w-full">{p.position}</span>
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            )}
-
-                                            {mode === 'awaiting_dice' && (
-                                                <div className="space-y-6">
-                                                    {/* Dice Entry */}
-                                                    <div className="flex flex-wrap justify-center gap-3">
-                                                        {pending.actionType === 'BLOCK' ? (
-                                                            ['Calavera', 'Ambos', 'Empujón', 'Zaca!', 'Flecha'].map(d => (
-                                                                <DiceInputCircle key={d} label={d} onClick={() => handleDiceResultInternal(d)} icon="casino" />
-                                                            ))
-                                                        ) : ['FOUL'].includes(pending.actionType as string) ? (
-                                                            [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(n => (
-                                                                <button key={n} onClick={() => handleDiceResultInternal(n)} className="size-12 rounded-xl bg-white/5 border border-white/10 text-xl font-black hover:bg-primary hover:text-black transition-all">{n}</button>
-                                                            ))
-                                                        ) : (
-                                                            [1, 2, 3, 4, 5, 6].map(n => (
-                                                                <button key={n} onClick={() => handleDiceResultInternal(n)} className="size-14 rounded-2xl bg-white/5 border border-white/10 text-2xl font-black hover:bg-primary hover:text-black transition-all">{n}</button>
-                                                            ))
-                                                        )}
-                                                    </div>
-                                                    
-                                                    <div className="h-px bg-white/10 w-full"></div>
-                                                    
-                                                    <button 
-                                                        onClick={() => {
-                                                            const res = Math.floor(Math.random() * 6) + 1;
-                                                            handleDiceResultInternal(res);
-                                                        }}
-                                                        className="w-full py-4 rounded-2xl bg-primary text-black font-black uppercase tracking-widest shadow-xl hover:scale-[1.02] transition-all"
-                                                    >
-                                                        Digital Dice Roll
-                                                    </button>
-                                                </div>
-                                            )}
-
-                                            <button 
-                                                onClick={() => setInteractionState({ mode: 'idle', pending: { actorId: null, actionType: null, objectiveId: null, diceResult: null, manualMode: true } })}
-                                                className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors"
-                                            >
-                                                &larr; Abortar Secuencia
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Pitch Visualization */}
-                                <div className="absolute inset-0 grid grid-cols-12 grid-rows-6 opacity-30 pointer-events-none">
-                                    {Array.from({length: 72}).map((_, i) => (
-                                        <div key={i} className="border-r border-b border-primary/20"></div>
-                                    ))}
-                                </div>
-                                
-                                <div className="absolute inset-0 flex items-center justify-center gap-12 font-display">
-                                    {selectedPlayerForAction && (
-                                        <div className="relative animate-pulse">
-                                            <div className="size-16 rounded-full bg-primary border-4 border-white shadow-[0_0_40px_rgba(245,159,10,0.5)] flex items-center justify-center font-black text-black text-xl z-10 relative">
-                                                #{selectedPlayerForAction.id.toString().slice(-2)}
-                                            </div>
-                                            <div className="absolute -inset-6 border-2 border-dashed border-primary/40 rounded-full animate-spin-slow"></div>
+                    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-y-auto pr-2 scrollbar-hide">
+                        {(rosterViewId === 'home' ? liveHomeTeam : liveOpponentTeam).players.map((p: ManagedPlayer) => {
+                            const isExhausted = ['KO', 'Lesionado', 'Muerto', 'Expulsado'].includes(p.status);
+                            return (
+                                <div 
+                                    key={p.id}
+                                    onClick={() => { setSelectedPlayerForAction(p); setActiveTeamId(rosterViewId); }}
+                                    className={`glass-dark p-4 rounded-xl border-l-4 transition-all cursor-pointer group relative overflow-hidden ring-1 ring-white/5
+                                        ${isExhausted ? 'opacity-30 border-l-slate-800 grayscale cursor-not-allowed' : 'border-l-primary hover:bg-white/5'}
+                                        ${selectedPlayerForAction?.id === p.id ? 'ring-2 ring-gold/40 bg-gold/5' : ''}
+                                    `}
+                                >
+                                    {(p.skillKeys?.length > 0) && (
+                                        <div className="absolute top-0 right-0 p-2 opacity-30 group-hover:opacity-100 transition-opacity">
+                                            <span className="material-symbols-outlined text-gold text-lg">stars</span>
                                         </div>
                                     )}
-                                    <div className="size-12 rounded-full bg-slate-800 border-4 border-slate-600 flex items-center justify-center font-bold text-slate-300 opacity-60">?</div>
-                                </div>
-
-                                {/* Distance indicator */}
-                                {selectedPlayerForAction && (
-                                    <div className="absolute bottom-4 right-4 flex gap-2">
-                                        <div className="bg-background-dark/90 px-4 py-2 rounded-xl border border-primary/20 flex items-center gap-3 backdrop-blur-md">
-                                            <span className="material-symbols-outlined text-primary text-sm">straighten</span>
-                                            <span className="text-[10px] font-black text-white uppercase tracking-widest">
-                                                Movimiento Restante: {selectedPlayerForAction.stats.MV - (selectedPlayerForAction.hasIndigestion ? 1 : 0)}
+                                    <div className="flex items-start gap-4">
+                                        <div className="w-16 h-16 rounded-lg bg-cover bg-center border border-white/10 shadow-lg bg-black flex items-center justify-center">
+                                            <span className="text-2xl font-black text-white/20">#{p.id.toString().slice(-2)}</span>
+                                        </div>
+                                        <div className="flex flex-col min-w-0">
+                                            <span className="text-[10px] font-bold text-primary">#{p.id.toString().slice(-2)}</span>
+                                            <span className={`text-lg font-black leading-tight uppercase truncate ${isExhausted ? 'text-slate-500' : 'text-diente-orco'}`}>
+                                                {p.customName}
+                                            </span>
+                                            <span className={`text-[10px] font-medium italic uppercase tracking-wider truncate ${isExhausted ? 'text-slate-600' : 'text-slate-500'}`}>
+                                                {p.position}
                                             </span>
                                         </div>
                                     </div>
-                                )}
-                            </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </section>
 
-                            {/* Token Grid Overlay / Replacement */}
-                            <div className="h-48 glass rounded-2xl p-4 flex flex-col gap-3">
-                                <div className="flex bg-black/40 rounded-full p-1 max-w-[280px] border border-white/5">
-                                    <button
-                                        onClick={() => setRosterViewId('home')}
-                                        className={`flex-1 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${rosterViewId === 'home' ? 'bg-primary text-black' : 'text-slate-500 hover:text-white'}`}
+                {/* ── Right: Player Hub (Detail Panel) ── */}
+                <aside className="w-[380px] flex flex-col gap-6 animate-in fade-in slide-in-from-right-8 duration-700">
+                    <div className="glass-dark rounded-2xl p-6 border border-gold/20 shadow-2xl relative ring-1 ring-white/5 h-full flex flex-col">
+                        {selectedPlayerForAction ? (
+                            <>
+                                <div className="absolute top-0 right-0 px-4 py-1 bg-gold text-midnight text-[10px] font-black uppercase rounded-bl-xl tracking-widest shadow-lg shadow-gold/20">Seleccionado</div>
+                                
+                                {/* Status Icons (Nuffle Prayers / States) */}
+                                <div className="absolute top-2 left-2 flex gap-1">
+                                    {selectedPlayerForAction.isDistracted && (
+                                        <div className="bg-red-500/20 border border-red-500/30 p-1 rounded-md" title="Distraído (Sin ZD)">
+                                            <span className="material-symbols-outlined text-red-400 text-sm">block</span>
+                                        </div>
+                                    )}
+                                    {selectedPlayerForAction.hasIndigestion && (
+                                        <div className="bg-amber-500/20 border border-amber-500/30 p-1 rounded-md" title="Indigestión (-1 MA/AR)">
+                                            <span className="material-symbols-outlined text-amber-400 text-sm">sick</span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="flex flex-col items-center text-center mb-6 pt-4">
+                                    <div className="w-32 h-32 rounded-2xl bg-black border-2 border-gold/40 shadow-2xl shadow-gold/10 mb-4 ring-4 ring-black/40 flex items-center justify-center overflow-hidden">
+                                        <span className="text-5xl font-black text-white/5">#{selectedPlayerForAction.id.toString().slice(-2)}</span>
+                                    </div>
+                                    <h3 className="text-2xl font-black uppercase tracking-tight italic text-diente-orco">
+                                        {selectedPlayerForAction.customName} <span className="text-primary">#{selectedPlayerForAction.id.toString().slice(-2)}</span>
+                                    </h3>
+                                    <p className="text-gold text-[10px] font-bold uppercase tracking-[0.3em]">{selectedPlayerForAction.position}</p>
+                                </div>
+
+                                {/* Attributes Grid */}
+                                <div className="grid grid-cols-5 gap-2 mb-8">
+                                    {[
+                                        { l: 'MA', v: selectedPlayerForAction.stats.MV, bad: selectedPlayerForAction.hasIndigestion },
+                                        { l: 'ST', v: selectedPlayerForAction.stats.FU },
+                                        { l: 'AG', v: selectedPlayerForAction.stats.AG + '+', bad: false },
+                                        { l: 'PA', v: selectedPlayerForAction.stats.PA === '-' ? '-' : selectedPlayerForAction.stats.PA + '+' },
+                                        { l: 'AV', v: selectedPlayerForAction.stats.AR + '+', bad: selectedPlayerForAction.hasIndigestion }
+                                    ].map(attr => (
+                                        <div key={attr.l} className="flex flex-col items-center bg-black/60 p-2 rounded-lg border border-white/5 relative">
+                                            <span className="text-[10px] font-bold text-slate-500 uppercase">{attr.l}</span>
+                                            <span className={`text-xl font-black ${attr.bad ? 'text-red-500 underline decoration-2' : 'text-gold'}`}>{attr.v}</span>
+                                            {attr.bad && <div className="warning-badge">-1</div>}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Skills */}
+                                <div className="flex-grow overflow-y-auto scrollbar-hide">
+                                    <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-primary text-sm">bolt</span>
+                                        HABILIDADES
+                                    </h4>
+                                    <div className="space-y-2">
+                                        {[...(selectedPlayerForAction.skillKeys || []), ...(selectedPlayerForAction.gainedSkills || [])].map((s, i) => (
+                                            <div key={i} className={`flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5 transition-all hover:bg-white/10 ${selectedPlayerForAction.isDistracted ? 'opacity-30' : ''}`}>
+                                                <span className="material-symbols-outlined text-primary text-lg">auto_fix_high</span>
+                                                <div>
+                                                    <p className={`text-xs font-bold uppercase text-diente-orco ${selectedPlayerForAction.isDistracted ? 'line-through' : ''}`}>{s}</p>
+                                                    <p className="text-[9px] text-slate-500 uppercase tracking-tighter">Habilidad de Clase</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* S3 Toggles in Panel */}
+                                <div className="mt-4 pt-4 border-t border-white/5 grid grid-cols-2 gap-2">
+                                    <button 
+                                        onClick={() => handleUpdatePlayerCondition(selectedPlayerForAction.id, activeTeamId, 'isDistracted')}
+                                        className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all border ${selectedPlayerForAction.isDistracted ? 'bg-red-500 text-midnight border-red-500' : 'bg-transparent border-red-500/20 text-red-500/60'}`}
                                     >
-                                        Local
+                                        <span className="material-symbols-outlined text-sm">block</span>
+                                        <span className="text-[8px] font-black uppercase">Distraído</span>
                                     </button>
-                                    <button
-                                        onClick={() => setRosterViewId('opponent')}
-                                        className={`flex-1 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${rosterViewId === 'opponent' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}
+                                    <button 
+                                        onClick={() => handleUpdatePlayerCondition(selectedPlayerForAction.id, activeTeamId, 'hasIndigestion')}
+                                        className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all border ${selectedPlayerForAction.hasIndigestion ? 'bg-amber-500 text-midnight border-amber-500' : 'bg-transparent border-amber-500/20 text-amber-500/60'}`}
                                     >
-                                        Rival
+                                        <span className="material-symbols-outlined text-sm">sick</span>
+                                        <span className="text-[8px] font-black uppercase">Indigestión</span>
                                     </button>
                                 </div>
-                                <div className="flex-1 overflow-x-auto overflow-y-hidden custom-scrollbar pb-2">
-                                   <div className="flex gap-2 min-w-max">
-                                       {(rosterViewId === 'home' ? liveHomeTeam : liveOpponentTeam).players.map((p: any) => (
-                                           <button 
-                                                key={p.id}
-                                                onClick={() => { setSelectedPlayerForAction(p); setActiveTeamId(rosterViewId); }}
-                                                className={`w-12 h-12 rounded-xl border flex-shrink-0 flex items-center justify-center transition-all ${selectedPlayerForAction?.id === p.id ? 'bg-primary border-white text-black font-black scale-110 shadow-lg' : 'bg-white/5 border-white/10 text-slate-400 opacity-70 hover:opacity-100 hover:border-primary/50'}`}
-                                           >
-                                               {p.id.toString().slice(-2)}
-                                           </button>
-                                       ))}
-                                   </div>
+                            </>
+                        ) : (
+                            <div className="h-full flex flex-col items-center justify-center text-center p-6 opacity-30">
+                                <span className="material-symbols-outlined text-6xl mb-4">touch_app</span>
+                                <p className="text-sm font-black uppercase tracking-widest leading-loose">
+                                    Elige un Guerrero<br/>de la Plantilla
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </aside>
+            </main>
+
+            {/* ── Interactive Sequences (Overlay) ── */}
+            {mode !== 'idle' && (
+                <div className="absolute inset-0 z-[100] bg-midnight/90 backdrop-blur-xl flex items-center justify-center animate-in fade-in duration-300 px-6">
+                    <div className="max-w-xl w-full glass-dark rounded-3xl border-2 border-gold/20 p-8 shadow-2xl relative">
+                        <div className="text-center mb-10">
+                            <span className="text-[10px] font-bold text-primary uppercase tracking-[0.5em] mb-2 font-display block">Vínculo de Nuffle</span>
+                            <h2 className="text-4xl font-display font-black text-diente-orco italic uppercase tracking-tighter">
+                                {mode === 'selecting_objective' && "¿A quién golpear?"}
+                                {mode === 'awaiting_dice' && "Entrada de Resultados"}
+                            </h2>
+                        </div>
+
+                        {mode === 'selecting_objective' && (
+                            <div className="grid grid-cols-4 gap-4 max-h-[50vh] overflow-y-auto pr-2 scrollbar-hide p-2">
+                                {idleTeam.players.filter(p => p.status === 'Activo').map(p => (
+                                    <button 
+                                        key={p.id} 
+                                        onClick={() => setInteractionState(prev => ({ ...prev, mode: 'awaiting_dice', pending: { ...prev.pending, objectiveId: p.id } }))}
+                                        className="flex flex-col items-center justify-center p-4 bg-red-600/5 border border-red-600/20 rounded-2xl hover:bg-red-500 hover:text-midnight transition-all group scale-100 hover:scale-110 shadow-lg"
+                                    >
+                                        <span className="text-2xl font-black mb-1">#{p.id.toString().slice(-2)}</span>
+                                        <span className="text-[8px] font-bold uppercase opacity-60 truncate w-full text-center">{p.position}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {mode === 'awaiting_dice' && (
+                            <div className="space-y-8 flex flex-col items-center">
+                                <div className="flex flex-wrap justify-center gap-4">
+                                    {pending.actionType === 'BLOCK' ? (
+                                        ['Calavera', 'Ambos', 'Empujón', 'Zaca!', 'Flecha'].map(d => (
+                                            <button 
+                                                key={d} 
+                                                onClick={() => handleDiceResultInternal(d)}
+                                                className="size-20 rounded-full glass border-white/20 flex flex-col items-center justify-center hover:bg-gold hover:text-midnight transition-all group shadow-2xl ring-offset-4 ring-offset-midnight hover:ring-2 ring-gold"
+                                            >
+                                                <span className="material-symbols-outlined text-lg mb-1">casino</span>
+                                                <span className="text-[8px] font-black uppercase tracking-widest">{d}</span>
+                                            </button>
+                                        ))
+                                    ) : ['FOUL'].includes(pending.actionType as string) ? (
+                                        <div className="grid grid-cols-4 lg:grid-cols-6 gap-3">
+                                            {[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(n => (
+                                                <button key={n} onClick={() => handleDiceResultInternal(n)} className="size-14 rounded-2xl bg-white/5 border border-white/10 text-xl font-black hover:bg-primary hover:text-midnight transition-all shadow-xl">{n}</button>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="flex gap-4">
+                                            {[1, 2, 3, 4, 5, 6].map(n => (
+                                                <button key={n} onClick={() => handleDiceResultInternal(n)} className="size-16 rounded-2xl glass border-white/20 text-3xl font-black hover:bg-primary hover:text-midnight transition-all shadow-2xl">{n}</button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                                <button 
+                                    onClick={() => handleDiceResultInternal(Math.floor(Math.random() * 6) + 1)}
+                                    className="w-full py-4 rounded-2xl btn-pe text-midnight font-black uppercase tracking-[0.3em] shadow-2xl hover:scale-[1.02] transition-all"
+                                >
+                                    Digital Dice Roll
+                                </button>
+                            </div>
+                        )}
+
+                        <button 
+                            onClick={() => setInteractionState({ mode: 'idle', pending: { actorId: null, actionType: null, objectiveId: null, diceResult: null, manualMode: true } })}
+                            className="mt-8 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors block mx-auto text-center"
+                        >
+                            &larr; Abortar Secuencia
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* ── BOTTOM DOCK ── */}
+            <footer className="w-full glass border-t border-white/10 p-4 flex flex-col gap-4 mt-auto">
+                <div className="grid grid-cols-12 gap-4">
+                    {/* 1. Acciones de Puntos (PE) */}
+                    <div className="col-span-12 lg:col-span-4 xl:col-span-5 flex flex-col gap-2">
+                        <h3 className="text-[10px] font-bold text-gold uppercase tracking-[0.2em] flex items-center gap-2 px-1">
+                            <span className="material-symbols-outlined text-sm">stars</span>
+                            Acciones de Puntos (PE)
+                        </h3>
+                        <div className="grid grid-cols-5 gap-2">
+                            <PEDockButton label="TD" pe="+3" icon="sports_score" onClick={() => handleTriggerAction('TD')} warning={false} />
+                            <PEDockButton label="CAS" pe="+2" icon="skull" onClick={() => handleTriggerAction('CAS')} warning={false} />
+                            <PEDockButton label="PASE" pe="+1" icon="near_me" onClick={() => handleTriggerAction('PASS')} warning={true} />
+                            <PEDockButton label="LANZAR" pe="+1" icon="rocket_launch" onClick={() => handleTriggerAction('HANDOFF')} warning={false} />
+                            <PEDockButton label="INTERCEP." pe="+2" icon="front_hand" onClick={() => logEvent('INFO', 'Intercepción pendiente...')} warning={true} />
+                        </div>
+                    </div>
+
+                    {/* 2. Control de Turno */}
+                    <div className="col-span-12 lg:col-span-4 flex flex-col gap-2">
+                        <h3 className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2 px-1">
+                            <span className="material-symbols-outlined text-sm">settings_input_component</span>
+                            Control de Turno
+                        </h3>
+                        <div className="grid grid-cols-2 gap-2 h-full">
+                            <div className="flex flex-col gap-2">
+                                <button onClick={() => logEvent('WARNING', 'TURNOVER MANUAL EJECUTADO')} className="bg-red-950/40 border border-red-900/50 hover:bg-red-900/40 py-2 rounded-xl flex items-center justify-center gap-2 transition-colors">
+                                    <span className="material-symbols-outlined text-red-500 text-sm">cancel</span>
+                                    <span className="text-[10px] font-black text-red-500 uppercase tracking-tighter">Turnover</span>
+                                </button>
+                                <button onClick={() => handleTriggerAction('SECURE_BALL')} className="bg-slate-800/40 border border-white/5 hover:bg-slate-700/40 py-2 rounded-xl flex items-center justify-center gap-2 transition-colors group relative">
+                                    <span className="material-symbols-outlined text-slate-400 text-sm group-hover:text-primary">inventory_2</span>
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter group-hover:text-primary">Balón</span>
+                                    <div className="warning-badge">-1</div>
+                                </button>
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                <button onClick={handleNextTurn} className="bg-primary hover:brightness-110 py-2 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/20 h-full flex-col">
+                                    <span className="material-symbols-outlined text-midnight text-xl">event_repeat</span>
+                                    <span className="text-[10px] font-black text-midnight uppercase tracking-widest">Finalizar Turno</span>
+                                </button>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button onClick={() => logEvent('INFO', 'Chequeando Stalling S3...')} className="bg-slate-900/60 border border-white/5 py-1.5 rounded-lg text-[9px] font-bold text-slate-400 hover:text-white transition-colors">STALLING</button>
+                                    <button onClick={() => setIsPrayersModalOpen(true)} className="bg-slate-900/60 border border-white/5 py-1.5 rounded-lg text-[9px] font-bold text-slate-400 hover:text-white transition-colors">RECURSOS</button>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </section>
 
-                {/* Sidebar Derecha: Special Assistance */}
-                <aside className="w-24 glass border-l border-primary/10 flex flex-col items-center py-6 gap-6 shrink-0">
-                    <SpecialActionButton icon="timer_off" title="Alerta Stalling" color="red" onClick={() => logEvent('INFO', 'Chequeando Stalling S3...')} />
-                    <SpecialActionButton icon="medical_services" title="Hospital" onClick={() => setIsInjuryModalOpen(true)} />
-                    
-                    <div className="w-10 h-px bg-primary/20"></div>
-                    
-                    <SpecialActionButton icon="auto_awesome" title="Plegarias" onClick={() => setIsPrayersModalOpen(true)} />
-                    <SpecialActionButton icon="cyclone" title="Vientos de Nuffle" onClick={() => setIsWeatherModalOpen(true)} />
-                    <SpecialActionButton icon="paid" title="Soborno" onClick={() => logEvent('INFO', 'Pago de soborno procesado.')} />
-                    
-                    <div className="flex-grow"></div>
-                    
-                    <button 
-                        onClick={() => useReroll(activeTeamId)}
-                        disabled={activeTeam.liveRerolls === 0}
-                        className="size-16 rounded-2xl bg-primary text-black shadow-[0_0_25px_rgba(245,159,10,0.4)] flex flex-col items-center justify-center leading-none hover:scale-105 active:scale-95 transition-all disabled:opacity-30 disabled:grayscale" 
-                        title="Gastar Segundas Oportunidades"
-                    >
-                        <span className="material-symbols-outlined text-2xl font-black">replay</span>
-                        <p className="text-[10px] font-black mt-1">{activeTeam.liveRerolls}</p>
-                        <span className="text-[8px] font-black uppercase opacity-60">RR</span>
-                    </button>
-                </aside>
-            </main>
-
-            {/* ── FOOTER: Connection & Info Bar ── */}
-            <footer className="bg-background-dark border-t border-primary/10 px-6 py-2 flex items-center justify-between shrink-0 font-display">
-                <div className="flex gap-8">
-                    <div className="flex items-center gap-2">
-                        <div className="size-2 rounded-full bg-primary shadow-[0_0_8px_#f59f0a]"></div>
-                        <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest font-display">Consola de Red Lista</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-slate-600 font-bold uppercase tracking-widest">Protocolo S3 Blood Bowl V3.3</span>
+                    {/* 3. El Oráculo */}
+                    <div className="col-span-12 lg:col-span-4 xl:col-span-3 flex flex-col gap-2">
+                        <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2 px-1">
+                            <span className="material-symbols-outlined text-sm">auto_stories</span>
+                            El Oráculo
+                        </h3>
+                        <div className="grid grid-cols-2 gap-2 h-full">
+                            <OracleButton label="Dodge Calc" icon="calculate" onClick={() => handleTriggerAction('DODGE')} />
+                            <OracleButton label="Weather" icon="wb_sunny" onClick={() => setIsWeatherModalOpen(true)} />
+                            <OracleButton label="Kickoff" icon="sports_cricket" onClick={() => setIsSequenceGuideOpen(true)} />
+                            <OracleButton label="Concede" icon="flag" onClick={() => setIsConcedeModalOpen(true)} />
+                        </div>
                     </div>
                 </div>
-                <div className="flex items-center gap-6">
-                    <button className="flex items-center gap-2 text-slate-500 hover:text-primary transition-colors">
-                        <span className="material-symbols-outlined text-sm">settings</span>
-                        <span className="text-[10px] font-black uppercase tracking-widest">Config</span>
-                    </button>
-                    <button className="flex items-center gap-2 text-slate-500 hover:text-primary transition-colors">
-                        <span className="material-symbols-outlined text-sm">help</span>
-                        <span className="text-[10px] font-black uppercase tracking-widest">Ayuda</span>
-                    </button>
-                    <button onClick={() => setIsConcedeModalOpen(true)} className="flex items-center gap-2 text-blood-red/40 hover:text-blood-red transition-colors">
-                        <span className="material-symbols-outlined text-sm">flag</span>
-                        <span className="text-[10px] font-black uppercase tracking-widest">Conceder</span>
-                    </button>
+
+                {/* Live Narrative Log Overlay */}
+                <div className="bg-black/60 rounded-xl p-3 border border-white/5 font-mono text-[11px] h-20 overflow-y-auto scrollbar-hide ring-1 ring-white/5">
+                    <GameLog />
                 </div>
             </footer>
         </div>
     );
 };
 
-// ── UTILITIES ────────────────────────────────────────────────────────
+// ── SUB-COMPONENTS ───────────────────────────────────────────────────
 
-const ActionCategory: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-    <div className="space-y-2">
-        <span className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] px-1 font-display">{title}</span>
-        <div className="grid grid-cols-1 gap-2">
-            {children}
-        </div>
-    </div>
-);
-
-const ActionButton: React.FC<{ 
-    label: string; 
-    icon: string; 
-    onClick: () => void; 
-    isActive?: boolean; 
-    isDanger?: boolean;
-    hasExtraDice?: boolean;
-    highlight?: boolean;
-    subtext?: string;
-}> = ({ label, icon, onClick, isActive, isDanger, hasExtraDice, highlight, subtext }) => (
+const PEDockButton: React.FC<{ label: string, pe: string, icon: string, onClick: () => void, warning: boolean }> = ({ label, pe, icon, onClick, warning }) => (
     <button 
         onClick={onClick}
-        className={`bento-card h-[50px] rounded flex items-center justify-between px-4 transition-all relative overflow-hidden group
-            ${isActive ? 'border-primary bg-primary/20 shadow-[0_0_15px_rgba(245,159,10,0.2)]' : ''}
-            ${isDanger ? 'bg-red-900/10 border-red-500/30' : ''}
-            ${highlight ? 'border-primary/50 bg-primary/10' : ''}
-        `}
+        className="btn-pe flex flex-col items-center justify-center py-2 rounded-xl transition-all group relative overflow-hidden"
     >
-        <div className="flex flex-col items-start leading-none min-w-0">
-            <span className={`text-[10px] font-black uppercase tracking-tighter truncate ${isDanger ? 'text-red-500' : isActive || highlight ? 'text-primary' : 'text-slate-300'}`}>{label}</span>
-            {subtext && <span className="text-[8px] text-slate-500 mt-1 font-bold">{subtext}</span>}
-        </div>
-        <div className="flex items-center gap-1">
-            {hasExtraDice && (
-                <div className="flex gap-0.5 opacity-40 group-hover:opacity-100 transition-opacity">
-                    <span className="material-symbols-outlined text-primary text-[10px]">casino</span>
-                    <span className="material-symbols-outlined text-primary text-[10px]">casino</span>
-                </div>
-            ) || <span className={`material-symbols-outlined text-sm ${isDanger ? 'text-red-500' : 'text-primary'}`}>{icon}</span>}
-        </div>
+        <span className="material-symbols-outlined text-midnight text-xl group-hover:scale-110 transition-transform">{icon}</span>
+        <span className="text-[9px] font-black text-midnight uppercase mt-1 leading-none">{label}</span>
+        <span className="text-[8px] font-bold text-midnight/60">{pe} PE</span>
+        {warning && <div className="warning-badge">-1</div>}
     </button>
 );
 
-const SpecialActionButton: React.FC<{ icon: string; title: string; onClick: () => void; color?: 'red' | 'gold' }> = ({ icon, title, onClick, color }) => (
+const OracleButton: React.FC<{ label: string, icon: string, onClick: () => void }> = ({ label, icon, onClick }) => (
     <button 
         onClick={onClick}
-        className={`size-12 rounded bg-slate-900 border transition-all flex items-center justify-center group
-            ${color === 'red' ? 'border-red-500/30 text-red-500 hover:bg-red-500' : 'border-primary/20 text-primary hover:bg-primary'}
-            hover:text-black hover:scale-105 active:scale-95
-        `} 
-        title={title}
+        className="glass border-white/10 hover:border-gold/40 flex items-center gap-2 px-3 rounded-xl transition-all group"
     >
-        <span className="material-symbols-outlined">{icon}</span>
-    </button>
-);
-
-const DiceInputCircle: React.FC<{ label: string; onClick: () => void; icon: string }> = ({ label, onClick, icon }) => (
-    <button 
-        onClick={onClick}
-        className="size-20 rounded-full bg-white/5 border border-white/10 flex flex-col items-center justify-center hover:bg-primary hover:text-black transition-all group shadow-xl"
-    >
-        <span className="material-symbols-outlined text-lg mb-1 group-hover:scale-110 transition-transform">{icon}</span>
-        <span className="text-[8px] font-black uppercase tracking-widest">{label}</span>
+        <span className="material-symbols-outlined text-gold text-lg group-hover:rotate-12 transition-transform">{icon}</span>
+        <span className="text-[9px] font-bold text-diente-orco uppercase leading-tight text-left">{label}</span>
     </button>
 );
 
