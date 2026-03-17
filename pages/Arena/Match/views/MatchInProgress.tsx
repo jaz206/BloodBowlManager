@@ -192,10 +192,10 @@ const MatchInProgress: React.FC = () => {
             </header>
 
             {/* ── 2. CUERPO: GESTIÓN DE PLANTILLA Y DETALLE (THE HUB) ── */}
-            <main className="flex-1 flex overflow-hidden p-6 gap-6">
+            <main className="flex-1 flex overflow-hidden p-6 gap-6 min-h-0">
                 
                 {/* ── Roster de Jugadores (Bento Grid) ── */}
-                <section className="flex-1 flex flex-col gap-6 overflow-hidden">
+                <section className="flex-[3] flex flex-col gap-4 overflow-hidden">
                     <div className="flex items-center justify-between">
                         <h2 className="text-xs font-bold tracking-[0.3em] uppercase text-slate-500 flex items-center gap-2">
                             <span className="material-symbols-outlined text-primary text-lg">view_quilt</span>
@@ -250,7 +250,7 @@ const MatchInProgress: React.FC = () => {
                 </section>
 
                 {/* ── Panel de Detalle (The Hub) ── */}
-                <aside className="w-[380px] flex flex-col gap-6 animate-in fade-in slide-in-from-right-8 duration-700">
+                <aside className="flex-[1.2] min-w-[420px] flex flex-col gap-6 animate-in fade-in slide-in-from-right-8 duration-700">
                     <div className="glass-dark rounded-2xl p-6 border border-gold/20 shadow-2xl relative h-full flex flex-col">
                         {selectedPlayerForAction ? (
                             <>
@@ -266,7 +266,7 @@ const MatchInProgress: React.FC = () => {
                                 </div>
 
                                 {/* Atributos S3 */}
-                                <div className="grid grid-cols-5 gap-2 mb-8">
+                                <div className="grid grid-cols-5 gap-3 mb-8 w-full">
                                     {[
                                         { l: 'MA', v: selectedPlayerForAction.stats.MV, bad: selectedPlayerForAction.hasIndigestion },
                                         { l: 'ST', v: selectedPlayerForAction.stats.FU },
@@ -274,10 +274,12 @@ const MatchInProgress: React.FC = () => {
                                         { l: 'PA', v: selectedPlayerForAction.stats.PA === '-' ? '-' : selectedPlayerForAction.stats.PA + '+', bad: false },
                                         { l: 'AV', v: selectedPlayerForAction.stats.AR + '+', bad: selectedPlayerForAction.hasIndigestion }
                                     ].map(attr => (
-                                        <div key={attr.l} className="flex flex-col items-center bg-black/40 p-2 rounded-xl border border-white/5 relative">
-                                            <span className="text-[9px] font-bold text-slate-500">{attr.l}</span>
-                                            <span className={`text-xl font-black ${attr.bad ? 'text-red-500 underline decoration-double' : 'text-gold-gradient'}`}>{attr.v}</span>
-                                            {attr.bad && <div className="absolute -top-1 -right-1 bg-red-600 size-4 rounded-full flex items-center justify-center text-[8px] font-black shadow-lg">-1</div>}
+                                        <div key={attr.l} className="flex flex-col items-center bg-black/60 py-3 rounded-xl border border-white/5 relative">
+                                            <span className="text-[10px] font-bold text-slate-500 mb-1">{attr.l}</span>
+                                            <span className={`text-2xl font-black ${attr.bad ? 'text-red-500 underline decoration-double' : 'text-gold-gradient'}`}>
+                                                {attr.v === 'undefined+' ? '--' : attr.v}
+                                            </span>
+                                            {attr.bad && <div className="absolute -top-1 -right-1 bg-red-600 size-5 rounded-full flex items-center justify-center text-[10px] font-black shadow-lg">-1</div>}
                                         </div>
                                     ))}
                                 </div>
@@ -398,12 +400,15 @@ const MatchInProgress: React.FC = () => {
                 </div>
 
                 {/* ── 5. EL CRONISTA NARRATIVO (DOCK TICKER) ── */}
-                <div className="bg-black/80 rounded-xl p-4 border border-gold/20 font-mono text-xs h-32 overflow-hidden relative shadow-2xl flex flex-col backdrop-blur-md">
-                    <div className="flex items-center justify-between mb-2 border-b border-white/10 pb-2">
-                        <span className="text-gold flex items-center gap-2 font-black tracking-[0.2em]"><span className="size-2 rounded-full bg-gold animate-pulse"></span> CRONISTA</span>
-                        <span className="text-slate-500 font-bold">BB-OS LIVE NARRATION</span>
+                <div className="bg-black/90 rounded-xl p-5 border border-gold/30 font-mono text-sm h-48 overflow-hidden relative shadow-[0_-10px_40px_rgba(0,0,0,0.5)] flex flex-col backdrop-blur-xl">
+                    <div className="flex items-center justify-between mb-3 border-b border-white/10 pb-3">
+                        <div className="flex items-center gap-3">
+                            <span className="size-2.5 rounded-full bg-gold animate-pulse shadow-[0_0_10px_rgba(212,175,55,0.8)]"></span>
+                            <span className="text-gold font-black tracking-[0.3em] uppercase">Cronista de Campo</span>
+                        </div>
+                        <span className="text-slate-500 font-bold text-[10px] tracking-widest">BLOOD BOWL OS v3.0 NARRATION</span>
                     </div>
-                    <div className="flex-1 overflow-y-auto custom-scrollbar">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
                         <GameLog hideHeader />
                     </div>
                 </div>
