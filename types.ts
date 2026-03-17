@@ -122,6 +122,7 @@ export interface ManagedPlayer extends Player {
   // S3 Condition States
   isDistracted?: boolean;
   hasIndigestion?: boolean;
+  isActivated?: boolean;
 }
 
 export interface ManagedTeamSnapshot {
@@ -157,6 +158,8 @@ export interface ManagedTeam {
   wanderingApothecaries?: number;
   plagueDoctors?: number;
   mortuaryAssistants?: number;
+  tempWizard?: boolean;
+  fanAttendance?: number;
   updatedAt?: any;
   totalTV?: number;
   record?: {

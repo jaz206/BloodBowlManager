@@ -30,7 +30,7 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
         setIsInjuryModalOpen, setInjuryState, injuryState,
         setIsApothecaryModalOpen, setSelectedSkillForModal,
         setBallCarrierId, setSelectedPlayerForAction, selectedPlayerForAction,
-        tdModalTeam, setInteractionState, setIsTurnoverModalOpen
+        tdModalTeam, setInteractionState, setIsTurnoverModalOpen, setRosterViewId
     } = state;
 
     // ─── UTILIDADES CORE ─────────────────────────────────────────────────────
@@ -99,11 +99,26 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
 
     /** Avanza al siguiente turno alternando el equipo activo. */
     const handleNextTurn = useCallback(() => {
+        // RESET ACTIVATIONS
+        const resetActivations = (setTeam: any) => {
+            setTeam((prev: ManagedTeam | null) => {
+                if (!prev) return null;
+                return { ...prev, players: prev.players.map(p => ({ ...p, isActivated: false })) };
+            });
+        };
+        resetActivations(setLiveHomeTeam);
+        resetActivations(setLiveOpponentTeam);
+
         handleNextTurnLogic({
             activeTeamId, setTurn, setActiveTeamId,
             setTurnActions, half, handleHalftime, setGameState, logEvent
         });
-    }, [activeTeamId, setTurn, setActiveTeamId, setTurnActions, half, handleHalftime, setGameState, logEvent]);
+        
+        // El Oráculo sincroniza automáticamente la vista de plantilla con el equipo activo
+        const nextActiveTeamId = activeTeamId === 'home' ? 'opponent' : 'home';
+        setRosterViewId(nextActiveTeamId);
+        setSelectedPlayerForAction(null);
+    }, [activeTeamId, setTurn, setActiveTeamId, setTurnActions, half, handleHalftime, setGameState, logEvent, setLiveHomeTeam, setLiveOpponentTeam, setSelectedPlayerForAction, setRosterViewId]);
 
     // ─── ACCIONES DE REGLAS ──────────────────────────────────────────────────
 
@@ -220,11 +235,27 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
 
     /** Registra un turnover y avanza al siguiente turno. */
     const handleTurnover = useCallback((reason: string) => {
-        logEvent('TURNOVER', `Cambio de turno: ${reason}.`);
+        logEvent('TURNOVER', `¡Fin de turno! ${reason}.`);
         playSound('turnover');
         setIsTurnoverModalOpen(false);
         handleNextTurn();
     }, [logEvent, playSound, handleNextTurn, setIsTurnoverModalOpen]);
+
+    /** Mecánica de Soborno (S3): 1 falla, 2-6 éxito. */
+    const handleBribe = useCallback((teamId: 'home' | 'opponent') => {
+        const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
+        const targetTeam = teamId === 'home' ? liveHomeTeam : liveOpponentTeam;
+        if (!targetTeam || (targetTeam.tempBribes || 0) <= 0) return;
+
+        const roll = Math.floor(Math.random() * 6) + 1;
+        setTeam(prev => prev ? ({ ...prev, tempBribes: (prev.tempBribes || 1) - 1 }) : null);
+
+        if (roll === 1) {
+            logEvent('WARNING', `¡SOBORNO FALLIDO! El árbitro devuelve el sobre con desprecio. "${targetTeam.name} no tiene suficiente oro para mi silencio". (Dado: ${roll}).`, { team: teamId });
+        } else {
+            logEvent('SUCCESS', `¡SOBORNO ACEPTADO! Un guiño cómplice y el jugador vuelve al campo tras "limpiarse el uniforme". (Dado: ${roll}).`, { team: teamId });
+        }
+    }, [setLiveHomeTeam, setLiveOpponentTeam, liveHomeTeam, liveOpponentTeam, logEvent]);
 
     /** Orquestador de lógica Season 3 tras recibir resultados de dados. */
     const handleS3Action = useCallback((pending: any, result: any) => {
@@ -239,13 +270,29 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
         if (!actor) return;
 
         // Log genérico de la acción registrada
-        const actionLabel = actionType === 'FOUL' ? 'Falta' : 
-                          actionType === 'BLOCK' ? 'Placaje' : 
-                          actionType === 'PASS' ? 'Pase' : 
-                          actionType === 'RUSH' ? 'Ir a por todos' : 
-                          actionType === 'DODGE' ? 'Esquiva' : actionType;
+        // Crónica Narrativa Elegante
+        const getThematicDesc = (type: string, actor: any, obj?: any, res?: any) => {
+            const flavor = {
+                'BLOCK': [`¡Choque brutal! ${actor.customName} embiste a ${obj?.customName || 'su rival'}...`],
+                'PASS': [`${actor.customName} otea el horizonte y lanza el esferoide...`],
+                'FOUL': [`¡Juego sucio! ${actor.customName} aprovecha que el árbitro parpadea para pisar a ${obj?.customName}...`],
+                'RUSH': [`${actor.customName} fuerza sus pulmones en un sprint desesperado...`],
+                'DODGE': [`${actor.customName} intenta una finta elegante para zafarse...`],
+                'HANDOFF': [`${actor.customName} entrega el balón en mano, ¡precisión quirúrgica!`],
+                'SECURE_BALL': [`${actor.customName} se abalanza sobre el cuero para asegurarlo.`]
+            }[type] || [`${actor.customName} realiza una acción de ${type}...`];
+            
+            return `${flavor[0]} (Resultado: ${res})`;
+        };
                           
-        logEvent('INFO', `[S3] ${actor.customName} realiza ${actionLabel} ${objective ? 'contra ' + objective.customName : ''}. Dado: ${result}.`);
+        logEvent('INFO', getThematicDesc(actionType, actor, objective, result));
+
+        // MARCAR JUGADOR COMO ACTIVADO (S3)
+        const setTeamActor = activeTeamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
+        setTeamActor(prev => {
+            if (!prev) return null;
+            return { ...prev, players: prev.players.map(p => p.id === actorId ? { ...p, isActivated: true } : p) };
+        });
 
         switch (actionType) {
             case 'TOUCHDOWN':
@@ -461,7 +508,8 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
         const fieldMap: Record<string, string> = {
             reroll: 'liveRerolls', bribe: 'tempBribes', cheerleader: 'tempCheerleaders',
             coach: 'tempAssistantCoaches', wanderingApothecary: 'wanderingApothecaries',
-            mortuaryAssistant: 'mortuaryAssistants', plagueDoctor: 'plagueDoctors'
+            mortuaryAssistant: 'mortuaryAssistants', plagueDoctor: 'plagueDoctors',
+            wizard: 'tempWizard'
         };
 
         if (name === 'biasedRef') {
@@ -481,7 +529,8 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
         const fieldMap: Record<string, string> = {
             reroll: 'liveRerolls', bribe: 'tempBribes', cheerleader: 'tempCheerleaders',
             coach: 'tempAssistantCoaches', wanderingApothecary: 'wanderingApothecaries',
-            mortuaryAssistant: 'mortuaryAssistants', plagueDoctor: 'plagueDoctors'
+            mortuaryAssistant: 'mortuaryAssistants', plagueDoctor: 'plagueDoctors',
+            wizard: 'tempWizard'
         };
 
         if (name === 'biasedRef') {
@@ -722,6 +771,17 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
         logEvent, updatePlayerStatus, updatePlayerSppAndAction, handleHalftime, handleNextTurn, handleFoulAction, handleInjuryAction, handleSkillClick, handleBallToggle, handleUpdatePlayerCondition,
         openSppModal, handleStrategicAction, handleSelectTdScorer, handleS3Action, handlePlayerStatusToggle, handlePlayerMove, useReroll, handleConfirmJourneymen, handleStartDrive,
         handleTurnover, handleBuyInducement, handleSellInducement, handleHireStar, handleFireStar, handleAutoSelectTeam, handleSuggestDeployment, handleSelectTeamInternal,
-        handleProcessQrCode, handleConfirmPostGame, resetGameState, rollKoRecovery, handleStartNextDrive
+        handleProcessQrCode, handleConfirmPostGame, resetGameState, rollKoRecovery, handleStartNextDrive, handleBribe,
+
+    /** Mecánica de Mago (S3): Bola de Fuego / Rayo. */
+    handleWizard: useCallback((teamId: 'home' | 'opponent') => {
+        const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
+        const targetTeam = teamId === 'home' ? liveHomeTeam : liveOpponentTeam;
+        if (!targetTeam || !targetTeam.tempWizard) return;
+
+        setTeam(prev => prev ? ({ ...prev, tempWizard: false }) : null);
+        logEvent('SUCCESS', `¡LANZAMIENTO DE HECHIZO! El mago de ${targetTeam.name} interviene en el campo.`, { team: teamId });
+        playSound('dice');
+    }, [setLiveHomeTeam, setLiveOpponentTeam, liveHomeTeam, liveOpponentTeam, logEvent, playSound])
     };
 };
