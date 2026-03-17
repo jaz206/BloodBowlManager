@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useMatch } from '../context/MatchContext';
 import { teamsData } from '../../../../data/teams';
 import { starPlayersData } from '../../../../data/starPlayers';
@@ -486,6 +486,24 @@ const KickoffStep: React.FC = () => {
         logEvent, playSound, handleStartDrive
     } = useMatch();
 
+    const [manualWeatherRoll, setManualWeatherRoll] = useState('');
+
+    const handleKickoffWeatherRoll = (total: number) => {
+        const w = weatherConditions.find(wc => {
+            if (wc.diceRoll.includes('-')) {
+                const [min, max] = wc.diceRoll.split('-').map(Number);
+                return total >= min && total <= max;
+            }
+            return wc.diceRoll === total.toString();
+        });
+        if (w) {
+            setGameStatus((prev: any) => ({ ...prev, weather: w }));
+            logEvent('INFO', `Clima Cambiante (Resultado ${total}): ${w.title}`);
+            setKickoffActionCompleted(true);
+        }
+        playSound('dice');
+    };
+
     const handleKickoffRoll = () => {
         setKickoffActionCompleted(false);
         const die1 = Math.floor(Math.random() * 6) + 1;
@@ -528,6 +546,42 @@ const KickoffStep: React.FC = () => {
                             <p className="text-slate-400 text-sm leading-relaxed max-w-sm mx-auto italic">{gameStatus.kickoffEvent.description}</p>
                         </div>
                     </div>
+
+                    {/* Caso especial: Clima Cambiante RESOLUTION (Season 3) */}
+                    {gameStatus.kickoffEvent.title === 'Clima Cambiante' && !kickoffActionCompleted && (
+                        <div className="mt-8 p-6 glass-dark rounded-3xl border border-sky-500/20 space-y-6 animate-in fade-in zoom-in duration-500">
+                             <p className="text-[10px] font-black text-sky-400 uppercase tracking-widest">Nueva Tirada de Clima</p>
+                             <div className="flex flex-col items-center gap-4">
+                                 <div className="flex gap-2">
+                                     <input 
+                                        type="number" 
+                                        min="2" max="12" 
+                                        value={manualWeatherRoll}
+                                        onChange={(e) => setManualWeatherRoll(e.target.value)}
+                                        placeholder="2-12"
+                                        className="w-24 bg-black/60 border border-sky-500/30 rounded-xl px-4 py-2 text-center text-xl font-black text-white focus:outline-none focus:border-sky-500 transition-all"
+                                     />
+                                     <button 
+                                        onClick={() => manualWeatherRoll && handleKickoffWeatherRoll(Number(manualWeatherRoll))}
+                                        className="bg-sky-500 text-black px-6 py-2 rounded-xl font-black text-xs uppercase hover:bg-white transition-all shadow-lg shadow-sky-500/20"
+                                     >
+                                         Confirmar
+                                     </button>
+                                 </div>
+                                 <div className="flex items-center gap-4 w-full max-w-[200px]">
+                                     <div className="h-px bg-white/5 flex-1"></div>
+                                     <span className="text-[8px] font-bold text-slate-600 uppercase">O bien</span>
+                                     <div className="h-px bg-white/5 flex-1"></div>
+                                 </div>
+                                 <button 
+                                    onClick={() => handleKickoffWeatherRoll(Math.floor(Math.random() * 6) + Math.floor(Math.random() * 6) + 2)}
+                                    className="text-[10px] font-black text-sky-400 hover:text-white uppercase tracking-widest flex items-center gap-2 transition-colors"
+                                 >
+                                     <span className="material-symbols-outlined text-sm">casino</span> Dejar que Nuffle elija
+                                 </button>
+                             </div>
+                        </div>
+                    )}
                     {kickoffActionCompleted && (
                         <button
                             onClick={handleStartDrive}
