@@ -14,7 +14,7 @@ interface InjuryEngineContext {
     setLiveHomeTeam: React.Dispatch<React.SetStateAction<ManagedTeam | null>>;
     setLiveOpponentTeam: React.Dispatch<React.SetStateAction<ManagedTeam | null>>;
     updatePlayerStatus: (playerId: number, teamId: 'home' | 'opponent', status: PlayerStatus, statusDetail?: string) => void;
-    updatePlayerSppAndAction: (player: ManagedPlayer, teamId: 'home' | 'opponent', spp: number, action: SppActionType, description: string) => void;
+    updatePlayerSppAndAction: (player: ManagedPlayer, teamId: 'home' | 'opponent', action: SppActionType, description: string) => void;
     logEvent: (type: any, description: string, extra?: any) => void;
     setIsInjuryModalOpen: (isOpen: boolean) => void;
     setIsApothecaryModalOpen: (isOpen: boolean) => void;
@@ -260,7 +260,7 @@ export const handleInjuryActionLogic = (ctx: InjuryEngineContext, action: 'next'
             }
 
             if (isCasualty && isRealCasualty && attackerPlayer && attackerTeamId) {
-                updatePlayerSppAndAction(attackerPlayer, attackerTeamId, 2, 'CASUALTY', `causar una baja a ${victimPlayer?.customName}`);
+                updatePlayerSppAndAction(attackerPlayer, attackerTeamId, 'CASUALTY', `causar una baja a ${victimPlayer?.customName}`);
                 logEvent('injury_casualty', `Baja causada por ${attackerPlayer.customName} sobre ${victimPlayer?.customName}. ${finalLog}`, { team: attackerTeamId, player: attackerPlayer.id, target: victimPlayer?.id });
             } else {
                 logEvent('injury_casualty', `Herida a ${victimPlayer?.customName}. ${finalLog}`, { team: victimTeamId!, player: victimPlayer?.id });

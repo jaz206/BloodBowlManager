@@ -82,23 +82,33 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
 const updatePlayerSppAndAction = useCallback((
     player: ManagedPlayer,
     teamId: 'home' | 'opponent',
-    baseSpp: number,
     action: SppActionType,
     description: string
 ) => {
-    let finalSpp = baseSpp;
+    const arenaSpp = state.arenaConfig.spp;
+    let finalSpp = 0;
+
+    switch (action) {
+        case 'TD': finalSpp = arenaSpp.touchdown; break;
+        case 'CASUALTY': finalSpp = arenaSpp.casualty; break;
+        case 'PASS': finalSpp = arenaSpp.pass; break;
+        case 'HANDOFF': finalSpp = arenaSpp.handoff; break;
+        case 'MVP': finalSpp = arenaSpp.mvp; break;
+        default: finalSpp = 0;
+    }
+    
     const team = teamId === 'home' ? liveHomeTeam : liveOpponentTeam;
     
     if (team && hasBrutosBrutales(team)) {
-        if (action === 'TD') finalSpp = 2; // Brutos Brutales: 2 PE por TD
-        if (action === 'CASUALTY') finalSpp = 3; // Brutos Brutales: 3 PE por CAS
+        if (action === 'TD') finalSpp = 2; // Fixed logic for Brutos Brutales if they exist
+        if (action === 'CASUALTY') finalSpp = 3;
     }
 
     updatePlayerSppActionLogic(
         { setLiveHomeTeam, setLiveOpponentTeam, logEvent, setSppModalState },
         player, teamId, finalSpp, action, description
     );
-}, [setLiveHomeTeam, setLiveOpponentTeam, logEvent, setSppModalState, liveHomeTeam, liveOpponentTeam]);
+}, [state.arenaConfig, setLiveHomeTeam, setLiveOpponentTeam, logEvent, setSppModalState, liveHomeTeam, liveOpponentTeam]);
 
     // ─── FLUJO DE PARTIDO ────────────────────────────────────────────────────
 
@@ -260,7 +270,7 @@ const updatePlayerSppAndAction = useCallback((
         logEvent('touchdown', `¡${scorer.customName} anota un TD para ${teamName}!`, { team: teamId, player: scorer.id });
         setScore(s => ({ ...s, [teamId]: s[teamId] + 1 }));
         playSound('td');
-        updatePlayerSppAndAction(scorer, teamId, 3, 'TD', `anotar un TD para ${teamName}`);
+        updatePlayerSppAndAction(scorer, teamId, 'TD', `anotar un TD para ${teamName}`);
         setIsTdModalOpen(false);
         setTdModalTeam(null);
 
@@ -402,7 +412,7 @@ const updatePlayerSppAndAction = useCallback((
                     handleTurnover(`¡FUMBLE! ${actor.customName} pierde el balón`);
                 } else if (roll >= 2) {
                     logEvent('SUCCESS', `${actor.customName} realiza un pase con éxito.`);
-                    updatePlayerSppAndAction(actor, activeTeamId, 1, 'PASS', 'pase completado');
+                    updatePlayerSppAndAction(actor, activeTeamId, 'PASS', 'pase completado');
                 }
                 break;
             }

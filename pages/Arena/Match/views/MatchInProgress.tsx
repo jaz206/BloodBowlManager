@@ -337,7 +337,8 @@ const MatchInProgress: React.FC = () => {
                                         <div key={attr.l} className="flex flex-col items-center bg-black/60 py-3 rounded-xl border border-white/5 relative">
                                             <span className="text-[10px] font-bold text-slate-500 mb-1">{attr.l}</span>
                                             <span className={`text-2xl font-black ${attr.bad ? 'text-red-500 underline decoration-double' : 'text-gold-gradient'}`}>
-                                                {(attr.v === 'undefined' || attr.v === null) ? '--' : String(attr.v).replace(/\+/g, '')}{attr.isRoll && attr.v !== '-' ? '+' : ''}
+                                                {(!attr.v || attr.v === 'undefined' || attr.v === 'null') ? '--' : String(attr.v).replace(/\+/g, '')}
+                                                {attr.isRoll && attr.v && attr.v !== '-' && attr.v !== 'undefined' ? '+' : ''}
                                             </span>
                                             {attr.bad && <div className="absolute -top-1 -right-1 bg-red-600 size-5 rounded-full flex items-center justify-center text-[10px] font-black shadow-lg">-1</div>}
                                         </div>

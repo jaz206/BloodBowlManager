@@ -290,7 +290,7 @@ export interface KickoffEvent {
   description: string;
 }
 
-export type SppActionType = 'TD' | 'CASUALTY' | 'PASS' | 'INT' | 'MVP' | 'INTERFERENCE' | 'DEFLECT' | 'THROW_TEAM_MATE';
+export type SppActionType = 'TD' | 'CASUALTY' | 'PASS' | 'INT' | 'MVP' | 'INTERFERENCE' | 'DEFLECT' | 'THROW_TEAM_MATE' | 'HANDOFF';
 
 // Board / Tactical
 export interface InjuryEvent {

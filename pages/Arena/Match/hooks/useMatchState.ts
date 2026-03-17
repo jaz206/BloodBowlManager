@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { useArenaConfig } from '../../../../hooks/useArenaConfig';
 import { 
     GameState, 
     GameBoardProps, 
@@ -230,7 +231,10 @@ export const useMatchState = (props: GameBoardProps) => {
         console.log("[MatchState] Cambiado a:", gameState);
     }, [gameState]);
 
+    const { config: arenaConfig } = useArenaConfig();
+
     return {
+        arenaConfig,
         gameState, setGameState,
         matchMode, setMatchMode,
         activeTab, setActiveTab,

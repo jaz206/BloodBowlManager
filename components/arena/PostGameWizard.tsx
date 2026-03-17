@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { useArenaConfig } from '../../hooks/useArenaConfig';
 import { createPortal } from 'react-dom';
 import type { ManagedTeam, ManagedPlayer, Skill } from '../../types';
 import { skillsData } from '../../data/skills';
@@ -99,6 +100,8 @@ interface PostGameState {
 }
 
 const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalHomeTeam, opponentTeam, score, fame, playersMNG, onConfirm, initialConcession }) => {
+    const { config: arenaConfig } = useArenaConfig();
+    const diceConfig = arenaConfig?.dice || { winnings: '1D3', mvp: '1D3', fans: '1D6' };
 
     const [step, setStep] = useState(0);
     const [fansChange, setFansChange] = useState<number>(0);
@@ -164,7 +167,8 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
         let calculatedWinnings = 0;
         if (rollHome !== 0) {
             const popHome = rollHome + finalHomeTeam.dedicatedFans;
-            calculatedWinnings = (popHome + score.home + (noStalling ? 5 : 0)) * 10000;
+            const stallBonus = noStalling ? arenaConfig.economics.no_stalling_bonus : 0;
+            calculatedWinnings = (popHome + score.home + stallBonus + arenaConfig.economics.win_bonus) * arenaConfig.economics.multiplier;
             if (concession === 'home') calculatedWinnings = 0;
         }
 
@@ -190,8 +194,9 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
     }, [winningsRolls.home, noStalling, concession, score.home]);
 
     const handleWinningsRoll = (manualVal?: number) => {
-        const rollHome = manualVal || (Math.floor(Math.random() * 3) + 1);
-        const rollOpp = (Math.floor(Math.random() * 3) + 1); // Opponent roll is usually not needed for winnings but kept for consistency
+        const rollLimit = diceConfig.winnings.toLowerCase().includes('d3') ? 3 : 6;
+        const rollHome = manualVal || (Math.floor(Math.random() * rollLimit) + 1);
+        const rollOpp = (Math.floor(Math.random() * rollLimit) + 1);
         setWinningsRolls({ home: rollHome, opponent: rollOpp });
     };
 
@@ -222,8 +227,8 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
     const handleMvpRoll = (manualVal?: number) => {
         if (mvpNominations.length === 0) return;
         
-        // BB2025/S3: Se usa 1D3 para seleccionar entre hasta 3 nominados
-        const roll = manualVal || (Math.floor(Math.random() * 3) + 1);
+        const rollLimit = diceConfig.mvp.toLowerCase().includes('d3') ? 3 : 6;
+        const roll = manualVal || (Math.floor(Math.random() * rollLimit) + 1);
         setMvpRoll(roll);
         
         // Map roll to nominated player.
@@ -234,7 +239,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
             if (!prev) return null;
             const updatedPlayers = prev.team.players.map(p => {
                 if (p.id === selectedId) {
-                    return { ...p, spp: p.spp + 4 };
+                    return { ...p, spp: p.spp + arenaConfig.spp.mvp };
                 }
                 return p;
             });
@@ -253,7 +258,8 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
 
 
     const handleFansRoll = (manualVal?: number) => {
-        const roll = manualVal || (Math.floor(Math.random() * 6) + 1);
+        const rollLimit = (concession === 'home' || diceConfig.fans.toLowerCase().includes('d3')) ? 3 : 6;
+        const roll = manualVal || (Math.floor(Math.random() * rollLimit) + 1);
         setFansRoll(roll);
         let change = 0;
 
@@ -451,7 +457,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                                         <div className="flex flex-col items-center gap-4 py-6 border-b border-white/5">
                                             <div className="flex gap-2">
                                                 <input 
-                                                    type="number" min="1" max="3" placeholder="D3"
+                                                    type="number" min="1" max={diceConfig.winnings.toLowerCase().includes('d3') ? 3 : 6} placeholder={diceConfig.winnings}
                                                     className="w-20 bg-black/60 border border-premium-gold/30 rounded-xl px-2 py-2 text-center text-xl font-black text-white focus:border-premium-gold outline-none"
                                                     id="winnings-manual-input"
                                                     onKeyDown={(e) => {
@@ -589,7 +595,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                                 Cónclave de MVP: Galardón {mvpsAwarded + 1} de {mvpCount}
                             </h4>
                             <div className="flex flex-col items-center gap-1 border-t border-white/5 pt-2">
-                                <p className="text-slate-500 text-[10px] italic">Nomina hasta 3 guerreros (1D3 elegirá al azar)</p>
+                                <p className="text-slate-500 text-[10px] italic">Nomina hasta 3 guerreros ({diceConfig.mvp} elegirá al azar)</p>
                                 <p className="text-white text-[12px] font-display font-black">
                                     Candidatos: <span className={mvpNominations.length === Math.min(3, eligibleMvp.length) ? "text-green-500" : "text-premium-gold animate-pulse"}>{mvpNominations.length} / {Math.min(3, eligibleMvp.length)}</span>
                                 </p>
@@ -624,7 +630,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                                 <div className="flex flex-col items-center gap-4 pt-4">
                                     <div className="flex gap-2">
                                         <input 
-                                            type="number" min="1" max="3" placeholder="D3"
+                                            type="number" min="1" max={diceConfig.mvp.toLowerCase().includes('d3') ? 3 : 6} placeholder={diceConfig.mvp}
                                             className="w-20 bg-black/60 border border-premium-gold/30 rounded-xl px-2 py-2 text-center text-xl font-black text-white focus:border-premium-gold outline-none"
                                             id="mvp-manual-input"
                                             onKeyDown={(e) => {
@@ -658,7 +664,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                                         <span className="material-symbols-outlined text-sm">casino</span>
                                         {mvpNominations.length < 1 
                                             ? 'Nomina al menos 1 candidato' 
-                                            : `Tirar D3 para MVP ${mvpsAwarded + 1}`}
+                                            : `Tirar ${diceConfig.mvp} para MVP ${mvpsAwarded + 1}`}
                                     </button>
                                 </div>
                             </div>
@@ -726,7 +732,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                             <div className="flex flex-col items-center gap-4 pt-4">
                                 <div className="flex gap-2">
                                     <input 
-                                        type="number" min="1" max="6" placeholder={concession === 'home' ? 'D3' : 'D6'}
+                                        type="number" min="1" max={(concession === 'home' || diceConfig.fans.toLowerCase().includes('d3')) ? 3 : 6} placeholder={concession === 'home' ? 'D3' : diceConfig.fans}
                                         className="w-20 bg-black/60 border border-sky-500/30 rounded-xl px-2 py-2 text-center text-xl font-black text-white focus:border-sky-500 outline-none"
                                         id="fans-manual-input"
                                         onKeyDown={(e) => {
@@ -766,7 +772,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                                 </div>
                                 <div className="flex justify-center gap-6 items-center mb-6 relative z-10">
                                     <div className="w-16 h-16 bg-white/5 rounded-2xl border-2 border-sky-500/30 flex flex-col items-center justify-center shadow-inner">
-                                        <span className="text-[8px] font-display font-black text-sky-500 uppercase tracking-widest mb-0.5">{concession === 'home' ? 'D3' : 'Dado'}</span>
+                                        <span className="text-[8px] font-display font-black text-sky-500 uppercase tracking-widest mb-0.5">{concession === 'home' ? 'D3' : diceConfig.fans}</span>
                                         <span className="text-2xl font-display font-black text-white">{fansRoll}</span>
                                     </div>
                                     <div className="h-10 w-px bg-white/10"></div>

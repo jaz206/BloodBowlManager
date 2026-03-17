@@ -5,7 +5,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import SearchIcon from '../icons/SearchIcon';
 import type { Team, StarPlayer, Skill, Inducement } from '../../types';
 
-type AdminTab = 'general' | 'teams' | 'stars' | 'skills' | 'inducements';
+type AdminTab = 'general' | 'arena' | 'teams' | 'stars' | 'skills' | 'inducements';
 
 const transformGitHubUrl = (url: string | undefined | null): string => {
     if (!url || typeof url !== 'string') return url || '';
@@ -25,6 +25,8 @@ const transformGitHubUrl = (url: string | undefined | null): string => {
     return url;
 };
 
+import { useArenaConfig, ArenaConfig } from '../../hooks/useArenaConfig';
+
 const AdminPanel: React.FC = () => {
     const {
         teams,
@@ -40,6 +42,8 @@ const AdminPanel: React.FC = () => {
         isFromFirestore,
         updateMasterItem
     } = useMasterData();
+
+    const { config: arenaConfig, updateConfig: saveArenaConfig } = useArenaConfig();
 
     const { language } = useLanguage();
     const [activeTab, setActiveTab] = useState<AdminTab>('general');
@@ -324,6 +328,8 @@ const AdminPanel: React.FC = () => {
 
             if (type === 'hero') {
                 await updateHeroImage(data.url);
+            } else if (type === 'arena') {
+                await saveArenaConfig(data);
             } else if (type === 'teams') {
                 await updateMasterItem('teams', data.name, data);
             } else if (type === 'stars') {
@@ -348,6 +354,7 @@ const AdminPanel: React.FC = () => {
 
     const tabs: { id: AdminTab; label: string; icon: string }[] = [
         { id: 'general', label: 'General', icon: 'settings' },
+        { id: 'arena', label: 'Reglas Arena', icon: 'stadia_controller' },
         { id: 'teams', label: 'Equipos', icon: 'groups' },
         { id: 'stars', label: 'Estrellas', icon: 'star' },
         { id: 'skills', label: 'Habilidades', icon: 'bolt' },
@@ -489,6 +496,86 @@ const AdminPanel: React.FC = () => {
                                     <p className="text-[10px] text-slate-500 font-bold uppercase leading-relaxed italic">
                                         * Los cambios realizados en el resto de pestañas se guardan directamente en Firestore y se reflejan instantáneamente para todos los usuarios.
                                     </p>
+                                </div>
+                            </div>
+                        </div>
+                    ) : activeTab === 'arena' ? (
+                        <div className="space-y-8">
+                            <div className="glass-panel p-8 border-white/5 bg-black/40">
+                                <div className="flex justify-between items-center mb-8">
+                                    <div>
+                                        <h4 className="text-2xl font-display font-black text-white uppercase italic tracking-tighter">Reglamento de la Arena</h4>
+                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Configuración dinámica de SPP, Economía y Dados</p>
+                                    </div>
+                                    <button 
+                                        onClick={() => setEditingItem({ type: 'arena', data: { ...arenaConfig } })}
+                                        className="bg-premium-gold text-black px-6 py-3 rounded-xl font-display font-black uppercase tracking-widest text-[10px] shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2"
+                                    >
+                                        <span className="material-symbols-outlined text-sm">edit</span>
+                                        Editar Reglamento
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    {/* SPP Values */}
+                                    <div className="bg-white/5 rounded-2xl p-6 border border-white/5 space-y-4">
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <span className="material-symbols-outlined text-premium-gold">workspace_premium</span>
+                                            <span className="text-[10px] font-black text-white uppercase tracking-widest">Recompensas SPP</span>
+                                        </div>
+                                        <div className="space-y-2">
+                                            {Object.entries(arenaConfig.spp).map(([key, value]) => (
+                                                <div key={key} className="flex justify-between items-center text-sm">
+                                                    <span className="text-slate-500 uppercase text-[10px] font-bold">{key}</span>
+                                                    <span className="text-white font-black">{value} pts</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Economics */}
+                                    <div className="bg-white/5 rounded-2xl p-6 border border-white/5 space-y-4">
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <span className="material-symbols-outlined text-green-500">payments</span>
+                                            <span className="text-[10px] font-black text-white uppercase tracking-widest">Economía & Bonos</span>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between items-center text-sm">
+                                                <span className="text-slate-500 uppercase text-[10px] font-bold">Bono Victoria</span>
+                                                <span className="text-white font-black">{arenaConfig.economics.win_bonus * 10}k</span>
+                                            </div>
+                                            <div className="flex justify-between items-center text-sm">
+                                                <span className="text-slate-500 uppercase text-[10px] font-bold">Bono Fair Play</span>
+                                                <span className="text-white font-black">{arenaConfig.economics.no_stalling_bonus * 10}k</span>
+                                            </div>
+                                            <div className="flex justify-between items-center text-sm">
+                                                <span className="text-slate-500 uppercase text-[10px] font-bold">Multiplicador</span>
+                                                <span className="text-white font-black">x{arenaConfig.economics.multiplier / 1000}k</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Dice Config */}
+                                    <div className="bg-white/5 rounded-2xl p-6 border border-white/5 space-y-4">
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <span className="material-symbols-outlined text-sky-500">casino</span>
+                                            <span className="text-[10px] font-black text-white uppercase tracking-widest">Configuración Dados</span>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between items-center text-sm">
+                                                <span className="text-slate-500 uppercase text-[10px] font-bold">Recaudación</span>
+                                                <span className="text-white font-black bg-sky-500/10 px-2 py-0.5 rounded text-[10px]">{arenaConfig.dice.winnings}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center text-sm">
+                                                <span className="text-slate-500 uppercase text-[10px] font-bold">MVP</span>
+                                                <span className="text-white font-black bg-sky-500/10 px-2 py-0.5 rounded text-[10px]">{arenaConfig.dice.mvp}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center text-sm">
+                                                <span className="text-slate-500 uppercase text-[10px] font-bold">Hinchas</span>
+                                                <span className="text-white font-black bg-sky-500/10 px-2 py-0.5 rounded text-[10px]">{arenaConfig.dice.fans}</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -663,6 +750,86 @@ const AdminPanel: React.FC = () => {
                             <div className="p-10 max-h-[70vh] overflow-y-auto custom-scrollbar bg-black/40">
                                 <form onSubmit={handleSave} className="space-y-8">
                                     <div className="grid grid-cols-1 gap-8">
+
+                                        {/* ARENA CONFIG EDITOR */}
+                                        {editingItem.type === 'arena' && (
+                                            <div className="space-y-10">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                                    {/* SPP */}
+                                                    <div className="space-y-4">
+                                                        <h5 className="text-[10px] font-black text-premium-gold uppercase tracking-[0.3em] mb-4">Recompensas SPP</h5>
+                                                        <div className="space-y-4 bg-black/40 p-6 rounded-2xl border border-white/5">
+                                                            {Object.entries(editingItem.data.spp).map(([key, value]) => (
+                                                                <div key={key} className="flex justify-between items-center gap-4">
+                                                                    <label className="text-[10px] font-bold text-slate-500 uppercase flex-1">{key}</label>
+                                                                    <input 
+                                                                        type="number"
+                                                                        value={value as number}
+                                                                        onChange={(e) => setEditingItem({
+                                                                            ...editingItem,
+                                                                            data: {
+                                                                                ...editingItem.data,
+                                                                                spp: { ...editingItem.data.spp, [key]: parseInt(e.target.value) || 0 }
+                                                                            }
+                                                                        })}
+                                                                        className="w-20 bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-center text-white text-xs outline-none focus:border-premium-gold"
+                                                                    />
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Economics */}
+                                                    <div className="space-y-4">
+                                                        <h5 className="text-[10px] font-black text-green-500 uppercase tracking-[0.3em] mb-4">Parámetros Económicos</h5>
+                                                        <div className="space-y-4 bg-black/40 p-6 rounded-2xl border border-white/5">
+                                                            {Object.entries(editingItem.data.economics).map(([key, value]) => (
+                                                                <div key={key} className="flex justify-between items-center gap-4">
+                                                                    <label className="text-[10px] font-bold text-slate-500 uppercase flex-1">{key.replace(/_/g, ' ')}</label>
+                                                                    <input 
+                                                                        type="number"
+                                                                        value={value as number}
+                                                                        onChange={(e) => setEditingItem({
+                                                                            ...editingItem,
+                                                                            data: {
+                                                                                ...editingItem.data,
+                                                                                economics: { ...editingItem.data.economics, [key]: parseInt(e.target.value) || 0 }
+                                                                            }
+                                                                        })}
+                                                                        className="w-24 bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-center text-white text-xs outline-none focus:border-green-500"
+                                                                    />
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Dice */}
+                                                <div className="space-y-4">
+                                                    <h5 className="text-[10px] font-black text-sky-500 uppercase tracking-[0.3em] mb-4">Lógica de Dados</h5>
+                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-black/40 p-6 rounded-2xl border border-white/5">
+                                                        {Object.entries(editingItem.data.dice).map(([key, value]) => (
+                                                            <div key={key} className="space-y-2">
+                                                                <label className="text-[10px] font-bold text-slate-500 uppercase block text-center italic">{key}</label>
+                                                                <input 
+                                                                    type="text"
+                                                                    value={value as string}
+                                                                    onChange={(e) => setEditingItem({
+                                                                        ...editingItem,
+                                                                        data: {
+                                                                            ...editingItem.data,
+                                                                            dice: { ...editingItem.data.dice, [key]: e.target.value }
+                                                                        }
+                                                                    })}
+                                                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-2 px-4 text-center text-white text-xs font-black outline-none focus:border-sky-500"
+                                                                    placeholder="Ej: 1D3"
+                                                                />
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
 
                                         {/* IMAGE EXPLORER / DATA URL FIELD */}
                                         {(editingItem.type === 'hero' || editingItem.type === 'teams' || editingItem.type === 'stars') && (
