@@ -123,6 +123,7 @@ export interface ManagedPlayer extends Player {
   isDistracted?: boolean;
   hasIndigestion?: boolean;
   isActivated?: boolean;
+  image?: string;
 }
 
 export interface ManagedTeamSnapshot {

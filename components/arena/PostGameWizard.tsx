@@ -136,14 +136,9 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
     useEffect(() => {
         if (!finalHomeTeam || !opponentTeam) return;
         
-        // Calculate Popularity Factors (BB2025: 1D3 + Dedicated Fans)
-        // Use existing rolls if available to avoid re-rolling on state changes
-        const rollHome = winningsRolls.home || (Math.floor(Math.random() * 3) + 1);
-        const rollOpp = winningsRolls.opponent || (Math.floor(Math.random() * 3) + 1);
-        
-        if (rollHome !== winningsRolls.home || rollOpp !== winningsRolls.opponent) {
-            setWinningsRolls({ home: rollHome, opponent: rollOpp });
-        }
+        // Winnings are calculated based on winningsRolls
+        const rollHome = winningsRolls.home;
+        if (rollHome === 0) return; // Wait for roll
 
         const popHome = rollHome + finalHomeTeam.dedicatedFans;
         
@@ -181,7 +176,13 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
         } else {
             setMvpCount(1);
         }
-    }, [finalHomeTeam, opponentTeam, score, playersMNG, noStalling, concession]);
+    }, [finalHomeTeam, opponentTeam, score, playersMNG, noStalling, concession, winningsRolls.home]);
+
+    const handleWinningsRoll = (manualVal?: number) => {
+        const rollHome = manualVal || (Math.floor(Math.random() * 3) + 1);
+        const rollOpp = (Math.floor(Math.random() * 3) + 1); // Opponent roll is usually not needed for winnings but kept for consistency
+        setWinningsRolls({ home: rollHome, opponent: rollOpp });
+    };
 
 
     const handleConfirm = () => {
@@ -308,8 +309,8 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
         handleSkillSelectionUpdate(player.id, skillName, cost);
     };
 
-    const handleCharacteristicImprovement = (player: ManagedPlayer, cost: number) => {
-        const roll = Math.floor(Math.random() * 16) + 1; // 1D16 for characteristic table
+    const handleCharacteristicImprovement = (player: ManagedPlayer, cost: number, manualVal?: number) => {
+        const roll = manualVal || (Math.floor(Math.random() * 16) + 1); // 1D16 for characteristic table
         let result = "";
         
         if (roll <= 7) result = "Hab. Primaria";
@@ -434,40 +435,83 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                                     </div>
                                 </div>
                                 
-                                <div className="space-y-4">
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-slate-500 font-display">Popularidad Local ({winningsRolls.home} + {finalHomeTeam.dedicatedFans})</span>
-                                        <span className="text-white font-black">{winningsRolls.home + finalHomeTeam.dedicatedFans}k</span>
-                                    </div>
-                                    <div className="flex justify-between text-sm py-2 border-y border-white/5">
-                                        <span className="text-slate-500 font-display">Touchdowns Anotados ({score.home})</span>
-                                        <span className="text-white font-black">{score.home * 10}k</span>
-                                    </div>
-                                    <div className="flex justify-between items-center py-2">
-                                        <div className="flex items-center gap-2">
-                                            <input 
-                                                type="checkbox" 
-                                                id="noStalling" 
-                                                checked={noStalling} 
-                                                onChange={(e) => setNoStalling(e.target.checked)}
-                                                className="w-4 h-4 rounded border-white/10 bg-black text-premium-gold focus:ring-premium-gold/30"
-                                            />
-                                            <label htmlFor="noStalling" className="text-slate-500 font-display text-xs cursor-pointer select-none">Bono por Fair Play (No-Stalling)</label>
+                                 <div className="space-y-4">
+                                    {!winningsRolls.home ? (
+                                        <div className="flex flex-col items-center gap-4 py-6 border-b border-white/5">
+                                            <div className="flex gap-2">
+                                                <input 
+                                                    type="number" min="1" max="3" placeholder="D3"
+                                                    className="w-20 bg-black/60 border border-premium-gold/30 rounded-xl px-2 py-2 text-center text-xl font-black text-white focus:border-premium-gold outline-none"
+                                                    id="winnings-manual-input"
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter') {
+                                                            const val = (e.currentTarget as HTMLInputElement).value;
+                                                            if (val) handleWinningsRoll(Number(val));
+                                                        }
+                                                    }}
+                                                />
+                                                <button
+                                                    onClick={() => {
+                                                        const input = document.getElementById('winnings-manual-input') as HTMLInputElement;
+                                                        if (input?.value) handleWinningsRoll(Number(input.value));
+                                                    }}
+                                                    className="bg-premium-gold text-black font-display font-black px-6 rounded-xl text-xs uppercase hover:bg-white transition-all shadow-lg active:scale-95"
+                                                >
+                                                    Aplicar
+                                                </button>
+                                            </div>
+                                            <div className="flex items-center gap-4 w-full max-w-[200px]">
+                                                <div className="h-px bg-white/5 flex-1"></div>
+                                                <span className="text-[8px] font-bold text-slate-600 uppercase">O bien</span>
+                                                <div className="h-px bg-white/5 flex-1"></div>
+                                            </div>
+                                            <button
+                                                onClick={() => handleWinningsRoll()}
+                                                className="group relative bg-white/5 border border-white/10 text-white font-display font-black py-3 px-10 rounded-2xl hover:bg-white/10 active:scale-95 transition-all flex items-center gap-3 uppercase tracking-widest text-[9px]"
+                                            >
+                                                <span className="material-symbols-outlined text-sm">casino</span>
+                                                Consultar Impuestos
+                                            </button>
                                         </div>
-                                        <span className="text-green-500 font-black">+{noStalling ? 50 : 0}k</span>
-                                    </div>
-                                </div>
-                                <div className="mt-8 pt-6 border-t border-premium-gold/20 text-center">
-                                    <p className={`text-4xl font-display font-black italic tracking-tight ${concession === 'home' ? 'text-blood-red line-through opacity-50' : 'text-white'}`}>
-                                        {winnings.toLocaleString()} <span className="text-sm not-italic text-green-500 ml-1 uppercase font-bold">m.o.</span>
-                                    </p>
-                                    {concession === 'home' && (
-                                        <p className="text-blood-red font-display font-black text-[10px] uppercase tracking-widest mt-2 animate-pulse">
-                                            Penalización por Concesión (0 m.o.)
-                                        </p>
+                                    ) : (
+                                        <>
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-slate-500 font-display">Popularidad Local ({winningsRolls.home} + {finalHomeTeam.dedicatedFans})</span>
+                                                <span className="text-white font-black">{winningsRolls.home + finalHomeTeam.dedicatedFans}k</span>
+                                            </div>
+                                            <div className="flex justify-between text-sm py-2 border-y border-white/5">
+                                                <span className="text-slate-500 font-display">Touchdowns Anotados ({score.home})</span>
+                                                <span className="text-white font-black">{score.home * 10}k</span>
+                                            </div>
+                                            <div className="flex justify-between items-center py-2">
+                                                <div className="flex items-center gap-2">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        id="noStalling" 
+                                                        checked={noStalling} 
+                                                        onChange={(e) => setNoStalling(e.target.checked)}
+                                                        className="w-4 h-4 rounded border-white/10 bg-black text-premium-gold focus:ring-premium-gold/30"
+                                                    />
+                                                    <label htmlFor="noStalling" className="text-slate-500 font-display text-xs cursor-pointer select-none">Bono por Fair Play (No-Stalling)</label>
+                                                </div>
+                                                <span className="text-green-500 font-black">+{noStalling ? 50 : 0}k</span>
+                                            </div>
+                                        </>
                                     )}
-                                    <p className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mt-2">Tesoro Actualizado</p>
                                 </div>
+                                {winningsRolls.home > 0 && (
+                                    <div className="mt-8 pt-6 border-t border-premium-gold/20 text-center">
+                                        <p className={`text-4xl font-display font-black italic tracking-tight ${concession === 'home' ? 'text-blood-red line-through opacity-50' : 'text-white'}`}>
+                                            {winnings.toLocaleString()} <span className="text-sm not-italic text-green-500 ml-1 uppercase font-bold">m.o.</span>
+                                        </p>
+                                        {concession === 'home' && (
+                                            <p className="text-blood-red font-display font-black text-[10px] uppercase tracking-widest mt-2 animate-pulse">
+                                                Penalización por Concesión (0 m.o.)
+                                            </p>
+                                        )}
+                                        <p className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest mt-2">Tesoro Actualizado</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -603,7 +647,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                                         <span className="material-symbols-outlined text-sm">casino</span>
                                         {mvpNominations.length < 1 
                                             ? 'Nomina al menos 1 candidato' 
-                                            : `Tirar D3 para MVP ${mvpsAwarded + 1} (${mvpNominations.length} nominado${mvpNominations.length > 1 ? 's' : ''})`}
+                                            : `Tirar D3 para MVP ${mvpsAwarded + 1}`}
                                     </button>
                                 </div>
                             </div>
@@ -833,13 +877,39 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                                                     Elegir S. ({costs.cs})
                                                 </button>
                                             </div>
-                                            <button
-                                                onClick={() => handleCharacteristicImprovement(p, costs.ch)}
-                                                disabled={p.spp < costs.ch}
-                                                className="w-full py-2 rounded-xl bg-premium-gold/5 border border-premium-gold/20 text-[8px] font-display font-black text-premium-gold hover:bg-premium-gold hover:text-black disabled:opacity-10 transition-all uppercase tracking-widest shadow-lg"
-                                            >
-                                                🎲 Tirar Característica ({costs.ch})
-                                            </button>
+                                            <div className="flex flex-col gap-2 bg-black/40 p-3 rounded-xl border border-white/5 shadow-inner">
+                                                <div className="flex items-center gap-2">
+                                                    <input 
+                                                        type="number" min="1" max="16" placeholder="D16"
+                                                        className="w-16 bg-black/60 border border-premium-gold/30 rounded-lg px-1 py-1 text-center text-xs font-black text-white focus:border-premium-gold outline-none"
+                                                        id={`char-manual-${p.id}`}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter') {
+                                                                const val = (e.currentTarget as HTMLInputElement).value;
+                                                                if (val) handleCharacteristicImprovement(p, costs.ch, Number(val));
+                                                            }
+                                                        }}
+                                                    />
+                                                    <button
+                                                        onClick={() => {
+                                                            const input = document.getElementById(`char-manual-${p.id}`) as HTMLInputElement;
+                                                            if (input?.value) handleCharacteristicImprovement(p, costs.ch, Number(input.value));
+                                                        }}
+                                                        disabled={p.spp < costs.ch}
+                                                        className="bg-premium-gold text-black font-display font-black px-3 py-1 rounded-lg text-[8px] uppercase hover:bg-white transition-all shadow-lg active:scale-95 disabled:opacity-30"
+                                                    >
+                                                        Aplicar
+                                                    </button>
+                                                    <div className="h-4 w-px bg-white/10 mx-1"></div>
+                                                    <button
+                                                        onClick={() => handleCharacteristicImprovement(p, costs.ch)}
+                                                        disabled={p.spp < costs.ch}
+                                                        className="flex-1 py-1 rounded-lg bg-premium-gold/5 border border-premium-gold/20 text-[8px] font-display font-black text-premium-gold hover:bg-premium-gold hover:text-black disabled:opacity-30 transition-all uppercase tracking-widest shadow-lg"
+                                                    >
+                                                        🎲 Tirar {costs.ch}
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 );
@@ -853,6 +923,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                         </div>
                     </div>
                 );
+            case 4: {
                 const needsExpensiveMistakes = updatedTeam.treasury >= 100000 && !expensiveMistakes;
                 
                 if (needsExpensiveMistakes) {
@@ -1018,6 +1089,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                         </div>
                     </div>
                 );
+            }
             default: return null;
         }
     };
@@ -1069,6 +1141,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                             <button
                                 onClick={() => setStep(s => s + 1)}
                                 disabled={
+                                    (step === 0 && !winningsRolls.home && concession !== 'home') ||
                                     (step === 1 && mvpsAwarded < mvpCount) || 
                                     (step === 2 && !fansRoll && !isDraw)
                                 }
@@ -1079,9 +1152,10 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                         ) : (
                             <button
                                 onClick={handleConfirm}
-                                className="flex-[2] bg-green-600 text-black font-display font-black py-3 rounded-xl shadow-[0_10px_20px_rgba(34,197,94,0.3)] hover:bg-green-500 hover:scale-[1.02] active:scale-[0.98] transition-all uppercase tracking-[0.2em] text-[10px]"
+                                disabled={updatedTeam.treasury >= 100000 && !expensiveMistakes}
+                                className="flex-[2] bg-green-600 text-black font-display font-black py-3 rounded-xl shadow-[0_10px_20px_rgba(34,197,94,0.3)] hover:bg-green-500 hover:scale-[1.02] active:scale-[0.98] transition-all uppercase tracking-[0.2em] text-[10px] disabled:opacity-30 disabled:grayscale"
                             >
-                                Sellar Destino Final
+                                {updatedTeam.treasury >= 100000 && !expensiveMistakes ? 'Pendiente: Gastos' : 'Sellar Destino Final'}
                             </button>
                         )}
                     </div>

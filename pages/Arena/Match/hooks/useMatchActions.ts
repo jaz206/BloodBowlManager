@@ -163,17 +163,44 @@ const updatePlayerSppAndAction = useCallback((
 
     // ─── ACCIONES DE UI ──────────────────────────────────────────────────────
 
-    /** Abre el modal de información de una skill. */
     const handleSkillClick = useCallback((skillName: string) => {
-        const cleanedName = (skillName || '').split('(')[0].trim();
-        const foundSkill = skillsData.find(s => s.name.toLowerCase().startsWith(cleanedName.toLowerCase()));
-        if (foundSkill) setSelectedSkillForModal(foundSkill);
+        if (!skillName) return;
+        const name = skillName.trim();
+        const baseName = name.split('(')[0].trim().toLowerCase();
+        
+        // 1. Búsqueda por coincidencia exacta o Key EN
+        let found = skillsData.find(s => 
+            (s.keyEN && s.keyEN.toLowerCase() === name.toLowerCase()) ||
+            (s.name_en && s.name_en.toLowerCase() === name.toLowerCase()) ||
+            (s.name_es && s.name_es.toLowerCase() === name.toLowerCase())
+        );
+        
+        // 2. Búsqueda por el nombre "limpio" (sin +1, +2 o puntuación)
+        if (!found) {
+            found = skillsData.find(s => 
+                (s.keyEN && s.keyEN.toLowerCase().startsWith(baseName)) ||
+                (s.name_en && s.name_en.toLowerCase().startsWith(baseName)) ||
+                (s.name_es && s.name_es.toLowerCase().startsWith(baseName))
+            );
+        }
+
+        if (found) {
+            setSelectedSkillForModal(found);
+            console.log(`[handleSkillClick] Mostrando: ${found.name_es} / ${found.name_en}`);
+        } else {
+            console.warn(`[handleSkillClick] No se encontró definición para: "${skillName}"`);
+        }
     }, [setSelectedSkillForModal]);
 
     /** Alterna al portador del balón. */
     const handleBallToggle = useCallback((playerId: number) => {
         setBallCarrierId(prev => prev === playerId ? null : playerId);
     }, [setBallCarrierId]);
+
+    /** Deselecciona al jugador actual. */
+    const handleDeselectPlayer = useCallback(() => {
+        setSelectedPlayerForAction(null);
+    }, [setSelectedPlayerForAction]);
 
     /** Actualiza una condición S3 (Distraído / Indigestión) de un jugador. */
     const handleUpdatePlayerCondition = useCallback((
@@ -452,24 +479,31 @@ const updatePlayerSppAndAction = useCallback((
         });
     }, [setLiveHomeTeam, setLiveOpponentTeam]);
 
-    /** Mueve un jugador en el campo táctico validando colisiones. */
+    /** Mueve un jugador en el campo táctico validando colisiones en ambos equipos. */
     const handlePlayerMove = useCallback((
         teamId: 'home' | 'opponent',
         playerId: number,
         newPos: { x: number; y: number }
     ) => {
         const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
+        
+        // Verificar ocupación global (en ambos equipos)
+        const isOccupied = (liveHomeTeam?.players || []).some(
+            p => p.fieldPosition?.x === newPos.x && p.fieldPosition?.y === newPos.y
+        ) || (liveOpponentTeam?.players || []).some(
+            p => p.fieldPosition?.x === newPos.x && p.fieldPosition?.y === newPos.y
+        );
+
+        if (isOccupied) return;
+
         setTeam(prev => {
             if (!prev) return null;
-            const isOccupied = prev.players.some(
-                p => p.id !== playerId &&
-                    p.fieldPosition?.x === newPos.x &&
-                    p.fieldPosition?.y === newPos.y
-            );
-            if (isOccupied) return prev;
-            return { ...prev, players: prev.players.map(p => p.id === playerId ? { ...p, fieldPosition: newPos } : p) };
+            return { 
+                ...prev, 
+                players: prev.players.map(p => p.id === playerId ? { ...p, fieldPosition: newPos } : p) 
+            };
         });
-    }, [setLiveHomeTeam, setLiveOpponentTeam]);
+    }, [liveHomeTeam, liveOpponentTeam, setLiveHomeTeam, setLiveOpponentTeam]);
 
     /** Usa un reroll del equipo indicado. */
     const useReroll = useCallback((teamId: 'home' | 'opponent') => {
@@ -789,7 +823,7 @@ const updatePlayerSppAndAction = useCallback((
         logEvent, updatePlayerStatus, updatePlayerSppAndAction, handleHalftime, handleNextTurn, handleFoulAction, handleInjuryAction, handleSkillClick, handleBallToggle, handleUpdatePlayerCondition,
         openSppModal, handleStrategicAction, handleSelectTdScorer, handleS3Action, handlePlayerStatusToggle, handlePlayerMove, useReroll, handleConfirmJourneymen, handleStartDrive,
         handleTurnover, handleBuyInducement, handleSellInducement, handleHireStar, handleFireStar, handleAutoSelectTeam, handleSuggestDeployment, handleSelectTeamInternal,
-        handleProcessQrCode, handleConfirmPostGame, resetGameState, rollKoRecovery, handleStartNextDrive, handleBribe,
+        handleProcessQrCode, handleConfirmPostGame, resetGameState, rollKoRecovery, handleStartNextDrive, handleBribe, handleDeselectPlayer,
 
     /** Genera un nuevo evento de clima (2D6). */
     handleGenerateWeather: useCallback((manualVal?: number) => {

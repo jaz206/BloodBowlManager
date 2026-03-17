@@ -67,6 +67,7 @@ export const useMatchState = (props: GameBoardProps) => {
     const [matchMode, setMatchMode] = useState<'friendly' | 'competition'>('competition');
     const [activeTab, setActiveTab] = useState<'assistant' | 'narrator'>('assistant');
     const [rosterViewId, setRosterViewId] = useState<'home' | 'opponent'>('home');
+    const [rosterDisplayMode, setRosterDisplayMode] = useState<'cards' | 'tactical'>('cards');
 
     // ESTADOS DE EQUIPO
     const [homeTeam, setHomeTeam] = useState<ManagedTeam | null>(null);
@@ -233,6 +234,7 @@ export const useMatchState = (props: GameBoardProps) => {
         gameState, setGameState,
         matchMode, setMatchMode,
         activeTab, setActiveTab,
+        rosterDisplayMode, setRosterDisplayMode,
         rosterViewId, setRosterViewId,
         homeTeam, setHomeTeam,
         opponentTeam, setOpponentTeam,

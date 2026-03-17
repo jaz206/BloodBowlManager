@@ -3,6 +3,8 @@ import { useMatch } from '../context/MatchContext';
 import GameLog from '../log/GameLog';
 import { S3ActionType } from '../types/match.types';
 import { ManagedPlayer } from '../../../../types';
+import MiniField from '../../../../components/common/MiniField';
+import S3ActionOrchestrator from '../components/S3ActionOrchestrator';
 
 /**
  * MatchInProgress — Arena Console V3 "Elite Assistant & Chronicle"
@@ -14,12 +16,14 @@ const MatchInProgress: React.FC = () => {
         score, turn, half, activeTeamId, setActiveTeamId,
         selectedPlayerForAction, setSelectedPlayerForAction,
         rosterViewId, setRosterViewId,
+        rosterDisplayMode, setRosterDisplayMode,
         setIsTdModalOpen, setIsInjuryModalOpen, setIsPrayersModalOpen,
         setIsWeatherModalOpen, setIsSequenceGuideOpen,
         setIsMatchSummaryOpen, setIsConcedeModalOpen, 
         handleNextTurn, handleUpdatePlayerCondition, handleSkillClick,
         logEvent, useReroll, interactionState, setInteractionState, handleS3Action, playSound,
-        gameStatus, handleBribe, handleWizard
+        gameStatus, handleBribe, handleWizard, handlePlayerMove, ballCarrierId, handleDeselectPlayer,
+        handleStrategicAction, turnActions
     } = useMatch();
 
     if (!liveHomeTeam || !liveOpponentTeam) {
@@ -201,51 +205,94 @@ const MatchInProgress: React.FC = () => {
                             <span className="material-symbols-outlined text-primary text-lg">view_quilt</span>
                             Panel de Plantilla: <span className="text-diente-orco">{(rosterViewId === 'home' ? liveHomeTeam : liveOpponentTeam).name}</span>
                         </h2>
+                        <div className="flex bg-black/40 rounded-lg p-1 border border-white/5">
+                            <button 
+                                onClick={() => setRosterDisplayMode('cards')}
+                                className={`px-3 py-1 rounded-md text-[9px] font-black transition-all ${rosterDisplayMode === 'cards' ? 'bg-primary text-midnight shadow-lg' : 'text-slate-500 hover:text-white'}`}
+                            >
+                                <span className="material-symbols-outlined text-xs mr-1 align-middle">grid_view</span>
+                                CARTAS
+                            </button>
+                            <button 
+                                onClick={() => setRosterDisplayMode('tactical')}
+                                className={`px-3 py-1 rounded-md text-[9px] font-black transition-all ${rosterDisplayMode === 'tactical' ? 'bg-primary text-midnight shadow-lg' : 'text-slate-500 hover:text-white'}`}
+                            >
+                                <span className="material-symbols-outlined text-xs mr-1 align-middle">sports_soccer</span>
+                                TÁCTICO
+                            </button>
+                        </div>
                         <div className="flex gap-4 text-[10px] font-bold uppercase text-slate-500">
                             <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-primary shadow-lg shadow-primary/40"></span> Listos</span>
                             <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-slate-700"></span> Agotados</span>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-y-auto pr-2 scrollbar-hide pb-4">
-                        {(rosterViewId === 'home' ? liveHomeTeam : liveOpponentTeam).players.map((p) => {
-                            const isExhausted = ['KO', 'Lesionado', 'Muerto', 'Expulsado'].includes(p.status);
-                            const isActivated = p.isActivated;
-                            const isSelected = selectedPlayerForAction?.id === p.id;
-                            const isStar = p.isStarPlayer;
+                    <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar pb-4">
+                        {rosterDisplayMode === 'cards' ? (
+                            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                {(rosterViewId === 'home' ? liveHomeTeam : liveOpponentTeam).players.map((p) => {
+                                    const isExhausted = ['KO', 'Lesionado', 'Muerto', 'Expulsado'].includes(p.status);
+                                    const isActivated = p.isActivated;
+                                    const isSelected = selectedPlayerForAction?.id === p.id;
+                                    const isStar = p.isStarPlayer;
 
-                            return (
-                                <div 
-                                    key={p.id}
-                                    onClick={() => { setSelectedPlayerForAction(p); setActiveTeamId(rosterViewId); }}
-                                    className={`glass-dark p-4 rounded-xl border-l-4 transition-all cursor-pointer group relative overflow-hidden ring-1 ring-white/5
-                                        ${isExhausted ? 'opacity-30 border-l-slate-800 grayscale scale-[0.98] pointer-events-none' : isActivated ? 'opacity-40 border-l-slate-500 grayscale-[0.8]' : 'border-l-primary hover:bg-white/5 hover:translate-y-[-2px]'}
-                                        ${isSelected ? 'ring-2 ring-gold/50 bg-gold/5 shadow-[0_0_20px_rgba(212,175,55,0.1)]' : ''}
-                                        ${p.isDistracted ? 'grayscale bg-white/5 ring-1 ring-red-500/10' : ''}
-                                        ${isStar ? 'ring-1 ring-gold/20' : ''}
-                                    `}
-                                >
-                                    <div className="absolute top-1 right-1 flex gap-1">
-                                        {isStar && <span className="material-symbols-outlined text-gold text-xs">workspace_premium</span>}
-                                        {(p.gainedSkills || []).some(s => ['Coraje de Hierro', 'Iron Resolve', 'Stand Firm', 'Dodge'].includes(s)) && (
-                                            <span className="material-symbols-outlined text-blue-400 text-xs animate-pulse">shield</span>
-                                        )}
-                                    </div>
-                                    <div className="flex items-start gap-3">
-                                        <div className="w-12 h-12 rounded-lg bg-black border border-white/10 shadow-inner flex items-center justify-center relative">
-                                            <span className="text-xl font-black text-white/5">#{p.id.toString().slice(-2)}</span>
-                                            {isActivated && !isExhausted && <div className="absolute inset-0 bg-primary/20 flex items-center justify-center"><span className="material-symbols-outlined text-midnight text-xs font-black">check</span></div>}
+                                    return (
+                                        <div 
+                                            key={p.id}
+                                            onClick={() => { setSelectedPlayerForAction(p); setActiveTeamId(rosterViewId); }}
+                                            className={`glass-dark p-4 rounded-xl border-l-4 transition-all cursor-pointer group relative overflow-hidden ring-1 ring-white/5
+                                                ${isExhausted ? 'opacity-30 border-l-slate-800 grayscale scale-[0.98] pointer-events-none' : isActivated ? 'opacity-40 border-l-slate-500 grayscale-[0.8]' : 'border-l-primary hover:bg-white/5 hover:translate-y-[-2px]'}
+                                                ${isSelected ? 'ring-2 ring-gold/50 bg-gold/5 shadow-[0_0_20px_rgba(212,175,55,0.1)]' : ''}
+                                                ${p.isDistracted ? 'grayscale bg-white/5 ring-1 ring-red-500/10' : ''}
+                                                ${isStar ? 'ring-1 ring-gold/20' : ''}
+                                            `}
+                                        >
+                                            <div className="absolute top-1 right-1 flex gap-1">
+                                                {isStar && <span className="material-symbols-outlined text-gold text-xs">workspace_premium</span>}
+                                                {(p.gainedSkills || []).some(s => ['Coraje de Hierro', 'Iron Resolve', 'Stand Firm', 'Dodge'].includes(s)) && (
+                                                    <span className="material-symbols-outlined text-blue-400 text-xs animate-pulse">shield</span>
+                                                )}
+                                            </div>
+                                            <div className="flex items-start gap-3">
+                                                <div className="w-12 h-12 rounded-lg bg-black border border-white/10 shadow-inner flex items-center justify-center relative">
+                                                    <span className="text-xl font-black text-white/5">#{p.id.toString().slice(-2)}</span>
+                                                    {isActivated && !isExhausted && <div className="absolute inset-0 bg-primary/20 flex items-center justify-center"><span className="material-symbols-outlined text-midnight text-xs font-black">check</span></div>}
+                                                </div>
+                                                <div className="flex flex-col min-w-0">
+                                                    <span className="text-[10px] font-bold text-primary">#{p.id.toString().slice(-2)}</span>
+                                                    <span className="text-sm font-black leading-tight uppercase truncate text-diente-orco">{p.customName}</span>
+                                                    <span className="text-[9px] font-medium italic uppercase tracking-wider truncate text-slate-500">{p.position}</span>
+                                                </div>
+                                            </div>
+                                            {p.isDistracted && <div className="absolute bottom-2 right-2 text-red-500"><span className="material-symbols-outlined text-sm">psychology_alt</span></div>}
                                         </div>
-                                        <div className="flex flex-col min-w-0">
-                                            <span className="text-[10px] font-bold text-primary">#{p.id.toString().slice(-2)}</span>
-                                            <span className="text-sm font-black leading-tight uppercase truncate text-diente-orco">{p.customName}</span>
-                                            <span className="text-[9px] font-medium italic uppercase tracking-wider truncate text-slate-500">{p.position}</span>
-                                        </div>
-                                    </div>
-                                    {p.isDistracted && <div className="absolute bottom-2 right-2 text-red-500"><span className="material-symbols-outlined text-sm">psychology_alt</span></div>}
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            <div className="h-full bg-black/40 rounded-3xl border border-white/5 p-4 flex flex-col items-center justify-center relative overflow-hidden group">
+                                <div className="absolute inset-0 flex items-center justify-center -z-10 opacity-[0.02]">
+                                    <span className="material-symbols-outlined text-[30rem] font-black group-hover:scale-110 transition-transform duration-[5s]">shield</span>
                                 </div>
-                            );
-                        })}
+                                <div className="w-full max-w-4xl">
+                                    <MiniField 
+                                        players={(rosterViewId === 'home' ? liveHomeTeam : liveOpponentTeam).players} 
+                                        teamColor={rosterViewId === 'home' ? 'bg-primary' : 'bg-slate-700'}
+                                        onPlayerMove={(pid, pos) => handlePlayerMove(rosterViewId, pid, pos)}
+                                        onPlayerClick={(p) => { setSelectedPlayerForAction(p); setActiveTeamId(rosterViewId); }}
+                                        ballCarrierId={ballCarrierId}
+                                    />
+                                    <div className="mt-6 flex justify-center">
+                                         <div className="px-6 py-2 bg-black/60 rounded-full border border-gold/20 backdrop-blur-md">
+                                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-2">
+                                                 <span className="material-symbols-outlined text-gold text-lg">info</span>
+                                                 Puedes arrastrar y soltar los tokens para registrar posiciones
+                                             </p>
+                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </section>
 
@@ -254,12 +301,25 @@ const MatchInProgress: React.FC = () => {
                     <div className="glass-dark rounded-2xl p-6 border border-gold/20 shadow-2xl relative h-full flex flex-col">
                         {selectedPlayerForAction ? (
                             <>
+                                <button 
+                                    onClick={handleDeselectPlayer}
+                                    className="absolute top-2 left-2 size-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-blood-red/20 text-slate-500 hover:text-blood-red transition-all border border-white/5 z-20"
+                                    title="Deseleccionar"
+                                >
+                                    <span className="material-symbols-outlined text-sm">close</span>
+                                </button>
                                 <div className="absolute top-0 right-0 px-4 py-1 bg-gold text-midnight text-[10px] font-black uppercase rounded-bl-xl tracking-widest shadow-lg">DETALLE HUB</div>
                                 
                                 <div className="flex flex-col items-center text-center mb-6 pt-6">
                                     <div className={`w-36 h-36 rounded-2xl bg-black border-4 shadow-2xl mb-4 flex items-center justify-center relative overflow-hidden ${selectedPlayerForAction.isDistracted ? 'grayscale border-slate-600' : 'border-gold/30'}`}>
-                                        <span className="text-6xl font-black text-white/5">#{selectedPlayerForAction.id.toString().slice(-2)}</span>
-                                        {selectedPlayerForAction.isDistracted && <div className="absolute inset-0 bg-white/10 flex items-center justify-center"><span className="material-symbols-outlined text-6xl text-white/40">question_mark</span></div>}
+                                        {selectedPlayerForAction.image ? (
+                                            <img src={selectedPlayerForAction.image} className="w-full h-full object-cover" alt={selectedPlayerForAction.customName} />
+                                        ) : (
+                                            <>
+                                                <span className="text-6xl font-black text-white/5">#{selectedPlayerForAction.id.toString().slice(-2)}</span>
+                                                {selectedPlayerForAction.isDistracted && <div className="absolute inset-0 bg-white/10 flex items-center justify-center"><span className="material-symbols-outlined text-6xl text-white/40">question_mark</span></div>}
+                                            </>
+                                        )}
                                     </div>
                                     <h3 className="text-2xl font-black uppercase italic text-diente-orco tracking-tight">{selectedPlayerForAction.customName}</h3>
                                     <p className="text-primary text-[10px] font-black uppercase tracking-[0.4em]">{selectedPlayerForAction.position}</p>
@@ -270,14 +330,14 @@ const MatchInProgress: React.FC = () => {
                                     {[
                                         { l: 'MA', v: selectedPlayerForAction.stats.MV, bad: selectedPlayerForAction.hasIndigestion },
                                         { l: 'ST', v: selectedPlayerForAction.stats.FU },
-                                        { l: 'AG', v: selectedPlayerForAction.stats.AG + '+', bad: false },
-                                        { l: 'PA', v: selectedPlayerForAction.stats.PA === '-' ? '-' : selectedPlayerForAction.stats.PA + '+', bad: false },
-                                        { l: 'AV', v: selectedPlayerForAction.stats.AR + '+', bad: selectedPlayerForAction.hasIndigestion }
+                                        { l: 'AG', v: selectedPlayerForAction.stats.AG, isRoll: true, bad: false },
+                                        { l: 'PA', v: selectedPlayerForAction.stats.PA === '-' ? '-' : selectedPlayerForAction.stats.PA, isRoll: selectedPlayerForAction.stats.PA !== '-', bad: false },
+                                        { l: 'AV', v: selectedPlayerForAction.stats.AR, isRoll: true, bad: selectedPlayerForAction.hasIndigestion }
                                     ].map(attr => (
                                         <div key={attr.l} className="flex flex-col items-center bg-black/60 py-3 rounded-xl border border-white/5 relative">
                                             <span className="text-[10px] font-bold text-slate-500 mb-1">{attr.l}</span>
                                             <span className={`text-2xl font-black ${attr.bad ? 'text-red-500 underline decoration-double' : 'text-gold-gradient'}`}>
-                                                {attr.v === 'undefined+' ? '--' : attr.v}
+                                                {(attr.v === 'undefined' || attr.v === null) ? '--' : String(attr.v).replace(/\+/g, '')}{attr.isRoll && attr.v !== '-' ? '+' : ''}
                                             </span>
                                             {attr.bad && <div className="absolute -top-1 -right-1 bg-red-600 size-5 rounded-full flex items-center justify-center text-[10px] font-black shadow-lg">-1</div>}
                                         </div>
@@ -290,12 +350,21 @@ const MatchInProgress: React.FC = () => {
                                         <span className="material-symbols-outlined text-primary text-sm">auto_fix_high</span> CODEX SKILLS
                                     </h4>
                                     <div className="space-y-2">
-                                        {[...(selectedPlayerForAction.skillKeys || []), ...(selectedPlayerForAction.gainedSkills || [])].map((s, i) => (
-                                            <button key={i} onClick={() => handleSkillClick(s)} className={`w-full flex items-center gap-3 p-3 glass border-white/5 rounded-xl hover:bg-white/10 transition-all text-left group ${selectedPlayerForAction.isDistracted ? 'opacity-30' : ''}`}>
+                                        {(selectedPlayerForAction.skillKeys || []).map((s, i) => (
+                                            <button key={`base-${i}`} onClick={() => handleSkillClick(s)} className={`w-full flex items-center gap-3 p-3 glass border-white/5 rounded-xl hover:bg-white/10 transition-all text-left group ${selectedPlayerForAction.isDistracted ? 'opacity-30' : ''}`}>
                                                 <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20"><span className="material-symbols-outlined text-primary text-sm">menu_book</span></div>
                                                 <div>
                                                     <p className={`text-[11px] font-black uppercase text-diente-orco ${selectedPlayerForAction.isDistracted ? 'line-through decoration-red-500' : ''}`}>{s}</p>
                                                     <p className="text-[8px] text-slate-600 font-bold tracking-tight uppercase">Click para Detalles</p>
+                                                </div>
+                                            </button>
+                                        ))}
+                                        {(selectedPlayerForAction.gainedSkills || []).map((s, i) => (
+                                            <button key={`gained-${i}`} onClick={() => handleSkillClick(s)} className="w-full flex items-center gap-3 p-3 bg-gold/5 border border-gold/20 rounded-xl hover:bg-gold/10 transition-all text-left group">
+                                                <div className="size-8 rounded-lg bg-gold/10 flex items-center justify-center group-hover:bg-gold/20"><span className="material-symbols-outlined text-gold text-sm">workspace_premium</span></div>
+                                                <div>
+                                                    <p className="text-[11px] font-black uppercase text-gold">{s}</p>
+                                                    <p className="text-[8px] text-gold/60 font-bold tracking-tight uppercase">Habilidad Adquirida</p>
                                                 </div>
                                             </button>
                                         ))}
@@ -359,7 +428,8 @@ const MatchInProgress: React.FC = () => {
                             <PEDockButton label="BAJA" pe="+2" icon="skull" onClick={() => handleTriggerAction('CAS')} warning={false} />
                             <PEDockButton label="PASE" pe="+1" icon="near_me" onClick={() => handleTriggerAction('PASS')} warning={isSunny} />
                             <PEDockButton label="HAND" pe="+1" icon="rocket_launch" onClick={() => handleTriggerAction('HANDOFF')} warning={isRainy} />
-                            <PEDockButton label="INT" pe="+2" icon="front_hand" onClick={() => logEvent('INFO', 'Intercepción S3')} warning={isRainy} />
+                            <PEDockButton label="BLITZ" pe="S3" icon="bolt" onClick={() => handleStrategicAction('blitz')} warning={turnActions[activeTeamId].blitz} />
+                            <PEDockButton label="FALTA" pe="S3" icon="gavel" onClick={() => handleStrategicAction('foul')} warning={turnActions[activeTeamId].foul} />
                         </div>
                     </div>
 
@@ -380,9 +450,9 @@ const MatchInProgress: React.FC = () => {
                                     {isRainy && <div className="warning-badge">-1</div>}
                                 </button>
                             </div>
-                            <button onClick={handleNextTurn} className="bg-primary hover:brightness-110 text-midnight py-2 rounded-xl flex flex-col items-center justify-center gap-1 shadow-2xl shadow-primary/20 transition-all hover:scale-[1.02]">
-                                <span className="material-symbols-outlined text-2xl font-black">event_repeat</span>
-                                <span className="text-[10px] font-black uppercase tracking-widest">Fin Activación</span>
+                            <button onClick={handleNextTurn} className="bg-primary hover:brightness-110 text-midnight py-2 rounded-xl flex flex-col items-center justify-center gap-1 shadow-2xl shadow-primary/20 transition-all hover:scale-[1.02] border-b-4 border-primary-dark">
+                                <span className="material-symbols-outlined text-2xl font-black">logout</span>
+                                <span className="text-[10px] font-black uppercase tracking-widest leading-none">TERMINAR TURNO</span>
                             </button>
                         </div>
                     </div>
@@ -414,94 +484,11 @@ const MatchInProgress: React.FC = () => {
                 </div>
             </footer>
 
-            {/* ── INTERACTIVE OVERLAYS ── */}
+            {/* ── INTERACTIVE OVERLAYS: NUFFLE ORCHESTRATOR ── */}
             {mode !== 'idle' && (
                 <div className="absolute inset-0 z-[100] bg-midnight/90 backdrop-blur-xl flex items-center justify-center p-6 animate-in fade-in duration-300">
-                    <div className="max-w-xl w-full glass-dark rounded-3xl border-2 border-gold/20 p-8 shadow-2xl relative shadow-[0_0_50px_rgba(212,175,55,0.1)]">
-                        <div className="text-center mb-8">
-                            <span className="text-[10px] font-black text-primary uppercase tracking-[0.4em] mb-2 block">CRONISTA DE NUFFLE</span>
-                            <h2 className="text-4xl font-display font-black text-diente-orco italic uppercase tracking-tighter">
-                                {mode === 'selecting_objective' && "¿VÍCTIMA DEL DESTINO?"}
-                                {mode === 'awaiting_dice' && "SENTENCIA DE DADOS"}
-                            </h2>
-                        </div>
-
-                        {mode === 'selecting_objective' && (
-                            <div className="grid grid-cols-4 gap-4">
-                                {idleTeam.players.filter(p => p.status === 'Activo').map(p => (
-                                    <button key={p.id} onClick={() => setInteractionState(prev => ({ ...prev, mode: 'awaiting_dice', pending: { ...prev.pending, objectiveId: p.id } }))} className="flex flex-col items-center justify-center p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-gold hover:text-midnight transition-all group scale-100 hover:scale-110 shadow-lg">
-                                        <span className="text-2xl font-black mb-1">#{p.id.toString().slice(-2)}</span>
-                                        <span className="text-[8px] font-bold uppercase opacity-60 text-center">{p.position}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-
-                        {mode === 'awaiting_dice' && (
-                            <div className="flex flex-col items-center gap-6">
-                                <span className="text-gold font-mono text-[9px] uppercase tracking-[0.2em] bg-gold/10 px-3 py-1 rounded-full border border-gold/20">
-                                    Contexto: {pending.actionType}
-                                </span>
-
-                                <div className="flex flex-wrap justify-center gap-3">
-                                    {pending.actionType === 'BLOCK' ? (
-                                        ['Calavera', 'Ambos', 'Empuje', 'Zaca!', 'Flecha'].map(d => (
-                                            <button key={d} onClick={() => handleDiceResultInternal(d)} className="size-20 rounded-full glass border-white/10 flex flex-col items-center justify-center hover:bg-gold hover:text-midnight transition-all shadow-xl font-black text-[9px] uppercase tracking-tighter group"><span className="material-symbols-outlined text-lg mb-1">casino</span>{d}</button>
-                                        ))
-                                    ) : (
-                                        <div className="flex flex-col items-center gap-4">
-                                            {/* D6 Grid for quick access */}
-                                            {['PASS', 'RUSH', 'DODGE', 'HANDOFF', 'SECURE_BALL', 'FOUL', 'REGEN', 'KO_RECOVERY'].includes(pending.actionType || '') ? (
-                                                <div className="grid grid-cols-6 gap-3">
-                                                    {[1, 2, 3, 4, 5, 6].map(n => (
-                                                        <button key={n} onClick={() => handleDiceResultInternal(n)} className="size-16 rounded-2xl glass border-white/10 text-3xl font-black hover:bg-gold hover:text-midnight transition-all shadow-xl">{n}</button>
-                                                    ))}
-                                                </div>
-                                            ) : pending.actionType === 'SCATTER' ? (
-                                                <div className="grid grid-cols-4 gap-3">
-                                                    {[1, 2, 3, 4, 5, 6, 7, 8].map(n => (
-                                                        <button key={n} onClick={() => handleDiceResultInternal(n)} className="size-16 rounded-2xl glass border-white/10 text-3xl font-black hover:bg-gold hover:text-midnight transition-all shadow-xl">{n}</button>
-                                                    ))}
-                                                </div>
-                                            ) : pending.actionType === 'FANS' ? (
-                                                <div className="grid grid-cols-3 gap-3">
-                                                    {[1, 2, 3].map(n => (
-                                                        <button key={n} onClick={() => handleDiceResultInternal(n)} className="size-20 rounded-2xl glass border-white/10 text-4xl font-black hover:bg-gold hover:text-midnight transition-all shadow-xl">{n}</button>
-                                                    ))}
-                                                </div>
-                                            ) : ['CAS', 'INJURY', 'CHARACTERISTIC'].includes(pending.actionType || '') ? (
-                                                <div className="grid grid-cols-4 gap-2">
-                                                    {Array.from({length: 16}, (_, i) => i + 1).map(n => (
-                                                        <button key={n} onClick={() => handleDiceResultInternal(n)} className="size-12 rounded-xl glass border-white/10 text-xl font-black hover:bg-gold hover:text-midnight transition-all shadow-lg">{n}</button>
-                                                    ))}
-                                                </div>
-                                            ) : (
-                                                <div className="flex items-center gap-3">
-                                                    <input 
-                                                        type="number" 
-                                                        placeholder="Resultado"
-                                                        value={manualRollVal}
-                                                        onChange={(e) => setManualRollVal(e.target.value)}
-                                                        className="w-32 bg-black/60 border border-gold/30 rounded-xl px-4 py-3 text-center text-2xl font-black text-white focus:outline-none focus:border-gold"
-                                                    />
-                                                    <button 
-                                                        onClick={() => manualRollVal && handleDiceResultInternal(Number(manualRollVal))}
-                                                        className="h-14 bg-gold text-midnight px-8 rounded-xl font-black uppercase tracking-widest text-xs"
-                                                    >
-                                                        Confirmar
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                                <button onClick={() => handleDiceResultInternal(undefined)} className="w-full py-4 bg-primary text-midnight font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-3">
-                                    <span className="material-symbols-outlined">casino</span> Lanzar Dados Digitales
-                                </button>
-                            </div>
-                        )}
-
-                        <button onClick={() => setInteractionState({ mode: 'idle', pending: { actorId: null, actionType: null, objectiveId: null, diceResult: null, manualMode: true } })} className="mt-8 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-all block mx-auto">&larr; ABORTAR SECUENCIA</button>
+                    <div className="max-w-xl w-full glass-dark rounded-3xl border-2 border-gold/20 p-8 shadow-3xl relative shadow-[0_0_50px_rgba(212,175,55,0.1)]">
+                        <S3ActionOrchestrator />
                     </div>
                 </div>
             )}
