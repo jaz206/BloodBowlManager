@@ -78,7 +78,12 @@ const MainApp: React.FC = () => {
   useEffect(() => {
     if (isGuest || !user || !db) {
       if (managedTeams.length === 0) {
-        setManagedTeams(getGuestTeams());
+        const cached = localStorage.getItem('bb-guest-teams');
+        if (cached) {
+          setManagedTeams(JSON.parse(cached));
+        } else {
+          setManagedTeams(getGuestTeams());
+        }
       }
       setPlays([]);
       setDataInitiallyLoaded(true);
@@ -160,7 +165,9 @@ const MainApp: React.FC = () => {
     if (!user) return;
     setSyncState('syncing');
     if (isGuest) {
-      setManagedTeams(prev => [...prev, { ...newTeamData, id: `temp_${Date.now()}` } as ManagedTeam]);
+      const updated = [...managedTeams, { ...newTeamData, id: `temp_${Date.now()}` } as ManagedTeam];
+      setManagedTeams(updated);
+      localStorage.setItem('bb-guest-teams', JSON.stringify(updated));
       setSyncState('synced');
       return;
     }

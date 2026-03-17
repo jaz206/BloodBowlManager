@@ -15,17 +15,15 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // 🏆 USUARIOS
-    // Permite acceso recursivo a los datos del usuario (perfil, equipos, reportes)
+    // 🏟️ EQUIPOS Y DATOS DE USUARIO
+    // Acceso recursivo a todo lo que cuelga de /users/{userId}
     match /users/{userId}/{document=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // 🏟️ EQUIPOS GESTIONADOS (Managed Teams)
-    // Público para ver (compartir rosters), solo usuarios logueados pueden crear/editar.
-    match /managed_teams/{teamId} {
-      allow read: if true;
-      allow write: if request.auth != null;
+    // 🛡️ REGLA GLOBAL SEGURA (Fallback)
+    match /{path=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
     // ⚔️ PARTIDOS (Live Matches)
