@@ -173,10 +173,12 @@ const MainApp: React.FC = () => {
     }
     try {
       if (!db) return;
-      await addDoc(collection(db, 'users', user.id, 'teams'), newTeamData);
+      // Sanitizar datos para evitar errores de Firestore (eliminar undefined)
+      const sanitizedTeam = JSON.parse(JSON.stringify(newTeamData));
+      await addDoc(collection(db, 'users', user.id, 'teams'), sanitizedTeam);
       setSyncState('synced');
     } catch (error) {
-      console.error("Error creating team:", error);
+      console.error("Error creating team in Firestore:", error);
       setSyncState('error');
     }
   };
