@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 // FIX: BoardToken is defined in types.ts, not GameBoard.tsx. BlockResolution is exported from GameBoard.
-import type { BlockResolution } from '../../pages/Arena/MatchPage';
+import type { BlockResolution } from '../../pages/Arena/Match/types/match.types';
 import type { BoardToken } from '../../types';
 import BlockDiceSkullIcon from '../icons/BlockDiceSkullIcon';
 import BlockDiceBothDownIcon from '../icons/BlockDiceBothDownIcon';

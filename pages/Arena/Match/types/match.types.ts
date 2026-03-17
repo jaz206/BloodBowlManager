@@ -9,11 +9,11 @@ import type {
     SppActionType
 } from '../../../../types';
 
-export type GameState = 'setup' | 'selection' | 'pre_game' | 'in_progress' | 'post_game' | 'ko_recovery' | 'reports';
+export type GameState = 'setup' | 'selection' | 'pre_game' | 'in_progress' | 'post_game' | 'ko_recovery' | 'reports' | '_pre_game_legacy' | '_in_progress_legacy';
 
 export type InteractionMode = 'idle' | 'selecting_actor' | 'selecting_action' | 'selecting_objective' | 'awaiting_dice' | 'processing';
 
-export type S3ActionType = 'BLOCK' | 'FOUL' | 'PASS' | 'HANDOFF' | 'TOUCHDOWN' | 'SECURE_BALL' | 'DODGE' | 'MOVE' | 'RUSH' | 'BONE_HEAD' | 'LEAP';
+export type S3ActionType = 'BLOCK' | 'FOUL' | 'PASS' | 'HANDOFF' | 'TOUCHDOWN' | 'SECURE_BALL' | 'DODGE' | 'MOVE' | 'RUSH' | 'BONE_HEAD' | 'LEAP' | 'REGEN' | 'KO_RECOVERY' | 'SCATTER' | 'FANS' | 'CAS' | 'INJURY' | 'CHARACTERISTIC';
 
 export interface PendingS3Action {
     actorId: number | null;

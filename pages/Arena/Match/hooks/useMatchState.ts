@@ -137,6 +137,7 @@ export const useMatchState = (props: GameBoardProps) => {
     const [isSequenceGuideOpen, setIsSequenceGuideOpen] = useState(false);
     const [isMatchSummaryOpen, setIsMatchSummaryOpen] = useState(false);
     const [isConcedeModalOpen, setIsConcedeModalOpen] = useState(false);
+    const [isCustomEventModalOpen, setIsCustomEventModalOpen] = useState(false);
 
     // ESTADOS DE APOYO
     const [viewingPlayer, setViewingPlayer] = useState<ManagedPlayer | null>(null);
@@ -268,6 +269,7 @@ export const useMatchState = (props: GameBoardProps) => {
         isSequenceGuideOpen, setIsSequenceGuideOpen,
         isMatchSummaryOpen, setIsMatchSummaryOpen,
         isConcedeModalOpen, setIsConcedeModalOpen,
+        isCustomEventModalOpen, setIsCustomEventModalOpen,
         viewingPlayer, setViewingPlayer,
         selectedSkillForModal, setSelectedSkillForModal,
         selectedStarPlayer, setSelectedStarPlayer,

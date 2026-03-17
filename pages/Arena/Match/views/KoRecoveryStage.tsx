@@ -46,12 +46,28 @@ const KoRecoveryStage: React.FC = () => {
                                             <span className="material-symbols-outlined text-sm">{koRecoveryRolls[p.id].success ? 'check_circle' : 'cancel'}</span>
                                         </div>
                                     ) : (
-                                        <button 
-                                            onClick={() => rollKoRecovery(p)} 
-                                            className="bg-premium-gold text-black font-display font-black py-1.5 px-4 rounded-xl text-[10px] uppercase tracking-widest hover:bg-white transition-all shadow-lg active:scale-95"
-                                        >
-                                            Tirar (1D6)
-                                        </button>
+                                        <div className="flex items-center gap-2">
+                                            <input 
+                                                type="number" min="1" max="6" placeholder="D6"
+                                                className="w-12 bg-black/60 border border-white/10 rounded-lg px-1 py-1 text-center text-xs font-black text-white focus:border-premium-gold outline-none"
+                                                id={`ko-manual-${p.id}`}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        const val = (e.target as HTMLInputElement).value;
+                                                        if (val) rollKoRecovery(p, Number(val));
+                                                    }
+                                                }}
+                                            />
+                                            <button 
+                                                onClick={() => {
+                                                    const input = document.getElementById(`ko-manual-${p.id}`) as HTMLInputElement;
+                                                    rollKoRecovery(p, input?.value ? Number(input.value) : undefined);
+                                                }} 
+                                                className="bg-premium-gold text-black font-display font-black py-1.5 px-3 rounded-xl text-[10px] uppercase tracking-widest hover:bg-white transition-all shadow-lg active:scale-95"
+                                            >
+                                                OK
+                                            </button>
+                                        </div>
                                     )}
                                 </div>
                             )) : (
@@ -78,12 +94,28 @@ const KoRecoveryStage: React.FC = () => {
                                             <span className="material-symbols-outlined text-sm">{koRecoveryRolls[p.id].success ? 'check_circle' : 'cancel'}</span>
                                         </div>
                                     ) : (
-                                        <button 
-                                            onClick={() => rollKoRecovery(p)} 
-                                            className="bg-premium-gold text-black font-display font-black py-1.5 px-4 rounded-xl text-[10px] uppercase tracking-widest hover:bg-white transition-all shadow-lg active:scale-95"
-                                        >
-                                            Tirar (1D6)
-                                        </button>
+                                        <div className="flex items-center gap-2">
+                                            <input 
+                                                type="number" min="1" max="6" placeholder="D6"
+                                                className="w-12 bg-black/60 border border-white/10 rounded-lg px-1 py-1 text-center text-xs font-black text-white focus:border-premium-gold outline-none"
+                                                id={`ko-manual-${p.id}`}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        const val = (e.target as HTMLInputElement).value;
+                                                        if (val) rollKoRecovery(p, Number(val));
+                                                    }
+                                                }}
+                                            />
+                                            <button 
+                                                onClick={() => {
+                                                    const input = document.getElementById(`ko-manual-${p.id}`) as HTMLInputElement;
+                                                    rollKoRecovery(p, input?.value ? Number(input.value) : undefined);
+                                                }} 
+                                                className="bg-premium-gold text-black font-display font-black py-1.5 px-3 rounded-xl text-[10px] uppercase tracking-widest hover:bg-white transition-all shadow-lg active:scale-95"
+                                            >
+                                                OK
+                                            </button>
+                                        </div>
                                     )}
                                 </div>
                             )) : (

@@ -13,6 +13,7 @@ import { handleInjuryActionLogic } from '../engine/injuryEngine';
 import { updatePlayerSppActionLogic } from '../engine/sppEngine';
 import { handleHalftimeLogic, handleNextTurnLogic, checkStalling } from '../engine/matchEngine';
 import { skillsData } from '../../../../data/skills';
+import { weatherConditions } from '../../../../data/weather';
 import { teamsData } from '../../../../data/teams';
 
 /**
@@ -30,8 +31,15 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
         setIsInjuryModalOpen, setInjuryState, injuryState,
         setIsApothecaryModalOpen, setSelectedSkillForModal,
         setBallCarrierId, setSelectedPlayerForAction, selectedPlayerForAction,
-        tdModalTeam, setInteractionState, setIsTurnoverModalOpen, setRosterViewId
+        tdModalTeam, setInteractionState, setIsTurnoverModalOpen, setRosterViewId,
+        setIsWeatherModalOpen, setIsChangingWeatherModalOpen, setWeatherRerollInput, weatherRerollInput
     } = state;
+
+    // ─── HELPER S3: BRUTOS BRUTALES ──────────────────────────────────────────
+    const hasBrutosBrutales = (team: ManagedTeam) => {
+        const name = team.rosterName.toLowerCase();
+        return name.includes('khorne') || name.includes('orcos negros') || name.includes('black orcs');
+    };
 
     // ─── UTILIDADES CORE ─────────────────────────────────────────────────────
 
@@ -71,19 +79,26 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
         });
     }, [setLiveHomeTeam, setLiveOpponentTeam]);
 
-    /** Otorga SPP a un jugador y lo registra en el log. */
-    const updatePlayerSppAndAction = useCallback((
-        player: ManagedPlayer,
-        teamId: 'home' | 'opponent',
-        spp: number,
-        action: SppActionType,
-        description: string
-    ) => {
-        updatePlayerSppActionLogic(
-            { setLiveHomeTeam, setLiveOpponentTeam, logEvent, setSppModalState },
-            player, teamId, spp, action, description
-        );
-    }, [setLiveHomeTeam, setLiveOpponentTeam, logEvent, setSppModalState]);
+const updatePlayerSppAndAction = useCallback((
+    player: ManagedPlayer,
+    teamId: 'home' | 'opponent',
+    baseSpp: number,
+    action: SppActionType,
+    description: string
+) => {
+    let finalSpp = baseSpp;
+    const team = teamId === 'home' ? liveHomeTeam : liveOpponentTeam;
+    
+    if (team && hasBrutosBrutales(team)) {
+        if (action === 'TD') finalSpp = 2; // Brutos Brutales: 2 PE por TD
+        if (action === 'CASUALTY') finalSpp = 3; // Brutos Brutales: 3 PE por CAS
+    }
+
+    updatePlayerSppActionLogic(
+        { setLiveHomeTeam, setLiveOpponentTeam, logEvent, setSppModalState },
+        player, teamId, finalSpp, action, description
+    );
+}, [setLiveHomeTeam, setLiveOpponentTeam, logEvent, setSppModalState, liveHomeTeam, liveOpponentTeam]);
 
     // ─── FLUJO DE PARTIDO ────────────────────────────────────────────────────
 
@@ -686,10 +701,13 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
         logEvent('INFO', 'Despliegue sugerido aplicado.');
     }, [setLiveHomeTeam, setLiveOpponentTeam, logEvent]);
 
-    /** Maneja la tirada de recuperación de un jugador KO. 4+ recupera al banquillo. */
-    const rollKoRecovery = useCallback((player: any) => {
+    /** Maneja la tirada de recuperación de un jugador KO. 4+ recupera al banquillo.
+     * @param player - El jugador KO a recuperar.
+     * @param manualVal - Valor manual de dado (1-6) introducido por el usuario. Si no se provee, se tira digitalmente.
+     */
+    const rollKoRecovery = useCallback((player: any, manualVal?: number) => {
         const { setKoRecoveryRolls } = state as any;
-        const roll = Math.floor(Math.random() * 6) + 1;
+        const roll = manualVal ?? (Math.floor(Math.random() * 6) + 1);
         const success = roll >= 4;
         setKoRecoveryRolls((prev: any) => ({ ...prev, [player.id]: { roll, success } }));
         if (success) {
@@ -772,6 +790,45 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
         openSppModal, handleStrategicAction, handleSelectTdScorer, handleS3Action, handlePlayerStatusToggle, handlePlayerMove, useReroll, handleConfirmJourneymen, handleStartDrive,
         handleTurnover, handleBuyInducement, handleSellInducement, handleHireStar, handleFireStar, handleAutoSelectTeam, handleSuggestDeployment, handleSelectTeamInternal,
         handleProcessQrCode, handleConfirmPostGame, resetGameState, rollKoRecovery, handleStartNextDrive, handleBribe,
+
+    /** Genera un nuevo evento de clima (2D6). */
+    handleGenerateWeather: useCallback((manualVal?: number) => {
+        const total = manualVal || (Math.floor(Math.random() * 6) + Math.floor(Math.random() * 6) + 2);
+        const w = weatherConditions.find(wc => {
+            if (wc.diceRoll.includes('-')) {
+                const [min, max] = wc.diceRoll.split('-').map(Number);
+                return total >= min && total <= max;
+            }
+            return wc.diceRoll === total.toString();
+        });
+        if (w) {
+            setGameStatus((prev: any) => ({ ...prev, weather: w }));
+            logEvent('WEATHER', `Nuffle ha hablado: ${w.title} (${total})`);
+            playSound('dice');
+        }
+        setIsWeatherModalOpen(false);
+    }, [setGameStatus, logEvent, playSound, setIsWeatherModalOpen]),
+
+    /** Confirma un cambio forzado de clima. */
+    handleConfirmWeatherReroll: useCallback(() => {
+        const val = parseInt(weatherRerollInput);
+        if (isNaN(val) || val < 2 || val > 12) return;
+        
+        const w = weatherConditions.find(wc => {
+            if (wc.diceRoll.includes('-')) {
+                const [min, max] = wc.diceRoll.split('-').map(Number);
+                return val >= min && val <= max;
+            }
+            return wc.diceRoll === val.toString();
+        });
+        if (w) {
+            setGameStatus((prev: any) => ({ ...prev, weather: w }));
+            logEvent('WEATHER', `¡Vientos de cambio! Nuevo clima: ${w.title} (${val})`);
+            playSound('dice');
+        }
+        setIsChangingWeatherModalOpen(false);
+        setWeatherRerollInput('');
+    }, [weatherRerollInput, setGameStatus, logEvent, playSound, setIsChangingWeatherModalOpen, setWeatherRerollInput]),
 
     /** Mecánica de Mago (S3): Bola de Fuego / Rayo. */
     handleWizard: useCallback((teamId: 'home' | 'opponent') => {

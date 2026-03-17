@@ -24,7 +24,7 @@ const WeatherModal: React.FC = () => {
                     </div>
                     <h3 className="text-2xl font-display font-black text-white uppercase italic tracking-tighter mb-2">Clima de <span className="text-premium-gold">Nuffle</span></h3>
                     <p className="text-slate-400 text-sm mb-8">El destino del campo pende de un hilo. Lanza los dados para invocar las fuerzas de la naturaleza.</p>
-                    <button onClick={handleGenerateWeather} className="w-full bg-premium-gold text-black font-display font-black py-4 px-6 rounded-2xl shadow-2xl hover:bg-premium-light transition-all active:scale-95 uppercase tracking-widest italic text-sm">
+                    <button onClick={() => handleGenerateWeather()} className="w-full bg-premium-gold text-black font-display font-black py-4 px-6 rounded-2xl shadow-2xl hover:bg-premium-light transition-all active:scale-95 uppercase tracking-widest italic text-sm">
                         Invocar (2D6)
                     </button>
                 </div>

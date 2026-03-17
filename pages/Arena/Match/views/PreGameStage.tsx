@@ -91,10 +91,14 @@ const CommandCenterStep: React.FC = () => {
         ...(isNurgle ? [{ name: 'plagueDoctor', icon: 'coronavirus', label: 'Médico de la Peste', cost: 100000, count: underdogTeam.plagueDoctors || 0 }] : []),
     ] : [];
 
-    const handleWeatherRoll = () => {
-        const die1 = Math.floor(Math.random() * 6) + 1;
-        const die2 = Math.floor(Math.random() * 6) + 1;
-        const total = die1 + die2;
+    const [manualWeather, setManualWeather] = useState('');
+    const [manualFansHome, setManualFansHome] = useState('');
+    const [manualFansOpp, setManualFansOpp] = useState('');
+    const [manualCoinHome, setManualCoinHome] = useState('');
+    const [manualCoinOpp, setManualCoinOpp] = useState('');
+
+    const handleWeatherRoll = (manualVal?: number) => {
+        const total = manualVal || (Math.floor(Math.random() * 6) + Math.floor(Math.random() * 6) + 2);
         const w = weatherConditions.find(wc => {
             if (wc.diceRoll.includes('-')) {
                 const [min, max] = wc.diceRoll.split('-').map(Number);
@@ -104,14 +108,14 @@ const CommandCenterStep: React.FC = () => {
         });
         if (w) {
             setGameStatus((prev: any) => ({ ...prev, weather: w }));
-            logEvent('INFO', `Clima Invocado (${die1}+${die2}=${total}): ${w.title}`);
+            logEvent('INFO', `Clima Invocado (Resultado ${total}): ${w.title}`);
         }
         playSound('dice');
     };
 
-    const handleFansRoll = () => {
-        const hf = (Math.floor(Math.random() * 6) + 1) + (Math.floor(Math.random() * 6) + 1);
-        const of = (Math.floor(Math.random() * 6) + 1) + (Math.floor(Math.random() * 6) + 1);
+    const handleFansRoll = (manualH?: number, manualO?: number) => {
+        const hf = manualH || (Math.floor(Math.random() * 3) + 1);
+        const of = manualO || (Math.floor(Math.random() * 3) + 1);
         const hTotal = liveHomeTeam.dedicatedFans + hf;
         const oTotal = liveOpponentTeam.dedicatedFans + of;
         let homeFame = 0, oppFame = 0;
@@ -119,7 +123,21 @@ const CommandCenterStep: React.FC = () => {
         if (oTotal >= hTotal * 2) oppFame = 2; else if (oTotal > hTotal) oppFame = 1;
         setFame({ home: homeFame, opponent: oppFame });
         setFansRoll({ home: hf.toString(), opponent: of.toString() });
-        logEvent('INFO', `Hinchas — ${liveHomeTeam.name}: ${hTotal} (${homeFame} FAMA), ${liveOpponentTeam.name}: ${oTotal} (${oppFame} FAMA)`);
+        logEvent('INFO', `Hinchas (S3 1D3) — ${liveHomeTeam.name}: +${hf}, ${liveOpponentTeam.name}: +${of}`);
+        playSound('dice');
+    };
+
+    const handleCoinTossRoll = (manualH?: number, manualO?: number) => {
+        const hRoll = manualH || (Math.floor(Math.random() * 6) + 1);
+        const oRoll = manualO || (Math.floor(Math.random() * 6) + 1);
+        
+        let winner: 'home' | 'opponent';
+        if (hRoll > oRoll) winner = 'home';
+        else if (oRoll > hRoll) winner = 'opponent';
+        else winner = Math.random() > 0.5 ? 'home' : 'opponent';
+
+        setGameStatus((prev: any) => ({ ...prev, coinTossWinner: winner }));
+        logEvent('INFO', `Sorteo de Moneda (1D6 vs 1D6) — ${liveHomeTeam.name}: ${hRoll}, ${liveOpponentTeam.name}: ${oRoll}. Ganador: ${winner === 'home' ? liveHomeTeam.name : liveOpponentTeam.name}`);
         playSound('dice');
     };
 
@@ -224,28 +242,40 @@ const CommandCenterStep: React.FC = () => {
                     <div className="glass-panel p-6 border-white/10 bg-black/40 space-y-4">
                         {/* Clima */}
                         <div className={`p-4 rounded-2xl border transition-all ${gameStatus.weather ? 'bg-sky-500/10 border-sky-500/30' : 'bg-white/5 border-white/5'}`}>
-                            <p className="text-[10px] font-display font-black text-sky-400 uppercase tracking-widest mb-2">Clima</p>
+                            <p className="text-[10px] font-display font-black text-sky-400 uppercase tracking-widest mb-2">Clima (2D6)</p>
                             {gameStatus.weather ? (
                                 <div className="flex items-center gap-3">
                                     <span className="material-symbols-outlined text-2xl text-white">cloud_queue</span>
                                     <h4 className="text-lg font-display font-black text-white uppercase italic">{gameStatus.weather.title}</h4>
                                 </div>
                             ) : (
-                                <p className="text-[10px] text-slate-500 uppercase font-bold italic tracking-wider mb-3">Pendiente de Consultar</p>
+                                <div className="flex gap-2">
+                                    <input 
+                                        type="number" min="2" max="12" placeholder="2D6" 
+                                        className="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-center text-xs font-black text-white focus:border-sky-500 transition-all"
+                                        value={manualWeather} onChange={(e) => setManualWeather(e.target.value)}
+                                    />
+                                    <button 
+                                        onClick={() => manualWeather && handleWeatherRoll(Number(manualWeather))}
+                                        className="bg-sky-500 text-black px-4 rounded-xl font-black text-[10px] uppercase hover:bg-white transition-all shadow-lg"
+                                    >
+                                        OK
+                                    </button>
+                                </div>
                             )}
                         </div>
                         <button
                             disabled={!!gameStatus.weather}
-                            onClick={handleWeatherRoll}
+                            onClick={() => handleWeatherRoll()}
                             className={`w-full font-display font-black py-3 rounded-2xl transition-all flex items-center justify-center gap-3 text-[10px] uppercase tracking-[0.2em] ${gameStatus.weather ? 'bg-green-900/30 text-green-500 border border-green-500/20 cursor-not-allowed opacity-60' : 'bg-sky-500 text-black hover:scale-105 active:scale-95 shadow-lg'}`}
                         >
                             <span className="material-symbols-outlined text-base">{gameStatus.weather ? 'check_circle' : 'thunderstorm'}</span>
-                            {gameStatus.weather ? 'Clima Registrado' : 'Tirar Clima (2D6)'}
+                            {gameStatus.weather ? 'Clima Registrado' : 'Generar Aleatorio'}
                         </button>
 
                         {/* Fans / FAMA */}
                         <div className={`p-4 rounded-2xl border transition-all ${fansRoll.home ? 'bg-amber-500/10 border-amber-500/30' : 'bg-white/5 border-white/5'}`}>
-                            <p className="text-[10px] font-display font-black text-amber-500 uppercase tracking-widest mb-2">Influencia de FAMA</p>
+                            <p className="text-[10px] font-display font-black text-amber-500 uppercase tracking-widest mb-2">Influencia de FAMA (1D3 x2)</p>
                             {fansRoll.home ? (
                                 <div className="flex justify-around items-center text-center">
                                     <div>
@@ -259,16 +289,35 @@ const CommandCenterStep: React.FC = () => {
                                     </div>
                                 </div>
                             ) : (
-                                <p className="text-[10px] text-slate-500 uppercase font-bold italic tracking-wider">Sin Registro del Grito</p>
+                                <div className="space-y-2">
+                                    <div className="flex gap-2">
+                                        <input 
+                                            type="number" min="1" max="3" placeholder="Loc. 1D3" 
+                                            className="w-full bg-black/40 border border-white/10 rounded-xl px-2 py-2 text-center text-[10px] font-black text-white focus:border-amber-500 transition-all"
+                                            value={manualFansHome} onChange={(e) => setManualFansHome(e.target.value)}
+                                        />
+                                        <input 
+                                            type="number" min="1" max="3" placeholder="Riv. 1D3" 
+                                            className="w-full bg-black/40 border border-white/10 rounded-xl px-2 py-2 text-center text-[10px] font-black text-white focus:border-amber-500 transition-all"
+                                            value={manualFansOpp} onChange={(e) => setManualFansOpp(e.target.value)}
+                                        />
+                                        <button 
+                                            onClick={() => manualFansHome && manualFansOpp && handleFansRoll(Number(manualFansHome), Number(manualFansOpp))}
+                                            className="bg-amber-500 text-black px-4 rounded-xl font-black text-[10px] uppercase hover:bg-white transition-all shadow-lg"
+                                        >
+                                            OK
+                                        </button>
+                                    </div>
+                                </div>
                             )}
                         </div>
                         <button
                             disabled={!!fansRoll.home}
-                            onClick={handleFansRoll}
+                            onClick={() => handleFansRoll()}
                             className={`w-full font-display font-black py-3 rounded-2xl transition-all flex items-center justify-center gap-3 text-[10px] uppercase tracking-[0.2em] ${fansRoll.home ? 'bg-green-900/30 text-green-500 border border-green-500/20 cursor-not-allowed opacity-60' : 'bg-amber-500 text-black hover:scale-105 active:scale-95 shadow-lg'}`}
                         >
                             <span className="material-symbols-outlined text-base">{fansRoll.home ? 'check_circle' : 'groups'}</span>
-                            {fansRoll.home ? 'Hinchas Registrados' : 'Tirar Hinchas (2D6+2D6)'}
+                            {fansRoll.home ? 'Hinchas Registrados' : 'Generar Aleatorio'}
                         </button>
                     </div>
 
@@ -285,15 +334,55 @@ const CommandCenterStep: React.FC = () => {
                         </div>
                         <div className="glass-panel p-6 border-white/10 bg-black/40 space-y-6">
                             {!gameStatus.coinTossWinner ? (
-                                <div className="flex gap-4">
-                                    <button onClick={() => { setGameStatus((p: any) => ({ ...p, coinTossWinner: 'home' })); logEvent('INFO', `Duelo Ganado (Moneda): ${liveHomeTeam.name}`); }} className="flex-1 p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-sky-500/20 hover:border-sky-500/40 transition-all text-center group">
-                                        <p className="text-[10px] font-display font-black text-slate-500 group-hover:text-sky-400 uppercase tracking-widest mb-1">Cara (Local)</p>
-                                        <p className="text-xs font-display font-black text-white uppercase truncate">{liveHomeTeam?.name?.split(' ')[0] || 'Local'}</p>
-                                    </button>
-                                    <button onClick={() => { setGameStatus((p: any) => ({ ...p, coinTossWinner: 'opponent' })); logEvent('INFO', `Duelo Ganado (Moneda): ${liveOpponentTeam.name}`); }} className="flex-1 p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-red-500/20 hover:border-red-500/40 transition-all text-center group">
-                                        <p className="text-[10px] font-display font-black text-slate-500 group-hover:text-red-400 uppercase tracking-widest mb-1">Cruz (Rival)</p>
-                                        <p className="text-xs font-display font-black text-white uppercase truncate">{liveOpponentTeam?.name?.split(' ')[0] || 'Rival'}</p>
-                                    </button>
+                                <div className="space-y-6">
+                                    <div className="flex justify-center gap-6">
+                                        <div className="flex flex-col items-center gap-2">
+                                            <span className="text-[8px] font-black text-sky-400 uppercase tracking-widest">Local (1D6)</span>
+                                            <input 
+                                                type="number" min="1" max="6" placeholder="D6"
+                                                value={manualCoinHome} onChange={(e) => setManualCoinHome(e.target.value)}
+                                                className="w-16 bg-black/60 border border-sky-500/30 rounded-xl px-2 py-2 text-center text-xl font-black text-white focus:border-sky-500 outline-none"
+                                            />
+                                        </div>
+                                        <div className="flex items-center text-slate-700 font-display font-black text-xs pt-6 italic">VS</div>
+                                        <div className="flex flex-col items-center gap-2">
+                                            <span className="text-[8px] font-black text-red-400 uppercase tracking-widest">Rival (1D6)</span>
+                                            <input 
+                                                type="number" min="1" max="6" placeholder="D6"
+                                                value={manualCoinOpp} onChange={(e) => setManualCoinOpp(e.target.value)}
+                                                className="w-16 bg-black/60 border border-red-500/30 rounded-xl px-2 py-2 text-center text-xl font-black text-white focus:border-red-500 outline-none"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-3">
+                                        <button 
+                                            onClick={() => manualCoinHome && manualCoinOpp && handleCoinTossRoll(Number(manualCoinHome), Number(manualCoinOpp))}
+                                            className="flex-1 bg-white text-black py-3 rounded-xl font-black text-[10px] uppercase hover:bg-premium-gold transition-all shadow-lg"
+                                        >
+                                            Confirmar Fisicos
+                                        </button>
+                                        <button 
+                                            onClick={() => handleCoinTossRoll()}
+                                            className="flex-1 bg-sky-500 text-black py-3 rounded-xl font-black text-[10px] uppercase hover:bg-white transition-all shadow-lg flex items-center justify-center gap-2"
+                                        >
+                                            <span className="material-symbols-outlined text-sm">casino</span> Sorteo Digital
+                                        </button>
+                                    </div>
+                                    <div className="flex items-center gap-4 w-full">
+                                        <div className="h-px bg-white/5 flex-1"></div>
+                                        <span className="text-[8px] font-bold text-slate-700 uppercase">O bien, selección manual directa:</span>
+                                        <div className="h-px bg-white/5 flex-1"></div>
+                                    </div>
+                                    <div className="flex gap-4">
+                                        <button onClick={() => { setGameStatus((p: any) => ({ ...p, coinTossWinner: 'home' })); logEvent('INFO', `Duelo Ganado (Moneda): ${liveHomeTeam.name}`); }} className="flex-1 p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-sky-500/20 hover:border-sky-500/40 transition-all text-center group">
+                                            <p className="text-[10px] font-display font-black text-slate-500 group-hover:text-sky-400 uppercase tracking-widest mb-1">Cara (Local)</p>
+                                            <p className="text-xs font-display font-black text-white uppercase truncate">{liveHomeTeam?.name?.split(' ')[0] || 'Local'}</p>
+                                        </button>
+                                        <button onClick={() => { setGameStatus((p: any) => ({ ...p, coinTossWinner: 'opponent' })); logEvent('INFO', `Duelo Ganado (Moneda): ${liveOpponentTeam.name}`); }} className="flex-1 p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-red-500/20 hover:border-red-500/40 transition-all text-center group">
+                                            <p className="text-[10px] font-display font-black text-slate-500 group-hover:text-red-400 uppercase tracking-widest mb-1">Cruz (Rival)</p>
+                                            <p className="text-xs font-display font-black text-white uppercase truncate">{liveOpponentTeam?.name?.split(' ')[0] || 'Rival'}</p>
+                                        </button>
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="animate-slide-in-up space-y-4">
@@ -483,10 +572,16 @@ const DeploymentStep: React.FC = () => {
 const KickoffStep: React.FC = () => {
     const {
         gameStatus, setGameStatus, kickoffActionCompleted, setKickoffActionCompleted,
-        logEvent, playSound, handleStartDrive
+        logEvent, playSound, handleStartDrive, liveHomeTeam, liveOpponentTeam,
+        setLiveHomeTeam, setLiveOpponentTeam, turn, setTurn
     } = useMatch();
 
     const [manualWeatherRoll, setManualWeatherRoll] = useState('');
+    const [manualScatterDir, setManualScatterDir] = useState('');
+    const [manualScatterDist, setManualScatterDist] = useState('');
+    const [manualKickoffRoll, setManualKickoffRoll] = useState('');
+    const [manualEventDice1, setManualEventDice1] = useState('');
+    const [manualEventDice2, setManualEventDice2] = useState('');
 
     const handleKickoffWeatherRoll = (total: number) => {
         const w = weatherConditions.find(wc => {
@@ -504,17 +599,71 @@ const KickoffStep: React.FC = () => {
         playSound('dice');
     };
 
-    const handleKickoffRoll = () => {
+    const handleKickoffRoll = (manualVal?: number) => {
         setKickoffActionCompleted(false);
-        const die1 = Math.floor(Math.random() * 6) + 1;
-        const die2 = Math.floor(Math.random() * 6) + 1;
-        const roll = die1 + die2;
+        const roll = manualVal || (Math.floor(Math.random() * 6) + Math.floor(Math.random() * 6) + 2);
         const event = kickoffEvents.find((e: any) => e.diceRoll === roll.toString());
         if (event) {
             setGameStatus((prev: any) => ({ ...prev, kickoffEvent: event }));
             logEvent('KICKOFF', `Evento de Patada (${roll}): ${event.title}`);
-            if (event.title !== 'Clima Cambiante') setKickoffActionCompleted(true);
+            
+            // EFECTOS INMEDIATOS (S3)
+            if (event.title === 'Árbitro Intimidado') {
+                setLiveHomeTeam(prev => prev ? ({ ...prev, tempBribes: (prev.tempBribes || 0) + 1 }) : null);
+                setLiveOpponentTeam(prev => prev ? ({ ...prev, tempBribes: (prev.tempBribes || 0) + 1 }) : null);
+                logEvent('SUCCESS', '¡Ambos equipos reciben un Soborno gratuito!');
+            }
+            
+            if (event.title === 'Tiempo Muerto') {
+                const isKickerTurnLate = (turn >= 6); // Simplificación
+                if (isKickerTurnLate) {
+                    setTurn(t => Math.max(0, t - 1));
+                    logEvent('INFO', 'Tiempo Muerto: Los marcadores de turno retroceden un espacio.');
+                } else {
+                    setTurn(t => Math.min(8, t + 1));
+                    logEvent('INFO', 'Tiempo Muerto: Los marcadores de turno avanzan un espacio.');
+                }
+            }
+
+            // Solo se marca como completado si no requiere tiradas adicionales
+            const needsExtra = ['Clima Cambiante', 'Defensa Sólida', 'Anticipación', '¡A la Carga! (Blitz)', 'Los Hinchas Animan', 'Entrenador Brillante', 'Indigestión', 'Invasión de Campo'].includes(event.title);
+            if (!needsExtra) setKickoffActionCompleted(true);
         }
+        setManualKickoffRoll('');
+        setManualEventDice1('');
+        setManualEventDice2('');
+    };
+
+    const handleResolveEventDice = (d1?: number, d2?: number) => {
+        const title = gameStatus.kickoffEvent?.title;
+        const roll1 = d1 || (Math.floor(Math.random() * 6) + 1);
+        const roll2 = d2 || (Math.floor(Math.random() * 6) + 1);
+        
+        let msg = '';
+        if (['Los Hinchas Animan', 'Entrenador Brillante', 'Indigestión', 'Invasión de Campo'].includes(title)) {
+            const winner = roll1 > roll2 ? 'home' : roll1 < roll2 ? 'opponent' : 'draw';
+            const winnerName = winner === 'home' ? liveHomeTeam.name : liveOpponentTeam.name;
+
+            if (title === 'Entrenador Brillante' && winner !== 'draw') {
+                const setWinnerTeam = winner === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
+                setWinnerTeam(prev => prev ? ({ ...prev, liveRerolls: (prev.liveRerolls || 0) + 1 }) : null);
+                msg = `¡Entrenador Brillante! ${winnerName} obtiene una Segunda Oportunidad extra (Dados: ${roll1} vs ${roll2}).`;
+            } else if (title === 'Indigestión' && winner !== 'draw') {
+                const loserName = winner === 'home' ? liveOpponentTeam.name : liveHomeTeam.name;
+                msg = `¡Indigestión! El equipo de ${loserName} sufre las consecuencias del rancho barato (Dados: ${roll1} vs ${roll2}).`;
+            } else if (title === 'Invasión de Campo' && winner !== 'draw') {
+                const loserName = winner === 'home' ? liveOpponentTeam.name : liveHomeTeam.name;
+                msg = `¡Invasión de Campo! Los hinchas de ${winnerName} saltan al campo. ${loserName} tiene problemas (Dados: ${roll1} vs ${roll2}).`;
+            } else {
+                msg = `Resolución de Evento — ${liveHomeTeam.name}: ${roll1}, ${liveOpponentTeam.name}: ${roll2}`;
+            }
+        } else {
+            msg = `Resolución de Evento (1D3+3 jugadores afectados): ${Math.floor(roll1/2)+3}`;
+        }
+        
+        logEvent('INFO', msg);
+        setKickoffActionCompleted(true);
+        playSound('dice');
     };
 
     return (
@@ -531,8 +680,27 @@ const KickoffStep: React.FC = () => {
                             <p className="text-slate-500 text-sm max-w-xs mx-auto">Lanza los dados del destino para determinar el evento que marcará el inicio del asalto.</p>
                         </div>
                     </div>
-                    <div className="flex justify-center">
-                        <DiceRollButton onRoll={handleKickoffRoll} onPlaySound={() => playSound('dice')} />
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="flex gap-2">
+                            <input 
+                                type="number" min="2" max="12" placeholder="2D6 Evento"
+                                className="w-32 bg-black/60 border border-premium-gold/30 rounded-xl px-4 py-2 text-center text-xl font-black text-white focus:outline-none focus:border-premium-gold transition-all"
+                                value={manualKickoffRoll}
+                                onChange={(e) => setManualKickoffRoll(e.target.value)}
+                            />
+                            <button 
+                                onClick={() => manualKickoffRoll && handleKickoffRoll(Number(manualKickoffRoll))}
+                                className="bg-premium-gold text-black px-6 py-2 rounded-xl font-black text-xs uppercase hover:bg-white transition-all shadow-lg shadow-premium-gold/20"
+                            >
+                                Aplicar
+                            </button>
+                        </div>
+                        <div className="flex items-center gap-4 w-full max-w-[200px]">
+                            <div className="h-px bg-white/5 flex-1"></div>
+                            <span className="text-[8px] font-bold text-slate-600 uppercase">O bien</span>
+                            <div className="h-px bg-white/5 flex-1"></div>
+                        </div>
+                        <DiceRollButton onRoll={() => handleKickoffRoll()} onPlaySound={() => playSound('dice')} />
                     </div>
                 </div>
             ) : (
@@ -582,14 +750,97 @@ const KickoffStep: React.FC = () => {
                              </div>
                         </div>
                     )}
-                    {kickoffActionCompleted && (
-                        <button
-                            onClick={handleStartDrive}
-                            className="group relative overflow-hidden bg-green-500 text-black font-display font-black py-6 px-20 rounded-2xl shadow-[0_30px_60px_rgba(34,197,94,0.3)] hover:scale-105 active:scale-95 transition-all duration-300"
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                            <span className="relative text-xs uppercase tracking-[0.4em]">¡Que Corra la Sangre!</span>
-                        </button>
+
+                    {/* Otros Eventos que requieren tirada (Season 3) */}
+                    {['Defensa Sólida', 'Anticipación', '¡A la Carga! (Blitz)', 'Los Hinchas Animan', 'Entrenador Brillante', 'Indigestión', 'Invasión de Campo'].includes(gameStatus.kickoffEvent.title) && !kickoffActionCompleted && (
+                        <div className="mt-8 p-6 glass-dark rounded-3xl border border-premium-gold/20 space-y-6 animate-in fade-in zoom-in duration-500">
+                             <p className="text-[10px] font-black text-premium-gold uppercase tracking-widest">Resolución del Suceso</p>
+                             <div className="flex flex-col items-center gap-4">
+                                 <div className="flex gap-4">
+                                     <div className="flex flex-col items-center gap-1">
+                                         <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">
+                                             {['Defensa Sólida', 'Anticipación', '¡A la Carga! (Blitz)'].includes(gameStatus.kickoffEvent.title) ? 'Dado (1D3)' : 'Local (1D6)'}
+                                         </span>
+                                         <input 
+                                            type="number" min="1" max="6" value={manualEventDice1} onChange={e => setManualEventDice1(e.target.value)}
+                                            className="w-16 bg-black/60 border border-white/10 rounded-xl px-2 py-2 text-center text-xl font-black text-white focus:border-premium-gold"
+                                            placeholder="?"
+                                         />
+                                     </div>
+                                     {['Los Hinchas Animan', 'Entrenador Brillante', 'Indigestión', 'Invasión de Campo'].includes(gameStatus.kickoffEvent.title) && (
+                                         <>
+                                            <div className="flex items-center pt-6 font-display font-black text-xs text-slate-700">VS</div>
+                                            <div className="flex flex-col items-center gap-1">
+                                                <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Rival (1D6)</span>
+                                                <input 
+                                                    type="number" min="1" max="6" value={manualEventDice2} onChange={e => setManualEventDice2(e.target.value)}
+                                                    className="w-16 bg-black/60 border border-white/10 rounded-xl px-2 py-2 text-center text-xl font-black text-white focus:border-premium-gold"
+                                                    placeholder="?"
+                                                />
+                                            </div>
+                                         </>
+                                     )}
+                                 </div>
+                                 <div className="flex gap-3 w-full">
+                                     <button 
+                                        onClick={() => handleResolveEventDice(Number(manualEventDice1), Number(manualEventDice2))}
+                                        className="flex-1 bg-white text-black py-3 rounded-xl font-black text-[10px] uppercase hover:bg-premium-gold transition-all shadow-lg"
+                                     >
+                                         Confirmar Dados
+                                     </button>
+                                     <button 
+                                        onClick={() => handleResolveEventDice()}
+                                        className="flex-1 bg-black/40 border border-white/10 text-white py-3 rounded-xl font-black text-[10px] uppercase hover:bg-white hover:text-black transition-all flex items-center justify-center gap-2"
+                                     >
+                                         <span className="material-symbols-outlined text-sm">casino</span> Azar
+                                     </button>
+                                 </div>
+                             </div>
+                        </div>
+                    )}
+                     {kickoffActionCompleted && (
+                        <div className="mt-8 p-8 glass-panel border-premium-gold/30 bg-black/40 space-y-6 animate-in fade-in zoom-in duration-700">
+                             <div className="flex items-center justify-between border-b border-white/5 pb-4 mb-4">
+                                 <div className="flex items-center gap-3">
+                                     <span className="material-symbols-outlined text-premium-gold">explore</span>
+                                     <h5 className="text-[10px] font-display font-black text-white uppercase tracking-[0.2em]">Resolución de Desvío</h5>
+                                 </div>
+                                 <span className="text-[8px] font-bold text-slate-500 uppercase">Season 3: 1D8 + 1D6</span>
+                             </div>
+
+                             <div className="flex flex-col items-center gap-4">
+                                 <div className="flex gap-4">
+                                     <div className="flex flex-col gap-1 items-center">
+                                         <p className="text-[8px] font-bold text-slate-500 uppercase">Dirección (D8)</p>
+                                         <input 
+                                            type="number" min="1" max="8" value={manualScatterDir} onChange={e => setManualScatterDir(e.target.value)}
+                                            className="w-16 bg-black/60 border border-white/10 rounded-xl px-2 py-2 text-center text-xl font-black text-white focus:border-premium-gold"
+                                            placeholder="?"
+                                         />
+                                     </div>
+                                     <div className="flex flex-col gap-1 items-center">
+                                         <p className="text-[8px] font-bold text-slate-500 uppercase">Distancia (D6)</p>
+                                         <input 
+                                            type="number" min="1" max="6" value={manualScatterDist} onChange={e => setManualScatterDist(e.target.value)}
+                                            className="w-16 bg-black/60 border border-white/10 rounded-xl px-2 py-2 text-center text-xl font-black text-white focus:border-premium-gold"
+                                            placeholder="?"
+                                         />
+                                     </div>
+                                 </div>
+                                 <button 
+                                    onClick={() => {
+                                        const d8 = manualScatterDir ? Number(manualScatterDir) : (Math.floor(Math.random() * 8) + 1);
+                                        const d6 = manualScatterDist ? Number(manualScatterDist) : (Math.floor(Math.random() * 6) + 1);
+                                        logEvent('INFO', `Desvío del Balón — Dirección: ${d8}, Distancia: ${d6} casillas.`);
+                                        handleStartDrive();
+                                    }}
+                                    className="w-full bg-premium-gold text-black py-4 rounded-xl font-display font-black text-xs uppercase tracking-widest hover:bg-white transition-all shadow-xl shadow-premium-gold/20"
+                                >
+                                     Comenzar el Asalto
+                                </button>
+                                 <p className="text-[8px] font-medium text-slate-600 uppercase italic">Dados automáticos si se dejan en blanco</p>
+                             </div>
+                        </div>
                     )}
                 </div>
             )}

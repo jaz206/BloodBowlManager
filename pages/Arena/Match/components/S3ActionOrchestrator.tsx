@@ -250,8 +250,7 @@ const S3ActionOrchestrator: React.FC = () => {
             </div>
             
             {/* Footer con resumen de la secuencia */}
-            {mode !== 'idle' && (
-                <div className="mt-auto pt-4 border-t border-white/5 flex items-center gap-3">
+            <div className="mt-auto pt-4 border-t border-white/5 flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
                          <span className="text-xs font-black text-primary">#{selectedPlayerForAction?.id.toString().slice(-2)}</span>
                     </div>
@@ -268,7 +267,6 @@ const S3ActionOrchestrator: React.FC = () => {
                         </div>
                     )}
                 </div>
-            )}
         </div>
     );
 };

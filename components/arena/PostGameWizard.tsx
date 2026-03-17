@@ -110,6 +110,8 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
     const [noStalling, setNoStalling] = useState(true);
     const [winningsRolls, setWinningsRolls] = useState({ home: 0, opponent: 0 });
     const [concession, setConcession] = useState<'none' | 'home' | 'opponent'>(initialConcession || 'none');
+    const [improvementResult, setImprovementResult] = useState<{ player: ManagedPlayer, roll: number, result: string } | null>(null);
+    const [expensiveMistakes, setExpensiveMistakes] = useState<{ roll: number, loss: number } | null>(null);
 
     const [mvpCount, setMvpCount] = useState(1);
     const [mvpsAwarded, setMvpsAwarded] = useState(0);
@@ -135,17 +137,19 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
         if (!finalHomeTeam || !opponentTeam) return;
         
         // Calculate Popularity Factors (BB2025: 1D3 + Dedicated Fans)
-        const rollHome = Math.floor(Math.random() * 3) + 1;
-        const rollOpp = Math.floor(Math.random() * 3) + 1;
-        setWinningsRolls({ home: rollHome, opponent: rollOpp });
+        // Use existing rolls if available to avoid re-rolling on state changes
+        const rollHome = winningsRolls.home || (Math.floor(Math.random() * 3) + 1);
+        const rollOpp = winningsRolls.opponent || (Math.floor(Math.random() * 3) + 1);
+        
+        if (rollHome !== winningsRolls.home || rollOpp !== winningsRolls.opponent) {
+            setWinningsRolls({ home: rollHome, opponent: rollOpp });
+        }
 
         const popHome = rollHome + finalHomeTeam.dedicatedFans;
-        const popOpp = rollOpp + opponentTeam.dedicatedFans;
-        const totalPop = popHome + popOpp;
         
-        // Winnings Formula: (Total Pop / 2 + TDs + 1 if no stalling) * 10,000
-        // BB2025: Conceding team gets 0 winnings.
-        let calculatedWinnings = (Math.ceil(totalPop / 2) + score.home + (noStalling ? 1 : 0)) * 10000;
+        // Winnings Formula (BB2020/S3): (Fan Factor + Dedicated Fans + TDs + 5 if no stalling) * 10,000
+        // Fan Factor = 1D3
+        let calculatedWinnings = (popHome + score.home + (noStalling ? 5 : 0)) * 10000;
         if (concession === 'home') calculatedWinnings = 0;
         
         const tempTeam = cloneTeamForPostGame(finalHomeTeam);
@@ -195,26 +199,22 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
             if (isAlreadyNominated) {
                 return prev.filter(id => id !== playerId);
             }
-            // Absolute limit of 6 candidates per Blood Bowl 2025 rules
-            if (prev.length >= 6) {
+            // BB2025 / S3: máximo 3 candidatos nominados
+            if (prev.length >= 3) {
                 return prev;
             }
             return [...prev, playerId];
         });
     };
 
-    const handleMvpRoll = () => {
+    const handleMvpRoll = (manualVal?: number) => {
         if (mvpNominations.length === 0) return;
         
-        // In BB2025, if you have fewer than 6, you still roll 1D6 and use a mapping.
-        // If nominations < 6, some results might miss or be re-rolled? 
-        // Rule says "Nominate 6... Assign 1-6... Roll D6".
-        // If fewer than 6 are available (dead/etc), rules vary but let's stick to picking from the chosen ones.
-        const roll = Math.floor(Math.random() * 6) + 1;
+        // BB2025/S3: Se usa 1D3 para seleccionar entre hasta 3 nominados
+        const roll = manualVal || (Math.floor(Math.random() * 3) + 1);
         setMvpRoll(roll);
         
-        // Map roll to nominated player. If roll > nominations.length, we wrap or re-roll.
-        // Standard competitive play: you MUST nominate 6 if possible.
+        // Map roll to nominated player.
         const index = (roll - 1) % mvpNominations.length; 
         const selectedId = mvpNominations[index];
         
@@ -240,8 +240,8 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
     };
 
 
-    const handleFansRoll = () => {
-        const roll = Math.floor(Math.random() * 6) + 1;
+    const handleFansRoll = (manualVal?: number) => {
+        const roll = manualVal || (Math.floor(Math.random() * 6) + 1);
         setFansRoll(roll);
         let change = 0;
 
@@ -249,9 +249,14 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
             // BB2025: Conceding team loses 1D3 Dedicated Fans
             change = -(Math.floor(Math.random() * 3) + 1);
         } else if (score.home > score.opponent) {
+            // WIN: Roll >= DF to increase
             if (roll >= postGameState!.team.dedicatedFans) change = 1;
         } else if (score.home < score.opponent) {
+            // LOSS: Roll < DF to decrease
             if (roll < postGameState!.team.dedicatedFans) change = -1;
+        } else {
+            // DRAW: Roll >= DF to increase, never decrease
+            if (roll >= postGameState!.team.dedicatedFans) change = 1;
         }
 
         setFansChange(change);
@@ -307,14 +312,14 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
         const roll = Math.floor(Math.random() * 16) + 1; // 1D16 for characteristic table
         let result = "";
         
-        if (roll <= 7) result = "Elegir Hab. Primaria";
-        else if (roll <= 12) result = "Elegir Hab. Secundaria";
-        else if (roll <= 13) result = "Mejora Movimiento (+1 MV) o Armadura (+1 AR)";
-        else if (roll <= 14) result = "Mejora Pase (+1 PA) o Agilidad (+1 AG)";
-        else if (roll <= 15) result = "Mejora Fuerza (+1 FU)";
-        else result = "Cualquier Mejora (+1 Caract. o Hab. Secundaria)";
+        if (roll <= 7) result = "Hab. Primaria";
+        else if (roll <= 12) result = "Hab. Secundaria";
+        else if (roll <= 13) result = "Movimiento (+1 MV) o Armadura (+1 AR)";
+        else if (roll <= 14) result = "Pase (+PA) o Agilidad (+AG)";
+        else if (roll <= 15) result = "Fuerza (+1 FU)";
+        else result = "¡Cualquiera! (+1 Atributo o Hab. Secundaria)";
 
-        alert(`Resultado de Mejora (Dado: ${roll}):\n\n${result}\n\nNota: Aplica la mejora manualmente en el perfil del jugador.`);
+        setImprovementResult({ player, roll, result });
         
         setPostGameState(prev => {
             if (!prev) return null;
@@ -324,6 +329,46 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                     ...prev.team,
                     players: prev.team.players.map(p => p.id === player.id ? { ...p, spp: p.spp - cost } : p)
                 }
+            };
+        });
+    };
+
+    const handleExpensiveMistakesRoll = (manualVal?: number) => {
+        const roll = manualVal || (Math.floor(Math.random() * 6) + 1);
+        let loss = 0;
+        const treasury = postGameState?.team.treasury || 0;
+        
+        // Tabla de Errores Costosos BB2020/S3
+        if (roll >= 4) {
+            if (treasury >= 100000 && treasury <= 190000) {
+                if (roll === 4) loss = 10000;
+                else if (roll === 5) loss = 20000;
+                else if (roll === 6) loss = 50000;
+            } else if (treasury >= 200000 && treasury <= 290000) {
+                if (roll === 4) loss = 20000;
+                else if (roll === 5) loss = 50000;
+                else if (roll === 6) loss = 100000;
+            } else if (treasury >= 300000 && treasury <= 390000) {
+                if (roll === 4) loss = 50000;
+                else if (roll === 5) loss = 100000;
+                else if (roll === 6) loss = treasury - 100000;
+            } else if (treasury >= 400000 && treasury <= 490000) {
+                if (roll === 4) loss = 100000;
+                else if (roll === 5) loss = treasury - 100000;
+                else if (roll === 6) loss = treasury - 50000;
+            } else if (treasury >= 500000) {
+                if (roll === 4) loss = treasury - 100000;
+                else if (roll === 5) loss = treasury - 50000;
+                else if (roll === 6) loss = treasury;
+            }
+        }
+
+        setExpensiveMistakes({ roll, loss });
+        setPostGameState(prev => {
+            if (!prev) return null;
+            return {
+                ...prev,
+                team: { ...prev.team, treasury: Math.max(0, prev.team.treasury - loss) }
             };
         });
     };
@@ -394,17 +439,9 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                                         <span className="text-slate-500 font-display">Popularidad Local ({winningsRolls.home} + {finalHomeTeam.dedicatedFans})</span>
                                         <span className="text-white font-black">{winningsRolls.home + finalHomeTeam.dedicatedFans}k</span>
                                     </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-slate-500 font-display">Popularidad Rival ({winningsRolls.opponent} + {opponentTeam.dedicatedFans})</span>
-                                        <span className="text-white font-black">{winningsRolls.opponent + opponentTeam.dedicatedFans}k</span>
-                                    </div>
                                     <div className="flex justify-between text-sm py-2 border-y border-white/5">
-                                        <span className="text-slate-500 font-display">Total Fans / 2 (Redondeado arriba)</span>
-                                        <span className="text-white font-black">{Math.ceil((winningsRolls.home + finalHomeTeam.dedicatedFans + winningsRolls.opponent + opponentTeam.dedicatedFans) / 2)}k</span>
-                                    </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-slate-500 font-display">Touchdowns Anotados</span>
-                                        <span className="text-white font-black">+{score.home}k</span>
+                                        <span className="text-slate-500 font-display">Touchdowns Anotados ({score.home})</span>
+                                        <span className="text-white font-black">{score.home * 10}k</span>
                                     </div>
                                     <div className="flex justify-between items-center py-2">
                                         <div className="flex items-center gap-2">
@@ -415,9 +452,9 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                                                 onChange={(e) => setNoStalling(e.target.checked)}
                                                 className="w-4 h-4 rounded border-white/10 bg-black text-premium-gold focus:ring-premium-gold/30"
                                             />
-                                            <label htmlFor="noStalling" className="text-slate-500 font-display text-xs cursor-pointer select-none">Bono por No-Stalling (Fair Play)</label>
+                                            <label htmlFor="noStalling" className="text-slate-500 font-display text-xs cursor-pointer select-none">Bono por Fair Play (No-Stalling)</label>
                                         </div>
-                                        <span className="text-green-500 font-black">+{noStalling ? 1 : 0}k</span>
+                                        <span className="text-green-500 font-black">+{noStalling ? 50 : 0}k</span>
                                     </div>
                                 </div>
                                 <div className="mt-8 pt-6 border-t border-premium-gold/20 text-center">
@@ -497,9 +534,9 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                                 Cónclave de MVP: Galardón {mvpsAwarded + 1} de {mvpCount}
                             </h4>
                             <div className="flex flex-col items-center gap-1 border-t border-white/5 pt-2">
-                                <p className="text-slate-500 text-[10px] italic">Nomina a 6 guerreros (1D6 elegirá al azar)</p>
+                                <p className="text-slate-500 text-[10px] italic">Nomina hasta 3 guerreros (1D3 elegirá al azar)</p>
                                 <p className="text-white text-[12px] font-display font-black">
-                                    Candidatos: <span className={mvpNominations.length === 6 ? "text-green-500" : "text-premium-gold animate-pulse"}>{mvpNominations.length} / 6</span>
+                                    Candidatos: <span className={mvpNominations.length === Math.min(3, eligibleMvp.length) ? "text-green-500" : "text-premium-gold animate-pulse"}>{mvpNominations.length} / {Math.min(3, eligibleMvp.length)}</span>
                                 </p>
                             </div>
                         </div>
@@ -529,19 +566,44 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                                         );
                                     })}
                                 </div>
-                                <div className="flex justify-center pt-2">
+                                <div className="flex flex-col items-center gap-4 pt-4">
+                                    <div className="flex gap-2">
+                                        <input 
+                                            type="number" min="1" max="3" placeholder="D3"
+                                            className="w-20 bg-black/60 border border-premium-gold/30 rounded-xl px-2 py-2 text-center text-xl font-black text-white focus:border-premium-gold outline-none"
+                                            id="mvp-manual-input"
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    const val = (e.currentTarget as HTMLInputElement).value;
+                                                    if (val) handleMvpRoll(Number(val));
+                                                }
+                                            }}
+                                        />
+                                        <button
+                                            onClick={() => {
+                                                const input = document.getElementById('mvp-manual-input') as HTMLInputElement;
+                                                if (input?.value) handleMvpRoll(Number(input.value));
+                                            }}
+                                            disabled={mvpNominations.length < 1}
+                                            className="bg-premium-gold text-black font-display font-black px-6 rounded-xl text-xs uppercase hover:bg-white transition-all shadow-lg active:scale-95 disabled:opacity-30"
+                                        >
+                                            Aplicar
+                                        </button>
+                                    </div>
+                                    <div className="flex items-center gap-4 w-full max-w-[200px]">
+                                        <div className="h-px bg-white/5 flex-1"></div>
+                                        <span className="text-[8px] font-bold text-slate-600 uppercase">O bien</span>
+                                        <div className="h-px bg-white/5 flex-1"></div>
+                                    </div>
                                     <button
-                                        onClick={handleMvpRoll}
-                                        disabled={mvpNominations.length < Math.min(6, eligibleMvp.length)}
-                                        className="group relative bg-premium-gold text-black font-display font-black py-4 px-12 rounded-2xl shadow-[0_15px_30px_rgba(245,159,10,0.3)] hover:scale-105 active:scale-95 disabled:opacity-30 transition-all flex items-center gap-4 uppercase tracking-[0.25em] text-[10px] overflow-hidden"
+                                        onClick={() => handleMvpRoll()}
+                                        disabled={mvpNominations.length < 1}
+                                        className="group relative bg-white/5 border border-white/10 text-white font-display font-black py-3 px-10 rounded-2xl hover:bg-white/10 active:scale-95 disabled:opacity-30 transition-all flex items-center gap-3 uppercase tracking-widest text-[9px]"
                                     >
-                                        <div className="absolute inset-0 bg-white/20 -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
-                                        <span className="material-symbols-outlined text-lg transition-transform group-hover:rotate-180 duration-[800ms] relative z-10">casino</span>
-                                        <span className="relative z-10">
-                                            {mvpNominations.length < Math.min(6, eligibleMvp.length) 
-                                                ? `Faltan ${Math.min(6, eligibleMvp.length) - mvpNominations.length} por elegir` 
-                                                : `Lanzar Dado para MVP ${mvpsAwarded + 1}`}
-                                        </span>
+                                        <span className="material-symbols-outlined text-sm">casino</span>
+                                        {mvpNominations.length < 1 
+                                            ? 'Nomina al menos 1 candidato' 
+                                            : `Tirar D3 para MVP ${mvpsAwarded + 1} (${mvpNominations.length} nominado${mvpNominations.length > 1 ? 's' : ''})`}
                                     </button>
                                 </div>
                             </div>
@@ -606,14 +668,40 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                                 </div>
                             </div>
                         ) : !fansRoll ? (
-                            <div className="flex justify-center pt-2">
+                            <div className="flex flex-col items-center gap-4 pt-4">
+                                <div className="flex gap-2">
+                                    <input 
+                                        type="number" min="1" max="6" placeholder={concession === 'home' ? 'D3' : 'D6'}
+                                        className="w-20 bg-black/60 border border-sky-500/30 rounded-xl px-2 py-2 text-center text-xl font-black text-white focus:border-sky-500 outline-none"
+                                        id="fans-manual-input"
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                const val = (e.currentTarget as HTMLInputElement).value;
+                                                if (val) handleFansRoll(Number(val));
+                                            }
+                                        }}
+                                    />
+                                    <button
+                                        onClick={() => {
+                                            const input = document.getElementById('fans-manual-input') as HTMLInputElement;
+                                            if (input?.value) handleFansRoll(Number(input.value));
+                                        }}
+                                        className="bg-sky-600 text-black font-display font-black px-6 rounded-xl text-xs uppercase hover:bg-white transition-all shadow-lg active:scale-95"
+                                    >
+                                        Aplicar
+                                    </button>
+                                </div>
+                                <div className="flex items-center gap-4 w-full max-w-[200px]">
+                                    <div className="h-px bg-white/5 flex-1"></div>
+                                    <span className="text-[8px] font-bold text-slate-600 uppercase">O bien</span>
+                                    <div className="h-px bg-white/5 flex-1"></div>
+                                </div>
                                 <button
-                                    onClick={handleFansRoll}
-                                    className="group relative bg-sky-600 text-black font-display font-black py-4 px-12 rounded-2xl shadow-[0_15px_30px_rgba(14,165,233,0.3)] hover:shadow-[0_20px_40px_rgba(14,165,233,0.4)] hover:-translate-y-1 active:translate-y-0 transition-all flex items-center gap-4 uppercase tracking-[0.25em] text-[10px] overflow-hidden"
+                                    onClick={() => handleFansRoll()}
+                                    className="group relative bg-white/5 border border-white/10 text-white font-display font-black py-3 px-10 rounded-2xl hover:bg-white/10 active:scale-95 transition-all flex items-center gap-3 uppercase tracking-widest text-[9px]"
                                 >
-                                    <div className="absolute inset-0 bg-white/20 -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
-                                    <span className="material-symbols-outlined text-lg transition-transform group-hover:rotate-180 duration-[800ms] relative z-10">casino</span>
-                                    <span className="relative z-10">Invocar a la Masa (1D6)</span>
+                                    <span className="material-symbols-outlined text-sm">casino</span>
+                                    Invocar a la Masa
                                 </button>
                             </div>
                         ) : (
@@ -653,6 +741,35 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                 return (
                     <div className="space-y-6 animate-fade-in h-full flex flex-col">
                         <div className="flex items-center justify-between px-2">
+                            <div>
+                                <h4 className="text-[10px] font-display font-black text-premium-gold uppercase tracking-[0.4em]">Ascensión y Destino</h4>
+                                <p className="text-[8px] font-display font-medium text-slate-500 uppercase tracking-widest mt-0.5">Gestión de PE y Atributos</p>
+                            </div>
+                            <div className="flex items-center gap-2 bg-white/5 px-3 py-1 rounded-full border border-white/5">
+                                <span className="text-[9px] font-display font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">{improvedPlayers.length} Jugadores con PE</span>
+                            </div>
+                        </div>
+
+                        {improvementResult && (
+                            <div className="glass-panel p-6 bg-premium-gold/5 border-premium-gold/30 animate-bounce-in relative overflow-hidden mb-4">
+                                <button onClick={() => setImprovementResult(null)} className="absolute top-2 right-2 p-1 text-slate-500 hover:text-white transition-colors">
+                                    <span className="material-symbols-outlined text-sm">close</span>
+                                </button>
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-premium-gold/10 rounded-xl border border-premium-gold/30 flex flex-col items-center justify-center">
+                                        <span className="text-[8px] font-black text-premium-gold uppercase">Dado</span>
+                                        <span className="text-xl font-black text-white">{improvementResult.roll}</span>
+                                    </div>
+                                    <div>
+                                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">¡Mejora para {improvementResult.player.customName}!</p>
+                                        <p className="text-sm font-display font-black text-white uppercase italic">{improvementResult.result}</p>
+                                        <p className="text-[8px] italic text-premium-gold/60 mt-1">Aplica este cambio manualmente en la ficha tras confirmar.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar pb-10">
                             <h4 className="text-[10px] font-display font-black text-premium-gold uppercase tracking-[0.2em]">Registro de Ascensión</h4>
                             <span className="text-[9px] font-display font-black text-slate-500 uppercase">{improvedPlayers.length} Marcados</span>
                         </div>
@@ -736,7 +853,92 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                         </div>
                     </div>
                 );
-            case 4:
+                const needsExpensiveMistakes = updatedTeam.treasury >= 100000 && !expensiveMistakes;
+                
+                if (needsExpensiveMistakes) {
+                    return (
+                        <div className="flex flex-col gap-6 animate-fade-in">
+                            <div className="text-center space-y-3">
+                                <div className="w-16 h-16 bg-blood-red/10 rounded-2xl border border-blood-red/30 flex items-center justify-center mx-auto shadow-2xl">
+                                    <span className="material-symbols-outlined text-3xl text-blood-red animate-pulse">account_balance_wallet</span>
+                                </div>
+                                <h4 className="text-[10px] font-display font-black text-blood-red uppercase tracking-[0.3em]">Errores Costosos</h4>
+                                <p className="text-slate-500 text-[10px] italic max-w-[300px] mx-auto">"La boveda está demasiado llena... los accidentes ocurren."</p>
+                                <p className="text-white font-black text-sm">Tesorería: {updatedTeam.treasury.toLocaleString()} m.o.</p>
+                            </div>
+
+                            <div className="flex flex-col items-center gap-4 pt-4">
+                                <div className="flex gap-2">
+                                    <input 
+                                        type="number" min="1" max="6" placeholder="D6"
+                                        className="w-20 bg-black/60 border border-blood-red/30 rounded-xl px-2 py-2 text-center text-xl font-black text-white focus:border-blood-red outline-none"
+                                        id="expensive-manual-input"
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                const val = (e.currentTarget as HTMLInputElement).value;
+                                                if (val) handleExpensiveMistakesRoll(Number(val));
+                                            }
+                                        }}
+                                    />
+                                    <button
+                                        onClick={() => {
+                                            const input = document.getElementById('expensive-manual-input') as HTMLInputElement;
+                                            if (input?.value) handleExpensiveMistakesRoll(Number(input.value));
+                                        }}
+                                        className="bg-blood-red text-white font-display font-black px-6 rounded-xl text-xs uppercase hover:bg-white hover:text-black transition-all shadow-lg active:scale-95"
+                                    >
+                                        Aplicar
+                                    </button>
+                                </div>
+                                <div className="flex items-center gap-4 w-full max-w-[200px]">
+                                    <div className="h-px bg-white/5 flex-1"></div>
+                                    <span className="text-[8px] font-bold text-slate-600 uppercase">O bien</span>
+                                    <div className="h-px bg-white/5 flex-1"></div>
+                                </div>
+                                <button
+                                    onClick={() => handleExpensiveMistakesRoll()}
+                                    className="group relative bg-white/5 border border-white/10 text-white font-display font-black py-3 px-10 rounded-2xl hover:bg-white/10 active:scale-95 transition-all flex items-center gap-3 uppercase tracking-widest text-[9px]"
+                                >
+                                    <span className="material-symbols-outlined text-sm">casino</span>
+                                    Tentar al Destino
+                                </button>
+                                <div className="mt-2 p-3 bg-black/40 rounded-xl border border-white/5">
+                                    <p className="text-[8px] text-slate-400 uppercase tracking-widest mb-2 font-bold">Resumen de Riesgo (Tesorería: {updatedTeam.treasury/1000}k)</p>
+                                    <div className="grid grid-cols-3 gap-2 text-[7px] font-display font-black uppercase text-center">
+                                        <div className="p-1 rounded bg-white/5 border border-white/5">
+                                            <p className="text-slate-500 mb-0.5">Resultado 4</p>
+                                            <p className="text-blood-red">-{
+                                                updatedTeam.treasury >= 500000 ? (updatedTeam.treasury - 100000)/1000 :
+                                                updatedTeam.treasury >= 400000 ? 100 :
+                                                updatedTeam.treasury >= 300000 ? 50 :
+                                                updatedTeam.treasury >= 200000 ? 20 : 10
+                                            }k</p>
+                                        </div>
+                                        <div className="p-1 rounded bg-white/5 border border-white/5">
+                                            <p className="text-slate-500 mb-0.5">Resultado 5</p>
+                                            <p className="text-blood-red">-{
+                                                updatedTeam.treasury >= 500000 ? (updatedTeam.treasury - 50000)/1000 :
+                                                updatedTeam.treasury >= 400000 ? (updatedTeam.treasury - 100000)/1000 :
+                                                updatedTeam.treasury >= 300000 ? 100 :
+                                                updatedTeam.treasury >= 200000 ? 50 : 20
+                                            }k</p>
+                                        </div>
+                                        <div className="p-1 rounded bg-white/5 border border-white/5">
+                                            <p className="text-slate-500 mb-0.5">Resultado 6</p>
+                                            <p className="text-blood-red">-{
+                                                updatedTeam.treasury >= 500000 ? (updatedTeam.treasury)/1000 :
+                                                updatedTeam.treasury >= 400000 ? (updatedTeam.treasury - 50000)/1000 :
+                                                updatedTeam.treasury >= 300000 ? (updatedTeam.treasury - 100000)/1000 :
+                                                updatedTeam.treasury >= 200000 ? 100 : 50
+                                            }k</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                }
+
                 return (
                     <div className="flex flex-col gap-6 animate-fade-in overflow-y-auto max-h-[420px] pr-1.5 custom-scrollbar">
                         <div className="glass-panel p-6 bg-black/60 border-white/5 space-y-8 relative overflow-hidden shadow-2xl">
@@ -770,6 +972,16 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
                                     </div>
                                 </div>
                             </div>
+
+                            {expensiveMistakes && expensiveMistakes.loss > 0 && (
+                                <div className="bg-blood-red/10 border border-blood-red/30 p-4 rounded-2xl flex justify-between items-center relative z-10 animate-pulse">
+                                    <div>
+                                        <p className="text-[10px] font-black text-blood-red uppercase tracking-widest">Errores Costosos (Dado: {expensiveMistakes.roll})</p>
+                                        <p className="text-xs text-white/80 font-display italic">Pérdidas por mala gestión de la bóveda.</p>
+                                    </div>
+                                    <p className="text-lg font-black text-blood-red">-{expensiveMistakes.loss.toLocaleString()} <span className="text-[10px] uppercase">m.o.</span></p>
+                                </div>
+                            )}
 
                             {(playersWithNewInjuries.length > 0 || playersWithMNG.length > 0) && (
                                 <div className="space-y-4 pt-6 border-t border-white/10 relative z-10">

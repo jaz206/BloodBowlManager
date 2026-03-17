@@ -68,14 +68,28 @@ const MatchInProgress: React.FC = () => {
         }
     };
 
+    const [manualRollVal, setManualRollVal] = useState('');
+
     const handleDiceResultInternal = (result: any) => {
-        handleS3Action(pending, result);
+        let finalResult = result;
+        if (typeof result === 'undefined') {
+            const diceMap: Record<string, number> = {
+                'BLOCK': 6, 'PASS': 6, 'RUSH': 6, 'DODGE': 6, 'HANDOFF': 6, 'SECURE_BALL': 6,
+                'CAS': 16, 'FOUL': 6, 'DAUNTLESS': 6, 'REGEN': 6, 'KO_RECOVERY': 6, 'SCATTER': 8, 'FANS': 3,
+                'INJURY': 16, 'CHARACTERISTIC': 16
+            };
+            const sides = diceMap[pending.actionType || ''] || 6;
+            finalResult = Math.floor(Math.random() * sides) + 1;
+        }
+        
+        handleS3Action(pending, finalResult);
         playSound('dice');
         setInteractionState({
             mode: 'idle',
             pending: { actorId: null, actionType: null, objectiveId: null, diceResult: null, manualMode: true }
         });
         setSelectedPlayerForAction(null);
+        setManualRollVal('');
     };
 
     return (
@@ -420,20 +434,65 @@ const MatchInProgress: React.FC = () => {
 
                         {mode === 'awaiting_dice' && (
                             <div className="flex flex-col items-center gap-6">
+                                <span className="text-gold font-mono text-[9px] uppercase tracking-[0.2em] bg-gold/10 px-3 py-1 rounded-full border border-gold/20">
+                                    Contexto: {pending.actionType}
+                                </span>
+
                                 <div className="flex flex-wrap justify-center gap-3">
                                     {pending.actionType === 'BLOCK' ? (
                                         ['Calavera', 'Ambos', 'Empuje', 'Zaca!', 'Flecha'].map(d => (
                                             <button key={d} onClick={() => handleDiceResultInternal(d)} className="size-20 rounded-full glass border-white/10 flex flex-col items-center justify-center hover:bg-gold hover:text-midnight transition-all shadow-xl font-black text-[9px] uppercase tracking-tighter group"><span className="material-symbols-outlined text-lg mb-1">casino</span>{d}</button>
                                         ))
                                     ) : (
-                                        <div className="grid grid-cols-6 gap-3">
-                                            {[1, 2, 3, 4, 5, 6].map(n => (
-                                                <button key={n} onClick={() => handleDiceResultInternal(n)} className="size-16 rounded-2xl glass border-white/10 text-3xl font-black hover:bg-primary hover:text-midnight transition-all shadow-xl">{n}</button>
-                                            ))}
+                                        <div className="flex flex-col items-center gap-4">
+                                            {/* D6 Grid for quick access */}
+                                            {['PASS', 'RUSH', 'DODGE', 'HANDOFF', 'SECURE_BALL', 'FOUL', 'REGEN', 'KO_RECOVERY'].includes(pending.actionType || '') ? (
+                                                <div className="grid grid-cols-6 gap-3">
+                                                    {[1, 2, 3, 4, 5, 6].map(n => (
+                                                        <button key={n} onClick={() => handleDiceResultInternal(n)} className="size-16 rounded-2xl glass border-white/10 text-3xl font-black hover:bg-gold hover:text-midnight transition-all shadow-xl">{n}</button>
+                                                    ))}
+                                                </div>
+                                            ) : pending.actionType === 'SCATTER' ? (
+                                                <div className="grid grid-cols-4 gap-3">
+                                                    {[1, 2, 3, 4, 5, 6, 7, 8].map(n => (
+                                                        <button key={n} onClick={() => handleDiceResultInternal(n)} className="size-16 rounded-2xl glass border-white/10 text-3xl font-black hover:bg-gold hover:text-midnight transition-all shadow-xl">{n}</button>
+                                                    ))}
+                                                </div>
+                                            ) : pending.actionType === 'FANS' ? (
+                                                <div className="grid grid-cols-3 gap-3">
+                                                    {[1, 2, 3].map(n => (
+                                                        <button key={n} onClick={() => handleDiceResultInternal(n)} className="size-20 rounded-2xl glass border-white/10 text-4xl font-black hover:bg-gold hover:text-midnight transition-all shadow-xl">{n}</button>
+                                                    ))}
+                                                </div>
+                                            ) : ['CAS', 'INJURY', 'CHARACTERISTIC'].includes(pending.actionType || '') ? (
+                                                <div className="grid grid-cols-4 gap-2">
+                                                    {Array.from({length: 16}, (_, i) => i + 1).map(n => (
+                                                        <button key={n} onClick={() => handleDiceResultInternal(n)} className="size-12 rounded-xl glass border-white/10 text-xl font-black hover:bg-gold hover:text-midnight transition-all shadow-lg">{n}</button>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center gap-3">
+                                                    <input 
+                                                        type="number" 
+                                                        placeholder="Resultado"
+                                                        value={manualRollVal}
+                                                        onChange={(e) => setManualRollVal(e.target.value)}
+                                                        className="w-32 bg-black/60 border border-gold/30 rounded-xl px-4 py-3 text-center text-2xl font-black text-white focus:outline-none focus:border-gold"
+                                                    />
+                                                    <button 
+                                                        onClick={() => manualRollVal && handleDiceResultInternal(Number(manualRollVal))}
+                                                        className="h-14 bg-gold text-midnight px-8 rounded-xl font-black uppercase tracking-widest text-xs"
+                                                    >
+                                                        Confirmar
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
-                                <button onClick={() => handleDiceResultInternal(Math.floor(Math.random() * 6) + 1)} className="w-full py-4 bg-primary text-midnight font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl hover:scale-[1.02] transition-all">Lanzar Dados Digitales</button>
+                                <button onClick={() => handleDiceResultInternal(undefined)} className="w-full py-4 bg-primary text-midnight font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-3">
+                                    <span className="material-symbols-outlined">casino</span> Lanzar Dados Digitales
+                                </button>
                             </div>
                         )}
 
