@@ -16,8 +16,8 @@ service cloud.firestore {
     }
 
     // 🏆 USUARIOS
-    // Solo el dueño puede leer/escribir su perfil.
-    match /users/{userId} {
+    // Permite acceso recursivo a los datos del usuario (perfil, equipos, reportes)
+    match /users/{userId}/{document=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 

@@ -77,7 +77,9 @@ const MainApp: React.FC = () => {
 
   useEffect(() => {
     if (isGuest || !user || !db) {
-      setManagedTeams(getGuestTeams());
+      if (managedTeams.length === 0) {
+        setManagedTeams(getGuestTeams());
+      }
       setPlays([]);
       setDataInitiallyLoaded(true);
       setSyncState('synced');
