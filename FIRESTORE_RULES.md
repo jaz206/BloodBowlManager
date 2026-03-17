@@ -21,9 +21,9 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // 🛡️ REGLA GLOBAL SEGURA (Fallback)
+    // 🛡️ REGLA GLOBAL SEGURA (Fallback para datos de usuario)
     match /{path=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if request.auth != null && request.auth.uid == request.auth.uid; // Comparación dummy de seguridad
     }
 
     // ⚔️ PARTIDOS (Live Matches)

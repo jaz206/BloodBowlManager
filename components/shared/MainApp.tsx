@@ -180,6 +180,7 @@ const MainApp: React.FC = () => {
     } catch (error) {
       console.error("Error creating team in Firestore:", error);
       setSyncState('error');
+      throw error; // Lanzar el error para que la UI pueda capturarlo
     }
   };
 

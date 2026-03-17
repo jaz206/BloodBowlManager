@@ -78,16 +78,21 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
         }
     }, [requestedRoster, onRosterRequestHandled]);
 
-    const handleTeamCreate = (newTeam: ManagedTeam) => {
+    const handleTeamCreate = async (newTeam: ManagedTeam) => {
         const teamNameExists = teams.some(team => team.name.toLowerCase() === newTeam.name.toLowerCase());
         if (teamNameExists) {
             setConfirmation({ title: 'Nombre en uso', message: 'Ya existe un equipo con este nombre en el Gremio. Por favor, elige otro.', onConfirm: () => setConfirmation(null), type: 'info' });
             return;
         }
         const { id, ...teamData } = newTeam;
-        onTeamCreate(teamData);
-        setIsCreating(false);
-        showToast('¡Equipo creado y registrado en el Gremio!');
+        try {
+            await onTeamCreate(teamData);
+            setIsCreating(false);
+            showToast('¡Equipo creado y registrado en el Gremio!');
+        } catch (error) {
+            console.error("Guild: Error al crear el equipo:", error);
+            showToast('Error crítico: El equipo no se ha podido guardar en el Gremio.');
+        }
     };
 
     const requestTeamDelete = (teamId: string) => {
