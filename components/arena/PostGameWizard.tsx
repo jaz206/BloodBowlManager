@@ -133,50 +133,61 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
         };
     }, []);
 
+    // Initialize team state once
     useEffect(() => {
-        if (!finalHomeTeam || !opponentTeam) return;
+        if (!finalHomeTeam) return;
+        const initialTeam = cloneTeamForPostGame(finalHomeTeam);
         
-        // Winnings are calculated based on winningsRolls
-        const rollHome = winningsRolls.home;
-        if (rollHome === 0) return; // Wait for roll
-
-        const popHome = rollHome + finalHomeTeam.dedicatedFans;
-        
-        // Winnings Formula (BB2020/S3): (Fan Factor + Dedicated Fans + TDs + 5 if no stalling) * 10,000
-        // Fan Factor = 1D3
-        let calculatedWinnings = (popHome + score.home + (noStalling ? 5 : 0)) * 10000;
-        if (concession === 'home') calculatedWinnings = 0;
-        
-        const tempTeam = cloneTeamForPostGame(finalHomeTeam);
-        tempTeam.treasury += calculatedWinnings;
-
-        // MNG Logic
+        // Apply MNG logic once on initialization
         const mngPlayerIds = new Set(playersMNG.map(p => p.playerId));
-        tempTeam.players.forEach(player => {
+        initialTeam.players.forEach(player => {
             if (mngPlayerIds.has(player.id)) {
                 player.missNextGame = (player.missNextGame || 0) + 1;
-                player.status = 'Reserva'; // Recover from MNG next game
+                player.status = 'Reserva';
             } else if (player.missNextGame && player.missNextGame > 0) {
                 player.missNextGame -= 1;
             }
-            // Reset death status for UI if they were resurrected or similar (though usually they stay dead)
         });
 
         setPostGameState({
-            winnings: calculatedWinnings,
+            winnings: 0,
             mvp: null,
-            team: tempTeam,
+            team: initialTeam,
+        });
+    }, [finalHomeTeam, cloneTeamForPostGame, playersMNG]);
+
+    // Handle winnings and MVP count changes separately without resetting everything
+    useEffect(() => {
+        if (!postGameState || !finalHomeTeam) return;
+
+        const rollHome = winningsRolls.home;
+        let calculatedWinnings = 0;
+        if (rollHome !== 0) {
+            const popHome = rollHome + finalHomeTeam.dedicatedFans;
+            calculatedWinnings = (popHome + score.home + (noStalling ? 5 : 0)) * 10000;
+            if (concession === 'home') calculatedWinnings = 0;
+        }
+
+        setPostGameState(prev => {
+            if (!prev) return prev;
+            // Solo actualizamos las ganancias y el tesoro calculado, mantenemos los jugadores (con sus mejoras)
+            const newTeam = { 
+                ...prev.team, 
+                // El tesoro es el original + ganancias actualizadas
+                treasury: finalHomeTeam.treasury + calculatedWinnings 
+            };
+            
+            return {
+                ...prev,
+                winnings: calculatedWinnings,
+                team: newTeam
+            };
         });
 
-        // Set MVP count based on concession
-        if (concession === 'opponent') {
-            setMvpCount(2);
-        } else if (concession === 'home') {
-            setMvpCount(0);
-        } else {
-            setMvpCount(1);
-        }
-    }, [finalHomeTeam, opponentTeam, score, playersMNG, noStalling, concession, winningsRolls.home]);
+        if (concession === 'opponent') setMvpCount(2);
+        else if (concession === 'home') setMvpCount(0);
+        else setMvpCount(1);
+    }, [winningsRolls.home, noStalling, concession, score.home]);
 
     const handleWinningsRoll = (manualVal?: number) => {
         const rollHome = manualVal || (Math.floor(Math.random() * 3) + 1);

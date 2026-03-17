@@ -156,18 +156,36 @@ const CommandCenterStep: React.FC = () => {
 
                     {inducementState.underdog ? (
                         <div className="space-y-6">
-                            {/* Wallet */}
-                            <div className="glass-panel p-6 border-green-500/20 bg-green-500/5 flex items-center justify-between">
-                                <div>
-                                    <p className="text-[10px] font-display font-black text-green-500 uppercase tracking-widest mb-1">Tesoro de Indulgencia</p>
-                                    <p className="text-3xl font-display font-black text-white italic">
-                                        {inducementState.money.toLocaleString()} <span className="text-xs text-green-500/50">m.o.</span>
-                                    </p>
-                                </div>
-                                <div className="w-16 h-16 rounded-full bg-black/60 border border-white/10 flex items-center justify-center">
-                                    <span className="material-symbols-outlined text-green-500 text-3xl">account_balance_wallet</span>
-                                </div>
-                            </div>
+                            {/* Underdog Banner */}
+                            <div className="bg-gradient-to-r from-green-500/20 to-transparent p-4 rounded-2xl border-l-4 border-green-500 flex items-center gap-4 animate-slide-in-right">
+                                <div className="w-12 h-12 rounded-xl bg-black/40 border border-green-500/30 flex items-center justify-center">
+                                     {underdogTeam.crestImage 
+                                         ? <img src={underdogTeam.crestImage} className="w-10 h-10 object-contain" alt="Underdog" />
+                                         : <span className="material-symbols-outlined text-green-500">trending_up</span>
+                                     }
+                                 </div>
+                                 <div>
+                                     <p className="text-[10px] font-display font-black text-green-500 uppercase tracking-widest leading-none mb-1">Equipo Infractor / Underdog</p>
+                                     <h4 className="text-lg font-display font-black text-white uppercase italic tracking-tighter leading-none">{underdogTeam.name}</h4>
+                                 </div>
+                                 <div className="ml-auto bg-green-500/10 px-3 py-1.5 rounded-lg border border-green-500/20 text-center">
+                                     <p className="text-[8px] font-black text-green-500 uppercase leading-none">Incentivos</p>
+                                     <p className="text-xs font-black text-white">S3 Match</p>
+                                 </div>
+                             </div>
+
+                             {/* Wallet */}
+                             <div className="glass-panel p-6 border-green-500/20 bg-green-500/5 flex items-center justify-between">
+                                 <div>
+                                     <p className="text-[10px] font-display font-black text-green-500 uppercase tracking-widest mb-1">Tesoro de Indulgencia</p>
+                                     <p className="text-3xl font-display font-black text-white italic">
+                                         {inducementState.money.toLocaleString()} <span className="text-xs text-green-500/50">m.o.</span>
+                                     </p>
+                                 </div>
+                                 <div className="w-16 h-16 rounded-full bg-black/60 border border-white/10 flex items-center justify-center">
+                                     <span className="material-symbols-outlined text-green-500 text-3xl">account_balance_wallet</span>
+                                 </div>
+                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {/* Options */}
