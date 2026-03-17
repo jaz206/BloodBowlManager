@@ -17,7 +17,7 @@ const MatchInProgress: React.FC = () => {
         setIsTdModalOpen, setIsInjuryModalOpen, setIsPrayersModalOpen,
         setIsWeatherModalOpen, setIsSequenceGuideOpen,
         setIsMatchSummaryOpen, setIsConcedeModalOpen, 
-        handleNextTurn, handleUpdatePlayerCondition, 
+        handleNextTurn, handleUpdatePlayerCondition, handleSkillClick,
         logEvent, useReroll, interactionState, setInteractionState, handleS3Action, playSound,
         gameStatus, handleBribe, handleWizard
     } = useMatch();
@@ -289,7 +289,7 @@ const MatchInProgress: React.FC = () => {
                                     </h4>
                                     <div className="space-y-2">
                                         {[...(selectedPlayerForAction.skillKeys || []), ...(selectedPlayerForAction.gainedSkills || [])].map((s, i) => (
-                                            <button key={i} onClick={() => logEvent('INFO', `Consultando Oráculo para: ${s}`)} className={`w-full flex items-center gap-3 p-3 glass border-white/5 rounded-xl hover:bg-white/10 transition-all text-left group ${selectedPlayerForAction.isDistracted ? 'opacity-30' : ''}`}>
+                                            <button key={i} onClick={() => handleSkillClick(s)} className={`w-full flex items-center gap-3 p-3 glass border-white/5 rounded-xl hover:bg-white/10 transition-all text-left group ${selectedPlayerForAction.isDistracted ? 'opacity-30' : ''}`}>
                                                 <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20"><span className="material-symbols-outlined text-primary text-sm">menu_book</span></div>
                                                 <div>
                                                     <p className={`text-[11px] font-black uppercase text-diente-orco ${selectedPlayerForAction.isDistracted ? 'line-through decoration-red-500' : ''}`}>{s}</p>
@@ -398,12 +398,12 @@ const MatchInProgress: React.FC = () => {
                 </div>
 
                 {/* ── 5. EL CRONISTA NARRATIVO (DOCK TICKER) ── */}
-                <div className="bg-black/60 rounded-xl p-3 border border-white/5 font-mono text-[10px] h-20 overflow-hidden relative ring-1 ring-gold/5 flex flex-col">
-                    <div className="flex items-center justify-between mb-1 border-b border-white/5 pb-1">
-                        <span className="text-gold flex items-center gap-2"><span className="size-1.5 rounded-full bg-gold animate-pulse"></span> CRONISTA</span>
-                        <span className="text-slate-600">BB-OS LIVE NARRATION</span>
+                <div className="bg-black/80 rounded-xl p-4 border border-gold/20 font-mono text-xs h-32 overflow-hidden relative shadow-2xl flex flex-col backdrop-blur-md">
+                    <div className="flex items-center justify-between mb-2 border-b border-white/10 pb-2">
+                        <span className="text-gold flex items-center gap-2 font-black tracking-[0.2em]"><span className="size-2 rounded-full bg-gold animate-pulse"></span> CRONISTA</span>
+                        <span className="text-slate-500 font-bold">BB-OS LIVE NARRATION</span>
                     </div>
-                    <div className="flex-1 overflow-y-auto scrollbar-hide">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar">
                         <GameLog hideHeader />
                     </div>
                 </div>

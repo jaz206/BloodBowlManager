@@ -116,14 +116,21 @@ export const handleInjuryActionLogic = (ctx: InjuryEngineContext, action: 'next'
             if (hasApo && (result === 'KO' || result === 'Lesionado')) {
                 setIsApothecaryModalOpen(true);
                 setInjuryState(prev => ({ ...prev, injuryRoll: { roll, result: resultText }, step: 'apothecary', log: [...log, logMsg] }));
+            } else if (result === 'Lesionado' && resultText !== 'Magullado (solo reservas)') {
+                // S3: Si es Lesionado, hay que tirar en la tabla de bajas (D16)
+                playSound('injury');
+                setInjuryState(prev => ({
+                    ...prev, 
+                    injuryRoll: { roll, result: resultText },
+                    step: 'casualty_roll',
+                    log: [...log, logMsg]
+                }));
             } else {
                 playSound('injury');
-                if (result !== 'Lesionado' || resultText === 'Magullado (solo reservas)') {
-                    updatePlayerStatus(victimPlayer!.id, victimTeamId!, result, resultText);
-                }
+                updatePlayerStatus(victimPlayer!.id, victimTeamId!, result, resultText);
                 setInjuryState(prev => ({
                     ...prev, injuryRoll: { roll, result: resultText },
-                    step: result === 'Lesionado' && resultText !== 'Magullado (solo reservas)' ? 'regeneration_check' : 'summary',
+                    step: 'summary',
                     log: [...log, logMsg]
                 }));
             }
