@@ -164,55 +164,55 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
         return (
             <div className="min-h-screen w-full flex flex-col bg-bb-dark text-bb-parchment font-inter overflow-x-hidden antialiased">
                 {/* Artifact Navigation Carousel */}
-                <nav className="w-full bg-black border-b-2 border-bb-gold/30 py-6 px-8 relative z-50">
-                    <div className="max-w-[1600px] mx-auto flex items-center justify-between gap-12">
-                        <div className="flex items-center gap-6 flex-1 overflow-hidden relative px-12">
-                            <button onClick={() => scrollCarousel('left')} className="absolute left-0 text-bb-gold hover:text-white transition-all transform hover:scale-110 z-10 w-10 h-10 flex items-center justify-center">
-                                <span className="material-symbols-outlined text-5xl ornate-arrow">chevron_left</span>
+                <nav className="w-full bg-black border-b-2 border-bb-gold/30 py-3 px-8 relative z-50">
+                    <div className="max-w-[1600px] mx-auto flex items-center justify-between gap-8 text-center">
+                        <div className="flex items-center gap-4 flex-1 overflow-hidden relative px-10">
+                            <button onClick={() => scrollCarousel('left')} className="absolute left-0 text-bb-gold hover:text-white transition-all transform hover:scale-110 z-10 w-8 h-8 flex items-center justify-center">
+                                <span className="material-symbols-outlined text-4xl ornate-arrow">chevron_left</span>
                             </button>
-                            <div ref={carouselRef} className="flex items-center gap-10 overflow-x-auto no-scrollbar scroll-smooth snap-x">
+                            <div ref={carouselRef} className="flex items-center gap-8 overflow-x-auto no-scrollbar scroll-smooth snap-x">
                                 {filteredFactions.map((tm, idx) => {
                                     const masterIdx = rosterTemplates.findIndex(f => f.name === tm.name);
                                     const isSelected = selectedFactionIdx === masterIdx;
                                     return (
-                                        <button key={tm.name} onClick={() => setSelectedFactionIdx(masterIdx)} className={`flex-none flex flex-col items-center gap-3 group transition-opacity snap-center ${!isSelected && 'opacity-60 hover:opacity-100'}`}>
-                                            <div className={`artifact-shield w-20 h-20 rounded-full overflow-hidden flex items-center justify-center p-1 transition-all duration-500 ${isSelected ? 'selected' : ''}`}>
+                                        <button key={tm.name} onClick={() => setSelectedFactionIdx(masterIdx)} className={`flex-none flex flex-col items-center gap-2 group transition-opacity snap-center ${!isSelected && 'opacity-60 hover:opacity-100'}`}>
+                                            <div className={`artifact-shield w-14 h-14 rounded-full overflow-hidden flex items-center justify-center p-1 transition-all duration-500 ${isSelected ? 'selected' : ''}`}>
                                                 <img src={tm.image} alt={tm.name} className={`w-full h-full object-cover rounded-full transition-all duration-700 ${isSelected ? 'grayscale-0' : 'grayscale'}`} />
                                             </div>
-                                            <span className={`text-[11px] font-black uppercase tracking-[0.2em] font-epilogue ${isSelected ? 'text-bb-gold' : 'text-gray-500'}`}>{tm.name}</span>
+                                            <span className={`text-[10px] font-black uppercase tracking-[0.15em] font-epilogue ${isSelected ? 'text-bb-gold' : 'text-gray-600'}`}>{tm.name}</span>
                                         </button>
                                     );
                                 })}
                             </div>
-                            <button onClick={() => scrollCarousel('right')} className="absolute right-0 text-bb-gold hover:text-white transition-all transform hover:scale-110 z-10 w-10 h-10 flex items-center justify-center">
-                                <span className="material-symbols-outlined text-5xl ornate-arrow">chevron_right</span>
+                            <button onClick={() => scrollCarousel('right')} className="absolute right-0 text-bb-gold hover:text-white transition-all transform hover:scale-110 z-10 w-8 h-8 flex items-center justify-center">
+                                <span className="material-symbols-outlined text-4xl ornate-arrow">chevron_right</span>
                             </button>
                         </div>
-                        <div className="relative w-72">
-                            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-bb-gold text-xl">search</span>
-                            <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full bg-zinc-900/80 border-2 border-bb-gold/20 rounded-none py-3 pl-10 pr-4 text-[10px] tracking-[0.3em] text-bb-gold focus:border-bb-gold focus:ring-0 transition-all placeholder:text-zinc-600 font-bold uppercase outline-none" placeholder="RASTREAR RAZA..." type="text"/>
+                        <div className="relative w-64">
+                            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-bb-gold/50 text-lg">search</span>
+                            <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full bg-zinc-900/80 border border-bb-gold/20 rounded-none py-2 pl-9 pr-4 text-[9px] tracking-[0.2em] text-bb-gold focus:border-bb-gold focus:ring-0 transition-all placeholder:text-zinc-700 font-bold uppercase outline-none" placeholder="RASTREAR RAZA..." type="text"/>
                         </div>
                     </div>
                 </nav>
 
-                <header className="w-full pt-16 pb-12 text-center">
+                <header className="w-full pt-8 pb-6 text-center">
                     <div className="inline-block relative">
                         <motion.h1 
                             key={currentFaction.name}
-                            initial={{ opacity: 0, scale: 0.95 }}
+                            initial={{ opacity: 0, scale: 0.98 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="font-epilogue text-9xl italic tracking-tighter text-white animate-glow uppercase relative z-10"
+                            className="font-epilogue text-7xl italic tracking-tighter text-white animate-glow uppercase relative z-10"
                         >
                             {currentFaction.name}
                         </motion.h1>
-                        <div className="absolute -inset-x-20 top-1/2 h-1 bg-gradient-to-r from-transparent via-bb-gold/40 to-transparent -translate-y-1/2 blur-sm"></div>
+                        <div className="absolute -inset-x-12 top-1/2 h-0.5 bg-gradient-to-r from-transparent via-bb-gold/30 to-transparent -translate-y-1/2 blur-[2px]"></div>
                     </div>
-                    <p className="text-bb-gold mt-6 text-2xl tracking-[0.25em] uppercase font-light opacity-90 font-epilogue">
+                    <p className="text-bb-gold mt-3 text-lg tracking-[0.2em] uppercase font-light opacity-80 font-epilogue italic">
                         {language === 'es' ? currentFaction.specialRules_es : currentFaction.specialRules_en}
                     </p>
                 </header>
 
-                <main className="max-w-[1600px] mx-auto px-8 pb-56 grid grid-cols-12 gap-12 items-stretch flex-1">
+                <main className="max-w-[1600px] mx-auto px-8 pb-40 grid grid-cols-12 gap-8 items-stretch flex-1">
                     {/* Attributes & Lore */}
                     <section className="col-span-12 lg:col-span-3 flex flex-col gap-12">
                         <div className="panel-grimdark panel-filigree p-8 shadow-2xl">
@@ -323,20 +323,18 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                     </section>
                 </main>
 
-                <footer className="fixed bottom-0 left-0 w-full bg-black/95 border-t-4 border-bb-gold/50 p-10 z-[100] backdrop-blur-md shadow-[0_-10px_40px_rgba(0,0,0,0.9)]">
+                <footer className="fixed bottom-0 left-0 w-full bg-black/95 border-t-2 border-bb-gold/30 p-5 z-[100] backdrop-blur-md">
                     <div className="max-w-[1600px] mx-auto flex justify-center">
                         <button 
                             onClick={() => setStep('draft')}
-                            className="btn-coin px-36 py-8 transition-all transform hover:scale-105 active:scale-95 group relative overflow-hidden"
+                            className="btn-coin px-24 py-4 transition-all transform hover:scale-105 active:scale-95 group relative overflow-hidden"
                         >
                             <div className="flex flex-col items-center relative z-10">
-                                <span className="font-epilogue italic font-black text-4xl text-black uppercase tracking-tighter leading-none">
+                                <span className="font-epilogue italic font-black text-2xl text-black uppercase tracking-tighter leading-none">
                                     Fundar esta Franquicia
                                 </span>
-                                <span className="text-[10px] text-black/60 font-black uppercase tracking-[0.5em] mt-1 shadow-sm">Sello Real de Nufflé</span>
+                                <span className="text-[8px] text-black/50 font-black uppercase tracking-[0.4em] mt-0.5">Sello Real de Nufflé</span>
                             </div>
-                            <div className="absolute top-2 left-2 w-6 h-6 border border-black/20 rounded-full opacity-30"></div>
-                            <div className="absolute bottom-2 right-2 w-6 h-6 border border-black/20 rounded-full opacity-30"></div>
                         </button>
                     </div>
                 </footer>
