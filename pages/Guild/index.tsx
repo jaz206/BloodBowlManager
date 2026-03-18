@@ -1,14 +1,12 @@
 
-
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import type { ManagedTeam } from '../../types';
 import TeamCreator from './CreateTeamPage';
 import { TeamDashboard } from './TeamDetailPage';
 import { calculateTeamValue } from '../../utils/teamUtils';
-import UploadIcon from '../../components/icons/UploadIcon';
-import DownloadIcon from '../../components/icons/DownloadIcon';
-import ShieldCheckIcon from '../../components/icons/ShieldCheckIcon';
-import TrashIcon from '../../components/icons/TrashIcon';
+
+// SPP Levels for S3
+const SPP_LEVELS = [0, 6, 16, 31, 51, 76, 176];
 
 // Helper to create a plain JS object from a ManagedTeam, suitable for JSON stringification.
 // This prevents "circular structure" errors from Firestore objects.
@@ -36,7 +34,6 @@ const sanitizeTeamForExport = (team: ManagedTeam): Omit<ManagedTeam, 'id'> => {
     };
 };
 
-
 const calculateTV = (team: ManagedTeam) => calculateTeamValue(team);
 
 interface TeamManagerProps {
@@ -51,7 +48,14 @@ interface TeamManagerProps {
 }
 
 const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUpdate, onTeamDelete, requestedRoster, onRosterRequestHandled = () => { }, isGuest, matchReports }) => {
-    const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+    // State for which team is shown in the top summary bar
+    const [activeSummaryTeamId, setActiveSummaryTeamId] = useState<string | null>(null);
+    // State for which team is being edited (inline rename)
+    const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
+    const [newName, setNewName] = useState('');
+    // State to open the Detailed Roster View
+    const [openTeamId, setOpenTeamId] = useState<string | null>(null);
+    
     const [isCreating, setIsCreating] = useState(requestedRoster !== null && requestedRoster !== undefined);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -60,15 +64,55 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
     const [confirmation, setConfirmation] = useState<{ title: string; message: string; onConfirm: () => void; type?: 'danger' | 'info' } | null>(null);
     const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+    // Calculate records for all teams based on matchReports and team.history
+    const teamRecords = useMemo(() => {
+        const records: Record<string, { wins: number; draws: number; losses: number; total: number }> = {};
+        
+        teams.forEach(team => {
+            let wins = 0, draws = 0, losses = 0;
+            
+            // 1. Check matchReports for this team
+            matchReports?.forEach(match => {
+                const isHome = match.homeTeam.name === team.name || match.homeTeam.id === team.id;
+                const isOpponent = match.opponentTeam.name === team.name || match.opponentTeam.id === team.id;
+                
+                if (isHome || isOpponent) {
+                    if (match.winner === 'draw') draws++;
+                    else if ((match.winner === 'home' && isHome) || (match.winner === 'opponent' && isOpponent)) wins++;
+                    else losses++;
+                }
+            });
+
+            // 2. Fallback or merge with team.record if provided
+            if (team.record) {
+                wins = Math.max(wins, team.record.wins);
+                draws = Math.max(draws, team.record.draws);
+                losses = Math.max(losses, team.record.losses);
+            }
+
+            records[team.id || team.name] = { wins, draws, losses, total: wins + draws + losses };
+        });
+        
+        return records;
+    }, [teams, matchReports]);
+
+    const activeSummaryTeamData = useMemo(() => {
+        const tId = activeSummaryTeamId || (teams.length > 0 ? teams[0].id : null);
+        return tId ? teamRecords[tId] : { wins: 0, draws: 0, losses: 0, total: 0 };
+    }, [activeSummaryTeamId, teamRecords, teams]);
+
+    const activeSummaryTeam = useMemo(() => {
+        return teams.find(t => t.id === activeSummaryTeamId) || teams[0] || null;
+    }, [activeSummaryTeamId, teams]);
+
+    const openTeam = useMemo(() => {
+        return teams.find(t => t.id === openTeamId) || null;
+    }, [openTeamId, teams]);
+
     const showToast = (msg: string) => {
         setToastMessage(msg);
         setTimeout(() => setToastMessage(null), 4000);
     };
-
-    const selectedTeam = useMemo(() => {
-        if (!selectedTeamId) return null;
-        return teams.find(t => t.id === selectedTeamId) || null;
-    }, [selectedTeamId, teams]);
 
     useEffect(() => {
         if (requestedRoster !== null && requestedRoster !== undefined) {
@@ -81,35 +125,27 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
     const handleTeamCreate = async (newTeam: ManagedTeam) => {
         const teamNameExists = teams.some(team => team.name.toLowerCase() === newTeam.name.toLowerCase());
         if (teamNameExists) {
-            setConfirmation({ title: 'Nombre en uso', message: 'Ya existe un equipo con este nombre en el Gremio. Por favor, elige otro.', onConfirm: () => setConfirmation(null), type: 'info' });
+            setConfirmation({ title: 'Nombre en uso', message: 'Ya existe un equipo con este nombre en el Gremio.', onConfirm: () => setConfirmation(null), type: 'info' });
             return;
         }
         const { id, ...teamData } = newTeam;
         try {
             await onTeamCreate(teamData);
             setIsCreating(false);
-            showToast('¡Equipo creado y registrado en el Gremio!');
+            showToast('¡Franquicia fundada con éxito!');
         } catch (error) {
-            console.error("Guild: Error al crear el equipo:", error);
-            showToast('Error crítico: El equipo no se ha podido guardar en el Gremio.');
+            showToast('Error al fundar la franquicia.');
         }
     };
 
-    const requestTeamDelete = (teamId: string) => {
-        const teamToDelete = teams.find(t => t.id === teamId);
-        if (teamToDelete) {
-            setConfirmation({
-                title: '¿Disolver equipo?',
-                message: `"${teamToDelete.name}" será eliminado permanentemente. Esta acción no puede deshacerse.`,
-                type: 'danger',
-                onConfirm: () => {
-                    onTeamDelete(teamId);
-                    setConfirmation(null);
-                    if (selectedTeamId === teamId) setSelectedTeamId(null);
-                    showToast('El equipo ha sido disuelto.');
-                }
-            });
+    const handleRenameSubmit = (team: ManagedTeam) => {
+        if (!newName.trim()) {
+            setEditingTeamId(null);
+            return;
         }
+        onTeamUpdate({ ...team, name: newName.trim() });
+        setEditingTeamId(null);
+        showToast('Nombre actualizado.');
     };
 
     const handleImportClick = () => {
@@ -210,44 +246,27 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
         setSelectedTeamsForExport([]);
     };
 
-    const handleCancelCreation = () => {
-        setIsCreating(false);
-        setInitialRosterForCreation(null);
-    };
-
-    if (selectedTeam) {
+    if (openTeam) {
         return (
-            <div className="p-2 sm:p-4 animate-fade-in-slow">
+            <div className="animate-in fade-in duration-500">
                 <TeamDashboard
-                    team={selectedTeam}
+                    team={openTeam}
                     onUpdate={onTeamUpdate}
-                    onDeleteRequest={requestTeamDelete}
-                    onBack={() => setSelectedTeamId(null)}
+                    onDeleteRequest={onTeamDelete}
+                    onBack={() => setOpenTeamId(null)}
                     isGuest={isGuest}
                     matchReports={matchReports}
                 />
-                <style>{`
-                    @keyframes fade-in-slow {
-                        from { opacity: 0; }
-                        to { opacity: 1; }
-                    }
-                    .animate-fade-in-slow {
-                        animation: fade-in-slow 0.5s ease-out forwards;
-                    }
-                `}</style>
             </div>
         );
     }
 
     if (isCreating) {
         return (
-            <div className="p-2 sm:p-4 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                <button
-                    onClick={handleCancelCreation}
-                    className="flex items-center gap-2 text-primary font-black uppercase tracking-widest text-[10px] mb-2 hover:underline group italic transition-all"
-                >
-                    <span className="material-symbols-outlined font-bold transform group-hover:-translate-x-1 transition-transform">arrow_back</span>
-                    Volver al Gremio
+            <div className="p-6 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <button onClick={() => setIsCreating(false)} className="flex items-center gap-2 text-gold font-black uppercase tracking-widest text-[10px] hover:underline group italic">
+                    <span className="material-symbols-outlined font-bold group-hover:-translate-x-1 transition-transform">arrow_back</span>
+                    Cancelar Fundación
                 </button>
                 <TeamCreator onTeamCreate={handleTeamCreate} initialRosterName={initialRosterForCreation} />
             </div>
@@ -255,245 +274,209 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
     }
 
     return (
-        <main className="px-4 lg:px-40 py-8 animate-fade-in-slow">
-            <div className="max-w-[1000px] mx-auto">
-                {/* Title Section */}
-                <div className="flex flex-wrap items-center justify-between gap-6 mb-10">
+        <div className="min-h-screen bg-[#0a0a0a] text-gray-200 font-inter">
+            {/* Header Section */}
+            <header className="w-full border-b border-white/10 bg-[#0a0a0a]/80 backdrop-blur-md sticky top-0 z-50 px-6 py-5">
+                <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
-                        <h1 className="text-slate-100 text-4xl font-black leading-tight tracking-[-0.033em] uppercase italic">
-                            GESTIÓN DE <span className="text-primary italic">EQUIPOS</span>
+                        <h1 className="text-3xl md:text-4xl font-header font-black text-gold tracking-tighter uppercase italic">
+                            EL GREMIO
                         </h1>
-                        <p className="text-primary/70 text-sm mt-1 font-medium italic">Administra tus plantillas de Blood Bowl</p>
+                        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Equipos Activos: {teams.length}</p>
                     </div>
-                    <button
-                        onClick={() => setIsCreating(true)}
-                        className="flex min-w-[120px] cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-xl h-12 px-8 bg-primary text-background-dark text-xs font-black leading-normal tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.05] transition-all uppercase italic"
-                    >
-                        <span className="material-symbols-outlined font-bold">add_circle</span>
-                        <span className="truncate">CREAR EQUIPO</span>
-                    </button>
+                    <div className="flex items-center gap-4">
+                        <div className="relative group hidden lg:block">
+                            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none material-symbols-outlined text-gray-500 text-sm">search</span>
+                            <input className="bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-xs focus:ring-1 focus:ring-gold focus:border-gold w-64 text-gray-300 placeholder-gray-600 transition-all font-bold" placeholder="Filtrar franquicias..." type="text"/>
+                        </div>
+                        <button onClick={() => setIsCreating(true)} className="bg-pitch hover:bg-pitch-hover text-gold px-6 py-2.5 rounded-lg border border-gold/50 font-header font-bold text-xs tracking-wide shadow-lg shadow-black/40 transition-all flex items-center gap-2">
+                            <span>[+]</span> FUNDAR NUEVA FRANQUICIA
+                        </button>
+                    </div>
                 </div>
+            </header>
 
-                {/* Team List */}
-                <div className="flex flex-col gap-5">
-                    {teams.length > 0 ? (
-                        teams.map(team => {
+            <main className="max-w-7xl mx-auto px-6 py-8 space-y-10">
+                {/* Dynamic Stats Summary Bar */}
+                {activeSummaryTeam && (
+                    <div className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-500">
+                        <h2 className="text-sm font-header font-bold text-gold uppercase tracking-widest flex items-center gap-3">
+                            <span className="opacity-50 text-[10px]">RESUMEN:</span> {activeSummaryTeam.name}
+                        </h2>
+                        <section className="grid grid-cols-1 md:grid-cols-3 gap-0 border border-white/10 rounded-2xl overflow-hidden bg-white/[0.02]">
+                            <div className="px-8 py-6 border-r border-white/10 bg-gradient-to-r from-gold/5 to-transparent">
+                                <p className="text-[10px] text-gray-500 font-black tracking-[0.2em] uppercase">Partidos Totales</p>
+                                <p className="text-3xl font-header font-bold text-gray-200 mt-1">{activeSummaryTeamData.total}</p>
+                            </div>
+                            <div className="px-8 py-6 border-r border-white/10 bg-gradient-to-r from-gold/5 to-transparent">
+                                <p className="text-[10px] text-gray-500 font-black tracking-[0.2em] uppercase">Victorias</p>
+                                <p className="text-3xl font-header font-bold text-gold mt-1">{activeSummaryTeamData.wins}</p>
+                            </div>
+                            <div className="px-8 py-6 bg-gradient-to-r from-gold/5 to-transparent">
+                                <p className="text-[10px] text-gray-500 font-black tracking-[0.2em] uppercase">Palmarés</p>
+                                <p className="text-3xl font-header font-bold text-gray-200 mt-1">0 <span className="text-xs font-normal text-gray-500 uppercase ml-2 italic">Títulos</span></p>
+                            </div>
+                        </section>
+                    </div>
+                )}
+
+                {/* Team List Table */}
+                <section className="border border-white/10 rounded-2xl overflow-hidden bg-black/20">
+                    <div className="hidden md:grid grid-cols-12 px-8 py-4 bg-white/5 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] border-b border-white/10">
+                        <div className="col-span-4">Equipo / Nombre</div>
+                        <div className="col-span-2 text-center">Raza</div>
+                        <div className="col-span-2 text-center">VAE</div>
+                        <div className="col-span-2 text-center">Récord (V-E-D)</div>
+                        <div className="col-span-2 text-right">Acción</div>
+                    </div>
+
+                    <div className="divide-y divide-white/5">
+                        {teams.map(team => {
+                            const isSelected = activeSummaryTeamId === team.id;
+                            const isEditing = editingTeamId === team.id;
                             const tv = calculateTV(team);
-                            const hasInjuries = team.players.some(p => p.lastingInjuries && p.lastingInjuries.length > 0);
+                            const hasLevelUps = team.players.some(p => p.spp >= (SPP_LEVELS[p.advancements?.length || 0] || 999));
+                            const hasInjuries = team.players.some(p => p.lastingInjuries?.some(i => i.includes('MNG')) || p.missNextGame);
+                            const record = teamRecords[team.id || team.name] || { wins: 0, draws: 0, losses: 0 };
 
                             return (
-                                <div key={team.id || team.name} className="flex items-center gap-6 rounded-2xl bg-primary/5 border border-primary/10 p-5 hover:border-primary/40 hover:bg-primary/[0.08] transition-all group relative overflow-hidden">
-                                    {/* Background Decor */}
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-[40px] rounded-full translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
-
-                                    {/* Icon / Crest */}
-                                    <div className="size-20 lg:size-24 shrink-0 bg-background-dark rounded-xl flex items-center justify-center border border-primary/20 overflow-hidden relative shadow-2xl">
-                                        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent opacity-60"></div>
-                                        {team.crestImage ? (
-                                            <img src={team.crestImage} alt="" className="w-full h-full object-cover relative z-10" />
-                                        ) : (
-                                            <span className="material-symbols-outlined text-primary text-4xl z-10 font-light opacity-80 group-hover:scale-110 transition-transform">
-                                                {hasInjuries ? 'skull' : 'shield'}
-                                            </span>
-                                        )}
+                                <div 
+                                    key={team.id}
+                                    onClick={() => setActiveSummaryTeamId(team.id!)}
+                                    className={`group cursor-pointer px-8 py-6 grid grid-cols-1 md:grid-cols-12 items-center gap-4 transition-all hover:bg-white/[0.05] ${isSelected ? 'bg-white/10 border-l-4 border-l-gold' : 'bg-transparent'}`}
+                                >
+                                    {/* Team Name & Crest */}
+                                    <div className="col-span-4 flex items-center gap-5">
+                                        <div className="w-14 h-14 bg-black/40 rounded-lg border border-white/10 flex items-center justify-center shrink-0 overflow-hidden relative group-hover:border-gold/30 transition-all">
+                                            {team.crestImage ? (
+                                                <img src={team.crestImage} alt={team.name} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <span className="material-symbols-outlined text-gold/30 text-2xl">shield</span>
+                                            )}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <div className="flex items-center gap-2">
+                                                {isEditing ? (
+                                                    <input 
+                                                        autoFocus
+                                                        className="bg-black/60 border border-gold text-white px-2 py-0.5 rounded text-lg font-header italic outline-none"
+                                                        value={newName}
+                                                        onChange={(e) => setNewName(e.target.value)}
+                                                        onBlur={() => handleRenameSubmit(team)}
+                                                        onKeyDown={(e) => e.key === 'Enter' && handleRenameSubmit(team)}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    />
+                                                ) : (
+                                                    <>
+                                                        <h3 className="font-header font-bold text-xl text-white truncate italic tracking-tighter uppercase">{team.name}</h3>
+                                                        <button 
+                                                            onClick={(e) => { e.stopPropagation(); setEditingTeamId(team.id!); setNewName(team.name); }}
+                                                            className="text-gold/40 hover:text-gold transition-colors"
+                                                        >
+                                                            <span className="material-symbols-outlined text-sm">edit</span>
+                                                        </button>
+                                                    </>
+                                                )}
+                                            </div>
+                                            <div className="flex items-center gap-2 mt-2 flex-wrap">
+                                                <span className="text-[9px] font-mono tracking-tighter text-gray-600 mr-1 uppercase">#FR-{team.id?.slice(0, 4)}</span>
+                                                {hasLevelUps && <span className="bg-gold text-black text-[8px] font-black px-1.5 py-0.5 rounded tracking-widest uppercase italic">PTE. MEJORA</span>}
+                                                {hasInjuries && <span className="bg-blood text-white text-[8px] font-black px-1.5 py-0.5 rounded tracking-widest uppercase italic">LESIONADOS</span>}
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    <div className="flex flex-1 flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
-                                        <div className="flex flex-col gap-1.5 min-w-0">
-                                            <div className="flex items-center gap-3">
-                                                <p className="text-slate-100 text-xl font-black leading-tight uppercase italic tracking-tighter truncate group-hover:text-primary transition-colors">
-                                                    {team.name}
-                                                </p>
-                                                <span className={`px-2.5 py-0.5 rounded-lg text-[9px] font-black tracking-[0.1em] uppercase shadow-sm ${hasInjuries
-                                                    ? 'bg-red-500/20 text-red-500 border border-red-500/20'
-                                                    : 'bg-primary/20 text-primary border border-primary/20'
-                                                    }`}>
-                                                    {hasInjuries ? 'Lesionado' : 'Activo'}
-                                                </span>
-                                            </div>
-                                            <p className="text-primary/80 text-xs font-black tracking-widest uppercase italic opacity-70">
-                                                {team.rosterName}
-                                            </p>
-                                            <div className="flex flex-wrap items-center gap-5 mt-2">
-                                                <div className="flex items-center gap-2 text-slate-500 group-hover:text-slate-400 transition-colors">
-                                                    <span className="material-symbols-outlined text-sm text-primary/60">payments</span>
-                                                    <span className="text-[10px] font-black uppercase tracking-tighter">TV: {tv.toLocaleString()}</span>
-                                                </div>
-                                                <div className="flex items-center gap-2 text-slate-500 group-hover:text-slate-400 transition-colors">
-                                                    <span className="material-symbols-outlined text-sm text-primary/60">groups</span>
-                                                    <span className="text-[10px] font-black uppercase tracking-tighter">{team.players.length} Jugadores</span>
-                                                </div>
-                                            </div>
-                                        </div>
+                                    {/* Race */}
+                                    <div className="col-span-2 text-center">
+                                        <span className="text-xs text-gray-400 font-bold uppercase tracking-widest">{team.rosterName}</span>
+                                    </div>
 
-                                        <div className="flex items-center gap-3">
-                                            {/* We use DETALLES as the main button, and a separate delete */}
-                                            <button
-                                                onClick={() => setSelectedTeamId(team.id!)}
-                                                className="flex items-center justify-center h-11 px-6 rounded-xl bg-primary/10 text-primary border border-primary/20 font-black text-[10px] gap-3 hover:bg-primary hover:text-background-dark transition-all uppercase tracking-widest italic shadow-lg shadow-primary/5"
-                                            >
-                                                <span>DETALLES</span>
-                                                <span className="material-symbols-outlined text-sm font-bold">arrow_forward</span>
-                                            </button>
+                                    {/* VAE */}
+                                    <div className="col-span-2 text-center">
+                                        <span className="font-mono text-lg font-bold text-gold">{tv.toLocaleString()}</span>
+                                        <span className="text-[9px] text-gold/30 block font-black tracking-widest mt-0.5">MO</span>
+                                    </div>
 
-                                            <div className="h-8 w-px bg-primary/10 mx-2 hidden lg:block"></div>
+                                    {/* Record */}
+                                    <div className="col-span-2 text-center">
+                                        <span className="text-xs font-mono tracking-widest text-gray-300 bg-black/40 px-4 py-1.5 rounded-full border border-white/5 inline-block">
+                                            {record.wins} - {record.draws} - {record.losses}
+                                        </span>
+                                    </div>
 
-                                            <button
-                                                onClick={() => requestTeamDelete(team.id!)}
-                                                className="flex items-center justify-center h-11 w-11 rounded-xl bg-red-500/10 text-red-500 border border-red-500/10 hover:bg-red-500 hover:text-white transition-all shadow-lg"
-                                                aria-label="Eliminar equipo"
-                                            >
-                                                <span className="material-symbols-outlined text-lg">delete</span>
-                                            </button>
-                                        </div>
+                                    {/* Action */}
+                                    <div className="col-span-2 flex justify-end">
+                                        <button 
+                                            onClick={(e) => { e.stopPropagation(); setOpenTeamId(team.id!); }}
+                                            className={`w-full md:w-auto text-[10px] font-black px-5 py-2.5 rounded-lg transition-all uppercase tracking-widest font-header italic border ${isSelected ? 'bg-gold text-black border-gold hover:bg-gold/80' : 'border-gold/40 text-gold hover:bg-gold hover:text-black'}`}
+                                        >
+                                            Gestionar Plantilla
+                                        </button>
                                     </div>
                                 </div>
                             );
-                        })
-                    ) : (
-                        <div className="text-center p-20 bg-primary/5 rounded-[2.5rem] border border-primary/10 shadow-inner group">
-                            <span className="material-symbols-outlined text-6xl text-primary/20 mb-6 block group-hover:scale-110 transition-transform duration-700">stadium</span>
-                            <p className="text-slate-100 font-black italic uppercase tracking-widest text-sm mb-2">Sin equipos en el Gremio</p>
-                            <p className="text-slate-500 text-xs font-medium italic">¡Pulsa "Crear Equipo" para empezar tu legado!</p>
-                        </div>
-                    )}
-                </div>
-
-                {/* Data Management Section */}
-                <div className="mt-16 pt-10 border-t border-primary/10 relative">
-                    <div className="absolute top-0 left-0 w-40 h-1 bg-gradient-to-r from-primary to-transparent -translate-y-px"></div>
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-10">
-                        <div className="flex flex-col gap-2">
-                            <h3 className="text-white font-black text-xl uppercase italic tracking-tighter">Gestión de <span className="text-primary italic">Datos</span></h3>
-                            <p className="text-slate-500 text-sm font-medium italic">Transfiere tus equipos entre diferentes dispositivos o haz copias de seguridad.</p>
-                        </div>
-                        <div className="flex gap-4 w-full sm:w-auto">
-                            <button
-                                onClick={() => handleImportClick()}
-                                className="flex-1 sm:flex-none flex items-center justify-center gap-3 h-12 px-8 rounded-xl bg-slate-800 text-slate-100 hover:bg-slate-700 border border-white/5 transition-all text-[10px] font-black uppercase tracking-widest italic"
-                            >
-                                <span className="material-symbols-outlined text-primary font-bold">upload</span>
-                                IMPORTAR
-                            </button>
-                            <input type="file" accept=".json" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
-                            <button
-                                onClick={() => teams.length > 0 ? setIsExportModalOpen(true) : showToast('No hay equipos para exportar.')}
-                                className="flex-1 sm:flex-none flex items-center justify-center gap-3 h-12 px-8 rounded-xl bg-slate-800 text-slate-100 hover:bg-slate-700 border border-white/5 transition-all text-[10px] font-black uppercase tracking-widest italic"
-                            >
-                                <span className="material-symbols-outlined text-primary font-bold">download</span>
-                                EXPORTAR
-                            </button>
-                        </div>
+                        })}
+                        
+                        {teams.length === 0 && (
+                            <div className="py-20 text-center flex flex-col items-center">
+                                <span className="material-symbols-outlined text-6xl text-white/5 mb-4">stadium</span>
+                                <h3 className="text-lg font-header font-black text-gray-600 uppercase italic tracking-widest">Sin franquicias registradas</h3>
+                                <button onClick={() => setIsCreating(true)} className="mt-6 text-gold text-xs font-black uppercase tracking-[0.2em] hover:text-white transition-colors">Fundar Primer Equipo</button>
+                            </div>
+                        )}
                     </div>
-                </div>
-            </div>
+                </section>
+            </main>
 
-            {/* Modals */}
+            <footer className="max-w-7xl mx-auto px-6 py-12 border-t border-white/5 text-center">
+                <p className="text-gray-600 text-[9px] uppercase tracking-[0.4em] font-black">© 2499 Blood Bowl Management System - El Gremio de Reikland</p>
+                <div className="mt-6 flex justify-center gap-6">
+                    <button onClick={handleImportClick} className="text-[9px] font-black text-gray-500 hover:text-gold uppercase tracking-widest transition-all">Importar JSON</button>
+                    <button onClick={() => setIsExportModalOpen(true)} className="text-[9px] font-black text-gray-500 hover:text-gold uppercase tracking-widest transition-all">Exportar Datos</button>
+                </div>
+                <input type="file" accept=".json" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
+            </footer >
+
+            {/* Reuse existing export modal and confirmation logic */}
             {isExportModalOpen && (
-                <div
-                    className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[200] p-4 animate-fade-in-fast"
-                    onClick={() => setIsExportModalOpen(false)}
-                >
-                    <div className="bg-background-dark/95 border border-primary/20 rounded-[2.5rem] shadow-2xl max-w-lg w-full transform animate-slide-in-up overflow-hidden" onClick={e => e.stopPropagation()}>
-                        <div className="p-8 border-b border-primary/10 flex items-center justify-between">
-                            <h2 className="text-2xl font-black text-white italic uppercase tracking-tighter">Exportar <span className="text-primary">Equipos</span></h2>
-                            <button onClick={() => setIsExportModalOpen(false)} className="text-slate-500 hover:text-white transition-colors">
-                                <span className="material-symbols-outlined">close</span>
-                            </button>
-                        </div>
-                        <div className="p-8 max-h-[50vh] overflow-y-auto space-y-4">
-                            <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5">
-                                <input
-                                    type="checkbox"
-                                    id="select-all-export"
-                                    className="h-5 w-5 rounded border-primary/20 text-primary focus:ring-primary bg-transparent"
-                                    checked={teams.length > 0 && selectedTeamsForExport.length === teams.length}
-                                    onChange={(e) => handleSelectAllForExport(e.target.checked)}
-                                />
-                                <label htmlFor="select-all-export" className="text-xs font-black text-slate-300 uppercase italic tracking-widest cursor-pointer">
-                                    Seleccionar Todos
-                                </label>
+                <div className="fixed inset-0 bg-black/98 backdrop-blur-xl flex items-center justify-center z-[200] p-4" onClick={() => setIsExportModalOpen(false)}>
+                    <div className="bg-[#0a0a0a] border border-white/10 rounded-[2.5rem] p-8 max-w-lg w-full shadow-2xl" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-2xl font-header font-black text-gold uppercase italic tracking-tighter mb-8 text-center underline decoration-gold/20 underline-offset-8">Archivo del Gremio</h3>
+                        <div className="max-h-[50vh] overflow-y-auto space-y-3 custom-scrollbar pr-2">
+                             <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5 cursor-pointer hover:bg-white/10 transition-all mb-4" onClick={(e) => { e.stopPropagation(); handleSelectAllForExport(selectedTeamsForExport.length !== teams.length); }}>
+                                <input type="checkbox" checked={teams.length > 0 && selectedTeamsForExport.length === teams.length} readOnly className="h-4 w-4 rounded border-gold/20 text-gold focus:ring-gold bg-black/40" />
+                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Seleccionar Todos</span>
                             </div>
-                            <div className="grid gap-2">
-                                {teams.map(team => (
-                                    <div key={team.id} className="flex items-center gap-3 bg-black/40 p-4 rounded-xl border border-white/5 hover:border-primary/20 transition-all">
-                                        <input
-                                            type="checkbox"
-                                            id={`export-${team.id}`}
-                                            className="h-5 w-5 rounded border-primary/20 text-primary focus:ring-primary bg-transparent"
-                                            checked={selectedTeamsForExport.includes(team.id!)}
-                                            onChange={() => handleExportSelectionChange(team.id!)}
-                                        />
-                                        <label htmlFor={`export-${team.id}`} className="text-sm font-black text-slate-200 italic uppercase cursor-pointer">
-                                            {team.name}
-                                        </label>
-                                    </div>
-                                ))}
-                            </div>
+                            {teams.map(t => (
+                                <div key={t.id} className="flex items-center gap-3 bg-black/40 p-4 rounded-xl border border-white/5 hover:border-gold/30 transition-all cursor-pointer" onClick={() => handleExportSelectionChange(t.id!)}>
+                                    <input type="checkbox" checked={selectedTeamsForExport.includes(t.id!)} readOnly className="h-4 w-4 rounded border-gold/20 text-gold focus:ring-gold bg-black/40" />
+                                    <span className="text-sm font-header font-bold text-white italic tracking-tighter uppercase">{t.name}</span>
+                                </div>
+                            ))}
                         </div>
-                        <div className="p-8 bg-black/40 border-t border-primary/10 flex gap-4">
-                            <button onClick={() => setIsExportModalOpen(false)} className="flex-1 py-4 px-6 rounded-2xl bg-white/5 text-slate-400 font-black text-[10px] uppercase tracking-widest italic hover:bg-white/10 transition-all">
-                                Cancelar
-                            </button>
-                            <button onClick={triggerExport} className="flex-1 py-4 px-6 rounded-2xl bg-primary text-background-dark font-black text-[10px] uppercase tracking-widest italic shadow-lg shadow-primary/20 hover:scale-105 transition-all">
-                                Exportar Selección
-                            </button>
+                        <div className="grid grid-cols-2 gap-4 mt-8">
+                            <button onClick={() => setIsExportModalOpen(false)} className="py-4 rounded-2xl bg-white/5 text-gray-500 font-header font-black uppercase text-[10px] tracking-widest hover:bg-white/10 transition-all">Cancelar</button>
+                            <button onClick={triggerExport} className="py-4 rounded-2xl bg-gold text-black font-header font-black uppercase text-[10px] tracking-widest shadow-xl shadow-gold/20 hover:scale-105 active:scale-95 transition-all">Exportar (.json)</button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {confirmation && (
-                <div className="fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center z-[300] p-4">
-                    <div className="bg-background-dark border border-white/10 p-10 rounded-[2.5rem] shadow-2xl max-w-sm w-full text-center space-y-6">
-                        <div className={`size-16 rounded-3xl flex items-center justify-center mx-auto ${confirmation.type === 'danger' ? 'bg-red-500/10 text-red-500' : 'bg-primary/10 text-primary'
-                            }`}>
-                            <span className="material-symbols-outlined text-4xl">
-                                {confirmation.type === 'danger' ? 'warning' : 'info'}
-                            </span>
-                        </div>
-                        <div className="space-y-2">
-                            <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter">{(confirmation as any).title || '¿Estás seguro?'}</h3>
-                            <p className="text-slate-400 text-sm font-medium italic leading-relaxed">{confirmation.message}</p>
-                        </div>
-                        <div className="flex flex-col gap-3">
-                            {confirmation.type === 'danger' && (
-                                <button onClick={confirmation.onConfirm} className="w-full py-4 bg-red-600 text-white font-black text-xs uppercase tracking-widest italic rounded-2xl shadow-xl shadow-red-600/10 hover:bg-red-500 transition-all">
-                                    CONFIRMAR
-                                </button>
-                            )}
-                            {confirmation.type !== 'danger' && (
-                                <button onClick={confirmation.onConfirm} className="w-full py-4 bg-primary text-background-dark font-black text-xs uppercase tracking-widest italic rounded-2xl shadow-xl shadow-primary/10 hover:bg-primary/90 transition-all">
-                                    ENTENDIDO
-                                </button>
-                            )}
-                            <button onClick={() => setConfirmation(null)} className="w-full py-4 bg-white/5 text-slate-400 font-black text-xs uppercase tracking-widest italic rounded-2xl hover:bg-white/10 transition-all">
-                                CANCELAR
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Toast Notification */}
             {toastMessage && (
-                <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-[400] animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div className="bg-zinc-900 border border-white/10 px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 backdrop-blur-xl">
-                        <span className="material-symbols-outlined text-primary font-bold">check_circle</span>
-                        <p className="text-white font-bold text-sm">{toastMessage}</p>
+                <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[400] animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="bg-gold text-black px-8 py-4 rounded-2xl shadow-glow font-black border-2 border-gold/50 text-[10px] uppercase tracking-widest">
+                        {toastMessage}
                     </div>
                 </div>
             )}
-
+            
             <style>{`
-                @keyframes fade-in-slow { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-                .animate-fade-in-slow { animation: fade-in-slow 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-                @keyframes fade-in-fast { from { opacity: 0; } to { opacity: 1; } }
-                @keyframes slide-in-up { from { transform: translateY(40px) scale(0.95); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
-                .animate-fade-in-fast { animation: fade-in-fast 0.3s ease-out forwards; }
-                .animate-slide-in-up { animation: slide-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+                 .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+                 .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
+                 .custom-scrollbar::-webkit-scrollbar-thumb { background: #CA8A04; border-radius: 10px; }
+                 .shadow-glow { box-shadow: 0 0 30px rgba(202, 138, 4, 0.3); }
             `}</style>
-        </main>
+        </div >
     );
 };
 
