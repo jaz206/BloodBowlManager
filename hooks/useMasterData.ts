@@ -309,6 +309,22 @@ export const useMasterData = () => {
         syncMasterData,
         updateMasterItem,
         updateHeroImage,
+        addItemToMaster: async (docId: 'teams' | 'skills' | 'star_players' | 'heraldo', item: any) => {
+            if (!db) return;
+            const ref = doc(db, MASTER_COL, docId);
+            const snap = await getDoc(ref);
+            const items = (snap.exists() ? snap.data().items : []) || [];
+            items.push(item);
+            await setDoc(ref, { items, updatedAt: serverTimestamp() }, { merge: true });
+        },
+        deleteMasterItem: async (docId: 'teams' | 'skills' | 'star_players' | 'heraldo', itemId: string) => {
+            if (!db) return;
+            const ref = doc(db, MASTER_COL, docId);
+            const snap = await getDoc(ref);
+            if (!snap.exists()) return;
+            const items = (snap.data().items || []).filter((i: any) => (i.keyEN ?? i.name ?? i.title) !== itemId);
+            await setDoc(ref, { items, updatedAt: serverTimestamp() }, { merge: true });
+        },
         refresh: () => setLoading(true),
     };
 };

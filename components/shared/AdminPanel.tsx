@@ -40,8 +40,10 @@ const AdminPanel: React.FC = () => {
         syncMasterData,
         isFromFirestore,
         updateMasterItem,
+        addItemToMaster,
+        deleteMasterItem,
         heraldoItems
-    } = useMasterData();
+    } = useMasterData() as any;
 
     const { config: arenaConfig, updateConfig: saveArenaConfig } = useArenaConfig();
 
@@ -343,10 +345,20 @@ const AdminPanel: React.FC = () => {
                 await updateMasterItem(docId, data.name, data);
             } else if (type === 'heraldo') {
                 // Use title as ID for heraldo items for now
-                await updateMasterItem('heraldo', data.title, data);
+                const isNew = !heraldoItems.find((h: any) => h.title === editingItem.data.title);
+            
+                if (isNew) {
+                    await addItemToMaster('heraldo', editingItem.data);
+                } else {
+                    await updateMasterItem('heraldo', editingItem.data.title, editingItem.data);
+                }
+                showToast('✅ Noticia guardada con éxito en la Base de Datos.');
             }
 
-            showToast('✅ Cambios guardados con éxito en la Base de Datos.');
+            // This toast is for all other types that don't have a specific success message
+            if (type !== 'heraldo') {
+                showToast('✅ Cambios guardados con éxito en la Base de Datos.');
+            }
             setEditingItem(null);
             refresh();
         } catch (error) {
@@ -707,18 +719,60 @@ const AdminPanel: React.FC = () => {
                                                 </p>
                                             </div>
                                         </div>
-                                        <button
-                                            onClick={() => setEditingItem({ type: activeTab, data: { ...item } })}
-                                            className="ml-4 px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-premium-gold hover:text-black hover:border-premium-gold font-display font-black text-[9px] uppercase tracking-widest transition-all whitespace-nowrap"
-                                        >
-                                            Editar
-                                        </button>
+                                        <div className="flex gap-2 ml-4">
+                                            <button
+                                                onClick={() => setEditingItem({ type: activeTab, data: { ...item } })}
+                                                className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-premium-gold hover:text-black hover:border-premium-gold font-display font-black text-[9px] uppercase tracking-widest transition-all whitespace-nowrap"
+                                            >
+                                                Editar
+                                            </button>
+                                            {activeTab === 'heraldo' && (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setConfirmModal({
+                                                            title: '¿Eliminar Noticia?',
+                                                            message: `Vas a borrar permanentemente "${item.title}". Esta acción no se puede deshacer.`,
+                                                            danger: true,
+                                                            onConfirm: async () => {
+                                                                try {
+                                                                    await deleteMasterItem('heraldo', item.title);
+                                                                    showToast('Noticia eliminada correctamente');
+                                                                    refresh();
+                                                                } catch (err) {
+                                                                    showToast('Error al eliminar noticia', 'error');
+                                                                }
+                                                                setConfirmModal(null);
+                                                            }
+                                                        });
+                                                    }}
+                                                    className="w-10 h-10 rounded-xl bg-blood/10 border border-blood/20 text-blood hover:bg-blood hover:text-white transition-all flex items-center justify-center"
+                                                >
+                                                    <span className="material-symbols-outlined text-sm">delete</span>
+                                                </button>
+                                            )}
+                                        </div>
                                     </motion.div>
                                 ))}
                                 {filteredContent.length === 0 && (
                                     <div className="col-span-full py-20 text-center glass-panel border-dashed border-white/10">
                                         <span className="material-symbols-outlined text-4xl text-slate-700 mb-2">search_off</span>
                                         <p className="text-slate-500 font-display font-bold uppercase text-[10px] tracking-[0.3em]">No se encontraron resultados para "{searchTerm}"</p>
+                                    </div>
+                                )}
+
+                                {activeTab === 'heraldo' && (
+                                    <div className="flex gap-4">
+                                        <button
+                                            onClick={() => setEditingItem({ 
+                                                type: 'heraldo', 
+                                                data: { type: 'skill', title: 'NUEVA NOTICIA', active: true, tag: 'Destacado', content: '', category: 'Sección de Habilidades' } 
+                                            })}
+                                            className="px-6 py-3 rounded-xl bg-premium-gold/10 border border-premium-gold/30 text-premium-gold font-display font-black uppercase tracking-widest text-[10px] hover:bg-premium-gold hover:text-black transition-all flex items-center gap-2"
+                                        >
+                                            <span className="material-symbols-outlined text-sm">add</span>
+                                            Añadir Noticia
+                                        </button>
                                     </div>
                                 )}
                             </div>
@@ -1354,29 +1408,45 @@ const AdminPanel: React.FC = () => {
                                         {/* HERALDO SPECIFIC */}
                                         {editingItem.type === 'heraldo' && (
                                             <div className="space-y-8">
+                                                <div className="bg-white/5 border border-white/5 rounded-3xl p-6 mb-8">
+                                                    <div className="flex items-center gap-4 mb-4">
+                                                        <div className="p-3 rounded-2xl bg-premium-gold/10">
+                                                            <span className="material-symbols-outlined text-premium-gold">auto_awesome</span>
+                                                        </div>
+                                                        <div>
+                                                            <h4 className="text-sm font-bold text-white uppercase tracking-tight">Plantilla: {editingItem.data.type === 'starplayer' ? 'Jugador Estrella' : editingItem.data.type === 'team' ? 'Equipo/Franquicia' : 'Regla de Juego'}</h4>
+                                                            <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mt-1">Los campos se adaptarán visualmente en el Heraldo según tu elección.</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                     <div className="space-y-4">
-                                                        <label className="block text-[10px] font-black text-premium-gold uppercase tracking-widest ml-1">Tipo de Noticia</label>
+                                                        <label className="block text-[10px] font-black text-premium-gold uppercase tracking-widest ml-1">Tipo de Noticia (Plantilla)</label>
                                                         <select
                                                             value={editingItem.data.type || 'skill'}
                                                             onChange={(e) => setEditingItem({ ...editingItem, data: { ...editingItem.data, type: e.target.value } })}
                                                             className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none"
                                                         >
-                                                            <option value="starplayer">Jugador Estrella</option>
-                                                            <option value="team">Equipo/Franquicia</option>
-                                                            <option value="skill">Habilidad/Regla</option>
+                                                            <option value="starplayer">Jugador Estrella (Retrato + Bio)</option>
+                                                            <option value="team">Equipo/Franquicia (Escudo + Crónica)</option>
+                                                            <option value="skill">Habilidad/Regla (Solo Texto / New Season)</option>
                                                         </select>
                                                     </div>
                                                     <div className="space-y-4">
-                                                        <label className="block text-[10px] font-black text-premium-gold uppercase tracking-widest ml-1">Título de la Noticia</label>
+                                                        <label className="block text-[10px] font-black text-premium-gold uppercase tracking-widest ml-1">
+                                                            {editingItem.data.type === 'starplayer' ? 'Nombre del Jugador' : editingItem.data.type === 'team' ? 'Nombre del Equipo' : 'Nombre de la Regla'}
+                                                        </label>
                                                         <input
                                                             type="text"
                                                             value={editingItem.data.title || ''}
                                                             onChange={(e) => setEditingItem({ ...editingItem, data: { ...editingItem.data, title: e.target.value } })}
                                                             className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none uppercase italic font-display font-black"
+                                                            placeholder="Ej: MORG 'N' THORG"
                                                         />
                                                     </div>
                                                 </div>
+                                                
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                     <div className="space-y-4">
                                                         <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Etiqueta (Tag)</label>
@@ -1385,37 +1455,43 @@ const AdminPanel: React.FC = () => {
                                                             value={editingItem.data.tag || ''}
                                                             onChange={(e) => setEditingItem({ ...editingItem, data: { ...editingItem.data, tag: e.target.value } })}
                                                             className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none"
-                                                            placeholder="Ej: Destacado, Leyenda, Reglamento"
+                                                            placeholder={editingItem.data.type === 'starplayer' ? 'Leyenda' : editingItem.data.type === 'team' ? 'Franquicia' : 'Destacado'}
                                                         />
                                                     </div>
                                                     <div className="space-y-4">
-                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Categoría</label>
+                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Subtítulo / Categoría</label>
                                                         <input
                                                             type="text"
                                                             value={editingItem.data.category || ''}
                                                             onChange={(e) => setEditingItem({ ...editingItem, data: { ...editingItem.data, category: e.target.value } })}
                                                             className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none"
-                                                            placeholder="Ej: Sección de Habilidades, Perfil de Jugador"
+                                                            placeholder={editingItem.data.type === 'starplayer' ? 'Perfil de Jugador' : editingItem.data.type === 'team' ? 'Crónica del Gremio' : 'Sección de Habilidades'}
                                                         />
                                                     </div>
                                                 </div>
+
                                                 <div className="space-y-4">
-                                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Contenido del Artículo (Cuerpo)</label>
+                                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                                                        {editingItem.data.type === 'starplayer' ? 'Biografía del Jugador' : editingItem.data.type === 'team' ? 'Últimos resultados / Historia' : 'Descripción de la Habilidad o Noticia'}
+                                                    </label>
                                                     <textarea
                                                         value={editingItem.data.content || ''}
                                                         onChange={(e) => setEditingItem({ ...editingItem, data: { ...editingItem.data, content: e.target.value } })}
                                                         className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none h-32 resize-none text-sm leading-relaxed"
-                                                        placeholder="Escribe la noticia aquí..."
+                                                        placeholder="Escribe la historia aquí..."
                                                     />
                                                 </div>
+
                                                 <div className="space-y-4">
-                                                    <label className="block text-[10px] font-black text-blood uppercase tracking-widest ml-1">Nota de Regla (Destacado Rojo)</label>
+                                                    <label className="block text-[10px] font-black text-blood uppercase tracking-widest ml-1">
+                                                        {editingItem.data.type === 'starplayer' ? 'Precio y Reglas Especiales' : editingItem.data.type === 'team' ? 'Estatus (En racha, Crisis...)' : 'Nota de Reglamento S3'}
+                                                    </label>
                                                     <input
                                                         type="text"
                                                         value={editingItem.data.rule || ''}
                                                         onChange={(e) => setEditingItem({ ...editingItem, data: { ...editingItem.data, rule: e.target.value } })}
                                                         className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none text-blood font-bold"
-                                                        placeholder="Ej: ⚠️ Regla S3: Categoría Élite"
+                                                        placeholder="Ej: 380,000 MO (S3)"
                                                     />
                                                 </div>
                                             </div>

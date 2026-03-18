@@ -435,7 +435,7 @@ const Home: React.FC<HomeProps> = ({
                             {/* Center Content */}
                             <div className={`flex-1 space-y-2 ${items[heraldoIndex]?.type === 'skill' ? 'max-w-3xl mx-auto' : ''}`}>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-[10px] bg-blood/10 text-blood font-black px-2 py-0.5 rounded border border-blood/20 uppercase tracking-tighter">
+                                    <span className="text-[10px] bg-neutral-900/10 text-neutral-900 font-black px-2 py-0.5 rounded border border-neutral-900/20 uppercase tracking-tighter">
                                         {items[heraldoIndex]?.tag}
                                     </span>
                                     <span className="text-[10px] text-neutral-900/60 font-serif font-bold italic">
@@ -445,7 +445,7 @@ const Home: React.FC<HomeProps> = ({
                                 <h3 className="font-header text-3xl md:text-4xl text-neutral-900 tracking-tight leading-none drop-shadow-sm transition-all duration-500">
                                     {items[heraldoIndex]?.title}
                                 </h3>
-                                <div className="max-w-xl">
+                                <div className="max-w-xl pb-6">
                                     <p className={`font-serif text-neutral-800 leading-tight drop-cap ${
                                         (items[heraldoIndex]?.content || '').length > 180 ? 'text-xs md:text-base' : 
                                         (items[heraldoIndex]?.content || '').length > 120 ? 'text-sm md:text-lg' : 
@@ -464,10 +464,13 @@ const Home: React.FC<HomeProps> = ({
                                 key={heraldoIndex} // Key forces re-animation on index change
                                 className="absolute inset-0 bg-blood/40 progress-bar-20s origin-left"
                             ></div>
-                            <div className="px-8 flex justify-between items-center absolute -top-8 left-0 right-0">
-                                <span className="font-serif italic text-[10px] text-neutral-900/50">Circulación Imperial Registrada • Nuffle's Will Be Done</span>
+                            <div 
+                                key={heraldoIndex} // Key forces re-animation on index change
+                                className="absolute inset-0 bg-blood/40 progress-bar-20s origin-left"
+                            ></div>
+                            <div className="px-8 flex justify-end items-center absolute -top-8 left-0 right-0">
                                 <div className="flex gap-4">
-                                    <span className="font-serif font-bold text-[10px] text-neutral-900/40 uppercase">Item {heraldoIndex + 1}/{items.length}</span>
+                                    <span className="font-serif font-bold text-[10px] text-neutral-900/40 uppercase tracking-widest">BOLETÍN {heraldoIndex + 1} de {items.length}</span>
                                 </div>
                             </div>
                         </div>
