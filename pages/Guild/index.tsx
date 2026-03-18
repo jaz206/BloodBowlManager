@@ -342,7 +342,10 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                             return (
                                 <div 
                                     key={team.id}
-                                    onClick={() => setActiveSummaryTeamId(team.id!)}
+                                    onClick={() => {
+                                        setActiveSummaryTeamId(team.id!);
+                                        setOpenTeamId(team.id!);
+                                    }}
                                     className={`group cursor-pointer px-8 py-6 grid grid-cols-1 md:grid-cols-12 items-center gap-4 transition-all hover:bg-white/[0.05] ${isSelected ? 'bg-white/10 border-l-4 border-l-gold' : 'bg-transparent'}`}
                                 >
                                     {/* Team Name & Crest */}
