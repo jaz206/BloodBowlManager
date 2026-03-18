@@ -224,7 +224,7 @@ const Home: React.FC<HomeProps> = ({
                         onClick={() => onNavigate('guild')}
                         className="w-full mt-8 bg-primary/10 hover:bg-primary text-primary hover:text-black py-4 rounded-xl border border-primary/30 font-header text-xs tracking-widest transition-all btn-interact"
                     >
-                        {t('home.hero.manageGuild') || 'GESTIONAR MI BANQUILLO'}
+                        Gestionar mi banquillo
                     </button>
                 </section>
 
