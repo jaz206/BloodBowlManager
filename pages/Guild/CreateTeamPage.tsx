@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ManagedTeam, Team, Player, ManagedPlayer, Skill } from '../../types';
 import { useMasterData } from '../../hooks/useMasterData';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -13,7 +14,7 @@ interface TeamCreatorProps {
 const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterName }) => {
     const { t } = useLanguage();
     const { user } = useAuth();
-    const { teams: rosterTemplates, loading } = useMasterData();
+    const { teams: rosterTemplates, loading, skills: allSkills } = useMasterData();
 
     // Form State
     const [teamName, setTeamName] = useState('');
@@ -26,7 +27,6 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
     const [apothecary, setApothecary] = useState(false);
     const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
     const [crestImage, setCrestImage] = useState<string | null>(null);
-    const [editingPlayerNameId, setEditingPlayerNameId] = useState<number | null>(null);
 
     // Initial Budget
     const startingTreasury = 1000000;
@@ -37,7 +37,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
 
     useEffect(() => {
         if (!loading && initialRosterName && rosterTemplates.length > 0) {
-            const index = rosterTemplates.findIndex(t => t.name === initialRosterName);
+            const index = rosterTemplates.findIndex(tm => tm.name === initialRosterName);
             if (index !== -1) setSelectedFactionIdx(index);
         }
     }, [initialRosterName, rosterTemplates, loading]);
@@ -50,44 +50,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
         setAssistantCoaches(0);
         setCheerleaders(0);
         setApothecary(false);
-        setCrestImage(null);
     }, [selectedFactionIdx]);
-
-    const handleCrestUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 200;
-                const MAX_HEIGHT = 200;
-                let width = img.width;
-                let height = img.height;
-
-                if (width > height) {
-                    if (width > MAX_WIDTH) {
-                        height *= MAX_WIDTH / width;
-                        width = MAX_WIDTH;
-                    }
-                } else {
-                    if (height > MAX_HEIGHT) {
-                        width *= MAX_HEIGHT / height;
-                        height = MAX_HEIGHT;
-                    }
-                }
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx?.drawImage(img, 0, 0, width, height);
-                setCrestImage(canvas.toDataURL('image/png'));
-            };
-            img.src = e.target?.result as string;
-        };
-        reader.readAsDataURL(file);
-    };
 
     // Calculations
     const totalCost = useMemo(() => {
@@ -100,12 +63,11 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
     }, [draftedPlayers, rerolls, dedicatedFans, assistantCoaches, cheerleaders, apothecary, currentFaction]);
 
     const remainingBudget = startingTreasury - totalCost;
+    const isBudgetNegative = remainingBudget < 0;
+    const canFinalize = draftedPlayers.length >= 11 && !isBudgetNegative && teamName.trim().length > 0;
 
     const handleHirePlayer = (pos: Player) => {
         if (draftedPlayers.length >= 16) return;
-        if (remainingBudget < pos.cost) return;
-
-        // Check positional limit
         const count = draftedPlayers.filter(p => p.position === pos.position).length;
         const limitStr = pos.qty.split('-')[1] || pos.qty;
         if (count >= parseInt(limitStr)) return;
@@ -126,31 +88,13 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
         setDraftedPlayers(draftedPlayers.filter(p => p.id !== id));
     };
 
-    const handlePlayerNameUpdate = (id: number, newName: string) => {
-        setDraftedPlayers(draftedPlayers.map(p => p.id === id ? { ...p, customName: newName } : p));
-    };
-
-    const { skills: allSkills } = useMasterData();
-
-    /** Resolve a canonical English key to the localized skill name */
     const localizeSkill = (keyEN: string): string => {
         const found = allSkills.find(s => s.keyEN === keyEN);
-        return found?.name ?? keyEN;
-    };
-
-    const handleSkillClick = (keyEN: string) => {
-        const cleanKey = keyEN.replace(/\(\+\d\)/g, '').trim();
-        const found = allSkills.find(s => s.keyEN === keyEN || s.keyEN === cleanKey);
-        if (found) setSelectedSkill(found);
+        return found?.name_es ?? found?.name ?? keyEN;
     };
 
     const handleSubmit = () => {
-        if (!teamName.trim() || !currentFaction) return;
-        if (draftedPlayers.length < 11) {
-            alert("Un equipo debe tener al menos 11 jugadores.");
-            return;
-        }
-
+        if (!canFinalize || !currentFaction) return;
         const newTeam: Omit<ManagedTeam, 'id'> = {
             name: teamName.trim(),
             rosterName: currentFaction.name,
@@ -169,426 +113,328 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
     if (loading || !currentFaction) {
         return (
             <div className="flex flex-col items-center justify-center p-20 min-h-[60vh]">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-premium-gold mb-4"></div>
-                <p className="text-slate-400 font-display animate-pulse uppercase tracking-widest">{t('loading.sync')}</p>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold mb-4"></div>
+                <p className="text-slate-400 font-display animate-pulse uppercase tracking-widest">Sincronizando con Nuffle...</p>
             </div>
         );
     }
 
     return (
-        <div className="animate-in fade-in duration-700 bg-background-dark/50 rounded-3xl overflow-hidden border border-white/5 shadow-2xl">
-            {/* Header Area */}
-            <div className="p-6 lg:px-12 border-b border-white/5 bg-black/40 flex flex-col md:flex-row justify-between items-center gap-6">
-                <div className="flex items-center gap-4 w-full md:w-auto">
-                    <div className="text-premium-gold bg-premium-gold/10 p-3 rounded-2xl border border-premium-gold/20 shadow-inner">
-                        <span className="material-symbols-outlined text-4xl font-bold">shield</span>
+        <div className="bg-[#0a0a0a] text-slate-100 min-h-screen flex flex-col font-sans relative overflow-x-hidden">
+            {/* TOP BAR / STICKY HEADER */}
+            <header className="sticky top-0 z-50 w-full bg-[#0a0a0a]/95 backdrop-blur-md border-b border-white/10 px-6 py-4 shadow-2xl">
+                <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <span className="material-symbols-outlined text-gold text-3xl font-bold">shield</span>
+                        <h1 className="text-xl font-header font-black tracking-tight text-white uppercase italic">Fundar Equipo</h1>
                     </div>
-                    <div>
-                        <h1 className="text-2xl font-black tracking-tighter text-white uppercase italic leading-none">{t('team.create.title')}</h1>
-                        <p className="text-[10px] text-premium-gold/80 font-black tracking-[0.3em] uppercase mt-1">{t('team.create.draft')}</p>
+                    <div className="flex items-center gap-4">
+                        <div className="bg-[#171717] border border-gold/30 px-6 py-2 rounded-2xl flex flex-col items-center shadow-inner">
+                            <span className="text-[10px] uppercase tracking-widest text-gold/70 font-bold">Oro Disponible</span>
+                            <span className={`text-2xl font-black transition-all ${isBudgetNegative ? 'text-blood animate-pulse' : 'shimmer-text'}`}>
+                                {remainingBudget.toLocaleString()} <small className="text-xs">gp</small>
+                            </span>
+                        </div>
+                        <div className="bg-[#171717] border border-white/10 px-6 py-2 rounded-2xl flex flex-col items-center shadow-inner">
+                            <span className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Jugadores</span>
+                            <span className={`text-2xl font-black ${draftedPlayers.length < 11 ? 'text-blood' : 'text-green-500'}`}>
+                                {draftedPlayers.length} / 16
+                            </span>
+                        </div>
                     </div>
                 </div>
-                <div className="flex items-center gap-4 w-full md:w-auto">
-                    <button className="flex-1 md:flex-none flex items-center justify-center rounded-xl h-12 w-12 bg-zinc-800 border border-white/5 text-slate-300 hover:bg-premium-gold/10 hover:text-premium-gold transition-all duration-300">
-                        <span className="material-symbols-outlined font-bold">settings</span>
-                    </button>
-                    <button
-                        onClick={handleSubmit}
-                        className="flex-1 md:flex-none flex items-center justify-center gap-3 px-8 py-3 rounded-xl bg-premium-gold text-black font-black hover:scale-105 active:scale-95 transition-all shadow-[0_10px_30px_rgba(202,138,4,0.3)] uppercase tracking-tighter text-sm italic"
-                    >
-                        <span className="material-symbols-outlined font-bold">save</span>
-                        <span>{t('team.create.save')}</span>
-                    </button>
-                </div>
-            </div>
+            </header>
 
-            <div className="p-6 lg:p-12 grid grid-cols-1 lg:grid-cols-12 gap-12">
-                {/* Main Content */}
-                <section className="lg:col-span-8 space-y-12">
-                    {/* Club Data */}
-                    <div className="bg-zinc-900/40 p-8 rounded-3xl border border-white/5 shadow-inner">
-                        <h3 className="text-premium-gold text-xs font-black mb-8 flex items-center gap-3 uppercase tracking-[0.2em] italic">
-                            <span className="material-symbols-outlined text-sm">info</span> {t('team.create.data')}
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="space-y-3">
-                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-2">{t('team.create.name')}</label>
-                                <input
-                                    className="w-full bg-black/60 border border-white/5 rounded-2xl text-white focus:ring-2 focus:ring-premium-gold/50 focus:border-transparent p-4 outline-none transition-all placeholder:text-slate-700 shadow-inner"
-                                    placeholder="Ej: Los Segadores de Altdorf"
+            <main className="max-w-7xl mx-auto w-full p-6 space-y-20 pb-40">
+                {/* STEP 1: IDENTITY */}
+                <section className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="flex items-center gap-4">
+                        <span className="flex items-center justify-center w-8 h-8 rounded-full bg-gold text-[#0a0a0a] font-header font-black shadow-lg shadow-gold/20 italic">1</span>
+                        <h2 className="text-2xl font-header font-black text-white uppercase tracking-tight italic">Identidad de la Franquicia</h2>
+                    </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                        <div className="lg:col-span-1 space-y-5">
+                            <label className="block group">
+                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 group-focus-within:text-gold transition-colors">Nombre de la Franquicia</span>
+                                <input 
+                                    className="mt-2 w-full bg-[#171717] border border-white/10 rounded-2xl p-4 text-white focus:ring-1 focus:ring-gold focus:border-gold transition-all font-header text-lg italic outline-none shadow-inner"
+                                    placeholder="Ej: Los Segadores de Altdorf" 
                                     type="text"
                                     value={teamName}
                                     onChange={(e) => setTeamName(e.target.value)}
                                 />
-                            </div>
-                            <div className="space-y-3">
-                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-2">{t('team.create.faction')}</label>
-                                <div className="relative group">
-                                    <select
-                                        className="w-full bg-black/60 border border-white/5 rounded-2xl text-white focus:ring-2 focus:ring-premium-gold/50 focus:border-transparent p-4 outline-none appearance-none cursor-pointer transition-all shadow-inner"
-                                        value={selectedFactionIdx}
-                                        onChange={(e) => setSelectedFactionIdx(parseInt(e.target.value))}
-                                    >
-                                        {rosterTemplates.map((t, idx) => (
-                                            <option key={idx} value={idx}>{t.name}</option>
-                                        ))}
-                                    </select>
-                                    <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500 group-hover:text-premium-gold transition-colors font-bold">expand_more</span>
-                                </div>
-                            </div>
-                            <div className="space-y-3 md:col-span-1">
-                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-2">Escudo del Club</label>
-                                <div className="flex items-center gap-4">
-                                    <div 
-                                        onClick={() => document.getElementById('crest-upload')?.click()}
-                                        className="size-24 bg-black/60 border-2 border-white/10 rounded-2xl flex items-center justify-center cursor-pointer hover:border-premium-gold/50 hover:bg-premium-gold/5 transition-all overflow-hidden relative group shadow-2xl"
-                                    >
-                                        {crestImage ? (
-                                            <img src={crestImage} alt="Crest" className="w-full h-full object-cover" />
-                                        ) : (
-                                            <div className="flex flex-col items-center gap-1">
-                                                <span className="material-symbols-outlined text-slate-700 group-hover:text-premium-gold transition-colors text-4xl">add_photo_alternate</span>
-                                                <span className="text-[8px] font-black text-slate-700 uppercase tracking-widest group-hover:text-premium-gold">Subir Escudo</span>
+                            </label>
+                            <p className="text-[10px] text-slate-500 italic uppercase tracking-[0.2em] px-2 opacity-60">
+                                {teamName ? `"${teamName}: El miedo es temporal, la gloria es eterna."` : '"El miedo es temporal, la gloria de la liga es eterna."'}
+                            </p>
+                        </div>
+                        <div className="lg:col-span-2 space-y-5">
+                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Seleccionar Raza</span>
+                            <div className="flex gap-8 overflow-x-auto pb-6 no-scrollbar snap-x">
+                                {rosterTemplates.map((tm, idx) => {
+                                    const isSelected = selectedFactionIdx === idx;
+                                    return (
+                                        <div 
+                                            key={idx} 
+                                            onClick={() => setSelectedFactionIdx(idx)}
+                                            className={`flex-none w-32 group cursor-pointer snap-center text-center transition-all ${isSelected ? 'opacity-100 scale-105' : 'opacity-40 grayscale hover:opacity-80 hover:grayscale-0'}`}
+                                        >
+                                            <div className={`w-24 h-24 mx-auto rounded-full bg-[#171717] p-1 shadow-2xl transition-all ${isSelected ? 'border-4 border-gold ring-4 ring-gold/20' : 'border-2 border-white/10 hover:border-gold/50'}`}>
+                                                <div className="w-full h-full rounded-full bg-cover bg-center bg-zinc-800" style={{ backgroundImage: tm.image ? `url(${tm.image})` : 'none' }}>
+                                                    {!tm.image && <span className="flex items-center justify-center h-full text-2xl font-black text-white/20">{tm.name.charAt(0)}</span>}
+                                                </div>
                                             </div>
-                                        )}
-                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity border-2 border-premium-gold">
-                                            <span className="material-symbols-outlined text-white text-2xl font-bold">upload_file</span>
+                                            <p className={`mt-4 text-[10px] font-black uppercase tracking-widest transition-colors ${isSelected ? 'text-gold' : 'text-slate-400 group-hover:text-white'}`}>{tm.name}</p>
                                         </div>
-                                    </div>
-                                    <input id="crest-upload" type="file" accept="image/*" className="hidden" onChange={handleCrestUpload} />
-                                    <p className="text-[10px] text-slate-500 italic max-w-[180px] leading-relaxed">Personaliza el blasón de tu equipo. <span className="text-premium-gold">Sube una imagen</span> para que tus guerreros la porten con orgullo.</p>
-                                </div>
-
+                                    );
+                                })}
                             </div>
-                            <div className="space-y-3 md:col-span-1">
-                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-2">{t('team.create.coach')}</label>
-                                <input
-                                    className="w-full bg-black/40 border border-white/5 rounded-2xl text-slate-500 p-4 shadow-inner cursor-not-allowed italic font-medium"
-                                    readOnly
-                                    type="text"
-                                    value={user?.name || 'Coach Unknown'}
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* hiring Table */}
-                    <div className="bg-zinc-900/20 p-8 rounded-3xl border border-white/5">
-                        <div className="flex justify-between items-end mb-8 border-b border-white/5 pb-4">
-                            <h3 className="text-premium-gold text-xs font-black flex items-center gap-3 uppercase tracking-[0.2em] italic">
-                                <span className="material-symbols-outlined">group_add</span> {t('team.create.hire')}
-                            </h3>
-                            <span className="text-[10px] text-slate-500 italic font-medium uppercase tracking-widest">{t('team.create.hire.limit')}</span>
-                        </div>
-                        <div className="overflow-x-visible lg:mx-0 lg:px-0">
-                            <table className="w-full text-left border-collapse">
-                                <thead>
-                                    <tr className="text-[9px] text-slate-500 uppercase tracking-[0.2em] font-black">
-                                        <th className="pb-4 px-4">{t('oracle.tabs.teams')}</th>
-                                        <th className="pb-4 px-2 text-center">MA</th>
-                                        <th className="pb-4 px-2 text-center">ST</th>
-                                        <th className="pb-4 px-2 text-center">AG</th>
-                                        <th className="pb-4 px-2 text-center">PA</th>
-                                        <th className="pb-4 px-2 text-center">AV</th>
-                                        <th className="pb-4 px-4">Habilidades</th>
-                                        <th className="pb-4 px-4 text-right">Coste</th>
-                                        <th className="pb-4 px-4 text-center">Acción</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="text-sm">
-                                    {currentFaction.roster.map((pos, idx) => {
-                                        const count = draftedPlayers.filter(p => p.position === pos.position).length;
-                                        const limitStr = pos.qty.split('-')[1] || pos.qty;
-                                        const limit = parseInt(limitStr);
-                                        const isFull = count >= limit;
-                                        const canAfford = remainingBudget >= pos.cost;
-
-                                        return (
-                                            <tr key={idx} className="border-b border-white/[0.03] last:border-0 hover:bg-white/[0.02] transition-colors group">
-                                                <td className="py-5 px-4">
-                                                    <p className="font-black text-white group-hover:text-premium-gold transition-colors italic">{pos.position}</p>
-                                                    <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">{count} / {limit}</p>
-                                                </td>
-                                                <td className="py-5 px-2 text-center font-mono font-black text-slate-400">{pos.stats.MV}</td>
-                                                <td className="py-5 px-2 text-center font-mono font-black text-slate-400">{pos.stats.FU}</td>
-                                                <td className="py-5 px-2 text-center font-mono font-black text-slate-400">{pos.stats.AG}</td>
-                                                <td className="py-5 px-2 text-center font-mono font-black text-slate-400">{pos.stats.PA}</td>
-                                                <td className="py-5 px-2 text-center font-mono font-black text-slate-400">{pos.stats.AR}</td>
-                                                <td className="py-5 px-4 text-[11px] text-slate-500 leading-relaxed font-medium italic group-hover:text-slate-300 transition-colors">
-                                                    {pos.skillKeys && pos.skillKeys.length > 0 ? (
-                                                        <div className="flex flex-wrap gap-x-2 gap-y-1">
-                                                            {pos.skillKeys.map((keyEN, sIdx) => (
-                                                                <button
-                                                                    key={sIdx}
-                                                                    onClick={() => handleSkillClick(keyEN)}
-                                                                    className="hover:text-premium-gold transition-colors cursor-pointer text-left underline-offset-2 hover:underline"
-                                                                    title="Ver descripción"
-                                                                >
-                                                                    {localizeSkill(keyEN)}{sIdx < pos.skillKeys.length - 1 ? ',' : ''}
-                                                                </button>
-                                                            ))}
-                                                        </div>
-                                                    ) : '-'}
-                                                </td>
-                                                <td className="py-5 px-4 text-right font-mono font-black text-premium-gold italic">{(pos.cost / 1000)}k</td>
-                                                <td className="py-5 px-4 text-center">
-                                                    <button
-                                                        onClick={() => handleHirePlayer(pos)}
-                                                        disabled={isFull || !canAfford}
-                                                        className={`size-10 rounded-xl flex items-center justify-center transition-all ${isFull || !canAfford ? 'opacity-20 cursor-not-allowed bg-zinc-800' : 'bg-premium-gold/10 text-premium-gold hover:bg-premium-gold hover:text-black hover:scale-110 shadow-lg shadow-premium-gold/5 border border-premium-gold/20'}`}
-                                                    >
-                                                        <span className="material-symbols-outlined font-bold">add</span>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    {/* Team Goods */}
-                    <div className="bg-zinc-900/20 p-8 rounded-3xl border border-white/5">
-                        <h3 className="text-premium-gold text-xs font-black mb-8 flex items-center gap-3 uppercase tracking-[0.2em] italic">
-                            <span className="material-symbols-outlined">shopping_cart</span> {t('team.create.goods')}
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {/* Rerolls */}
-                            <div className="bg-black/40 border border-white/5 p-6 rounded-2xl flex flex-col justify-between group hover:border-premium-gold/30 transition-all shadow-inner">
-                                <div className="flex justify-between items-start mb-6">
-                                    <div className="space-y-1">
-                                        <p className="font-black text-white italic leading-none">{t('team.create.rerolls')}</p>
-                                        <p className="text-[9px] text-slate-500 font-black uppercase tracking-[0.2em]">Re-rolls</p>
-                                    </div>
-                                    <span className="text-premium-gold font-mono font-black italic">{(currentFaction.rerollCost / 1000)}k</span>
-                                </div>
-                                <div className="flex items-center gap-4 bg-zinc-800/50 p-2 rounded-xl border border-white/5">
-                                    <button
-                                        onClick={() => setRerolls(Math.max(0, rerolls - 1))}
-                                        className="size-10 rounded-lg bg-zinc-700 text-slate-400 hover:bg-red-900/40 hover:text-red-400 transition-colors flex items-center justify-center"
-                                    >
-                                        <span className="material-symbols-outlined font-bold">remove</span>
-                                    </button>
-                                    <span className="flex-1 text-center font-mono text-2xl font-black text-white italic">{rerolls}</span>
-                                    <button
-                                        onClick={() => setRerolls(rerolls + 1)}
-                                        disabled={remainingBudget < currentFaction.rerollCost}
-                                        className={`size-10 rounded-lg bg-zinc-700 text-slate-400 hover:bg-premium-gold/20 hover:text-premium-gold transition-colors flex items-center justify-center ${remainingBudget < currentFaction.rerollCost ? 'opacity-20' : ''}`}
-                                    >
-                                        <span className="material-symbols-outlined font-bold">add</span>
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Apothecary */}
-                            <div className="bg-black/40 border border-white/5 p-6 rounded-2xl flex flex-col justify-between group hover:border-premium-gold/30 transition-all shadow-inner">
-                                <div className="flex justify-between items-start mb-6">
-                                    <div className="space-y-1">
-                                        <p className="font-black text-white italic leading-none">{t('team.create.apothecary')}</p>
-                                        <p className="text-[9px] text-slate-500 font-black uppercase tracking-[0.2em]">Apothecary</p>
-                                    </div>
-                                    <span className="text-premium-gold font-mono font-black italic">50k</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-[9px] text-slate-500 italic font-black uppercase tracking-[0.1em]">Límite 1</span>
-                                    <button
-                                        onClick={() => setApothecary(!apothecary)}
-                                        disabled={!apothecary && remainingBudget < 50000}
-                                        className={`px-5 py-2 text-[10px] rounded-xl border font-black uppercase tracking-widest transition-all italic ${apothecary ? 'bg-premium-gold text-black border-premium-gold' : 'border-premium-gold/40 text-premium-gold hover:bg-premium-gold/10'}`}
-                                    >
-                                        {apothecary ? 'CONTRATADO' : 'CONTRATAR'}
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Fans */}
-                            <div className="bg-black/40 border border-white/5 p-6 rounded-2xl flex flex-col justify-between group hover:border-premium-gold/30 transition-all shadow-inner">
-                                <div className="flex justify-between items-start mb-6">
-                                    <div className="space-y-1">
-                                        <p className="font-black text-white italic leading-none">{t('team.create.fans')}</p>
-                                        <p className="text-[9px] text-slate-500 font-black uppercase tracking-[0.2em]">Dedicated Fans</p>
-                                    </div>
-                                    <span className="text-premium-gold font-mono font-black italic">10k</span>
-                                </div>
-                                <div className="flex items-center gap-4 bg-zinc-800/50 p-2 rounded-xl border border-white/5">
-                                    <button
-                                        onClick={() => setDedicatedFans(Math.max(1, dedicatedFans - 1))}
-                                        className="size-10 rounded-lg bg-zinc-700 text-slate-400 hover:bg-red-900/40 hover:text-red-400 transition-colors flex items-center justify-center"
-                                    >
-                                        <span className="material-symbols-outlined font-bold">remove</span>
-                                    </button>
-                                    <span className="flex-1 text-center font-mono text-2xl font-black text-white italic">{dedicatedFans}</span>
-                                    <button
-                                        onClick={() => setDedicatedFans(Math.min(6, dedicatedFans + 1))}
-                                        disabled={remainingBudget < 10000 || dedicatedFans >= 6}
-                                        className={`size-10 rounded-lg bg-zinc-700 text-slate-400 hover:bg-premium-gold/20 hover:text-premium-gold transition-colors flex items-center justify-center ${(remainingBudget < 10000 || dedicatedFans >= 6) ? 'opacity-20' : ''}`}
-                                    >
-                                        <span className="material-symbols-outlined font-bold">add</span>
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Staff helpers */}
-                            {[{
-                                key: 'assistants',
-                                label: t('team.create.assistants'),
-                                detail: 'Assistant Coaches',
-                                val: assistantCoaches,
-                                set: setAssistantCoaches
-                            },
-                            {
-                                key: 'cheerleaders',
-                                label: t('team.create.cheerleaders'),
-                                detail: 'Cheerleaders',
-                                val: cheerleaders,
-                                set: setCheerleaders
-                            }].map(staff => (
-                                <div key={staff.key} className="bg-black/40 border border-white/5 p-6 rounded-2xl flex flex-col justify-between group hover:border-premium-gold/30 transition-all shadow-inner">
-                                    <div className="flex justify-between items-start mb-6">
-                                        <div className="space-y-1">
-                                            <p className="font-black text-white italic leading-none">{staff.label}</p>
-                                            <p className="text-[9px] text-slate-500 font-black uppercase tracking-[0.2em]">{staff.detail}</p>
-                                        </div>
-                                        <span className="text-premium-gold font-mono font-black italic">10k</span>
-                                    </div>
-                                    <div className="flex items-center gap-4 bg-zinc-800/50 p-2 rounded-xl border border-white/5">
-                                        <button
-                                            onClick={() => staff.set(Math.max(0, staff.val - 1))}
-                                            className="size-10 rounded-lg bg-zinc-700 text-slate-400 hover:bg-red-900/40 hover:text-red-400 transition-colors flex items-center justify-center"
-                                        >
-                                            <span className="material-symbols-outlined font-bold">remove</span>
-                                        </button>
-                                        <span className="flex-1 text-center font-mono text-2xl font-black text-white italic">{staff.val}</span>
-                                        <button
-                                            onClick={() => staff.set(staff.val + 1)}
-                                            disabled={remainingBudget < 10000}
-                                            className={`size-10 rounded-lg bg-zinc-700 text-slate-400 hover:bg-premium-gold/20 hover:text-premium-gold transition-colors flex items-center justify-center ${remainingBudget < 10000 ? 'opacity-20' : ''}`}
-                                        >
-                                            <span className="material-symbols-outlined font-bold">add</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
                         </div>
                     </div>
                 </section>
 
-                {/* Sidebar Summary */}
-                <aside className="lg:col-span-4 flex flex-col gap-8">
-                    <div className="bg-premium-gold p-8 rounded-[2.5rem] text-black shadow-2xl shadow-premium-gold/10 sticky top-24 border-4 border-black/10">
-                        <h3 className="font-black text-2xl uppercase tracking-tighter mb-8 flex items-center gap-3 italic leading-none">
-                            <span className="material-symbols-outlined font-bold text-3xl">analytics</span> {t('team.create.summary')}
-                        </h3>
-                        <div className="space-y-8">
+                {/* STEP 2: THE DRAFT */}
+                <section className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-700">
+                    <div className="flex items-center gap-4">
+                        <span className="flex items-center justify-center w-8 h-8 rounded-full bg-gold text-[#0a0a0a] font-header font-black shadow-lg shadow-gold/20 italic">2</span>
+                        <h2 className="text-2xl font-header font-black text-white uppercase tracking-tight italic">The Draft: Reclutamiento</h2>
+                    </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                        {/* Market Column */}
+                        <div className="lg:col-span-7 space-y-6">
+                            <div className="flex justify-between items-center px-1">
+                                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Posiciones Disponibles</h3>
+                                <span className="text-[10px] font-bold text-gold/50 italic capitalize">Tier {currentFaction.tier}</span>
+                            </div>
                             <div className="space-y-3">
-                                <div className="flex justify-between text-[10px] font-black uppercase tracking-[0.2em] opacity-60 italic">
-                                    <span>{t('team.create.budget')}</span>
-                                    <span className="font-mono">{remainingBudget.toLocaleString()} MO</span>
-                                </div>
-                                <div className="h-4 w-full bg-black/10 rounded-full overflow-hidden p-1 shadow-inner border border-black/5">
-                                    <div
-                                        className="h-full bg-black rounded-full transition-all duration-500 shadow-lg"
-                                        style={{ width: `${Math.max(0, Math.min(100, (totalCost / startingTreasury) * 100))}%` }}
-                                    ></div>
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="bg-black p-5 rounded-2xl shadow-xl border border-white/5">
-                                    <p className="text-[9px] font-black uppercase tracking-widest text-premium-gold italic">{t('team.create.tv')}</p>
-                                    <p className="text-3xl font-black text-white italic tracking-tighter leading-none mt-2">{totalCost / 1000}k</p>
-                                </div>
-                                <div className="bg-black p-5 rounded-2xl shadow-xl border border-white/5">
-                                    <p className="text-[9px] font-black uppercase tracking-widest text-premium-gold italic">{t('team.create.players')}</p>
-                                    <p className="text-3xl font-black text-white italic tracking-tighter leading-none mt-2">{draftedPlayers.length} / 16</p>
-                                </div>
-                            </div>
-                            <div className="border-t-2 border-black/5 pt-8">
-                                <h4 className="text-[10px] font-black uppercase tracking-[0.3em] mb-6 opacity-60 italic">{t('team.create.currentRoster')}</h4>
-                                <div className="max-h-[300px] overflow-y-auto custom-scrollbar pr-2 space-y-4">
-                                    {draftedPlayers.length > 0 ? (
-                                        Array.from(new Set(draftedPlayers.map(p => p.position))).map(posName => {
-                                            const playersOfPos = draftedPlayers.filter(p => p.position === posName);
-                                            const totalPosCost = playersOfPos.reduce((s, p) => s + p.cost, 0);
-                                            return (
-                                                <div key={posName} className="flex flex-col gap-1">
-                                                    <div className="flex justify-between items-center bg-black/20 p-2 rounded-lg border border-white/5 mb-1">
-                                                        <span className="text-sm font-black italic uppercase leading-none">{playersOfPos.length}x {posName}</span>
-                                                        <span className="font-mono font-black text-sm italic">{totalPosCost / 1000}k</span>
-                                                    </div>
-                                                    <div className="flex flex-col gap-2 pl-2">
-                                                        {playersOfPos.map((p, pIdx) => (
-                                                            <div key={p.id} className="flex items-center gap-2 group/player">
-                                                                <span className="text-[10px] font-bold text-black/40">#{pIdx + 1}</span>
-                                                                {editingPlayerNameId === p.id ? (
-                                                                    <input 
-                                                                        autoFocus
-                                                                        className="flex-1 bg-black/40 border border-premium-gold/30 rounded px-2 py-0.5 text-xs text-white outline-none"
-                                                                        value={p.customName}
-                                                                        onChange={(e) => handlePlayerNameUpdate(p.id, e.target.value)}
-                                                                        onBlur={() => setEditingPlayerNameId(null)}
-                                                                        onKeyDown={(e) => e.key === 'Enter' && setEditingPlayerNameId(null)}
-                                                                    />
-                                                                ) : (
-                                                                    <div 
-                                                                        onClick={() => setEditingPlayerNameId(p.id)}
-                                                                        className="flex-1 flex items-center gap-2 group/name cursor-pointer"
-                                                                    >
-                                                                        <span className="text-[11px] font-bold text-black/70 italic group-hover/name:text-black transition-colors truncate">
-                                                                            {p.customName}
-                                                                        </span>
-                                                                        <span className="material-symbols-outlined text-[10px] text-black/20 group-hover/name:text-black/60 transition-colors">edit</span>
-                                                                    </div>
-                                                                )}
+                                {currentFaction.roster.map((pos, idx) => {
+                                    const count = draftedPlayers.filter(p => p.position === pos.position).length;
+                                    const limitStr = pos.qty.split('-')[1] || pos.qty;
+                                    const limit = parseInt(limitStr);
+                                    const isFull = count >= limit;
+                                    const canAfford = remainingBudget >= pos.cost;
 
-                                                                <button
-                                                                    onClick={() => handleFirePlayer(p.id)}
-                                                                    className="opacity-0 group-hover/player:opacity-100 size-6 bg-red-900/10 rounded flex items-center justify-center text-red-900 hover:bg-red-900 hover:text-white transition-all"
-                                                                >
-                                                                    <span className="material-symbols-outlined text-xs">close</span>
-                                                                </button>
-                                                            </div>
-                                                        ))}
+                                    return (
+                                        <div key={idx} className={`bg-[#171717] border rounded-3xl p-6 flex items-center justify-between transition-all group ${isFull ? 'opacity-40 border-white/5' : 'border-white/10 hover:border-gold/30 hover:bg-white/[0.02] shadow-xl hover:shadow-gold/5'}`}>
+                                            <div className="flex flex-col gap-3">
+                                                <div className="flex items-center gap-3">
+                                                    <span className="text-white font-header font-black text-xl italic uppercase tracking-tighter">{pos.position}</span>
+                                                    {pos.skillKeys && pos.skillKeys.length > 0 && (
+                                                        <div className="flex gap-1">
+                                                            {pos.skillKeys.map((s, si) => (
+                                                                <span key={si} className="text-[8px] px-1.5 py-0.5 bg-gold/10 text-gold rounded font-black uppercase tracking-tighter border border-gold/20">{localizeSkill(s)}</span>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex gap-5">
+                                                    {['MA', 'ST', 'AG', 'PA', 'AV'].map(stat => (
+                                                        <div key={stat} className="flex flex-col items-center">
+                                                            <span className="text-[9px] text-slate-500 font-bold uppercase tracking-tighter">{stat}</span>
+                                                            <span className="text-sm font-mono font-black text-white">{(pos.stats as any)[stat === 'MA' ? 'MV' : stat === 'ST' ? 'FU' : stat === 'AV' ? 'AR' : stat]}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest border-t border-white/5 pt-2 mt-1">{count} / {limit} RECLUTADOS</span>
+                                            </div>
+                                            <div className="flex items-center gap-6">
+                                                <span className="text-2xl font-header font-black text-gold italic">{pos.cost / 1000}k <small className="text-[10px] opacity-50">gp</small></span>
+                                                <button 
+                                                    onClick={() => handleHirePlayer(pos)}
+                                                    disabled={isFull || !canAfford}
+                                                    className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${isFull || !canAfford ? 'bg-zinc-800 text-slate-600 cursor-not-allowed' : 'bg-gold text-[#0a0a0a] hover:scale-110 active:scale-95 shadow-lg shadow-gold/20'}`}
+                                                >
+                                                    <span className="material-symbols-outlined font-black">add</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Roster Column */}
+                        <div className="lg:col-span-5 space-y-6">
+                            <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Roster Actual ({draftedPlayers.length})</h3>
+                            <div className="bg-[#171717]/50 border border-dashed border-white/20 rounded-[2.5rem] min-h-[500px] p-6 flex flex-col gap-4 overflow-y-auto no-scrollbar shadow-inner">
+                                <AnimatePresence initial={false}>
+                                    {draftedPlayers.length === 0 ? (
+                                        <motion.div 
+                                            initial={{ opacity: 0 }} animate={{ opacity: 0.2 }}
+                                            className="flex flex-col items-center justify-center py-40 text-slate-400 gap-4"
+                                            key="empty"
+                                        >
+                                            <span className="material-symbols-outlined text-6xl">group_add</span>
+                                            <p className="text-xs font-black uppercase tracking-[0.2em] italic">No has reclutado jugadores todavía</p>
+                                        </motion.div>
+                                    ) : (
+                                        draftedPlayers.map((p, idx) => (
+                                            <motion.div 
+                                                key={p.id}
+                                                initial={{ opacity: 0, x: 20 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                exit={{ opacity: 0, x: -20 }}
+                                                className="bg-[#0a0a0a]/60 backdrop-blur-md border border-white/10 rounded-2xl p-4 flex items-center justify-between group hover:border-white/20 transition-all shadow-lg"
+                                            >
+                                                <div className="flex items-center gap-5">
+                                                    <span className="w-10 h-10 rounded-xl bg-zinc-900 border border-white/10 text-[10px] flex items-center justify-center font-mono font-black text-gold/60 shadow-inner">
+                                                        #{String(idx + 1).padStart(2, '0')}
+                                                    </span>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-md font-header font-black text-white italic uppercase tracking-tighter">{p.position}</span>
+                                                        <span className="text-[8px] text-slate-500 font-black uppercase tracking-[0.3em] mt-1">{currentFaction.name}</span>
                                                     </div>
                                                 </div>
-                                            );
-                                        })
-                                    ) : (
-                                        <p className="text-sm font-black italic opacity-40 uppercase tracking-widest">{t('team.create.noStaff')}</p>
+                                                <div className="flex items-center gap-6">
+                                                    <span className="text-xs font-mono font-black text-slate-400 italic">{(p.cost).toLocaleString()} gp</span>
+                                                    <button 
+                                                        onClick={() => handleFirePlayer(p.id as number)}
+                                                        className="w-10 h-10 flex items-center justify-center text-blood hover:bg-blood/10 rounded-xl transition-all active:scale-90"
+                                                    >
+                                                        <span className="material-symbols-outlined font-black">do_not_disturb_on</span>
+                                                    </button>
+                                                </div>
+                                            </motion.div>
+                                        ))
                                     )}
-                                </div>
+                                </AnimatePresence>
                             </div>
-                            <button
-                                onClick={handleSubmit}
-                                className="w-full mt-10 py-5 rounded-3xl bg-black text-premium-gold font-black uppercase tracking-[0.2em] italic text-sm hover:scale-[1.03] active:scale-95 transition-all shadow-2xl shadow-black/30 border border-white/5"
-                            >
-                                {t('team.create.finalize')}
-                            </button>
                         </div>
+                    </div>
+                </section>
+
+                {/* STEP 3: STAFF & INCENTIVES */}
+                <section className="space-y-10 pt-16 border-t border-white/5 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+                    <div className="flex items-center gap-4">
+                        <span className="flex items-center justify-center w-8 h-8 rounded-full bg-gold text-[#0a0a0a] font-header font-black shadow-lg shadow-gold/20 italic">3</span>
+                        <h2 className="text-2xl font-header font-black text-white uppercase tracking-tight italic">Staff & Incentivos</h2>
+                    </div>
+                    
+                    <div className="bg-blood/10 border border-blood/20 rounded-[2rem] p-6 flex items-center gap-6 group overflow-hidden relative shadow-2xl">
+                        <div className="absolute inset-0 bg-blood/10 blur-[50px] -z-10 group-hover:scale-110 transition-transform"></div>
+                        <div className="w-12 h-12 bg-blood/20 rounded-2xl flex items-center justify-center text-blood shadow-inner">
+                            <span className="material-symbols-outlined font-black animate-pulse">warning</span>
+                        </div>
+                        <p className="text-sm font-medium text-red-200 leading-relaxed italic">
+                            Aprovecha ahora: <span className="font-header font-black underline italic text-blood uppercase tracking-wide">¡Los Rerolls duplicarán su precio</span> una vez fundado el equipo! Nuffle no perdona la falta de previsión.
+                        </p>
                     </div>
 
-                    {/* Race Rules Brief */}
-                    <div className="bg-zinc-900 border border-white/5 p-10 rounded-[2.5rem] shadow-xl relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-premium-gold/5 blur-[60px] rounded-full group-hover:scale-150 transition-transform duration-1000"></div>
-                        <h4 className="text-[10px] font-black text-premium-gold uppercase tracking-[0.4em] mb-6 italic leading-none">{t('team.create.rules')}: {currentFaction.name}</h4>
-                        <div className="flex items-center gap-6 mb-8 relative">
-                            <div className="size-16 rounded-2xl bg-black/60 flex items-center justify-center text-premium-gold border border-white/5 shadow-inner">
-                                <span className="material-symbols-outlined text-4xl font-bold">sports_kabaddi</span>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        {/* Reroll Card */}
+                        <div className="bg-[#171717] border border-white/10 rounded-[2.5rem] p-8 flex flex-col gap-6 hover:border-gold/30 hover:bg-white/[0.01] transition-all shadow-2xl">
+                            <div className="flex justify-between items-start">
+                                <div className="p-4 bg-gold/10 rounded-2xl text-gold border border-gold/20 shadow-inner">
+                                    <span className="material-symbols-outlined text-4xl font-black">refresh</span>
+                                </div>
+                                <span className="text-3xl font-header font-black text-white italic">{currentFaction.rerollCost / 1000}k <small className="text-xs text-slate-600 font-mono italic">ea</small></span>
                             </div>
                             <div>
-                                <p className="text-xl font-black text-white italic tracking-tighter leading-none">Tier {currentFaction.tier}</p>
-                                <p className="text-xs text-slate-500 font-medium mt-2">{currentFaction.specialRules || 'Reglas estándar aplicadas.'}</p>
+                                <h4 className="font-header font-black text-xl text-white italic uppercase tracking-tighter">Rerolls de Equipo</h4>
+                                <p className="text-xs text-slate-500 italic leading-relaxed mt-2 uppercase tracking-wide">Permite repetir una tirada fallida por mitad de juego. La base de toda estrategia.</p>
+                            </div>
+                            <div className="flex items-center justify-between mt-auto pt-6 border-t border-white/5">
+                                <button 
+                                    onClick={() => setRerolls(Math.max(0, rerolls - 1))}
+                                    className="w-12 h-12 rounded-2xl bg-zinc-900 border border-white/5 text-slate-500 hover:bg-blood/10 hover:text-blood transition-all flex items-center justify-center font-black text-xl shadow-inner">-</button>
+                                <span className="font-header font-black text-3xl text-white italic border-b-2 border-gold/20 px-4">{rerolls}</span>
+                                <button 
+                                    onClick={() => setRerolls(rerolls + 1)}
+                                    disabled={remainingBudget < currentFaction.rerollCost}
+                                    className={`w-12 h-12 rounded-2xl bg-gold/10 border border-gold/20 text-gold hover:bg-gold/20 transition-all flex items-center justify-center font-black text-xl shadow-inner ${remainingBudget < currentFaction.rerollCost ? 'opacity-20 cursor-not-allowed' : ''}`}>+</button>
                             </div>
                         </div>
-                        <div className="space-y-4 text-sm leading-relaxed text-slate-400 font-medium italic relative">
-                            <p>Los equipos de {currentFaction.name} rinden gloria a Nuffle bajo sus propias leyes. Estudia su flexibilidad y coste de reroll antes de saltar al césped.</p>
-                            <div className="p-4 bg-black/40 rounded-2xl border border-white/5 italic text-xs leading-relaxed group-hover:border-premium-gold/30 transition-colors">
-                                "La victoria no es solo sangre, sino saber qué sacrificios merece Nuffle."
+
+                        {/* Apothecary Card */}
+                        <div className={`bg-[#171717] border rounded-[2.5rem] p-8 flex flex-col gap-6 transition-all shadow-2xl ${apothecary ? 'border-gold/50 bg-gold/[0.02]' : 'border-white/10 hover:border-gold/30 hover:bg-white/[0.01]'}`}>
+                            <div className="flex justify-between items-start">
+                                <div className={`p-4 rounded-2xl border transition-all shadow-inner ${apothecary ? 'bg-gold text-[#0a0a0a] border-gold' : 'bg-gold/10 text-gold border-gold/20'}`}>
+                                    <span className="material-symbols-outlined text-4xl font-black">medical_services</span>
+                                </div>
+                                <span className="text-3xl font-header font-black text-white italic">50k</span>
+                            </div>
+                            <div>
+                                <h4 className="font-header font-black text-xl text-white italic uppercase tracking-tighter">Apoticario</h4>
+                                <p className="text-xs text-slate-500 italic leading-relaxed mt-2 uppercase tracking-wide">Inversión obligatoria para proteger el capital humano. Salva a tus cracks.</p>
+                            </div>
+                            <div className="mt-auto pt-6 border-t border-white/5">
+                                <button 
+                                    onClick={() => setApothecary(!apothecary)}
+                                    disabled={!apothecary && remainingBudget < 50000}
+                                    className={`w-full py-4 rounded-2xl border font-header font-black text-sm tracking-[0.15em] uppercase italic transition-all shadow-xl ${apothecary ? 'bg-gold text-[#0a0a0a] border-gold hover:opacity-90' : 'bg-white/5 border-white/10 text-white hover:bg-gold hover:text-[#0a0a0a] hover:border-gold hover:scale-[1.02]'}`}
+                                >
+                                    {apothecary ? 'CONTRATADO' : 'CONTRATAR'}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Fan Factor Card */}
+                        <div className="bg-[#171717] border border-white/10 rounded-[2.5rem] p-8 flex flex-col gap-6 hover:border-gold/30 hover:bg-white/[0.01] transition-all shadow-2xl">
+                            <div className="flex justify-between items-start">
+                                <div className="p-4 bg-gold/10 rounded-2xl text-gold border border-gold/20 shadow-inner">
+                                    <span className="material-symbols-outlined text-4xl font-black">campaign</span>
+                                </div>
+                                <span className="text-3xl font-header font-black text-white italic">10k <small className="text-xs text-slate-600 font-mono italic">ea</small></span>
+                            </div>
+                            <div>
+                                <h4 className="font-header font-black text-xl text-white italic uppercase tracking-tighter">Factor de Hinchas</h4>
+                                <p className="text-xs text-slate-500 italic leading-relaxed mt-2 uppercase tracking-wide">Más fans, más Oro al final del partido. Una franquicia necesita público.</p>
+                            </div>
+                            <div className="flex items-center justify-between mt-auto pt-6 border-t border-white/5">
+                                <button 
+                                    onClick={() => setDedicatedFans(Math.max(1, dedicatedFans - 1))}
+                                    className="w-12 h-12 rounded-2xl bg-zinc-900 border border-white/5 text-slate-500 hover:bg-blood/10 hover:text-blood transition-all flex items-center justify-center font-black text-xl shadow-inner">-</button>
+                                <span className="font-header font-black text-3xl text-white italic border-b-2 border-gold/20 px-4">{dedicatedFans}</span>
+                                <button 
+                                    onClick={() => setDedicatedFans(dedicatedFans + 1)}
+                                    disabled={remainingBudget < 10000}
+                                    className={`w-12 h-12 rounded-2xl bg-gold/10 border border-gold/20 text-gold hover:bg-gold/20 transition-all flex items-center justify-center font-black text-xl shadow-inner ${remainingBudget < 10000 ? 'opacity-20 cursor-not-allowed' : ''}`}>+</button>
                             </div>
                         </div>
                     </div>
-                </aside>
-            </div>
+                </section>
+
+                {/* BENTO SUMMARY & FINAL CTA */}
+                <section className="grid grid-cols-1 lg:grid-cols-4 gap-8 pb-40">
+                    <div className="lg:col-span-3 grid grid-cols-2 md:grid-cols-4 gap-6">
+                        <div className="bg-[#171717] border border-white/10 rounded-3xl p-6 flex flex-col justify-center shadow-xl">
+                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none mb-3 italic">Valor de Equipo</span>
+                            <span className="text-2xl font-header font-black text-white italic">{totalCost / 1000} TV</span>
+                        </div>
+                        <div className="bg-[#171717] border border-white/10 rounded-3xl p-6 flex flex-col justify-center shadow-xl">
+                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none mb-3 italic">Coste Actual</span>
+                            <span className="text-2xl font-header font-black text-white italic">{(totalCost).toLocaleString()} gp</span>
+                        </div>
+                        <div className="bg-[#171717] border border-white/10 rounded-3xl p-6 flex flex-col justify-center shadow-xl">
+                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none mb-3 italic">Tesorería Restante</span>
+                            <span className={`text-2xl font-header font-black italic ${isBudgetNegative ? 'text-blood' : 'shimmer-text'}`}>{remainingBudget.toLocaleString()} gp</span>
+                        </div>
+                        <div className="bg-[#171717] border border-white/10 rounded-3xl p-6 flex flex-col justify-center shadow-xl">
+                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none mb-3 italic">Mín. Requerido</span>
+                            <span className={`text-2xl font-header font-black italic ${draftedPlayers.length < 11 ? 'text-blood' : 'text-green-500'}`}>11 Jugadores</span>
+                        </div>
+                    </div>
+                    <div className="lg:col-span-1">
+                        <button 
+                            disabled={!canFinalize}
+                            onClick={handleSubmit}
+                            className={`w-full h-full min-h-[100px] rounded-3xl font-header font-black text-2xl tracking-[0.1em] uppercase italic flex items-center justify-center gap-4 transition-all duration-500 shadow-2xl ${canFinalize ? 'bg-gradient-to-br from-gold to-yellow-700 text-[#0a0a0a] shadow-gold/30 hover:scale-[1.05] hover:brightness-110' : 'bg-white/5 border border-white/10 text-white/20 cursor-not-allowed opacity-50 grayscale'}`}
+                        >
+                            <span className="material-symbols-outlined text-3xl">stadium</span>
+                            Fundar Equipo
+                        </button>
+                    </div>
+                </section>
+            </main>
+
+            {/* FIXED FOOTER (MOBILE ONLY) */}
+            <footer className="fixed bottom-0 left-0 w-full bg-[#171717]/90 backdrop-blur-2xl border-t border-white/10 py-5 px-8 lg:hidden z-50 shadow-2xl flex justify-between items-center">
+                <div className="flex flex-col">
+                    <span className="text-[10px] text-gold font-black tracking-[0.2em] uppercase italic">DISPONIBLE</span>
+                    <span className={`font-header font-black text-2xl italic tracking-tighter ${isBudgetNegative ? 'text-blood animate-pulse' : 'shimmer-text'}`}>{remainingBudget.toLocaleString()}</span>
+                </div>
+                <button className="bg-gold text-[#0a0a0a] font-header font-black py-3 px-8 rounded-2xl text-xs uppercase tracking-tighter italic shadow-xl shadow-gold/20">ROSTER ({draftedPlayers.length})</button>
+            </footer>
 
             {/* Skill Modal */}
             {selectedSkill && (
@@ -598,12 +444,21 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                 />
             )}
 
-            {/* Custom Scrollbar Styles */}
+            {/* Custom Animations & Styles */}
             <style>{`
-                .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
-                .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-                .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(202, 138, 4, 0.2); border-radius: 10px; }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(202, 138, 4, 0.5); }
+                .shimmer-text {
+                    background: linear-gradient(90deg, #CA8A04 0%, #ffe4a3 50%, #CA8A04 100%);
+                    background-size: 200% auto;
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    animation: shimmer 3s infinite linear;
+                }
+                @keyframes shimmer {
+                    0% { background-position: -200% 0; }
+                    100% { background-position: 200% 0; }
+                }
+                .no-scrollbar::-webkit-scrollbar { display: none; }
+                .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
             `}</style>
         </div>
     );
