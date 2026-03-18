@@ -32,7 +32,9 @@ const HERALDO_ITEMS = [
         title: "MORG 'N' THORG",
         content: 'El Gigante entre Gigantes. Su fuerza devastadora y su sorprendente agilidad lo convierten en el Star Player más codiciado (y caro) de la historia.',
         rule: 'Precio: 380,000 MO (S3)',
-        image: 'https://raw.githubusercontent.com/jaz206/Bloodbowl-image/main/morg.webp'
+        image: 'https://raw.githubusercontent.com/jaz206/Bloodbowl-image/main/morg.webp',
+        stats: { ma: 6, st: 6, ag: '2+', pa: '4+', av: '11+' },
+        skillKeys: ['Block', 'Mighty Blow (+2)', 'Thick Skull', 'Throw Team-Mate']
     },
     {
         type: 'team' as const,
@@ -66,10 +68,26 @@ const Home: React.FC<HomeProps> = ({
 }) => {
     const { t } = useLanguage();
     const { user } = useAuth();
-    const { heraldoItems: remoteHeraldo } = useMasterData();
+    const { heraldoItems: remoteHeraldo, starPlayers } = useMasterData();
 
-    // Use remote items if available, otherwise static fallback
-    const items = useMemo(() => remoteHeraldo.length > 0 ? remoteHeraldo : HERALDO_ITEMS, [remoteHeraldo]);
+    // The Heraldo now primarily showcases Star Players
+    const items = useMemo(() => {
+        if (starPlayers && starPlayers.length > 0) {
+            return starPlayers.map(s => ({
+                id: s.name,
+                type: 'starplayer' as const,
+                tag: 'Leyenda',
+                category: 'Perfil del Jugador',
+                title: s.name,
+                content: s.description || s.specialRules_es || 'Sin biografía disponible.',
+                rule: s.cost ? `${s.cost.toLocaleString()} MO` : '',
+                image: s.image,
+                stats: s.stats,
+                skillKeys: s.skillKeys
+            }));
+        }
+        return remoteHeraldo.length > 0 ? remoteHeraldo : HERALDO_ITEMS;
+    }, [remoteHeraldo, starPlayers]);
     
     // States for interactive modules
     const [oracleSearch, setOracleSearch] = useState('');
@@ -84,12 +102,12 @@ const Home: React.FC<HomeProps> = ({
             .slice(0, 10);
     }, [oracleSearch]);
 
-    // Heraldo Rotation Logic
+    // Heraldo Rotation Logic (30 seconds)
     useEffect(() => {
         if (items.length <= 1) return;
         const timer = setInterval(() => {
-            setHeraldoIndex(prev => (prev + 1) % items.length);
-        }, 20000); // 20 seconds as requested
+            setHeraldoIndex(Math.floor(Math.random() * items.length));
+        }, 30000); // 30 seconds as requested
         return () => clearInterval(timer);
     }, [items.length]);
 
@@ -419,59 +437,100 @@ const Home: React.FC<HomeProps> = ({
                         </div>
 
                         {/* Content area with smooth transition */}
-                        <div className="flex-1 flex items-center px-8 gap-8 py-4 transition-all duration-500">
-                            {/* Conditional Media Item */}
-                            {items[heraldoIndex]?.type !== 'skill' && (
-                                <div className={`flex-shrink-0 relative ${items[heraldoIndex]?.type === 'team' ? 'w-20 h-20' : 'w-28 h-28 md:w-36 md:h-36'}`}>
-                                    <div className="absolute inset-0 bg-neutral-900/10 rounded-full blur-xl"></div>
+                        <div className="flex-1 flex gap-10 px-8 py-6 overflow-hidden">
+                            {/* Portrait */}
+                            <div className="flex-shrink-0 w-44 h-44 md:w-56 md:h-56 relative group/portrait">
+                                <div className="absolute inset-0 bg-neutral-900/10 rounded-full blur-2xl group-hover/portrait:bg-blood/5 transition-colors"></div>
+                                {items[heraldoIndex]?.image ? (
                                     <img 
-                                        alt="News media" 
-                                        className={`w-full h-full object-contain ${items[heraldoIndex]?.type === 'team' ? 'grayscale-0' : 'ink-edges'}`} 
+                                        alt={items[heraldoIndex]?.title} 
+                                        className="w-full h-full object-contain ink-edges relative z-10 drop-shadow-2xl transition-transform duration-700 group-hover/portrait:scale-110" 
                                         src={items[heraldoIndex]?.image} 
                                     />
-                                </div>
-                            )}
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-black/5 rounded-full border-2 border-dashed border-black/10">
+                                        <span className="material-symbols-outlined text-6xl text-black/10">person</span>
+                                    </div>
+                                )}
+                            </div>
 
-                            {/* Center Content */}
-                            <div className={`flex-1 space-y-2 ${items[heraldoIndex]?.type === 'skill' ? 'max-w-3xl mx-auto' : ''}`}>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[10px] bg-neutral-900/10 text-neutral-900 font-black px-2 py-0.5 rounded border border-neutral-900/20 uppercase tracking-tighter">
-                                        {items[heraldoIndex]?.tag}
-                                    </span>
-                                    <span className="text-[10px] text-neutral-900/60 font-serif font-bold italic">
-                                        {items[heraldoIndex]?.category}
-                                    </span>
+                            {/* Info Section */}
+                            <div className="flex-1 flex flex-col min-w-0">
+                                {/* Header: Name & Nav */}
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className="space-y-1">
+                                        <div className="flex items-center gap-3 mb-1">
+                                            <span className="text-[10px] bg-neutral-900/10 text-neutral-900 font-black px-2 py-0.5 rounded border border-neutral-900/20 uppercase tracking-tighter">
+                                                {items[heraldoIndex]?.tag || 'Estrella'}
+                                            </span>
+                                            <span className="text-[10px] text-neutral-900/60 font-serif font-bold italic">
+                                                {items[heraldoIndex]?.category}
+                                            </span>
+                                        </div>
+                                        <h3 
+                                            onClick={() => onNavigate('stars', items[heraldoIndex]?.title)}
+                                            className="font-header text-4xl md:text-5xl text-neutral-900 tracking-tight leading-none uppercase italic font-black hover:text-blood transition-colors cursor-pointer group"
+                                        >
+                                            {items[heraldoIndex]?.title}
+                                            <span className="material-symbols-outlined text-sm ml-2 opacity-0 group-hover:opacity-100 transition-opacity translate-y-[-20%]">open_in_new</span>
+                                        </h3>
+                                    </div>
+
+                                    {/* Stats Badge */}
+                                    {items[heraldoIndex]?.stats && (
+                                        <div className="bg-neutral-900/5 border border-neutral-900/10 rounded-2xl flex items-center divide-x divide-neutral-900/10 px-4 py-3">
+                                            {[
+                                                { k: 'MA', v: items[heraldoIndex]?.stats.ma },
+                                                { k: 'ST', v: items[heraldoIndex]?.stats.st },
+                                                { k: 'AG', v: items[heraldoIndex]?.stats.ag },
+                                                { k: 'PA', v: items[heraldoIndex]?.stats.pa },
+                                                { k: 'AV', v: items[heraldoIndex]?.stats.av },
+                                            ].map(s => (
+                                                <div key={s.k} className="px-3 flex flex-col items-center">
+                                                    <span className="text-[8px] font-black text-neutral-500 uppercase">{s.k}</span>
+                                                    <span className="text-sm font-bold text-neutral-900">{s.v}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
-                                <h3 className="font-header text-3xl md:text-4xl text-neutral-900 tracking-tight leading-none drop-shadow-sm transition-all duration-500">
-                                    {items[heraldoIndex]?.title}
-                                </h3>
-                                <div className="max-w-xl pb-6">
-                                    <p className={`font-serif text-neutral-800 leading-tight drop-cap ${
-                                        (items[heraldoIndex]?.content || '').length > 180 ? 'text-xs md:text-base' : 
-                                        (items[heraldoIndex]?.content || '').length > 120 ? 'text-sm md:text-lg' : 
-                                        'text-base md:text-xl'
-                                    }`}>
-                                        {items[heraldoIndex]?.content} 
-                                        <span className="font-bold text-blood ml-2 whitespace-nowrap">{items[heraldoIndex]?.rule}</span>
+
+                                {/* Skills Tags */}
+                                {items[heraldoIndex]?.skillKeys && (
+                                    <div className="flex flex-wrap gap-2 mb-4">
+                                        {items[heraldoIndex]?.skillKeys.slice(0, 8).map((skill: string) => (
+                                            <span key={skill} className="px-3 py-1 bg-white/40 border border-neutral-900/5 rounded-lg text-[10px] font-bold text-neutral-800 uppercase tracking-tighter">
+                                                {skill}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Biography (Scrollable) */}
+                                <div className="flex-1 overflow-y-auto custom-scrollbar-neutral pr-4 mb-4">
+                                    <p className="font-serif text-neutral-800 text-base leading-relaxed text-justify">
+                                        {items[heraldoIndex]?.content}
                                     </p>
+                                </div>
+
+                                {/* Footer Info */}
+                                <div className="flex justify-between items-center mt-auto border-t border-neutral-900/10 pt-4">
+                                    <div className="flex items-center gap-4">
+                                        <span className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">COSTE DE CONTRATACIÓN</span>
+                                        <span className="text-xl font-header font-black text-blood italic tracking-tighter">{items[heraldoIndex]?.rule}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Footer & Progress */}
+                        {/* Progress Bar (Bottom) */}
                         <div className="relative h-2 bg-black/5 mt-auto">
                             <div 
                                 key={heraldoIndex} // Key forces re-animation on index change
-                                className="absolute inset-0 bg-blood/40 progress-bar-20s origin-left"
-                            ></div>
-                            <div 
-                                key={heraldoIndex} // Key forces re-animation on index change
-                                className="absolute inset-0 bg-blood/40 progress-bar-20s origin-left"
+                                className="absolute inset-0 bg-blood/40 progress-bar-30s origin-left"
                             ></div>
                             <div className="px-8 flex justify-end items-center absolute -top-8 left-0 right-0">
-                                <div className="flex gap-4">
-                                    <span className="font-serif font-bold text-[10px] text-neutral-900/40 uppercase tracking-widest">BOLETÍN {heraldoIndex + 1} de {items.length}</span>
-                                </div>
+                                <span className="font-serif font-bold text-[10px] text-neutral-900/40 uppercase tracking-widest">RECLUTANDO ESTRELLA {heraldoIndex + 1}/{items.length}</span>
                             </div>
                         </div>
                     </div>

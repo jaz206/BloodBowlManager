@@ -157,6 +157,18 @@ h1, h2, h3, h4, .font-display {
     animation: progress 20s linear infinite;
 }
 
+@keyframes progress30 {
+    from { width: 0%; }
+    to { width: 100%; }
+}
+.progress-bar-30s {
+    animation: progress30 30s linear infinite;
+}
+
+.custom-scrollbar-neutral::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar-neutral::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.05); }
+.custom-scrollbar-neutral::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); border-radius: 10px; }
+
 .btn-pe {
     background: linear-gradient(135deg, #d4af37 0%, #f59f0a 100%);
     box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
