@@ -374,11 +374,6 @@ const MainApp: React.FC = () => {
       <div className="fixed inset-0 pointer-events-none opacity-40 z-0" style={{ backgroundImage: 'radial-gradient(rgba(202, 138, 4, 0.15) 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
 
       <div className="w-full relative z-50">
-          <div className="max-w-[1700px] mx-auto flex items-center justify-between py-1 text-[9px] font-black text-[#CA8A04]/40 uppercase tracking-[0.4em] italic px-10">
-              <span>.INDEX.</span>
-              <span className="material-symbols-outlined text-[10px] opacity-10">code</span>
-          </div>
-          
           <header className="h-14 bg-black border-b border-[#CA8A04]/20 flex items-center justify-between px-10 shadow-2xl relative group">
             {/* Top accent line */}
             <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#CA8A04]/40 to-transparent opacity-50"></div>
