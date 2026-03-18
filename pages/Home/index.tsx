@@ -1,7 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import type { ManagedTeam, League as Competition, GameEvent, MatchReport } from '../../types';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../hooks/useAuth';
+import { skillsData } from '../../data/skills_es';
 
 interface HomeProps {
     onNavigate: (view: any, payload?: string) => void;
@@ -13,252 +14,438 @@ interface HomeProps {
     matchReports?: MatchReport[];
 }
 
-const Home: React.FC<HomeProps> = ({ onNavigate, onCreateTeam, managedTeams, competitions = [], matchReports = [], heroImage }) => {
+const ELITE_SKILLS = ['Placar', 'Esquivar', 'Defensa', 'Golpe Mortífero'];
+
+const HERALDO_ITEMS = [
+    {
+        tag: 'Destacado',
+        category: 'Sección de Habilidades',
+        title: 'ESQUIVAR',
+        content: 'Una habilidad esencial para cualquier jugador que desee sobrevivir en las zonas de defensa. Permite repetir una tirada de Esquiva fallida por turno.',
+        rule: '⚠️ Regla S3: Categoría Élite (+10k MO)',
+        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAoZFoF0guWdurhfUKnNWrVyO86UnCzaVNhEgSYsfz0T93F7TeH25iZmLeS0QWa4IjVeaSyiPc0YqB3eFm5rQfrzw2l2zKd5EZ5nQdipG9E46n6q-mKEbwK1JLI3jma1w-xhZRAc_0cy9a6LCcKOxweoygH8Xz9VJw4cHQlCh9bbOS7SaO-MGxmF0o-_WeV64RUwxLcRvF4wP2oQyv_K-CRVFV1ebuoX2BzEG6zGAhSgSM01rFTFKFJ7oUYyQVQbtTZeczuFYnxLQM'
+    },
+    {
+        tag: 'Leyenda',
+        category: 'Perfil de Jugador',
+        title: "MORG 'N' THORG",
+        content: 'El Gigante entre Gigantes. Su fuerza devastadora y su sorprendente agilidad lo convierten en el Star Player más codiciado (y caro) de la historia.',
+        rule: 'Precio: 380,000 MO (S3)',
+        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAoZFoF0guWdurhfUKnNWrVyO86UnCzaVNhEgSYsfz0T93F7TeH25iZmLeS0QWa4IjVeaSyiPc0YqB3eFm5rQfrzw2l2zKd5EZ5nQdipG9E46n6q-mKEbwK1JLI3jma1w-xhZRAc_0cy9a6LCcKOxweoygH8Xz9VJw4cHQlCh9bbOS7SaO-MGxmF0o-_WeV64RUwxLcRvF4wP2oQyv_K-CRVFV1ebuoX2BzEG6zGAhSgSM01rFTFKFJ7oUYyQVQbtTZeczuFYnxLQM'
+    },
+    {
+        tag: 'Reglamento',
+        category: 'Errores Costosos',
+        title: 'BANCO EXCESIVO',
+        content: 'Si tu tesorería supera los 100,000 MO al final del partido, corres el riesgo de perder fondos ante la indisciplina de tus jugadores o fiestas imprevistas.',
+        rule: '⚠️ Nueva tabla de Errores Costosos S3',
+        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAoZFoF0guWdurhfUKNWrVyO86UnCzaVNhEgSYsfz0T93F7TeH25iZmLeS0QWa4IjVeaSyiPc0YqB3eFm5rQfrzw2l2zKd5EZ5nQdipG9E46n6q-mKEbwK1JLI3jma1w-xhZRAc_0cy9a6LCcKOxweoygH8Xz9VJw4cHQlCh9bbOS7SaO-MGxmF0o-_WeV64RUwxLcRvF4wP2oQyv_K-CRVFV1ebuoX2BzEG6zGAhSgSM01rFTFKFJ7oUYyQVQbtTZeczuFYnxLQM'
+    }
+];
+
+const SPP_LEVELS = [6, 16, 31, 51, 76, 126, 176];
+
+const Home: React.FC<HomeProps> = ({ 
+    onNavigate, 
+    onCreateTeam, 
+    managedTeams, 
+    competitions, 
+    recentEvents, 
+    heroImage, 
+    matchReports 
+}) => {
     const { t } = useLanguage();
     const { user } = useAuth();
     
-    // Logic for recent teams (last updated)
-    const latestTeams = useMemo(() => {
-        return [...managedTeams].sort((a, b) => {
-            const dateA = a.updatedAt?.seconds || 0;
-            const dateB = b.updatedAt?.seconds || 0;
-            return dateB - dateA;
-        }).slice(0, 2);
-    }, [managedTeams]);
+    // States for interactive modules
+    const [oracleSearch, setOracleSearch] = useState('');
+    const [heraldoIndex, setHeraldoIndex] = useState(0);
+    const [compTab, setCompTab] = useState<'ligas' | 'torneos'>('ligas');
 
-    // Global Stats Calculation
-    const stats = useMemo(() => {
-        let wins = 0;
-        let totalMatches = matchReports.length;
-        let casualties = 0;
+    // Oracle Search Logic
+    const filteredSkills = useMemo(() => {
+        if (!oracleSearch) return skillsData.slice(0, 5);
+        return skillsData
+            .filter(s => s.name.toLowerCase().includes(oracleSearch.toLowerCase()))
+            .slice(0, 10);
+    }, [oracleSearch]);
 
-        managedTeams.forEach(team => {
-            wins += team.record?.wins || 0;
-        });
+    // Heraldo Rotation Logic
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setHeraldoIndex(prev => (prev + 1) % HERALDO_ITEMS.length);
+        }, 20000); // 20 seconds as requested
+        return () => clearInterval(timer);
+    }, []);
 
-        // Sum casualties from reports if available
-        matchReports.forEach(report => {
-            if (report.stats?.casualties) {
-                casualties += (report.stats.casualties.home || 0);
+    // Logic for Competición: Active league and its standings
+    const activeLeague = useMemo(() => 
+        competitions.find(c => c.format === 'Liguilla' && (c.status as string) === 'In Progress'),
+    [competitions]);
+
+    const leagueStandings = useMemo(() => {
+        if (!activeLeague || !activeLeague.schedule || !activeLeague.teams) return [];
+        
+        const teamsStats = activeLeague.teams.map(({ teamName }) => {
+            let p = 0, w = 0, l = 0, d = 0, tdF = 0, tdA = 0;
+            const history: ('W' | 'L' | 'D')[] = [];
+
+            if (activeLeague.schedule) {
+                Object.values(activeLeague.schedule).forEach(round => {
+                    (round as any[]).forEach(match => {
+                        if ((match.team1 === teamName || match.team2 === teamName) && match.score1 != null && match.score2 != null) {
+                            p++;
+                            const isTeam1 = match.team1 === teamName;
+                            const sF = isTeam1 ? match.score1 : match.score2;
+                            const sA = isTeam1 ? match.score2 : match.score1;
+                            tdF += sF;
+                            tdA += sA;
+                            if (sF > sA) {
+                                w++;
+                                history.push('W');
+                            } else if (sA > sF) {
+                                l++;
+                                history.push('L');
+                            } else {
+                                d++;
+                                history.push('D');
+                            }
+                        }
+                    });
+                });
             }
+
+            return {
+                name: teamName,
+                played: p,
+                points: w * 3 + d,
+                goalsDiff: tdF - tdA,
+                form: history.slice(-5).reverse()
+            };
         });
 
-        return { totalMatches: Math.max(totalMatches, wins), wins, casualties };
-    }, [managedTeams, matchReports]);
+        return teamsStats.sort((a, b) => b.points - a.points || b.goalsDiff - a.goalsDiff).slice(0, 5);
+    }, [activeLeague]);
 
     return (
-        <div className="space-y-12 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-             {/* Hero Header */}
-             <section className="relative rounded-[2.5rem] overflow-hidden h-72 md:h-80 flex items-end p-8 md:p-12 border border-white/5 shadow-2xl group">
-                <div 
-                    className="absolute inset-0 bg-cover bg-center transition-transform duration-[3000ms] group-hover:scale-105 pointer-events-none" 
-                    style={{ backgroundImage: `url('${heroImage || 'https://lh3.googleusercontent.com/aida-public/AB6AXuBOnh3QMmXMj5089XASf9DHSnVLUNSPKeuU1h1YTVw0qsYy6LCTZgipMAmyGzUiOYOuSgHiCDOKZ7eeCKJzUyHPP0gDc2V0Xhr3o8292Ogd2Kf7DmAOhxa5S7FeQDLwok8sspu20LJgAVVIWfrs6t7uy-ZfGL7eHw6vHlkZgGbqe4UhukzN_tg93L9_T_bOd742JjNy7l39bpTcBND9XeLgyOudWSXIJmCsHQbetpy4bPPUPr_ssxaNyb3y3KzJMCwREbJHms-_-NeO'}')` }}
-                ></div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
+        <main className="max-w-[1600px] mx-auto w-full space-y-8 pb-32 animate-in fade-in duration-700 bg-[radial-gradient(circle_at_center,_rgba(202,138,4,0.03)_0%,_transparent_70%)]">
+            
+            {/* ROW 1: GREMIO & ORÁCULO */}
+            <div className="grid grid-cols-1 md:grid-cols-10 gap-8">
                 
-                <div className="relative z-10 space-y-3">
-                    <p className="text-premium-gold font-display font-black tracking-[0.4em] uppercase text-[10px] animate-pulse">
-                        {t('home.welcome') || 'Bienvenido de nuevo'}, {user?.name.split(' ')[0] || 'Coach'}
-                    </p>
-                    <h2 className="text-5xl md:text-7xl font-display font-black text-white italic tracking-tighter uppercase leading-[0.8]">
-                        TABLERO DE <br/><span className="text-premium-gold drop-shadow-[0_0_30px_rgba(245,159,10,0.5)]">ESTRATEGIA</span>
-                    </h2>
-                    <p className="text-slate-400 max-w-xl text-sm md:text-base font-medium leading-relaxed mt-4">
-                        Nuffle observa tus dados. Prepara tu táctica, gestiona tu equipo y reclama la gloria en el emparrillado.
-                    </p>
-                </div>
-                
-                {/* Decoration Corner */}
-                <div className="absolute top-8 right-8 w-20 h-20 border-t-2 border-r-2 border-premium-gold/20 rounded-tr-3xl"></div>
-            </section>
-
-            {/* Main Access Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                
-                {/* 1. Oráculo Card (Bento Style) */}
-                <section className="glass-panel rounded-[2rem] p-8 border-l-4 border-l-premium-gold flex flex-col hover:border-premium-gold/40 transition-all duration-500 shadow-2xl relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-10 opacity-[0.02] scale-150 rotate-12 transition-transform duration-1000 group-hover:scale-[1.7] group-hover:rotate-0">
-                        <span className="material-symbols-outlined text-9xl">menu_book</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-4 mb-10 relative z-10">
-                        <div className="w-14 h-14 rounded-2xl bg-premium-gold/10 flex items-center justify-center border border-premium-gold/20 shadow-inner">
-                            <span className="material-symbols-outlined text-premium-gold text-3xl font-bold">menu_book</span>
-                        </div>
-                        <h3 className="text-2xl font-display font-black text-white uppercase italic tracking-tight">{t('home.cards.oracle.title') || 'El Oráculo de Nuffle'}</h3>
+                {/* 1. EL GREMIO (60%) */}
+                <section className="col-span-1 md:col-span-6 bento-card rounded-2xl p-6 md:p-8 flex flex-col">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 onClick={() => onNavigate('guild')} className="font-header text-3xl section-title">El Gremio</h2>
+                        <span className="text-[10px] font-header tracking-widest text-primary/60 uppercase">S3 Active Franchises</span>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 relative z-10">
-                        {[
-                            { icon: 'groups', title: 'Equipos', sub: 'Enciclopedia', view: 'oracle', payload: 'teams' },
-                            { icon: 'bolt', title: 'Codex', sub: 'Habilidades', view: 'oracle', payload: 'skills' },
-                            { icon: 'star', title: 'Estrellas', sub: 'Legendarios', view: 'oracle', payload: 'stars' },
-                            { icon: 'calculate', title: 'Calculadora', sub: 'Probabilidades', view: 'oracle', payload: 'calculator' }
-                        ].map(item => (
-                            <button 
-                                key={item.title}
-                                onClick={() => onNavigate(item.view, item.payload)}
-                                className="group/btn bg-white/5 hover:bg-premium-gold/10 p-5 rounded-2xl border border-white/5 transition-all flex flex-col items-start gap-2 hover:border-premium-gold/30 hover:shadow-xl"
-                            >
-                                <span className="material-symbols-outlined text-premium-gold transition-transform group-hover/btn:scale-110 group-hover/btn:-rotate-6">{item.icon}</span>
-                                <div className="text-left">
-                                    <p className="font-display font-black text-xs text-white uppercase italic group-hover/btn:text-premium-gold transition-colors">{item.title}</p>
-                                    <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">{item.sub}</p>
+                    <div className="space-y-4 flex-1">
+                        {managedTeams.length > 0 ? managedTeams.slice(0, 3).map(team => {
+                            const hasLevelUp = team.players?.some(p => {
+                                const currentAdvancements = p.advancements?.length || 0;
+                                const nextLevelSpp = SPP_LEVELS[currentAdvancements] || 999;
+                                return (p.spp || 0) >= nextLevelSpp;
+                            });
+                            const hasMNG = team.players?.some(p => p.lastingInjuries?.includes('MNG'));
+                            const expensiveMistake = (team.treasury || 0) > 100000;
+
+                            return (
+                                <div 
+                                    key={team.id}
+                                    onClick={() => onNavigate('guild')}
+                                    className="bg-white/5 border border-white/5 rounded-xl p-5 flex items-center justify-between group hover:bg-white/[0.07] transition-all cursor-pointer relative"
+                                >
+                                    <div className="flex items-center gap-5">
+                                        <div className="size-16 rounded-lg bg-black flex items-center justify-center border border-white/10 overflow-hidden">
+                                            {team.crestImage ? (
+                                                <img alt={team.name} className="size-full object-cover grayscale group-hover:grayscale-0 transition-all" src={team.crestImage} />
+                                            ) : (
+                                                <span className="material-symbols-outlined text-3xl text-slate-600">shield</span>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <h3 className="font-header text-lg group-hover:text-primary transition-colors">{team.name}</h3>
+                                            <div className="flex gap-4 mt-1">
+                                                <div className={`flex gap-1 items-center px-2 py-0.5 rounded border ${hasLevelUp ? 'bg-primary/20 border-primary/40 animate-pulse' : 'bg-white/5 border-white/10'}`}>
+                                                    <span className={`material-symbols-outlined text-xs ${hasLevelUp ? 'text-primary fill-1' : 'text-slate-500'}`}>star</span>
+                                                    <span className={`text-[10px] font-bold ${hasLevelUp ? 'text-primary' : 'text-slate-500'}`}>
+                                                        {team.players?.filter(p => {
+                                                            const currentAdvancements = p.advancements?.length || 0;
+                                                            const nextLevelSpp = SPP_LEVELS[currentAdvancements] || 999;
+                                                            return (p.spp || 0) >= nextLevelSpp;
+                                                        }).length || 0}
+                                                    </span>
+                                                </div>
+                                                {hasMNG && (
+                                                    <div className="flex gap-1 items-center bg-blood/10 px-2 py-0.5 rounded border border-blood/20">
+                                                        <span className="material-symbols-outlined text-xs text-blood fill-1">medical_services</span>
+                                                        <span className="text-[10px] font-bold text-blood">
+                                                            {team.players?.filter(p => p.lastingInjuries?.includes('MNG')).length || 0}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="flex flex-col items-end">
+                                            <span className="text-[9px] font-header text-slate-500 uppercase mb-1">Treasury</span>
+                                            <div className={`flex items-center gap-1.5 px-3 py-1 rounded border transition-colors ${expensiveMistake ? 'bg-blood/20 border-blood/40' : 'bg-primary/10 border-primary/20'}`}>
+                                                <span className={`text-sm font-bold ${expensiveMistake ? 'text-blood' : 'text-primary'}`}>
+                                                    {team.treasury ? `${team.treasury / 1000}k` : '0k'} GP
+                                                </span>
+                                                {expensiveMistake && <span className="material-symbols-outlined text-sm text-blood animate-pulse">warning</span>}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                            </button>
-                        ))}
-                    </div>
-                </section>
-
-                {/* 2. Gremio Card */}
-                <section className="glass-panel rounded-[2rem] p-8 border-l-4 border-l-sky-500 flex flex-col hover:border-sky-500/40 transition-all duration-500 shadow-2xl relative overflow-hidden group">
-                    <div className="flex items-center justify-between mb-10 relative z-10">
-                        <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-2xl bg-sky-500/10 flex items-center justify-center border border-sky-500/20 shadow-inner">
-                                <span className="material-symbols-outlined text-sky-500 text-3xl font-bold">badge</span>
-                            </div>
-                            <h3 className="text-2xl font-display font-black text-white uppercase italic tracking-tight">{t('home.cards.guild.title') || 'Gremio de Coaches'}</h3>
-                        </div>
-                        <button 
-                            onClick={onCreateTeam || (() => onNavigate('guild'))}
-                            className="bg-sky-500 hover:bg-white text-black text-[10px] font-display font-black py-4 px-6 rounded-xl uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-xl shadow-sky-500/20"
-                        >
-                            {t('home.hero.newRoster') || 'Nuevo Equipo'}
-                        </button>
-                    </div>
-
-                    <div className="space-y-4 flex-1 relative z-10">
-                        <p className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest px-1 mb-2">{t('home.activeTeams.title') || 'Equipos Recientes'}</p>
-                        {latestTeams.length > 0 ? latestTeams.map(team => (
+                            );
+                        }) : (
                             <div 
-                                key={team.id}
-                                onClick={() => onNavigate('guild')}
-                                className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-white/10 hover:border-sky-500/50 cursor-pointer transition-all group/item hover:bg-white/[0.08]"
+                                onClick={onCreateTeam}
+                                className="border-2 border-dashed border-white/10 rounded-xl p-10 flex flex-col items-center justify-center gap-4 group hover:border-primary/40 cursor-pointer transition-all"
                             >
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-black/60 rounded-xl flex items-center justify-center border border-white/10 overflow-hidden shadow-inner group-hover/item:border-sky-500/30">
-                                        {team.crestImage ? <img src={team.crestImage} className="w-full h-full object-cover transition-transform group-hover/item:scale-110" /> : <span className="font-black text-sky-500 text-sm italic">{team.name.substring(0,2).toUpperCase()}</span>}
-                                    </div>
-                                    <div>
-                                        <p className="text-base font-display font-black text-white uppercase italic group-hover/item:text-sky-500 transition-colors leading-none mb-1">{team.name}</p>
-                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{team.rosterName} • TV {team.totalTV ? team.totalTV / 1000 : 1000}k</p>
-                                    </div>
-                                </div>
-                                <span className="material-symbols-outlined text-slate-600 group-hover/item:text-sky-500 transition-transform group-hover/item:translate-x-1">chevron_right</span>
-                            </div>
-                        )) : (
-                            <div className="flex-1 flex flex-col items-center justify-center opacity-30 gap-4 py-8 border-2 border-dashed border-white/5 rounded-2xl">
-                                <span className="material-symbols-outlined text-5xl">shield</span>
-                                <p className="text-[10px] font-display font-bold uppercase tracking-[0.2em] italic">{t('home.activeTeams.empty') || 'Aún no has forjado tu leyenda'}</p>
+                                <span className="material-symbols-outlined text-4xl text-slate-600 group-hover:text-primary transition-colors">add_circle</span>
+                                <p className="font-header text-xs tracking-widest text-slate-500 group-hover:text-slate-300">FUNDAR NUEVA FRANQUICIA</p>
                             </div>
                         )}
                     </div>
+
+                    <button 
+                        onClick={() => onNavigate('guild')}
+                        className="w-full mt-8 bg-primary/10 hover:bg-primary text-primary hover:text-black py-4 rounded-xl border border-primary/30 font-header text-xs tracking-widest transition-all btn-interact"
+                    >
+                        {t('home.hero.manageGuild') || 'GESTIONAR MI BANQUILLO'}
+                    </button>
                 </section>
 
-                {/* 3. Ligas Card */}
-                <section className="glass-panel rounded-[2rem] p-8 border-l-4 border-l-amber-500 flex flex-col hover:border-amber-500/40 transition-all duration-500 shadow-2xl relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-10 opacity-[0.02] scale-150 rotate-12 transition-transform duration-1000 group-hover:scale-[1.7] group-hover:rotate-0">
-                        <span className="material-symbols-outlined text-9xl">trophy</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-4 mb-4 relative z-10">
-                        <div className="w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 shadow-inner">
-                            <span className="material-symbols-outlined text-amber-500 text-3xl font-bold">trophy</span>
-                        </div>
-                        <h3 className="text-2xl font-display font-black text-white uppercase italic tracking-tight">{t('home.cards.leagues.title')}</h3>
+                {/* 2. EL ORÁCULO (40%) */}
+                <section className="col-span-1 md:col-span-4 bento-card rounded-2xl p-6 md:p-8 flex flex-col">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 onClick={() => onNavigate('oracle')} className="font-header text-3xl section-title">El Oráculo</h2>
+                        <span className="material-symbols-outlined text-primary/60">auto_awesome</span>
                     </div>
 
-                    <p className="text-slate-400 text-sm mb-8 relative z-10 font-medium leading-relaxed">
-                        {t('home.cards.leagues.desc')}
-                    </p>
-
-                    <div className="mt-auto space-y-3 relative z-10">
-                        <div className="flex items-center justify-between px-2 mb-2">
-                            <span className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest">{t('nav.leagues')} Activas</span>
-                            <span className="text-xs font-display font-black text-amber-500">{competitions.length}</span>
-                        </div>
-                        <button 
-                            onClick={() => onNavigate('leagues')}
-                            className="w-full bg-amber-500 hover:bg-white text-black font-display font-black py-4 rounded-xl uppercase tracking-widest transition-all shadow-xl flex items-center justify-center gap-3 border border-amber-400 group/btn-l"
-                        >
-                            <span className="material-symbols-outlined text-xl group-hover/btn-l:scale-110 transition-transform">military_tech</span>
-                            {t('home.cards.leagues.btn')}
-                        </button>
-                    </div>
-                </section>
-
-                {/* 4. Arena - Main Entry (Full Width on Desktop) */}
-                <section 
-                    onClick={() => onNavigate('arena')}
-                    className="glass-panel lg:col-span-2 rounded-[3.5rem] p-10 md:p-14 flex flex-col md:flex-row items-center justify-around gap-12 relative overflow-hidden group cursor-pointer border border-premium-gold/10 hover:border-premium-gold/40 transition-all duration-700 bg-gradient-to-br from-premium-gold/5 via-transparent to-blood-red/5 shadow-3xl"
-                >
-                    <div className="absolute top-0 right-0 p-12 opacity-[0.03] group-hover:opacity-[0.1] transition-all rotate-12 group-hover:scale-125 duration-1000 pointer-events-none">
-                        <span className="material-symbols-outlined text-[320px]">stadium</span>
-                    </div>
-                    
-                    <div className="flex flex-col items-center text-center md:items-start md:text-left z-10 max-w-lg">
-                        <div className="w-24 h-24 rounded-[2rem] bg-premium-gold/10 flex items-center justify-center mb-10 border border-premium-gold/20 shadow-2xl group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
-                            <span className="material-symbols-outlined text-premium-gold text-6xl font-black">sports_football</span>
-                        </div>
-                        <h3 className="text-5xl md:text-6xl font-display font-black text-white uppercase italic mb-4 tracking-tighter leading-[0.85]">
-                            LA ARENA <br/><span className="text-premium-gold drop-shadow-[0_0_20px_rgba(245,159,10,0.3)]">DE LA GLORIA</span>
-                        </h3>
-                        <p className="text-slate-400 text-base md:text-lg font-medium leading-relaxed max-w-sm">
-                            ¿Listo para el saque inicial? Controla turnos, bajas y puntuaciones en tiempo real con el asistente táctico definitivo de Nuffle.
-                        </p>
+                    <div className="relative mb-6">
+                        <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">search</span>
+                        <input 
+                            value={oracleSearch}
+                            onChange={(e) => setOracleSearch(e.target.value)}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:border-primary/50 transition-all text-white placeholder-slate-600" 
+                            placeholder="Consultar Nufflepedia..." 
+                            type="text" 
+                        />
                     </div>
 
-                    <div className="z-10 w-full md:w-auto flex flex-col gap-6 items-center">
-                         <button className="w-full md:w-auto bg-premium-gold hover:bg-white text-black font-display font-black py-6 px-16 rounded-[2.5rem] uppercase text-2xl shadow-[0_25px_50px_rgba(245,159,10,0.4)] transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center gap-5 group/btn-arena">
-                            <span className="material-symbols-outlined text-3xl font-black group-hover/btn-arena:rotate-12 transition-transform">play_circle</span>
-                            {t('home.cards.arena.btn') || 'Iniciar Partido'}
-                        </button>
-                        <p className="text-xs font-display font-black text-slate-500 uppercase tracking-[0.4em] flex items-center gap-3">
-                            <span className="w-8 h-px bg-white/10"></span>
-                            O continúa tu <span className="text-premium-gold animate-pulse italic">partido guardado</span>
-                            <span className="w-8 h-px bg-white/10"></span>
-                        </p>
+                    <div className="flex-1 space-y-2 overflow-y-auto max-h-[350px] custom-scrollbar pr-2">
+                        {filteredSkills.map(skill => (
+                            <div 
+                                key={skill.keyEN}
+                                onClick={() => onNavigate('oracle', skill.name)}
+                                className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-transparent hover:border-primary/30 cursor-pointer transition-all group"
+                            >
+                                <div className="flex flex-col">
+                                    <span className="font-bold text-slate-200 group-hover:text-primary transition-colors">{skill.name}</span>
+                                    <span className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">{skill.category}</span>
+                                </div>
+                                {ELITE_SKILLS.includes(skill.name) && (
+                                    <span className="text-[10px] px-2 py-1 bg-primary/20 text-primary border border-primary/30 rounded font-black uppercase tracking-tight">+10k MO</span>
+                                )}
+                            </div>
+                        ))}
                     </div>
                 </section>
             </div>
 
-            {/* Global Statistics Section */}
-            <footer className="pt-20 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-12 pb-16">
-                <div className="flex flex-wrap justify-center gap-14 md:gap-24 relative">
-                    <div className="absolute inset-0 bg-white/5 blur-[100px] rounded-full -z-10"></div>
-                    
-                    <div className="text-center md:text-left space-y-2 group">
-                        <p className="text-[10px] text-slate-500 uppercase font-black tracking-[0.3em] group-hover:text-slate-300 transition-colors uppercase">{t('home.stats.totalMatches') || 'Partidos Totales'}</p>
-                        <p className="text-5xl font-display font-black text-white italic tracking-tighter group-hover:scale-110 transition-transform origin-left">{stats.totalMatches}</p>
-                    </div>
-                    <div className="text-center md:text-left space-y-2 group">
-                        <p className="text-[10px] text-slate-500 uppercase font-black tracking-[0.3em] group-hover:text-premium-gold/60 transition-colors uppercase">{t('home.stats.wins') || 'Victorias'}</p>
-                        <p className="text-5xl font-display font-black text-premium-gold italic tracking-tighter group-hover:scale-110 transition-transform origin-left drop-shadow-[0_0_15px_rgba(245,159,10,0.2)]">{stats.wins}</p>
-                    </div>
-                    <div className="text-center md:text-left space-y-2 group">
-                        <p className="text-[10px] text-slate-500 uppercase font-black tracking-[0.3em] group-hover:text-blood-red/60 transition-colors uppercase">{t('home.stats.casualties') || 'Bajas Causadas'}</p>
-                        <p className="text-5xl font-display font-black text-blood-red italic tracking-tighter group-hover:scale-110 transition-transform origin-left drop-shadow-[0_0_15px_rgba(220,38,38,0.2)]">{stats.casualties}</p>
+            {/* ROW 2: COMPETICIÓN (100%) */}
+            <section className="bento-card rounded-2xl p-6 md:p-8 w-full overflow-hidden">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
+                    <h2 onClick={() => onNavigate('leagues')} className="font-header text-4xl section-title">Competición</h2>
+                    <div className="flex p-1 bg-black/40 border border-white/5 rounded-xl">
+                        <button 
+                            onClick={() => setCompTab('ligas')}
+                            className={`px-10 py-2.5 rounded-lg text-xs font-header tracking-widest font-bold transition-all ${compTab === 'ligas' ? 'bg-primary text-black' : 'text-slate-500 hover:text-white'}`}
+                        >
+                            LIGAS
+                        </button>
+                        <button 
+                            onClick={() => setCompTab('torneos')}
+                            className={`px-10 py-2.5 rounded-lg text-xs font-header tracking-widest font-bold transition-all ${compTab === 'torneos' ? 'bg-primary text-black' : 'text-slate-500 hover:text-white'}`}
+                        >
+                            TORNEOS
+                        </button>
                     </div>
                 </div>
+
+                <div className="grid grid-cols-12 gap-8">
+                    {/* Left: Standings/Bracket */}
+                    <div className="col-span-12 lg:col-span-7 bg-black/30 rounded-2xl border border-white/5 overflow-hidden">
+                        {compTab === 'ligas' ? (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="bg-white/5 border-b border-white/10">
+                                            <th className="p-4 text-[10px] font-header text-primary tracking-widest uppercase">Pos</th>
+                                            <th className="p-4 text-[10px] font-header text-primary tracking-widest uppercase">Equipo</th>
+                                            <th className="p-4 text-[10px] font-header text-primary tracking-widest uppercase">Pts</th>
+                                            <th className="p-4 text-[10px] font-header text-primary tracking-widest uppercase hidden md:table-cell">Récord</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="text-sm font-sans">
+                                        {leagueStandings.length > 0 ? leagueStandings.map((entry, idx) => (
+                                            <tr key={idx} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                                <td className="p-4 font-header font-bold text-primary">{String(idx + 1).padStart(2, '0')}</td>
+                                                <td className="p-4 font-bold uppercase tracking-tight text-white">{entry.name}</td>
+                                                <td className="p-4 font-bold">{entry.points}</td>
+                                                <td className="p-4 hidden md:table-cell">
+                                                    <div className="flex gap-1.5">
+                                                        {entry.form?.map((res, i) => (
+                                                            <div 
+                                                                key={i} 
+                                                                className={`size-2 rounded-full ${res === 'W' ? 'bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]' : res === 'D' ? 'bg-yellow-500' : 'bg-red-500'}`}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )) : (
+                                            <tr>
+                                                <td colSpan={4} className="p-10 text-center text-slate-500 font-header text-xs tracking-widest">NO HAY DATOS DE CLASIFICACIÓN</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <div className="p-12 flex flex-col items-center justify-center gap-6 opacity-40 grayscale min-h-[300px]">
+                                <span className="material-symbols-outlined text-6xl">account_tree</span>
+                                <p className="font-header text-xs tracking-widest uppercase">Visualizador de Brackets (Beta S3)</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Right: Match Day Info */}
+                    <div className="col-span-12 lg:col-span-5 flex flex-col gap-4">
+                        <div className="flex-1 bg-gradient-to-br from-white/[0.08] to-transparent rounded-2xl border border-white/10 p-8 flex flex-col items-center justify-center text-center relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 p-3 bg-primary/20 border-l border-b border-primary/30 text-[10px] font-header font-bold text-primary rounded-bl-xl tracking-widest">
+                                PRÓXIMO ENCUENTRO
+                            </div>
+                            
+                            <div className="flex items-center gap-8 mb-10">
+                                <div className="flex flex-col items-center gap-3">
+                                    <div className="size-20 rounded-full bg-background-dark border-2 border-primary/40 flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
+                                        <span className="material-symbols-outlined text-4xl text-primary/80">shield</span>
+                                    </div>
+                                    <span className="text-[10px] font-header tracking-widest text-slate-300">LOCAL</span>
+                                </div>
+                                <span className="text-3xl font-header text-slate-800 italic">VS</span>
+                                <div className="flex flex-col items-center gap-3">
+                                    <div className="size-20 rounded-full bg-background-dark border-2 border-white/10 flex items-center justify-center">
+                                        <span className="material-symbols-outlined text-4xl text-slate-700">shield</span>
+                                    </div>
+                                    <span className="text-[10px] font-header tracking-widest text-slate-500">RIVAL</span>
+                                </div>
+                            </div>
+
+                            <div className="space-y-1">
+                                <p className="text-3xl font-header text-white uppercase italic tracking-tighter">Match Day 04</p>
+                                <div className="flex items-center justify-center gap-2 text-primary">
+                                    <span className="material-symbols-outlined text-sm">schedule</span>
+                                    <span className="text-sm font-bold font-sans uppercase tracking-tighter italic">Fecha pendiente de sorteo</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button 
+                            onClick={() => onNavigate('arena')}
+                            className="w-full bg-white/5 border border-white/10 hover:border-primary/50 text-white font-header text-xs py-5 rounded-xl tracking-widest transition-all btn-interact uppercase"
+                        >
+                            ACCEDER AL MATCH CENTER
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            {/* ROW 3: ARENA & HERALDO */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                 
-                <div className="flex items-center gap-10 bg-black/60 p-5 px-10 rounded-[2rem] border border-white/10 shadow-2xl backdrop-blur-xl">
-                    <button className="text-slate-500 hover:text-white transition-all flex items-center gap-3 group relative">
-                        <span className="material-symbols-outlined text-xl group-hover:rotate-90 transition-transform duration-500">settings</span>
-                        <span className="text-[10px] font-display font-black uppercase tracking-widest hidden lg:block opacity-0 group-hover:opacity-100 transition-opacity">Ajustes</span>
+                {/* 4. LA ARENA (25%) */}
+                <section className="col-span-1 bento-card rounded-2xl p-8 flex flex-col justify-between min-h-[250px] group">
+                    <div>
+                        <h2 onClick={() => onNavigate('arena')} className="font-header text-3xl text-primary tracking-widest section-title">LA ARENA</h2>
+                        <p className="text-sm font-sans text-slate-400 mt-4 leading-relaxed">Asistente táctico para dados, gestión de tiempos y actas interactivas en tiempo real.</p>
+                    </div>
+                    <button 
+                        onClick={() => onNavigate('arena')}
+                        className="w-full py-5 bg-primary text-black font-header text-sm tracking-widest btn-interact rounded-xl transform hover:scale-105 transition-all font-black uppercase text-center"
+                    >
+                        INICIAR PARTIDO
                     </button>
-                    <div className="w-px h-6 bg-white/10"></div>
-                    <button className="text-slate-500 hover:text-sky-400 transition-all flex items-center gap-3 group relative">
-                        <span className="material-symbols-outlined text-xl">help_center</span>
-                        <span className="text-[10px] font-display font-black uppercase tracking-widest hidden lg:block opacity-0 group-hover:opacity-100 transition-opacity">Soporte</span>
-                    </button>
-                    <div className="w-px h-6 bg-white/10"></div>
-                    <button className="text-blood-red/60 hover:text-blood-red transition-all flex items-center gap-3 group">
-                        <span className="material-symbols-outlined text-xl">logout</span>
-                        <span className="text-[10px] font-display font-black uppercase tracking-widest hidden lg:block opacity-0 group-hover:opacity-100 transition-opacity">Salir</span>
-                    </button>
-                </div>
-            </footer>
-        </div>
+                </section>
+
+                {/* 5. EL HERALDO DE NUFFLE (75%) */}
+                <footer className="col-span-1 md:col-span-3 rounded-2xl bg-[#e2d1b1] border border-black/10 relative overflow-hidden shadow-2xl flex flex-col min-h-[250px]">
+                    <div className="absolute inset-0 opacity-15 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/parchment.png')]"></div>
+                    
+                    <div className="relative z-10 flex flex-col h-full">
+                        {/* Header */}
+                        <div className="px-8 pt-4 pb-2 border-b border-neutral-900/10 flex justify-between items-end backdrop-blur-[2px]">
+                            <h2 className="font-serif text-xl text-neutral-900 font-bold tracking-tight uppercase">EL HERALDO DE NUFFLE</h2>
+                            <span className="font-serif font-bold text-[10px] uppercase tracking-widest text-neutral-800 opacity-60">EDICIÓN ALTDORF GAZETTE • {new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long' })}</span>
+                        </div>
+
+                        {/* Content area with smooth transition */}
+                        <div className="flex-1 flex items-center px-8 gap-8 py-4 transition-all duration-500">
+                            {/* Left Media Item */}
+                            <div className="w-24 h-24 md:w-32 md:h-32 flex-shrink-0 relative">
+                                <div className="absolute inset-0 bg-neutral-900/10 rounded-full blur-xl"></div>
+                                <img 
+                                    alt="News media" 
+                                    className="w-full h-full object-contain ink-edges" 
+                                    src={HERALDO_ITEMS[heraldoIndex].image} 
+                                />
+                            </div>
+
+                            {/* Center Content */}
+                            <div className="flex-1 space-y-2">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[10px] bg-blood/10 text-blood font-black px-2 py-0.5 rounded border border-blood/20 uppercase tracking-tighter">
+                                        {HERALDO_ITEMS[heraldoIndex].tag}
+                                    </span>
+                                    <span className="text-[10px] text-neutral-900/60 font-serif font-bold italic">
+                                        {HERALDO_ITEMS[heraldoIndex].category}
+                                    </span>
+                                </div>
+                                <h3 className="font-header text-3xl md:text-4xl text-neutral-900 tracking-tight leading-none drop-shadow-sm transition-all duration-500">
+                                    {HERALDO_ITEMS[heraldoIndex].title}
+                                </h3>
+                                <div className="max-w-xl">
+                                    <p className="font-serif text-base md:text-lg text-neutral-800 leading-tight drop-cap">
+                                        {HERALDO_ITEMS[heraldoIndex].content} 
+                                        <span className="font-bold text-blood ml-2 whitespace-nowrap">{HERALDO_ITEMS[heraldoIndex].rule}</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Footer & Progress */}
+                        <div className="relative h-2 bg-black/5 mt-auto">
+                            <div 
+                                key={heraldoIndex} // Key forces re-animation on index change
+                                className="absolute inset-0 bg-blood/40 progress-bar-20s origin-left"
+                            ></div>
+                            <div className="px-8 flex justify-between items-center absolute -top-8 left-0 right-0">
+                                <span className="font-serif italic text-[10px] text-neutral-900/50">Circulación Imperial Registrada • Nuffle's Will Be Done</span>
+                                <div className="flex gap-4">
+                                    <span className="font-serif font-bold text-[10px] text-neutral-900/40 uppercase">Item {heraldoIndex + 1}/{HERALDO_ITEMS.length}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </main>
     );
 };
 
