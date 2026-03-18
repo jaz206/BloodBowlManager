@@ -373,15 +373,15 @@ const MainApp: React.FC = () => {
       {/* Dot Grid Background Layer */}
       <div className="fixed inset-0 pointer-events-none opacity-40 z-0" style={{ backgroundImage: 'radial-gradient(rgba(202, 138, 4, 0.15) 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
 
-      <div className="max-w-[1700px] mx-auto pt-4 px-6 relative z-50">
-          <div className="flex items-center justify-between py-2 text-[10px] font-black text-[#CA8A04]/40 uppercase tracking-[0.4em] italic px-2">
+      <div className="w-full relative z-50">
+          <div className="max-w-[1700px] mx-auto flex items-center justify-between py-1 text-[9px] font-black text-[#CA8A04]/40 uppercase tracking-[0.4em] italic px-10">
               <span>.INDEX.</span>
-              <span className="material-symbols-outlined text-[12px] opacity-20">code</span>
+              <span className="material-symbols-outlined text-[10px] opacity-10">code</span>
           </div>
           
-          <header className="h-16 bg-black rounded-xl border border-[#CA8A04]/20 flex items-center justify-between px-6 shadow-[0_15px_40px_rgba(0,0,0,0.8)] relative overflow-hidden group">
-            {/* Gold highlight at top of bar */}
-            <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#CA8A04]/30 to-transparent"></div>
+          <header className="h-14 bg-black border-b border-[#CA8A04]/20 flex items-center justify-between px-10 shadow-2xl relative group">
+            {/* Top accent line */}
+            <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#CA8A04]/40 to-transparent opacity-50"></div>
 
             <div className="flex items-center gap-4">
               <div 
