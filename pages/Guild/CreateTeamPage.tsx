@@ -215,21 +215,21 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                 <main className="max-w-[1600px] mx-auto px-8 pb-40 grid grid-cols-12 gap-8 items-stretch flex-1">
                     {/* Attributes & Lore */}
                     <section className="col-span-12 lg:col-span-3 flex flex-col gap-12">
-                        <div className="panel-grimdark panel-filigree p-8 shadow-2xl">
-                            <h3 className="text-sm font-black text-bb-gold mb-8 uppercase tracking-[0.2em] border-b border-bb-gold/20 pb-2 italic">Eficacia de Combate</h3>
-                            <div className="relative aspect-square flex items-center justify-center">
-                                <svg className="w-full h-full overflow-visible" viewBox="0 0 100 100">
-                                    <polygon className="stroke-bb-gold/30 fill-none" points="50,5 95,50 50,95 5,50" strokeWidth="0.5"></polygon>
-                                    <polygon className="stroke-bb-gold/30 fill-none" points="50,25 75,50 50,75 25,50" strokeWidth="0.5"></polygon>
-                                    <polygon className="fill-bb-gold/20 stroke-bb-gold" points={radarPoints} strokeWidth="2"></polygon>
-                                    <text className="fill-bb-parchment text-[6px] font-bold uppercase" textAnchor="middle" x="50" y="-3">Fuerza</text>
-                                    <text className="fill-bb-parchment text-[6px] font-bold uppercase" textAnchor="start" x="98" y="52">Armadura</text>
-                                    <text className="fill-bb-parchment text-[6px] font-bold uppercase" textAnchor="middle" x="50" y="106">Velocidad</text>
-                                    <text className="fill-bb-parchment text-[6px] font-bold uppercase" textAnchor="end" x="2" y="52">Agilidad</text>
+                        <div className="panel-grimdark panel-filigree p-6 shadow-2xl border-dashed border-bb-gold/20">
+                            <h3 className="text-sm font-black text-white mb-6 uppercase tracking-[0.2em] italic border-b border-white/5 pb-2">Eficacia de Combate</h3>
+                            <div className="relative aspect-square flex items-center justify-center p-4">
+                                <svg className="w-full h-full overflow-visible opacity-80" viewBox="0 0 100 100">
+                                    <polygon className="stroke-white/10 fill-none" points="50,5 95,50 50,95 5,50" strokeWidth="0.5"></polygon>
+                                    <polygon className="stroke-white/10 fill-none" points="50,25 75,50 50,75 25,50" strokeWidth="0.5"></polygon>
+                                    <polygon className="fill-white/10 stroke-white/40" points={radarPoints} strokeWidth="1.5"></polygon>
+                                    <text className="fill-zinc-500 text-[6px] font-bold uppercase" textAnchor="middle" x="50" y="-4">Fuerza</text>
+                                    <text className="fill-zinc-500 text-[6px] font-bold uppercase" textAnchor="start" x="98" y="52">Armadura</text>
+                                    <text className="fill-zinc-500 text-[6px] font-bold uppercase" textAnchor="middle" x="50" y="108">Velocidad</text>
+                                    <text className="fill-zinc-500 text-[6px] font-bold uppercase" textAnchor="end" x="2" y="52">Agilidad</text>
                                 </svg>
                             </div>
-                            <div className="mt-8 pt-4 border-t border-bb-gold/10 text-center">
-                                <p className="text-[10px] text-bb-gold uppercase tracking-widest font-black italic">Riesgo Táctico: {currentFaction.tier === 1 ? 'Mínimo' : currentFaction.tier === 2 ? 'Equilibrado' : 'Crítico'}</p>
+                            <div className="mt-8 pt-4 border-t border-white/10 text-center">
+                                <p className="text-[10px] text-white uppercase tracking-[0.2em] font-black italic">Riesgo Táctico: {currentFaction.tier === 1 ? 'Mínimo' : currentFaction.tier === 2 ? 'Equilibrado' : 'Crítico'}</p>
                             </div>
                         </div>
                         <div className="space-y-6">
@@ -251,38 +251,40 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
 
                     {/* Roster Table */}
                     <section className="col-span-12 lg:col-span-6">
-                        <div className="panel-grimdark panel-filigree p-10 h-full">
-                            <div className="flex items-center justify-between mb-10 border-b-2 border-bb-gold/40 pb-4">
-                                <h3 className="text-3xl font-epilogue italic text-white uppercase tracking-tighter">Legión de Hierro</h3>
-                                <span className="text-bb-gold text-[10px] font-bold tracking-[0.4em] uppercase opacity-60">Roster Oficial NAF</span>
+                        <div className="panel-grimdark panel-filigree p-10 h-full border-dashed border-bb-gold/20">
+                            <div className="flex items-center justify-between mb-8">
+                                <h3 className="text-4xl font-header italic text-white uppercase tracking-tighter">Legión de Hierro</h3>
+                                <span className="text-zinc-600 text-[10px] font-black tracking-[0.4em] uppercase">Roster Oficial NAF</span>
                             </div>
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left border-collapse">
                                     <thead>
-                                        <tr className="text-[11px] text-bb-gold uppercase tracking-widest bg-black/40">
-                                            <th className="py-5 px-4 font-black italic">Guerrero</th>
-                                            <th className="py-5 px-2 text-center">MA</th>
-                                            <th className="py-5 px-2 text-center">ST</th>
-                                            <th className="py-5 px-2 text-center">AG</th>
-                                            <th className="py-5 px-2 text-center">PA</th>
-                                            <th className="py-5 px-2 text-center">AV</th>
-                                            <th className="py-5 px-4 font-black">Bendiciones</th>
+                                        <tr className="text-[11px] text-white uppercase tracking-widest bg-zinc-900/80">
+                                            <th className="py-4 px-4 font-black">Guerrero</th>
+                                            <th className="py-4 px-2 text-center">MA</th>
+                                            <th className="py-4 px-2 text-center">ST</th>
+                                            <th className="py-4 px-2 text-center">AG</th>
+                                            <th className="py-4 px-2 text-center">PA</th>
+                                            <th className="py-4 px-2 text-center">AV</th>
+                                            <th className="py-4 px-4 font-black">Bendiciones</th>
                                         </tr>
                                     </thead>
                                     <tbody className="text-sm font-medium">
                                         {currentFaction.roster.map((pos, pidx) => (
-                                            <tr key={pidx} className="border-b border-bb-gold/10 hover:bg-bb-gold/5 transition-colors group">
-                                                <td className="py-5 px-4 font-bold text-white uppercase tracking-wide italic">{pos.position}</td>
-                                                <td className="py-5 px-2 text-center text-bb-parchment font-mono">{pos.stats.MV}</td>
-                                                <td className="py-5 px-2 text-center text-bb-parchment font-mono">{pos.stats.FU}</td>
-                                                <td className="py-5 px-2 text-center text-bb-parchment font-mono">{pos.stats.AG}</td>
-                                                <td className="py-5 px-2 text-center text-bb-parchment font-mono">{pos.stats.PA}</td>
-                                                <td className="py-5 px-2 text-center text-bb-parchment font-mono">{pos.stats.AR}</td>
-                                                <td className="py-5 px-4">
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {pos.skillKeys.length > 0 ? pos.skillKeys.slice(0, 3).map(sk => (
-                                                            <span key={sk} className="px-3 py-1 bg-bb-gold text-black text-[9px] font-black rounded-sm uppercase italic shadow-sm">{localizeSkill(sk)}</span>
-                                                        )) : <span className="px-3 py-1 bg-zinc-800 text-gray-500 text-[9px] font-black rounded-sm uppercase italic">Básico</span>}
+                                            <tr key={pidx} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors group">
+                                                <td className="py-6 px-4">
+                                                    <span className="text-2xl font-header font-black text-white italic uppercase tracking-tighter leading-none">{pos.position}</span>
+                                                </td>
+                                                <td className="py-6 px-2 text-center text-zinc-400 font-mono text-lg">{pos.stats.MV}</td>
+                                                <td className="py-6 px-2 text-center text-zinc-400 font-mono text-lg">{pos.stats.FU}</td>
+                                                <td className="py-6 px-2 text-center text-zinc-400 font-mono text-lg">{pos.stats.AG}</td>
+                                                <td className="py-6 px-2 text-center text-zinc-400 font-mono text-lg">{pos.stats.PA}</td>
+                                                <td className="py-6 px-2 text-center text-zinc-400 font-mono text-lg">{pos.stats.AR}</td>
+                                                <td className="py-6 px-4">
+                                                    <div className="flex flex-col gap-1 items-start">
+                                                        {pos.skillKeys.length > 0 ? pos.skillKeys.slice(0, 4).map(sk => (
+                                                            <span key={sk} className="text-[9px] font-black text-zinc-500 uppercase tracking-widest leading-none">{localizeSkill(sk)}</span>
+                                                        )) : <span className="text-[9px] font-black text-zinc-700 uppercase tracking-widest italic">Estándar</span>}
                                                     </div>
                                                 </td>
                                             </tr>
