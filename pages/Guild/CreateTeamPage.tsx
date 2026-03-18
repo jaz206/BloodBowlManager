@@ -195,93 +195,81 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                 </nav>
 
                 {/* 2. TIPOGRAFÍA Y CABECERA */}
-                <header className="w-full pt-10 pb-4 text-center">
+                <header className="w-full pt-6 pb-2 text-center relative z-10">
                     <motion.h1 
                         key={currentFaction.name}
                         initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="font-epilogue text-6xl italic font-black tracking-tighter text-white nuffle-glow uppercase"
+                        className="font-epilogue text-5xl italic font-black tracking-tighter text-white nuffle-glow uppercase"
                     >
                         {currentFaction.name}
                     </motion.h1>
-                    <p className="text-[#CA8A04] mt-2 text-xl tracking-[0.2em] uppercase font-light italic opacity-90 font-epilogue">
+                    <p className="text-[#CA8A04] mt-1 text-base tracking-[0.25em] uppercase font-light italic opacity-80 font-epilogue">
                         {language === 'es' ? currentFaction.specialRules_es : currentFaction.specialRules_en}
                     </p>
-                    <div className="gold-divider mt-8 max-w-4xl mx-auto h-[1px]"></div>
+                    <div className="gold-divider mt-6 max-w-2xl mx-auto h-[1px]"></div>
                 </header>
 
-                <main className="max-w-[1700px] mx-auto px-10 pb-56 grid grid-cols-12 gap-10 items-stretch flex-1">
-                    {/* Radar: Eficacia de Combate */}
-                    <section className="col-span-12 lg:col-span-3 flex flex-col gap-10">
-                        <div className="bg-[#1a1a1a] p-8 border border-[#CA8A04]/20 shadow-2xl relative overflow-hidden group">
-                            <h3 className="text-xs font-black text-[#CA8A04] mb-8 uppercase tracking-[0.3em] italic border-b border-[#CA8A04]/10 pb-2">Eficacia de Combate</h3>
-                            <div className="relative aspect-square flex items-center justify-center p-4 radar-grid">
-                                <svg className="w-full h-full overflow-visible" viewBox="0 0 100 100">
-                                    <polygon className="stroke-[#CA8A04]/10 fill-none" points="50,5 95,50 50,95 5,50" strokeWidth="1"></polygon>
-                                    <polygon className="stroke-[#CA8A04]/10 fill-none" points="50,25 75,50 50,75 25,50" strokeWidth="1"></polygon>
-                                    <polygon className="radar-fill stroke-[#CA8A04]" points={radarPoints} strokeWidth="2.5"></polygon>
-                                    <text className="fill-white/40 text-[7px] font-black uppercase italic" textAnchor="middle" x="50" y="-4">Fuerza</text>
-                                    <text className="fill-white/40 text-[7px] font-black uppercase italic" textAnchor="start" x="100" y="52">Armadura</text>
-                                    <text className="fill-white/40 text-[7px] font-black uppercase italic" textAnchor="middle" x="50" y="110">Velocidad</text>
-                                    <text className="fill-white/40 text-[7px] font-black uppercase italic" textAnchor="end" x="0" y="52">Agilidad</text>
-                                </svg>
-                            </div>
-                            <div className="mt-8 pt-4 border-t border-[#CA8A04]/10 text-center">
-                                <p className="text-[10px] text-[#CA8A04]/60 uppercase tracking-[0.2em] font-black italic">Riesgo Táctico: {currentFaction.tier === 1 ? 'Mínimo' : currentFaction.tier === 2 ? 'Equilibrado' : 'Crítico'}</p>
-                            </div>
-                        </div>
+                <main className="max-w-[1700px] mx-auto px-10 pb-64 grid grid-cols-12 gap-16 items-start flex-1 relative">
+                    {/* Background Visual Focus (Breaks the grid) */}
+                    <div className="absolute right-[33%] top-20 w-[500px] h-[500px] opacity-20 pointer-events-none z-0">
+                        <motion.img 
+                            key={currentFaction.image}
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 0.15, x: 0 }}
+                            src={currentFaction.image} 
+                            alt="" 
+                            className="w-full h-full object-contain filter grayscale"
+                        />
+                    </div>
 
-                        <div className="space-y-4 px-2">
-                            <h3 className="text-xs font-black text-[#CA8A04] uppercase tracking-[0.3em] italic">Ecos del Campo</h3>
-                            <p className="text-gray-500 leading-relaxed text-sm italic font-medium">
-                                {language === 'es' ? "Su paso por la NAF está marcado por una resistencia legendaria y una falta total de sutileza. No buscan el hueco; crean el hueco a través de las costillas del oponente. En el campo, un equipo de Orcos es un muro de carne verde y hierro oxidado que solo se detiene cuando el silbato suena..." : "Their journey through the NAF is marked by legendary resilience and a complete lack of subtlety. They don't look for the gap; they create the gap through the opponent's ribs."}
-                            </p>
-                        </div>
-                    </section>
-
-                    {/* Tabla de Plantilla */}
-                    <section className="col-span-12 lg:col-span-6">
-                        <div className="bg-[#1a1a1a]/50 border border-[#CA8A04]/20 p-8 h-full shadow-inner">
-                            <div className="flex items-center justify-between mb-8 border-b-2 border-[#CA8A04]/30 pb-4">
-                                <h3 className="text-3xl font-epilogue font-black italic text-white uppercase tracking-tighter">Plantilla Base</h3>
-                                <span className="text-gray-600 text-[10px] font-black tracking-widest uppercase">Legión de Hierro</span>
+                    {/* MAIN AREA (8 COLS) */}
+                    <section className="col-span-12 lg:col-span-8 flex flex-col gap-12 relative z-10">
+                        <div className="bg-[#1a1a1a]/40 border border-[#CA8A04]/10 p-10 shadow-2xl backdrop-blur-sm">
+                            <div className="flex items-end justify-between mb-10 border-b border-[#CA8A04]/20 pb-4">
+                                <div>
+                                    <h3 className="text-4xl font-header font-black italic text-white uppercase tracking-tighter leading-none">Plantilla Base</h3>
+                                    <p className="text-[#CA8A04]/40 text-[9px] font-black tracking-[0.4em] uppercase mt-2">Configuración Estándar de la Liga NAF</p>
+                                </div>
                             </div>
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left border-collapse">
                                     <thead>
-                                        <tr className="border-b border-[#CA8A04]/20 text-[11px] text-[#CA8A04] uppercase tracking-widest font-black">
-                                            <th className="py-4 px-2 italic">Posición</th>
-                                            <th className="py-4 px-2 text-center">MA</th>
-                                            <th className="py-4 px-2 text-center">ST</th>
-                                            <th className="py-4 px-2 text-center">AG</th>
-                                            <th className="py-4 px-2 text-center">PA</th>
-                                            <th className="py-4 px-2 text-center">AV</th>
-                                            <th className="py-4 px-4">Habilidades</th>
+                                        <tr className="border-b border-[#CA8A04]/20 text-[10px] text-[#CA8A04] uppercase tracking-[0.25em] font-black">
+                                            <th className="py-5 px-4 italic">Posición</th>
+                                            <th className="py-5 px-2 text-center">MA</th>
+                                            <th className="py-5 px-2 text-center">ST</th>
+                                            <th className="py-5 px-2 text-center">AG</th>
+                                            <th className="py-5 px-2 text-center">PA</th>
+                                            <th className="py-5 px-2 text-center">AV</th>
+                                            <th className="py-5 px-4">Habilidades</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="text-sm">
+                                    <tbody className="text-sm font-medium tracking-normal">
                                         {currentFaction.roster.map((pos, pidx) => (
-                                            <tr key={pidx} className="border-b border-white/5 hover:bg-white/[0.03] transition-colors group">
-                                                <td className="py-5 px-2 font-bold text-white uppercase italic tracking-wide">{pos.position}</td>
-                                                <td className="py-5 px-2 text-center text-zinc-400 font-mono font-bold">{pos.stats.MV}</td>
-                                                <td className="py-5 px-2 text-center text-zinc-400 font-mono font-bold">{pos.stats.FU}</td>
-                                                <td className="py-5 px-2 text-center text-zinc-400 font-mono font-bold">{pos.stats.AG}</td>
-                                                <td className="py-5 px-2 text-center text-zinc-400 font-mono font-bold">{pos.stats.PA}</td>
-                                                <td className="py-5 px-2 text-center text-zinc-400 font-mono font-bold">{pos.stats.AR}</td>
-                                                <td className="py-5 px-4">
+                                            <tr key={pidx} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors group">
+                                                <td className="py-6 px-4">
+                                                    <span className="text-xl font-bold text-white uppercase italic tracking-tight">{pos.position}</span>
+                                                </td>
+                                                <td className="py-6 px-2 text-center text-zinc-400 font-mono font-bold text-base">{pos.stats.MV}</td>
+                                                <td className="py-6 px-2 text-center text-zinc-400 font-mono font-bold text-base">{pos.stats.FU}</td>
+                                                <td className="py-6 px-2 text-center text-zinc-400 font-mono font-bold text-base">{pos.stats.AG}</td>
+                                                <td className="py-6 px-2 text-center text-zinc-400 font-mono font-bold text-base">{pos.stats.PA}</td>
+                                                <td className="py-6 px-2 text-center text-zinc-400 font-mono font-bold text-base">{pos.stats.AR}</td>
+                                                <td className="py-6 px-4">
                                                     <div className="flex flex-wrap gap-2">
-                                                        {pos.skillKeys.length > 0 ? pos.skillKeys.slice(0, 3).map(sk => {
+                                                        {pos.skillKeys.length > 0 ? pos.skillKeys.slice(0, 4).map(sk => {
                                                             const skillObj = allSkills.find(s => s.keyEN === sk);
                                                             return (
                                                                 <button 
                                                                     key={sk} 
                                                                     onClick={() => skillObj && setSelectedSkill(skillObj)}
-                                                                    className="px-3 py-1 bg-[#CA8A04] hover:bg-white text-black text-[9px] font-black rounded-sm uppercase italic tracking-tighter shadow-sm transition-colors"
+                                                                    className="px-3 py-1 bg-[#CA8A04] hover:bg-white text-black text-[9px] font-black rounded-sm uppercase italic tracking-tighter shadow-md transition-all transform hover:scale-105 active:scale-95"
                                                                 >
                                                                     {localizeSkill(sk)}
                                                                 </button>
                                                             );
-                                                        }) : <span className="text-zinc-600 text-[9px] font-bold uppercase tracking-widest italic opacity-40">Sin Atributos</span>}
+                                                        }) : <span className="text-zinc-700 text-[9px] font-bold uppercase tracking-widest italic opacity-30">Roster Básico</span>}
                                                     </div>
                                                 </td>
                                             </tr>
@@ -290,43 +278,77 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                                 </table>
                             </div>
                         </div>
+
+                        <div className="grid grid-cols-2 gap-12">
+                            <div className="space-y-4">
+                                <h3 className="text-xs font-black text-[#CA8A04] uppercase tracking-[0.3em] italic border-l-2 border-[#CA8A04] pl-4">Ecos de Sangre</h3>
+                                <p className="text-gray-500 leading-relaxed text-sm italic font-medium px-4">
+                                    {language === 'es' ? "Su paso por la NAF está marcado por una resistencia legendaria y una falta total de sutileza. No buscan el hueco; crean el hueco a través de las costillas del oponente." : "Their journey through the NAF is marked by legendary resilience and a complete lack of subtlety."}
+                                </p>
+                            </div>
+                            <div className="flex items-center justify-center p-8 border border-white/5 bg-white/[0.01]">
+                                <img src={currentFaction.image} alt={currentFaction.name} className="w-48 h-48 object-contain filter drop-shadow-[0_0_30px_rgba(202,138,4,0.2)]" />
+                            </div>
+                        </div>
                     </section>
 
-                    {/* Grid de Estrellas (3 Columnas) */}
-                    <section className="col-span-12 lg:col-span-3 flex flex-col h-full">
-                        <div className="flex items-center gap-4 mb-8">
-                            <h3 className="text-xs font-black text-[#CA8A04] uppercase tracking-[0.3em] italic">Gladiadores Eternos</h3>
-                            <span className="material-symbols-outlined text-[#CA8A04]/30 text-lg font-black">stars</span>
+                    {/* SIDEBAR AREA (4 COLS) */}
+                    <section className="col-span-12 lg:col-span-4 flex flex-col gap-12 relative z-10">
+                        {/* Radar */}
+                        <div className="bg-[#1a1a1a] p-8 border border-[#CA8A04]/20 shadow-2xl relative">
+                            <h3 className="text-xs font-black text-[#CA8A04] mb-8 uppercase tracking-[0.3em] italic border-b border-[#CA8A04]/10 pb-2">Perfil de Combate</h3>
+                            <div className="relative aspect-square flex items-center justify-center p-6 radar-grid">
+                                <svg className="w-full h-full overflow-visible" viewBox="0 0 100 100">
+                                    <polygon className="stroke-[#CA8A04]/10 fill-none" points="50,5 95,50 50,95 5,50" strokeWidth="1"></polygon>
+                                    <polygon className="stroke-[#CA8A04]/10 fill-none" points="50,25 75,50 50,75 25,50" strokeWidth="1"></polygon>
+                                    <polygon className="radar-fill stroke-[#CA8A04]" points={radarPoints} strokeWidth="3"></polygon>
+                                    <text className="fill-white/30 text-[8px] font-black uppercase italic" textAnchor="middle" x="50" y="-6">Fuerza</text>
+                                    <text className="fill-white/30 text-[8px] font-black uppercase italic" textAnchor="start" x="102" y="52">Armadura</text>
+                                    <text className="fill-white/30 text-[8px] font-black uppercase italic" textAnchor="middle" x="50" y="112">Velocidad</text>
+                                    <text className="fill-white/30 text-[8px] font-black uppercase italic" textAnchor="end" x="-2" y="52">Agilidad</text>
+                                </svg>
+                            </div>
+                            <div className="mt-8 pt-6 border-t border-[#CA8A04]/10 text-center">
+                                <p className="text-[10px] text-[#CA8A04]/80 uppercase tracking-[0.2em] font-black italic">RIESGO TÁCTICO: {currentFaction.tier === 1 ? 'BAJO' : currentFaction.tier === 2 ? 'EQUILIBRADO' : 'CRÍTICO'}</p>
+                            </div>
                         </div>
-                        <div className="flex-1 bg-[#1a1a1a]/40 border border-[#CA8A04]/20 p-6 overflow-hidden flex flex-col shadow-2xl">
-                            <div className="grid grid-cols-3 gap-3 overflow-y-auto no-scrollbar max-h-[600px] pr-2">
-                                {factionStars.map((star, sidx) => (
-                                    <div key={sidx} className="flex flex-col items-center group cursor-pointer">
-                                        <div className="w-full aspect-square bg-[#0a0a0a] star-portrait-frame p-1.5 transition-all duration-500 overflow-hidden">
-                                            <img src={star.image} alt={star.name} className="object-cover w-full h-full spectral-filter group-hover:filter-none transition-all duration-700 scale-[1.05] group-hover:scale-110" />
+
+                        {/* Stars (2 Column Grid) */}
+                        <div className="flex flex-col gap-6">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-xs font-black text-[#CA8A04] uppercase tracking-[0.3em] italic">Gladiadores Eternos</h3>
+                                <div className="h-[1px] flex-1 bg-gradient-to-r from-[#CA8A04]/30 to-transparent ml-4"></div>
+                            </div>
+                            <div className="bg-[#1a1a1a]/40 border border-[#CA8A04]/20 p-8 shadow-2xl">
+                                <div className="grid grid-cols-2 gap-6 overflow-y-auto no-scrollbar max-h-[500px] pr-2">
+                                    {factionStars.map((star, sidx) => (
+                                        <div key={sidx} className="flex flex-col items-center group cursor-pointer">
+                                            <div className="w-full aspect-square bg-[#0a0a0a] star-portrait-frame p-2 transition-all duration-500 overflow-hidden shadow-xl ring-1 ring-white/5">
+                                                <img src={star.image} alt={star.name} className="object-cover w-full h-full spectral-filter group-hover:filter-none transition-all duration-700 scale-[1.05] group-hover:scale-110" />
+                                            </div>
+                                            <span className="text-[8px] font-black text-[#CA8A04] uppercase text-center mt-3 leading-tight tracking-[0.1em] italic group-hover:text-white transition-colors">{star.name}</span>
                                         </div>
-                                        <span className="text-[7px] font-black text-[#CA8A04] uppercase text-center mt-3 leading-tight tracking-[0.1em] opacity-80 group-hover:opacity-100 italic">{star.name}</span>
-                                    </div>
-                                ))}
-                                {factionStars.length === 0 && Array(6).fill(0).map((_, i) => (
-                                    <div key={i} className="w-full aspect-square bg-[#0a0a0a] border border-white/5 flex items-center justify-center opacity-20">
-                                        <span className="material-symbols-outlined text-[#CA8A04]/10 text-4xl">skull</span>
-                                    </div>
-                                ))}
+                                    ))}
+                                    {factionStars.length === 0 && Array(4).fill(0).map((_, i) => (
+                                        <div key={i} className="w-full aspect-square bg-[#0a0a0a]/30 border border-white/5 flex items-center justify-center opacity-10">
+                                            <span className="material-symbols-outlined text-[#CA8A04] text-4xl">skull</span>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     </section>
                 </main>
 
-                {/* 4. EL BOTÓN MAESTRO */}
-                <footer className="fixed bottom-0 left-0 w-full bg-[#0a0a0a]/80 border-t-2 border-[#CA8A04]/30 p-6 z-[100] backdrop-blur-xl">
+                {/* 4. FOOTER LIGHTENING */}
+                <footer className="fixed bottom-0 left-0 w-full bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/90 to-transparent p-6 pt-12 z-[100] backdrop-blur-sm">
                     <div className="max-w-[1600px] mx-auto flex justify-center">
                         <button 
                             onClick={() => setStep('draft')}
-                            className="bg-[#CA8A04] hover:bg-white text-black font-epilogue italic font-black text-xl px-16 py-4 tracking-tighter uppercase transition-all transform hover:scale-[1.02] active:scale-95 shadow-[0_0_40px_rgba(202,138,4,0.4)] relative group overflow-hidden"
+                            className="bg-[#CA8A04] hover:bg-white text-black font-epilogue italic font-black text-2xl px-24 py-4 tracking-tighter uppercase transition-all transform hover:scale-[1.03] active:scale-95 shadow-[0_0_50px_rgba(202,138,4,0.4)] relative group overflow-hidden"
                         >
                             <span className="relative z-10">Fundar esta Franquicia</span>
-                            <div className="absolute top-0 -left-full w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent group-hover:left-full transition-all duration-1000 ease-in-out"></div>
+                            <div className="absolute top-0 -left-full w-full h-full bg-gradient-to-r from-transparent via-white/40 to-transparent group-hover:left-full transition-all duration-1000 ease-in-out"></div>
                         </button>
                     </div>
                 </footer>
