@@ -18,13 +18,13 @@ const UserProfile: React.FC = () => {
 
   return (
     <div className="relative">
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-slate-300 hidden sm:inline">Hola, {(user?.name || '').split(' ')[0]}</span>
-        <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-amber-400 rounded-full">
+      <div className="flex items-center gap-4">
+        <span className="text-[10px] font-epilogue font-black italic tracking-[0.2em] text-[#CA8A04] uppercase hidden lg:inline">Manager Pro</span>
+        <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="focus:outline-none group">
           <img
             src={user.picture}
             alt="User avatar"
-            className="w-10 h-10 rounded-full border-2 border-slate-600 hover:border-amber-400 transition-colors bg-slate-700"
+            className="w-10 h-10 rounded-full border-2 border-[#CA8A04] group-hover:border-white transition-all shadow-[0_0_15px_rgba(202,138,4,0.3)] bg-black"
           />
         </button>
         {isDropdownOpen && (

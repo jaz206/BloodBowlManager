@@ -370,36 +370,60 @@ const MainApp: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#050505] text-slate-200 font-sans antialiased selection:bg-premium-gold selection:text-black">
       {isGuest && <GuestWarningBanner />}
-      <header className="p-4 flex justify-between items-center glass-panel border-b border-white/5 bg-black/40 backdrop-blur-xl sticky top-0 z-[100]">
-        <div className="flex items-center gap-4">
-          <h1
-            onClick={() => setActiveView('home')}
-            className="text-2xl font-display font-black text-white italic tracking-tighter leading-none cursor-pointer group"
-          >
-            {t('header.title')} <span className="text-blood-red group-hover:text-white transition-colors">{t('header.subtitle')}</span>
-          </h1>
-          {isAdmin && (
-            <button
-              onClick={() => setActiveView('admin')}
-              className={`hidden md:block px-3 py-1 rounded border text-[10px] font-display font-black uppercase tracking-widest transition-all ${activeView === 'admin'
-                ? 'bg-premium-gold text-black border-premium-gold'
-                : 'border-white/20 text-slate-500 hover:border-premium-gold hover:text-premium-gold'
-                }`}
-            >
-              {t('nav.admin')}
-            </button>
-          )}
-        </div>
+      {/* Dot Grid Background Layer */}
+      <div className="fixed inset-0 pointer-events-none opacity-40 z-0" style={{ backgroundImage: 'radial-gradient(rgba(202, 138, 4, 0.15) 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
 
-        <div className="flex items-center gap-6">
-          <SyncStatusIndicator
-            status={displaySyncStatus}
-            origin={isFromFirestore ? 'firestore' : 'static'}
-          />
-          <LanguageSelector />
-          <UserProfile />
-        </div>
-      </header>
+      <div className="max-w-[1700px] mx-auto pt-4 px-6 relative z-50">
+          <div className="flex items-center justify-between py-2 text-[10px] font-black text-[#CA8A04]/40 uppercase tracking-[0.4em] italic px-2">
+              <span>.INDEX.</span>
+              <span className="material-symbols-outlined text-[12px] opacity-20">code</span>
+          </div>
+          
+          <header className="h-16 bg-black rounded-xl border border-[#CA8A04]/20 flex items-center justify-between px-6 shadow-[0_15px_40px_rgba(0,0,0,0.8)] relative overflow-hidden group">
+            {/* Gold highlight at top of bar */}
+            <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#CA8A04]/30 to-transparent"></div>
+
+            <div className="flex items-center gap-4">
+              <div 
+                onClick={() => setActiveView('home')}
+                className="flex items-center gap-3 cursor-pointer group/logo"
+              >
+                <span className="material-symbols-outlined text-[#CA8A04] text-2xl font-black transform group-hover/logo:rotate-12 transition-transform">sports_football</span>
+                <h1 className="font-epilogue font-black italic text-xl tracking-tighter uppercase flex gap-1.5 leading-none">
+                    <span className="text-[#CA8A04]">BLOOD BOWL</span>
+                    <span className="text-white">ASSISTANT</span>
+                </h1>
+              </div>
+
+              {isAdmin && (
+                <button
+                  onClick={() => setActiveView('admin')}
+                  className={`ml-4 px-3 py-1 rounded-sm border text-[8px] font-display font-black uppercase tracking-widest transition-all ${activeView === 'admin'
+                    ? 'bg-[#CA8A04] text-black border-[#CA8A04]'
+                    : 'border-white/10 text-slate-500 hover:border-[#CA8A04] hover:text-[#CA8A04]'
+                    }`}
+                >
+                  {t('nav.admin')}
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-5">
+              <button className="text-[#CA8A04]/60 hover:text-[#CA8A04] transition-colors relative">
+                <span className="material-symbols-outlined font-black">notifications</span>
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-600 rounded-full border border-black animate-pulse"></span>
+              </button>
+              
+              <button className="text-[#CA8A04]/60 hover:text-[#CA8A04] transition-colors">
+                <span className="material-symbols-outlined font-black">settings</span>
+              </button>
+
+              <div className="h-6 w-[1px] bg-white/10 mx-1"></div>
+
+              <UserProfile />
+            </div>
+          </header>
+      </div>
 
       <main className={`${mainClasses} pt-8 pb-40`}>
         {/* Navigation - Modern Bento Nav (Bottom or Top) */}
