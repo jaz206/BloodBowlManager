@@ -62,7 +62,6 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
         }
     }, [initialRosterName, rosterTemplates, loading]);
 
-    // Reset draft ONLY if race definitely changes
     useEffect(() => {
         setDraftedPlayers([]);
         setRerolls(0);
@@ -145,7 +144,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
         );
     }
 
-    // PHASE 1: DISCOVERY (Grimdark Artifact Edition)
+    // PHASE 1: DISCOVERY (Original Clean Design)
     if (step === 'selection') {
         const ratings = currentFaction.ratings || { fuerza: 50, agilidad: 50, velocidad: 50, armadura: 50, pase: 50 };
         const getPoint = (val: number, angle: number) => {
@@ -162,129 +161,112 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
         ].join(' ');
 
         return (
-            <div className="min-h-screen w-full flex flex-col bg-bb-dark text-bb-parchment font-inter overflow-x-hidden antialiased">
-                {/* Artifact Navigation Carousel */}
-                <nav className="w-full bg-black border-b-2 border-bb-gold/30 py-3 px-8 relative z-50">
-                    <div className="max-w-[1600px] mx-auto flex items-center justify-between gap-8 text-center">
-                        <div className="flex items-center gap-4 flex-1 overflow-hidden relative px-10">
+            <div className="min-h-screen w-full flex flex-col bg-bb-dark text-white font-inter overflow-x-hidden antialiased">
+                {/* Top Navigation Carousel */}
+                <nav className="w-full bg-bb-dark border-b border-bb-gold/20 py-3 px-8 relative z-50">
+                    <div className="max-w-[1600px] mx-auto flex items-center justify-between gap-8 h-12">
+                        <div className="flex items-center gap-6 flex-1 overflow-hidden relative px-10">
                             <button onClick={() => scrollCarousel('left')} className="absolute left-0 text-bb-gold hover:text-white transition-all transform hover:scale-110 z-10 w-8 h-8 flex items-center justify-center">
-                                <span className="material-symbols-outlined text-4xl ornate-arrow">chevron_left</span>
+                                <span className="material-symbols-outlined text-4xl font-bold">chevron_left</span>
                             </button>
-                            <div ref={carouselRef} className="flex items-center gap-8 overflow-x-auto no-scrollbar scroll-smooth snap-x">
+                            <div ref={carouselRef} className="flex items-center gap-6 overflow-x-auto no-scrollbar scroll-smooth snap-x">
                                 {filteredFactions.map((tm, idx) => {
                                     const masterIdx = rosterTemplates.findIndex(f => f.name === tm.name);
                                     const isSelected = selectedFactionIdx === masterIdx;
                                     return (
                                         <button key={tm.name} onClick={() => setSelectedFactionIdx(masterIdx)} className={`flex-none flex flex-col items-center gap-2 group transition-opacity snap-center ${!isSelected && 'opacity-60 hover:opacity-100'}`}>
-                                            <div className={`artifact-shield w-14 h-14 rounded-full overflow-hidden flex items-center justify-center p-1 transition-all duration-500 ${isSelected ? 'selected' : ''}`}>
-                                                <img src={tm.image} alt={tm.name} className={`w-full h-full object-cover rounded-full transition-all duration-700 ${isSelected ? 'grayscale-0' : 'grayscale'}`} />
+                                            <div className={`race-shield w-14 h-14 rounded-full overflow-hidden bg-zinc-900 border-2 transition-all duration-300 ${isSelected ? 'border-bb-gold shadow-[0_0_20px_rgba(202,138,4,0.5)] scale-110' : 'border-bb-gold/20'}`}>
+                                                <img src={tm.image} alt={tm.name} className="w-full h-full object-cover" />
                                             </div>
-                                            <span className={`text-[10px] font-black uppercase tracking-[0.15em] font-epilogue ${isSelected ? 'text-bb-gold' : 'text-gray-600'}`}>{tm.name}</span>
+                                            <span className={`text-[10px] font-bold uppercase tracking-widest ${isSelected ? 'text-bb-gold' : 'text-gray-400'}`}>{tm.name}</span>
                                         </button>
                                     );
                                 })}
                             </div>
                             <button onClick={() => scrollCarousel('right')} className="absolute right-0 text-bb-gold hover:text-white transition-all transform hover:scale-110 z-10 w-8 h-8 flex items-center justify-center">
-                                <span className="material-symbols-outlined text-4xl ornate-arrow">chevron_right</span>
+                                <span className="material-symbols-outlined text-4xl font-bold">chevron_right</span>
                             </button>
                         </div>
                         <div className="relative w-64">
-                            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-bb-gold/50 text-lg">search</span>
-                            <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full bg-zinc-900/80 border border-bb-gold/20 rounded-none py-2 pl-9 pr-4 text-[9px] tracking-[0.2em] text-bb-gold focus:border-bb-gold focus:ring-0 transition-all placeholder:text-zinc-700 font-bold uppercase outline-none" placeholder="RASTREAR RAZA..." type="text"/>
+                            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-bb-gold/50 text-xl">search</span>
+                            <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full bg-bb-gray border-none rounded-none py-2 pl-10 pr-4 text-[10px] tracking-widest text-white focus:ring-0 transition-all placeholder:text-gray-600 outline-none uppercase" placeholder="BUSCAR RAZA..." type="text"/>
                         </div>
                     </div>
                 </nav>
 
                 <header className="w-full pt-8 pb-6 text-center">
-                    <div className="inline-block relative">
-                        <motion.h1 
-                            key={currentFaction.name}
-                            initial={{ opacity: 0, scale: 0.98 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="font-epilogue text-7xl italic tracking-tighter text-white animate-glow uppercase relative z-10"
-                        >
-                            {currentFaction.name}
-                        </motion.h1>
-                        <div className="absolute -inset-x-12 top-1/2 h-0.5 bg-gradient-to-r from-transparent via-bb-gold/30 to-transparent -translate-y-1/2 blur-[2px]"></div>
-                    </div>
-                    <p className="text-bb-gold mt-3 text-lg tracking-[0.2em] uppercase font-light opacity-80 font-epilogue italic">
+                    <motion.h1 
+                        key={currentFaction.name}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="font-epilogue text-7xl italic tracking-tighter text-white animate-glow uppercase"
+                    >
+                        {currentFaction.name}
+                    </motion.h1>
+                    <p className="text-bb-gold mt-2 text-lg tracking-widest uppercase font-light opacity-90 italic">
                         {language === 'es' ? currentFaction.specialRules_es : currentFaction.specialRules_en}
                     </p>
+                    <div className="mt-6 max-w-4xl mx-auto h-[1px] bg-gradient-to-r from-transparent via-bb-gold/30 to-transparent"></div>
                 </header>
 
                 <main className="max-w-[1600px] mx-auto px-8 pb-40 grid grid-cols-12 gap-8 items-stretch flex-1">
-                    {/* Attributes & Lore */}
-                    <section className="col-span-12 lg:col-span-3 flex flex-col gap-12">
-                        <div className="panel-grimdark panel-filigree p-6 shadow-2xl border-dashed border-bb-gold/20">
-                            <h3 className="text-sm font-black text-white mb-6 uppercase tracking-[0.2em] italic border-b border-white/5 pb-2">Eficacia de Combate</h3>
-                            <div className="relative aspect-square flex items-center justify-center p-4">
-                                <svg className="w-full h-full overflow-visible opacity-80" viewBox="0 0 100 100">
-                                    <polygon className="stroke-white/10 fill-none" points="50,5 95,50 50,95 5,50" strokeWidth="0.5"></polygon>
-                                    <polygon className="stroke-white/10 fill-none" points="50,25 75,50 50,75 25,50" strokeWidth="0.5"></polygon>
-                                    <polygon className="fill-white/10 stroke-white/40" points={radarPoints} strokeWidth="1.5"></polygon>
-                                    <text className="fill-zinc-500 text-[6px] font-bold uppercase" textAnchor="middle" x="50" y="-4">Fuerza</text>
-                                    <text className="fill-zinc-500 text-[6px] font-bold uppercase" textAnchor="start" x="98" y="52">Armadura</text>
-                                    <text className="fill-zinc-500 text-[6px] font-bold uppercase" textAnchor="middle" x="50" y="108">Velocidad</text>
-                                    <text className="fill-zinc-500 text-[6px] font-bold uppercase" textAnchor="end" x="2" y="52">Agilidad</text>
+                    {/* Left: Attributes & Lore */}
+                    <section className="col-span-12 lg:col-span-3 flex flex-col gap-8">
+                        <div className="bg-bb-gray p-6 rounded-sm border border-bb-gold/10">
+                            <h3 className="text-sm font-bold text-bb-gold mb-6 uppercase tracking-widest italic">Atributos de Raza</h3>
+                            <div className="relative aspect-square flex items-center justify-center">
+                                <svg className="w-full h-full overflow-visible" viewBox="0 0 100 100">
+                                    <polygon className="stroke-bb-gold/20 fill-none" points="50,5 95,50 50,95 5,50" strokeWidth="1"></polygon>
+                                    <polygon className="stroke-bb-gold/20 fill-none" points="50,25 75,50 50,75 25,50" strokeWidth="1"></polygon>
+                                    <polygon className="fill-bb-gold/30 stroke-bb-gold" points={radarPoints} strokeWidth="2"></polygon>
+                                    <text className="fill-white text-[6px] font-bold uppercase" textAnchor="middle" x="50" y="-2">Fuerza</text>
+                                    <text className="fill-white text-[6px] font-bold uppercase" textAnchor="start" x="100" y="52">Armadura</text>
+                                    <text className="fill-white text-[6px] font-bold uppercase" textAnchor="middle" x="50" y="105">Velocidad</text>
+                                    <text className="fill-white text-[6px] font-bold uppercase" textAnchor="end" x="0" y="52">Agilidad</text>
                                 </svg>
                             </div>
-                            <div className="mt-8 pt-4 border-t border-white/10 text-center">
-                                <p className="text-[10px] text-white uppercase tracking-[0.2em] font-black italic">Riesgo Táctico: {currentFaction.tier === 1 ? 'Mínimo' : currentFaction.tier === 2 ? 'Equilibrado' : 'Crítico'}</p>
-                            </div>
+                            <p className="text-[10px] text-center mt-6 text-gray-400 uppercase tracking-tighter italic">Dificultad de Manejo: {currentFaction.tier === 1 ? 'Baja' : currentFaction.tier === 2 ? 'Media' : 'Alta'}</p>
                         </div>
-                        <div className="space-y-6">
-                            <h3 className="text-sm font-black text-bb-gold uppercase tracking-[0.2em] flex items-center gap-2 italic">
-                                <span className="w-8 h-[2px] bg-bb-gold"></span>
-                                Ecos del Campo
-                            </h3>
-                            <div className="bg-[#15120c] p-6 border-l-4 border-bb-gold shadow-2xl relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-16 h-16 bg-bb-gold/5 rounded-full blur-3xl"></div>
-                                <p className="text-bb-parchment leading-relaxed text-sm italic font-medium text-justify relative z-10">
-                                    {language === 'es' 
-                                        ? "Su paso por la NAF está marcado por una resistencia legendaria y una falta total de sutileza. No buscan el hueco; crean el hueco a través de las costillas del oponente."
-                                        : "Their path through the NAF is marked by legendary resilience and a total lack of subtlety. They don't look for the gap; they create it through their opponent's ribs."
-                                    }
-                                </p>
-                            </div>
+                        <div className="space-y-4">
+                            <h3 className="text-sm font-bold text-bb-gold uppercase tracking-widest italic">Historia de Sangre</h3>
+                            <div className="h-[1px] w-12 bg-bb-gold mb-4"></div>
+                            <p className="text-gray-400 leading-relaxed text-sm italic">
+                                {language === 'es' ? "Su paso por la NAF está marcado por una resistencia legendaria y una falta total de sutileza. No buscan el hueco; crean el hueco a través de las costillas del oponente." : "Their journey through the NAF is marked by legendary resilience and a complete lack of subtlety."}
+                            </p>
                         </div>
                     </section>
 
-                    {/* Roster Table */}
+                    {/* Center: Base Roster */}
                     <section className="col-span-12 lg:col-span-6">
-                        <div className="panel-grimdark panel-filigree p-10 h-full border-dashed border-bb-gold/20">
-                            <div className="flex items-center justify-between mb-8">
-                                <h3 className="text-4xl font-header italic text-white uppercase tracking-tighter">Legión de Hierro</h3>
-                                <span className="text-zinc-600 text-[10px] font-black tracking-[0.4em] uppercase">Roster Oficial NAF</span>
-                            </div>
+                        <div className="bg-bb-gray/50 border border-bb-gold/10 p-8 h-full">
+                            <h3 className="text-xl font-header italic text-white mb-8 uppercase">Plantilla Base</h3>
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left border-collapse">
                                     <thead>
-                                        <tr className="text-[11px] text-white uppercase tracking-widest bg-zinc-900/80">
-                                            <th className="py-4 px-4 font-black">Guerrero</th>
+                                        <tr className="border-b border-bb-gold/30 text-[10px] text-bb-gold uppercase tracking-widest">
+                                            <th className="py-4 font-semibold">Posición</th>
                                             <th className="py-4 px-2 text-center">MA</th>
                                             <th className="py-4 px-2 text-center">ST</th>
                                             <th className="py-4 px-2 text-center">AG</th>
                                             <th className="py-4 px-2 text-center">PA</th>
                                             <th className="py-4 px-2 text-center">AV</th>
-                                            <th className="py-4 px-4 font-black">Bendiciones</th>
+                                            <th className="py-4 pl-4">Habilidades</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="text-sm font-medium">
+                                    <tbody className="text-sm">
                                         {currentFaction.roster.map((pos, pidx) => (
-                                            <tr key={pidx} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors group">
-                                                <td className="py-6 px-4">
-                                                    <span className="text-2xl font-header font-black text-white italic uppercase tracking-tighter leading-none">{pos.position}</span>
-                                                </td>
-                                                <td className="py-6 px-2 text-center text-zinc-400 font-mono text-lg">{pos.stats.MV}</td>
-                                                <td className="py-6 px-2 text-center text-zinc-400 font-mono text-lg">{pos.stats.FU}</td>
-                                                <td className="py-6 px-2 text-center text-zinc-400 font-mono text-lg">{pos.stats.AG}</td>
-                                                <td className="py-6 px-2 text-center text-zinc-400 font-mono text-lg">{pos.stats.PA}</td>
-                                                <td className="py-6 px-2 text-center text-zinc-400 font-mono text-lg">{pos.stats.AR}</td>
-                                                <td className="py-6 px-4">
-                                                    <div className="flex flex-col gap-1 items-start">
-                                                        {pos.skillKeys.length > 0 ? pos.skillKeys.slice(0, 4).map(sk => (
-                                                            <span key={sk} className="text-[9px] font-black text-zinc-500 uppercase tracking-widest leading-none">{localizeSkill(sk)}</span>
-                                                        )) : <span className="text-[9px] font-black text-zinc-700 uppercase tracking-widest italic">Estándar</span>}
+                                            <tr key={pidx} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                                <td className="py-4 font-bold text-gray-200">{pos.position}</td>
+                                                <td className="py-4 px-2 text-center">{pos.stats.MV}</td>
+                                                <td className="py-4 px-2 text-center">{pos.stats.FU}</td>
+                                                <td className="py-4 px-2 text-center">{pos.stats.AG}</td>
+                                                <td className="py-4 px-2 text-center">{pos.stats.PA}</td>
+                                                <td className="py-4 px-2 text-center">{pos.stats.AR}</td>
+                                                <td className="py-4 pl-4">
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {pos.skillKeys.length > 0 ? pos.skillKeys.slice(0, 3).map(sk => (
+                                                            <span key={sk} className="px-2 py-0.5 bg-bb-gold text-black text-[9px] font-bold rounded-sm uppercase tracking-tighter">{localizeSkill(sk)}</span>
+                                                        )) : <span className="px-2 py-0.5 bg-zinc-800 text-gray-500 text-[9px] rounded-sm uppercase tracking-tighter">Ninguna</span>}
                                                     </div>
                                                 </td>
                                             </tr>
@@ -295,29 +277,22 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                         </div>
                     </section>
 
-                    {/* Star Players */}
+                    {/* Right: Star Players */}
                     <section className="col-span-12 lg:col-span-3 flex flex-col h-full">
-                        <h3 className="text-sm font-black text-bb-gold uppercase tracking-[0.3em] mb-6 flex items-center justify-between italic leading-none">
-                            Gladiadores Eternos
-                            <span className="material-symbols-outlined text-bb-gold">stars</span>
-                        </h3>
-                        <div className="flex-1 panel-grimdark panel-filigree p-6 overflow-hidden flex flex-col backdrop-blur-sm">
-                            <div className="grid grid-cols-2 gap-6 overflow-y-auto pr-2 custom-scrollbar max-h-[600px]">
+                        <h3 className="text-sm font-bold text-bb-gold uppercase tracking-widest mb-6">Jugadores Estrella</h3>
+                        <div className="flex-1 bg-bb-gray/30 border border-bb-gold/10 p-6 overflow-hidden flex flex-col">
+                            <div className="grid grid-cols-2 gap-4 overflow-y-auto no-scrollbar max-h-[500px]">
                                 {factionStars.map((star, sidx) => (
                                     <button key={sidx} className="flex flex-col items-center group focus:outline-none">
-                                        <div className="relative w-full aspect-[3/4] bg-zinc-900 border-2 border-bb-gold/40 p-1 mb-3 shadow-[0_5px_15px_rgba(0,0,0,0.5)] transform transition-all group-hover:-translate-y-2 group-hover:border-bb-gold">
-                                            <img src={star.image} alt={star.name} className="object-cover w-full h-full spectral-filter grayscale group-hover:grayscale-0 transition-all duration-700" />
-                                            <div className="absolute inset-0 border border-white/10 pointer-events-none"></div>
+                                        <div className="w-full aspect-square bg-zinc-900 border border-bb-gold/20 p-1 mb-2 transition-all group-hover:border-bb-gold">
+                                            <img src={star.image} alt={star.name} className="object-cover w-full h-full grayscale group-hover:grayscale-0 transition-opacity opacity-60 group-hover:opacity-100" />
                                         </div>
-                                        <span className="font-epilogue text-[10px] italic font-black text-bb-gold uppercase text-center leading-tight tracking-tighter opacity-60 group-hover:opacity-100">{star.name}</span>
+                                        <span className="text-[8px] font-black text-bb-gold uppercase text-center leading-tight tracking-tighter">{star.name}</span>
                                     </button>
                                 ))}
-                                {factionStars.length < 3 && Array(3 - factionStars.length).fill(0).map((_, i) => (
-                                    <div key={i} className="flex flex-col items-center group opacity-20">
-                                        <div className="relative w-full aspect-[3/4] bg-zinc-900/50 border-2 border-bb-gold/10 p-1 mb-3 flex items-center justify-center">
-                                            <span className="material-symbols-outlined text-bb-gold/30 text-4xl">skull</span>
-                                        </div>
-                                        <span className="font-epilogue text-[10px] italic font-black text-gray-700 uppercase">Incógnito</span>
+                                {factionStars.length === 0 && Array(3).fill(0).map((_, i) => (
+                                    <div key={i} className="w-full aspect-square bg-zinc-900/50 border border-bb-gold/5 flex items-center justify-center">
+                                        <span className="material-symbols-outlined text-bb-gold/10 text-3xl">skull</span>
                                     </div>
                                 ))}
                             </div>
@@ -325,66 +300,52 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                     </section>
                 </main>
 
-                <footer className="fixed bottom-0 left-0 w-full bg-black/95 border-t-2 border-bb-gold/30 p-5 z-[100] backdrop-blur-md">
+                <footer className="fixed bottom-0 left-0 w-full bg-bb-dark border-t border-bb-gold/30 p-8 z-[100] backdrop-blur-md">
                     <div className="max-w-[1600px] mx-auto flex justify-center">
                         <button 
                             onClick={() => setStep('draft')}
-                            className="btn-coin px-24 py-4 transition-all transform hover:scale-105 active:scale-95 group relative overflow-hidden"
+                            className="bg-bb-gold hover:bg-white text-black font-epilogue italic font-black text-3xl px-24 py-5 tracking-tighter uppercase transition-all transform hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(202,138,4,0.3)]"
                         >
-                            <div className="flex flex-col items-center relative z-10">
-                                <span className="font-epilogue italic font-black text-2xl text-black uppercase tracking-tighter leading-none">
-                                    Fundar esta Franquicia
-                                </span>
-                                <span className="text-[8px] text-black/50 font-black uppercase tracking-[0.4em] mt-0.5">Sello Real de Nufflé</span>
-                            </div>
+                            Fundar esta Franquicia
                         </button>
                     </div>
                 </footer>
-
+                
                 <style>{`
                     .animate-glow { animation: glow 4s infinite ease-in-out }
-                    @keyframes glow { 0%, 100% { text-shadow: 0 0 15px rgba(202, 138, 4, 0.3); } 50% { text-shadow: 0 0 30px rgba(202, 138, 4, 0.6); } }
-                    .panel-grimdark { background: linear-gradient(145deg, #121212, #080808); border: 2px solid #332b1a; position: relative; box-shadow: inset 0 0 40px rgba(0,0,0,0.8); }
-                    .panel-filigree::before { content: ""; position: absolute; top: -4px; left: -4px; right: -4px; bottom: -4px; border: 1px solid #CA8A04; opacity: 0.15; pointer-events: none; mask-image: linear-gradient(45deg, black 25%, transparent 25%, transparent 50%, black 50%, black 75%, transparent 75%, transparent); mask-size: 8px 8px; }
-                    .artifact-shield { border: 3px solid #3f3f3f; background: radial-gradient(circle, #2a2a2a 0%, #000 100%); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-                    .artifact-shield.selected { border-color: #CA8A04; box-shadow: 0 0 25px rgba(202, 138, 4, 0.4), inset 0 0 15px rgba(202, 138, 4, 0.2); transform: scale(1.1) rotate(2deg); }
-                    .btn-coin { background: radial-gradient(circle at center, #f59e0b 0%, #b45309 70%, #78350f 100%); border: 4px double #451a03; box-shadow: 0 10px 30px rgba(0,0,0,0.6), inset 0 2px 4px rgba(255,255,255,0.4); text-shadow: 2px 2px 2px rgba(0,0,0,0.3); }
-                    .spectral-filter { filter: sepia(0.4) contrast(1.3) brightness(0.7) grayscale(0.2); }
-                    .ornate-arrow { font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 48; text-shadow: 0 0 12px #CA8A04; }
-                    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-                    .custom-scrollbar::-webkit-scrollbar-thumb { background: #CA8A04; border-radius: 2px; }
+                    @keyframes glow { 0%, 100% { text-shadow: 0 0 10px rgba(202, 138, 4, 0.2); } 50% { text-shadow: 0 0 20px rgba(202, 138, 4, 0.5); } }
                     .no-scrollbar::-webkit-scrollbar { display: none; }
                 `}</style>
             </div>
         );
     }
 
-    // PHASE 2: DRAFT (Control Panel - S3 High Fidelity)
+    // PHASE 2: DRAFT (The S3 Control Panel)
     return (
-        <div className="h-screen w-full flex flex-col bg-[#0a0a0a] text-bb-parchment overflow-hidden font-sans select-none">
-            {/* Header: Fixed top summary */}
-            <header className="flex-none bg-black border-b-2 border-bb-gold/30 px-6 py-3 z-50">
-                <div className="max-w-screen-2xl mx-auto flex items-center justify-between gap-8 h-12">
+        <div className="h-screen w-full flex flex-col bg-[#0a0a0a] text-slate-100 overflow-hidden font-sans select-none">
+            {/* Header */}
+            <header className="flex-none bg-black border-b border-bb-gold/20 px-6 py-3 z-50">
+                <div className="max-w-screen-2xl mx-auto flex items-center justify-between gap-8 h-10">
                     <div className="flex items-center gap-2 shrink-0">
-                        <button onClick={() => setStep('selection')} className="material-symbols-outlined text-bb-gold mr-4 hover:scale-110 transition-transform font-black">arrow_back</button>
+                        <button onClick={() => setStep('selection')} className="material-symbols-outlined text-bb-gold mr-3 hover:scale-110 transition-transform font-bold">arrow_back</button>
                         <span className="material-symbols-outlined text-bb-gold text-2xl font-black">sports_football</span>
-                        <h1 className="text-xl font-header font-black tracking-tight text-white uppercase italic leading-none">{currentFaction.name} - Mesa de Contratación</h1>
+                        <h1 className="text-lg font-header font-black tracking-tight text-white uppercase italic leading-none">{currentFaction.name} - Mesa de Contratación</h1>
                     </div>
                     
                     <div className="flex items-center gap-6">
-                         <div className="px-5 py-2 rounded-none border border-bb-gold/30 bg-bb-gold/5 flex items-center gap-4">
-                            <span className="text-[10px] font-black text-bb-gold uppercase tracking-[0.2em] italic">Estandarte:</span>
-                            <div className="w-6 h-6 rounded-full bg-cover bg-center border border-bb-gold/20" style={{ backgroundImage: currentFaction.image ? `url(${currentFaction.image})` : 'none' }}></div>
-                            <span className="text-[11px] font-black text-white uppercase tracking-widest italic">{currentFaction.name}</span>
+                         <div className="px-4 py-1.5 rounded-full border border-bb-gold/30 bg-bb-gold/5 flex items-center gap-3">
+                            <span className="text-[10px] font-black text-bb-gold uppercase tracking-widest italic">Race:</span>
+                            <div className="w-5 h-5 rounded-full bg-cover bg-center border border-white/10" style={{ backgroundImage: currentFaction.image ? `url(${currentFaction.image})` : 'none' }}></div>
+                            <span className="text-[10px] font-black text-white uppercase tracking-widest italic">{currentFaction.name}</span>
                         </div>
                     </div>
                 </div>
             </header>
 
-            {/* TEAM NAME SECTION (Separator) */}
-            <section className="flex-none px-6 py-4 bg-[#121212] border-b border-bb-gold/10 shadow-inner">
-                <div className="max-w-screen-2xl mx-auto flex flex-col gap-1">
-                    <label className="text-[10px] font-black text-bb-gold/40 uppercase tracking-[0.4em] ml-1">Bautismo de la Franquicia</label>
+            {/* TEAM NAME SECTION */}
+            <section className="flex-none px-6 py-3 bg-[#111111] border-b border-white/5">
+                <div className="max-w-screen-2xl mx-auto flex flex-col gap-0.5">
+                    <label className="text-[9px] font-black text-bb-gold/60 uppercase tracking-[0.4em] ml-1">Nombre de la Franquicia</label>
                     <input 
                         className="w-full bg-transparent border-none p-0 text-3xl font-header font-black text-white italic placeholder:text-zinc-800 outline-none uppercase tracking-tighter" 
                         placeholder="Escribe el nombre de tu equipo..." 
@@ -400,16 +361,15 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
             {/* MAIN VIEWPORT */}
             <main className="flex-1 flex overflow-hidden">
                 {/* LEFT: Market */}
-                <section className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
-                    <div className="flex items-center justify-between mb-2">
-                        <h2 className="text-xs font-header font-black text-bb-gold/60 uppercase tracking-widest flex items-center gap-3 italic">
-                            <span className="w-6 h-6 flex items-center justify-center rounded-full bg-bb-gold/10 text-bb-gold text-[10px] border border-bb-gold/20 italic">2</span>
-                            Reclutamiento de Reos y Héroes
+                <section className="flex-1 overflow-y-auto p-6 space-y-4 pt-10 no-scrollbar">
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-xs font-header font-black text-slate-500 uppercase tracking-widest flex items-center gap-2 italic">
+                            <span className="w-5 h-5 flex items-center justify-center rounded-full bg-bb-gold/20 text-bb-gold text-[9px] border border-bb-gold/20 italic">2</span>
+                            Reclutamiento de Jugadores
                         </h2>
-                        <span className="text-[9px] text-zinc-600 italic uppercase tracking-widest opacity-60">"Hierro y sangre por la gloria eterna"</span>
                     </div>
 
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 pb-24">
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 pb-32">
                         {currentFaction.roster.map((pos, idx) => {
                             const count = draftedPlayers.filter(p => p.position === pos.position).length;
                             const limitStr = pos.qty.split('-')[1] || pos.qty;
@@ -418,31 +378,30 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                             const canAfford = remainingBudget >= pos.cost;
 
                             return (
-                                <motion.div layout key={idx} className={`bg-[#0a0a0a] border-2 rounded-none p-4 flex items-center justify-between transition-all group ${isFull ? 'opacity-20 border-zinc-900' : 'border-[#1a1a1a] hover:border-bb-gold/30 hover:bg-zinc-900/40 shadow-xl'}`}>
-                                    <div className="flex flex-col gap-2">
-                                        <div className="flex items-center gap-4">
-                                            <span className="text-white font-header font-black text-lg uppercase italic tracking-tighter">{pos.position}</span>
+                                <motion.div layout key={idx} className={`bg-[#171717] border rounded-none p-3 flex items-center justify-between transition-all group ${isFull ? 'opacity-20 border-white/5' : 'border-white/5 hover:border-bb-gold/30 hover:bg-zinc-900 shadow-xl'}`}>
+                                    <div className="flex flex-col gap-1.5">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-white font-header font-black text-sm uppercase italic tracking-tighter">{pos.position}</span>
                                             <div className="relative group/skill-tip">
-                                                <span className="material-symbols-outlined text-zinc-700 text-[14px] cursor-help hover:text-bb-gold transition-colors">info</span>
+                                                <span className="material-symbols-outlined text-slate-700 text-[12px] cursor-help hover:text-bb-gold transition-colors">info</span>
                                                 {pos.skillKeys && pos.skillKeys.length > 0 && (
-                                                    <div className="absolute bottom-full left-0 mb-3 hidden group-hover/skill-tip:flex flex-wrap gap-1 p-3 bg-black border border-bb-gold/20 rounded-none shadow-3xl z-50 w-56 border-l-4 border-l-bb-gold backdrop-blur-xl">
-                                                        <p className="w-full text-[9px] font-black text-bb-gold/40 uppercase tracking-widest mb-2 italic">Dones de Nuffle</p>
-                                                        {pos.skillKeys.map(sk => <span key={sk} className="text-[9px] font-black px-2 py-1 bg-zinc-900 text-bb-parchment uppercase border border-white/5">{localizeSkill(sk)}</span>)}
+                                                    <div className="absolute bottom-full left-0 mb-2 hidden group-hover/skill-tip:flex flex-wrap gap-1 p-2 bg-black border border-white/10 rounded shadow-2xl z-50 w-48 border-l-2 border-l-bb-gold backdrop-blur-md">
+                                                        {pos.skillKeys.map(sk => <span key={sk} className="text-[8px] font-black px-1.5 py-0.5 rounded bg-bb-gold/10 text-bb-gold uppercase border border-bb-gold/20">{localizeSkill(sk)}</span>)}
                                                     </div>
                                                 )}
                                             </div>
                                         </div>
-                                        <div className="flex gap-4 text-[10px] font-mono font-black italic">
-                                            {['MV', 'FU', 'AG', 'PA', 'AR'].map(s => <div key={s} className="flex gap-1"><span className="text-zinc-600">{s.replace('MV','MA').replace('FU','ST').replace('AR','AV')}</span><span className="text-zinc-300">{(pos.stats as any)[s]}</span></div>)}
+                                        <div className="flex gap-3 text-[8px] font-mono font-black italic">
+                                            {['MV', 'FU', 'AG', 'PA', 'AR'].map(s => <div key={s} className="flex gap-0.5"><span className="text-slate-600">{s.replace('MV','MA').replace('FU','ST').replace('AR','AV')}</span><span className="text-slate-300">{(pos.stats as any)[s]}</span></div>)}
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-6">
+                                    <div className="flex items-center gap-4">
                                         <div className="text-right">
-                                            <span className="text-2xl font-header font-black text-bb-gold italic tracking-tighter">{pos.cost / 1000}k</span>
-                                            <span className="block text-[8px] font-black text-zinc-700 uppercase leading-none mt-1 tracking-widest">{count} / {limit}</span>
+                                            <span className="text-md font-header font-black text-bb-gold italic">{pos.cost / 1000}k</span>
+                                            <span className="block text-[7px] font-black text-slate-700 uppercase leading-none mt-0.5 italic">{count} / {limit}</span>
                                         </div>
-                                        <button onClick={() => handleHirePlayer(pos)} disabled={isFull || !canAfford} className={`w-11 h-11 border-2 flex items-center justify-center transition-all ${isFull || !canAfford ? 'bg-zinc-950 border-zinc-900 text-zinc-800 cursor-not-allowed' : 'bg-bb-gold border-bb-gold/50 text-black hover:scale-110 active:scale-90 shadow-[0_0_20px_rgba(202,138,4,0.2)]'}`}>
-                                            <span className="material-symbols-outlined font-black">add</span>
+                                        <button onClick={() => handleHirePlayer(pos)} disabled={isFull || !canAfford} className={`w-8 h-8 flex items-center justify-center transition-all ${isFull || !canAfford ? 'bg-zinc-900 text-zinc-800 cursor-not-allowed' : 'bg-bb-gold text-black hover:scale-110 active:scale-90 shadow-lg'}`}>
+                                            <span className="material-symbols-outlined font-black text-sm">add</span>
                                         </button>
                                     </div>
                                 </motion.div>
@@ -451,59 +410,49 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                     </div>
                 </section>
 
-                {/* RIGHT: Sidebar (Tu Plantilla - Grimdark) */}
-                <aside id="squad_list" className="w-[400px] bg-black border-l-2 border-bb-gold/20 flex flex-col h-full shadow-4xl relative">
-                    <div className="sticky top-0 z-20 p-8 space-y-6 bg-black border-b border-bb-gold/10">
-                        <div className="flex items-center gap-3 overflow-hidden mb-2">
-                             <div className="w-1 h-4 bg-bb-gold/40"></div>
-                             <span className="text-[11px] font-header font-black text-bb-gold italic uppercase tracking-tighter truncate">{teamName || 'TU FRANQUICIA'}</span>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-6">
+                {/* RIGHT: Sidebar (Tu Plantilla) */}
+                <aside id="squad_list" className="w-[380px] bg-[#1a1a1a] border-l border-white/5 flex flex-col h-full shadow-2xl">
+                    <div className="sticky top-0 z-20 p-6 space-y-5 bg-[#1a1a1a] border-b border-white/5">
+                        <h2 className="text-[10px] font-black text-bb-gold uppercase tracking-[0.2em] italic mb-2">RESUMEN: {teamName || 'TU FRANQUICIA'}</h2>
+                        <div className="flex justify-between items-end">
                             <div className="space-y-1">
-                                <span className="text-[10px] uppercase font-black text-zinc-600 tracking-widest italic leading-none">Cofre de la Liga</span>
+                                <span className="text-[9px] uppercase font-black text-slate-500 tracking-widest italic leading-none">Tesorería Inicial</span>
                                 <div className="flex items-baseline gap-1">
-                                    <span className={`text-4xl font-header font-black italic ${isBudgetNegative ? 'text-bb-blood animate-pulse' : 'shimmer-text'}`}>{remainingBudget.toLocaleString()}</span>
+                                    <span className={`text-3xl font-header font-black italic ${isBudgetNegative ? 'text-blood animate-pulse' : 'shimmer-text'}`}>{remainingBudget.toLocaleString()}</span>
                                     <small className="text-[10px] font-black text-bb-gold italic">gp</small>
                                 </div>
                             </div>
-                            <div className="text-right flex flex-col justify-end">
-                                <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest italic leading-none">Contrato</span>
-                                <div className={`text-2xl font-header font-black italic ${draftedPlayers.length < 11 ? 'text-bb-blood' : 'text-white'}`}>{draftedPlayers.length} / 16</div>
+                            <div className="text-right">
+                                <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic">Roster</span>
+                                <div className={`text-2xl font-header font-black italic ${draftedPlayers.length < 11 ? 'text-blood' : 'text-white'}`}>{draftedPlayers.length} / 16</div>
                             </div>
                         </div>
 
-                        <details open className="group bg-[#0a0a0a] border border-bb-gold/10 overflow-hidden transition-all shadow-xl">
-                            <summary className="flex items-center justify-between px-4 py-3 cursor-pointer list-none hover:bg-bb-gold/5 transition-colors">
-                                <div className="flex items-center gap-3">
-                                    <span className="material-symbols-outlined text-bb-gold text-lg font-black">inventory_2</span>
-                                    <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest italic">Provisiones & Staff</span>
+                        <details className="group bg-black/40 rounded border border-white/5 overflow-hidden transition-all">
+                            <summary className="flex items-center justify-between px-3 py-2 cursor-pointer list-none hover:bg-white/5 transition-colors">
+                                <div className="flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-bb-gold text-sm font-black">inventory_2</span>
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Staff & Incentivos</span>
                                 </div>
-                                <span className="material-symbols-outlined text-sm transition-transform group-open:rotate-180 font-black">expand_more</span>
+                                <span className="material-symbols-outlined text-xs transition-transform group-open:rotate-180 font-black">expand_more</span>
                             </summary>
-                            <div className="px-4 pb-4 pt-2 space-y-1.5 bg-black/40">
+                            <div className="px-3 pb-3 pt-1 space-y-1">
                                 {[
-                                    { name: 'Rerolls', cost: currentFaction.rerollCost, val: rerolls, set: setRerolls, desc: 'Segundas Oportunidades' },
-                                    { name: 'Fan Factor', cost: 10000, val: dedicatedFans, set: setDedicatedFans, min: 1, desc: 'Factor de Hinchas' },
+                                    { name: 'Rerolls', cost: currentFaction.rerollCost, val: rerolls, set: setRerolls },
+                                    { name: 'Fan Factor', cost: 10000, val: dedicatedFans, set: setDedicatedFans, min: 1 },
                                 ].map(staff => (
-                                    <div key={staff.name} className="flex items-center justify-between py-2 border-t border-white/5">
-                                        <div className="flex flex-col">
-                                            <span className="text-[9px] font-black uppercase text-zinc-300 italic">{staff.name}</span>
-                                            <span className="text-[7px] font-black text-zinc-600 uppercase tracking-widest">{staff.cost/1000}k unidad</span>
-                                        </div>
-                                        <div className="flex items-center gap-3 bg-zinc-950 rounded-none p-1 border border-white/5">
-                                            <button onClick={() => staff.set(Math.max(staff.min || 0, staff.val - 1))} className="w-6 h-6 rounded-none bg-zinc-900 hover:bg-zinc-800 text-[11px] font-black flex items-center justify-center">-</button>
-                                            <span className="text-xs font-mono font-black text-white w-4 text-center italic">{staff.val}</span>
-                                            <button onClick={() => staff.set(staff.val + 1)} disabled={remainingBudget < staff.cost} className={`w-6 h-6 rounded-none border border-bb-gold/20 text-bb-gold flex items-center justify-center transition-all ${remainingBudget < staff.cost ? 'opacity-10' : 'bg-bb-gold/10 hover:bg-bb-gold hover:text-black font-black'}`}>+</button>
+                                    <div key={staff.name} className="flex items-center justify-between py-1.5 border-t border-white/5">
+                                        <span className="text-[8px] font-black uppercase text-slate-500 italic">{staff.name} ({staff.cost/1000}k)</span>
+                                        <div className="flex items-center gap-2 bg-black/60 rounded p-0.5 border border-white/5">
+                                            <button onClick={() => staff.set(Math.max(staff.min || 0, staff.val - 1))} className="w-5 h-5 rounded bg-white/5 hover:bg-white/10 text-[10px] flex items-center justify-center font-black">-</button>
+                                            <span className="text-[10px] font-mono font-black text-white w-3 text-center italic">{staff.val}</span>
+                                            <button onClick={() => staff.set(staff.val + 1)} disabled={remainingBudget < staff.cost} className={`w-5 h-5 rounded border border-gold/20 text-gold flex items-center justify-center transition-all ${remainingBudget < staff.cost ? 'opacity-10' : 'bg-gold/10 hover:bg-gold hover:text-black font-black'}`}>+</button>
                                         </div>
                                     </div>
                                 ))}
-                                <div className="flex items-center justify-between py-3 border-t border-white/5">
-                                    <div className="flex flex-col">
-                                        <span className="text-[9px] font-black uppercase text-zinc-300 italic">Apoticario</span>
-                                        <span className="text-[7px] font-black text-zinc-600 uppercase tracking-widest">50k MO</span>
-                                    </div>
-                                    <button onClick={() => setApothecary(!apothecary)} disabled={!apothecary && remainingBudget < 50000} className={`text-[9px] font-black px-5 py-2 rounded-none border border-2 tracking-[0.2em] italic transition-all ${apothecary ? 'bg-bb-gold text-black border-bb-gold' : 'text-bb-gold bg-bb-gold/5 border-bb-gold/20'}`}>
+                                <div className="flex items-center justify-between py-2 border-t border-white/5">
+                                    <span className="text-[8px] font-black uppercase text-slate-500 italic">Apoticario (50k)</span>
+                                    <button onClick={() => setApothecary(!apothecary)} disabled={!apothecary && remainingBudget < 50000} className={`text-[8px] font-black px-4 py-1.5 rounded-full border tracking-widest italic transition-all ${apothecary ? 'bg-bb-gold text-black border-bb-gold' : 'text-gold bg-gold/5 border-gold/20'}`}>
                                         {apothecary ? 'SI' : 'NO'}
                                     </button>
                                 </div>
@@ -511,61 +460,36 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                         </details>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-6 custom-scrollbar bg-black/30">
-                        <div className="flex flex-col gap-1.5">
-                            <AnimatePresence initial={false}>
-                                {draftedPlayers.length === 0 ? (
-                                    <div className="flex flex-col items-center justify-center py-20 text-zinc-800 opacity-40 grayscale">
-                                        <span className="material-symbols-outlined text-5xl">skull</span>
-                                        <p className="text-[9px] font-black uppercase italic mt-3 tracking-[0.4em]">Sin Guerreros</p>
+                    <div className="flex-1 overflow-y-auto p-4 custom-scroll-area bg-black/10 no-scrollbar">
+                        <div className="flex flex-col gap-1">
+                            {draftedPlayers.map((p, idx) => (
+                                <motion.div key={p.id} layout className="bg-zinc-900/40 backdrop-blur-sm border border-white/5 rounded px-3 py-1.5 flex items-center justify-between group hover:border-bb-gold/30 hover:bg-black/40 transition-all">
+                                    <div className="flex items-center gap-3 overflow-hidden">
+                                        <span className="text-[9px] font-mono font-black text-bb-gold/30 shrink-0">#{String(idx + 1).padStart(2, '0')}</span>
+                                        <span className="text-[10px] font-header font-black text-slate-300 italic uppercase tracking-tighter truncate leading-none">{p.position}</span>
                                     </div>
-                                ) : (
-                                    draftedPlayers.map((p, idx) => (
-                                        <motion.div layout key={p.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="bg-[#121212] border border-white/5 rounded-none px-4 py-3 flex items-center justify-between group hover:border-bb-gold/30 hover:bg-zinc-900 transition-all shadow-md">
-                                            <div className="flex items-center gap-4 overflow-hidden">
-                                                <span className="text-[10px] font-mono font-black text-bb-gold opacity-30 shrink-0">#{String(idx + 1).padStart(2, '0')}</span>
-                                                <div className="flex flex-col">
-                                                    <span className="text-[11px] font-header font-black text-bb-parchment italic uppercase tracking-tighter truncate leading-none mb-0.5">{p.position}</span>
-                                                    <span className="text-[8px] font-black text-zinc-600 uppercase tracking-widest">{p.cost / 1000}k MO</span>
-                                                </div>
-                                            </div>
-                                            <button onClick={() => handleFirePlayer(p.id as number)} className="w-7 h-7 flex items-center justify-center text-bb-blood bg-bb-blood/5 hover:bg-bb-blood hover:text-white transition-all shrink-0"><span className="material-symbols-outlined text-[16px] font-black">remove</span></button>
-                                        </motion.div>
-                                    ))
-                                )}
-                            </AnimatePresence>
+                                    <button onClick={() => handleFirePlayer(p.id as number)} className="w-5 h-5 flex items-center justify-center text-blood bg-blood/5 hover:bg-blood hover:text-white rounded transition-all shrink-0"><span className="material-symbols-outlined text-[14px] font-black">remove</span></button>
+                                </motion.div>
+                            ))}
                         </div>
                     </div>
 
-                    <div className="p-8 border-t-2 border-bb-gold/30 space-y-5 bg-black z-20 shadow-4xl">
-                        <div className="flex justify-between items-end border-b border-bb-gold/5 pb-4">
-                            <span className="text-[11px] font-black uppercase text-zinc-600 italic tracking-[0.3em]">VALOR DE EQUIPO (VAE)</span>
-                            <span className="text-4xl font-header font-black text-white italic tracking-tighter leading-none">{totalCost / 1000} <small className="text-sm text-bb-gold">k</small></span>
+                    <div className="p-8 border-t border-white/10 space-y-4 bg-[#1a1a1a]">
+                        <div className="flex justify-between items-end border-b border-bb-gold/10 pb-4">
+                            <span className="text-[10px] font-black uppercase text-slate-600 italic tracking-[0.2em]">VALOR EQUIPO</span>
+                            <span className="text-3xl font-header font-black text-white italic tracking-tighter">{totalCost / 1000} <small className="text-xs text-bb-gold">TV</small></span>
                         </div>
                         <button 
                             disabled={!canFinalize}
                             onClick={handleSubmit}
-                            className={`btn-coin w-full py-6 transition-all duration-500 transform ${canFinalize ? 'hover:scale-[1.03] active:scale-95' : 'grayscale opacity-20 cursor-not-allowed border-zinc-800 bg-zinc-900'}`}
+                            className={`w-full py-5 rounded font-header font-black text-2xl tracking-tighter uppercase italic flex items-center justify-center gap-4 transition-all duration-300 shadow-xl ${canFinalize ? 'bg-bb-gold text-black hover:scale-[1.03] active:scale-95' : 'bg-white/5 text-white/10 border border-white/5 cursor-not-allowed opacity-20'}`}
                         >
-                            <span className="font-epilogue italic font-black text-2xl text-black uppercase tracking-tighter leading-none block">
-                                Confirmar Fundación
-                            </span>
-                            <span className="text-[9px] text-black/50 font-black uppercase tracking-[0.4em] mt-1 block">Regla Oficial Nuffle</span>
+                            <span className="material-symbols-outlined text-2xl font-black">stadium</span>
+                            CONFIRMAR FUNDACIÓN
                         </button>
-                        <p className="text-[9px] text-center text-zinc-600 font-black italic uppercase tracking-[0.3em] leading-relaxed mt-2 h-4">
-                            {teamName.length < 3 ? 'Requiere Bautismo (mín. 3)' : (draftedPlayers.length < 11 ? `Faltan ${11 - draftedPlayers.length} efectivos` : (isBudgetNegative ? 'Presupuesto Agotado' : '✓ Fundación Autorizada'))}
-                        </p>
                     </div>
                 </aside>
             </main>
-
-            {/* Modal for skills */}
-            {selectedSkill && (
-                <SkillModal
-                    skill={selectedSkill}
-                    onClose={() => setSelectedSkill(null)}
-                />
-            )}
 
             <style>{`
                 .shimmer-text { background: linear-gradient(90deg, #CA8A04 0%, #ffe4a3 50%, #CA8A04 100%); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: shimmer 3s infinite linear; }
