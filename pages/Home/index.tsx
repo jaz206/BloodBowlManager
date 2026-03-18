@@ -165,7 +165,15 @@ const Home: React.FC<HomeProps> = ({
                                             )}
                                         </div>
                                         <div>
-                                            <h3 className="font-header text-lg group-hover:text-primary transition-colors">{team.name}</h3>
+                                            <h3 
+                                                className="font-header text-lg group-hover:text-primary transition-colors cursor-default"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    // Reservado para navegación a liga/historial futura
+                                                }}
+                                            >
+                                                {team.name}
+                                            </h3>
                                             <div className="flex gap-4 mt-1">
                                                 <div className={`flex gap-1 items-center px-2 py-0.5 rounded border ${hasLevelUp ? 'bg-primary/20 border-primary/40 animate-pulse' : 'bg-white/5 border-white/10'}`}>
                                                     <span className={`material-symbols-outlined text-xs ${hasLevelUp ? 'text-primary fill-1' : 'text-slate-500'}`}>star</span>
