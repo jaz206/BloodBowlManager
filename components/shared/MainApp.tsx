@@ -69,8 +69,21 @@ const MainApp: React.FC = () => {
     if (view === 'oracle') {
       setOracleSearchTerm(payload || '');
     }
+    if (view === 'guild' && payload) {
+      setRequestedRoster(null); // Clear roster request if selecting existing team
+      // Use a temporary state or pass directly if payload is teamId
+    }
     setActiveView(view);
+    if (payload && view === 'guild') {
+      // We'll use requestedRoster as a proxy or add a new state. 
+      // Actually, let's add a proper state for direct team opening.
+      setDirectOpenTeamId(payload);
+    } else {
+      setDirectOpenTeamId(null);
+    }
   };
+
+  const [directOpenTeamId, setDirectOpenTeamId] = useState<string | null>(null);
 
   // Combine sync states
   const displaySyncStatus = masterDataError ? 'error' : syncState;
@@ -472,6 +485,8 @@ const MainApp: React.FC = () => {
                   onRosterRequestHandled={() => setRequestedRoster(null)}
                   isGuest={isGuest}
                   matchReports={matchReports}
+                  initialTeamId={directOpenTeamId}
+                  onInitialTeamHandled={() => setDirectOpenTeamId(null)}
                 />
               )}
               {activeView === 'tactical' && <TacticalBoardPage managedTeams={managedTeams} plays={plays} onSavePlay={handlePlaySave} onDeletePlay={handlePlayDelete} />}

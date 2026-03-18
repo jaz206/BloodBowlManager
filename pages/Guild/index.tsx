@@ -45,9 +45,11 @@ interface TeamManagerProps {
     onRosterRequestHandled?: () => void;
     isGuest: boolean;
     matchReports: any[];
+    initialTeamId?: string | null;
+    onInitialTeamHandled?: () => void;
 }
 
-const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUpdate, onTeamDelete, requestedRoster, onRosterRequestHandled = () => { }, isGuest, matchReports }) => {
+const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUpdate, onTeamDelete, requestedRoster, onRosterRequestHandled = () => { }, isGuest, matchReports, initialTeamId, onInitialTeamHandled = () => {} }) => {
     // State for which team is shown in the top summary bar
     const [activeSummaryTeamId, setActiveSummaryTeamId] = useState<string | null>(null);
     // State for which team is being edited (inline rename)
@@ -121,6 +123,13 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
             onRosterRequestHandled();
         }
     }, [requestedRoster, onRosterRequestHandled]);
+
+    useEffect(() => {
+        if (initialTeamId) {
+            setOpenTeamId(initialTeamId);
+            onInitialTeamHandled();
+        }
+    }, [initialTeamId, onInitialTeamHandled]);
 
     const handleTeamCreate = async (newTeam: ManagedTeam) => {
         const teamNameExists = teams.some(team => team.name.toLowerCase() === newTeam.name.toLowerCase());

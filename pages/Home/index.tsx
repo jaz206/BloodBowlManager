@@ -153,7 +153,7 @@ const Home: React.FC<HomeProps> = ({
                             return (
                                 <div 
                                     key={team.id}
-                                    onClick={() => onNavigate('guild')}
+                                    onClick={() => onNavigate('guild', team.id)}
                                     className="bg-white/5 border border-white/5 rounded-xl p-5 flex items-center justify-between group hover:bg-white/[0.07] transition-all cursor-pointer relative"
                                 >
                                     <div className="flex items-center gap-5">
