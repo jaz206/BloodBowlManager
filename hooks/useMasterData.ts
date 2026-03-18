@@ -38,6 +38,7 @@ export const useMasterData = () => {
     const [skills, setSkills] = useState<Skill[]>(staticSkills);
     const [starPlayers, setStarPlayers] = useState<StarPlayer[]>(staticStarsData);
     const [inducements, setInducements] = useState<Inducement[]>(language === 'es' ? staticInducementsEs : (staticInducementsEn as unknown as Inducement[]));
+    const [heraldoItems, setHeraldoItems] = useState<any[]>([]);
     const [heroImage, setHeroImage] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
@@ -58,7 +59,7 @@ export const useMasterData = () => {
 
         setLoading(true);
         let resolved = 0;
-        const TOTAL = 5; // teams, skills, stars, inducements, hero
+        const TOTAL = 6; // teams, skills, stars, inducements, hero, heraldo
 
         const checkDone = () => {
             resolved++;
@@ -144,6 +145,20 @@ export const useMasterData = () => {
             () => checkDone()
         );
 
+        // Heraldo listener
+        const unsubHeraldo = onSnapshot(
+            doc(db, MASTER_COL, 'heraldo'),
+            (snap) => {
+                if (snap.exists() && snap.data()?.items?.length > 0) {
+                    setHeraldoItems(snap.data().items);
+                } else {
+                    setHeraldoItems([]);
+                }
+                checkDone();
+            },
+            () => { setHeraldoItems([]); checkDone(); }
+        );
+
         // Meta listener (for last sync info)
         const unsubMeta = onSnapshot(
             doc(db, MASTER_COL, 'meta'),
@@ -162,6 +177,7 @@ export const useMasterData = () => {
             unsubStars();
             unsubInducements();
             unsubHero();
+            unsubHeraldo();
             unsubMeta();
         };
         // Re-subscribe when language changes to get the right skills/inducements doc
@@ -208,6 +224,7 @@ export const useMasterData = () => {
                 getDoc(doc(db, MASTER_COL, 'star_players')),
                 getDoc(doc(db, MASTER_COL, 'inducements_es')),
                 getDoc(doc(db, MASTER_COL, 'inducements_en')),
+                getDoc(doc(db, MASTER_COL, 'heraldo')),
             ]);
 
             const teamsToSave = mergeItems(teamsSnap.exists() ? teamsSnap.data().items : [], staticTeamsData, 'name');
@@ -222,6 +239,7 @@ export const useMasterData = () => {
                 setDoc(doc(db, MASTER_COL, 'star_players'), { items: starsToSave, updatedAt: ts }),
                 setDoc(doc(db, MASTER_COL, 'inducements_es'), { items: inducEsToSave, updatedAt: ts }),
                 setDoc(doc(db, MASTER_COL, 'inducements_en'), { items: inducEnToSave, updatedAt: ts }),
+                setDoc(doc(db, MASTER_COL, 'heraldo'), { items: heraldoItems, updatedAt: ts }),
                 setDoc(doc(db, MASTER_COL, 'meta'), {
                     lastSync: ts,
                     version: new Date().toISOString().split('T')[0],
@@ -249,7 +267,7 @@ export const useMasterData = () => {
      * Finds the item by keyEN (skills) or name (teams/stars/inducements).
      */
     const updateMasterItem = useCallback(async (
-        docId: 'teams' | 'skills' | 'star_players' | 'inducements_es' | 'inducements_en',
+        docId: 'teams' | 'skills' | 'star_players' | 'inducements_es' | 'inducements_en' | 'heraldo',
         itemId: string,
         patch: Record<string, unknown>
     ): Promise<void> => {
@@ -279,6 +297,7 @@ export const useMasterData = () => {
         skills,
         starPlayers,
         inducements,
+        heraldoItems,
         heroImage,
         // Status
         loading,

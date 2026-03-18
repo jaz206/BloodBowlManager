@@ -5,7 +5,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import SearchIcon from '../icons/SearchIcon';
 import type { Team, StarPlayer, Skill, Inducement } from '../../types';
 
-type AdminTab = 'general' | 'arena' | 'teams' | 'stars' | 'skills' | 'inducements';
+type AdminTab = 'general' | 'heraldo' | 'arena' | 'teams' | 'stars' | 'skills' | 'inducements';
 
 const transformGitHubUrl = (url: string | undefined | null): string => {
     if (!url || typeof url !== 'string') return url || '';
@@ -38,9 +38,9 @@ const AdminPanel: React.FC = () => {
         loading,
         refresh,
         syncMasterData,
-        syncStatus,
         isFromFirestore,
-        updateMasterItem
+        updateMasterItem,
+        heraldoItems
     } = useMasterData();
 
     const { config: arenaConfig, updateConfig: saveArenaConfig } = useArenaConfig();
@@ -85,10 +85,12 @@ const AdminPanel: React.FC = () => {
                 );
             case 'inducements':
                 return inducements.filter(i => i.name.toLowerCase().includes(term));
+            case 'heraldo':
+                return heraldoItems.filter(h => h.title.toLowerCase().includes(term) || h.content.toLowerCase().includes(term));
             default:
                 return [];
         }
-    }, [activeTab, searchTerm, teams, starPlayers, skills, inducements]);
+    }, [activeTab, searchTerm, teams, starPlayers, skills, inducements, heraldoItems]);
 
     // Automatic URL transformation effect
     useEffect(() => {
@@ -339,6 +341,9 @@ const AdminPanel: React.FC = () => {
             } else if (type === 'inducements') {
                 const docId = language === 'es' ? 'inducements_es' : 'inducements_en';
                 await updateMasterItem(docId, data.name, data);
+            } else if (type === 'heraldo') {
+                // Use title as ID for heraldo items for now
+                await updateMasterItem('heraldo', data.title, data);
             }
 
             showToast('✅ Cambios guardados con éxito en la Base de Datos.');
@@ -354,6 +359,7 @@ const AdminPanel: React.FC = () => {
 
     const tabs: { id: AdminTab; label: string; icon: string }[] = [
         { id: 'general', label: 'General', icon: 'settings' },
+        { id: 'heraldo', label: 'Heraldo', icon: 'newspaper' },
         { id: 'arena', label: 'Reglas Arena', icon: 'stadia_controller' },
         { id: 'teams', label: 'Equipos', icon: 'groups' },
         { id: 'stars', label: 'Estrellas', icon: 'star' },
@@ -685,14 +691,19 @@ const AdminPanel: React.FC = () => {
                                                     <span className="material-symbols-outlined text-base">payments</span>
                                                 </div>
                                             )}
+                                            {activeTab === 'heraldo' && (
+                                                <div className="w-10 h-10 rounded-xl bg-neutral-800 border border-neutral-700 flex items-center justify-center text-premium-gold">
+                                                    <span className="material-symbols-outlined text-base">{item.type === 'starplayer' ? 'star' : item.type === 'team' ? 'groups' : 'bolt'}</span>
+                                                </div>
+                                            )}
                                             <div className="min-w-0">
                                                 <h5 className="font-display font-black text-white uppercase tracking-wider text-sm truncate group-hover:text-premium-gold transition-colors italic">
                                                     {activeTab === 'skills'
                                                         ? (language === 'es' ? (item.name_es || item.name_en) : item.name_en)
-                                                        : item.name}
+                                                        : item.title || item.name}
                                                 </h5>
                                                 <p className="text-[10px] text-slate-500 font-bold uppercase truncate tracking-tighter">
-                                                    {activeTab === 'skills' ? item.category : (item.cost ? `${(item.cost / 1000)}k MO` : item.tier ? `Tier ${item.tier}` : 'Consitente')}
+                                                    {activeTab === 'skills' ? item.category : activeTab === 'heraldo' ? item.category : (item.cost ? `${(item.cost / 1000)}k MO` : item.tier ? `Tier ${item.tier}` : 'Consitente')}
                                                 </p>
                                             </div>
                                         </div>
@@ -832,7 +843,7 @@ const AdminPanel: React.FC = () => {
                                         )}
 
                                         {/* IMAGE EXPLORER / DATA URL FIELD */}
-                                        {(editingItem.type === 'hero' || editingItem.type === 'teams' || editingItem.type === 'stars') && (
+                                        {(editingItem.type === 'hero' || editingItem.type === 'teams' || editingItem.type === 'stars' || editingItem.type === 'heraldo') && (
                                             <div className="space-y-6">
                                                 <div className="flex justify-between items-end">
                                                     <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Origen de la Imagen</label>
@@ -1335,6 +1346,76 @@ const AdminPanel: React.FC = () => {
                                                         value={editingItem.data.description || ''}
                                                         onChange={(e) => setEditingItem({ ...editingItem, data: { ...editingItem.data, description: e.target.value } })}
                                                         className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none h-40 resize-none text-sm leading-relaxed"
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* HERALDO SPECIFIC */}
+                                        {editingItem.type === 'heraldo' && (
+                                            <div className="space-y-8">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                    <div className="space-y-4">
+                                                        <label className="block text-[10px] font-black text-premium-gold uppercase tracking-widest ml-1">Tipo de Noticia</label>
+                                                        <select
+                                                            value={editingItem.data.type || 'skill'}
+                                                            onChange={(e) => setEditingItem({ ...editingItem, data: { ...editingItem.data, type: e.target.value } })}
+                                                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none"
+                                                        >
+                                                            <option value="starplayer">Jugador Estrella</option>
+                                                            <option value="team">Equipo/Franquicia</option>
+                                                            <option value="skill">Habilidad/Regla</option>
+                                                        </select>
+                                                    </div>
+                                                    <div className="space-y-4">
+                                                        <label className="block text-[10px] font-black text-premium-gold uppercase tracking-widest ml-1">Título de la Noticia</label>
+                                                        <input
+                                                            type="text"
+                                                            value={editingItem.data.title || ''}
+                                                            onChange={(e) => setEditingItem({ ...editingItem, data: { ...editingItem.data, title: e.target.value } })}
+                                                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none uppercase italic font-display font-black"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                    <div className="space-y-4">
+                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Etiqueta (Tag)</label>
+                                                        <input
+                                                            type="text"
+                                                            value={editingItem.data.tag || ''}
+                                                            onChange={(e) => setEditingItem({ ...editingItem, data: { ...editingItem.data, tag: e.target.value } })}
+                                                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none"
+                                                            placeholder="Ej: Destacado, Leyenda, Reglamento"
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-4">
+                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Categoría</label>
+                                                        <input
+                                                            type="text"
+                                                            value={editingItem.data.category || ''}
+                                                            onChange={(e) => setEditingItem({ ...editingItem, data: { ...editingItem.data, category: e.target.value } })}
+                                                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none"
+                                                            placeholder="Ej: Sección de Habilidades, Perfil de Jugador"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-4">
+                                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Contenido del Artículo (Cuerpo)</label>
+                                                    <textarea
+                                                        value={editingItem.data.content || ''}
+                                                        onChange={(e) => setEditingItem({ ...editingItem, data: { ...editingItem.data, content: e.target.value } })}
+                                                        className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none h-32 resize-none text-sm leading-relaxed"
+                                                        placeholder="Escribe la noticia aquí..."
+                                                    />
+                                                </div>
+                                                <div className="space-y-4">
+                                                    <label className="block text-[10px] font-black text-blood uppercase tracking-widest ml-1">Nota de Regla (Destacado Rojo)</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editingItem.data.rule || ''}
+                                                        onChange={(e) => setEditingItem({ ...editingItem, data: { ...editingItem.data, rule: e.target.value } })}
+                                                        className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none text-blood font-bold"
+                                                        placeholder="Ej: ⚠️ Regla S3: Categoría Élite"
                                                     />
                                                 </div>
                                             </div>

@@ -383,3 +383,15 @@ export interface MatchReport {
   stats?: MatchStats;
   wasConceded?: 'home' | 'opponent' | 'none';
 }
+
+export interface HeraldoItem {
+  id?: string;
+  type: 'starplayer' | 'skill' | 'team';
+  tag: string;
+  category: string;
+  title: string;
+  content: string;
+  rule: string;
+  image?: string;
+  active?: boolean;
+}

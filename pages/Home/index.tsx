@@ -3,6 +3,7 @@ import type { ManagedTeam, League as Competition, GameEvent, MatchReport } from 
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../hooks/useAuth';
 import { skillsData } from '../../data/skills_es';
+import { useMasterData } from '../../hooks/useMasterData';
 
 interface HomeProps {
     onNavigate: (view: any, payload?: string) => void;
@@ -15,31 +16,40 @@ interface HomeProps {
 }
 
 const ELITE_SKILLS = ['Placar', 'Esquivar', 'Defensa', 'Golpe Mortífero'];
-
 const HERALDO_ITEMS = [
     {
+        type: 'skill' as const,
         tag: 'Destacado',
         category: 'Sección de Habilidades',
         title: 'ESQUIVAR',
         content: 'Una habilidad esencial para cualquier jugador que desee sobrevivir en las zonas de defensa. Permite repetir una tirada de Esquiva fallida por turno.',
-        rule: '⚠️ Regla S3: Categoría Élite (+10k MO)',
-        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAoZFoF0guWdurhfUKnNWrVyO86UnCzaVNhEgSYsfz0T93F7TeH25iZmLeS0QWa4IjVeaSyiPc0YqB3eFm5rQfrzw2l2zKd5EZ5nQdipG9E46n6q-mKEbwK1JLI3jma1w-xhZRAc_0cy9a6LCcKOxweoygH8Xz9VJw4cHQlCh9bbOS7SaO-MGxmF0o-_WeV64RUwxLcRvF4wP2oQyv_K-CRVFV1ebuoX2BzEG6zGAhSgSM01rFTFKFJ7oUYyQVQbtTZeczuFYnxLQM'
+        rule: '⚠️ Regla S3: Categoría Élite (+10k MO)'
     },
     {
+        type: 'starplayer' as const,
         tag: 'Leyenda',
         category: 'Perfil de Jugador',
         title: "MORG 'N' THORG",
         content: 'El Gigante entre Gigantes. Su fuerza devastadora y su sorprendente agilidad lo convierten en el Star Player más codiciado (y caro) de la historia.',
         rule: 'Precio: 380,000 MO (S3)',
-        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAoZFoF0guWdurhfUKnNWrVyO86UnCzaVNhEgSYsfz0T93F7TeH25iZmLeS0QWa4IjVeaSyiPc0YqB3eFm5rQfrzw2l2zKd5EZ5nQdipG9E46n6q-mKEbwK1JLI3jma1w-xhZRAc_0cy9a6LCcKOxweoygH8Xz9VJw4cHQlCh9bbOS7SaO-MGxmF0o-_WeV64RUwxLcRvF4wP2oQyv_K-CRVFV1ebuoX2BzEG6zGAhSgSM01rFTFKFJ7oUYyQVQbtTZeczuFYnxLQM'
+        image: 'https://raw.githubusercontent.com/jaz206/Bloodbowl-image/main/morg.webp'
     },
     {
+        type: 'team' as const,
+        tag: 'Franquicia',
+        category: 'Crónica del Gremio',
+        title: 'LOS TRAGALEGUAS',
+        content: 'El equipo revelación de la pretemporada ha sorprendido a todos con su juego ofensivo. ¿Podrán mantener el ritmo ante los Enanos?',
+        rule: 'Estatus: En racha',
+        image: 'https://raw.githubusercontent.com/jaz206/Bloodbowl-image/main/orcs_crest.png'
+    },
+    {
+        type: 'skill' as const,
         tag: 'Reglamento',
         category: 'Errores Costosos',
         title: 'BANCO EXCESIVO',
-        content: 'Si tu tesorería supera los 100,000 MO al final del partido, corres el riesgo de perder fondos ante la indisciplina de tus jugadores o fiestas imprevistas.',
-        rule: '⚠️ Nueva tabla de Errores Costosos S3',
-        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAoZFoF0guWdurhfUKNWrVyO86UnCzaVNhEgSYsfz0T93F7TeH25iZmLeS0QWa4IjVeaSyiPc0YqB3eFm5rQfrzw2l2zKd5EZ5nQdipG9E46n6q-mKEbwK1JLI3jma1w-xhZRAc_0cy9a6LCcKOxweoygH8Xz9VJw4cHQlCh9bbOS7SaO-MGxmF0o-_WeV64RUwxLcRvF4wP2oQyv_K-CRVFV1ebuoX2BzEG6zGAhSgSM01rFTFKFJ7oUYyQVQbtTZeczuFYnxLQM'
+        content: 'Si tu tesorería supera los 100,000 MO al final del partido, corres el riesgo de perder fondos ante la indisciplina de tus jugadores o fiestas imprevistas. ¡No guardes tanto oro!',
+        rule: '⚠️ Nueva tabla de Errores Costosos S3'
     }
 ];
 
@@ -56,6 +66,10 @@ const Home: React.FC<HomeProps> = ({
 }) => {
     const { t } = useLanguage();
     const { user } = useAuth();
+    const { heraldoItems: remoteHeraldo } = useMasterData();
+
+    // Use remote items if available, otherwise static fallback
+    const items = useMemo(() => remoteHeraldo.length > 0 ? remoteHeraldo : HERALDO_ITEMS, [remoteHeraldo]);
     
     // States for interactive modules
     const [oracleSearch, setOracleSearch] = useState('');
@@ -72,11 +86,12 @@ const Home: React.FC<HomeProps> = ({
 
     // Heraldo Rotation Logic
     useEffect(() => {
+        if (items.length <= 1) return;
         const timer = setInterval(() => {
-            setHeraldoIndex(prev => (prev + 1) % HERALDO_ITEMS.length);
+            setHeraldoIndex(prev => (prev + 1) % items.length);
         }, 20000); // 20 seconds as requested
         return () => clearInterval(timer);
-    }, []);
+    }, [items.length]);
 
     // Logic for Competición: Active league and its standings
     const activeLeague = useMemo(() => 
@@ -405,33 +420,39 @@ const Home: React.FC<HomeProps> = ({
 
                         {/* Content area with smooth transition */}
                         <div className="flex-1 flex items-center px-8 gap-8 py-4 transition-all duration-500">
-                            {/* Left Media Item */}
-                            <div className="w-24 h-24 md:w-32 md:h-32 flex-shrink-0 relative">
-                                <div className="absolute inset-0 bg-neutral-900/10 rounded-full blur-xl"></div>
-                                <img 
-                                    alt="News media" 
-                                    className="w-full h-full object-contain ink-edges" 
-                                    src={HERALDO_ITEMS[heraldoIndex].image} 
-                                />
-                            </div>
+                            {/* Conditional Media Item */}
+                            {items[heraldoIndex]?.type !== 'skill' && (
+                                <div className={`flex-shrink-0 relative ${items[heraldoIndex]?.type === 'team' ? 'w-20 h-20' : 'w-28 h-28 md:w-36 md:h-36'}`}>
+                                    <div className="absolute inset-0 bg-neutral-900/10 rounded-full blur-xl"></div>
+                                    <img 
+                                        alt="News media" 
+                                        className={`w-full h-full object-contain ${items[heraldoIndex]?.type === 'team' ? 'grayscale-0' : 'ink-edges'}`} 
+                                        src={items[heraldoIndex]?.image} 
+                                    />
+                                </div>
+                            )}
 
                             {/* Center Content */}
-                            <div className="flex-1 space-y-2">
+                            <div className={`flex-1 space-y-2 ${items[heraldoIndex]?.type === 'skill' ? 'max-w-3xl mx-auto' : ''}`}>
                                 <div className="flex items-center gap-2">
                                     <span className="text-[10px] bg-blood/10 text-blood font-black px-2 py-0.5 rounded border border-blood/20 uppercase tracking-tighter">
-                                        {HERALDO_ITEMS[heraldoIndex].tag}
+                                        {items[heraldoIndex]?.tag}
                                     </span>
                                     <span className="text-[10px] text-neutral-900/60 font-serif font-bold italic">
-                                        {HERALDO_ITEMS[heraldoIndex].category}
+                                        {items[heraldoIndex]?.category}
                                     </span>
                                 </div>
                                 <h3 className="font-header text-3xl md:text-4xl text-neutral-900 tracking-tight leading-none drop-shadow-sm transition-all duration-500">
-                                    {HERALDO_ITEMS[heraldoIndex].title}
+                                    {items[heraldoIndex]?.title}
                                 </h3>
                                 <div className="max-w-xl">
-                                    <p className="font-serif text-base md:text-lg text-neutral-800 leading-tight drop-cap">
-                                        {HERALDO_ITEMS[heraldoIndex].content} 
-                                        <span className="font-bold text-blood ml-2 whitespace-nowrap">{HERALDO_ITEMS[heraldoIndex].rule}</span>
+                                    <p className={`font-serif text-neutral-800 leading-tight drop-cap ${
+                                        (items[heraldoIndex]?.content || '').length > 180 ? 'text-xs md:text-base' : 
+                                        (items[heraldoIndex]?.content || '').length > 120 ? 'text-sm md:text-lg' : 
+                                        'text-base md:text-xl'
+                                    }`}>
+                                        {items[heraldoIndex]?.content} 
+                                        <span className="font-bold text-blood ml-2 whitespace-nowrap">{items[heraldoIndex]?.rule}</span>
                                     </p>
                                 </div>
                             </div>
@@ -446,7 +467,7 @@ const Home: React.FC<HomeProps> = ({
                             <div className="px-8 flex justify-between items-center absolute -top-8 left-0 right-0">
                                 <span className="font-serif italic text-[10px] text-neutral-900/50">Circulación Imperial Registrada • Nuffle's Will Be Done</span>
                                 <div className="flex gap-4">
-                                    <span className="font-serif font-bold text-[10px] text-neutral-900/40 uppercase">Item {heraldoIndex + 1}/{HERALDO_ITEMS.length}</span>
+                                    <span className="font-serif font-bold text-[10px] text-neutral-900/40 uppercase">Item {heraldoIndex + 1}/{items.length}</span>
                                 </div>
                             </div>
                         </div>
