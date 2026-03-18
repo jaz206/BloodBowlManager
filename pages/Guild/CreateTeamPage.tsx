@@ -200,7 +200,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                         key={currentFaction.name}
                         initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="font-epilogue text-8xl italic font-black tracking-tighter text-white nuffle-glow uppercase"
+                        className="font-epilogue text-6xl italic font-black tracking-tighter text-white nuffle-glow uppercase"
                     >
                         {currentFaction.name}
                     </motion.h1>
@@ -270,11 +270,18 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                                                 <td className="py-5 px-2 text-center text-zinc-400 font-mono font-bold">{pos.stats.AR}</td>
                                                 <td className="py-5 px-4">
                                                     <div className="flex flex-wrap gap-2">
-                                                        {pos.skillKeys.length > 0 ? pos.skillKeys.slice(0, 3).map(sk => (
-                                                            <span key={sk} className="px-3 py-1 bg-[#CA8A04] text-black text-[9px] font-black rounded-sm uppercase italic tracking-tighter shadow-sm">
-                                                                {localizeSkill(sk)}
-                                                            </span>
-                                                        )) : <span className="text-zinc-600 text-[9px] font-bold uppercase tracking-widest italic opacity-40">Sin Atributos</span>}
+                                                        {pos.skillKeys.length > 0 ? pos.skillKeys.slice(0, 3).map(sk => {
+                                                            const skillObj = allSkills.find(s => s.keyEN === sk);
+                                                            return (
+                                                                <button 
+                                                                    key={sk} 
+                                                                    onClick={() => skillObj && setSelectedSkill(skillObj)}
+                                                                    className="px-3 py-1 bg-[#CA8A04] hover:bg-white text-black text-[9px] font-black rounded-sm uppercase italic tracking-tighter shadow-sm transition-colors"
+                                                                >
+                                                                    {localizeSkill(sk)}
+                                                                </button>
+                                                            );
+                                                        }) : <span className="text-zinc-600 text-[9px] font-bold uppercase tracking-widest italic opacity-40">Sin Atributos</span>}
                                                     </div>
                                                 </td>
                                             </tr>
@@ -312,17 +319,26 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                 </main>
 
                 {/* 4. EL BOTÓN MAESTRO */}
-                <footer className="fixed bottom-0 left-0 w-full bg-[#0a0a0a]/80 border-t-2 border-[#CA8A04]/30 p-8 z-[100] backdrop-blur-xl">
+                <footer className="fixed bottom-0 left-0 w-full bg-[#0a0a0a]/80 border-t-2 border-[#CA8A04]/30 p-6 z-[100] backdrop-blur-xl">
                     <div className="max-w-[1600px] mx-auto flex justify-center">
                         <button 
                             onClick={() => setStep('draft')}
-                            className="bg-[#CA8A04] hover:bg-white text-black font-epilogue italic font-black text-3xl px-32 py-6 tracking-tighter uppercase transition-all transform hover:scale-[1.02] active:scale-95 shadow-[0_0_40px_rgba(202,138,4,0.4)] relative group overflow-hidden"
+                            className="bg-[#CA8A04] hover:bg-white text-black font-epilogue italic font-black text-xl px-16 py-4 tracking-tighter uppercase transition-all transform hover:scale-[1.02] active:scale-95 shadow-[0_0_40px_rgba(202,138,4,0.4)] relative group overflow-hidden"
                         >
                             <span className="relative z-10">Fundar esta Franquicia</span>
                             <div className="absolute top-0 -left-full w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent group-hover:left-full transition-all duration-1000 ease-in-out"></div>
                         </button>
                     </div>
                 </footer>
+
+                <AnimatePresence>
+                    {selectedSkill && (
+                        <SkillModal 
+                            skill={selectedSkill} 
+                            onClose={() => setSelectedSkill(null)} 
+                        />
+                    )}
+                </AnimatePresence>
                 
                 <style>{`
                     .nuffle-glow { text-shadow: 0 0 15px rgba(255, 255, 255, 0.1), 0 0 30px rgba(202, 138, 4, 0.4); animation: breathe 3s infinite ease-in-out; }
