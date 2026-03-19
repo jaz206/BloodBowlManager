@@ -1810,10 +1810,9 @@ export const Leagues: React.FC<LeaguesProps> = ({
                             </div>
                             <div className="flex gap-4">
                                 <button onClick={() => setConfirmation(null)} className="flex-1 py-4 text-slate-500 font-black uppercase tracking-widest text-[10px] hover:text-white transition-colors">Cerrar</button>
-                                {confirmation.type === 'danger' && (
+                                {confirmation.type === 'danger' ? (
                                     <button onClick={confirmation.onConfirm} className="flex-1 py-4 bg-red-600 text-white font-black rounded-2xl uppercase tracking-widest text-[10px] shadow-lg shadow-red-900/20">Confirmar</button>
-                                )}
-                                {confirmation.type !== 'danger' && confirmation.onConfirm !== (() => setConfirmation(null)) && (
+                                ) : (
                                     <button onClick={confirmation.onConfirm} className="flex-1 py-4 bg-primary text-black font-black rounded-2xl uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20">Entendido</button>
                                 )}
                             </div>

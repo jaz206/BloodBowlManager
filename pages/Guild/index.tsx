@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import type { ManagedTeam } from '../../types';
 import TeamCreator from './CreateTeamPage';
-import { TeamDashboard } from './TeamDetailPage';
+import { TeamDashboard } from '../../components/guild/TeamDashboard';
 import { calculateTeamValue } from '../../utils/teamUtils';
 
 // SPP Levels for S3
