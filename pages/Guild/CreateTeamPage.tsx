@@ -91,6 +91,28 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
     const isBudgetNegative = remainingBudget < 0;
     const canFinalize = teamName.trim().length >= 3 && draftedPlayers.length >= 11 && !isBudgetNegative;
 
+    const getRandomFantasyName = (faction: string, position: string, index: number) => {
+        const names: Record<string, string[]> = {
+            'Humanos': ['Aldric', 'Beorn', 'Cedrick', 'Derfel', 'Elric', 'Frederick', 'Garrick', 'Heward', 'Isambard', 'Justinian', 'Kole', 'Lambert', 'Merrick', 'Osric', 'Piers'],
+            'Orcos': ['Gorbag', 'Shagrat', 'Grishnakh', 'Ugluk', 'Mauhur', 'Lugdush', 'Radbug', 'Bolg', 'Azog', 'Gothmog', 'Mugrug', 'Zog', 'Grok', 'Drog', 'Snagga'],
+            'Elfos': ['Legolas', 'Thranduil', 'Celeborn', 'Elrond', 'Haldir', 'Erestor', 'Glorfindel', 'Cirdan', 'Lindir', 'Aegnor', 'Beleg', 'Celegorm', 'Denethor', 'Ecthelion', 'Finduilas'],
+            'Enanos': ['Thorin', 'Balin', 'Dwalin', 'Fili', 'Kili', 'Dori', 'Nori', 'Ori', 'Oin', 'Gloin', 'Bifur', 'Bofur', 'Bombur', 'Dain', 'Thrain'],
+            'No Muertos': ['Vorthas', 'Kaelath', 'Malakor', 'Nerughal', 'Skaros', 'Xeth-Ka', 'Zephyrus', 'Mortis', 'Drax', 'Thanatos', 'Karrion', 'Blight', 'Grave', 'Stitch', 'Bone'],
+            'Caos': ['Archaon', 'Crom', 'Vardek', 'Engra', 'Sigvald', 'Vilitch', 'Festus', 'Valkia', 'Scyla', 'Khornev', 'Malek', 'Zhur', 'Kran', 'Vorg', 'Slav'],
+            'Skavens': ['Snikch', 'Queek', 'Ikit', 'Throt', 'Skrolk', 'Skweel', 'Tretch', 'Ghoritch', 'Klaw', 'Verminkin', 'Ratchet', 'Squeal', 'Gnaw', 'Bite', 'Sneak'],
+            'Hombres Lagarto': ['Tik-taq-to', 'Kroq-Gar', 'Tehenhauin', 'Itzi-Bitzi', 'Mazdamundi', 'Lord Kroak', 'Nakai', 'Oxayotl', 'Tlaxtlan', 'Xlanhuapec', 'Zlat', 'Krox', 'Slaan', 'Skink', 'Chameleon'],
+            'Goblins': ['Grom', 'Skarsnik', 'Snagla', 'Gitilla', 'Oglok', 'Spinny', 'Gnash', 'Bitey', 'Snotty', 'Boog', 'Greeny', 'Stab', 'Poke', 'Sniff', 'Snot']
+        };
+
+        const factionKey = Object.keys(names).find(k => faction.toLowerCase().includes(k.toLowerCase()));
+        if (factionKey && names[factionKey]) {
+            const list = names[factionKey];
+            return list[Math.floor(Math.random() * list.length)];
+        }
+
+        return `${position} #${index}`;
+    };
+
     const handleHirePlayer = (pos: Player) => {
         if (draftedPlayers.length >= 16) return;
         const count = draftedPlayers.filter(p => p.position === pos.position).length;
@@ -100,7 +122,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
         const newPlayer: ManagedPlayer = {
             ...pos,
             id: Date.now() + Math.random(),
-            customName: `${pos.position} #${draftedPlayers.length + 1}`,
+            customName: getRandomFantasyName(currentFaction?.name || '', pos.position, draftedPlayers.length + 1),
             spp: 0,
             gainedSkills: [],
             lastingInjuries: [],
@@ -130,7 +152,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
             cheerleaders,
             apothecary,
             players: draftedPlayers,
-            crestImage: undefined
+            crestImage: currentFaction.image
         };
         onTeamCreate(newTeam);
     };
