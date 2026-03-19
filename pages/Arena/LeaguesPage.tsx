@@ -138,6 +138,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
     const [newCompetitionFormat, setNewCompetitionFormat] = useState<'Liguilla' | 'Torneo'>('Liguilla');
     const [newCompReglamento, setNewCompReglamento] = useState<'BB2020' | 'BB2016' | 'Sevens'>('BB2020');
     const [newCompMuerteSubita, setNewCompMuerteSubita] = useState(false);
+    const [newCompVisibility, setNewCompVisibility] = useState<'Public' | 'Private'>('Public');
     const [newCompIncentivos, setNewCompIncentivos] = useState<'Todos' | 'Reducidos' | 'Ninguno'>('Todos');
     const [newCompTiempoTurno, setNewCompTiempoTurno] = useState(4);
     const [newCompMercenarios, setNewCompMercenarios] = useState(true);
@@ -148,9 +149,21 @@ export const Leagues: React.FC<LeaguesProps> = ({
     const [scoreModalState, setScoreModalState] = useState<{ isOpen: boolean; roundIndex: string; matchIndex: number; matchup: Matchup; } | null>(null);
     const [confirmation, setConfirmation] = useState<{ title: string; message: string; onConfirm: () => void; type?: 'danger' | 'info' } | null>(null);
 
-    const leagues = useMemo(() => initialCompetitions.filter(c => c.format === 'Liguilla' && c.status === 'Open' && c.ownerId !== user?.id && !c.teams.some(t => t.ownerId === user?.id)), [initialCompetitions, user]);
-    const tournaments = useMemo(() => initialCompetitions.filter(c => c.format === 'Torneo' && c.status === 'Open' && c.ownerId !== user?.id && !c.teams.some(t => t.ownerId === user?.id)), [initialCompetitions, user]);
+    const leagues = useMemo(() => initialCompetitions.filter(c => c.format === 'Liguilla' && c.status === 'Open' && c.visibility !== 'Private' && c.ownerId !== user?.id && !c.teams.some(t => t.ownerId === user?.id)), [initialCompetitions, user]);
+    const tournaments = useMemo(() => initialCompetitions.filter(c => c.format === 'Torneo' && c.status === 'Open' && c.visibility !== 'Private' && c.ownerId !== user?.id && !c.teams.some(t => t.ownerId === user?.id)), [initialCompetitions, user]);
     const myCompetitions = useMemo(() => initialCompetitions.filter(c => c.ownerId === user?.id || c.teams.some(t => t.ownerId === user?.id)), [initialCompetitions, user]);
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const joinId = params.get('join');
+        if (joinId && initialCompetitions.length > 0 && managedTeams.length > 0 && !joinModalState.comp) {
+            const compToJoin = initialCompetitions.find((c: Competition) => c.id === joinId);
+            if (compToJoin) {
+                setJoinModalState({ comp: compToJoin, teamToJoin: managedTeams[0]?.name || '' });
+                window.history.replaceState({}, '', window.location.pathname);
+            }
+        }
+    }, [initialCompetitions, managedTeams, joinModalState.comp]);
 
     const standings = useMemo(() => {
         if (!selectedCompetition || selectedCompetition.format !== 'Liguilla' || !selectedCompetition.schedule) return [];
@@ -209,6 +222,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
         const newCompetition: Omit<Competition, 'id'> = {
             name: newCompetitionName.trim(),
             format: newCompetitionFormat,
+            visibility: newCompVisibility,
             teams,
             ownerId: user.id,
             ownerName: user.name,
@@ -470,6 +484,29 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                     </div>
                                 </div>
                             </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div className="sm:col-span-2">
+                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-2">Visibilidad de la Competición</label>
+                                    <div className="flex bg-black/40 border border-white/10 rounded-2xl p-1">
+                                        <button 
+                                            type="button" 
+                                            onClick={() => setNewCompVisibility('Public')} 
+                                            className={`flex-1 flex flex-col items-center justify-center gap-1 py-4 text-[10px] font-black uppercase tracking-widest italic rounded-xl transition-all ${newCompVisibility === 'Public' ? 'bg-primary text-black' : 'text-slate-500 hover:text-white'}`}
+                                        >
+                                            <span className="material-symbols-outlined text-xl">public</span>
+                                            Pública (Visible en la Arena)
+                                        </button>
+                                        <button 
+                                            type="button" 
+                                            onClick={() => setNewCompVisibility('Private')} 
+                                            className={`flex-1 flex flex-col items-center justify-center gap-1 py-4 text-[10px] font-black uppercase tracking-widest italic rounded-xl transition-all ${newCompVisibility === 'Private' ? 'bg-primary text-black' : 'text-slate-500 hover:text-white'}`}
+                                        >
+                                            <span className="material-symbols-outlined text-xl">vpn_key</span>
+                                            Privada (Solo por invitación)
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </section>
 
@@ -487,25 +524,10 @@ export const Leagues: React.FC<LeaguesProps> = ({
                         <div className="flex flex-col sm:flex-row gap-4 mb-8">
                             <button 
                                 onClick={() => setIsSelectingOwnerTeam(true)}
-                                className="flex-1 flex items-center justify-center gap-2 bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest italic transition-all shadow-lg shadow-primary/5"
+                                className="w-full flex items-center justify-center gap-2 bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest italic transition-all shadow-lg shadow-primary/5"
                             >
                                 <span className="material-symbols-outlined text-[20px] font-bold">add_circle</span>
                                 Mis Equipos
-                            </button>
-                            <button 
-                                onClick={() => {
-                                    navigator.clipboard.writeText(`${window.location.origin}?join=invite_${Date.now()}`);
-                                    setConfirmation({
-                                        title: "Enlace Copiado",
-                                        message: "¡Enlace de invitación copiado al portapapeles! Envíalo a otros coaches por WhatsApp o Discord.",
-                                        onConfirm: () => setConfirmation(null),
-                                        type: 'info'
-                                    });
-                                }}
-                                className="flex-1 flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest italic transition-all"
-                            >
-                                <span className="material-symbols-outlined text-[20px] font-bold">link</span>
-                                Generar Invitación
                             </button>
                         </div>
 
@@ -685,10 +707,17 @@ export const Leagues: React.FC<LeaguesProps> = ({
                     <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-3xl rounded-full translate-x-1/3 -translate-y-1/3"></div>
 
                     <div className="relative z-10 space-y-2">
-                        <span className={`text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-[0.2em] italic border ${selectedCompetition.status === 'Open' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-primary/10 text-primary border-primary/20'
-                            }`}>
-                            {selectedCompetition.status}
-                        </span>
+                        <div className="flex gap-2">
+                            <span className={`text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-[0.2em] italic border ${selectedCompetition.status === 'Open' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-primary/10 text-primary border-primary/20'
+                                }`}>
+                                {selectedCompetition.status}
+                            </span>
+                            {selectedCompetition.visibility === 'Private' && (
+                                <span className="text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-[0.2em] italic border bg-red-500/10 text-red-500 border-red-500/20 flex items-center gap-1">
+                                    <span className="material-symbols-outlined text-[12px]">lock</span> PRIVADA
+                                </span>
+                            )}
+                        </div>
                         <h2 className="text-4xl md:text-5xl font-black text-white italic truncate tracking-tighter uppercase pt-2">
                             {selectedCompetition.name}
                         </h2>
@@ -707,6 +736,21 @@ export const Leagues: React.FC<LeaguesProps> = ({
 
                     {user?.id === selectedCompetition.ownerId && (
                         <div className="relative z-10 flex flex-wrap gap-3">
+                            <button
+                                onClick={() => {
+                                    navigator.clipboard.writeText(`${window.location.origin}?join=${selectedCompetition.id}`);
+                                    setConfirmation({
+                                        title: "Enlace Copiado",
+                                        message: "¡Enlace de invitación copiado al portapapeles! Envíalo a otros coaches por WhatsApp o Discord para que se unan.",
+                                        onConfirm: () => setConfirmation(null),
+                                        type: 'info'
+                                    });
+                                }}
+                                className="bg-primary/10 text-primary border border-primary/30 hover:bg-primary hover:text-black font-black py-3 px-6 rounded-2xl text-[10px] uppercase tracking-widest transition-all shadow-xl shadow-primary/5 flex items-center gap-2"
+                            >
+                                <span className="material-symbols-outlined text-sm font-bold">link</span>
+                                Invitar
+                            </button>
                             {selectedCompetition.status === 'Open' && (
                                 <button
                                     onClick={() => handleStartCompetition(selectedCompetition)}

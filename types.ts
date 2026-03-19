@@ -239,6 +239,7 @@ export interface Competition {
   ownerName?: string;
   format: 'Liguilla' | 'Torneo';
   status: 'Open' | 'In Progress' | 'Finished';
+  visibility?: 'Public' | 'Private'; // Nueva propiedad
   teams: CompetitionTeam[];
   schedule?: Record<string, Matchup[]> | null;
   bracket?: Record<string, Matchup[]> | null;
