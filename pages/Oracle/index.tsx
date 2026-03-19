@@ -394,7 +394,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                         </button>
 
                         {/* Traditional Tab Navigation for sub-views */}
-                        <div className="flex border-b border-white/5 mb-8 bg-black/40 rounded-2xl overflow-hidden shadow-xl">
+                        <div className="flex border-b border-white/5 mb-8 bg-[#0a0a0a]/80 rounded-2xl overflow-hidden shadow-xl sticky top-16 z-20 backdrop-blur-xl transition-all">
                             {[
                                 { id: 'teams', label: t('oracle.tabs.teams') },
                                 { id: 'skills', label: t('oracle.tabs.skills') },

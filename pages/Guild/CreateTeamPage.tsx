@@ -163,7 +163,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
         return (
             <div className="min-h-screen w-full flex flex-col bg-[#0a0a0a] text-white font-inter overflow-x-hidden antialiased selection:bg-gold selection:text-black">
                 {/* 1. FLUID RACE SELECTOR */}
-                <nav className="w-full bg-black/40 backdrop-blur-md border-b border-white/5 py-4 px-8 sticky top-0 z-[100]">
+                <nav className="w-full bg-black/40 backdrop-blur-xl border-b border-white/5 py-4 px-8 sticky top-16 z-[100]">
                     <div className="max-w-7xl mx-auto flex items-center justify-between gap-12">
                         <div className="flex flex-col">
                             <h2 className="text-[10px] font-black text-gold uppercase tracking-[0.4em] mb-1">Cátedra de Nuffle</h2>

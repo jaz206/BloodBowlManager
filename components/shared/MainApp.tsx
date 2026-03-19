@@ -442,7 +442,7 @@ const MainApp: React.FC = () => {
           </header>
       </div>
 
-      <main className={`${mainClasses} pt-24 pb-12`}>
+      <main className={`${mainClasses} pt-40 pb-12`}>
         <div className="min-h-[60vh] relative group/main">
           {!dataInitiallyLoaded ? (
             <div className="flex flex-col items-center justify-center text-white py-40">

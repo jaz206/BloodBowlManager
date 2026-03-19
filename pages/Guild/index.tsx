@@ -310,7 +310,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
             )}
 
             {/* Header Section */}
-            <header className="w-full border-b border-white/10 bg-[#0a0a0a]/90 backdrop-blur-xl sticky top-0 z-50 px-6 py-4">
+            <header className="w-full border-b border-white/10 bg-[#0a0a0a]/90 backdrop-blur-xl sticky top-16 z-50 px-6 py-4">
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
                         <h1 className="text-3xl font-header font-black text-gold tracking-tight uppercase italic leading-none">
