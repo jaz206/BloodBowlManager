@@ -161,7 +161,7 @@ const Home: React.FC<HomeProps> = ({
     }, [activeLeague]);
 
     return (
-        <main className="max-w-[1600px] mx-auto w-full space-y-8 pb-32 animate-in fade-in duration-700 bg-[radial-gradient(circle_at_center,_rgba(202,138,4,0.03)_0%,_transparent_70%)]">
+        <div className="max-w-[1600px] mx-auto w-full space-y-8 pb-32 animate-in fade-in duration-700 bg-[radial-gradient(circle_at_center,_rgba(202, 138, 4, 0.03) 0%, transparent 70%)] pt-12">
             
             {/* ROW 1: GREMIO & ORÁCULO */}
             <div className="grid grid-cols-1 md:grid-cols-10 gap-8">
@@ -536,7 +536,7 @@ const Home: React.FC<HomeProps> = ({
                     </div>
                 </footer>
             </div>
-        </main>
+        </div>
     );
 };
 

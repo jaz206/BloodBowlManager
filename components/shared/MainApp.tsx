@@ -375,7 +375,7 @@ const MainApp: React.FC = () => {
     );
   };
 
-  const mainClasses = (activeView === 'arena' || activeView === 'tactical' || activeView === 'admin') ? '' : 'container mx-auto max-w-7xl p-2 sm:p-6';
+  const mainClasses = (activeView === 'arena' || activeView === 'tactical' || activeView === 'admin') ? '' : 'container mx-auto max-w-7xl px-2 sm:px-6 pb-2 sm:pb-6';
 
   return (
     <div className="min-h-screen bg-[#050505] text-slate-200 font-sans antialiased selection:bg-premium-gold selection:text-black">
@@ -442,7 +442,7 @@ const MainApp: React.FC = () => {
           </header>
       </div>
 
-      <main className={`${mainClasses} pt-40 pb-12`}>
+      <main className={`${mainClasses} pt-64 pb-12 transition-all duration-700`}>
         <div className="min-h-[60vh] relative group/main">
           {!dataInitiallyLoaded ? (
             <div className="flex flex-col items-center justify-center text-white py-40">
