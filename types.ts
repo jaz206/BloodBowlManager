@@ -225,7 +225,7 @@ export interface Matchup {
 }
 
 export interface CompetitionRules {
-  reglamento: 'BB2020' | 'BB2016' | 'Sevens';
+  reglamento: 'BB2025' | 'BB2020' | 'BB2016' | 'Sevens';
   muerteSubita: boolean;
   incentivos: 'Todos' | 'Reducidos' | 'Ninguno';
   tiempoTurno: number;

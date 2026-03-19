@@ -147,7 +147,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
 
     const [newCompetitionName, setNewCompetitionName] = useState('');
     const [newCompetitionFormat, setNewCompetitionFormat] = useState<'Liguilla' | 'Torneo'>('Liguilla');
-    const [newCompReglamento, setNewCompReglamento] = useState<'BB2020' | 'BB2016' | 'Sevens'>('BB2020');
+    const [newCompReglamento, setNewCompReglamento] = useState<'BB2025' | 'BB2020' | 'BB2016' | 'Sevens'>('BB2025');
     const [newCompMuerteSubita, setNewCompMuerteSubita] = useState(false);
     const [newCompVisibility, setNewCompVisibility] = useState<'Public' | 'Private'>('Public');
     const [newCompMaxTeams, setNewCompMaxTeams] = useState<number>(8);
@@ -515,9 +515,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                             onChange={(e) => setNewCompReglamento(e.target.value as any)}
                                             className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-4 text-white focus:ring-2 focus:ring-primary/50 outline-none transition-all font-bold appearance-none"
                                         >
-                                            <option value="BB2020">BB2020 (Official)</option>
-                                            <option value="BB2016">BB2016 (Classic)</option>
-                                            <option value="Sevens">Sevens (Rápido)</option>
+                                            <option value="BB2025">BB2025 (3ª Temporada)</option>
                                         </select>
                                         <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">expand_more</span>
                                     </div>
