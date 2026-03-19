@@ -116,6 +116,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
     const qrCanvasRef = useRef<HTMLCanvasElement>(null);
     const crestInputRef = useRef<HTMLInputElement>(null);
     const [activeTab, setActiveTab] = useState<'roster' | 'recruit' | 'staff' | 'history'>('roster');
+    const [zoomedImage, setZoomedImage] = useState<string | null>(null);
     const baseRoster = useMemo(() => teamsData.find(t => t.name === team.rosterName), [team.rosterName]);
 
     useEffect(() => {
@@ -441,10 +442,24 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                             )}
 
                                             <div className="flex flex-col md:flex-row items-center gap-6">
-                                                <div className="flex-shrink-0 w-12 text-center">
-                                                    <span className={`font-epilogue italic text-2xl font-black ${hasLevelUp ? 'text-primary' : 'text-slate-700 group-hover/card:text-primary transition-colors'}`}>
-                                                        #{p.id.toString().slice(-2)}
-                                                    </span>
+                                                <div className="flex-shrink-0 flex items-center gap-4">
+                                                    <div className="w-12 text-center">
+                                                        <span className={`font-epilogue italic text-2xl font-black ${hasLevelUp ? 'text-primary' : 'text-slate-700 group-hover/card:text-primary transition-colors'}`}>
+                                                            #{p.id.toString().slice(-2)}
+                                                        </span>
+                                                    </div>
+                                                    {p.image && (
+                                                        <div 
+                                                            onClick={() => setZoomedImage(p.image!)}
+                                                            className="w-14 h-14 rounded-xl overflow-hidden border border-white/10 bg-black/40 cursor-zoom-in hover:scale-110 hover:border-primary/50 transition-all group/img"
+                                                        >
+                                                            <img 
+                                                                src={p.image} 
+                                                                alt={p.customName} 
+                                                                className="w-full h-full object-cover grayscale group-hover/img:grayscale-0 transition-all opacity-60 group-hover/img:opacity-100"
+                                                            />
+                                                        </div>
+                                                    )}
                                                 </div>
 
                                                 <div className="flex-1 grid grid-cols-1 md:grid-cols-6 gap-6 items-center w-full">
@@ -775,6 +790,32 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                             <p className="text-[10px] text-slate-500 mt-8 text-center font-black uppercase tracking-[0.2em] max-w-[240px] mx-auto">Escanea desde otro dispositivo para transferir la franquicia</p>
                         </div>
                     </div>
+                )}
+
+                {zoomedImage && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setZoomedImage(null)}
+                        className="fixed inset-0 z-[300] bg-black/90 backdrop-blur-xl flex items-center justify-center p-8 cursor-zoom-out"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="relative max-w-4xl max-h-full flex items-center justify-center"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <img src={zoomedImage} className="max-w-full max-h-[85vh] object-contain rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] border border-white/10" alt="Zoomed view" />
+                            <button 
+                                onClick={() => setZoomedImage(null)}
+                                className="absolute -top-4 -right-4 bg-primary text-black w-10 h-10 rounded-full flex items-center justify-center font-black shadow-xl hover:scale-110 transition-transform z-10"
+                            >
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </motion.div>
+                    </motion.div>
                 )}
             </AnimatePresence>
 
