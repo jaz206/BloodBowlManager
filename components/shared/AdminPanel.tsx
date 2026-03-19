@@ -26,6 +26,7 @@ const transformGitHubUrl = (url: string | undefined | null): string => {
 };
 
 import { useArenaConfig, ArenaConfig } from '../../hooks/useArenaConfig';
+import { PLAYER_NAMES } from '../../pages/Guild/playerNames';
 
 const AdminPanel: React.FC = () => {
     const {
@@ -49,6 +50,7 @@ const AdminPanel: React.FC = () => {
 
     const { language } = useLanguage();
     const [activeTab, setActiveTab] = useState<AdminTab>('general');
+    const [activeTeamTab, setActiveTeamTab] = useState<'general' | 'identidad' | 'roster' | 'nombres'>('general');
     const [searchTerm, setSearchTerm] = useState('');
     const [editingItem, setEditingItem] = useState<{ type: AdminTab | 'hero', data: any } | null>(null);
     const [isSaving, setIsSaving] = useState(false);
@@ -1039,301 +1041,336 @@ const AdminPanel: React.FC = () => {
 
                                         {/* TEAMS SPECIFIC */}
                                         {editingItem.type === 'teams' && (
-                                            <div className="space-y-12">
-                                                {/* Core Config */}
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-white/[0.02] p-6 rounded-[2rem] border border-white/5">
-                                                    <div className="space-y-4">
-                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Costo Segunda Tirada</label>
-                                                        <input
-                                                            type="number"
-                                                            value={editingItem.data.rerollCost || 0}
-                                                            onChange={(e) => setEditingItem({
-                                                                ...editingItem,
-                                                                data: { ...editingItem.data, rerollCost: parseInt(e.target.value) }
-                                                            })}
-                                                            className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-6 text-white text-sm focus:border-premium-gold/50 outline-none transition-all"
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-4">
-                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Tier (Nivel)</label>
-                                                        <select
-                                                            value={editingItem.data.tier || 1}
-                                                            onChange={(e) => setEditingItem({
-                                                                ...editingItem,
-                                                                data: { ...editingItem.data, tier: parseInt(e.target.value) }
-                                                            })}
-                                                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none"
+                                            <div className="space-y-6">
+                                                {/* Team Tabs Navigation */}
+                                                <div className="flex flex-wrap gap-2 p-1.5 bg-black/40 border border-white/5 rounded-2xl w-fit">
+                                                    {(['general', 'identidad', 'roster', 'nombres'] as const).map(tab => (
+                                                        <button
+                                                            key={tab}
+                                                            type="button"
+                                                            onClick={() => setActiveTeamTab(tab)}
+                                                            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTeamTab === tab
+                                                                ? 'bg-premium-gold text-black shadow-lg shadow-premium-gold/20'
+                                                                : 'text-slate-500 hover:text-white hover:bg-white/5'
+                                                                }`}
                                                         >
-                                                            {[1, 2, 3].map(t => <option key={t} value={t}>Tier {t}</option>)}
-                                                        </select>
-                                                    </div>
+                                                            {tab}
+                                                        </button>
+                                                    ))}
                                                 </div>
 
-                                                {/* History & Bio */}
-                                                <div className="space-y-4">
-                                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Biografía y Trasfondo de la Facción</label>
-                                                    <textarea
-                                                        value={editingItem.data.description || ''}
-                                                        onChange={(e) => setEditingItem({
-                                                            ...editingItem,
-                                                            data: { ...editingItem.data, description: e.target.value }
-                                                        })}
-                                                        className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none h-32 resize-none text-[10px] leading-relaxed transition-all"
-                                                        placeholder="Describe aquí el trasfondo de esta raza en el mundo de Blood Bowl..."
-                                                    />
-                                                </div>
-
-                                                {/* Mega Factions (Eligible Stars) */}
-                                                <div className="space-y-4">
-                                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Ligas y Alianzas (Para Star Players)</label>
-                                                    <div className="flex flex-wrap gap-2 p-6 bg-black/40 border border-white/5 rounded-[2rem]">
-                                                        {[
-                                                            'Old World Classic', 'Worlds Edge Superleague', 'Lustrian Superleague',
-                                                            'Badlands Brawl', 'Favoured of Nurgle', 'Favoured of Slaanesh', 'Favoured of Khorne',
-                                                            'Favoured of Tzeentch', 'Underworld Challenge', 'Sylvanian Spotlight', 'Elven Kingdoms League'
-                                                        ].map(faction => {
-                                                            const isSelected = (editingItem.data.megaFactions || []).includes(faction);
-                                                            return (
-                                                                <button
-                                                                    key={faction}
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        const current = editingItem.data.megaFactions || [];
-                                                                        const next = isSelected 
-                                                                            ? current.filter((f: string) => f !== faction)
-                                                                            : [...current, faction];
-                                                                        setEditingItem({
-                                                                            ...editingItem,
-                                                                            data: { ...editingItem.data, megaFactions: next }
-                                                                        });
-                                                                    }}
-                                                                    className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${isSelected
-                                                                        ? 'bg-premium-gold/20 text-premium-gold border-premium-gold/30'
-                                                                        : 'bg-white/5 text-slate-500 border-white/5 hover:border-white/20'
-                                                                        }`}
+                                                {/* TAB: GENERAL */}
+                                                {activeTeamTab === 'general' && (
+                                                    <div className="space-y-12 animate-fade-in-up">
+                                                        {/* Core Config */}
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-white/[0.02] p-6 rounded-[2rem] border border-white/5">
+                                                            <div className="space-y-4">
+                                                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Costo Segunda Tirada</label>
+                                                                <input
+                                                                    type="number"
+                                                                    value={editingItem.data.rerollCost || 0}
+                                                                    onChange={(e) => setEditingItem({
+                                                                        ...editingItem,
+                                                                        data: { ...editingItem.data, rerollCost: parseInt(e.target.value) }
+                                                                    })}
+                                                                    className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-6 text-white text-sm focus:border-premium-gold/50 outline-none transition-all"
+                                                                />
+                                                            </div>
+                                                            <div className="space-y-4">
+                                                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Tier (Nivel)</label>
+                                                                <select
+                                                                    value={editingItem.data.tier || 1}
+                                                                    onChange={(e) => setEditingItem({
+                                                                        ...editingItem,
+                                                                        data: { ...editingItem.data, tier: parseInt(e.target.value) }
+                                                                    })}
+                                                                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none"
                                                                 >
-                                                                    {faction}
-                                                                </button>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                </div>
+                                                                    {[1, 2, 3].map(t => <option key={t} value={t}>Tier {t}</option>)}
+                                                                </select>
+                                                            </div>
+                                                        </div>
 
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                                    {/* Ratings for Teams */}
-                                                    <div className="space-y-4">
-                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Ratings de Facción</label>
-                                                        <div className="grid grid-cols-5 gap-3 bg-black/40 p-6 rounded-2xl border border-white/5">
-                                                            {[
-                                                                { k: 'fuerza', l: 'FUE' },
-                                                                { k: 'agilidad', l: 'AGI' },
-                                                                { k: 'velocidad', l: 'VEL' },
-                                                                { k: 'armadura', l: 'ARM' },
-                                                                { k: 'pase', l: 'PAS' }
-                                                            ].map(stat => (
-                                                                <div key={stat.k} className="space-y-1">
-                                                                    <span className="block text-[8px] font-bold text-slate-600 uppercase text-center">{stat.l}</span>
-                                                                    <input
-                                                                        type="number"
-                                                                        value={editingItem.data.ratings?.[stat.k] || 0}
-                                                                        onChange={(e) => setEditingItem({
-                                                                            ...editingItem,
-                                                                            data: {
-                                                                                ...editingItem.data,
-                                                                                ratings: { ...editingItem.data.ratings, [stat.k]: parseInt(e.target.value) }
-                                                                            }
-                                                                        })}
-                                                                        className="w-full bg-white/5 border border-white/10 rounded-xl py-2 px-1 text-center text-white focus:border-premium-gold/50 outline-none text-[10px]"
-                                                                    />
+                                                        {/* Mega Factions (Eligible Stars) */}
+                                                        <div className="space-y-4">
+                                                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Ligas y Alianzas (Para Star Players)</label>
+                                                            <div className="flex flex-wrap gap-2 p-6 bg-black/40 border border-white/5 rounded-[2rem]">
+                                                                {[
+                                                                    'Old World Classic', 'Worlds Edge Superleague', 'Lustrian Superleague',
+                                                                    'Badlands Brawl', 'Favoured of Nurgle', 'Favoured of Slaanesh', 'Favoured of Khorne',
+                                                                    'Favoured of Tzeentch', 'Underworld Challenge', 'Sylvanian Spotlight', 'Elven Kingdoms League'
+                                                                ].map(faction => {
+                                                                    const isSelected = (editingItem.data.megaFactions || []).includes(faction);
+                                                                    return (
+                                                                        <button
+                                                                            key={faction}
+                                                                            type="button"
+                                                                            onClick={() => {
+                                                                                const current = editingItem.data.megaFactions || [];
+                                                                                const next = isSelected 
+                                                                                    ? current.filter((f: string) => f !== faction)
+                                                                                    : [...current, faction];
+                                                                                setEditingItem({
+                                                                                    ...editingItem,
+                                                                                    data: { ...editingItem.data, megaFactions: next }
+                                                                                });
+                                                                            }}
+                                                                            className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${isSelected
+                                                                                ? 'bg-premium-gold/20 text-premium-gold border-premium-gold/30'
+                                                                                : 'bg-white/5 text-slate-500 border-white/5 hover:border-white/20'
+                                                                                }`}
+                                                                        >
+                                                                            {faction}
+                                                                        </button>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Ratings for Teams */}
+                                                        <div className="space-y-4">
+                                                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Ratings de Facción</label>
+                                                            <div className="grid grid-cols-5 gap-3 bg-black/40 p-6 rounded-2xl border border-white/5">
+                                                                {[
+                                                                    { k: 'fuerza', l: 'FUE' },
+                                                                    { k: 'agilidad', l: 'AGI' },
+                                                                    { k: 'velocidad', l: 'VEL' },
+                                                                    { k: 'armadura', l: 'ARM' },
+                                                                    { k: 'pase', l: 'PAS' }
+                                                                ].map(stat => (
+                                                                    <div key={stat.k} className="space-y-1">
+                                                                        <span className="block text-[8px] font-bold text-slate-600 uppercase text-center">{stat.l}</span>
+                                                                        <input
+                                                                            type="number"
+                                                                            value={editingItem.data.ratings?.[stat.k] || 0}
+                                                                            onChange={(e) => setEditingItem({
+                                                                                ...editingItem,
+                                                                                data: {
+                                                                                    ...editingItem.data,
+                                                                                    ratings: { ...editingItem.data.ratings, [stat.k]: parseInt(e.target.value) }
+                                                                                }
+                                                                            })}
+                                                                            className="w-full bg-white/5 border border-white/10 rounded-xl py-2 px-1 text-center text-white focus:border-premium-gold/50 outline-none text-[10px]"
+                                                                        />
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* TAB: IDENTIDAD */}
+                                                {activeTeamTab === 'identidad' && (
+                                                    <div className="space-y-12 animate-fade-in-up">
+                                                        {/* History & Bio */}
+                                                        <div className="space-y-4">
+                                                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Biografía y Trasfondo de la Facción</label>
+                                                            <textarea
+                                                                value={editingItem.data.description || ''}
+                                                                onChange={(e) => setEditingItem({
+                                                                    ...editingItem,
+                                                                    data: { ...editingItem.data, description: e.target.value }
+                                                                })}
+                                                                className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none h-64 resize-none text-[10px] leading-relaxed transition-all"
+                                                                placeholder="Describe aquí el trasfondo de esta raza en el mundo de Blood Bowl..."
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* TAB: ROSTER */}
+                                                {activeTeamTab === 'roster' && (
+                                                    <div className="space-y-6 animate-fade-in-up">
+                                                        {/* Roster Editor */}
+                                                        <div className="flex justify-between items-center px-1">
+                                                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Roster de Jugadores (Posicionales)</label>
+                                                            <button 
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    const newPlayer = {
+                                                                        qty: '0-16',
+                                                                        position: 'Línea',
+                                                                        cost: 50000,
+                                                                        stats: { MV: 6, FU: '3', AG: '3+', PA: '4+', AR: '9+' },
+                                                                        skillKeys: [],
+                                                                        primary: 'G',
+                                                                        secondary: 'A, S'
+                                                                    };
+                                                                    setEditingItem({
+                                                                        ...editingItem,
+                                                                        data: { ...editingItem.data, roster: [...(editingItem.data.roster || []), newPlayer] }
+                                                                    });
+                                                                }}
+                                                                className="text-premium-gold hover:text-white transition-colors flex items-center gap-1 text-[9px] font-black uppercase tracking-widest"
+                                                            >
+                                                                <span className="material-symbols-outlined text-sm">add</span> Añadir Posición
+                                                            </button>
+                                                        </div>
+                                                        
+                                                        <div className="space-y-3 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
+                                                            {(editingItem.data.roster || []).map((player: any, idx: number) => (
+                                                                <div key={idx} className="bg-white/5 border border-white/5 rounded-2xl p-5 space-y-4">
+                                                                    <div className="flex justify-between gap-4">
+                                                                        <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                                                            <div className="space-y-1">
+                                                                                <label className="text-[8px] font-bold text-slate-600 uppercase ml-1">Posición</label>
+                                                                                <input 
+                                                                                    type="text"
+                                                                                    value={player.position}
+                                                                                    onChange={(e) => {
+                                                                                        const newRoster = [...editingItem.data.roster];
+                                                                                        newRoster[idx] = { ...newRoster[idx], position: e.target.value };
+                                                                                        setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
+                                                                                    }}
+                                                                                    className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-premium-gold/30"
+                                                                                />
+                                                                            </div>
+                                                                            <div className="space-y-1">
+                                                                                <label className="text-[8px] font-bold text-slate-600 uppercase ml-1">Cantidad</label>
+                                                                                <input 
+                                                                                    type="text"
+                                                                                    value={player.qty}
+                                                                                    onChange={(e) => {
+                                                                                        const newRoster = [...editingItem.data.roster];
+                                                                                        newRoster[idx] = { ...newRoster[idx], qty: e.target.value };
+                                                                                        setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
+                                                                                    }}
+                                                                                    className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-premium-gold/30"
+                                                                                />
+                                                                            </div>
+                                                                            <div className="space-y-1">
+                                                                                <label className="text-[8px] font-bold text-slate-600 uppercase ml-1">Costo (MO)</label>
+                                                                                <input 
+                                                                                    type="number"
+                                                                                    value={player.cost}
+                                                                                    onChange={(e) => {
+                                                                                        const newRoster = [...editingItem.data.roster];
+                                                                                        newRoster[idx] = { ...newRoster[idx], cost: parseInt(e.target.value) || 0 };
+                                                                                        setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
+                                                                                    }}
+                                                                                    className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-premium-gold/30"
+                                                                                />
+                                                                            </div>
+                                                                        </div>
+                                                                        <button 
+                                                                            type="button"
+                                                                            onClick={() => {
+                                                                                const newRoster = (editingItem.data.roster || []).filter((_: any, i: number) => i !== idx);
+                                                                                setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
+                                                                            }}
+                                                                            className="w-10 h-10 rounded-xl bg-blood-red/10 border border-blood-red/20 text-blood-red flex items-center justify-center hover:bg-blood-red hover:text-white transition-all self-end"
+                                                                        >
+                                                                            <span className="material-symbols-outlined text-sm">delete</span>
+                                                                        </button>
+                                                                    </div>
+
+                                                                    <div className="grid grid-cols-5 gap-3 bg-black/20 p-3 rounded-xl border border-white/5">
+                                                                        {['MV', 'FU', 'AG', 'PA', 'AR'].map(stat => (
+                                                                            <div key={stat} className="space-y-1">
+                                                                                <span className="block text-[8px] font-bold text-slate-600 uppercase text-center">{stat}</span>
+                                                                                <input
+                                                                                    type="text"
+                                                                                    value={player.stats?.[stat] || ''}
+                                                                                    onChange={(e) => {
+                                                                                        const newRoster = [...editingItem.data.roster];
+                                                                                        newRoster[idx] = { 
+                                                                                            ...newRoster[idx], 
+                                                                                            stats: { ...newRoster[idx].stats, [stat]: e.target.value } 
+                                                                                        };
+                                                                                        setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
+                                                                                    }}
+                                                                                    className="w-full bg-transparent border-b border-white/10 text-center text-white text-xs py-1 focus:border-premium-gold outline-none font-display font-black transition-colors"
+                                                                                />
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+
+                                                                    <div className="grid grid-cols-2 gap-4">
+                                                                        <div className="space-y-1">
+                                                                            <label className="text-[8px] font-bold text-slate-600 uppercase ml-1">Primarias (Ejs: G, A, S)</label>
+                                                                            <input 
+                                                                                type="text"
+                                                                                value={player.primary || ''}
+                                                                                onChange={(e) => {
+                                                                                    const newRoster = [...editingItem.data.roster];
+                                                                                    newRoster[idx] = { ...newRoster[idx], primary: e.target.value };
+                                                                                    setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
+                                                                                }}
+                                                                                className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-premium-gold/30"
+                                                                            />
+                                                                        </div>
+                                                                        <div className="space-y-1">
+                                                                            <label className="text-[8px] font-bold text-slate-600 uppercase ml-1">Secundarias (Ejs: P, M)</label>
+                                                                            <input 
+                                                                                type="text"
+                                                                                value={player.secondary || ''}
+                                                                                onChange={(e) => {
+                                                                                    const newRoster = [...editingItem.data.roster];
+                                                                                    newRoster[idx] = { ...newRoster[idx], secondary: e.target.value };
+                                                                                    setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
+                                                                                }}
+                                                                                className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-premium-gold/30"
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div className="space-y-2">
+                                                                        <label className="text-[8px] font-bold text-slate-600 uppercase ml-1">Habilidades Iniciales (Canónicas)</label>
+                                                                        <div className="flex flex-wrap gap-1.5 min-h-[40px] p-3 bg-black/20 rounded-xl border border-white/5">
+                                                                            {skills.map((skill: any) => {
+                                                                                const isSelected = (player.skillKeys || []).includes(skill.keyEN);
+                                                                                return (
+                                                                                    <button
+                                                                                        key={skill.keyEN}
+                                                                                        type="button"
+                                                                                        onClick={() => {
+                                                                                            const currentKeys = player.skillKeys || [];
+                                                                                            const nextKeys = isSelected 
+                                                                                                ? currentKeys.filter((k: string) => k !== skill.keyEN)
+                                                                                                : [...currentKeys, skill.keyEN];
+                                                                                            const newRoster = [...editingItem.data.roster];
+                                                                                            newRoster[idx] = { ...newRoster[idx], skillKeys: nextKeys };
+                                                                                            setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
+                                                                                        }}
+                                                                                        className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-tighter border transition-all ${isSelected 
+                                                                                            ? 'bg-premium-gold/20 border-premium-gold/40 text-premium-gold' 
+                                                                                            : 'bg-white/5 border-white/5 text-slate-600 hover:text-white'}`}
+                                                                                    >
+                                                                                        {language === 'es' ? (skill.name_es || skill.name_en) : skill.name_en}
+                                                                                    </button>
+                                                                                );
+                                                                            })}
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
                                                             ))}
                                                         </div>
                                                     </div>
+                                                )}
 
-                                                    {/* Names dictionary */}
-                                                    <div className="space-y-4">
-                                                        <label className="block text-[10px] font-black text-sky-500 uppercase tracking-widest ml-1">Diccionario de Nombres Temáticos</label>
-                                                        <textarea
-                                                            value={(editingItem.data.namePools || []).join(', ')}
-                                                            onChange={(e) => {
-                                                                const names = e.target.value.split(',').map(n => n.trim()).filter(Boolean);
-                                                                setEditingItem({
-                                                                    ...editingItem,
-                                                                    data: { ...editingItem.data, namePools: names }
-                                                                });
-                                                            }}
-                                                            className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-sky-500/50 outline-none h-[110px] resize-none text-[10px] leading-relaxed transition-all"
-                                                            placeholder="Morg, Throg, Grashnak... (separados por comas)"
-                                                        />
+                                                {/* TAB: NOMBRES */}
+                                                {activeTeamTab === 'nombres' && (
+                                                    <div className="space-y-12 animate-fade-in-up">
+                                                        <div className="space-y-4">
+                                                            <label className="block text-[10px] font-black text-sky-500 uppercase tracking-widest ml-1">Diccionario de Nombres Temáticos</label>
+                                                            <textarea
+                                                                value={(editingItem.data.namePools?.length ? editingItem.data.namePools : (editingItem.data.name ? (PLAYER_NAMES[editingItem.data.name.toUpperCase()] || []) : [])).join(', ')}
+                                                                onChange={(e) => {
+                                                                    const names = e.target.value.split(',').map(n => n.trim()).filter(Boolean);
+                                                                    setEditingItem({
+                                                                        ...editingItem,
+                                                                        data: { ...editingItem.data, namePools: names }
+                                                                    });
+                                                                }}
+                                                                className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-sky-500/50 outline-none h-64 resize-none text-[10px] leading-relaxed transition-all"
+                                                                placeholder="Morg, Throg, Grashnak... (separados por comas)"
+                                                            />
+                                                            <p className="text-[9px] text-slate-500 uppercase tracking-tight ml-1 font-bold">
+                                                                {!editingItem.data.namePools?.length ? 'ℹ️ Mostrando borrador por defecto de las reglas base. Haz una pequeña modificación y se guardará como nombre de la liga.' : '✅ Diccionario personalizado guardado en Firestore para esta facción.'}
+                                                            </p>
+                                                        </div>
                                                     </div>
-                                                </div>
-
-                                                {/* Roster Editor */}
-                                                <div className="space-y-6">
-                                                    <div className="flex justify-between items-center px-1">
-                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Roster de Jugadores (Posicionales)</label>
-                                                        <button 
-                                                            type="button"
-                                                            onClick={() => {
-                                                                const newPlayer = {
-                                                                    qty: '0-16',
-                                                                    position: 'Línea',
-                                                                    cost: 50000,
-                                                                    stats: { MV: 6, FU: '3', AG: '3+', PA: '4+', AR: '9+' },
-                                                                    skillKeys: [],
-                                                                    primary: 'G',
-                                                                    secondary: 'A, S'
-                                                                };
-                                                                setEditingItem({
-                                                                    ...editingItem,
-                                                                    data: { ...editingItem.data, roster: [...(editingItem.data.roster || []), newPlayer] }
-                                                                });
-                                                            }}
-                                                            className="text-premium-gold hover:text-white transition-colors flex items-center gap-1 text-[9px] font-black uppercase tracking-widest"
-                                                        >
-                                                            <span className="material-symbols-outlined text-sm">add</span> Añadir Posición
-                                                        </button>
-                                                    </div>
-                                                    
-                                                    <div className="space-y-3 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
-                                                        {(editingItem.data.roster || []).map((player: any, idx: number) => (
-                                                            <div key={idx} className="bg-white/5 border border-white/5 rounded-2xl p-5 space-y-4">
-                                                                <div className="flex justify-between gap-4">
-                                                                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                                                        <div className="space-y-1">
-                                                                            <label className="text-[8px] font-bold text-slate-600 uppercase ml-1">Posición</label>
-                                                                            <input 
-                                                                                type="text"
-                                                                                value={player.position}
-                                                                                onChange={(e) => {
-                                                                                    const newRoster = [...editingItem.data.roster];
-                                                                                    newRoster[idx] = { ...newRoster[idx], position: e.target.value };
-                                                                                    setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
-                                                                                }}
-                                                                                className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-premium-gold/30"
-                                                                            />
-                                                                        </div>
-                                                                        <div className="space-y-1">
-                                                                            <label className="text-[8px] font-bold text-slate-600 uppercase ml-1">Cantidad</label>
-                                                                            <input 
-                                                                                type="text"
-                                                                                value={player.qty}
-                                                                                onChange={(e) => {
-                                                                                    const newRoster = [...editingItem.data.roster];
-                                                                                    newRoster[idx] = { ...newRoster[idx], qty: e.target.value };
-                                                                                    setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
-                                                                                }}
-                                                                                className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-premium-gold/30"
-                                                                            />
-                                                                        </div>
-                                                                        <div className="space-y-1">
-                                                                            <label className="text-[8px] font-bold text-slate-600 uppercase ml-1">Costo (MO)</label>
-                                                                            <input 
-                                                                                type="number"
-                                                                                value={player.cost}
-                                                                                onChange={(e) => {
-                                                                                    const newRoster = [...editingItem.data.roster];
-                                                                                    newRoster[idx] = { ...newRoster[idx], cost: parseInt(e.target.value) || 0 };
-                                                                                    setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
-                                                                                }}
-                                                                                className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-premium-gold/30"
-                                                                            />
-                                                                        </div>
-                                                                    </div>
-                                                                    <button 
-                                                                        type="button"
-                                                                        onClick={() => {
-                                                                            const newRoster = (editingItem.data.roster || []).filter((_: any, i: number) => i !== idx);
-                                                                            setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
-                                                                        }}
-                                                                        className="w-10 h-10 rounded-xl bg-blood-red/10 border border-blood-red/20 text-blood-red flex items-center justify-center hover:bg-blood-red hover:text-white transition-all self-end"
-                                                                    >
-                                                                        <span className="material-symbols-outlined text-sm">delete</span>
-                                                                    </button>
-                                                                </div>
-
-                                                                <div className="grid grid-cols-5 gap-3 bg-black/20 p-3 rounded-xl border border-white/5">
-                                                                    {['MV', 'FU', 'AG', 'PA', 'AR'].map(stat => (
-                                                                        <div key={stat} className="space-y-1">
-                                                                            <span className="block text-[8px] font-bold text-slate-600 uppercase text-center">{stat}</span>
-                                                                            <input
-                                                                                type="text"
-                                                                                value={player.stats?.[stat] || ''}
-                                                                                onChange={(e) => {
-                                                                                    const newRoster = [...editingItem.data.roster];
-                                                                                    newRoster[idx] = { 
-                                                                                        ...newRoster[idx], 
-                                                                                        stats: { ...newRoster[idx].stats, [stat]: e.target.value } 
-                                                                                    };
-                                                                                    setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
-                                                                                }}
-                                                                                className="w-full bg-transparent border-b border-white/10 text-center text-white text-xs py-1 focus:border-premium-gold outline-none font-display font-black transition-colors"
-                                                                            />
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
-
-                                                                <div className="grid grid-cols-2 gap-4">
-                                                                    <div className="space-y-1">
-                                                                        <label className="text-[8px] font-bold text-slate-600 uppercase ml-1">Primarias (Ejs: G, A, S)</label>
-                                                                        <input 
-                                                                            type="text"
-                                                                            value={player.primary || ''}
-                                                                            onChange={(e) => {
-                                                                                const newRoster = [...editingItem.data.roster];
-                                                                                newRoster[idx] = { ...newRoster[idx], primary: e.target.value };
-                                                                                setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
-                                                                            }}
-                                                                            className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-premium-gold/30"
-                                                                        />
-                                                                    </div>
-                                                                    <div className="space-y-1">
-                                                                        <label className="text-[8px] font-bold text-slate-600 uppercase ml-1">Secundarias (Ejs: P, M)</label>
-                                                                        <input 
-                                                                            type="text"
-                                                                            value={player.secondary || ''}
-                                                                            onChange={(e) => {
-                                                                                const newRoster = [...editingItem.data.roster];
-                                                                                newRoster[idx] = { ...newRoster[idx], secondary: e.target.value };
-                                                                                setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
-                                                                            }}
-                                                                            className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-premium-gold/30"
-                                                                        />
-                                                                    </div>
-                                                                </div>
-
-                                                                <div className="space-y-2">
-                                                                    <label className="text-[8px] font-bold text-slate-600 uppercase ml-1">Habilidades Iniciales (Canónicas)</label>
-                                                                    <div className="flex flex-wrap gap-1.5 min-h-[40px] p-3 bg-black/20 rounded-xl border border-white/5">
-                                                                        {skills.map((skill: any) => {
-                                                                            const isSelected = (player.skillKeys || []).includes(skill.keyEN);
-                                                                            return (
-                                                                                <button
-                                                                                    key={skill.keyEN}
-                                                                                    type="button"
-                                                                                    onClick={() => {
-                                                                                        const currentKeys = player.skillKeys || [];
-                                                                                        const nextKeys = isSelected 
-                                                                                            ? currentKeys.filter((k: string) => k !== skill.keyEN)
-                                                                                            : [...currentKeys, skill.keyEN];
-                                                                                        const newRoster = [...editingItem.data.roster];
-                                                                                        newRoster[idx] = { ...newRoster[idx], skillKeys: nextKeys };
-                                                                                        setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
-                                                                                    }}
-                                                                                    className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-tighter border transition-all ${isSelected 
-                                                                                        ? 'bg-premium-gold/20 border-premium-gold/40 text-premium-gold' 
-                                                                                        : 'bg-white/5 border-white/5 text-slate-600 hover:text-white'}`}
-                                                                                >
-                                                                                    {language === 'es' ? (skill.name_es || skill.name_en) : skill.name_en}
-                                                                                </button>
-                                                                            );
-                                                                        })}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
+                                                )}
                                             </div>
                                         )}
 
