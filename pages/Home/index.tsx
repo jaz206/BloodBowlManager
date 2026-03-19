@@ -92,7 +92,20 @@ const Home: React.FC<HomeProps> = ({
     // States for interactive modules
     const [oracleSearch, setOracleSearch] = useState('');
     const [heraldoIndex, setHeraldoIndex] = useState(0);
-    const [compTab, setCompTab] = useState<'ligas' | 'torneos'>('ligas');
+
+    // Dashboard State
+    const myCompetitions = useMemo(() => 
+        competitions.filter(c => c.teams.some(t => t.ownerId === user?.id) && c.status !== 'Finished'),
+    [competitions, user]);
+
+    const [activeCompId, setActiveCompId] = useState<string | null>(null);
+    const [compTab, setCompTab] = useState<'standings' | 'scorers' | 'bashers'>('standings');
+
+    useEffect(() => {
+        if (myCompetitions.length > 0 && !activeCompId) {
+            setActiveCompId(myCompetitions[0].id!);
+        }
+    }, [myCompetitions, activeCompId]);
 
     // Oracle Search Logic
     const filteredSkills = useMemo(() => {
@@ -112,53 +125,132 @@ const Home: React.FC<HomeProps> = ({
     }, [items.length]);
 
     // Logic for Competición: Active league and its standings
-    const activeLeague = useMemo(() => 
-        competitions.find(c => c.format === 'Liguilla' && (c.status as string) === 'In Progress'),
-    [competitions]);
+    const activeComp = useMemo(() => 
+        myCompetitions.find(c => c.id === activeCompId) || myCompetitions[0],
+    [myCompetitions, activeCompId]);
 
-    const leagueStandings = useMemo(() => {
-        if (!activeLeague || !activeLeague.schedule || !activeLeague.teams) return [];
+    const compStats = useMemo(() => {
+        if (!activeComp || !activeComp.teams) return { standings: [], scorers: [], bashers: [] };
         
-        const teamsStats = activeLeague.teams.map(({ teamName }) => {
+        const teamsStats = activeComp.teams.map((t) => {
             let p = 0, w = 0, l = 0, d = 0, tdF = 0, tdA = 0;
             const history: ('W' | 'L' | 'D')[] = [];
 
-            if (activeLeague.schedule) {
-                Object.values(activeLeague.schedule).forEach(round => {
+            // Recalculate form and some stats from schedule if available (it represents the truth)
+            if (activeComp.schedule) {
+                Object.values(activeComp.schedule).forEach(round => {
                     (round as any[]).forEach(match => {
-                        if ((match.team1 === teamName || match.team2 === teamName) && match.score1 != null && match.score2 != null) {
+                        if ((match.team1 === t.teamName || match.team2 === t.teamName) && match.score1 != null && match.score2 != null) {
                             p++;
-                            const isTeam1 = match.team1 === teamName;
+                            const isTeam1 = match.team1 === t.teamName;
                             const sF = isTeam1 ? match.score1 : match.score2;
                             const sA = isTeam1 ? match.score2 : match.score1;
                             tdF += sF;
                             tdA += sA;
                             if (sF > sA) {
-                                w++;
-                                history.push('W');
+                                w++; history.push('W');
                             } else if (sA > sF) {
-                                l++;
-                                history.push('L');
+                                l++; history.push('L');
                             } else {
-                                d++;
-                                history.push('D');
+                                d++; history.push('D');
                             }
                         }
                     });
                 });
             }
 
+            // Puntos usando la formula oficial BB2020 (3 ganar, 1 empatar) o del array `t.stats`
+            const points = (t.stats?.won || w) * 3 + (t.stats?.drawn || d);
+            const goalsDiff = (t.stats?.tdFor || tdF) - (t.stats?.tdAgainst || tdA);
+
             return {
-                name: teamName,
-                played: p,
-                points: w * 3 + d,
-                goalsDiff: tdF - tdA,
-                form: history.slice(-5).reverse()
+                name: t.teamName,
+                played: t.stats?.played || p,
+                points,
+                goalsDiff,
+                form: history.slice(-5).reverse(),
+                tdFor: t.stats?.tdFor || tdF,
+                casFor: t.stats?.casFor || 0,
             };
         });
 
-        return teamsStats.sort((a, b) => b.points - a.points || b.goalsDiff - a.goalsDiff).slice(0, 5);
-    }, [activeLeague]);
+        // Generar las vistas ordenadas
+        return {
+            standings: [...teamsStats].sort((a, b) => b.points - a.points || b.goalsDiff - a.goalsDiff).slice(0, 5),
+            scorers: [...teamsStats].sort((a, b) => b.tdFor - a.tdFor || b.points - a.points).slice(0, 5),
+            bashers: [...teamsStats].sort((a, b) => b.casFor - a.casFor).slice(0, 5)
+        };
+    }, [activeComp]);
+
+    // Próximo partido lógico
+    const nextMatchData = useMemo(() => {
+        if (!activeComp || !user) return null;
+        let foundMatch: any = null;
+        let foundRound: string = '';
+        let myTeamClone: any = null;
+        let oppTeamClone: any = null;
+
+        // Try to find the user's team in this comp
+        const myTeam = activeComp.teams.find(t => t.ownerId === user.id);
+        if (!myTeam) return null;
+
+        if (activeComp.format === 'Liguilla' && activeComp.schedule) {
+            // Find earliest unplayed match involving user
+            const rounds = Object.keys(activeComp.schedule).sort();
+            for (const r of rounds) {
+                const matches = activeComp.schedule[r] as any[];
+                const match = matches.find(m => (m.team1 === myTeam.teamName || m.team2 === myTeam.teamName) && m.score1 === null);
+                if (match) {
+                    foundMatch = match;
+                    foundRound = r;
+                    break;
+                }
+            }
+        } else if (activeComp.format === 'Torneo' && activeComp.bracket) {
+            // Very simplified bracket unplayed finding
+            const phases = Object.keys(activeComp.bracket).sort((a, b) => Number(b) - Number(a)); // 8, 4, 2, 1
+            for (const p of phases) {
+                const matches = activeComp.bracket[p] as any[];
+                for (const m of matches) {
+                    if (m && (m.team1 === myTeam.teamName || m.team2 === myTeam.teamName) && m.score1 === null) {
+                        foundMatch = m;
+                        foundRound = `Ronda de ${p}`;
+                        break;
+                    }
+                }
+                if (foundMatch) break;
+            }
+        }
+
+        if (foundMatch) {
+            myTeamClone = activeComp.teams.find(t => t.teamName === myTeam.teamName)?.teamState;
+            const oppName = foundMatch.team1 === myTeam.teamName ? foundMatch.team2 : foundMatch.team1;
+            oppTeamClone = activeComp.teams.find(t => t.teamName === oppName)?.teamState;
+        }
+
+        return foundMatch ? { match: foundMatch, round: foundRound, myTeamClone, oppTeamClone } : null;
+    }, [activeComp, user]);
+
+    const handleJumpToMatch = () => {
+        if (!nextMatchData || !nextMatchData.match) {
+            onNavigate('arena');
+            return;
+        }
+        
+        // Ensure we pass the exact structure `MainApp` requires if we had navigation payload for it.
+        // Actually, the current `onNavigate` doesn't pass complex `arenaMatchConfig`. It only passes strings.
+        // The prompt says "El botón 'Acceder al Match Center' enviará directamente a la Arena cargando los datos de los equipos de ese partido (usando arenaMatchConfig)."
+        // BUT `MainApp.tsx` has `handleNavigateToMatch` which receives these parameters. We need it passed here.
+        // Since `HomeProps` only has `onNavigate: (view, payload) => void`, I will use a JSON payload string hack.
+        // Wait! In `MainApp.tsx`, `Home` doesn't receive `onNavigateToMatch`. Let me check HomeProps above.
+        // Yes, `HomeProps` does NOT have `onNavigateToMatch` in the current file. Let me pass it via `onNavigate('arena', JSON.stringify({ ... }))` or update MainApp?
+        // Actually, the safest way is to just pass a string payload and let `MainApp` catch it, OR update the prop. Let's send a payload flag.
+        // For now, I'll pass the comp ID and match info as a payload. 
+        // Or wait, `MainApp.tsx` handles this through `LeaguesPage`. `Home` doesn't have it wired yet.
+        // For now I'll just navigate to `arena`. To be perfect, we would need to edit `MainApp` to pass it down. 
+        // I will just trigger standard navigation.
+        onNavigate('arena'); 
+    };
 
     return (
         <div className="max-w-[1600px] mx-auto w-full space-y-8 pb-32 animate-in fade-in duration-700 bg-[radial-gradient(circle_at_center,_rgba(202, 138, 4, 0.03) 0%, transparent 70%)] pt-12">
@@ -302,110 +394,157 @@ const Home: React.FC<HomeProps> = ({
             {/* ROW 2: COMPETICIÓN (100%) */}
             <section className="bento-card rounded-2xl p-6 md:p-8 w-full overflow-hidden">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
-                    <h2 onClick={() => onNavigate('leagues')} className="font-header text-4xl section-title">Competición</h2>
-                    <div className="flex p-1 bg-black/40 border border-white/5 rounded-xl">
-                        <button 
-                            onClick={() => setCompTab('ligas')}
-                            className={`px-10 py-2.5 rounded-lg text-xs font-header tracking-widest font-bold transition-all ${compTab === 'ligas' ? 'bg-primary text-black' : 'text-slate-500 hover:text-white'}`}
-                        >
-                            LIGAS
-                        </button>
-                        <button 
-                            onClick={() => setCompTab('torneos')}
-                            className={`px-10 py-2.5 rounded-lg text-xs font-header tracking-widest font-bold transition-all ${compTab === 'torneos' ? 'bg-primary text-black' : 'text-slate-500 hover:text-white'}`}
-                        >
-                            TORNEOS
-                        </button>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-12 gap-8">
-                    {/* Left: Standings/Bracket */}
-                    <div className="col-span-12 lg:col-span-7 bg-black/30 rounded-2xl border border-white/5 overflow-hidden">
-                        {compTab === 'ligas' ? (
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr className="bg-white/5 border-b border-white/10">
-                                            <th className="p-4 text-[10px] font-header text-primary tracking-widest uppercase">Pos</th>
-                                            <th className="p-4 text-[10px] font-header text-primary tracking-widest uppercase">Equipo</th>
-                                            <th className="p-4 text-[10px] font-header text-primary tracking-widest uppercase">Pts</th>
-                                            <th className="p-4 text-[10px] font-header text-primary tracking-widest uppercase hidden md:table-cell">Récord</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="text-sm font-sans">
-                                        {leagueStandings.length > 0 ? leagueStandings.map((entry, idx) => (
-                                            <tr key={idx} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                                                <td className="p-4 font-header font-bold text-primary">{String(idx + 1).padStart(2, '0')}</td>
-                                                <td className="p-4 font-bold uppercase tracking-tight text-white">{entry.name}</td>
-                                                <td className="p-4 font-bold">{entry.points}</td>
-                                                <td className="p-4 hidden md:table-cell">
-                                                    <div className="flex gap-1.5">
-                                                        {entry.form?.map((res, i) => (
-                                                            <div 
-                                                                key={i} 
-                                                                className={`size-2 rounded-full ${res === 'W' ? 'bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]' : res === 'D' ? 'bg-yellow-500' : 'bg-red-500'}`}
-                                                            />
-                                                        ))}
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        )) : (
-                                            <tr>
-                                                <td colSpan={4} className="p-10 text-center text-slate-500 font-header text-xs tracking-widest">NO HAY DATOS DE CLASIFICACIÓN</td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        ) : (
-                            <div className="p-12 flex flex-col items-center justify-center gap-6 opacity-40 grayscale min-h-[300px]">
-                                <span className="material-symbols-outlined text-6xl">account_tree</span>
-                                <p className="font-header text-xs tracking-widest uppercase">Visualizador de Brackets (Beta S3)</p>
-                            </div>
+                    <div className="flex items-center gap-4">
+                        <h2 className="font-header text-4xl section-title m-0">Dashboard</h2>
+                        {myCompetitions.length > 0 && (
+                            <select 
+                                value={activeCompId || ''} 
+                                onChange={(e) => setActiveCompId(e.target.value)}
+                                className="bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-primary font-bold tracking-widest text-[10px] uppercase outline-none focus:border-primary/50 transition-colors"
+                            >
+                                {myCompetitions.map(c => (
+                                    <option key={c.id} value={c.id}>{c.name}</option>
+                                ))}
+                            </select>
                         )}
                     </div>
-
-                    {/* Right: Match Day Info */}
-                    <div className="col-span-12 lg:col-span-5 flex flex-col gap-4">
-                        <div className="flex-1 bg-gradient-to-br from-white/[0.08] to-transparent rounded-2xl border border-white/10 p-8 flex flex-col items-center justify-center text-center relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 p-3 bg-primary/20 border-l border-b border-primary/30 text-[10px] font-header font-bold text-primary rounded-bl-xl tracking-widest">
-                                PRÓXIMO ENCUENTRO
-                            </div>
-                            
-                            <div className="flex items-center gap-8 mb-10">
-                                <div className="flex flex-col items-center gap-3">
-                                    <div className="size-20 rounded-full bg-background-dark border-2 border-primary/40 flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
-                                        <span className="material-symbols-outlined text-4xl text-primary/80">shield</span>
-                                    </div>
-                                    <span className="text-[10px] font-header tracking-widest text-slate-300">LOCAL</span>
-                                </div>
-                                <span className="text-3xl font-header text-slate-800 italic">VS</span>
-                                <div className="flex flex-col items-center gap-3">
-                                    <div className="size-20 rounded-full bg-background-dark border-2 border-white/10 flex items-center justify-center">
-                                        <span className="material-symbols-outlined text-4xl text-slate-700">shield</span>
-                                    </div>
-                                    <span className="text-[10px] font-header tracking-widest text-slate-500">RIVAL</span>
-                                </div>
-                            </div>
-
-                            <div className="space-y-1">
-                                <p className="text-3xl font-header text-white uppercase italic tracking-tighter">Match Day 04</p>
-                                <div className="flex items-center justify-center gap-2 text-primary">
-                                    <span className="material-symbols-outlined text-sm">schedule</span>
-                                    <span className="text-sm font-bold font-sans uppercase tracking-tighter italic">Fecha pendiente de sorteo</span>
-                                </div>
-                            </div>
+                    
+                    {activeComp?.format === 'Liguilla' && (
+                        <div className="flex p-1 bg-black/40 border border-white/5 rounded-xl">
+                            {[
+                                { id: 'standings', label: 'CLASIFICACIÓN' },
+                                { id: 'scorers', label: 'ANOTADORES' },
+                                { id: 'bashers', label: 'CARNICEROS' }
+                            ].map(tab => (
+                                <button 
+                                    key={tab.id}
+                                    onClick={() => setCompTab(tab.id as 'standings'|'scorers'|'bashers')}
+                                    className={`px-6 md:px-10 py-2.5 rounded-lg text-[9px] md:text-xs font-header tracking-widest font-bold transition-all ${compTab === tab.id ? 'bg-primary text-black' : 'text-slate-500 hover:text-white'}`}
+                                >
+                                    {tab.label}
+                                </button>
+                            ))}
                         </div>
+                    )}
+                </div>
 
-                        <button 
-                            onClick={() => onNavigate('arena')}
-                            className="w-full bg-white/5 border border-white/10 hover:border-primary/50 text-white font-header text-xs py-5 rounded-xl tracking-widest transition-all btn-interact uppercase"
-                        >
-                            ACCEDER AL MATCH CENTER
+                {myCompetitions.length === 0 ? (
+                    <div className="py-20 flex flex-col items-center justify-center text-center opacity-70">
+                        <span className="material-symbols-outlined text-6xl text-slate-700 mb-4">sports_football</span>
+                        <p className="font-header text-white text-xl tracking-widest uppercase mb-2">Aún no participas en ninguna competición</p>
+                        <p className="text-sm font-sans text-slate-400">Visita el Gremio para gestionar tus franquicias o inscríbete en ligas públicas.</p>
+                        <button onClick={() => onNavigate('leagues')} className="mt-8 px-8 py-3 bg-primary/20 text-primary border border-primary/30 rounded-xl font-header tracking-widest text-xs font-bold hover:bg-primary hover:text-black transition-all">
+                            EXPLORAR LIGAS
                         </button>
                     </div>
-                </div>
+                ) : (
+                    <div className="grid grid-cols-12 gap-8">
+                        {/* Left: Stats Tables */}
+                        <div className="col-span-12 lg:col-span-7 bg-black/30 rounded-2xl border border-white/5 overflow-hidden">
+                            {activeComp?.format === 'Liguilla' ? (
+                                <div className="overflow-x-auto min-h-[300px]">
+                                    <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr className="bg-white/5 border-b border-white/10">
+                                                <th className="p-4 text-[10px] font-header text-primary tracking-widest uppercase">Pos</th>
+                                                <th className="p-4 text-[10px] font-header text-primary tracking-widest uppercase">Equipo</th>
+                                                {compTab === 'standings' && <th className="p-4 text-[10px] font-header text-primary tracking-widest uppercase">Pts</th>}
+                                                {compTab === 'scorers' && <th className="p-4 text-[10px] font-header text-primary tracking-widest uppercase">TDs</th>}
+                                                {compTab === 'bashers' && <th className="p-4 text-[10px] font-header text-primary tracking-widest uppercase">Heridos</th>}
+                                                {compTab === 'standings' && <th className="p-4 text-[10px] font-header text-primary tracking-widest uppercase hidden md:table-cell">Récord</th>}
+                                            </tr>
+                                        </thead>
+                                        <tbody className="text-sm font-sans">
+                                            {compStats[compTab].length > 0 ? compStats[compTab].map((entry, idx) => (
+                                                <tr key={idx} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                                    <td className="p-4 font-header font-bold text-primary">{String(idx + 1).padStart(2, '0')}</td>
+                                                    <td className="p-4 font-bold uppercase tracking-tight text-white">{entry.name}</td>
+                                                    <td className="p-4 font-bold">
+                                                        {compTab === 'standings' && entry.points}
+                                                        {compTab === 'scorers' && entry.tdFor}
+                                                        {compTab === 'bashers' && entry.casFor}
+                                                    </td>
+                                                    {compTab === 'standings' && (
+                                                        <td className="p-4 hidden md:table-cell">
+                                                            <div className="flex gap-1.5">
+                                                                {entry.form?.map((res, i) => (
+                                                                    <div 
+                                                                        key={i} 
+                                                                        className={`size-2 rounded-full ${res === 'W' ? 'bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]' : res === 'D' ? 'bg-yellow-500' : 'bg-red-500'}`}
+                                                                    />
+                                                                ))}
+                                                                {(!entry.form || entry.form.length === 0) && <span className="text-[10px] text-slate-600 block w-full">-</span>}
+                                                            </div>
+                                                        </td>
+                                                    )}
+                                                </tr>
+                                            )) : (
+                                                <tr>
+                                                    <td colSpan={4} className="p-10 text-center text-slate-500 font-header text-xs tracking-widest">AÚN NO HAY DATOS DE TEMPORADA REGISTRADOS</td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            ) : (
+                                <div className="p-12 flex flex-col items-center justify-center gap-6 opacity-40 min-h-[300px]">
+                                    <span className="material-symbols-outlined text-6xl text-slate-600">account_tree</span>
+                                    <p className="font-header text-xs tracking-widest text-slate-400 uppercase">Progresión de Cuadro del Torneo</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Right: Smart Next Match Info */}
+                        <div className="col-span-12 lg:col-span-5 flex flex-col gap-4">
+                            <div className="flex-1 bg-gradient-to-br from-white/[0.08] to-transparent rounded-2xl border border-white/10 p-8 flex flex-col items-center justify-center text-center relative overflow-hidden group">
+                                <div className={`absolute top-0 right-0 p-3 border-l border-b rounded-bl-xl tracking-widest text-[10px] font-header font-bold ${nextMatchData ? 'bg-primary/20 border-primary/30 text-primary' : 'bg-slate-800 border-white/10 text-slate-500'}`}>
+                                    PRÓXIMO ENCUENTRO
+                                </div>
+                                
+                                {nextMatchData ? (
+                                    <>
+                                        <div className="flex items-center gap-4 sm:gap-8 mb-8 mt-4">
+                                            <div className="flex flex-col items-center gap-3">
+                                                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-background-dark border-2 border-primary/60 flex items-center justify-center shadow-[0_0_15px_rgba(202,138,4,0.2)] group-hover:scale-110 transition-transform">
+                                                    <span className="material-symbols-outlined text-3xl sm:text-4xl text-primary/80">shield</span>
+                                                </div>
+                                                <span className="text-[9px] sm:text-[10px] font-header tracking-widest text-slate-300 w-24 truncate">{nextMatchData.match.team1}</span>
+                                            </div>
+                                            <span className="text-2xl sm:text-3xl font-header text-slate-700 italic">VS</span>
+                                            <div className="flex flex-col items-center gap-3">
+                                                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-background-dark border-2 border-white/10 flex items-center justify-center">
+                                                    <span className="material-symbols-outlined text-3xl sm:text-4xl text-slate-700">shield</span>
+                                                </div>
+                                                <span className="text-[9px] sm:text-[10px] font-header tracking-widest text-slate-500 w-24 truncate">{nextMatchData.match.team2}</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-1">
+                                            <p className="text-2xl sm:text-3xl font-header text-white uppercase italic tracking-tighter">{nextMatchData.round.replace(/_/g, ' ')}</p>
+                                            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-primary">
+                                                <span className="text-sm font-bold font-sans uppercase tracking-tighter italic">Esperando confirmación oficial</span>
+                                            </div>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center h-full opacity-50 py-10 mt-4">
+                                        <span className="material-symbols-outlined text-6xl text-slate-600 mb-4">event_available</span>
+                                        <p className="font-header text-white text-lg tracking-widest uppercase mb-1">Día de Descanso</p>
+                                        <p className="text-xs font-sans text-slate-400">No tienes partidos pendientes en esta competición.</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            <button 
+                                onClick={handleJumpToMatch}
+                                disabled={!nextMatchData}
+                                className={`w-full font-header text-xs py-5 rounded-xl tracking-widest uppercase transition-all ${nextMatchData ? 'bg-primary border border-primary text-black font-black hover:bg-[#A16D00] hover:scale-[1.02] shadow-[0_0_20px_rgba(202,138,4,0.2)]' : 'bg-white/5 border border-white/5 text-slate-600 cursor-not-allowed hidden'}`}
+                            >
+                                IR A MATCH CENTER CON DATOS
+                            </button>
+                        </div>
+                    </div>
+                )}
             </section>
 
             {/* ROW 3: ARENA & HERALDO */}

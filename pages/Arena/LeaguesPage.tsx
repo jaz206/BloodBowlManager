@@ -131,10 +131,10 @@ export const Leagues: React.FC<LeaguesProps> = ({
     isGuest 
 }) => {
     const { user } = useAuth();
-    const [activeTab, setActiveTab] = useState<'leagues' | 'tournaments' | 'my'>('leagues');
+    const [activeTab, setActiveTab] = useState<'my-leagues' | 'my-tournaments' | 'discover' | 'organization'>('my-leagues');
     const [view, setView] = useState<'list' | 'create' | 'detail'>('list');
     const [selectedCompetition, setSelectedCompetition] = useState<Competition | null>(null);
-    const [detailTab, setDetailTab] = useState<'summary' | 'standings' | 'calendar' | 'news'>('summary');
+    const [detailTab, setDetailTab] = useState<'summary' | 'standings' | 'calendar' | 'news' | 'stats'>('summary');
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -160,10 +160,18 @@ export const Leagues: React.FC<LeaguesProps> = ({
     const [scoreModalState, setScoreModalState] = useState<{ isOpen: boolean; roundIndex: string; matchIndex: number; matchup: Matchup; } | null>(null);
     const [confirmation, setConfirmation] = useState<{ title: string; message: string; onConfirm: () => void; type?: 'danger' | 'info' } | null>(null);
     const [statsModalTeam, setStatsModalTeam] = useState<import('../../types').ManagedTeam | null>(null);
+    const [showReportModal, setShowReportModal] = useState(false);
+    const [reportForm, setReportForm] = useState({ headline: '', subHeadline: '', article: '', homeTeam: '', opponentTeam: '', score1: 0, score2: 0 });
 
-    const leagues = useMemo(() => initialCompetitions.filter(c => c.format === 'Liguilla' && c.status === 'Open' && c.visibility !== 'Private' && !c.teams.some(t => t.ownerId === user?.id)), [initialCompetitions, user]);
-    const tournaments = useMemo(() => initialCompetitions.filter(c => c.format === 'Torneo' && c.status === 'Open' && c.visibility !== 'Private' && !c.teams.some(t => t.ownerId === user?.id)), [initialCompetitions, user]);
-    const myCompetitions = useMemo(() => initialCompetitions.filter(c => c.ownerId === user?.id || c.teams.some(t => t.ownerId === user?.id)), [initialCompetitions, user]);
+    // Ligas donde el usuario es un participante activo (como jugador)
+    const myLeagues = useMemo(() => initialCompetitions.filter(c => c.format === 'Liguilla' && c.teams.some(t => t.ownerId === user?.id)), [initialCompetitions, user]);
+    // Torneos donde el usuario participa activamente
+    const myTournaments = useMemo(() => initialCompetitions.filter(c => c.format === 'Torneo' && c.teams.some(t => t.ownerId === user?.id)), [initialCompetitions, user]);
+    // Ligas/Torneos públicos donde el usuario NO participa aún
+    const publicLeagues = useMemo(() => initialCompetitions.filter(c => c.format === 'Liguilla' && c.status === 'Open' && c.visibility !== 'Private' && !c.teams.some(t => t.ownerId === user?.id)), [initialCompetitions, user]);
+    const publicTournaments = useMemo(() => initialCompetitions.filter(c => c.format === 'Torneo' && c.status === 'Open' && c.visibility !== 'Private' && !c.teams.some(t => t.ownerId === user?.id)), [initialCompetitions, user]);
+    // Competiciones que el usuario ha CREADO (para gestionar)
+    const myCompetitions = useMemo(() => initialCompetitions.filter(c => c.ownerId === user?.id), [initialCompetitions, user]);
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -253,7 +261,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
         setNewCompetitionName('');
         setOwnerTeamToJoin('');
         setView('list');
-        setActiveTab('my');
+        setActiveTab('organization');
     };
 
     const handleJoinCompetition = () => {
@@ -815,6 +823,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
                         { id: 'summary', icon: 'dashboard', label: 'Resumen' },
                         { id: 'standings', icon: 'format_list_numbered', label: 'Clasificación' },
                         { id: 'calendar', icon: 'calendar_month', label: 'Calendario' },
+                        { id: 'stats', icon: 'monitoring', label: 'Estadísticas' },
                         { id: 'news', icon: 'newspaper', label: 'La Gaceta' },
                     ].map(tab => (
                         <button
@@ -1116,6 +1125,108 @@ export const Leagues: React.FC<LeaguesProps> = ({
                         </div>
                     )}
 
+                    {detailTab === 'stats' && (
+                        <div className="space-y-12 pb-12">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                {/* Anotadores */}
+                                <div className="bg-zinc-900/40 border border-white/5 rounded-[2.5rem] overflow-hidden backdrop-blur-md">
+                                     <div className="p-8 border-b border-white/5 flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center">
+                                            <span className="material-symbols-outlined text-primary font-bold">sports_football</span>
+                                        </div>
+                                        <h3 className="text-xl font-black text-white italic uppercase tracking-tighter">Máximos <span className="text-primary italic">Anotadores</span></h3>
+                                    </div>
+                                    <div className="p-8">
+                                        {(() => {
+                                            const allPlayers = selectedCompetition.teams.flatMap(t => 
+                                                (t.teamState?.players || []).map(p => ({ ...p, teamName: t.teamName }))
+                                            );
+                                            const scorers = allPlayers
+                                                .filter(p => (p.sppActions?.TD || 0) > 0)
+                                                .sort((a, b) => (b.sppActions?.TD || 0) - (a.sppActions?.TD || 0))
+                                                .slice(0, 10);
+                                            
+                                            if (scorers.length === 0) return (
+                                                <div className="py-20 text-center space-y-4 opacity-30">
+                                                    <span className="material-symbols-outlined text-5xl">edit_off</span>
+                                                    <p className="font-bold uppercase tracking-widest text-[10px] italic">No hay touchdowns registrados</p>
+                                                </div>
+                                            );
+
+                                            return (
+                                                <div className="space-y-3">
+                                                    {scorers.map((p, idx) => (
+                                                        <div key={`${p.teamName}-${p.customName}`} className="flex items-center justify-between p-4 bg-black/40 rounded-2xl border border-white/5 hover:border-primary/20 transition-all group">
+                                                            <div className="flex items-center gap-4">
+                                                                <span className="text-xs font-black text-slate-700 italic w-4">{idx + 1}</span>
+                                                                <div>
+                                                                    <p className="text-sm font-black text-white uppercase italic group-hover:text-primary transition-colors">{p.customName}</p>
+                                                                    <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">{p.teamName}</p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="text-right">
+                                                                <span className="text-2xl font-black text-primary italic leading-none">{p.sppActions?.TD}</span>
+                                                                <span className="block text-[8px] font-black text-slate-600 uppercase tracking-widest italic">TD</span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
+                                </div>
+
+                                {/* Carniceros */}
+                                <div className="bg-zinc-900/40 border border-white/5 rounded-[2.5rem] overflow-hidden backdrop-blur-md">
+                                     <div className="p-8 border-b border-white/5 flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-2xl bg-red-500/10 flex items-center justify-center">
+                                            <span className="material-symbols-outlined text-red-500 font-bold">skull</span>
+                                        </div>
+                                        <h3 className="text-xl font-black text-white italic uppercase tracking-tighter">Mayores <span className="text-red-500 italic">Carniceros</span></h3>
+                                    </div>
+                                    <div className="p-8">
+                                        {(() => {
+                                            const allPlayers = selectedCompetition.teams.flatMap(t => 
+                                                (t.teamState?.players || []).map(p => ({ ...p, teamName: t.teamName }))
+                                            );
+                                            const bashers = allPlayers
+                                                .filter(p => (p.sppActions?.CASUALTY || 0) > 0)
+                                                .sort((a, b) => (b.sppActions?.CASUALTY || 0) - (a.sppActions?.CASUALTY || 0))
+                                                .slice(0, 10);
+                                            
+                                            if (bashers.length === 0) return (
+                                                <div className="py-20 text-center space-y-4 opacity-30">
+                                                    <span className="material-symbols-outlined text-5xl">medical_services</span>
+                                                    <p className="font-bold uppercase tracking-widest text-[10px] italic">Nadie ha mordido el polvo todavía</p>
+                                                </div>
+                                            );
+
+                                            return (
+                                                <div className="space-y-3">
+                                                    {bashers.map((p, idx) => (
+                                                        <div key={`${p.teamName}-${p.customName}`} className="flex items-center justify-between p-4 bg-black/40 rounded-2xl border border-white/5 hover:border-red-500/20 transition-all group">
+                                                            <div className="flex items-center gap-4">
+                                                                <span className="text-xs font-black text-slate-700 italic w-4">{idx + 1}</span>
+                                                                <div>
+                                                                    <p className="text-sm font-black text-white uppercase italic group-hover:text-red-500 transition-colors">{p.customName}</p>
+                                                                    <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">{p.teamName}</p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="text-right">
+                                                                <span className="text-2xl font-black text-red-500 italic leading-none">{p.sppActions?.CASUALTY}</span>
+                                                                <span className="block text-[8px] font-black text-slate-600 uppercase tracking-widest italic">CAS</span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {detailTab === 'calendar' && (
                         <div className="space-y-12">
                             {selectedCompetition.status === 'Open' ? (
@@ -1211,12 +1322,22 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                 <p className="text-slate-500 font-bold uppercase tracking-[0.2em] text-xs max-w-lg mx-auto leading-relaxed">
                                     Crónicas sangrientas, rumores de vestuario y el reporte oficial de cada encuentro en la arena de <span className="text-white italic">{selectedCompetition.name}</span>
                                 </p>
+                                
+                                {user?.id === selectedCompetition.ownerId && (
+                                    <button 
+                                        onClick={() => setShowReportModal(true)}
+                                        className="mt-6 bg-primary text-black font-black px-8 py-3 rounded-2xl flex items-center gap-2 mx-auto transition-all hover:scale-105 active:scale-95 uppercase tracking-tighter text-[10px] shadow-xl shadow-primary/10"
+                                    >
+                                        <span className="material-symbols-outlined font-bold text-sm">edit_square</span>
+                                        Redactar Crónica
+                                    </button>
+                                )}
                             </div>
                             
                             {selectedCompetition.reports && selectedCompetition.reports.length > 0 ? (
                                 <div className="grid grid-cols-1 gap-12">
                                     {selectedCompetition.reports.slice().reverse().map((report, idx) => (
-                                        <div key={report.id || idx} className="bg-zinc-900/40 border border-white/5 rounded-[3rem] p-10 relative overflow-hidden group hover:border-primary/20 transition-all">
+                                        <div key={report.id || idx} className="bg-zinc-900/40 border border-white/5 rounded-[3rem] p-10 relative overflow-hidden group hover:border-primary/20 transition-all border-l-4 border-l-primary/30">
                                             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[100px] rounded-full translate-x-1/2 -translate-y-1/2"></div>
                                             
                                             <div className="flex flex-col md:flex-row justify-between items-start gap-8 relative z-10">
@@ -1233,24 +1354,43 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                         <p className="text-slate-400 font-bold italic text-sm">{report.subHeadline}</p>
                                                     )}
                                                     <div className="h-px w-20 bg-white/10"></div>
-                                                    <p className="text-slate-500 text-sm leading-relaxed whitespace-pre-wrap font-medium line-clamp-4 group-hover:line-clamp-none transition-all duration-700">
+                                                    <p className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap font-medium line-clamp-4 group-hover:line-clamp-none transition-all duration-700">
                                                         {report.article}
                                                     </p>
+                                                    
+                                                    {report.summary && (
+                                                        <div className="mt-4 p-4 bg-black/40 rounded-2xl border border-white/5 italic text-slate-400 text-xs">
+                                                            "{report.summary}"
+                                                        </div>
+                                                    )}
                                                 </div>
 
-                                                <div className="w-full md:w-64 bg-black/40 border border-white/5 rounded-3xl p-6 space-y-4">
-                                                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest text-center border-b border-white/5 pb-2">Marcador Final</p>
-                                                    <div className="flex items-center justify-between">
+                                                <div className="w-full md:w-64 bg-black/40 border border-white/5 rounded-3xl p-6 space-y-4 shrink-0">
+                                                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest text-center border-b border-white/5 pb-2 italic">Reporte Oficial</p>
+                                                    <div className="flex items-center justify-between gap-2">
                                                         <div className="text-center flex-1 min-w-0">
                                                             <div className="text-xl font-black text-white italic truncate">{report.homeTeam.score}</div>
                                                             <div className="text-[8px] font-bold text-slate-500 uppercase truncate">{report.homeTeam.name}</div>
                                                         </div>
-                                                        <div className="text-[10px] font-black text-primary px-2">VS</div>
+                                                        <div className="text-[10px] font-black text-primary px-2 italic">VS</div>
                                                         <div className="text-center flex-1 min-w-0">
                                                             <div className="text-xl font-black text-white italic truncate">{report.opponentTeam.score}</div>
                                                             <div className="text-[8px] font-bold text-slate-500 uppercase truncate">{report.opponentTeam.name}</div>
                                                         </div>
                                                     </div>
+                                                    
+                                                    {report.stats && (
+                                                        <div className="pt-4 border-t border-white/5 grid grid-cols-2 gap-y-2 gap-x-4">
+                                                            <div className="flex flex-col">
+                                                                <span className="text-[8px] font-black text-slate-600 uppercase">Casualties</span>
+                                                                <span className="text-[10px] font-black text-white">{report.stats.casualties.home} - {report.stats.casualties.opponent}</span>
+                                                            </div>
+                                                            <div className="flex flex-col text-right">
+                                                                <span className="text-[8px] font-black text-slate-600 uppercase">Passes</span>
+                                                                <span className="text-[10px] font-black text-white">{report.stats.passes.home} - {report.stats.passes.opponent}</span>
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -1266,8 +1406,64 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                         <p className="text-white font-black italic uppercase text-lg mb-2">Las rotativas están paradas</p>
                                         <p className="text-slate-500 font-bold italic uppercase tracking-widest text-[10px]">Todavía no se ha redactado ninguna crónica para esta competición.</p>
                                     </div>
+                                    {user?.id === selectedCompetition.ownerId && (
+                                        <button 
+                                            onClick={() => setShowReportModal(true)}
+                                            className="px-8 py-3 bg-primary/20 text-primary border border-primary/30 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-primary hover:text-black transition-all"
+                                        >
+                                            Escribir Primera Noticia
+                                        </button>
+                                    )}
                                 </div>
                             )}
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    };
+
+    const renderCompCard = (c: Competition, myTeamInComp?: import('../../types').CompetitionTeam) => {
+        const statusColor = c.status === 'Open' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : (c.status === 'In Progress' ? 'bg-yellow-400 shadow-[0_0_8px_rgba(234,179,8,0.5)]' : 'bg-slate-500');
+        return (
+            <div key={c.id} className="group bg-zinc-900/40 border border-white/5 p-6 rounded-[2rem] hover:bg-zinc-800/60 transition-all relative overflow-hidden cursor-pointer" onClick={() => { setSelectedCompetition(c); setView('detail'); }}>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2 group-hover:bg-primary/10 transition-colors" />
+                <div className="relative z-10 flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <span className={`w-2 h-2 shrink-0 rounded-full ${statusColor}`} />
+                            <h3 className="text-xl font-black text-white uppercase italic tracking-tight truncate group-hover:text-primary transition-colors">{c.name}</h3>
+                        </div>
+                        <span className="shrink-0 ml-2 text-[9px] font-black bg-white/5 text-slate-400 px-2 py-1 rounded-lg uppercase tracking-widest">{c.format === 'Liguilla' ? 'LIGA' : 'TORNEO'}</span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                        <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[13px] text-primary/50">person</span> {c.ownerName}</span>
+                        <span className="w-1 h-1 rounded-full bg-slate-700" />
+                        <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[13px] text-primary/50">groups</span> {c.teams.length}{c.maxTeams ? `/${c.maxTeams}` : ''} equipos</span>
+                        {c.rules?.reglamento && <><span className="w-1 h-1 rounded-full bg-slate-700" /><span className="text-primary/60">{c.rules.reglamento}</span></>}
+                    </div>
+
+                    {myTeamInComp && (
+                        <div className="mt-2 pt-3 border-t border-white/5 flex items-center justify-between">
+                            <div className="flex gap-4">
+                                <div>
+                                    <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Tu equipo</p>
+                                    <p className="text-[11px] font-black text-white italic truncate max-w-[130px]">{myTeamInComp.teamName}</p>
+                                </div>
+                                {myTeamInComp.stats && (
+                                    <div>
+                                        <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Record</p>
+                                        <p className="text-[11px] font-black text-primary italic">{myTeamInComp.stats.won}V {myTeamInComp.stats.drawn}E {myTeamInComp.stats.lost}D</p>
+                                    </div>
+                                )}
+                                {myTeamInComp.stats && (
+                                    <div>
+                                        <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Puntos</p>
+                                        <p className="text-[11px] font-black text-yellow-400 italic">{(myTeamInComp.stats.won||0)*3 + (myTeamInComp.stats.drawn||0)} PTS</p>
+                                    </div>
+                                )}
+                            </div>
+                            <span className="material-symbols-outlined text-primary/40 text-sm">arrow_forward_ios</span>
                         </div>
                     )}
                 </div>
@@ -1282,37 +1478,151 @@ export const Leagues: React.FC<LeaguesProps> = ({
                 <h1 className="text-4xl font-black text-white italic uppercase tracking-tighter">
                     La <span className="text-primary italic">Arena</span>
                 </h1>
-                <div className="flex bg-zinc-900/60 p-1 rounded-2xl border border-white/5 backdrop-blur-md">
-                    <button
-                        onClick={() => setActiveTab('leagues')}
-                        className={`px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'leagues' ? 'bg-primary text-black shadow-lg shadow-primary/20' : 'text-slate-500 hover:text-white'}`}
-                    >
-                        Ligas
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('tournaments')}
-                        className={`px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'tournaments' ? 'bg-primary text-black shadow-lg shadow-primary/20' : 'text-slate-500 hover:text-white'}`}
-                    >
-                        Torneos
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('my')}
-                        className={`px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'my' ? 'bg-primary text-black shadow-lg shadow-primary/20' : 'text-slate-500 hover:text-white'}`}
-                    >
-                        Mis Franquicias
-                    </button>
+                <div className="flex flex-wrap gap-1 bg-zinc-900/60 p-1 rounded-2xl border border-white/5 backdrop-blur-md">
+                    {[
+                        { id: 'my-leagues', label: 'Mis Ligas', icon: 'emoji_events' },
+                        { id: 'my-tournaments', label: 'Mis Torneos', icon: 'bolt' },
+                        { id: 'discover', label: 'Descubrir', icon: 'explore' },
+                        { id: 'organization', label: 'Organización', icon: 'admin_panel_settings' },
+                    ].map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id as any)}
+                            className={`flex items-center gap-1.5 px-4 sm:px-5 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === tab.id ? 'bg-primary text-black shadow-lg shadow-primary/20' : 'text-slate-500 hover:text-white'}`}
+                        >
+                            <span className="material-symbols-outlined text-sm font-bold">{tab.icon}</span>
+                            <span className="hidden sm:inline">{tab.label}</span>
+                        </button>
+                    ))}
                 </div>
             </div>
 
-            {activeTab === 'my' && (
-                <div className="space-y-8 text-center sm:text-left">
-                    <div className="flex justify-center sm:justify-start">
+            {/* MIS LIGAS */}
+            {activeTab === 'my-leagues' && (
+                <div className="space-y-4">
+                    {myLeagues.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {myLeagues.map(c => renderCompCard(c, c.teams.find(t => t.ownerId === user?.id)))}
+                        </div>
+                    ) : (
+                        <div className="py-24 text-center bg-zinc-900/20 rounded-[2.5rem] border border-dashed border-white/5 space-y-4">
+                            <span className="material-symbols-outlined text-7xl text-white/5 block">emoji_events</span>
+                            <p className="text-white font-black italic uppercase text-lg">No participas en ninguna liga</p>
+                            <p className="text-slate-500 font-bold italic uppercase tracking-widest text-xs">Ve a la pestaña Descubrir o crea la tuya en Organización</p>
+                            <button onClick={() => setActiveTab('discover')} className="mt-4 px-8 py-3 bg-primary/20 text-primary border border-primary/30 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-primary hover:text-black transition-all">
+                                Explorar Ligas Públicas
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* MIS TORNEOS */}
+            {activeTab === 'my-tournaments' && (
+                <div className="space-y-4">
+                    {myTournaments.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {myTournaments.map(c => renderCompCard(c, c.teams.find(t => t.ownerId === user?.id)))}
+                        </div>
+                    ) : (
+                        <div className="py-24 text-center bg-zinc-900/20 rounded-[2.5rem] border border-dashed border-white/5 space-y-4">
+                            <span className="material-symbols-outlined text-7xl text-white/5 block">bolt</span>
+                            <p className="text-white font-black italic uppercase text-lg">No participas en ningún torneo</p>
+                            <p className="text-slate-500 font-bold italic uppercase tracking-widest text-xs">Espera una invitación o únete a torneos públicos</p>
+                            <button onClick={() => setActiveTab('discover')} className="mt-4 px-8 py-3 bg-primary/20 text-primary border border-primary/30 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-primary hover:text-black transition-all">
+                                Explorar Torneos Públicos
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* DESCUBRIR */}
+            {activeTab === 'discover' && (
+                <div className="space-y-8">
+                    <div className="space-y-3">
+                        <h2 className="text-lg font-black text-white uppercase tracking-widest italic flex items-center gap-2">
+                            <span className="material-symbols-outlined text-primary">emoji_events</span>
+                            Ligas Abiertas
+                        </h2>
+                        {publicLeagues.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {publicLeagues.map(c => (
+                                    <div key={c.id} className="bg-zinc-900/40 border border-white/5 p-6 rounded-[2rem] flex justify-between items-center group relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2" />
+                                        <div className="min-w-0 relative z-10 space-y-2">
+                                            <p className="text-xl font-black text-white italic uppercase truncate group-hover:text-primary transition-colors">{c.name}</p>
+                                            <div className="flex flex-wrap items-center gap-3 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                                                <span>{c.ownerName}</span>
+                                                <span className="w-1 h-1 rounded-full bg-slate-700" />
+                                                <span>{c.teams.length}{c.maxTeams ? `/${c.maxTeams}` : ''} equipos</span>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => setJoinModalState({ comp: c, teamToJoin: managedTeams[0]?.name || '' })}
+                                            className="relative z-10 bg-primary/10 hover:bg-primary text-primary hover:text-black px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border border-primary/20 shrink-0"
+                                        >
+                                            Inscribirse
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="py-10 text-center bg-zinc-900/20 rounded-[2rem] border border-dashed border-white/5">
+                                <p className="text-slate-500 font-bold italic uppercase tracking-widest text-xs">No hay ligas abiertas ahora mismo</p>
+                            </div>
+                        )}
+                    </div>
+                    <div className="space-y-3">
+                        <h2 className="text-lg font-black text-white uppercase tracking-widest italic flex items-center gap-2">
+                            <span className="material-symbols-outlined text-primary">bolt</span>
+                            Torneos Abiertos
+                        </h2>
+                        {publicTournaments.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {publicTournaments.map(c => (
+                                    <div key={c.id} className="bg-zinc-900/40 border border-white/5 p-6 rounded-[2rem] flex justify-between items-center group relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2" />
+                                        <div className="min-w-0 relative z-10 space-y-2">
+                                            <p className="text-xl font-black text-white italic uppercase truncate group-hover:text-primary transition-colors">{c.name}</p>
+                                            <div className="flex flex-wrap items-center gap-3 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                                                <span>{c.ownerName}</span>
+                                                <span className="w-1 h-1 rounded-full bg-slate-700" />
+                                                <span>{c.teams.length}{c.maxTeams ? `/${c.maxTeams}` : ''} equipos</span>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => setJoinModalState({ comp: c, teamToJoin: managedTeams[0]?.name || '' })}
+                                            className="relative z-10 bg-primary/10 hover:bg-primary text-primary hover:text-black px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border border-primary/20 shrink-0"
+                                        >
+                                            Inscribirse
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="py-10 text-center bg-zinc-900/20 rounded-[2rem] border border-dashed border-white/5">
+                                <p className="text-slate-500 font-bold italic uppercase tracking-widest text-xs">No hay torneos abiertos ahora mismo</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* ORGANIZACIÓN */}
+            {activeTab === 'organization' && (
+                <div className="space-y-8">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Tu área de gestión</p>
+                            <h2 className="text-2xl font-black text-white italic uppercase tracking-tight">Organización</h2>
+                        </div>
                         <button
                             onClick={() => setView('create')}
-                            className="bg-primary text-black font-black px-10 py-5 rounded-2xl flex items-center gap-3 transition-all hover:scale-105 active:scale-95 uppercase tracking-tighter text-sm shadow-xl shadow-primary/10"
+                            className="bg-primary text-black font-black px-8 py-4 rounded-2xl flex items-center gap-2 transition-all hover:scale-105 active:scale-95 uppercase tracking-tighter text-[10px] shadow-xl shadow-primary/10"
                         >
-                            <span className="material-symbols-outlined font-bold">add_circle</span>
-                            Organizar Nueva Liga
+                            <span className="material-symbols-outlined font-bold text-sm">add_circle</span>
+                            Nueva Competición
                         </button>
                     </div>
 
@@ -1323,110 +1633,39 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                     key={c.id}
                                     className="group bg-zinc-900/40 border border-white/5 p-6 rounded-[2rem] hover:bg-zinc-800/60 transition-all flex justify-between items-center relative overflow-hidden"
                                 >
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2 group-hover:bg-primary/10 transition-colors"></div>
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2 group-hover:bg-primary/10 transition-colors" />
                                     <div className="relative z-10 flex flex-col gap-2 min-w-0">
                                         <div className="flex items-center gap-2">
                                             <span className={`w-2 h-2 rounded-full ${c.status === 'Open' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : (c.status === 'In Progress' ? 'bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.5)]' : 'bg-slate-500')}`} />
-                                            <h3 className="text-xl font-black text-white uppercase italic tracking-tight truncate group-hover:text-primary transition-colors">
-                                                {c.name}
-                                            </h3>
+                                            <h3 className="text-xl font-black text-white uppercase italic tracking-tight truncate group-hover:text-primary transition-colors">{c.name}</h3>
                                         </div>
                                         <div className="flex flex-wrap items-center gap-3 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
                                             <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">military_tech</span> {c.format}</span>
-                                            <span className="w-1 h-1 rounded-full bg-slate-700"></span>
-                                            <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">person</span> {c.ownerId === user?.id ? 'Tu liga' : c.ownerName}</span>
-                                            {c.rules && (
-                                                <>
-                                                    <span className="w-1 h-1 rounded-full bg-slate-700"></span>
-                                                    <span className="flex items-center gap-1 text-primary/60"><span className="material-symbols-outlined text-[14px]">gavel</span> {c.rules.reglamento}</span>
-                                                </>
-                                            )}
+                                            <span className="w-1 h-1 rounded-full bg-slate-700" />
+                                            <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">groups</span> {c.teams.length}{c.maxTeams ? `/${c.maxTeams}` : ''} participantes</span>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-4 relative z-10 shrink-0">
+                                    <div className="flex items-center gap-3 relative z-10 shrink-0">
                                         <div className="text-right hidden sm:block">
-                                            <span className="block text-[10px] font-black text-white/40 uppercase tracking-widest italic">{c.teams.length} Equipos</span>
+                                            <span className={`block text-[10px] font-black uppercase italic px-2 py-1 rounded-lg ${
+                                                c.status === 'Open' ? 'bg-green-500/10 text-green-400' : c.status === 'In Progress' ? 'bg-yellow-500/10 text-yellow-400' : 'bg-slate-800 text-slate-500'
+                                            }`}>{c.status}</span>
                                         </div>
                                         <button
                                             onClick={() => { setSelectedCompetition(c); setView('detail'); }}
                                             className="w-12 h-12 rounded-2xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center hover:bg-primary hover:text-black transition-all shadow-lg hover:shadow-primary/20"
                                         >
-                                            <span className="material-symbols-outlined font-bold">arrow_forward</span>
+                                            <span className="material-symbols-outlined font-bold">settings</span>
                                         </button>
                                     </div>
                                 </div>
                             ))}
                         </div>
                     ) : (
-                        <div className="py-20 text-center bg-zinc-900/20 rounded-[2.5rem] border border-dashed border-white/5">
-                            <span className="material-symbols-outlined text-6xl text-white/5 mb-4 block">stadium</span>
-                            <p className="text-slate-500 font-bold italic uppercase tracking-widest text-xs">No estás en ninguna competición activa</p>
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {activeTab === 'leagues' && (
-                <div className="space-y-8">
-                    {leagues.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {leagues.map(c => (
-                                <div key={c.id} className="bg-zinc-900/40 border border-white/5 p-6 rounded-[2rem] flex justify-between items-center group relative overflow-hidden">
-                                     <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2"></div>
-                                    <div className="min-w-0 relative z-10 space-y-2">
-                                        <p className="text-xl font-black text-white italic uppercase truncate group-hover:text-primary transition-colors">{c.name}</p>
-                                        <div className="flex flex-wrap items-center gap-3 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                                            <span className="flex items-center gap-1">{c.ownerName}</span>
-                                            <span className="w-1 h-1 rounded-full bg-slate-700"></span>
-                                            <span className="flex items-center gap-1">{c.format}</span>
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={() => setJoinModalState({ comp: c, teamToJoin: managedTeams[0]?.name || '' })}
-                                        className="relative z-10 bg-primary/10 hover:bg-primary text-primary hover:text-black px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border border-primary/20"
-                                    >
-                                        Inscribirse
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="py-20 text-center bg-zinc-900/20 rounded-[2.5rem] border border-dashed border-white/5">
-                            <span className="material-symbols-outlined text-6xl text-white/5 mb-4 block">search_off</span>
-                            <p className="text-slate-500 font-bold italic uppercase tracking-widest text-xs">No hay ligas abiertas</p>
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {activeTab === 'tournaments' && (
-                <div className="space-y-8">
-                    {tournaments.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {tournaments.map(c => (
-                                <div key={c.id} className="bg-zinc-900/40 border border-white/5 p-6 rounded-[2rem] flex justify-between items-center group relative overflow-hidden">
-                                     <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2"></div>
-                                    <div className="min-w-0 relative z-10 space-y-2">
-                                        <p className="text-xl font-black text-white italic uppercase truncate group-hover:text-primary transition-colors">{c.name}</p>
-                                        <div className="flex flex-wrap items-center gap-3 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                                            <span className="flex items-center gap-1">{c.ownerName}</span>
-                                            <span className="w-1 h-1 rounded-full bg-slate-700"></span>
-                                            <span className="flex items-center gap-1">{c.format}</span>
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={() => setJoinModalState({ comp: c, teamToJoin: managedTeams[0]?.name || '' })}
-                                        className="relative z-10 bg-primary/10 hover:bg-primary text-primary hover:text-black px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border border-primary/20"
-                                    >
-                                        Inscribirse
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="py-20 text-center bg-zinc-900/20 rounded-[2.5rem] border border-dashed border-white/5">
-                            <span className="material-symbols-outlined text-6xl text-white/5 mb-4 block">bolt</span>
-                            <p className="text-slate-500 font-bold italic uppercase tracking-widest text-xs">No hay torneos abiertos</p>
+                        <div className="py-24 text-center bg-zinc-900/20 rounded-[2.5rem] border border-dashed border-white/5 space-y-4">
+                            <span className="material-symbols-outlined text-7xl text-white/5 block">admin_panel_settings</span>
+                            <p className="text-white font-black italic uppercase text-lg">Aún no has creado ninguna competición</p>
+                            <p className="text-slate-500 font-bold italic uppercase tracking-widest text-xs">Crea tu primera liga o torneo para empezar</p>
                         </div>
                     )}
                 </div>
@@ -1634,6 +1873,125 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                         </div>
                                     </div>
                                 ))}
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+            {/* Modal: Redactar Crónica */}
+            <AnimatePresence>
+                {showReportModal && selectedCompetition && (
+                    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={() => setShowReportModal(false)}>
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="bg-zinc-900 border border-white/5 rounded-[2.5rem] shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[90vh]"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="p-8 border-b border-white/5 shrink-0 flex justify-between items-center">
+                                <div>
+                                    <h3 className="text-xl font-black text-white italic uppercase tracking-tighter">Cronista Real</h3>
+                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Escribiendo para {selectedCompetition.name}</p>
+                                </div>
+                                <button onClick={() => setShowReportModal(false)} className="text-slate-500 hover:text-white">
+                                    <span className="material-symbols-outlined">close</span>
+                                </button>
+                            </div>
+
+                            <div className="p-8 space-y-6 overflow-y-auto">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="block text-[10px] font-black text-slate-500 uppercase">Titular Principal</label>
+                                        <input 
+                                            type="text" 
+                                            placeholder="Goleada en la Arena..."
+                                            value={reportForm.headline}
+                                            onChange={e => setReportForm({...reportForm, headline: e.target.value})}
+                                            className="w-full bg-black/60 border border-white/10 rounded-2xl py-4 px-4 text-white focus:ring-1 focus:ring-primary outline-none font-bold"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="block text-[10px] font-black text-slate-500 uppercase">Sub-titular</label>
+                                        <input 
+                                            type="text" 
+                                            placeholder="Detalles del partido..."
+                                            value={reportForm.subHeadline}
+                                            onChange={e => setReportForm({...reportForm, subHeadline: e.target.value})}
+                                            className="w-full bg-black/60 border border-white/10 rounded-2xl py-4 px-4 text-white focus:ring-1 focus:ring-primary outline-none font-bold"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-black/40 p-6 rounded-3xl border border-white/5">
+                                    <div className="space-y-2">
+                                        <label className="block text-[10px] font-black text-slate-600 uppercase">Equipo A</label>
+                                        <select 
+                                            value={reportForm.homeTeam}
+                                            onChange={e => setReportForm({...reportForm, homeTeam: e.target.value})}
+                                            className="w-full bg-zinc-900 border border-white/10 rounded-xl py-2 px-3 text-xs text-white"
+                                        >
+                                            <option value="">Selección...</option>
+                                            {selectedCompetition.teams.map(t => <option key={t.teamName} value={t.teamName}>{t.teamName}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="block text-[10px] font-black text-slate-600 uppercase">TDs</label>
+                                        <input type="number" value={reportForm.score1} onChange={e => setReportForm({...reportForm, score1: parseInt(e.target.value)})} className="w-full bg-zinc-900 border border-white/10 rounded-xl py-2 text-center text-white" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="block text-[10px] font-black text-slate-600 uppercase">Equipo B</label>
+                                        <select 
+                                            value={reportForm.opponentTeam}
+                                            onChange={e => setReportForm({...reportForm, opponentTeam: e.target.value})}
+                                            className="w-full bg-zinc-900 border border-white/10 rounded-xl py-2 px-3 text-xs text-white"
+                                        >
+                                            <option value="">Selección...</option>
+                                            {selectedCompetition.teams.map(t => <option key={t.teamName} value={t.teamName}>{t.teamName}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="block text-[10px] font-black text-slate-600 uppercase">TDs</label>
+                                        <input type="number" value={reportForm.score2} onChange={e => setReportForm({...reportForm, score2: parseInt(e.target.value)})} className="w-full bg-zinc-900 border border-white/10 rounded-xl py-2 text-center text-white" />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="block text-[10px] font-black text-slate-500 uppercase">Artículo de Prensa</label>
+                                    <textarea 
+                                        rows={8}
+                                        placeholder="Escribe la crónica del encuentro..."
+                                        value={reportForm.article}
+                                        onChange={e => setReportForm({...reportForm, article: e.target.value})}
+                                        className="w-full bg-black/60 border border-white/10 rounded-2xl py-4 px-4 text-white focus:ring-1 focus:ring-primary outline-none font-medium text-sm leading-relaxed"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="p-8 bg-black/40 flex gap-4 shrink-0">
+                                <button onClick={() => setShowReportModal(false)} className="flex-1 py-4 text-slate-400 font-black uppercase tracking-widest text-[10px] hover:text-white transition-colors">Descartar</button>
+                                <button 
+                                    onClick={() => {
+                                        const newReport: import('../../types').MatchReport = {
+                                            id: crypto.randomUUID(),
+                                            date: new Date().toLocaleDateString('es-ES'),
+                                            headline: reportForm.headline,
+                                            subHeadline: reportForm.subHeadline,
+                                            article: reportForm.article,
+                                            homeTeam: { name: reportForm.homeTeam, rosterName: '', score: reportForm.score1 },
+                                            opponentTeam: { name: reportForm.opponentTeam, rosterName: '', score: reportForm.score2 },
+                                            gameLog: []
+                                        };
+                                        const updatedComp = { ...selectedCompetition, reports: [...(selectedCompetition.reports || []), newReport] };
+                                        onCompetitionUpdate(updatedComp);
+                                        setSelectedCompetition(updatedComp);
+                                        setShowReportModal(false);
+                                        setReportForm({ headline: '', subHeadline: '', article: '', homeTeam: '', opponentTeam: '', score1: 0, score2: 0 });
+                                    } }
+                                    className="flex-1 py-4 bg-primary text-black font-black rounded-2xl uppercase tracking-widest text-[10px] shadow-lg shadow-primary/10"
+                                >
+                                    Publicar en La Gaceta
+                                </button>
                             </div>
                         </motion.div>
                     </div>
