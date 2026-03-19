@@ -87,6 +87,7 @@ interface TeamDashboardProps {
     hideDelete?: boolean;
     syncLabel?: string;
     onSync?: () => void;
+    stickyOffset?: string;
 }
 
 export const TeamDashboard: React.FC<TeamDashboardProps> = ({ 
@@ -98,7 +99,8 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
     matchReports = [],
     hideDelete = false,
     syncLabel = "Sincronizar",
-    onSync
+    onSync,
+    stickyOffset = "top-16"
 }) => {
     const [editingPlayer, setEditingPlayer] = useState<ManagedPlayer | null>(null);
     const [showQr, setShowQr] = useState(false);
@@ -293,7 +295,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
     return (
         <div className="min-h-screen bg-background-dark text-slate-100 font-display">
             {/* Top Navigation & Header */}
-            <header className="border-b border-white/10 bg-black/40 backdrop-blur-md sticky top-16 z-50">
+            <header className={`border-b border-white/10 bg-black/40 backdrop-blur-md sticky ${stickyOffset} z-50`}>
                 <div className="max-w-[1400px] mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-6">
                         <div

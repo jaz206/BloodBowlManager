@@ -1827,7 +1827,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        className="fixed inset-0 z-[100] bg-background-dark/95 backdrop-blur-xl"
+                        className="fixed inset-0 z-[100] bg-background-dark/95 backdrop-blur-xl overflow-y-auto"
                     >
                         <TeamDashboard 
                             team={statsModalTeam}
@@ -1850,6 +1850,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
                             isGuest={isGuest}
                             hideDelete={true}
                             syncLabel="Sync Clon"
+                            stickyOffset="top-0"
                         />
                     </motion.div>
                 )}
