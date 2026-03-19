@@ -1375,6 +1375,8 @@ const AdminPanel: React.FC = () => {
                                         )}
 
                                         {/* STARS SPECIFIC */}
+                                        {editingItem.type === 'stars' && (
+                                            <div className="space-y-12 animate-fade-in-slow mt-8">
                                                 {/* IMAGE SECTION (FOLDABLE) */}
                                                 <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] overflow-hidden">
                                                     <button
@@ -1590,6 +1592,8 @@ const AdminPanel: React.FC = () => {
                                                         placeholder="Describe aquí el trasfondo de la leyenda..."
                                                     />
                                                 </div>
+                                            </div>
+                                        )}
 
                                         {/* SKILLS SPECIFIC (Bilingual) */}
                                         {editingItem.type === 'skills' && (
