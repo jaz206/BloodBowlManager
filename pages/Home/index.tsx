@@ -394,15 +394,16 @@ const Home: React.FC<HomeProps> = ({
             {/* ROW 2: COMPETICIÓN (100%) */}
             <section className="bento-card rounded-2xl p-6 md:p-8 w-full overflow-hidden">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
-                    <div className="flex items-center gap-4 group cursor-pointer" onClick={() => onNavigate('leagues')}>
-                        <h2 className="font-header text-4xl section-title m-0 group-hover:text-primary transition-colors">Estado de la Arena</h2>
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3 group cursor-pointer" onClick={() => onNavigate('leagues')}>
+                            <h2 className="font-header text-4xl section-title m-0 group-hover:text-primary transition-colors">Estado de la Arena</h2>
+                            <span className="material-symbols-outlined text-primary/40 text-sm group-hover:translate-x-1 transition-all">chevron_right</span>
+                        </div>
                         {myCompetitions.length > 0 && (
                             <select 
                                 value={activeCompId || ''} 
-                                onChange={(e) => {
-                                    e.stopPropagation();
-                                    setActiveCompId(e.target.value);
-                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                onChange={(e) => setActiveCompId(e.target.value)}
                                 className="bg-zinc-900 border border-primary/20 rounded-xl px-4 py-2 text-primary font-black tracking-widest text-[10px] uppercase outline-none focus:border-primary/60 transition-all cursor-pointer hover:bg-zinc-800 hover:border-primary/40 appearance-none"
                                 style={{ 
                                     backgroundImage: "url(\"data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23facc15' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e\")",
@@ -417,7 +418,6 @@ const Home: React.FC<HomeProps> = ({
                                 ))}
                             </select>
                         )}
-                        <span className="material-symbols-outlined text-primary/40 text-sm group-hover:translate-x-1 transition-all">chevron_right</span>
                     </div>
                     
                     {activeComp?.format === 'Liguilla' && (
