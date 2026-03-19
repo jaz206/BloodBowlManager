@@ -360,20 +360,17 @@ const MainApp: React.FC = () => {
     return (
       <button
         onClick={() => setActiveView(view)}
-        className={`flex-1 group flex flex-col sm:flex-row items-center justify-center gap-2 py-3 px-3 text-center transition-all duration-300 relative ${isActive
-          ? 'text-premium-gold'
-          : 'text-slate-500 hover:text-white hover:bg-white/5'
+        className={`group flex items-center gap-3 px-4 h-full transition-all duration-300 relative border-b-2 ${isActive
+          ? 'text-[#CA8A04] border-[#CA8A04] bg-[#CA8A04]/5'
+          : 'text-slate-500 border-transparent hover:text-white hover:bg-white/5'
           }`}
       >
         {React.cloneElement(icon, {
-          className: `w-5 h-5 transition-all duration-300 ${isActive ? 'text-premium-gold scale-110' : 'text-slate-500 group-hover:text-white group-hover:scale-110'}`
+          className: `w-4 h-4 transition-all duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`
         })}
-        <span className={`hidden sm:inline font-display text-[10px] tracking-widest font-bold uppercase ${isActive ? 'opacity-100' : 'opacity-60 group-hover:opacity-100'}`}>
+        <span className={`text-[9px] font-display font-black uppercase tracking-[0.2em] ${isActive ? 'opacity-100' : 'opacity-40 group-hover:opacity-100'}`}>
           {label}
         </span>
-        {isActive && (
-          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-premium-gold shadow-[0_0_10px_rgba(202,138,4,0.5)]" />
-        )}
       </button>
     );
   };
@@ -386,27 +383,28 @@ const MainApp: React.FC = () => {
       {/* Dot Grid Background Layer */}
       <div className="fixed inset-0 pointer-events-none opacity-40 z-0" style={{ backgroundImage: 'radial-gradient(rgba(202, 138, 4, 0.15) 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
 
-      <div className="w-full relative z-50">
-          <header className="h-14 bg-black border-b border-[#CA8A04]/20 flex items-center justify-between px-10 shadow-2xl relative group">
+      <div className="w-full fixed top-0 left-0 z-[100]">
+          <header className="h-16 bg-black/90 backdrop-blur-xl border-b border-[#CA8A04]/20 flex items-center justify-between px-10 shadow-2xl relative group">
             {/* Top accent line */}
             <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#CA8A04]/40 to-transparent opacity-50"></div>
 
-            <div className="flex items-center gap-4">
+            {/* Left: Logo & Admin */}
+            <div className="flex items-center gap-6">
               <div 
                 onClick={() => setActiveView('home')}
                 className="flex items-center gap-3 cursor-pointer group/logo"
               >
                 <span className="material-symbols-outlined text-[#CA8A04] text-2xl font-black transform group-hover/logo:rotate-12 transition-transform">sports_football</span>
                 <h1 className="font-epilogue font-black italic text-xl tracking-tighter uppercase flex gap-1.5 leading-none">
-                    <span className="text-[#CA8A04]">BLOOD BOWL</span>
-                    <span className="text-white">ASSISTANT</span>
+                    <span className="text-[#CA8A04]">BB</span>
+                    <span className="text-white hidden lg:inline">ASSISTANT</span>
                 </h1>
               </div>
 
               {isAdmin && (
                 <button
                   onClick={() => setActiveView('admin')}
-                  className={`ml-4 px-3 py-1 rounded-sm border text-[8px] font-display font-black uppercase tracking-widest transition-all ${activeView === 'admin'
+                  className={`px-3 py-1.5 rounded-sm border text-[8px] font-display font-black uppercase tracking-widest transition-all ${activeView === 'admin'
                     ? 'bg-[#CA8A04] text-black border-[#CA8A04]'
                     : 'border-white/10 text-slate-500 hover:border-[#CA8A04] hover:text-[#CA8A04]'
                     }`}
@@ -416,36 +414,35 @@ const MainApp: React.FC = () => {
               )}
             </div>
 
+            {/* Center: Main Navigation */}
+            <nav className="h-full hidden md:flex items-center">
+                <NavButton view="home" label={t('nav.home')} icon={<HomeIcon />} />
+                <NavButton view="oracle" label={t('nav.oracle')} icon={<BookOpenIcon />} />
+                <NavButton view="guild" label={t('nav.guild')} icon={<UsersIcon />} />
+                <NavButton view="leagues" label={t('nav.leagues')} icon={<TrophyIcon />} />
+                <NavButton view="arena" label={t('nav.arena')} icon={<StadiumIcon />} />
+                <NavButton view="tactical" label={t('nav.tactical')} icon={<ClipboardListIcon />} />
+            </nav>
+
+            {/* Right: User Actions */}
             <div className="flex items-center gap-5">
-              <button className="text-[#CA8A04]/60 hover:text-[#CA8A04] transition-colors relative">
+              <button className="text-[#CA8A04]/60 hover:text-[#CA8A04] transition-colors relative hidden sm:block">
                 <span className="material-symbols-outlined font-black">notifications</span>
                 <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-600 rounded-full border border-black animate-pulse"></span>
               </button>
               
-              <button className="text-[#CA8A04]/60 hover:text-[#CA8A04] transition-colors">
+              <button className="text-[#CA8A04]/60 hover:text-[#CA8A04] transition-colors hidden sm:block">
                 <span className="material-symbols-outlined font-black">settings</span>
               </button>
 
-              <div className="h-6 w-[1px] bg-white/10 mx-1"></div>
+              <div className="h-6 w-[1px] bg-white/10 mx-1 hidden sm:block"></div>
 
               <UserProfile />
             </div>
           </header>
       </div>
 
-      <main className={`${mainClasses} pt-8 pb-40`}>
-        {/* Navigation - Modern Bento Nav (Bottom or Top) */}
-        <nav className="fixed bottom-10 left-1/2 -translate-x-1/2 w-[95%] max-w-2xl glass-panel border-white/10 overflow-hidden z-[100] shadow-[0_30px_60px_rgba(0,0,0,0.9)] rounded-3xl bg-black/80 backdrop-blur-2xl">
-          <div className="flex justify-around items-center h-16">
-            <NavButton view="home" label={t('nav.home')} icon={<HomeIcon />} />
-            <NavButton view="oracle" label={t('nav.oracle')} icon={<BookOpenIcon />} />
-            <NavButton view="guild" label={t('nav.guild')} icon={<UsersIcon />} />
-            <NavButton view="leagues" label={t('nav.leagues')} icon={<TrophyIcon />} />
-            <NavButton view="arena" label={t('nav.arena')} icon={<StadiumIcon />} />
-            <NavButton view="tactical" label={t('nav.tactical')} icon={<ClipboardListIcon />} />
-          </div>
-        </nav>
-
+      <main className={`${mainClasses} pt-24 pb-12`}>
         <div className="min-h-[60vh] relative group/main">
           {!dataInitiallyLoaded ? (
             <div className="flex flex-col items-center justify-center text-white py-40">
@@ -508,7 +505,7 @@ const MainApp: React.FC = () => {
         </div>
       </main>
 
-      {/* Footer removed to prevent clashing with floating navigation */}
+      {/* Footer and mobile nav could be added here if needed */}
 
 
       <div className="fixed inset-0 pointer-events-none overflow-hidden h-screen w-screen z-[-1]">
