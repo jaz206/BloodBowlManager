@@ -545,14 +545,23 @@ const MainApp: React.FC = () => {
                 />
               )}
               {activeView === 'tactical' && <TacticalBoardPage managedTeams={managedTeams} plays={plays} onSavePlay={handlePlaySave} onDeletePlay={handlePlayDelete} />}
-              {activeView === 'arena' && <MatchPage managedTeams={managedTeams} matchReports={matchReports} onTeamUpdate={handleTeamUpdate} onMatchReportCreate={handleMatchReportCreate} />}
+              {activeView === 'arena' && <MatchPage 
+                managedTeams={managedTeams} 
+                matchReports={matchReports} 
+                onTeamUpdate={handleTeamUpdate} 
+                onMatchReportCreate={handleMatchReportCreate}
+                initialHomeTeam={arenaMatchConfig?.homeTeam}
+                initialOpponentTeam={arenaMatchConfig?.opponentTeam}
+                competition={arenaMatchConfig?.competition}
+              />}
               {activeView === 'leagues' && (
-                <LeaguesPage
+              <LeaguesPage
                   managedTeams={managedTeams}
                   initialCompetitions={leagues}
                   onCompetitionCreate={handleCompetitionCreate}
                   onCompetitionUpdate={handleCompetitionUpdate}
                   onCompetitionDelete={handleCompetitionDelete}
+                  onNavigateToMatch={handleNavigateToMatch}
                   isGuest={isGuest}
                 />
               )}

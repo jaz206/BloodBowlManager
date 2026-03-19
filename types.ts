@@ -240,12 +240,14 @@ export interface Competition {
   format: 'Liguilla' | 'Torneo';
   status: 'Open' | 'In Progress' | 'Finished';
   visibility?: 'Public' | 'Private'; // Nueva propiedad
+  maxTeams?: number; // Nueva propiedad S3
   teams: CompetitionTeam[];
   schedule?: Record<string, Matchup[]> | null;
   bracket?: Record<string, Matchup[]> | null;
   createdAt?: any;
   rules?: CompetitionRules;
   baseTeam?: ManagedTeam; // Equipo base del propietario (host)
+  reports?: MatchReport[]; // Crónicas y noticias S3
 }
 
 export type League = Competition;
