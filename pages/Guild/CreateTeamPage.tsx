@@ -194,7 +194,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                                                     <motion.div layoutId="active-bg" className="absolute inset-0 bg-gold/5 pointer-events-none" />
                                                 )}
                                             </div>
-                                            <span className={`text-[8px] font-black uppercase tracking-[0.2em] transition-colors ${isSelected ? 'text-gold' : 'text-gray-600'}`}>{tm.name}</span>
+                                            <span className={`text-[7px] font-black uppercase tracking-[0.1em] transition-colors ${isSelected ? 'text-gold' : 'text-gray-600'}`}>{tm.name}</span>
                                         </button>
                                     );
                                 })}
@@ -219,7 +219,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                             />
                         </div>
                     </div>
-                </nav>                <main className="max-w-[1500px] mx-auto px-6 pt-12 pb-48 grid grid-cols-1 md:grid-cols-12 gap-8 items-start relative">
+                </nav>                <main className="max-w-[1500px] mx-auto px-6 pt-24 pb-48 grid grid-cols-1 md:grid-cols-12 gap-8 items-start relative">
                     {/* Background Illustration Glow */}
                     <AnimatePresence mode="wait">
                         <motion.div 
@@ -246,7 +246,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                             animate={{ opacity: 1, y: 0 }}
                             className="space-y-3"
                         >
-                            <h1 className="text-5xl font-header font-black text-white italic tracking-tighter uppercase leading-none drop-shadow-2xl">
+                            <h1 className="text-4xl font-header font-black text-white italic tracking-tighter uppercase leading-none drop-shadow-2xl">
                                 {currentFaction.name}
                             </h1>
                             <p className="text-gold text-[10px] font-black tracking-[0.4em] uppercase italic opacity-60 border-l-2 border-gold pl-4 py-0.5">
