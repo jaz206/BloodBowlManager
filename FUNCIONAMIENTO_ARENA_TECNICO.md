@@ -1,76 +1,75 @@
-# 🏟️ Arquitectura y Funcionamiento: Blood Bowl Arena (Match Engine)
+# 🏟️ Arquitectura y Funcionamiento Técnico: La Arena (V2026)
 
-Este documento detalla la lógica interna, los cálculos y el flujo de trabajo del Match Engine de la Arena, diseñado para cumplir con las reglas de la **Season 3 (2025)**.
-
----
-
-## 1. Arquitectura de Estados
-La Arena se gestiona mediante un **Orquestador Central** (`MatchOrchestrator.tsx`) y un **Contexto Global** (`MatchContext.tsx`).
-
-### Estados de Partida (`GameState`)
-- **`selection`**: Configuración de equipos (Carga vía QR o manual) y modo de juego (Amistoso/Competición).
-- **`pre_game`**: Secuencia de 4 pasos (Journeymen, Mercado de Incentivos/Clima/Sorteo, Despliegue, Kickoff).
-- **`in_progress`**: El bucle principal del partido.
-- **`ko_recovery`**: Fase intermedia entre drives para recuperar jugadores inconscientes.
-- **`post_game`**: Cierre de acta, SPP, MVP y actualización de base de datos.
+Este documento detalla la lógica de negocio, arquitectura de datos y motores de reglas para la gestión de competiciones.
 
 ---
 
-## 2. Motores de Reglas (`engine/`)
+## 1. El Dashboard Dinámico (`Home/index.tsx`)
+El panel de "Estado de la Arena" opera mediante inyección de contexto competidor.
 
-### A. Motor de Lesiones (`injuryEngine.ts`)
-Gestiona la lógica de daños cuando un jugador es derribado.
-- **Tirada de Armadura (2D6)**: Compara contra atributo `AR`.
-- **Tirada de Heridas (2D6)**: Determina Aturdido, KO o Lesionado.
-    - *Modificador Stunty*: Umbrales de herida reducidos para jugadores pequeños.
-- **Intervención del Apotecario**: Permite repetir tiradas de KO o Lesión.
-- **Regeneración**: Chequeo 4+ para jugadores no-muertos.
-- **Devolver el Favor (S3)**: Si un jugador sufre una lesión grave, tiene un 50% (4+) de ganar el rasgo **Odio** contra su agresor.
-
-### B. Motor de Faltas (`foulEngine.ts`)
-- **Doble Natural**: Si sale un doble en la tirada de Armadura o Heridas, el jugador es expulsado.
-- **Árbitro Parcial**: El incentivo permite evitar la expulsión con un 2+ en 1D6.
-
-### C. Lógica de Juego (`matchEngine.ts`)
-- **Turnos**: 8 turnos por parte. El turno avanza tras la activación del equipo visitante.
-- **Stalling (Frenazo)**: Lanza 1D6 al activar un jugador que puede anotar. Si `Dado >= Turno Actual`, ocurre un Turnover.
-- **SPP Dinámico (S3)**:
-    - Normal: TD (3), Baja (2).
-    - **Brutos Brutales (S3)**: TD (2), Baja (3).
+- **Estado `activeCompId`**: Los componentes de Home (`HomeLeaderboard`, `HomeNextMatch`) se suscriben a este ID.
+- **`useMemo` de Estadísticas**:
+  - `homeStandings`: Filtra, ordena por puntos (3 pts V, 1 pt E) y desempate por TD-Net.
+  - `homeScorers`: Aplana los jugadores de todos los equipos de la liga, filtra por `sppActions.TD > 0` y ordena descendente.
+  - `homeBashers`: Aplana jugadores, filtra por `sppActions.CASUALTY > 0` y ordena descendente.
+- **Navegación Selectiva**: Solo el encabezado del dashboard (`h2`) y el chevron icon disparan `onNavigate('leagues')`. El `select` nativo está blindado con `e.stopPropagation()` para permitir interacción sin navegar.
 
 ---
 
-## 3. Acciones de Juego (Vínculo de Nuffle)
+## 2. El Sistema de 4 Pestañas (`LeaguesPage/renderTabbedList`)
+La arquitectura de `LeaguesPage.tsx` se basa en filtros derivados del array maestro de `competitions`.
 
-Implementadas en `S3ActionOrchestrator.tsx`, estas acciones permiten digitalizar las tiradas de dados físicas:
-
-| Acción | Dado | Lógica |
-| :--- | :--- | :--- |
-| **GFI (Rush)** | 1D6 | Fallo con 1 natural. |
-| **Asegurar Balón** | 1D6 | Requiere 2+ para éxito. |
-| **Falta** | 2D6 | Lanza Armadura automáticamente contra el objetivo. |
-| **Bone Head** | 1D6 | Si saca 1, el jugador queda **Distraído** (Pierde ZD y Habilidades). |
-| **Placaje** | Block | Dados de placaje (Calaveras, Both Down, Empujón, etc). |
+1. **`my-leagues`**: `competitions.filter(c => c.format === 'Liguilla' && c.teams.some(t => t.ownerId === user.id))`.
+2. **`my-tournaments`**: `competitions.filter(c => c.format === 'Torneo' && c.teams.some(t => t.ownerId === user.id))`.
+3. **`discover`**: Filtra ligas públicas (`visibility === 'public'`), abiertas (`status === 'Open'`) y donde el usuario aún no tiene plaza.
+4. **`organization`**: Filtra ligas donde `ownerId === user.id`. Centra el acceso a modales de gestión (Reports, Admin, Delete).
 
 ---
 
-## 4. UI y Modales
-- **MiniField**: Representación táctica para despliegue y visualización de estados (Balón, Distraído, Indigestión).
-- **PlayerStatusCard**: Gestión individual de condiciones S3:
-    - **Distraído**: El CSS aplica `grayscale` y una línea sobre las habilidades, indicando que no tiene Zona de Defensa.
-    - **Indigestión**: Aplica penalizador automático de -1 MA y -1 AR visible en la ficha.
-- **Quick Dice Grid**: Interfaz de entrada rápida para resultados 2-12 que agiliza el uso de la app durante partidos con dados físicos.
+## 3. "La Gaceta" y Sistema de Crónicas
+El sistema de noticias opera sobre el array `Competition.reports`.
+
+- **Modelo `MatchReport`**:
+  - `id`: UUID.
+  - `headline`, `subHeadline`, `article`: Texto narrativo.
+  - `homeTeam`, `opponentTeam`: Objeto con `name`, `score` y `rosterName`.
+  - `date`: Fecha de publicación.
+- **Generación Automática**: El `PostGameWizard` puede disparar el `newsGenerator.ts` para crear un reporte base al cerrar el acta.
+- **Redacción Manual**: El organizador puede inyectar nuevos reportes vía modal, los cuales se añaden al principio del array (`[newReport, ...oldReports]`) para visualización cronológica inversa.
 
 ---
 
-## 5. Secuencia de Turno y Continuidad
-1. **Inicio de Turno**: Se limpian las acciones estratégicas (Blitz, Pase, Falta, Handoff).
-2. **Activación de Jugador**: El usuario selecciona un jugador y realiza acciones.
-3. **Turnover**: Disparado por fallos críticos (GFI 1, Pase fallido, Muerte, Stalling).
-4. **Final de Turno**: Se alterna el equipo activo y se comprueba el límite de tiempo/turnos.
+## 4. Gestión de Clones (ManagedTeam)
+Para competiciones, se utiliza una copia profunda de la franquicia original.
+
+- **Ficha Técnica**: Al seleccionar un equipo en el detalle de liga, se inyecta su `teamState` (un `ManagedTeam` de Firestore) en el modal `StatsModalTeam`.
+- **Integridad de Datos**: Las actualizaciones en el clon (lesiones, SPP) se guardan en el objeto `CompetitionTeam` y no afectan al equipo base del Gremio hasta que el usuario decida sincronizarlo explícitamente.
 
 ---
 
-## 6. Integración de Datos
-- **QR Code**: Serializa el equipo en un formato comprimido para transferencia offline entre dispositivos.
-- **Post-Game**: Actualiza la tesorería del equipo basándose en la FAMA y el Factor de Hinchas según la tabla de ganancias S3.
+## 5. Próximo Encuentro Inteligente
+Lógica de detección de partido pendiente para el usuario en una competencia:
+
+```typescript
+const nextMatch = useMemo(() => {
+    if (activeComp.format === 'Liguilla') {
+        const schedule = activeComp.schedule || {};
+        // Busca en todas las jornadas (rounds) el primer partido del usuario sin score
+        for (const matchups of Object.values(schedule)) {
+            const match = matchups.find(m => 
+                (m.team1 === myTeamName || m.team2 === myTeamName) && 
+                m.score1 === null && m.score2 === null
+            );
+            if (match) return match;
+        }
+    }
+}, [activeComp, user]);
+```
+
+---
+
+## 🎲 Conclusión para Android (Mesa de Estrategia)
+Para la futura aplicación **Blood Bowl Android**:
+- Replicar la lógica `useMemo` de los rankings en `ViewModel` de Kotlin.
+- Implementar el sistema de pestañas Arena mediante `Navigation Component` o `Compose Tabs`.
+- Utilizar el motor de crónicas para generar notificaciones push de "Nueva Crónica en La Gaceta".

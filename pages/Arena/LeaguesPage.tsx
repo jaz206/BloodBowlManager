@@ -5,6 +5,7 @@ import { useAuth } from '../../hooks/useAuth';
 import PencilIcon from '../../components/icons/PencilIcon';
 import CalendarIcon from '../../components/icons/CalendarIcon';
 import QrCodeIcon from '../../components/icons/QrCodeIcon';
+import { TeamDashboard } from '../../components/guild/TeamDashboard';
 
 declare global {
     interface Window {
@@ -262,6 +263,23 @@ export const Leagues: React.FC<LeaguesProps> = ({
         setOwnerTeamToJoin('');
         setView('list');
         setActiveTab('organization');
+    };
+
+    const handleUpdateClone = (updatedTeam: ManagedTeam) => {
+        if (!selectedCompetition || !statsModalTeam) return;
+        
+        const updatedComp = {
+            ...selectedCompetition,
+            teams: selectedCompetition.teams.map(t => 
+                (t.ownerId === statsModalTeam.ownerId && t.teamName === statsModalTeam.name)
+                ? { ...t, teamState: updatedTeam } 
+                : t
+            )
+        };
+        
+        onCompetitionUpdate(updatedComp);
+        setSelectedCompetition(updatedComp);
+        setStatsModalTeam(updatedTeam);
     };
 
     const handleJoinCompetition = () => {
@@ -1806,76 +1824,35 @@ export const Leagues: React.FC<LeaguesProps> = ({
             {/* Modal: Gestionar Clon */}
             <AnimatePresence>
                 {statsModalTeam && (
-                    <div className="fixed inset-0 bg-black/90 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 backdrop-blur-md" onClick={() => setStatsModalTeam(null)}>
-                        <motion.div
-                            initial={{ opacity: 0, y: 60 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 60 }}
-                            className="bg-zinc-900 border border-white/10 rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden"
-                            onClick={e => e.stopPropagation()}
-                        >
-                            {/* Header */}
-                            <div className="flex items-center justify-between p-8 border-b border-white/5 shrink-0">
-                                <div>
-                                    <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-1 italic">Franquicia de Competición</p>
-                                    <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter">{statsModalTeam.name}</h3>
-                                    <p className="text-[10px] text-slate-500 font-bold uppercase">{statsModalTeam.rosterName}</p>
-                                </div>
-                                <button onClick={() => setStatsModalTeam(null)} className="w-12 h-12 rounded-2xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-500 hover:text-white transition-all">
-                                    <span className="material-symbols-outlined font-bold">close</span>
-                                </button>
-                            </div>
-
-                            {/* Stats bar */}
-                            <div className="grid grid-cols-3 border-b border-white/5 shrink-0">
-                                <div className="p-6 text-center border-r border-white/5">
-                                    <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1">Tesorería</p>
-                                    <p className="text-xl font-black text-primary italic">{((statsModalTeam.treasury || 0) / 1000)}k GP</p>
-                                </div>
-                                <div className="p-6 text-center border-r border-white/5">
-                                    <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1">Valor Total</p>
-                                    <p className="text-xl font-black text-white italic">{((statsModalTeam.totalTV || 0) / 1000)}k TV</p>
-                                </div>
-                                <div className="p-6 text-center">
-                                    <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1">Jugadores</p>
-                                    <p className="text-xl font-black text-white italic">{statsModalTeam.players.filter(p => p.status !== 'Muerto').length}</p>
-                                </div>
-                            </div>
-
-                            {/* Player List */}
-                            <div className="overflow-y-auto flex-1 p-6 space-y-2 scrollbar-premium">
-                                <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-4">Plantilla completa</p>
-                                {statsModalTeam.players.filter(p => p.status !== 'Muerto').map(p => (
-                                    <div key={p.id} className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${ p.status === 'Lesionado' || (p.missNextGame && p.missNextGame > 0) ? 'bg-red-950/20 border-red-900/20' : 'bg-black/30 border-white/5 hover:border-white/10' }`}>
-                                        <div className="flex items-center gap-4">
-                                            <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black italic ${ p.status === 'Lesionado' ? 'bg-red-900/30 text-red-400' : 'bg-primary/10 text-primary' }`}>
-                                                {p.customName.charAt(0)}
-                                            </div>
-                                            <div>
-                                                <p className="font-black text-white text-sm uppercase italic tracking-tight">{p.customName}</p>
-                                                <p className="text-[9px] text-slate-500 font-bold uppercase">{p.position}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-4 text-right">
-                                            {p.gainedSkills.length > 0 && (
-                                                <div className="flex flex-wrap gap-1 justify-end max-w-[160px]">
-                                                    {p.gainedSkills.slice(0, 3).map(s => (
-                                                        <span key={s} className="text-[8px] bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded-full font-bold uppercase tracking-widest">{s}</span>
-                                                    ))}
-                                                </div>
-                                            )}
-                                            <div>
-                                                <p className="text-[10px] font-black text-primary italic">{p.spp} SPP</p>
-                                                {p.missNextGame && p.missNextGame > 0 ? (
-                                                    <p className="text-[9px] text-red-400 font-bold italic">Baja</p>
-                                                ) : <p className={`text-[9px] font-bold uppercase ${p.status === 'Activo' ? 'text-green-500' : 'text-slate-500'}`}>{p.status}</p>}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </motion.div>
-                    </div>
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="fixed inset-0 z-[100] bg-background-dark/95 backdrop-blur-xl"
+                    >
+                        <TeamDashboard 
+                            team={statsModalTeam}
+                            onUpdate={handleUpdateClone}
+                            onDeleteRequest={() => setConfirmation({
+                                title: "Retirar Franquicia",
+                                message: "¿Estás seguro de que quieres retirar este equipo de la competición? Se perderá todo el historial del clon.",
+                                onConfirm: () => {
+                                    const updatedComp = {
+                                        ...selectedCompetition!,
+                                        teams: selectedCompetition!.teams.filter(t => t.teamName !== statsModalTeam.name)
+                                    };
+                                    onCompetitionUpdate(updatedComp);
+                                    setSelectedCompetition(updatedComp);
+                                    setStatsModalTeam(null);
+                                    setConfirmation(null);
+                                }
+                            })}
+                            onBack={() => setStatsModalTeam(null)}
+                            isGuest={isGuest}
+                            hideDelete={true}
+                            syncLabel="Sync Clon"
+                        />
+                    </motion.div>
                 )}
             </AnimatePresence>
             {/* Modal: Redactar Crónica */}

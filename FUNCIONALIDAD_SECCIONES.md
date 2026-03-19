@@ -1,508 +1,65 @@
-# 🩸 Blood Bowl Assistant – Funcionalidad de Secciones
+# 🩸 Blood Bowl Manager – Funcionalidad de Secciones
 
-Este documento describe el funcionamiento de cada sección principal de la aplicación **Blood Bowl Assistant**, incluyendo su objetivo, los elementos que debe contener y cómo interactúa el usuario con ella.
-
-La aplicación se organiza en tres áreas principales:
-
-1. El Oráculo de Nuffle (consulta de conocimiento)
-2. El Gremio de Entrenadores (gestión de equipos)
-3. La Arena de la Gloria (ligas y partidos)
+Guía detallada del comportamiento y propósito de cada sección de la aplicación **Blood Bowl Assistant** (Actualizada a Versión 2026).
 
 ---
 
-# 📚 I. EL ORÁCULO DE NUFFLE
-## Base de conocimiento del juego
+## 🏠 I. HOME: EL PORTAL DE ACCESO (ESTADO DE LA ARENA)
+Es el centro neurálgico que organiza la sesión del entrenador.
 
-### Objetivo
-
-Permitir consultar rápidamente toda la información relevante del juego durante la preparación de equipos o durante una partida.
-
-Debe ser **rápido, claro y fácil de buscar**.
-
----
-
-## Contenido de la sección
-
-Esta sección contiene:
-
-- Enciclopedia de equipos
-- Base de datos de habilidades
-- Jugadores estrella
-- Calculadora de probabilidades
-- Tabla de incentivos
+### Funcionalidad Principal: Dashboard Dinámico
+- **Selector de Competición**: Desplegable estilizado que filtra todas las ligas/torneos donde el usuario participa.
+- **Pestaña de Clasificación**: Tabla rápida con puntos, victorias y récord de la liga elegida.
+- **Pestaña de Anotadores (TD)**: Ranking de los 10 mejores anotadores de la competición.
+- **Pestaña de Carniceros (CAS)**: Ranking de los 10 jugadores con más bajas causadas.
+- **Próximo Encuentro Inteligente**: Panel interactivo que busca el partido pendiente del usuario.
+  - **Botón Match Center**: Carga automáticamente el `arenaMatchConfig` con los equipos reales y navega al partido.
 
 ---
 
-## Funcionalidad general
+## ⚔️ II. EL GREMIO DE ENTRENADORES (GESTIÓN)
+Centro de control de tus franquicias y equipos.
 
-El usuario puede:
+### Mis Equipos
+- **Ficha de Equipo**: Gestión de jugadores con SPP y habilidades.
+- **Snapshots (Viaje en el Tiempo)**: Permite guardar estados del equipo y restaurarlos.
+- **Pizarra Táctica**: Arrastra y suelta jugadores (MiniField) para diseñar formaciones.
 
-- Buscar información mediante un **buscador global**
-- Filtrar contenido por categorías
-- Acceder rápidamente a fichas detalladas
-
-Esta sección no modifica datos del usuario, solo consulta información.
-
----
-
-## Enciclopedia de Equipos
-
-### Qué contiene
-
-Lista de todas las facciones del juego.
-
-Cada equipo tiene:
-
-- nombre
-- tier
-- descripción
-- roster de jugadores
-- coste de cada posición
-- habilidades iniciales
-- coste de rerolls
-- disponibilidad de apotecario
-- icono o escudo
-
-También debe mostrar:
-
-- atributos promedio del equipo
-- gráfico radar comparativo
-
-Atributos representados:
-
-- MA (Movimiento)
-- ST (Fuerza)
-- AG (Agilidad)
-- PA (Pase)
-- AV (Armadura)
+### Crear Equipo (Draft S3)
+- **Editor Interactivo**: Compra de jugadores, rerolls, staff e incentivos permanentes.
+- **Presupuesto Real**: El sistema calcula el TV (Team Value) y el presupuesto restante en tiempo real.
 
 ---
 
-## Codex de Habilidades
+## 📚 III. EL ORÁCULO DE NUFFLE (BIBLIOTECA)
+Enciclopedia bilingüe (ES/EN) de conocimiento del Viejo Mundo.
 
-### Qué contiene
-
-Lista completa de habilidades del juego.
-
-Cada habilidad tiene:
-
-- nombre
-- descripción
-- categoría
-- icono
-- color de categoría
-
-Categorías:
-
-- General
-- Fuerza
-- Agilidad
-- Pase
-- Mutación
-- Triquiñuelas
+- **Equipos**: Roster oficial con radar chart de MA, ST, AG, PA, AV.
+- **Codex de Habilidades**: Diccionario categorizado de todas las habilidades S3.
+- **Jugadores Estrella**: Ficha de mercenarios con costes y reglas especiales.
+- **Herramientas**: Calculadora de dados 2D6 y Tabla de Incentivos dinámica según TV relativo.
 
 ---
 
-### Funcionalidad
+## 🏟️ IV. LA ARENA DE LA GLORIA (COMPETICIÓN)
+El corazón multijugador y de organización.
 
-El usuario puede:
+### El Sistema de 4 Pestañas
+1. **Mis Ligas**: Solo competiciones de formato Liguilla con tu equipo dentro.
+2. **Mis Torneos**: Solo brackets y eliminatorias con tu equipo dentro.
+3. **Descubrir**: Buscador de competiciones públicas abiertas a inscripción.
+4. **Organización**: El panel de mando para fundadores de ligas.
+   - Herramientas: Invitar participantes, Editar calendario, Eliminar liga.
 
-- buscar habilidades
-- filtrar por categoría
-- abrir la ficha de una habilidad
+### La Gaceta (Periódico Deportivo)
+- **Feed de Noticias**: Lista cronológica de crónicas generadas por el sistema o redactadas por el administrador.
+- **Redactor de Crónicas**: Modal dedicado para que el dueño de la liga publique crónicas manuales.
+- **Resultados Históricos**: Visualización del acta del partido en formato prensa antigua.
 
-Esta sección es especialmente útil durante partidas.
-
----
-
-## Compendio de Jugadores Estrella
-
-### Qué contiene
-
-Listado de todos los **Star Players** del juego.
-
-Cada jugador estrella tiene:
-
-- nombre
-- coste de contratación
-- atributos
-- habilidades
-- equipos que pueden contratarlo
-- reglas especiales
-- imagen del jugador
-- descripción temática
+### Estadísticas de Competición
+- **Ranking Interno**: Seguimiento del Top 10 de jugadores locales por touchdowns y bajas producidas dentro de esa liga específica.
 
 ---
 
-### Funcionalidad
-
-El usuario puede:
-
-- buscar jugadores estrella
-- filtrar por equipo compatible
-- filtrar por coste
-- comparar varios jugadores estrella
-
----
-
-## Calculadora de Probabilidades
-
-### Objetivo
-
-Permitir calcular rápidamente probabilidades de éxito de acciones del juego.
-
----
-
-### Acciones que debe calcular
-
-- tiradas de agilidad
-- tiradas con segunda oportunidad (reroll)
-- bloqueos con distintos dados
-- esquivas
-- recoger balón
-- pases
-
----
-
-### Ejemplo de uso
-
-El usuario selecciona:
-
-Objetivo de dado → 3+
-
-¿Usar reroll? → Sí
-
-Resultado:
-
-Probabilidad de éxito → 88.9%
-
----
-
-## Tabla de Incentivos
-
-### Objetivo
-
-Ayudar a elegir incentivos cuando hay diferencia de valor de equipo.
-
----
-
-### Funcionamiento
-
-El usuario introduce:
-
-- TV equipo A
-- TV equipo B
-
-La aplicación calcula:
-
-- diferencia de valor
-- presupuesto de incentivos
-
----
-
-### La app muestra sugerencias
-
-Ejemplos:
-
-- Barriles de Bloodweiser
-- Mercenarios
-- Jugadores estrella
-- Chef Halfling
-
-Cada incentivo muestra:
-
-- coste
-- efecto
-- recomendación estratégica
-
----
-
-# ⚔️ II. EL GREMIO DE ENTRENADORES
-## Gestión de equipos
-
-### Objetivo
-
-Permitir que los usuarios creen, gestionen y evolucionen sus equipos.
-
-Todos los datos se guardan en **Firestore**.
-
----
-
-## Contenido de la sección
-
-- Mis equipos
-- Crear equipo
-- Gestión de roster
-- Gestión de jugadores
-- Historial de partidos
-- Pizarra táctica
-
----
-
-## Mis Equipos
-
-### Qué contiene
-
-Lista de todos los equipos creados por el usuario.
-
-Cada equipo muestra:
-
-- nombre
-- raza
-- valor del equipo (TV)
-- número de jugadores
-- escudo del equipo
-
----
-
-### Funcionalidad
-
-El usuario puede:
-
-- abrir la ficha del equipo
-- editar el equipo
-- ver historial de partidos
-- acceder a la pizarra táctica
-
----
-
-## Ficha de Equipo
-
-Contiene varias pestañas.
-
-### Roster
-
-Lista de jugadores del equipo.
-
-Cada jugador muestra:
-
-- nombre
-- posición
-- atributos
-- habilidades
-- lesiones
-
----
-
-### Jugadores
-
-Ficha individual de cada jugador.
-
-Contiene:
-
-- atributos
-- habilidades
-- puntos de estrellato (SPP)
-- estadísticas
-
----
-
-### Estadísticas del jugador
-
-- touchdowns
-- bajas causadas
-- intercepciones
-- pases completados
-- MVP obtenidos
-
----
-
-### Historial de Partidos
-
-Lista de partidos jugados por el equipo.
-
-Cada partido muestra:
-
-- rival
-- resultado
-- fecha
-- **Crónica Deportiva**: Enlace a la narración estilo periódico generada al finalizar.
-
----
-
-## Crear Equipo
-
-### Funcionamiento
-
-El usuario selecciona:
-
-- facción
-- nombre del equipo
-- escudo
-
-Luego construye el roster:
-
-- añadir jugadores
-- añadir rerolls
-- añadir staff
-
----
-
-### El sistema calcula automáticamente
-
-- coste total
-- valor del equipo (TV)
-- límites del roster
-
----
-
-## Pizarra Táctica
-
-### Objetivo
-
-Permitir diseñar formaciones antes de los partidos.
-
----
-
-### Funcionalidad
-
-El usuario puede:
-
-- arrastrar jugadores sobre el campo
-- moverlos libremente
-- guardar formaciones
-
-Ejemplos de formaciones:
-
-- defensa contra elfos
-- jaula ofensiva
-- defensa profunda
-
----
-
-# 🏟 III. LA ARENA DE LA GLORIA
-## Ligas y partidos
-
-### Objetivo
-
-Gestionar competiciones y registrar lo que ocurre durante los partidos.
-
----
-
-## Contenido de la sección
-
-- Ligas
-- Partidos
-- Consola de partido en vivo
-- Crónicas
-- Historial de partidos
-
----
-
-## Gestor de Ligas
-
-### Funcionalidad de Creación
-Permite organizar el caos del Viejo Mundo mediante:
-
-- **Nueva Liga (Round Robin)**: Todos contra todos con calendario automático.
-- **Nuevo Torneo (Eliminatoria)**: Cuadro de competición generado por azar.
-- **Generador de Invitaciones**: Enlaces directos para WhatsApp/Discord que permiten unirse a la liga con un clic.
-- **Configuración de Reglamento**: Soporte para BB2020 (Oficial), BB2016 (Clásico) y Sevens (Rápido).
-- **Control de Reglas Avanzadas**: Gestión de Muerte Súbita, Incentivos permitidos y tiempo límite por turno.
-
----
-
-### Cada liga contiene
-- **Gestión de Participantes**: Listado con distinción entre equipos locales (del usuario) y externos.
-- **Contador de Cupos**: Visualización en tiempo real del llenado de la liga (ej: 4/12).
-- **Clasificación Dinámica**: Tabla de puntos con desempates automáticos por Touchdowns.
-- **Calendario / Cuadro**: Gestión interactiva de resultados con guardado de actas.
-- **Resumen Élite**: Tarjeta visual que resume las reglas clave antes de empezar la carnicería.
-
----
-
-## Consola de Partido en Vivo
-
-### Objetivo
-
-Registrar lo que ocurre durante el partido.
-
-Optimizada para **tablet o móvil**.
-
----
-
-### Elementos de la consola
-
-- contador de turnos
-- marcador
-- registro de eventos
-- uso de rerolls
-
----
-
-### Acciones registrables
-
-- touchdown
-- baja causada
-- falta
-- intercepción
-- recogida de balón
-- pase completado
-- expulsión
-- lesión grave
-
----
-
-## Contratación de Jugadores Estrella
-
-Durante el partido el sistema puede permitir contratar Star Players.
-
-Esto ocurre cuando hay diferencia de valor de equipo.
-
----
-
-### Funcionamiento
-
-La app muestra:
-
-- jugadores estrella disponibles
-- coste
-- equipos compatibles
-
-Si el usuario lo contrata:
-
-- se descuenta del presupuesto de incentivos
-- se añade al roster del partido
-
-El jugador solo participa en ese partido.
-
----
-
-# 📖 EL CRONISTA DE NUFFLE
-## Narración automática del partido
-
-### Objetivo
-
-Generar una crónica narrativa automática del encuentro.
-
----
-
-### Funcionamiento
-
-1. **Captura en Vivo**: Cada evento registrado durante el partido se guarda en Firestore.
-2. **Generación Narrativa (Estilo Cabalvisión)**: Al finalizar, el sistema procesa el log completo y transforma los datos técnicos en relatos épicos. Se eliminan los números y tecnicismos, convirtiendo "heridas" en crónicas viscerales de huesos rotos y "touchdowns" en hazañas legendarias.
-3. **Formato Periódico**: El resultado se presenta en el "Diario Deportivo de Altdorf", con maquetación de diario clásico (serif, columnas, capitulares).
-
----
-
-### Ejemplo de resultado
-
-Turno 3.
-
-El blitzer orco Gorbag atravesó la línea humana con una brutal embestida y dejó fuera de combate a un rival.
-
-La multitud rugía mientras el árbitro fingía no haber visto nada.
-
----
-
-# 🎯 Objetivo del sistema
-
-Crear la herramienta definitiva para jugadores de Blood Bowl que combine:
-
-- consulta de reglas
-- gestión de equipos
-- control de partidos
-- narración automática
-- historial de ligas
-
-Todo sincronizado en la nube y accesible desde ordenador, tablet o móvil.
+## 🎯 Objetivo Global del Sistema
+Centralizar la experiencia de Blood Bowl: de la consulta de una regla rápida en el Oráculo al inicio de un partido directo de liga desde la Home, cerrando el ciclo con la publicación de la crónica en La Gaceta.
