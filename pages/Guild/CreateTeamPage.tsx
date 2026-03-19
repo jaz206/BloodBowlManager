@@ -5,6 +5,7 @@ import { useMasterData } from '../../hooks/useMasterData';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../hooks/useAuth';
 import SkillModal from '../../components/oracle/SkillModal';
+import { PLAYER_NAMES } from './playerNames';
 
 interface TeamCreatorProps {
     onTeamCreate: (team: Omit<ManagedTeam, 'id'>) => void;
@@ -91,26 +92,48 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
     const isBudgetNegative = remainingBudget < 0;
     const canFinalize = teamName.trim().length >= 3 && draftedPlayers.length >= 11 && !isBudgetNegative;
 
-    const getRandomFantasyName = (faction: string, position: string, index: number) => {
-        const names: Record<string, string[]> = {
-            'Humanos': ['Aldric', 'Beorn', 'Cedrick', 'Derfel', 'Elric', 'Frederick', 'Garrick', 'Heward', 'Isambard', 'Justinian', 'Kole', 'Lambert', 'Merrick', 'Osric', 'Piers'],
-            'Orcos': ['Gorbag', 'Shagrat', 'Grishnakh', 'Ugluk', 'Mauhur', 'Lugdush', 'Radbug', 'Bolg', 'Azog', 'Gothmog', 'Mugrug', 'Zog', 'Grok', 'Drog', 'Snagga'],
-            'Elfos': ['Legolas', 'Thranduil', 'Celeborn', 'Elrond', 'Haldir', 'Erestor', 'Glorfindel', 'Cirdan', 'Lindir', 'Aegnor', 'Beleg', 'Celegorm', 'Denethor', 'Ecthelion', 'Finduilas'],
-            'Enanos': ['Thorin', 'Balin', 'Dwalin', 'Fili', 'Kili', 'Dori', 'Nori', 'Ori', 'Oin', 'Gloin', 'Bifur', 'Bofur', 'Bombur', 'Dain', 'Thrain'],
-            'No Muertos': ['Vorthas', 'Kaelath', 'Malakor', 'Nerughal', 'Skaros', 'Xeth-Ka', 'Zephyrus', 'Mortis', 'Drax', 'Thanatos', 'Karrion', 'Blight', 'Grave', 'Stitch', 'Bone'],
-            'Caos': ['Archaon', 'Crom', 'Vardek', 'Engra', 'Sigvald', 'Vilitch', 'Festus', 'Valkia', 'Scyla', 'Khornev', 'Malek', 'Zhur', 'Kran', 'Vorg', 'Slav'],
-            'Skavens': ['Snikch', 'Queek', 'Ikit', 'Throt', 'Skrolk', 'Skweel', 'Tretch', 'Ghoritch', 'Klaw', 'Verminkin', 'Ratchet', 'Squeal', 'Gnaw', 'Bite', 'Sneak'],
-            'Hombres Lagarto': ['Tik-taq-to', 'Kroq-Gar', 'Tehenhauin', 'Itzi-Bitzi', 'Mazdamundi', 'Lord Kroak', 'Nakai', 'Oxayotl', 'Tlaxtlan', 'Xlanhuapec', 'Zlat', 'Krox', 'Slaan', 'Skink', 'Chameleon'],
-            'Goblins': ['Grom', 'Skarsnik', 'Snagla', 'Gitilla', 'Oglok', 'Spinny', 'Gnash', 'Bitey', 'Snotty', 'Boog', 'Greeny', 'Stab', 'Poke', 'Sniff', 'Snot']
-        };
+    const getRandomFantasyName = (position: string, teamPlayers: ManagedPlayer[]): string => {
+        const posLower = position.toLowerCase();
+        
+        let raceKey = '';
+        if (posLower.includes('orco negro') || posLower.includes('black orc')) raceKey = 'ORCOS NEGROS';
+        else if (posLower.includes('orco') || posLower.includes('orc') || posLower.includes('troll')) raceKey = 'ORCOS';
+        else if (posLower.includes('humano') || posLower.includes('human')) raceKey = 'HUMANOS';
+        else if (posLower.includes('enano del caos') || posLower.includes('chaos dwarf')) raceKey = 'ENANOS DEL CAOS';
+        else if (posLower.includes('enano') || posLower.includes('dwarf')) raceKey = 'ENANOS';
+        else if (posLower.includes('elfo oscuro') || posLower.includes('dark elf')) raceKey = 'ELFOS OSCUROS';
+        else if (posLower.includes('elfo silvano') || posLower.includes('wood elf')) raceKey = 'ELFOS SILVANOS';
+        else if (posLower.includes('alto elfo') || posLower.includes('high elf')) raceKey = 'ALTOS ELFOS';
+        else if (posLower.includes('elfo') || posLower.includes('elf')) raceKey = 'UNIÓN ÉLFICA';
+        else if (posLower.includes('skaven')) raceKey = 'SKAVENS';
+        else if (posLower.includes('nurgle') || posLower.includes('pestigun')) raceKey = 'NURGLE';
+        else if (posLower.includes('khorne') || posLower.includes('bloodseeker')) raceKey = 'KHORNE';
+        else if (posLower.includes('vampiro') || posLower.includes('vampire')) raceKey = 'VAMPIROS';
+        else if (posLower.includes('saurus') || posLower.includes('skink') || posLower.includes('lagarto')) raceKey = 'HOMBRES LAGARTO';
+        else if (posLower.includes('nórdico') || posLower.includes('norse')) raceKey = 'NÓRDICOS';
+        else if (posLower.includes('ogro') || posLower.includes('ogre')) raceKey = 'OGROS';
+        else if (posLower.includes('halfling')) raceKey = 'HALFLINGS';
+        else if (posLower.includes('goblin')) raceKey = 'GOBLINS';
+        else if (posLower.includes('snotling')) raceKey = 'SNOTLINGS';
+        else if (posLower.includes('skeleton') || posLower.includes('zombie') || posLower.includes('ghoul') || posLower.includes('mummy')) raceKey = 'NO MUERTOS';
+        else if (posLower.includes('werewolf') || posLower.includes('flesh golem')) raceKey = 'HORROR NECROMÁNTICO';
+        else if (posLower.includes('tomb king') || posLower.includes('khemri')) raceKey = 'REYES DE LA TUMBA';
+        else if (posLower.includes('slann')) raceKey = 'SLANN';
+        else if (posLower.includes('nobleza') || posLower.includes('nobility')) raceKey = 'NOBLEZA IMPERIAL';
+        else if (posLower.includes('beastman') || posLower.includes('chaos warrior')) raceKey = 'ELEGIDOS DEL CAOS';
 
-        const factionKey = Object.keys(names).find(k => faction.toLowerCase().includes(k.toLowerCase()));
-        if (factionKey && names[factionKey]) {
-            const list = names[factionKey];
+        if (raceKey && PLAYER_NAMES[raceKey]) {
+            const list = PLAYER_NAMES[raceKey];
+            const usedNames = teamPlayers.map(p => p.customName);
+            const available = list.filter(name => !usedNames.includes(name));
+            
+            if (available.length > 0) {
+                return available[Math.floor(Math.random() * available.length)];
+            }
             return list[Math.floor(Math.random() * list.length)];
         }
 
-        return `${position} #${index}`;
+        return `${position} #${teamPlayers.length + 1}`;
     };
 
     const handleHirePlayer = (pos: Player) => {
@@ -122,7 +145,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
         const newPlayer: ManagedPlayer = {
             ...pos,
             id: Date.now() + Math.random(),
-            customName: getRandomFantasyName(currentFaction?.name || '', pos.position, draftedPlayers.length + 1),
+            customName: getRandomFantasyName(pos.position, draftedPlayers),
             spp: 0,
             gainedSkills: [],
             lastingInjuries: [],
