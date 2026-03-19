@@ -6,6 +6,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../hooks/useAuth';
 import SkillModal from '../../components/oracle/SkillModal';
 import { PLAYER_NAMES } from './playerNames';
+import { getPlayerImageUrl, getTeamLogoUrl } from '../../utils/imageUtils';
 
 interface TeamCreatorProps {
     onTeamCreate: (team: Omit<ManagedTeam, 'id'>) => void;
@@ -202,6 +203,10 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
         const limitStr = pos.qty.split('-')[1] || pos.qty;
         if (count >= parseInt(limitStr)) return;
 
+        // Calcular número de imagen basado en la posición actual en el draft
+        const countInDraft = draftedPlayers.filter(p => p.position === pos.position).length;
+        const playerImageUrl = getPlayerImageUrl(currentFaction?.name || '', pos.position, countInDraft + 1);
+
         const newPlayer: ManagedPlayer = {
             ...pos,
             id: Date.now() + Math.random(),
@@ -210,6 +215,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
             gainedSkills: [],
             lastingInjuries: [],
             status: 'Activo',
+            image: playerImageUrl,
         };
         setDraftedPlayers([...draftedPlayers, newPlayer]);
     }
@@ -235,7 +241,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
             cheerleaders,
             apothecary,
             players: draftedPlayers,
-            crestImage: currentFaction.image
+            crestImage: getTeamLogoUrl(currentFaction.name) || currentFaction.image
         };
         onTeamCreate(newTeam);
     };

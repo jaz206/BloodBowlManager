@@ -10,6 +10,7 @@ import { generateRandomName } from '../../data/randomNames';
 import { PlayerAdvancementModal } from './PlayerAdvancementModal';
 import { useMasterData } from '../../hooks/useMasterData';
 import { calculateTeamValue } from '../../utils/teamUtils';
+import { getPlayerImageUrl, getNextImageNumber, getTeamLogoUrl } from '../../utils/imageUtils';
 
 declare const QRCode: any;
 
@@ -226,6 +227,9 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
         if (team.players.length >= 16) return;
         if (team.treasury < player.cost && !team.isAutoCalculating) return;
 
+        const imgNumber = getNextImageNumber(team, player.position);
+        const playerImageUrl = getPlayerImageUrl(team.rosterName, player.position, imgNumber);
+
         const newPlayer: ManagedPlayer = {
             ...player,
             id: Date.now(),
@@ -235,11 +239,32 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
             lastingInjuries: [],
             status: 'Activo',
             isBenched: true,
+            image: playerImageUrl,
         };
         onUpdate({
             ...team,
             treasury: team.isAutoCalculating ? team.treasury : team.treasury - player.cost,
             players: [...team.players, newPlayer],
+        });
+    };
+
+    const handleAutoSyncImages = () => {
+        const stats: Record<string, number> = {};
+        const updatedPlayers = team.players.map(p => {
+            const currentCount = stats[p.position] || 0;
+            const newCount = currentCount + 1;
+            stats[p.position] = newCount;
+            
+            return {
+                ...p,
+                image: getPlayerImageUrl(team.rosterName, p.position, newCount)
+            };
+        });
+
+        onUpdate({
+            ...team,
+            crestImage: getTeamLogoUrl(team.rosterName) || team.crestImage,
+            players: updatedPlayers
         });
     };
 
@@ -335,6 +360,10 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                         </nav>
 
                         <div className="flex items-center gap-2">
+                            <button onClick={handleAutoSyncImages} className="bg-gold/10 border border-gold/20 text-gold px-4 py-2 rounded-xl text-[10px] font-black tracking-widest hover:bg-gold/20 transition-all uppercase flex items-center gap-2 shadow-lg shadow-gold/5" title="Sincronizar fotos desde GitHub">
+                                <span className="material-symbols-outlined text-base">image</span>
+                                Fotos
+                            </button>
                             <button onClick={onBack} className="bg-white/5 border border-white/10 text-slate-400 px-4 py-2 rounded-xl text-[10px] font-black tracking-widest hover:bg-white/10 transition-all uppercase flex items-center gap-2">
                                 <span className="material-symbols-outlined text-base">arrow_back</span>
                                 Volver
