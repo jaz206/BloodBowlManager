@@ -85,6 +85,9 @@ export interface Team {
     armadura: number;
     pase: number;
   };
+  description?: string;
+  megaFactions?: string[];
+  namePools?: string[];
 }
 
 export type PlayerStatus = 'Activo' | 'Reserva' | 'KO' | 'Lesionado' | 'Expulsado' | 'Muerto';
