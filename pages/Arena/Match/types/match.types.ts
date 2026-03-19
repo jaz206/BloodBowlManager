@@ -107,4 +107,7 @@ export interface GameBoardProps {
     matchReports?: MatchReport[];
     onTeamUpdate: (team: ManagedTeam) => void;
     onMatchReportCreate?: (report: Omit<MatchReport, 'id'>) => Promise<string | null>;
+    initialHomeTeam?: ManagedTeam;
+    initialOpponentTeam?: ManagedTeam;
+    competition?: any; // Competition type from types.ts
 }

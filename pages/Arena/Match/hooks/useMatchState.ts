@@ -71,10 +71,26 @@ export const useMatchState = (props: GameBoardProps) => {
     const [rosterDisplayMode, setRosterDisplayMode] = useState<'cards' | 'tactical'>('cards');
 
     // ESTADOS DE EQUIPO
-    const [homeTeam, setHomeTeam] = useState<ManagedTeam | null>(null);
-    const [opponentTeam, setOpponentTeam] = useState<ManagedTeam | null>(null);
-    const [liveHomeTeam, setLiveHomeTeam] = useState<ManagedTeam | null>(null);
-    const [liveOpponentTeam, setLiveOpponentTeam] = useState<ManagedTeam | null>(null);
+    const [homeTeam, setHomeTeam] = useState<ManagedTeam | null>(props.initialHomeTeam || null);
+    const [opponentTeam, setOpponentTeam] = useState<ManagedTeam | null>(props.initialOpponentTeam || null);
+    const [liveHomeTeam, setLiveHomeTeam] = useState<ManagedTeam | null>(props.initialHomeTeam ? {
+        ...props.initialHomeTeam,
+        players: props.initialHomeTeam.players.map(p => ({
+            ...p,
+            status: (p.status === 'Muerto' || p.status === 'Lesionado' || (p.missNextGame && p.missNextGame > 0)) ? p.status : 'Reserva',
+            fieldPosition: null
+        })),
+        liveRerolls: props.initialHomeTeam.rerolls || 0
+    } : null);
+    const [liveOpponentTeam, setLiveOpponentTeam] = useState<ManagedTeam | null>(props.initialOpponentTeam ? {
+        ...props.initialOpponentTeam,
+        players: props.initialOpponentTeam.players.map(p => ({
+            ...p,
+            status: (p.status === 'Muerto' || p.status === 'Lesionado' || (p.missNextGame && p.missNextGame > 0)) ? p.status : 'Reserva',
+            fieldPosition: null
+        })),
+        liveRerolls: props.initialOpponentTeam.rerolls || 0
+    } : null);
 
     // ESTADOS DE JUEGO (REGLAS)
     const [gameLog, setGameLog] = useState<GameEvent[]>([]);
@@ -179,12 +195,15 @@ export const useMatchState = (props: GameBoardProps) => {
 
     // SINCRONIZACIÓN INICIAL CON PROPS
     useEffect(() => {
-        if (props.managedTeams && props.managedTeams.length > 0 && !homeTeam) {
+        if (props.initialHomeTeam && props.initialOpponentTeam) {
+            setGameState('pre_game');
+            setPreGameStep(1);
+        } else if (props.managedTeams && props.managedTeams.length > 0 && !homeTeam) {
             if (props.managedTeams.length === 1) {
                 setHomeTeam(props.managedTeams[0]);
             }
         }
-    }, [props.managedTeams, homeTeam]);
+    }, [props.managedTeams, props.initialHomeTeam, props.initialOpponentTeam]);
 
     // INICIALIZACIÓN DE EQUIPOS EN VIVO AL EMPEZAR EL PRE-GAME
     useEffect(() => {

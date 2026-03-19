@@ -64,6 +64,12 @@ const MainApp: React.FC = () => {
   const [syncState, setSyncState] = useState<SyncStatus>('synced');
   const { heroImage, isFromFirestore, error: masterDataError } = useMasterData();
   const [oracleSearchTerm, setOracleSearchTerm] = useState<string>('');
+  const [arenaMatchConfig, setArenaMatchConfig] = useState<{ 
+    homeTeam: ManagedTeam; 
+    opponentTeam: ManagedTeam; 
+    competition: Competition;
+    matchup: any;
+  } | null>(null);
 
   const handleNavigate = (view: View, payload?: string) => {
     if (view === 'oracle') {
@@ -81,6 +87,21 @@ const MainApp: React.FC = () => {
     } else {
       setDirectOpenTeamId(null);
     }
+    
+    // Si navegamos fuera de arena, limpiar config de partido de competición
+    if (view !== 'arena') {
+      setArenaMatchConfig(null);
+    }
+  };
+
+  const handleNavigateToMatch = (matchup: any, competition: Competition, homeClone: ManagedTeam, opponentClone: ManagedTeam) => {
+    setArenaMatchConfig({
+      homeTeam: homeClone,
+      opponentTeam: opponentClone,
+      competition,
+      matchup
+    });
+    setActiveView('arena');
   };
 
   const [directOpenTeamId, setDirectOpenTeamId] = useState<string | null>(null);
@@ -198,6 +219,43 @@ const MainApp: React.FC = () => {
   };
 
   const handleTeamUpdate = async (updatedTeam: ManagedTeam) => {
+    // Si tenemos un partido de competición activo, la actualización debe ir al clon en la liga
+    if (arenaMatchConfig?.competition) {
+      const comp = leagues.find(l => l.id === arenaMatchConfig.competition.id) as Competition;
+      if (comp) {
+        const updatedTeams = comp.teams.map(t => {
+          if (t.teamName === updatedTeam.name && t.ownerId === user?.id) {
+            // Actualizar el clon y sus estadísticas
+            const won = updatedTeam.record?.wins || 0;
+            const drawn = updatedTeam.record?.draws || 0;
+            const lost = updatedTeam.record?.losses || 0;
+            const played = won + drawn + lost;
+            const points = (won * 3) + drawn;
+
+            return { 
+              ...t, 
+              teamState: updatedTeam,
+              stats: {
+                ...(t.stats || { tdFor: 0, tdAgainst: 0, casFor: 0, casAgainst: 0 }),
+                played, won, drawn, lost, points
+              }
+            };
+          }
+          return t;
+        });
+
+        // Caso especial: si es el equipo del propietario (host), también puede ser teamState o baseTeam
+        const isOwner = comp.ownerId === user?.id && comp.baseTeam?.name === updatedTeam.name;
+        const finalComp = { 
+          ...comp, 
+          teams: updatedTeams
+        };
+        
+        handleCompetitionUpdate(finalComp as Competition);
+        return;
+      }
+    }
+
     if (!user || isGuest || !db || !updatedTeam.id) return;
     setSyncState('syncing');
     try {

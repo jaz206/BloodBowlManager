@@ -28,6 +28,7 @@ const SppActionIcons: React.FC<{ actions: Partial<Record<SppActionType, number>>
         MVP: { icon: <TdIcon />, title: 'MVP' },
         DEFLECT: { icon: <InterferenceIcon />, title: 'Desvío' },
         THROW_TEAM_MATE: { icon: <PassIcon />, title: 'Lanzar Compañero' },
+        HANDOFF: { icon: <PassIcon />, title: 'Entrega' },
     };
 
     return (

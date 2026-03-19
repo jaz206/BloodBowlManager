@@ -36,7 +36,8 @@ export const updatePlayerSppActionLogic = (ctx: SppEngineContext, player: Manage
         'MVP': 'mvp_awarded',
         'INTERFERENCE': 'INFO',
         'DEFLECT': 'DEFLECT',
-        'THROW_TEAM_MATE': 'THROW_TEAM_MATE'
+        'THROW_TEAM_MATE': 'THROW_TEAM_MATE',
+        'HANDOFF': 'handoff'
     };
 
     logEvent(actionTypeMap[action] || 'INFO', `${player.customName} gana ${spp} PE por ${description}.`, { team: teamId, player: player.id });

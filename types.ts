@@ -197,6 +197,19 @@ export interface CompetitionTeam {
   teamName: string;
   ownerId: string;
   ownerName: string;
+  // Franquicia de Competición (Clon)
+  teamState?: ManagedTeam;
+  stats?: {
+    played: number;
+    won: number;
+    drawn: number;
+    lost: number;
+    tdFor: number;
+    tdAgainst: number;
+    casFor: number;
+    casAgainst: number;
+    points: number;
+  };
 }
 
 export interface Matchup {
@@ -228,6 +241,7 @@ export interface Competition {
   bracket?: Record<string, Matchup[]> | null;
   createdAt?: any;
   rules?: CompetitionRules;
+  baseTeam?: ManagedTeam; // Equipo base del propietario (host)
 }
 
 export type League = Competition;

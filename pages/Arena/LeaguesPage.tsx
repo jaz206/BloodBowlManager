@@ -116,12 +116,21 @@ interface LeaguesProps {
     onCompetitionCreate: (comp: Omit<Competition, 'id'>) => void;
     onCompetitionUpdate: (comp: Competition) => void;
     onCompetitionDelete: (id: string) => void;
+    onNavigateToMatch?: (matchup: Matchup, comp: Competition, myTeam?: ManagedTeam, opponentTeam?: ManagedTeam) => void;
     isGuest: boolean;
 }
 
-export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetitions, onCompetitionCreate, onCompetitionUpdate, onCompetitionDelete, isGuest }) => {
+export const Leagues: React.FC<LeaguesProps> = ({ 
+    managedTeams, 
+    initialCompetitions, 
+    onCompetitionCreate, 
+    onCompetitionUpdate, 
+    onCompetitionDelete, 
+    onNavigateToMatch,
+    isGuest 
+}) => {
     const { user } = useAuth();
-    const [activeTab, setActiveTab] = useState<'my' | 'join'>('my');
+    const [activeTab, setActiveTab] = useState<'leagues' | 'tournaments' | 'my'>('leagues');
     const [view, setView] = useState<'list' | 'create' | 'detail'>('list');
     const [selectedCompetition, setSelectedCompetition] = useState<Competition | null>(null);
 
@@ -139,8 +148,9 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
     const [scoreModalState, setScoreModalState] = useState<{ isOpen: boolean; roundIndex: string; matchIndex: number; matchup: Matchup; } | null>(null);
     const [confirmation, setConfirmation] = useState<{ title: string; message: string; onConfirm: () => void; type?: 'danger' | 'info' } | null>(null);
 
+    const leagues = useMemo(() => initialCompetitions.filter(c => c.format === 'Liguilla' && c.status === 'Open' && c.ownerId !== user?.id && !c.teams.some(t => t.ownerId === user?.id)), [initialCompetitions, user]);
+    const tournaments = useMemo(() => initialCompetitions.filter(c => c.format === 'Torneo' && c.status === 'Open' && c.ownerId !== user?.id && !c.teams.some(t => t.ownerId === user?.id)), [initialCompetitions, user]);
     const myCompetitions = useMemo(() => initialCompetitions.filter(c => c.ownerId === user?.id || c.teams.some(t => t.ownerId === user?.id)), [initialCompetitions, user]);
-    const joinableCompetitions = useMemo(() => initialCompetitions.filter(c => c.status === 'Open' && c.ownerId !== user?.id && !c.teams.some(t => t.ownerId === user?.id)), [initialCompetitions, user]);
 
     const standings = useMemo(() => {
         if (!selectedCompetition || selectedCompetition.format !== 'Liguilla' || !selectedCompetition.schedule) return [];
@@ -182,11 +192,18 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
 
         const teams: CompetitionTeam[] = [];
         if (ownerTeamToJoin) {
-            teams.push({
-                teamName: ownerTeamToJoin,
-                ownerId: user.id,
-                ownerName: user.name
-            });
+            const baseTeam = managedTeams.find(t => t.name === ownerTeamToJoin);
+            if (baseTeam) {
+                const teamState: ManagedTeam = JSON.parse(JSON.stringify(baseTeam));
+                teamState.record = { wins: 0, draws: 0, losses: 0 };
+                teams.push({
+                    teamName: ownerTeamToJoin,
+                    ownerId: user.id || '',
+                    ownerName: user.name || '',
+                    teamState,
+                    stats: { played: 0, won: 0, drawn: 0, lost: 0, tdFor: 0, tdAgainst: 0, casFor: 0, casAgainst: 0, points: 0 }
+                });
+            }
         }
 
         const newCompetition: Omit<Competition, 'id'> = {
@@ -196,6 +213,7 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
             ownerId: user.id,
             ownerName: user.name,
             status: 'Open',
+            baseTeam: managedTeams.find(t => t.name === ownerTeamToJoin),
             rules: {
                 reglamento: newCompReglamento,
                 muerteSubita: newCompMuerteSubita,
@@ -214,14 +232,14 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
     const handleJoinCompetition = () => {
         if (!joinModalState.comp || !user) return;
         
-        let teamName = joinModalState.teamToJoin;
+        let targetTeamName = joinModalState.teamToJoin;
         
         // Fallback to first managed team if none selected but available
-        if (!teamName && managedTeams.length > 0) {
-            teamName = managedTeams[0].name;
+        if (!targetTeamName && managedTeams.length > 0) {
+            targetTeamName = managedTeams[0].name;
         }
 
-        if (!teamName) {
+        if (!targetTeamName) {
             setConfirmation({
                 title: "Sin equipo",
                 message: "Debes crear al menos un equipo en el Gremio para unirte a una liga.",
@@ -231,10 +249,13 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
             return;
         }
 
+        const baseTeam = managedTeams.find(t => t.name === targetTeamName);
+        if (!baseTeam) return;
+
         const cleanComp = cloneCompetition(joinModalState.comp);
         
         // Check if team already exists in competition
-        if (cleanComp.teams.some(t => t.teamName === teamName)) {
+        if (cleanComp.teams.some(t => t.teamName === targetTeamName)) {
             setConfirmation({
                 title: "Equipo duplicado",
                 message: "Este equipo ya está inscrito en la competición.",
@@ -244,11 +265,21 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
             return;
         }
 
+        // Crear el clon (Franquicia de Competición)
+        const teamState: ManagedTeam = JSON.parse(JSON.stringify(baseTeam));
+        teamState.record = { wins: 0, draws: 0, losses: 0 };
+
         const updatedComp = {
             ...cleanComp,
-            teams: [...cleanComp.teams, { teamName, ownerId: user.id, ownerName: user.name }]
+            teams: [...cleanComp.teams, { 
+                teamName: targetTeamName, 
+                ownerId: user.id, 
+                ownerName: user.name,
+                teamState,
+                stats: { played: 0, won: 0, drawn: 0, lost: 0, tdFor: 0, tdAgainst: 0, casFor: 0, casAgainst: 0, points: 0 }
+            }]
         };
-        onCompetitionUpdate(updatedComp);
+        onCompetitionUpdate(updatedComp as Competition);
         
         // Update local state if we are in detail view
         if (selectedCompetition && selectedCompetition.id === updatedComp.id) {
@@ -608,9 +639,9 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
                             <div className="flex justify-between items-center py-4 border-b border-white/5">
                                 <span className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Tiempo por Turno</span>
                                 <div className="flex items-center gap-2">
-                                    <button onClick={() => setNewCompTiempoTurno(Math.max(1, newCompTiempoTurno - 1))} className="text-primary font-bold opacity-50 hover:opacity-100">-</button>
+                                    <button onClick={() => setNewCompTiempoTurno(Math.max(1, newCompTiempoTurno - 1))} className="text-primary font-bold opacity-50 hover:opacity-100 p-1">-</button>
                                     <span className="text-white font-black uppercase tracking-widest text-[10px] italic w-20 text-center">{newCompTiempoTurno} Minutos</span>
-                                    <button onClick={() => setNewCompTiempoTurno(Math.min(10, newCompTiempoTurno + 1))} className="text-primary font-bold opacity-50 hover:opacity-100">+</button>
+                                    <button onClick={() => setNewCompTiempoTurno(Math.min(10, newCompTiempoTurno + 1))} className="text-primary font-bold opacity-50 hover:opacity-100 p-1">+</button>
                                 </div>
                             </div>
                             <div className="flex justify-between items-center py-4">
@@ -727,14 +758,22 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
                             {selectedCompetition.teams.length > 0 ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {selectedCompetition.teams.map(t => (
-                                        <div key={t.ownerId + t.teamName} className="p-5 bg-black/40 border border-white/5 rounded-2xl flex items-center gap-4 group hover:border-primary/30 transition-all">
-                                            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black text-sm italic">
-                                                {t.teamName.charAt(0)}
+                                        <div key={t.ownerId + t.teamName} className="p-5 bg-black/40 border border-white/5 rounded-2xl flex items-center justify-between group hover:border-primary/30 transition-all">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black text-sm italic">
+                                                    {t.teamName.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <p className="font-black text-white uppercase italic tracking-tight">{t.teamName}</p>
+                                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{t.ownerName}</p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <p className="font-black text-white uppercase italic tracking-tight">{t.teamName}</p>
-                                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{t.ownerName}</p>
-                                            </div>
+                                            {t.stats && (
+                                                <div className="text-right">
+                                                    <p className="text-[10px] font-black text-primary italic uppercase">{t.stats.points} PTS</p>
+                                                    <p className="text-[8px] text-slate-600 font-bold uppercase">{t.stats.played} PJ</p>
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
@@ -743,6 +782,130 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
                                     <p className="text-slate-500 font-bold italic uppercase tracking-widest text-xs">Esperando aspirantes... ¡Únete o invita a otros coaches!</p>
                                 </div>
                             )}
+
+                            {/* Dashboard de Franquicia del Usuario */}
+                            {selectedCompetition.teams.find(t => t.ownerId === user?.id) && (
+                                <div className="mt-12 pt-12 border-t border-white/5">
+                                    <div className="flex items-center gap-3 mb-8">
+                                        <span className="material-symbols-outlined text-primary font-bold">account_balance_wallet</span>
+                                        <h3 className="text-xl font-black text-white italic tracking-tighter uppercase">Estado de mi <span className="text-primary italic">Franquicia</span></h3>
+                                    </div>
+                                    
+                                    {(() => {
+                                        const myFranchise = selectedCompetition.teams.find(t => t.ownerId === user?.id);
+                                        const myTeam = myFranchise?.teamState;
+                                        if (!myFranchise || !myTeam) return null;
+
+                                        const availablePlayers = myTeam.players.filter(p => p.status === 'Activo').length;
+                                        const injuredPlayers = myTeam.players.filter(p => p.status === 'Lesionado' || (p.missNextGame && p.missNextGame > 0)).length;
+
+                                        return (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                                <div className="p-6 bg-zinc-900/40 border border-white/5 rounded-3xl space-y-2">
+                                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Plantilla</p>
+                                                    <div className="flex items-baseline gap-2">
+                                                        <span className="text-2xl font-black text-white italic">{availablePlayers}</span>
+                                                        <span className="text-[10px] font-bold text-slate-600 uppercase">Activos</span>
+                                                    </div>
+                                                    {injuredPlayers > 0 && <p className="text-[9px] font-bold text-red-500 uppercase italic">+{injuredPlayers} Bajas</p>}
+                                                </div>
+                                                <div className="p-6 bg-zinc-900/40 border border-white/5 rounded-3xl space-y-2">
+                                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Tesorería Liga</p>
+                                                    <div className="flex items-baseline gap-2">
+                                                        <span className="text-2xl font-black text-primary italic">{(myTeam.treasury / 1000)}k</span>
+                                                        <span className="text-[10px] font-bold text-slate-600 uppercase">GP</span>
+                                                    </div>
+                                                </div>
+                                                <div className="p-6 bg-zinc-900/40 border border-white/5 rounded-3xl space-y-2">
+                                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Valor Equipo</p>
+                                                    <div className="flex items-baseline gap-2">
+                                                        <span className="text-2xl font-black text-white italic">{(myTeam.totalTV || 0) / 1000}k</span>
+                                                        <span className="text-[10px] font-bold text-slate-600 uppercase">TV</span>
+                                                    </div>
+                                                </div>
+                                                <div className="p-6 bg-primary/10 border border-primary/20 rounded-3xl flex flex-col justify-center items-center gap-2 group cursor-pointer hover:bg-primary/20 transition-all">
+                                                    <span className="material-symbols-outlined text-primary font-bold">stadium</span>
+                                                    <p className="text-[10px] font-black text-primary uppercase tracking-widest italic">Gestionar Clon</p>
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
+                                </div>
+                            )}
+
+                            {/* Próximo Encuentro */}
+                            {(() => {
+                                if (!user || !selectedCompetition || selectedCompetition.status !== 'In Progress') return null;
+                                
+                                let nextMatch: Matchup | null = null;
+                                let opponentName = '';
+                                
+                                // Buscar en Ligas
+                                if (selectedCompetition.format === 'Liguilla' && selectedCompetition.schedule) {
+                                    for (const round of Object.values(selectedCompetition.schedule)) {
+                                        const myMatch = round.find(m => !m.played && (m.team1 === user.name || m.team2 === user.name || selectedCompetition.teams.find(t => t.ownerId === user.id)?.teamName === m.team1 || selectedCompetition.teams.find(t => t.ownerId === user.id)?.teamName === m.team2));
+                                        if (myMatch) {
+                                            nextMatch = myMatch;
+                                            const myTeamName = selectedCompetition.teams.find(t => t.ownerId === user.id)?.teamName;
+                                            opponentName = myMatch.team1 === myTeamName ? myMatch.team2 : myMatch.team1;
+                                            break;
+                                        }
+                                    }
+                                } 
+                                // Buscar en Torneos
+                                else if (selectedCompetition.format === 'Torneo' && selectedCompetition.bracket) {
+                                    for (const round of Object.values(selectedCompetition.bracket)) {
+                                        const myMatch = round.find(m => !m.played && m.team1 !== 'Por determinar' && m.team2 !== 'Por determinar' && (selectedCompetition.teams.find(t => t.ownerId === user.id)?.teamName === m.team1 || selectedCompetition.teams.find(t => t.ownerId === user.id)?.teamName === m.team2));
+                                        if (myMatch) {
+                                            nextMatch = myMatch;
+                                            const myTeamName = selectedCompetition.teams.find(t => t.ownerId === user.id)?.teamName;
+                                            opponentName = myMatch.team1 === myTeamName ? myMatch.team2 : myMatch.team1;
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                if (!nextMatch || opponentName === 'BYE') return null;
+
+                                const opponentFranchise = selectedCompetition.teams.find(t => t.teamName === opponentName);
+                                const myFranchise = selectedCompetition.teams.find(t => t.ownerId === user.id);
+
+                                return (
+                                    <div className="mt-12 pt-12 border-t border-white/5">
+                                        <div className="flex items-center gap-3 mb-8">
+                                            <span className="material-symbols-outlined text-primary font-bold">event_repeat</span>
+                                            <h3 className="text-xl font-black text-white italic tracking-tighter uppercase">Próximo <span className="text-primary italic">Encuentro</span></h3>
+                                        </div>
+
+                                        <div className="bg-zinc-900/60 border border-white/5 rounded-[2.5rem] p-8 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden group">
+                                            <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                            
+                                            <div className="flex items-center gap-6 relative z-10 w-full md:w-auto">
+                                                <div className="size-20 bg-zinc-800 rounded-3xl border border-white/10 flex items-center justify-center text-4xl text-primary font-black italic">
+                                                    {opponentName.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-1 italic">Vs Rival Especial</p>
+                                                    <h4 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">{opponentName}</h4>
+                                                    <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                                                        <span>{opponentFranchise?.teamState?.rosterName || 'Desconocido'}</span>
+                                                        <span className="w-1 h-1 rounded-full bg-slate-700"></span>
+                                                        <span>TV {(opponentFranchise?.teamState?.totalTV || 0) / 1000}k</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <button 
+                                                onClick={() => onNavigateToMatch?.(nextMatch!, selectedCompetition, myFranchise?.teamState, opponentFranchise?.teamState)}
+                                                className="w-full md:w-auto relative z-10 bg-primary text-black font-black px-10 py-5 rounded-2xl flex items-center justify-center gap-3 transition-all hover:scale-105 active:scale-95 uppercase tracking-tighter text-sm shadow-xl shadow-primary/10"
+                                            >
+                                                <span className="material-symbols-outlined font-bold">sports_football</span>
+                                                Jugar Partido
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
                         </div>
 
                         <div className="lg:col-span-4 space-y-6">
@@ -949,16 +1112,22 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
                 </h1>
                 <div className="flex bg-zinc-900/60 p-1 rounded-2xl border border-white/5 backdrop-blur-md">
                     <button
+                        onClick={() => setActiveTab('leagues')}
+                        className={`px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'leagues' ? 'bg-primary text-black shadow-lg shadow-primary/20' : 'text-slate-500 hover:text-white'}`}
+                    >
+                        Ligas
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('tournaments')}
+                        className={`px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'tournaments' ? 'bg-primary text-black shadow-lg shadow-primary/20' : 'text-slate-500 hover:text-white'}`}
+                    >
+                        Torneos
+                    </button>
+                    <button
                         onClick={() => setActiveTab('my')}
                         className={`px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'my' ? 'bg-primary text-black shadow-lg shadow-primary/20' : 'text-slate-500 hover:text-white'}`}
                     >
-                        Mis Competiciones
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('join')}
-                        className={`px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'join' ? 'bg-primary text-black shadow-lg shadow-primary/20' : 'text-slate-500 hover:text-white'}`}
-                    >
-                        Unirse
+                        Mis Franquicias
                     </button>
                 </div>
             </div>
@@ -1025,11 +1194,11 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
                 </div>
             )}
 
-            {activeTab === 'join' && (
+            {activeTab === 'leagues' && (
                 <div className="space-y-8">
-                    {joinableCompetitions.length > 0 ? (
+                    {leagues.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {joinableCompetitions.map(c => (
+                            {leagues.map(c => (
                                 <div key={c.id} className="bg-zinc-900/40 border border-white/5 p-6 rounded-[2rem] flex justify-between items-center group relative overflow-hidden">
                                      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2"></div>
                                     <div className="min-w-0 relative z-10 space-y-2">
@@ -1038,12 +1207,6 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
                                             <span className="flex items-center gap-1">{c.ownerName}</span>
                                             <span className="w-1 h-1 rounded-full bg-slate-700"></span>
                                             <span className="flex items-center gap-1">{c.format}</span>
-                                            {c.rules && (
-                                                <>
-                                                    <span className="w-1 h-1 rounded-full bg-slate-700"></span>
-                                                    <span className="text-primary/60">{c.rules.reglamento}</span>
-                                                </>
-                                            )}
                                         </div>
                                     </div>
                                     <button
@@ -1058,7 +1221,40 @@ export const Leagues: React.FC<LeaguesProps> = ({ managedTeams, initialCompetiti
                     ) : (
                         <div className="py-20 text-center bg-zinc-900/20 rounded-[2.5rem] border border-dashed border-white/5">
                             <span className="material-symbols-outlined text-6xl text-white/5 mb-4 block">search_off</span>
-                            <p className="text-slate-500 font-bold italic uppercase tracking-widest text-xs">No hay competiciones abiertas en este momento</p>
+                            <p className="text-slate-500 font-bold italic uppercase tracking-widest text-xs">No hay ligas abiertas</p>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {activeTab === 'tournaments' && (
+                <div className="space-y-8">
+                    {tournaments.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {tournaments.map(c => (
+                                <div key={c.id} className="bg-zinc-900/40 border border-white/5 p-6 rounded-[2rem] flex justify-between items-center group relative overflow-hidden">
+                                     <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2"></div>
+                                    <div className="min-w-0 relative z-10 space-y-2">
+                                        <p className="text-xl font-black text-white italic uppercase truncate group-hover:text-primary transition-colors">{c.name}</p>
+                                        <div className="flex flex-wrap items-center gap-3 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                                            <span className="flex items-center gap-1">{c.ownerName}</span>
+                                            <span className="w-1 h-1 rounded-full bg-slate-700"></span>
+                                            <span className="flex items-center gap-1">{c.format}</span>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setJoinModalState({ comp: c, teamToJoin: managedTeams[0]?.name || '' })}
+                                        className="relative z-10 bg-primary/10 hover:bg-primary text-primary hover:text-black px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border border-primary/20"
+                                    >
+                                        Inscribirse
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="py-20 text-center bg-zinc-900/20 rounded-[2.5rem] border border-dashed border-white/5">
+                            <span className="material-symbols-outlined text-6xl text-white/5 mb-4 block">bolt</span>
+                            <p className="text-slate-500 font-bold italic uppercase tracking-widest text-xs">No hay torneos abiertos</p>
                         </div>
                     )}
                 </div>

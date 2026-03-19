@@ -83,18 +83,25 @@ const updatePlayerSppAndAction = useCallback((
     player: ManagedPlayer,
     teamId: 'home' | 'opponent',
     action: SppActionType,
-    description: string
+    description: string,
+    sppOverride?: number
 ) => {
     const arenaSpp = state.arenaConfig.spp;
-    let finalSpp = 0;
+    let finalSpp = sppOverride !== undefined ? sppOverride : 0;
 
-    switch (action) {
-        case 'TD': finalSpp = arenaSpp.touchdown; break;
-        case 'CASUALTY': finalSpp = arenaSpp.casualty; break;
-        case 'PASS': finalSpp = arenaSpp.pass; break;
-        case 'HANDOFF': finalSpp = arenaSpp.handoff; break;
-        case 'MVP': finalSpp = arenaSpp.mvp; break;
-        default: finalSpp = 0;
+    if (sppOverride === undefined) {
+        switch (action) {
+            case 'TD': finalSpp = arenaSpp.touchdown; break;
+            case 'CASUALTY': finalSpp = arenaSpp.casualty; break;
+            case 'PASS': finalSpp = arenaSpp.pass; break;
+            case 'HANDOFF': finalSpp = arenaSpp.handoff; break;
+            case 'MVP': finalSpp = arenaSpp.mvp; break;
+            case 'INT': finalSpp = 2; break; 
+            case 'INTERFERENCE': finalSpp = 2; break;
+            case 'DEFLECT': finalSpp = 1; break;
+            case 'THROW_TEAM_MATE': finalSpp = 1; break;
+            default: finalSpp = 0;
+        }
     }
     
     const team = teamId === 'home' ? liveHomeTeam : liveOpponentTeam;

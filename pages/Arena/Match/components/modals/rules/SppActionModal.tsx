@@ -50,8 +50,20 @@ const SppActionModal: React.FC = () => {
                                     if (sppModalState.type === 'interference') setSppModalState(s => ({ ...s, selectedPlayer: p, step: 'interference_type' }));
                                     else {
                                         let points = 2; // Default for Casualty/Int
-                                        if (sppModalState.type === 'pass' || sppModalState.type === 'deflect' || sppModalState.type === 'throw_team_mate') points = 1;
-                                        updatePlayerSppAndAction(p, sppModalState.teamId!, points, sppModalState.type!.toUpperCase() as SppActionType, sppModalState.type!);
+                                        let actionType: SppActionType = 'CASUALTY';
+                                        
+                                        if (sppModalState.type === 'pass') {
+                                            points = 1;
+                                            actionType = 'PASS';
+                                        } else if (sppModalState.type === 'deflect') {
+                                            points = 1;
+                                            actionType = 'DEFLECT';
+                                        } else if (sppModalState.type === 'throw_team_mate') {
+                                            points = 1;
+                                            actionType = 'THROW_TEAM_MATE';
+                                        }
+
+                                        updatePlayerSppAndAction(p, sppModalState.teamId!, actionType, sppModalState.type!, points);
                                     }
                                 }} className="w-full flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:border-premium-gold/50 hover:bg-premium-gold/5 transition-all group">
                                     <div className="text-left">
@@ -70,11 +82,11 @@ const SppActionModal: React.FC = () => {
                     <div className="space-y-6 text-center">
                         <h3 className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest">Magnitud de la Interferencia</h3>
                         <div className="grid grid-cols-2 gap-4">
-                            <button onClick={() => updatePlayerSppAndAction(sppModalState.selectedPlayer!, sppModalState.teamId!, 2, 'INTERFERENCE' as SppActionType, 'interferencia exitosa')} className="bg-green-500/10 border border-green-500/20 p-6 rounded-2xl hover:bg-green-500 hover:text-black transition-all group">
+                            <button onClick={() => updatePlayerSppAndAction(sppModalState.selectedPlayer!, sppModalState.teamId!, 'INTERFERENCE', 'interferencia exitosa', 2)} className="bg-green-500/10 border border-green-500/20 p-6 rounded-2xl hover:bg-green-500 hover:text-black transition-all group">
                                 <p className="text-2xl font-display font-black italic mb-1 transition-colors">ÉXITO</p>
                                 <p className="text-[10px] font-display font-bold uppercase tracking-widest opacity-60">2 PE Ganados</p>
                             </button>
-                            <button onClick={() => updatePlayerSppAndAction(sppModalState.selectedPlayer!, sppModalState.teamId!, 1, 'INTERFERENCE' as SppActionType, 'interferencia fallida')} className="bg-blood-red/10 border border-blood-red/20 p-6 rounded-2xl hover:bg-blood-red hover:text-white transition-all group">
+                            <button onClick={() => updatePlayerSppAndAction(sppModalState.selectedPlayer!, sppModalState.teamId!, 'INTERFERENCE', 'interferencia fallida', 1)} className="bg-blood-red/10 border border-blood-red/20 p-6 rounded-2xl hover:bg-blood-red hover:text-white transition-all group">
                                 <p className="text-2xl font-display font-black italic mb-1 transition-colors">FALLO</p>
                                 <p className="text-[10px] font-display font-bold uppercase tracking-widest opacity-60">1 PE Ganado</p>
                             </button>
