@@ -194,7 +194,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                                                     <motion.div layoutId="active-bg" className="absolute inset-0 bg-gold/5 pointer-events-none" />
                                                 )}
                                             </div>
-                                            <span className={`text-[7px] font-black uppercase tracking-[0.1em] transition-colors ${isSelected ? 'text-gold' : 'text-gray-600'}`}>{tm.name}</span>
+                                            <span className={`w-16 text-[9px] font-black uppercase tracking-tight leading-tight text-center transition-colors ${isSelected ? 'text-white border-b border-gold pb-0.5' : 'text-gray-500'}`}>{tm.name}</span>
                                         </button>
                                     );
                                 })}
