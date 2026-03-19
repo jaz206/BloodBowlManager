@@ -32,6 +32,11 @@ const ROSTER_PREFIX_MAP: Record<string, string> = {
 
 // Map internal position names to GitHub position tags
 const POSITION_TAG_MAP: Record<string, string> = {
+  "Vampiros Corredor": "Vampire Runner",
+  "Vampiros Lanzador": "Vampire Thrower",
+  "Vampiros Placador": "Vampire Blitzer",
+  "Vargheist": "Vargheist",
+  "Thrall": "Thrall linea",
   "Línea": "linea",
   "Bloqueador Línea": "linea",
   "Eagle Guerrero Línea": "linea",
@@ -87,19 +92,32 @@ export const getPlayerImageUrl = (rosterName: string, position: string, number: 
     }
   }
   
-  // Fallback for position if no tag match
-  if (!posTag) {
+  // Case-sensitive check for specific high-level tags
+  const exactTags = ["Vargheist", "Vampire Thrower", "Vampire Runner", "Vampire Blitzer", "Thrall linea"];
+  
+  if (exactTags.includes(posTag)) {
+    // Keep as is
+  } else if (!posTag) {
     posTag = position.toLowerCase().replace(/línea/g, 'linea').split(' ').pop() || 'jugador';
   }
 
-  // Handle plural/singular for Team Name if needed (e.g. Orcos -> Orco)
+  // Handle plural/singular for Team Name if needed
   if (teamPrefix === "Orcos Negros") teamPrefix = "Orco negro";
   if (teamPrefix === "Orcos") teamPrefix = "Orco";
   if (teamPrefix === "Humanos") teamPrefix = "Humano";
-  if (teamPrefix === "Amazonas") teamPrefix = "Amazonas"; // It's Amazonas in the screenshot
+  if (teamPrefix === "Vampiros") teamPrefix = "Vampiros"; 
 
-  const filename = `${teamPrefix} - ${posTag} ${number}.png`;
-  // Use raw.githubusercontent.com for direct image access
+  // Special case for Vampires naming inconsistency in GitHub (-Thrall vs - Thrall)
+  let separator = " - ";
+  if (posTag === "Thrall linea") {
+      // User's screenshot shows "Vampiros -Thrall linea 1.png" (no space after hyphen)
+      // but let's try to be safe and match what they have.
+      // If the URL fails, it fails, but I'll try to match the exact string "Vampiros -Thrall linea"
+      const filename = `${teamPrefix} -${posTag} ${number}.png`;
+      return `${BASE_URL}${encodeURIComponent(filename)}`;
+  }
+
+  const filename = `${teamPrefix}${separator}${posTag} ${number}.png`;
   return `${BASE_URL}${encodeURIComponent(filename)}`;
 };
 
