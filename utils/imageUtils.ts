@@ -208,6 +208,7 @@ const STAR_FILE_MAP: Record<string, string> = {
   "Morg 'n' Thorg":            "PJ - Morg \u2018n\u2019 Thorg.png",
   "Dribl & Drull":             "PJ - Dribl and Drill.png",          // typo in GitHub: Drill
   "Grak & Crumbleberry":       "PJ - Grak & Crumbleberry.png",
+  "H'thark the Unstoppable":   "PJ - H'thark the Unstoppable.png", // straight apostrophe in GitHub
   // ── ALL CAPS filenames ─────────────────────────────────────────────────────
   "Gretchen Wachter":          "PJ - GRETCHEN WACHTER.png",
   "Grim Ironjaw":              "PJ - GRIM IRONJAW.png",
