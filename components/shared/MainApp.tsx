@@ -572,7 +572,12 @@ const MainApp: React.FC = () => {
                   isGuest={isGuest}
                 />
               )}
-              {activeView === 'admin' && <AdminPanel />}
+              {activeView === 'admin' && (
+                <AdminPanel
+                  managedTeams={managedTeams}
+                  onCompetitionCreate={handleCompetitionCreate}
+                />
+              )}
               {activeView === 'guide' && <QuickGuide />}
             </div>
           )}

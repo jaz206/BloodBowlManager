@@ -3,18 +3,24 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useMasterData } from '../../hooks/useMasterData';
 import { useLanguage } from '../../contexts/LanguageContext';
 import SearchIcon from '../icons/SearchIcon';
-import type { Team, StarPlayer, Skill, Inducement } from '../../types';
+import type { Competition, ManagedTeam, Team, StarPlayer, Skill, Inducement } from '../../types';
 import AdminGeneralForm from './AdminGeneralForm';
 import AdminEditorModal from './AdminEditorModal';
 import { downloadCSV, parseCSV, transformGitHubUrl } from './adminPanelUtils';
 import AdminFeedbackOverlays from './AdminFeedbackOverlays';
 import { getStarPlayerImageUrl, getTeamLogoUrl } from '../../utils/imageUtils';
+import AdminCompetitionLab from './AdminCompetitionLab';
 
-type AdminTab = 'general' | 'heraldo' | 'arena' | 'teams' | 'stars' | 'skills' | 'inducements';
+type AdminTab = 'general' | 'heraldo' | 'arena' | 'competitions' | 'teams' | 'stars' | 'skills' | 'inducements';
 import { useArenaConfig, ArenaConfig } from '../../hooks/useArenaConfig';
 import { PLAYER_NAMES } from '../../pages/Guild/playerNames';
 
-const AdminPanel: React.FC = () => {
+interface AdminPanelProps {
+    managedTeams: ManagedTeam[];
+    onCompetitionCreate: (comp: Omit<Competition, 'id'>) => void | Promise<void>;
+}
+
+const AdminPanel: React.FC<AdminPanelProps> = ({ managedTeams, onCompetitionCreate }) => {
     const {
         teams,
         starPlayers,
@@ -383,6 +389,7 @@ const AdminPanel: React.FC = () => {
         { id: 'general', label: 'General', icon: 'settings' },
         { id: 'heraldo', label: 'Heraldo', icon: 'newspaper' },
         { id: 'arena', label: 'Reglas Arena', icon: 'stadia_controller' },
+        { id: 'competitions', label: 'Competiciones', icon: 'emoji_events' },
         { id: 'teams', label: 'Equipos', icon: 'groups' },
         { id: 'stars', label: 'Estrellas', icon: 'star' },
         { id: 'skills', label: 'Habilidades', icon: 'bolt' },
@@ -562,6 +569,8 @@ const AdminPanel: React.FC = () => {
                                 </div>
                             </div>
                         </div>
+                    ) : activeTab === 'competitions' ? (
+                        <AdminCompetitionLab managedTeams={managedTeams} onCompetitionCreate={onCompetitionCreate} />
                     ) : (
                         <>
                             {/* Search + CSV toolbar for Content Tabs */}
