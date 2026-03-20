@@ -40,6 +40,7 @@ const AdminEditorModal: React.FC<AdminEditorModalProps> = ({
     if (!editingItem) return null;
 
     return (
+        <>
             {/* Editing Modal */}
             <AnimatePresence>
                 {editingItem && (
@@ -360,7 +361,7 @@ const AdminEditorModal: React.FC<AdminEditorModalProps> = ({
                     </div>
                 )}
             </AnimatePresence>
-
+        </>
     );
 };
 

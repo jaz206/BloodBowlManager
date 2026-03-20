@@ -5,6 +5,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import SearchIcon from '../icons/SearchIcon';
 import type { Team, StarPlayer, Skill, Inducement } from '../../types';
 import AdminGeneralForm from './AdminGeneralForm';
+import AdminEditorModal from './AdminEditorModal';
 import { downloadCSV, parseCSV, transformGitHubUrl } from './adminPanelUtils';
 import AdminFeedbackOverlays from './AdminFeedbackOverlays';
 
