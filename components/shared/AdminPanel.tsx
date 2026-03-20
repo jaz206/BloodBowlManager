@@ -689,6 +689,7 @@ const AdminPanel: React.FC = () => {
                 tabs={tabs}
                 isSaving={isSaving}
                 language={language}
+                skills={skills}
                 arenaConfig={arenaConfig}
                 heraldoItems={heraldoItems}
                 gitHubImages={gitHubImages}

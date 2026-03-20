@@ -13,6 +13,7 @@ type AdminEditorModalProps = {
     tabs: { id: AdminTab; label: string; icon: string }[];
     isSaving: boolean;
     language: string;
+    skills: any[];
     arenaConfig: any;
     heraldoItems: any[];
     gitHubImages: any[];
@@ -28,6 +29,7 @@ const AdminEditorModal: React.FC<AdminEditorModalProps> = ({
     tabs,
     isSaving,
     language,
+    skills,
     arenaConfig,
     heraldoItems,
     gitHubImages,
