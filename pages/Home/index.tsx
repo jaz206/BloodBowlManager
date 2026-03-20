@@ -3,8 +3,10 @@ import type { ManagedTeam, League as Competition, GameEvent, MatchReport } from 
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../hooks/useAuth';
 import { skillsData } from '../../data/skills_es';
+import { teamsData } from '../../data/teams';
 import { useMasterData } from '../../hooks/useMasterData';
 import { getTeamLogoUrl } from '../../utils/imageUtils';
+import SkillModal from '../../components/oracle/SkillModal';
 
 interface HomeProps {
     onNavigate: (view: any, payload?: string) => void;
@@ -93,6 +95,7 @@ const Home: React.FC<HomeProps> = ({
     // States for interactive modules
     const [oracleSearch, setOracleSearch] = useState('');
     const [heraldoIndex, setHeraldoIndex] = useState(0);
+    const [selectedSkill, setSelectedSkill] = useState<any | null>(null);
 
     // Dashboard State
     const myCompetitions = useMemo(() => 
@@ -115,6 +118,11 @@ const Home: React.FC<HomeProps> = ({
             .filter(s => s.name.toLowerCase().includes(oracleSearch.toLowerCase()))
             .slice(0, 10);
     }, [oracleSearch]);
+
+    const resolveTeamCrest = (team: ManagedTeam) => {
+        const staticMatch = teamsData.find(t => t.name === team.rosterName || t.name === team.name);
+        return team.crestImage || staticMatch?.image || getTeamLogoUrl(team.rosterName || team.name);
+    };
 
     // Heraldo Rotation Logic (30 seconds)
     useEffect(() => {
@@ -287,10 +295,11 @@ const Home: React.FC<HomeProps> = ({
                                             <img
                                                 alt={team.name}
                                                 className="size-full object-cover grayscale group-hover:grayscale-0 transition-all"
-                                                src={team.crestImage || getTeamLogoUrl(team.rosterName)}
+                                                src={resolveTeamCrest(team)}
                                                 onError={(e) => {
                                                     const img = e.target as HTMLImageElement;
-                                                    const fallback = getTeamLogoUrl(team.rosterName);
+                                                    const staticMatch = teamsData.find(t => t.name === team.rosterName || t.name === team.name);
+                                                    const fallback = staticMatch?.image || getTeamLogoUrl(team.rosterName || team.name);
                                                     if (img.src !== fallback) {
                                                         img.src = fallback;
                                                     }
@@ -383,7 +392,7 @@ const Home: React.FC<HomeProps> = ({
                         {filteredSkills.map(skill => (
                             <div 
                                 key={skill.keyEN}
-                                onClick={() => onNavigate('oracle', skill.name)}
+                                onClick={() => setSelectedSkill(skill)}
                                 className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-transparent hover:border-primary/30 cursor-pointer transition-all group"
                             >
                                 <div className="flex flex-col">
@@ -693,6 +702,22 @@ const Home: React.FC<HomeProps> = ({
                         </div>
                     </div>
                 </footer>
+
+                <AnimatePresence>
+                    {selectedSkill && (
+                        <SkillModal
+                            skill={{
+                                keyEN: selectedSkill.keyEN,
+                                name_es: selectedSkill.name_es || selectedSkill.name,
+                                name_en: selectedSkill.name_en || selectedSkill.name,
+                                desc_es: selectedSkill.desc_es || selectedSkill.description || '',
+                                desc_en: selectedSkill.desc_en || selectedSkill.description || '',
+                                category: selectedSkill.category,
+                            } as any}
+                            onClose={() => setSelectedSkill(null)}
+                        />
+                    )}
+                </AnimatePresence>
             </div>
         </div>
     );
