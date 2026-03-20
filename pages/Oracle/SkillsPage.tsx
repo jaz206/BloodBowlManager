@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { Skill } from '../../types';
 import { useMasterData } from '../../hooks/useMasterData';
 import { useLanguage } from '../../contexts/LanguageContext';
+import SkillModal from '../../components/oracle/SkillModal';
 
 const SKILLS_PER_PAGE = 8;
 
@@ -80,6 +81,7 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
     }, [initialSearchTerm]);
 
     const [selectedSkillName, setSelectedSkillName] = useState<string | null>(null);
+    const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [pinnedSkills, setPinnedSkills] = useState<string[]>([]);
     const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -131,6 +133,11 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
         }
     };
 
+    const handleOpenSkill = (skill: Skill) => {
+        setSelectedSkillName(skill.name);
+        setSelectedSkill(skill);
+    };
+
     if (loading) {
         return (
             <div className="flex justify-center items-center py-40">
@@ -172,6 +179,7 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
                                     setActiveCategory(cat.id);
                                     setSearchTerm('');
                                     setSelectedSkillName(null);
+                                    setSelectedSkill(null);
                                     setCurrentPage(1);
                                 }}
                                 className={`flex items-center gap-3 px-5 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${activeCategory === cat.id
@@ -303,7 +311,7 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
                             <SkillCard
                                 key={skill.name}
                                 skill={skill}
-                                onClick={() => setSelectedSkillName(skill.name)}
+                                onClick={() => handleOpenSkill(skill)}
                                 isSelected={selectedSkillName === skill.name}
                             />
                         ))}
@@ -341,6 +349,15 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
                         </button>
                     </div>
                 )}
+
+                <AnimatePresence>
+                    {selectedSkill && (
+                        <SkillModal
+                            skill={selectedSkill}
+                            onClose={() => setSelectedSkill(null)}
+                        />
+                    )}
+                </AnimatePresence>
             </div>
         </div>
     );

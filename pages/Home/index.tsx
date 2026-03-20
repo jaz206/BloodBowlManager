@@ -4,6 +4,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../hooks/useAuth';
 import { skillsData } from '../../data/skills_es';
 import { useMasterData } from '../../hooks/useMasterData';
+import { getTeamLogoUrl } from '../../utils/imageUtils';
 
 interface HomeProps {
     onNavigate: (view: any, payload?: string) => void;
@@ -283,11 +284,18 @@ const Home: React.FC<HomeProps> = ({
                                 >
                                     <div className="flex items-center gap-5">
                                         <div className="size-16 rounded-lg bg-black flex items-center justify-center border border-white/10 overflow-hidden">
-                                            {team.crestImage ? (
-                                                <img alt={team.name} className="size-full object-cover grayscale group-hover:grayscale-0 transition-all" src={team.crestImage} />
-                                            ) : (
-                                                <span className="material-symbols-outlined text-3xl text-slate-600">shield</span>
-                                            )}
+                                            <img
+                                                alt={team.name}
+                                                className="size-full object-cover grayscale group-hover:grayscale-0 transition-all"
+                                                src={team.crestImage || getTeamLogoUrl(team.rosterName)}
+                                                onError={(e) => {
+                                                    const img = e.target as HTMLImageElement;
+                                                    const fallback = getTeamLogoUrl(team.rosterName);
+                                                    if (img.src !== fallback) {
+                                                        img.src = fallback;
+                                                    }
+                                                }}
+                                            />
                                         </div>
                                         <div>
                                             <h3 
