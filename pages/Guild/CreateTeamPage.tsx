@@ -6,7 +6,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../hooks/useAuth';
 import SkillModal from '../../components/oracle/SkillModal';
 import { PLAYER_NAMES } from './playerNames';
-import { getPlayerImageUrl, getTeamLogoUrl } from '../../utils/imageUtils';
+import { getPlayerImageUrl, getTeamLogoUrl, getStarPlayerImageUrl } from '../../utils/imageUtils';
 
 interface TeamCreatorProps {
     onTeamCreate: (team: Omit<ManagedTeam, 'id'>) => void;
@@ -299,13 +299,13 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                                             onClick={() => setSelectedFactionIdx(masterIdx)} 
                                             className={`flex-none flex flex-col items-center gap-2 group transition-all duration-500 snap-center outline-none ${isSelected ? 'scale-105' : 'opacity-20 grayscale hover:opacity-100 hover:grayscale-0'}`}
                                         >
-                                            <div className={`w-12 h-12 rounded-xl overflow-hidden bg-black/40 border transition-all duration-500 relative ${isSelected ? 'border-gold shadow-[0_0_15px_rgba(202,138,4,0.3)] rotate-0' : 'border-white/5 group-hover:border-white/20 -rotate-3 hover:rotate-0'}`}>
+                                            <div className={`w-20 h-20 rounded-xl overflow-hidden bg-black/40 border transition-all duration-500 relative ${isSelected ? 'border-gold shadow-[0_0_15px_rgba(202,138,4,0.3)] rotate-0' : 'border-white/5 group-hover:border-white/20 -rotate-3 hover:rotate-0'}`}>
                                                 <img src={tm.image} alt={tm.name} className="w-full h-full object-cover p-1" />
                                                 {isSelected && (
                                                     <motion.div layoutId="active-bg" className="absolute inset-0 bg-gold/5 pointer-events-none" />
                                                 )}
                                             </div>
-                                            <span className={`w-16 text-[9px] font-black uppercase tracking-tight leading-tight text-center transition-colors ${isSelected ? 'text-white border-b border-gold pb-0.5' : 'text-gray-500'}`}>{tm.name}</span>
+                                            <span className={`w-24 text-[9px] font-black uppercase tracking-tight leading-tight text-center transition-colors ${isSelected ? 'text-white border-b border-gold pb-0.5' : 'text-gray-500'}`}>{tm.name}</span>
                                         </button>
                                     );
                                 })}
@@ -491,7 +491,15 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                                 {factionStars.slice(0, 6).map((star, sidx) => (
                                     <div key={sidx} className="bg-white/[0.02] border border-white/5 p-2 rounded-xl group cursor-pointer hover:bg-gold/5 hover:border-gold/20 transition-all">
                                         <div className="aspect-square bg-black/40 rounded-lg overflow-hidden mb-2 border border-white/5">
-                                            <img src={star.image} alt={star.name} className="object-cover w-full h-full grayscale group-hover:grayscale-0 transition-opacity opacity-60 group-hover:opacity-100" />
+                                            <img 
+                                                src={getStarPlayerImageUrl(star.name)} 
+                                                onError={(e) => {
+                                                    const img = e.target as HTMLImageElement;
+                                                    if (img.src !== star.image) img.src = star.image;
+                                                }}
+                                                alt={star.name} 
+                                                className="object-cover w-full h-full grayscale group-hover:grayscale-0 transition-opacity opacity-60 group-hover:opacity-100" 
+                                            />
                                         </div>
                                         <p className="text-[7px] font-black text-center text-gray-600 group-hover:text-gold uppercase tracking-tighter truncate">{star.name}</p>
                                     </div>

@@ -4,9 +4,11 @@ import type { ManagedTeam, Player } from '../types';
 const BASE_URL = "https://raw.githubusercontent.com/jaz206/Bloodbowl-image/main/Foto%20plantilla/";
 
 // Map internal roster names to GitHub prefix
+// Map internal roster names to GitHub folder prefix (For player images)
 const ROSTER_PREFIX_MAP: Record<string, string> = {
   "Amazonas": "Amazonas",
-  "Orcos Negros": "Orco negro",
+  "Orcos": "Orcos",
+  "Orcos Negros": "Orcos negros",
   "Elegidos del Caos": "Elegidos del Caos",
   "Enanos del Caos": "Enanos del caos",
   "Renegados del Caos": "Renegados",
@@ -26,8 +28,20 @@ const ROSTER_PREFIX_MAP: Record<string, string> = {
   "Skaven": "Skaven",
   "Slaanesh": "Slaanesh",
   "Tomb Kings": "Khemri",
+  "Unión Élfica": "Union Elfica",
   "Vampiros": "Vampiros",
   "Wood Elves": "Silvanos"
+};
+
+// Map internal roster names to GitHub shield filenames (For Crests)
+const CREST_PREFIX_MAP: Record<string, string> = {
+  "Amazonas": "Amazonas",
+  "Orcos": "Orcos Negros", // Using Orcos Negros if Orcos.png missing
+  "Orcos Negros": "Orcos Negros",
+  "Union Elfica": "Union Elfica",
+  "Unión Élfica": "Union Elfica",
+  "Renegados del Caos": "Renegados del Caos",
+  "Enanos del Caos": "Enanos del caos",
 };
 
 export const getTeamPrefix = (rosterName: string): string => {
@@ -166,7 +180,7 @@ const CREST_BASE_URL = "https://raw.githubusercontent.com/jaz206/Bloodbowl-image
  * Special case for team logos if they follow a similar pattern
  */
 export const getTeamLogoUrl = (rosterName: string): string => {
-  const prefix = getTeamPrefix(rosterName);
+  const prefix = CREST_PREFIX_MAP[rosterName] || getTeamPrefix(rosterName);
   return `${CREST_BASE_URL}${encodeURIComponent(prefix + ".png")}`;
 };
 
@@ -176,5 +190,14 @@ const STAR_BASE_URL = "https://raw.githubusercontent.com/jaz206/Bloodbowl-image/
  * Generates the GitHub image URL for a star player
  */
 export const getStarPlayerImageUrl = (starName: string): string => {
-  return `${STAR_BASE_URL}${encodeURIComponent("PJ - " + starName + ".png")}`;
+  // Handle inconsistent "PJ- " vs "PJ - " naming in GitHub
+  const noSpaceDashStars = [
+    "Akhorne The Squirrel",
+    "IVAR ERIKSSON",
+    "Kreek Rustgouger",
+    "ZZHARG MADEYE"
+  ];
+
+  const prefix = noSpaceDashStars.includes(starName) ? "PJ- " : "PJ - ";
+  return `${STAR_BASE_URL}${encodeURIComponent(prefix + starName + ".png")}`;
 };
