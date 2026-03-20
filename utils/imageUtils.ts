@@ -36,12 +36,16 @@ const ROSTER_PREFIX_MAP: Record<string, string> = {
 // Map internal roster names to GitHub shield filenames (For Crests)
 const CREST_PREFIX_MAP: Record<string, string> = {
   "Amazonas": "Amazonas",
-  "Orcos": "Orcos Negros", // Using Orcos Negros if Orcos.png missing
+  "Orcos": "Orcos", 
   "Orcos Negros": "Orcos Negros",
   "Union Elfica": "Union Elfica",
   "Unión Élfica": "Union Elfica",
   "Renegados del Caos": "Renegados del Caos",
   "Enanos del Caos": "Enanos del caos",
+  "Elegidos del Caos": "Elegidos del Caos",
+  "Enanos": "Enanos",
+  "Goblins": "Goblins",
+  "Elfos Oscuros": "Elfos Oscuros"
 };
 
 export const getTeamPrefix = (rosterName: string): string => {
@@ -190,14 +194,14 @@ const STAR_BASE_URL = "https://raw.githubusercontent.com/jaz206/Bloodbowl-image/
  * Generates the GitHub image URL for a star player
  */
 export const getStarPlayerImageUrl = (starName: string): string => {
-  // Handle inconsistent "PJ- " vs "PJ - " naming in GitHub
-  const noSpaceDashStars = [
-    "Akhorne The Squirrel",
-    "IVAR ERIKSSON",
-    "Kreek Rustgouger",
-    "ZZHARG MADEYE"
-  ];
+  // Normalize naming inconsistencies:
+  // 1. Curly quotes -> Straight quotes ('Captain', 'The Slice')
+  // 2. '&' -> 'and' (Dribl and Drill)
+  // 3. Curly ' -> straight ' (H’thark -> H'thark)
+  const normalized = starName
+    .replace(/[‘’]/g, "'")
+    .replace(/[“”]/g, '"')
+    .replace(/&/g, "and");
 
-  const prefix = noSpaceDashStars.includes(starName) ? "PJ- " : "PJ - ";
-  return `${STAR_BASE_URL}${encodeURIComponent(prefix + starName + ".png")}`;
+  return `${STAR_BASE_URL}${encodeURIComponent("PJ - " + normalized + ".png")}`;
 };

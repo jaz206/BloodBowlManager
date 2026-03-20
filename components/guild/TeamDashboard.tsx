@@ -341,14 +341,26 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                 <div className="max-w-[1400px] mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-6">
                         <div
-                            className="size-12 bg-primary rounded-xl flex items-center justify-center text-background-dark shadow-glow cursor-pointer hover:scale-105 transition-transform"
+                            className="size-12 bg-black/40 rounded-xl flex items-center justify-center text-background-dark shadow-glow cursor-pointer hover:scale-105 transition-transform overflow-hidden"
                             onClick={() => crestInputRef.current?.click()}
                         >
-                            {team.crestImage ? (
-                                <img src={team.crestImage} alt={team.name} className="w-full h-full object-cover rounded-xl" />
-                            ) : (
-                                <span className="material-symbols-outlined font-black text-2xl">skull</span>
-                            )}
+                            <img 
+                                src={team.crestImage || getTeamLogoUrl(team.rosterName)} 
+                                onError={(e) => {
+                                    const img = e.target as HTMLImageElement;
+                                    const githubUrl = getTeamLogoUrl(team.rosterName);
+                                    if (img.src !== githubUrl) {
+                                        img.src = githubUrl;
+                                    } else {
+                                        const originalData = teamsData.find(t => t.name === team.rosterName);
+                                        if (originalData && img.src !== originalData.image) {
+                                            img.src = originalData.image;
+                                        }
+                                    }
+                                }}
+                                alt={team.name} 
+                                className="w-full h-full object-contain p-1" 
+                            />
                         </div>
                         <div>
                             <h1 className="font-epilogue text-3xl md:text-4xl italic font-black tracking-tighter text-primary uppercase leading-tight">
@@ -732,7 +744,26 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                 onClick={() => crestInputRef.current?.click()}
                             >
                                 {team.crestImage ? (
-                                    <img src={team.crestImage} alt={team.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                    <div className="w-24 h-24 rounded-3xl overflow-hidden bg-black/40 border border-white/5 flex items-center justify-center relative group">
+                                        <img 
+                                            src={team.crestImage || getTeamLogoUrl(team.rosterName)} 
+                                            onError={(e) => {
+                                                const img = e.target as HTMLImageElement;
+                                                const githubUrl = getTeamLogoUrl(team.rosterName);
+                                                if (img.src !== githubUrl) {
+                                                    img.src = githubUrl;
+                                                } else {
+                                                    // Final fallback if github is also missing
+                                                    const originalData = teamsData.find(t => t.name === team.rosterName);
+                                                    if (originalData && img.src !== originalData.image) {
+                                                        img.src = originalData.image;
+                                                    }
+                                                }
+                                            }}
+                                            alt={team.name} 
+                                            className="w-full h-full object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.1)] group-hover:scale-110 transition-transform duration-500" 
+                                        />
+                                    </div>
                                 ) : (
                                     <div className="text-center">
                                         <span className="material-symbols-outlined text-4xl text-slate-700 mb-2">upload</span>

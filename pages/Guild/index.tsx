@@ -4,6 +4,8 @@ import type { ManagedTeam } from '../../types';
 import TeamCreator from './CreateTeamPage';
 import { TeamDashboard } from '../../components/guild/TeamDashboard';
 import { calculateTeamValue } from '../../utils/teamUtils';
+import { getTeamLogoUrl } from '../../utils/imageUtils';
+import { teamsData } from '../../data/teams';
 import { useAuth } from '../../hooks/useAuth';
 import type { Competition } from '../../types';
 
@@ -407,12 +409,24 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                 >
                                     {/* Team Name & Crest */}
                                     <div className="col-span-4 flex items-center gap-6">
-                                        <div className="w-20 h-20 bg-black/40 rounded-2xl border border-white/5 p-1 flex items-center justify-center shrink-0 overflow-hidden relative group-hover:border-gold/20 transition-all shadow-xl">
-                                            {team.crestImage ? (
-                                                <img src={team.crestImage} alt={team.name} className="w-full h-full object-contain" />
-                                            ) : (
-                                                <span className="material-symbols-outlined text-gray-800 text-3xl">shield</span>
-                                            )}
+                                        <div className="w-20 h-20 bg-black/40 rounded-2xl border border-white/5 p-2 flex items-center justify-center shrink-0 overflow-hidden relative group-hover:border-gold/20 transition-all shadow-xl">
+                                            <img 
+                                                src={team.crestImage || getTeamLogoUrl(team.rosterName)} 
+                                                onError={(e) => {
+                                                    const img = e.target as HTMLImageElement;
+                                                    const githubUrl = getTeamLogoUrl(team.rosterName);
+                                                    if (img.src !== githubUrl) {
+                                                        img.src = githubUrl;
+                                                    } else {
+                                                        const originalData = teamsData.find(t => t.name === team.rosterName);
+                                                        if (originalData && img.src !== originalData.image) {
+                                                            img.src = originalData.image;
+                                                        }
+                                                    }
+                                                }}
+                                                alt={team.name} 
+                                                className="w-full h-full object-contain" 
+                                            />
                                         </div>
                                         <div className="min-w-0">
                                             <div className="flex items-center gap-2">

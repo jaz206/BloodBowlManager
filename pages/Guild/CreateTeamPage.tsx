@@ -300,7 +300,15 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                                             className={`flex-none flex flex-col items-center gap-2 group transition-all duration-500 snap-center outline-none ${isSelected ? 'scale-105' : 'opacity-20 grayscale hover:opacity-100 hover:grayscale-0'}`}
                                         >
                                             <div className={`w-20 h-20 rounded-xl overflow-hidden bg-black/40 border transition-all duration-500 relative ${isSelected ? 'border-gold shadow-[0_0_15px_rgba(202,138,4,0.3)] rotate-0' : 'border-white/5 group-hover:border-white/20 -rotate-3 hover:rotate-0'}`}>
-                                                <img src={tm.image} alt={tm.name} className="w-full h-full object-cover p-1" />
+                                                <img 
+                                                    src={getTeamLogoUrl(tm.name)} 
+                                                    onError={(e) => {
+                                                        const img = e.target as HTMLImageElement;
+                                                        if (img.src !== tm.image) img.src = tm.image;
+                                                    }}
+                                                    alt={tm.name} 
+                                                    className="w-full h-full object-contain p-2" 
+                                                />
                                                 {isSelected && (
                                                     <motion.div layoutId="active-bg" className="absolute inset-0 bg-gold/5 pointer-events-none" />
                                                 )}
