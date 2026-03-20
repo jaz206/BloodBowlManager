@@ -30,6 +30,45 @@ const ROSTER_PREFIX_MAP: Record<string, string> = {
   "Wood Elves": "Silvanos"
 };
 
+export const getTeamPrefix = (rosterName: string): string => {
+  let prefix = ROSTER_PREFIX_MAP[rosterName] || rosterName;
+  if (prefix === "Orcos Negros") prefix = "Orcos negros";
+  if (prefix === "Humanos") prefix = "Humanos";
+  return prefix;
+};
+
+export interface PositionStock {
+    [posTag: string]: number[]; // List of available numbers for that position
+}
+
+export const fetchTeamImageStock = async (rosterName: string): Promise<PositionStock> => {
+  const prefix = getTeamPrefix(rosterName);
+  try {
+    const res = await fetch(`https://api.github.com/repos/jaz206/Bloodbowl-image/contents/Foto%20plantilla/${encodeURIComponent(prefix)}`);
+    if (!res.ok) return {};
+    const files = await res.json();
+    
+    const stock: PositionStock = {};
+    files.forEach((f: any) => {
+        if (f.type === 'file' && f.name.endsWith('.png')) {
+            const parts = f.name.split(' ');
+            if (parts.length >= 2) {
+                const tag = parts[0].toLowerCase();
+                const numMatch = parts[1].match(/\d+/);
+                if (numMatch) {
+                    const num = parseInt(numMatch[0]);
+                    if (!stock[tag]) stock[tag] = [];
+                    stock[tag].push(num);
+                }
+            }
+        }
+    });
+    return stock;
+  } catch (e) {
+    return {};
+  }
+};
+
 // Map internal position names to GitHub position tags
 const POSITION_TAG_MAP: Record<string, string> = {
   "Vampiros Corredor": "Vampire Runner",
@@ -90,13 +129,7 @@ export const getRandomImageNumber = (team: ManagedTeam, position: string): numbe
   return Math.floor(Math.random() * 15) + 1;
 };
 
-/**
- * Generates the GitHub image URL for a player
- */
-export const getPlayerImageUrl = (rosterName: string, position: string, number: number): string => {
-  let teamPrefix = ROSTER_PREFIX_MAP[rosterName] || rosterName;
-  
-  // Try to find a tag match
+export const getPosTag = (position: string): string => {
   let posTag = "";
   for (const [key, tag] of Object.entries(POSITION_TAG_MAP)) {
     if (position.includes(key)) {
@@ -105,43 +138,26 @@ export const getPlayerImageUrl = (rosterName: string, position: string, number: 
     }
   }
   
-  // Case-sensitive check for specific high-level tags
-  const exactTags = ["Vargheist", "Vampire Thrower", "Vampire Runner", "Vampire Blitzer", "Thrall linea"];
-  
-  if (exactTags.includes(posTag)) {
-    // Keep as is
-  } else if (!posTag) {
+  if (!posTag) {
     posTag = position.toLowerCase().replace(/línea/g, 'linea').split(' ').pop() || 'jugador';
   }
+  return posTag;
+};
 
-  // Adjust team prefixes to match GitHub folder names accurately
-  if (teamPrefix === "Orcos Negros") teamPrefix = "Orcos negros";
-  if (teamPrefix === "Humanos") teamPrefix = "Humanos";
-  // The user uses plural in GitHub folders: Orcos, Vampiros, Amazonas
+export const getPlayerImageUrl = (rosterName: string, position: string, number: number): string => {
+  const teamPrefix = getTeamPrefix(rosterName);
+  const posTag = getPosTag(position);
 
   // Special case for Vampires naming inconsistency in GitHub (-Thrall vs - Thrall)
-  // If we move to subfolders, we can simplify this, but keeping it for backward compat if needed.
   if (posTag === "Thrall linea") {
-      // New structure: Vampiros/Thrall linea 1.png
       return `${BASE_URL}${encodeURIComponent(teamPrefix)}/${encodeURIComponent(posTag + " " + number + ".png")}`;
   }
 
-  // New Recommended Structure: TeamFolder/Position 01.png
-  // Handling padding: 1 -> 01
   const paddedNumber = number < 10 ? `0${number}` : `${number}`;
-  
-  // Capitalize position tag for GitHub naming (e.g. linea -> Linea)
   const capitalizedPos = posTag.charAt(0).toUpperCase() + posTag.slice(1);
+  const filename = `${capitalizedPos} ${paddedNumber}.png`;
   
-  // Try to match the user's specific files found in GitHub (some have a leading space)
-  const filename = `${capitalizedPos} ${paddedNumber}.tsx`.replace('.tsx', '.png'); // Simple way to prevent some issues
-  
-  // Use raw.githubusercontent.com for direct image access
-  const path = `${BASE_URL}${encodeURIComponent(teamPrefix)}/${encodeURIComponent(filename)}`;
-  
-  // Note: If you have a leading space in GitHub, like "%20Lanzador 01.png", I will try to handle it.
-  // For now matching the "Clean" version: "Orcos/Linea 01.png"
-  return path;
+  return `${BASE_URL}${encodeURIComponent(teamPrefix)}/${encodeURIComponent(filename)}`;
 };
 
 /**
