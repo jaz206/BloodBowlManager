@@ -696,6 +696,8 @@ const AdminPanel: React.FC = () => {
                 isLoadingGitHub={isLoadingGitHub}
                 githubSearch={githubSearch}
                 setGithubSearch={setGithubSearch}
+                isImageExplorerExpanded={isImageExplorerExpanded}
+                setIsImageExplorerExpanded={setIsImageExplorerExpanded}
                 handleSave={handleSave}
                 setEditingItem={setEditingItem}
             />

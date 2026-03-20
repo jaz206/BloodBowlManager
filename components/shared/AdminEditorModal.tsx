@@ -20,6 +20,8 @@ type AdminEditorModalProps = {
     isLoadingGitHub: boolean;
     githubSearch: string;
     setGithubSearch: React.Dispatch<React.SetStateAction<string>>;
+    isImageExplorerExpanded: boolean;
+    setIsImageExplorerExpanded: React.Dispatch<React.SetStateAction<boolean>>;
     handleSave: (e: React.FormEvent) => void;
     setEditingItem: React.Dispatch<React.SetStateAction<{ type: AdminTab | 'hero'; data: any } | null>>;
 };
@@ -36,6 +38,8 @@ const AdminEditorModal: React.FC<AdminEditorModalProps> = ({
     isLoadingGitHub,
     githubSearch,
     setGithubSearch,
+    isImageExplorerExpanded,
+    setIsImageExplorerExpanded,
     handleSave,
     setEditingItem,
 }) => {
