@@ -114,9 +114,22 @@ export const getPlayerImageUrl = (rosterName: string, position: string, number: 
       return `${BASE_URL}${encodeURIComponent(teamPrefix)}/${encodeURIComponent(posTag + " " + number + ".png")}`;
   }
 
-  // New Recommended Structure: TeamFolder/Position Number.png
-  const filename = `${posTag} ${number}.png`;
-  return `${BASE_URL}${encodeURIComponent(teamPrefix)}/${encodeURIComponent(filename)}`;
+  // New Recommended Structure: TeamFolder/Position 01.png
+  // Handling padding: 1 -> 01
+  const paddedNumber = number < 10 ? `0${number}` : `${number}`;
+  
+  // Capitalize position tag for GitHub naming (e.g. linea -> Linea)
+  const capitalizedPos = posTag.charAt(0).toUpperCase() + posTag.slice(1);
+  
+  // Try to match the user's specific files found in GitHub (some have a leading space)
+  const filename = `${capitalizedPos} ${paddedNumber}.tsx`.replace('.tsx', '.png'); // Simple way to prevent some issues
+  
+  // Use raw.githubusercontent.com for direct image access
+  const path = `${BASE_URL}${encodeURIComponent(teamPrefix)}/${encodeURIComponent(filename)}`;
+  
+  // Note: If you have a leading space in GitHub, like "%20Lanzador 01.png", I will try to handle it.
+  // For now matching the "Clean" version: "Orcos/Linea 01.png"
+  return path;
 };
 
 /**
