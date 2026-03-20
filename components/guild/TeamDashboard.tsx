@@ -451,13 +451,15 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                                     {p.image && (
                                                         <div 
                                                             onClick={() => setZoomedImage(p.image!)}
-                                                            className="w-20 aspect-[4/3] rounded-lg overflow-hidden border-2 border-slate-800 bg-black/40 cursor-zoom-in hover:scale-105 hover:border-gold/50 transition-all group/img relative"
+                                                            className="w-24 aspect-[4/3] rounded-lg overflow-hidden border-2 border-slate-800 bg-black cursor-zoom-in hover:scale-105 hover:border-gold/50 transition-all group/img relative"
                                                         >
-                                                            <div className="absolute inset-0 border-[3px] border-black/20 pointer-events-none z-10 shadow-[inset_0_0_10px_rgba(0,0,0,0.5)]"></div>
+                                                            {/* Blurred layer */}
+                                                            <img src={p.image} className="absolute inset-0 w-full h-full object-cover blur-lg opacity-30 scale-125" alt="" />
+                                                            {/* Main Image layer */}
                                                             <img 
                                                                 src={p.image} 
                                                                 alt={p.customName} 
-                                                                className="w-full h-full object-cover grayscale group-hover/img:grayscale-0 transition-all opacity-60 group-hover/img:opacity-100"
+                                                                className="relative w-full h-full object-contain z-10 grayscale group-hover/img:grayscale-0 transition-all opacity-80 group-hover/img:opacity-100"
                                                             />
                                                         </div>
                                                     )}
@@ -808,19 +810,26 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                             className="relative flex items-center justify-center blood-bowl-photo-frame p-6"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <img src={zoomedImage} className="max-w-[80vw] max-h-[75vh] aspect-[4/3] object-cover rounded-sm shadow-[0_0_60px_rgba(0,0,0,0.9)] border-4 border-[#1a1a1a]" alt="Zoomed view" />
+                            {/* Blur Background Box (4:3) */}
+                            <div className="relative w-[75vw] max-w-[800px] aspect-[4/3] rounded-sm overflow-hidden shadow-[0_0_60px_rgba(0,0,0,0.9)] border-4 border-[#1a1a1a] bg-black">
+                                {/* Blurred layer */}
+                                <img src={zoomedImage} className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-40 scale-110" alt="" />
+                                {/* Main Image layer (Full view) */}
+                                <img src={zoomedImage} className="relative w-full h-full object-contain z-10" alt="Zoomed view" />
+                            </div>
                             
                             {/* Decorative Rivets */}
-                            <div className="absolute top-2 left-2 w-3 h-3 rounded-full bg-slate-800 border border-slate-600 shadow-inner"></div>
-                            <div className="absolute top-2 right-2 w-3 h-3 rounded-full bg-slate-800 border border-slate-600 shadow-inner"></div>
-                            <div className="absolute bottom-2 left-2 w-3 h-3 rounded-full bg-slate-800 border border-slate-600 shadow-inner"></div>
-                            <div className="absolute bottom-2 right-2 w-3 h-3 rounded-full bg-slate-800 border border-slate-600 shadow-inner"></div>
+                            <div className="absolute top-2 left-2 w-3 h-3 rounded-full bg-slate-800 border border-slate-600 shadow-inner z-20"></div>
+                            <div className="absolute top-2 right-2 w-3 h-3 rounded-full bg-slate-800 border border-slate-600 shadow-inner z-20"></div>
+                            <div className="absolute bottom-2 left-2 w-3 h-3 rounded-full bg-slate-800 border border-slate-600 shadow-inner z-20"></div>
+                            <div className="absolute bottom-2 right-2 w-3 h-3 rounded-full bg-slate-800 border border-slate-600 shadow-inner z-20"></div>
 
                             <button 
                                 onClick={() => setZoomedImage(null)}
-                                className="absolute -top-8 -right-8 bg-gold text-black w-10 h-10 rounded-full flex items-center justify-center font-black shadow-2xl hover:scale-110 transition-transform z-20 hover:bg-white"
+                                className="absolute -top-8 -right-8 bg-gold text-black w-12 h-12 rounded-full flex items-center justify-center font-black shadow-2xl hover:scale-110 transition-transform z-[30] hover:bg-white"
                             >
-                                <span className="material-symbols-outlined">close</span>
+                                <span className="material-symbols-outlined text-xl">close</span>
+                                <div className="absolute inset-0 bg-black/10 rounded-full animate-ping"></div>
                             </button>
                         </motion.div>
                     </motion.div>
