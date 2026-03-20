@@ -101,11 +101,10 @@ export const getPlayerImageUrl = (rosterName: string, position: string, number: 
     posTag = position.toLowerCase().replace(/línea/g, 'linea').split(' ').pop() || 'jugador';
   }
 
-  // Handle plural/singular for Team Name if needed
-  if (teamPrefix === "Orcos Negros") teamPrefix = "Orco negro";
-  if (teamPrefix === "Orcos") teamPrefix = "Orco";
-  if (teamPrefix === "Humanos") teamPrefix = "Humano";
-  if (teamPrefix === "Vampiros") teamPrefix = "Vampiros"; 
+  // Adjust team prefixes to match GitHub folder names accurately
+  if (teamPrefix === "Orcos Negros") teamPrefix = "Orcos negros";
+  if (teamPrefix === "Humanos") teamPrefix = "Humanos";
+  // The user uses plural in GitHub folders: Orcos, Vampiros, Amazonas
 
   // Special case for Vampires naming inconsistency in GitHub (-Thrall vs - Thrall)
   // If we move to subfolders, we can simplify this, but keeping it for backward compat if needed.

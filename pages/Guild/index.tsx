@@ -4,6 +4,8 @@ import type { ManagedTeam } from '../../types';
 import TeamCreator from './CreateTeamPage';
 import { TeamDashboard } from '../../components/guild/TeamDashboard';
 import { calculateTeamValue } from '../../utils/teamUtils';
+import { useAuth } from '../../hooks/useAuth';
+import type { Competition } from '../../types';
 
 // SPP Levels for S3
 const SPP_LEVELS = [0, 6, 16, 31, 51, 76, 176];
@@ -47,9 +49,11 @@ interface TeamManagerProps {
     matchReports: any[];
     initialTeamId?: string | null;
     onInitialTeamHandled?: () => void;
+    competitions?: Competition[];
 }
 
-const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUpdate, onTeamDelete, requestedRoster, onRosterRequestHandled = () => { }, isGuest, matchReports, initialTeamId, onInitialTeamHandled = () => {} }) => {
+const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUpdate, onTeamDelete, requestedRoster, onRosterRequestHandled = () => { }, isGuest, matchReports, initialTeamId, onInitialTeamHandled = () => {}, competitions }) => {
+    const { user } = useAuth();
     // State for which team is shown in the top summary bar
     const [activeSummaryTeamId, setActiveSummaryTeamId] = useState<string | null>(null);
     // State for which team is being edited (inline rename)
@@ -101,8 +105,16 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
 
     const activeSummaryTeamData = useMemo(() => {
         const tId = activeSummaryTeamId || (teams.length > 0 ? teams[0].id : null);
-        return tId ? teamRecords[tId] : { wins: 0, draws: 0, losses: 0, total: 0 };
+        const record = tId ? teamRecords[tId] : null;
+        return record || { wins: 0, draws: 0, losses: 0, total: 0 };
     }, [activeSummaryTeamId, teamRecords, teams]);
+
+    // Safety effect: If the active team is deleted, fallback to the first available team
+    useEffect(() => {
+        if (activeSummaryTeamId && !teams.some(t => t.id === activeSummaryTeamId)) {
+            setActiveSummaryTeamId(teams.length > 0 ? (teams[0].id || null) : null);
+        }
+    }, [teams, activeSummaryTeamId]);
 
     const activeSummaryTeam = useMemo(() => {
         return teams.find(t => t.id === activeSummaryTeamId) || teams[0] || null;
@@ -468,9 +480,26 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                         <button 
                                             onClick={(e) => { 
                                                 e.stopPropagation(); 
+                                                
+                                                // Check if the team is currently in an active competition
+                                                const activeComp = competitions?.find(c => 
+                                                    c.status === 'In Progress' && 
+                                                    c.teams.some(t => t.teamName === team.name && t.ownerId === user?.id)
+                                                );
+
+                                                if (activeComp) {
+                                                    setConfirmation({
+                                                        title: 'Equipo en Competición',
+                                                        message: `No puedes disolver a los "${team.name}" porque están disputando la competición "${activeComp.name}". Retira al equipo de la competición o finalízala antes de borrarlo.`,
+                                                        type: 'info',
+                                                        onConfirm: () => setConfirmation(null)
+                                                    });
+                                                    return;
+                                                }
+
                                                 setConfirmation({
                                                     title: '¿Abandonar Franquicia?',
-                                                    message: `Vas a retirar permanentemente a los "${team.name}" de la competición. Todo su progreso se perderá.`,
+                                                    message: `Vas a retirar permanentemente a los "${team.name}" del Gremio. Todo su progreso se perderá.`,
                                                     type: 'danger',
                                                     onConfirm: () => onTeamDelete(team.id!)
                                                 });

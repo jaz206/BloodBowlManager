@@ -533,6 +533,7 @@ const MainApp: React.FC = () => {
               {activeView === 'guild' && (
                 <GuildPage
                   teams={managedTeams}
+                  competitions={leagues}
                   onTeamCreate={handleTeamCreate}
                   onTeamUpdate={handleTeamUpdate}
                   onTeamDelete={handleTeamDelete}
