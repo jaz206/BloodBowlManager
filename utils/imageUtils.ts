@@ -208,7 +208,9 @@ const STAR_FILE_MAP: Record<string, string> = {
   "Morg 'n' Thorg":            "PJ - Morg \u2018n\u2019 Thorg.png",
   "Dribl & Drull":             "PJ - Dribl and Drill.png",          // typo in GitHub: Drill
   "Grak & Crumbleberry":       "PJ - Grak & Crumbleberry.png",
-  "H'thark the Unstoppable":   "PJ - H'thark the Unstoppable.png", // straight apostrophe in GitHub
+  // H'thark: curly apostrophe (U+2019) from starPlayers.ts → straight apostrophe in GitHub filename
+  "H\u2019thark the Unstoppable": "PJ - H'thark the Unstoppable.png",
+  "H'thark the Unstoppable":   "PJ - H'thark the Unstoppable.png", // fallback straight apostrophe
   // ── ALL CAPS filenames ─────────────────────────────────────────────────────
   "Gretchen Wachter":          "PJ - GRETCHEN WACHTER.png",
   "Grim Ironjaw":              "PJ - GRIM IRONJAW.png",
@@ -244,12 +246,13 @@ const STAR_FILE_MAP: Record<string, string> = {
  * Uses an explicit lookup map first; falls back to simple Title Case construction.
  */
 export const getStarPlayerImageUrl = (starName: string): string => {
-  // Normalise input (straight quotes) for the map lookup key
+  // Normalise input: convert all curly/smart quotes to straight ASCII equivalents
   const key = starName
-    .replace(/['']/g, "'")
-    .replace(/[""]/g, '"')
+    .replace(/[\u2018\u2019\u02BC\u0060]/g, "'")   // curly/smart single quotes → '
+    .replace(/[\u201C\u201D]/g, '"')                  // curly double quotes → "
     .trim();
 
   const filename = STAR_FILE_MAP[key] ?? `PJ - ${key}.png`;
   return `${STAR_BASE_URL}${encodeURIComponent(filename)}`;
 };
+
