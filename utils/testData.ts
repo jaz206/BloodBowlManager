@@ -10,16 +10,24 @@ const normalizeRosterLabel = (value: string) =>
     .replace(/[^a-z0-9]+/gi, '')
     .toLowerCase();
 
+const skeletonRosterLabel = (value: string) =>
+  normalizeRosterLabel(value).replace(/[aeiou]/g, '');
+
 const createPlayerFromRoster = (teamRoster: any[], positionName: string, customName: string, id: number): ManagedPlayer => {
   const normalizedTarget = normalizeRosterLabel(positionName);
+  const skeletonTarget = skeletonRosterLabel(positionName);
   const rosterEntry = teamRoster.find(p => {
     if (!p?.position) return false;
     if (p.position === positionName) return true;
 
     const normalizedRosterPosition = normalizeRosterLabel(String(p.position));
+    const skeletonRosterPosition = skeletonRosterLabel(String(p.position));
     return normalizedRosterPosition === normalizedTarget
       || normalizedRosterPosition.includes(normalizedTarget)
-      || normalizedTarget.includes(normalizedRosterPosition);
+      || normalizedTarget.includes(normalizedRosterPosition)
+      || skeletonRosterPosition === skeletonTarget
+      || skeletonRosterPosition.includes(skeletonTarget)
+      || skeletonTarget.includes(skeletonRosterPosition);
   });
   if (!rosterEntry) {
     throw new Error(`Position ${positionName} not found in roster`);
