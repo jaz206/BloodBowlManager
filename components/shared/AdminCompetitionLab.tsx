@@ -6,7 +6,9 @@ import { getGuestTeams } from '../../utils/testData';
 
 type AdminCompetitionLabProps = {
   managedTeams: ManagedTeam[];
+  competitions: Competition[];
   onCompetitionCreate: (comp: Omit<Competition, 'id'>) => void | Promise<void>;
+  onOpenLeagues?: () => void;
 };
 
 const COMPETITION_RULES: Competition['rules'] = {
@@ -71,7 +73,7 @@ const buildTestOpponents = (format: 'Liguilla' | 'Torneo', minTeams: number): Ma
   return opponents;
 };
 
-const AdminCompetitionLab: React.FC<AdminCompetitionLabProps> = ({ managedTeams, onCompetitionCreate }) => {
+const AdminCompetitionLab: React.FC<AdminCompetitionLabProps> = ({ managedTeams, competitions, onCompetitionCreate, onOpenLeagues }) => {
   const { user } = useAuth();
   const [selectedTeamName, setSelectedTeamName] = useState('');
   const [format, setFormat] = useState<'Liguilla' | 'Torneo'>('Liguilla');
@@ -115,6 +117,12 @@ const AdminCompetitionLab: React.FC<AdminCompetitionLabProps> = ({ managedTeams,
     if (!selectedHostTeam) return 'Competiciones de prueba';
     return `${format === 'Liguilla' ? 'Liga' : 'Torneo'} privada - ${selectedHostTeam.name}`;
   }, [format, selectedHostTeam]);
+
+  const createdCompetitions = useMemo(() => (
+    competitions
+      .filter(comp => comp.ownerId === user?.id && comp.visibility === 'Private')
+      .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))
+  ), [competitions, user]);
 
   const handleCreate = async () => {
     if (!selectedHostTeam || !user) return;
@@ -285,6 +293,42 @@ const AdminCompetitionLab: React.FC<AdminCompetitionLabProps> = ({ managedTeams,
             <p className="text-center text-[10px] font-black uppercase tracking-widest text-slate-400">
               {statusMessage}
             </p>
+          )}
+
+          {createdCompetitions.length > 0 && (
+            <div className="rounded-[2rem] border border-white/5 bg-black/20 p-5 space-y-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Tus competiciones privadas</p>
+                  <p className="text-[9px] text-slate-600 uppercase tracking-widest">Lo que creaste ya se puede revisar en Ligas</p>
+                </div>
+                {onOpenLeagues && (
+                  <button
+                    type="button"
+                    onClick={onOpenLeagues}
+                    className="rounded-xl border border-premium-gold/30 bg-premium-gold/10 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-premium-gold"
+                  >
+                    Abrir ligas
+                  </button>
+                )}
+              </div>
+
+              <div className="space-y-3">
+                {createdCompetitions.slice(0, 4).map(comp => (
+                  <div key={comp.id} className="flex items-center justify-between gap-3 rounded-2xl border border-white/5 bg-white/5 px-4 py-3">
+                    <div className="min-w-0">
+                      <p className="font-black text-white uppercase italic truncate">{comp.name}</p>
+                      <p className="text-[10px] text-slate-500 uppercase tracking-widest">
+                        {comp.format} · {comp.teams.length} equipos · {comp.joinCode || comp.id}
+                      </p>
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-premium-gold">
+                      {comp.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </div>
       </div>

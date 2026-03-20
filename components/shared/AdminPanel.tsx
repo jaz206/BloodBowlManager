@@ -17,10 +17,12 @@ import { PLAYER_NAMES } from '../../pages/Guild/playerNames';
 
 interface AdminPanelProps {
     managedTeams: ManagedTeam[];
+    competitions: Competition[];
     onCompetitionCreate: (comp: Omit<Competition, 'id'>) => void | Promise<void>;
+    onOpenLeagues?: () => void;
 }
 
-const AdminPanel: React.FC<AdminPanelProps> = ({ managedTeams, onCompetitionCreate }) => {
+const AdminPanel: React.FC<AdminPanelProps> = ({ managedTeams, competitions, onCompetitionCreate, onOpenLeagues }) => {
     const {
         teams,
         starPlayers,
@@ -570,7 +572,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ managedTeams, onCompetitionCrea
                             </div>
                         </div>
                     ) : activeTab === 'competitions' ? (
-                        <AdminCompetitionLab managedTeams={managedTeams} onCompetitionCreate={onCompetitionCreate} />
+                        <AdminCompetitionLab
+                            managedTeams={managedTeams}
+                            competitions={competitions}
+                            onCompetitionCreate={onCompetitionCreate}
+                            onOpenLeagues={onOpenLeagues}
+                        />
                     ) : (
                         <>
                             {/* Search + CSV toolbar for Content Tabs */}

@@ -575,7 +575,9 @@ const MainApp: React.FC = () => {
               {activeView === 'admin' && (
                 <AdminPanel
                   managedTeams={managedTeams}
+                  competitions={leagues}
                   onCompetitionCreate={handleCompetitionCreate}
+                  onOpenLeagues={() => setActiveView('leagues')}
                 />
               )}
               {activeView === 'guide' && <QuickGuide />}
