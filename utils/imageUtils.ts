@@ -198,10 +198,35 @@ export const getStarPlayerImageUrl = (starName: string): string => {
   // 1. Curly quotes -> Straight quotes ('Captain', 'The Slice')
   // 2. '&' -> 'and' (Dribl and Drill)
   // 3. Curly ' -> straight ' (H’thark -> H'thark)
-  const normalized = starName
-    .replace(/[‘’]/g, "'")
-    .replace(/[“”]/g, '"')
-    .replace(/&/g, "and");
+    // Mapeo exhaustivo para corregir inconsistencias en los nombres de archivos de GitHub
+    const STAR_PLAYER_MAPPINGS: Record<string, string> = {
+        "Dribl & Drull": "Dribl and Drill", // El archivo en GitHub tiene un typo "Drill"
+        "Grak & Crumbleberry": "Grak & Crumbleberry", // Usa ampersand directamente
+        "Frank 'n' Stein": "Frank ‘n’ Stein", // Usa comillas curvas y 'n' minúscula
+        "Morg 'n' Thorg": "Morg ‘n’ Thorg", // Usa comillas curvas y 'n' minúscula
+        "Boa Kon'ssstriktr": "Boa Kon’ssstriktr", // Usa apóstrofo curvo
+        "Bryce 'The Slice' Cambuel": "Bryce ‘The Slice’ Cambuel", // Usa comillas curvas
+        "Captain Karina Von Riesz": "‘Captain’ Karina Von Riesz", // Añade comillas curvas
+        "‘Captain’ Karina Von Riesz": "‘Captain’ Karina Von Riesz",
+        "Ivar Eriksson": "IVAR ERIKSSON", // Caso especial PJ- sin espacio
+    };
 
-  return `${STAR_BASE_URL}${encodeURIComponent("PJ - " + normalized + ".png")}`;
+    let filename = "";
+    if (STAR_PLAYER_MAPPINGS[starName]) {
+        const mapped = STAR_PLAYER_MAPPINGS[starName];
+        if (starName === "Ivar Eriksson") {
+            filename = `PJ- ${mapped}.png`;
+        } else {
+            filename = `PJ - ${mapped}.png`;
+        }
+    } else {
+        // Normalización general para el resto
+        const normalized = starName
+            .replace(/[‘’]/g, "'")
+            .replace(/[“”]/g, '"')
+            .replace(/&/g, "and");
+        filename = `PJ - ${normalized}.png`;
+    }
+
+    return `${STAR_BASE_URL}${encodeURIComponent(filename)}`;
 };
