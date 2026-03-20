@@ -5,6 +5,7 @@ import { S3ActionType } from '../types/match.types';
 import { ManagedPlayer } from '../../../../types';
 import MiniField from '../../../../components/common/MiniField';
 import S3ActionOrchestrator from '../components/S3ActionOrchestrator';
+import MatchTeamRoster from '../components/MatchTeamRoster';
 
 /**
  * MatchInProgress — Arena Console V3 "Elite Assistant & Chronicle"
@@ -45,6 +46,22 @@ const MatchInProgress: React.FC = () => {
     const isRainy = currentWeather === 'Lluvioso';
     const isSunny = currentWeather === 'Muy Soleado';
     const isBlizzard = currentWeather === 'Ventisca';
+
+    const openPlayerActionPanel = (player: ManagedPlayer, teamId: 'home' | 'opponent') => {
+        setSelectedPlayerForAction(player);
+        setActiveTeamId(teamId);
+        setInteractionState(prev => ({
+            ...prev,
+            mode: 'selecting_action',
+            pending: {
+                actorId: player.id,
+                actionType: null,
+                objectiveId: null,
+                diceResult: null,
+                manualMode: true
+            }
+        }));
+    };
 
     const handleTriggerAction = (type: S3ActionType | string) => {
         if (!selectedPlayerForAction) {
@@ -199,75 +216,59 @@ const MatchInProgress: React.FC = () => {
             <main className="flex-1 flex overflow-hidden p-6 gap-6 min-h-0">
                 
                 {/* ── Roster de Jugadores (Bento Grid) ── */}
-                <section className="flex-[3] flex flex-col gap-4 overflow-hidden">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-xs font-bold tracking-[0.3em] uppercase text-slate-500 flex items-center gap-2">
-                            <span className="material-symbols-outlined text-primary text-lg">view_quilt</span>
-                            Panel de Plantilla: <span className="text-diente-orco">{(rosterViewId === 'home' ? liveHomeTeam : liveOpponentTeam).name}</span>
-                        </h2>
-                        <div className="flex bg-black/40 rounded-lg p-1 border border-white/5">
-                            <button 
-                                onClick={() => setRosterDisplayMode('cards')}
-                                className={`px-3 py-1 rounded-md text-[9px] font-black transition-all ${rosterDisplayMode === 'cards' ? 'bg-primary text-midnight shadow-lg' : 'text-slate-500 hover:text-white'}`}
-                            >
-                                <span className="material-symbols-outlined text-xs mr-1 align-middle">grid_view</span>
-                                CARTAS
-                            </button>
-                            <button 
-                                onClick={() => setRosterDisplayMode('tactical')}
-                                className={`px-3 py-1 rounded-md text-[9px] font-black transition-all ${rosterDisplayMode === 'tactical' ? 'bg-primary text-midnight shadow-lg' : 'text-slate-500 hover:text-white'}`}
-                            >
-                                <span className="material-symbols-outlined text-xs mr-1 align-middle">sports_soccer</span>
-                                TÁCTICO
-                            </button>
+                <section className="flex-[3] flex flex-col gap-4 overflow-hidden min-h-0">
+                    <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-4">
+                        <div>
+                            <h2 className="text-xs font-bold tracking-[0.3em] uppercase text-slate-500 flex items-center gap-2">
+                                <span className="material-symbols-outlined text-primary text-lg">view_quilt</span>
+                                Mesa de Partido
+                            </h2>
+                            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-600 mt-1">
+                                Toca una ficha para abrir su panel de acciones
+                            </p>
                         </div>
-                        <div className="flex gap-4 text-[10px] font-bold uppercase text-slate-500">
-                            <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-primary shadow-lg shadow-primary/40"></span> Listos</span>
-                            <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-slate-700"></span> Agotados</span>
+
+                        <div className="flex flex-wrap items-center gap-3">
+                            <div className="flex gap-4 text-[10px] font-bold uppercase text-slate-500">
+                                <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-primary shadow-lg shadow-primary/40"></span> Listos</span>
+                                <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-slate-700"></span> Agotados</span>
+                            </div>
+                            <div className="flex bg-black/40 rounded-lg p-1 border border-white/5">
+                                <button 
+                                    onClick={() => setRosterDisplayMode('cards')}
+                                    className={`px-3 py-1 rounded-md text-[9px] font-black transition-all ${rosterDisplayMode === 'cards' ? 'bg-primary text-midnight shadow-lg' : 'text-slate-500 hover:text-white'}`}
+                                >
+                                    <span className="material-symbols-outlined text-xs mr-1 align-middle">grid_view</span>
+                                    CARTAS
+                                </button>
+                                <button 
+                                    onClick={() => setRosterDisplayMode('tactical')}
+                                    className={`px-3 py-1 rounded-md text-[9px] font-black transition-all ${rosterDisplayMode === 'tactical' ? 'bg-primary text-midnight shadow-lg' : 'text-slate-500 hover:text-white'}`}
+                                >
+                                    <span className="material-symbols-outlined text-xs mr-1 align-middle">sports_soccer</span>
+                                    TÁCTICO
+                                </button>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar pb-4">
+                    <div className="flex-1 overflow-hidden">
                         {rosterDisplayMode === 'cards' ? (
-                            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                                {(rosterViewId === 'home' ? liveHomeTeam : liveOpponentTeam).players.map((p) => {
-                                    const isExhausted = ['KO', 'Lesionado', 'Muerto', 'Expulsado'].includes(p.status);
-                                    const isActivated = p.isActivated;
-                                    const isSelected = selectedPlayerForAction?.id === p.id;
-                                    const isStar = p.isStarPlayer;
-
-                                    return (
-                                        <div 
-                                            key={p.id}
-                                            onClick={() => { setSelectedPlayerForAction(p); setActiveTeamId(rosterViewId); }}
-                                            className={`glass-dark p-4 rounded-xl border-l-4 transition-all cursor-pointer group relative overflow-hidden ring-1 ring-white/5
-                                                ${isExhausted ? 'opacity-30 border-l-slate-800 grayscale scale-[0.98] pointer-events-none' : isActivated ? 'opacity-40 border-l-slate-500 grayscale-[0.8]' : 'border-l-primary hover:bg-white/5 hover:translate-y-[-2px]'}
-                                                ${isSelected ? 'ring-2 ring-gold/50 bg-gold/5 shadow-[0_0_20px_rgba(212,175,55,0.1)]' : ''}
-                                                ${p.isDistracted ? 'grayscale bg-white/5 ring-1 ring-red-500/10' : ''}
-                                                ${isStar ? 'ring-1 ring-gold/20' : ''}
-                                            `}
-                                        >
-                                            <div className="absolute top-1 right-1 flex gap-1">
-                                                {isStar && <span className="material-symbols-outlined text-gold text-xs">workspace_premium</span>}
-                                                {(p.gainedSkills || []).some(s => ['Coraje de Hierro', 'Iron Resolve', 'Stand Firm', 'Dodge'].includes(s)) && (
-                                                    <span className="material-symbols-outlined text-blue-400 text-xs animate-pulse">shield</span>
-                                                )}
-                                            </div>
-                                            <div className="flex items-start gap-3">
-                                                <div className="w-12 h-12 rounded-lg bg-black border border-white/10 shadow-inner flex items-center justify-center relative">
-                                                    <span className="text-xl font-black text-white/5">#{p.id.toString().slice(-2)}</span>
-                                                    {isActivated && !isExhausted && <div className="absolute inset-0 bg-primary/20 flex items-center justify-center"><span className="material-symbols-outlined text-midnight text-xs font-black">check</span></div>}
-                                                </div>
-                                                <div className="flex flex-col min-w-0">
-                                                    <span className="text-[10px] font-bold text-primary">#{p.id.toString().slice(-2)}</span>
-                                                    <span className="text-sm font-black leading-tight uppercase truncate text-diente-orco">{p.customName}</span>
-                                                    <span className="text-[9px] font-medium italic uppercase tracking-wider truncate text-slate-500">{p.position}</span>
-                                                </div>
-                                            </div>
-                                            {p.isDistracted && <div className="absolute bottom-2 right-2 text-red-500"><span className="material-symbols-outlined text-sm">psychology_alt</span></div>}
-                                        </div>
-                                    );
-                                })}
+                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 h-full min-h-0">
+                                <MatchTeamRoster
+                                    team={liveHomeTeam}
+                                    side="home"
+                                    activeTeamId={activeTeamId}
+                                    selectedPlayerId={selectedPlayerForAction?.id ?? null}
+                                    onSelectPlayer={(player) => openPlayerActionPanel(player, 'home')}
+                                />
+                                <MatchTeamRoster
+                                    team={liveOpponentTeam}
+                                    side="opponent"
+                                    activeTeamId={activeTeamId}
+                                    selectedPlayerId={selectedPlayerForAction?.id ?? null}
+                                    onSelectPlayer={(player) => openPlayerActionPanel(player, 'opponent')}
+                                />
                             </div>
                         ) : (
                             <div className="h-full bg-black/40 rounded-3xl border border-white/5 p-4 flex flex-col items-center justify-center relative overflow-hidden group">
@@ -275,11 +276,21 @@ const MatchInProgress: React.FC = () => {
                                     <span className="material-symbols-outlined text-[30rem] font-black group-hover:scale-110 transition-transform duration-[5s]">shield</span>
                                 </div>
                                 <div className="w-full max-w-4xl">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">
+                                            <span className="material-symbols-outlined text-primary text-lg">stadium</span>
+                                            Vista táctica
+                                        </div>
+                                        <div className="flex bg-black/40 rounded-lg p-1 border border-white/5">
+                                            <button onClick={() => setRosterViewId('home')} className={`px-3 py-1 rounded-md text-[9px] font-black transition-all ${rosterViewId === 'home' ? 'bg-primary text-midnight shadow-lg' : 'text-slate-500 hover:text-white'}`}>LOCAL</button>
+                                            <button onClick={() => setRosterViewId('opponent')} className={`px-3 py-1 rounded-md text-[9px] font-black transition-all ${rosterViewId === 'opponent' ? 'bg-primary text-midnight shadow-lg' : 'text-slate-500 hover:text-white'}`}>RIVAL</button>
+                                        </div>
+                                    </div>
                                     <MiniField 
                                         players={(rosterViewId === 'home' ? liveHomeTeam : liveOpponentTeam).players} 
                                         teamColor={rosterViewId === 'home' ? 'bg-primary' : 'bg-slate-700'}
                                         onPlayerMove={(pid, pos) => handlePlayerMove(rosterViewId, pid, pos)}
-                                        onPlayerClick={(p) => { setSelectedPlayerForAction(p); setActiveTeamId(rosterViewId); }}
+                                        onPlayerClick={(p) => openPlayerActionPanel(p, rosterViewId)}
                                         ballCarrierId={ballCarrierId}
                                     />
                                     <div className="mt-6 flex justify-center">
