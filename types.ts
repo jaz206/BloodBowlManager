@@ -237,6 +237,7 @@ export interface Competition {
   name: string;
   ownerId: string;
   ownerName?: string;
+  createdBy?: string;
   format: 'Liguilla' | 'Torneo';
   status: 'Open' | 'In Progress' | 'Finished';
   visibility?: 'Public' | 'Private'; // Nueva propiedad

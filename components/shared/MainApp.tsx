@@ -360,11 +360,15 @@ const MainApp: React.FC = () => {
     if (!user || !db) return;
     setSyncState('syncing');
     try {
+      const competitionPayload = {
+        ...newCompData,
+        createdBy: newCompData.createdBy || user.id,
+      };
       if (isGuest) {
-        setLeagues(prev => [...prev, { ...newCompData, id: `temp_comp_${Date.now()}` } as League]);
+        setLeagues(prev => [...prev, { ...competitionPayload, id: `temp_comp_${Date.now()}` } as League]);
       } else {
         await addDoc(collection(db, 'leagues'), {
-          ...newCompData,
+          ...competitionPayload,
           createdAt: serverTimestamp()
         });
       }

@@ -6,6 +6,8 @@ import PencilIcon from '../../components/icons/PencilIcon';
 import CalendarIcon from '../../components/icons/CalendarIcon';
 import QrCodeIcon from '../../components/icons/QrCodeIcon';
 import { TeamDashboard } from '../../components/guild/TeamDashboard';
+import { cloneCompetition, generateBracket, generateSchedule } from './competitionUtils';
+import LeaguesTabbedList from './LeaguesTabbedList';
 
 declare global {
     interface Window {
@@ -17,100 +19,6 @@ declare const QRCode: any;
 declare const Html5Qrcode: any;
 
 const trophyImageUrl = 'https://i.pinimg.com/736x/95/dc/9a/95dc9a37df924d550e9922dbf37b9089.jpg';
-
-const cloneCompetition = (comp: Competition): Competition => {
-    const newComp: Competition = {
-        id: comp.id,
-        name: comp.name,
-        format: comp.format,
-        teams: comp.teams.map(t => ({ ...t })),
-        ownerId: comp.ownerId,
-        ownerName: comp.ownerName,
-        status: comp.status,
-        rules: comp.rules ? { ...comp.rules } : undefined,
-        reports: comp.reports ? [...comp.reports] : [],
-    };
-    if (comp.schedule) {
-        newComp.schedule = {};
-        for (const round in comp.schedule) {
-            if (Object.prototype.hasOwnProperty.call(comp.schedule, round)) {
-                newComp.schedule[round] = comp.schedule[round].map(matchup => ({ ...matchup }));
-            }
-        }
-    } else {
-        newComp.schedule = null;
-    }
-    if (comp.bracket) {
-        newComp.bracket = {};
-        for (const round in comp.bracket) {
-            if (Object.prototype.hasOwnProperty.call(comp.bracket, round)) {
-                newComp.bracket[round] = comp.bracket[round].map(matchup => ({ ...matchup }));
-            }
-        }
-    } else {
-        newComp.bracket = null;
-    }
-    return newComp;
-};
-
-const generateSchedule = (teamNames: string[]): Record<string, Matchup[]> => {
-    const teams = [...teamNames];
-    if (teams.length % 2 !== 0) {
-        teams.push('BYE');
-    }
-    const numTeams = teams.length;
-    const rounds: Record<string, Matchup[]> = {};
-    const teamIndices = teams.map((_, i) => i);
-    for (let r = 0; r < numTeams - 1; r++) {
-        const round: Matchup[] = [];
-        for (let i = 0; i < numTeams / 2; i++) {
-            const team1Index = teamIndices[i];
-            const team2Index = teamIndices[numTeams - 1 - i];
-            if (teams[team1Index] !== 'BYE' && teams[team2Index] !== 'BYE') {
-                round.push({ team1: teams[team1Index], team2: teams[team2Index] });
-            }
-        }
-        rounds[r.toString()] = round;
-        const last = teamIndices.pop()!;
-        teamIndices.splice(1, 0, last);
-    }
-    return rounds;
-};
-
-const generateBracket = (teamNames: string[]): Record<string, Matchup[]> => {
-    const shuffledTeams = [...teamNames].sort(() => 0.5 - Math.random());
-    let numTeams = shuffledTeams.length;
-    const nextPowerOfTwo = Math.pow(2, Math.ceil(Math.log2(numTeams)));
-    const byesToAdd = nextPowerOfTwo - numTeams;
-    for (let i = 0; i < byesToAdd; i++) {
-        shuffledTeams.push('BYE');
-    }
-    numTeams = nextPowerOfTwo;
-    const bracket: Record<string, Matchup[]> = {};
-    const firstRound: Matchup[] = [];
-    for (let i = 0; i < numTeams; i += 2) {
-        const match: Matchup = { team1: shuffledTeams[i], team2: shuffledTeams[i + 1] || 'BYE' };
-        if (match.team1 === 'BYE') match.winner = match.team2;
-        if (match.team2 === 'BYE') match.winner = match.team1;
-        firstRound.push(match);
-    }
-    bracket['0'] = firstRound;
-    let currentRound = firstRound;
-    let roundIndex = 1;
-    while (currentRound.length > 1) {
-        const nextRound: Matchup[] = [];
-        for (let i = 0; i < currentRound.length; i += 2) {
-            nextRound.push({
-                team1: currentRound[i].winner || 'Por determinar',
-                team2: currentRound[i + 1]?.winner || 'Por determinar',
-            });
-        }
-        bracket[roundIndex.toString()] = nextRound;
-        currentRound = nextRound;
-        roundIndex++;
-    }
-    return bracket;
-};
 
 interface LeaguesProps {
     managedTeams: ManagedTeam[];
@@ -1439,260 +1347,27 @@ export const Leagues: React.FC<LeaguesProps> = ({
         );
     };
 
-    const renderCompCard = (c: Competition, myTeamInComp?: import('../../types').CompetitionTeam) => {
-        const statusColor = c.status === 'Open' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : (c.status === 'In Progress' ? 'bg-yellow-400 shadow-[0_0_8px_rgba(234,179,8,0.5)]' : 'bg-slate-500');
-        return (
-            <div key={c.id} className="group bg-zinc-900/40 border border-white/5 p-6 rounded-[2rem] hover:bg-zinc-800/60 transition-all relative overflow-hidden cursor-pointer" onClick={() => { setSelectedCompetition(c); setView('detail'); }}>
-                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2 group-hover:bg-primary/10 transition-colors" />
-                <div className="relative z-10 flex flex-col gap-3">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 min-w-0">
-                            <span className={`w-2 h-2 shrink-0 rounded-full ${statusColor}`} />
-                            <h3 className="text-xl font-black text-white uppercase italic tracking-tight truncate group-hover:text-primary transition-colors">{c.name}</h3>
-                        </div>
-                        <span className="shrink-0 ml-2 text-[9px] font-black bg-white/5 text-slate-400 px-2 py-1 rounded-lg uppercase tracking-widest">{c.format === 'Liguilla' ? 'LIGA' : 'TORNEO'}</span>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                        <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[13px] text-primary/50">person</span> {c.ownerName}</span>
-                        <span className="w-1 h-1 rounded-full bg-slate-700" />
-                        <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[13px] text-primary/50">groups</span> {c.teams.length}{c.maxTeams ? `/${c.maxTeams}` : ''} equipos</span>
-                        {c.rules?.reglamento && <><span className="w-1 h-1 rounded-full bg-slate-700" /><span className="text-primary/60">{c.rules.reglamento}</span></>}
-                    </div>
-
-                    {myTeamInComp && (
-                        <div className="mt-2 pt-3 border-t border-white/5 flex items-center justify-between">
-                            <div className="flex gap-4">
-                                <div>
-                                    <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Tu equipo</p>
-                                    <p className="text-[11px] font-black text-white italic truncate max-w-[130px]">{myTeamInComp.teamName}</p>
-                                </div>
-                                {myTeamInComp.stats && (
-                                    <div>
-                                        <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Record</p>
-                                        <p className="text-[11px] font-black text-primary italic">{myTeamInComp.stats.won}V {myTeamInComp.stats.drawn}E {myTeamInComp.stats.lost}D</p>
-                                    </div>
-                                )}
-                                {myTeamInComp.stats && (
-                                    <div>
-                                        <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Puntos</p>
-                                        <p className="text-[11px] font-black text-yellow-400 italic">{(myTeamInComp.stats.won||0)*3 + (myTeamInComp.stats.drawn||0)} PTS</p>
-                                    </div>
-                                )}
-                            </div>
-                            <span className="material-symbols-outlined text-primary/40 text-sm">arrow_forward_ios</span>
-                        </div>
-                    )}
-                </div>
-            </div>
-        );
-    };
-
-    const renderTabbedList = () => (
-        <div className="p-2 sm:p-4 max-w-5xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* Header / Tabs */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/5 pb-6">
-                <h1 className="text-4xl font-black text-white italic uppercase tracking-tighter">
-                    La <span className="text-primary italic">Arena</span>
-                </h1>
-                <div className="flex flex-wrap gap-1 bg-zinc-900/60 p-1 rounded-2xl border border-white/5 backdrop-blur-md">
-                    {[
-                        { id: 'my-leagues', label: 'Mis Ligas', icon: 'emoji_events' },
-                        { id: 'my-tournaments', label: 'Mis Torneos', icon: 'bolt' },
-                        { id: 'discover', label: 'Descubrir', icon: 'explore' },
-                        { id: 'organization', label: 'Organización', icon: 'admin_panel_settings' },
-                    ].map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id as any)}
-                            className={`flex items-center gap-1.5 px-4 sm:px-5 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === tab.id ? 'bg-primary text-black shadow-lg shadow-primary/20' : 'text-slate-500 hover:text-white'}`}
-                        >
-                            <span className="material-symbols-outlined text-sm font-bold">{tab.icon}</span>
-                            <span className="hidden sm:inline">{tab.label}</span>
-                        </button>
-                    ))}
-                </div>
-            </div>
-
-            {/* MIS LIGAS */}
-            {activeTab === 'my-leagues' && (
-                <div className="space-y-4">
-                    {myLeagues.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {myLeagues.map(c => renderCompCard(c, c.teams.find(t => t.ownerId === user?.id)))}
-                        </div>
-                    ) : (
-                        <div className="py-24 text-center bg-zinc-900/20 rounded-[2.5rem] border border-dashed border-white/5 space-y-4">
-                            <span className="material-symbols-outlined text-7xl text-white/5 block">emoji_events</span>
-                            <p className="text-white font-black italic uppercase text-lg">No participas en ninguna liga</p>
-                            <p className="text-slate-500 font-bold italic uppercase tracking-widest text-xs">Ve a la pestaña Descubrir o crea la tuya en Organización</p>
-                            <button onClick={() => setActiveTab('discover')} className="mt-4 px-8 py-3 bg-primary/20 text-primary border border-primary/30 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-primary hover:text-black transition-all">
-                                Explorar Ligas Públicas
-                            </button>
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {/* MIS TORNEOS */}
-            {activeTab === 'my-tournaments' && (
-                <div className="space-y-4">
-                    {myTournaments.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {myTournaments.map(c => renderCompCard(c, c.teams.find(t => t.ownerId === user?.id)))}
-                        </div>
-                    ) : (
-                        <div className="py-24 text-center bg-zinc-900/20 rounded-[2.5rem] border border-dashed border-white/5 space-y-4">
-                            <span className="material-symbols-outlined text-7xl text-white/5 block">bolt</span>
-                            <p className="text-white font-black italic uppercase text-lg">No participas en ningún torneo</p>
-                            <p className="text-slate-500 font-bold italic uppercase tracking-widest text-xs">Espera una invitación o únete a torneos públicos</p>
-                            <button onClick={() => setActiveTab('discover')} className="mt-4 px-8 py-3 bg-primary/20 text-primary border border-primary/30 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-primary hover:text-black transition-all">
-                                Explorar Torneos Públicos
-                            </button>
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {/* DESCUBRIR */}
-            {activeTab === 'discover' && (
-                <div className="space-y-8">
-                    <div className="space-y-3">
-                        <h2 className="text-lg font-black text-white uppercase tracking-widest italic flex items-center gap-2">
-                            <span className="material-symbols-outlined text-primary">emoji_events</span>
-                            Ligas Abiertas
-                        </h2>
-                        {publicLeagues.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {publicLeagues.map(c => (
-                                    <div key={c.id} className="bg-zinc-900/40 border border-white/5 p-6 rounded-[2rem] flex justify-between items-center group relative overflow-hidden">
-                                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2" />
-                                        <div className="min-w-0 relative z-10 space-y-2">
-                                            <p className="text-xl font-black text-white italic uppercase truncate group-hover:text-primary transition-colors">{c.name}</p>
-                                            <div className="flex flex-wrap items-center gap-3 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                                                <span>{c.ownerName}</span>
-                                                <span className="w-1 h-1 rounded-full bg-slate-700" />
-                                                <span>{c.teams.length}{c.maxTeams ? `/${c.maxTeams}` : ''} equipos</span>
-                                            </div>
-                                        </div>
-                                        <button
-                                            onClick={() => setJoinModalState({ comp: c, teamToJoin: managedTeams[0]?.name || '' })}
-                                            className="relative z-10 bg-primary/10 hover:bg-primary text-primary hover:text-black px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border border-primary/20 shrink-0"
-                                        >
-                                            Inscribirse
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="py-10 text-center bg-zinc-900/20 rounded-[2rem] border border-dashed border-white/5">
-                                <p className="text-slate-500 font-bold italic uppercase tracking-widest text-xs">No hay ligas abiertas ahora mismo</p>
-                            </div>
-                        )}
-                    </div>
-                    <div className="space-y-3">
-                        <h2 className="text-lg font-black text-white uppercase tracking-widest italic flex items-center gap-2">
-                            <span className="material-symbols-outlined text-primary">bolt</span>
-                            Torneos Abiertos
-                        </h2>
-                        {publicTournaments.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {publicTournaments.map(c => (
-                                    <div key={c.id} className="bg-zinc-900/40 border border-white/5 p-6 rounded-[2rem] flex justify-between items-center group relative overflow-hidden">
-                                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2" />
-                                        <div className="min-w-0 relative z-10 space-y-2">
-                                            <p className="text-xl font-black text-white italic uppercase truncate group-hover:text-primary transition-colors">{c.name}</p>
-                                            <div className="flex flex-wrap items-center gap-3 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                                                <span>{c.ownerName}</span>
-                                                <span className="w-1 h-1 rounded-full bg-slate-700" />
-                                                <span>{c.teams.length}{c.maxTeams ? `/${c.maxTeams}` : ''} equipos</span>
-                                            </div>
-                                        </div>
-                                        <button
-                                            onClick={() => setJoinModalState({ comp: c, teamToJoin: managedTeams[0]?.name || '' })}
-                                            className="relative z-10 bg-primary/10 hover:bg-primary text-primary hover:text-black px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border border-primary/20 shrink-0"
-                                        >
-                                            Inscribirse
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="py-10 text-center bg-zinc-900/20 rounded-[2rem] border border-dashed border-white/5">
-                                <p className="text-slate-500 font-bold italic uppercase tracking-widest text-xs">No hay torneos abiertos ahora mismo</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
-
-            {/* ORGANIZACIÓN */}
-            {activeTab === 'organization' && (
-                <div className="space-y-8">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div>
-                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Tu área de gestión</p>
-                            <h2 className="text-2xl font-black text-white italic uppercase tracking-tight">Organización</h2>
-                        </div>
-                        <button
-                            onClick={() => setView('create')}
-                            className="bg-primary text-black font-black px-8 py-4 rounded-2xl flex items-center gap-2 transition-all hover:scale-105 active:scale-95 uppercase tracking-tighter text-[10px] shadow-xl shadow-primary/10"
-                        >
-                            <span className="material-symbols-outlined font-bold text-sm">add_circle</span>
-                            Nueva Competición
-                        </button>
-                    </div>
-
-                    {myCompetitions.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {myCompetitions.map(c => (
-                                <div
-                                    key={c.id}
-                                    className="group bg-zinc-900/40 border border-white/5 p-6 rounded-[2rem] hover:bg-zinc-800/60 transition-all flex justify-between items-center relative overflow-hidden"
-                                >
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2 group-hover:bg-primary/10 transition-colors" />
-                                    <div className="relative z-10 flex flex-col gap-2 min-w-0">
-                                        <div className="flex items-center gap-2">
-                                            <span className={`w-2 h-2 rounded-full ${c.status === 'Open' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : (c.status === 'In Progress' ? 'bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.5)]' : 'bg-slate-500')}`} />
-                                            <h3 className="text-xl font-black text-white uppercase italic tracking-tight truncate group-hover:text-primary transition-colors">{c.name}</h3>
-                                        </div>
-                                        <div className="flex flex-wrap items-center gap-3 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                                            <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">military_tech</span> {c.format}</span>
-                                            <span className="w-1 h-1 rounded-full bg-slate-700" />
-                                            <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">groups</span> {c.teams.length}{c.maxTeams ? `/${c.maxTeams}` : ''} participantes</span>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-3 relative z-10 shrink-0">
-                                        <div className="text-right hidden sm:block">
-                                            <span className={`block text-[10px] font-black uppercase italic px-2 py-1 rounded-lg ${
-                                                c.status === 'Open' ? 'bg-green-500/10 text-green-400' : c.status === 'In Progress' ? 'bg-yellow-500/10 text-yellow-400' : 'bg-slate-800 text-slate-500'
-                                            }`}>{c.status}</span>
-                                        </div>
-                                        <button
-                                            onClick={() => { setSelectedCompetition(c); setView('detail'); }}
-                                            className="w-12 h-12 rounded-2xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center hover:bg-primary hover:text-black transition-all shadow-lg hover:shadow-primary/20"
-                                        >
-                                            <span className="material-symbols-outlined font-bold">settings</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="py-24 text-center bg-zinc-900/20 rounded-[2.5rem] border border-dashed border-white/5 space-y-4">
-                            <span className="material-symbols-outlined text-7xl text-white/5 block">admin_panel_settings</span>
-                            <p className="text-white font-black italic uppercase text-lg">Aún no has creado ninguna competición</p>
-                            <p className="text-slate-500 font-bold italic uppercase tracking-widest text-xs">Crea tu primera liga o torneo para empezar</p>
-                        </div>
-                    )}
-                </div>
-            )}
-        </div>
-    );
-
     return (
         <div className="min-h-screen pb-20">
             <AnimatePresence mode="wait">
-                {view === 'list' && <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>{renderTabbedList()}</motion.div>}
+                {view === 'list' && (
+                    <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                        <LeaguesTabbedList
+                            activeTab={activeTab}
+                            setActiveTab={setActiveTab}
+                            myLeagues={myLeagues}
+                            myTournaments={myTournaments}
+                            publicLeagues={publicLeagues}
+                            publicTournaments={publicTournaments}
+                            myCompetitions={myCompetitions}
+                            user={user}
+                            defaultTeamName={managedTeams[0]?.name || ''}
+                            onOpenCompetition={(c) => { setSelectedCompetition(c); setView('detail'); }}
+                            onJoinCompetition={(c, teamName) => setJoinModalState({ comp: c, teamToJoin: teamName })}
+                            onCreateCompetition={() => setView('create')}
+                        />
+                    </motion.div>
+                )}
                 {view === 'create' && <motion.div key="create" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>{renderCreateView()}</motion.div>}
                 {view === 'detail' && <motion.div key="detail" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}>{renderDetailView()}</motion.div>}
             </AnimatePresence>

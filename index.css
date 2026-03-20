@@ -44,10 +44,6 @@ h1, h2, h3, h4, .font-display {
     text-transform: uppercase; 
 }
 
-.radar-chart {
-    clip-path: polygon(50% 0%, 100% 38%, 81% 100%, 19% 100%, 0% 38%);
-}
-
 .material-symbols-outlined {
     font-family: 'Material Symbols Outlined', sans-serif !important;
 }
@@ -139,6 +135,15 @@ h1, h2, h3, h4, .font-display {
 .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: #CA8A04; border-radius: 10px; }
 
+.animate-fade-in-slow {
+    animation: fade-in-slow 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fade-in-slow {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 .parchment-scrollbar::-webkit-scrollbar { width: 4px; }
 .parchment-scrollbar::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.05); }
 .parchment-scrollbar::-webkit-scrollbar-thumb { background: rgba(139, 0, 0, 0.3); border-radius: 10px; }
@@ -147,14 +152,6 @@ h1, h2, h3, h4, .font-display {
     mask-image: radial-gradient(circle, black 60%, transparent 100%);
     -webkit-mask-image: radial-gradient(circle, black 60%, transparent 100%);
     filter: sepia(0.3) contrast(1.1) brightness(0.9);
-}
-
-@keyframes progress {
-    from { width: 0%; }
-    to { width: 100%; }
-}
-.progress-bar-20s {
-    animation: progress 20s linear infinite;
 }
 
 @keyframes progress30 {
@@ -195,6 +192,15 @@ h1, h2, h3, h4, .font-display {
 
 .scrollbar-hide::-webkit-scrollbar {
     display: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 
 @keyframes spin-slow {

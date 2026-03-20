@@ -4,27 +4,11 @@ import { useMasterData } from '../../hooks/useMasterData';
 import { useLanguage } from '../../contexts/LanguageContext';
 import SearchIcon from '../icons/SearchIcon';
 import type { Team, StarPlayer, Skill, Inducement } from '../../types';
+import AdminGeneralForm from './AdminGeneralForm';
+import { downloadCSV, parseCSV, transformGitHubUrl } from './adminPanelUtils';
+import AdminFeedbackOverlays from './AdminFeedbackOverlays';
 
 type AdminTab = 'general' | 'heraldo' | 'arena' | 'teams' | 'stars' | 'skills' | 'inducements';
-
-const transformGitHubUrl = (url: string | undefined | null): string => {
-    if (!url || typeof url !== 'string') return url || '';
-
-    // Check if it's a standard GitHub URL with /blob/
-    if (url.includes('github.com') && url.includes('/blob/')) {
-        return url
-            .replace('github.com', 'raw.githubusercontent.com')
-            .replace('/blob/', '/');
-    }
-
-    // Check if it's already a raw URL but with /blob/ (some users copy it wrong)
-    if (url.includes('raw.githubusercontent.com') && url.includes('/blob/')) {
-        return url.replace('/blob/', '/');
-    }
-
-    return url;
-};
-
 import { useArenaConfig, ArenaConfig } from '../../hooks/useArenaConfig';
 import { PLAYER_NAMES } from '../../pages/Guild/playerNames';
 
@@ -147,24 +131,7 @@ const AdminPanel: React.FC = () => {
         fetchGitHubImages();
     }, [editingItem]);
 
-    // ─── CSV EXPORT ──────────────────────────────────────────────────────────
-    const escapeCSV = (val: any): string => {
-        if (val === null || val === undefined) return '';
-        const str = Array.isArray(val) ? val.join(' | ') : String(val);
-        return str.includes(',') || str.includes('"') || str.includes('\n')
-            ? `"${str.replace(/"/g, '""')}"`
-            : str;
-    };
-
-    const downloadCSV = (filename: string, rows: string[][]) => {
-        const csv = '\uFEFF' + rows.map(r => r.map(escapeCSV).join(',')).join('\r\n');
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = filename; a.click();
-        URL.revokeObjectURL(url);
-    };
-
+    // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ CSV EXPORT ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     const handleExportStars = () => {
         const headers = ['name', 'cost', 'MV', 'FU', 'AG', 'PA', 'AR', 'skills', 'playsFor', 'specialRules_es', 'specialRules_en', 'image'];
         const rows = [headers, ...starPlayers.map(s => [
@@ -182,7 +149,7 @@ const AdminPanel: React.FC = () => {
             s.image ?? '',
         ])];
         downloadCSV(`star_players_${new Date().toISOString().slice(0,10)}.csv`, rows);
-        showToast('✅ CSV de Star Players descargado.');
+        showToast('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ CSV de Star Players descargado.');
     };
 
     const handleExportTeams = () => {
@@ -199,32 +166,10 @@ const AdminPanel: React.FC = () => {
             (t as any).image ?? (t as any).crestImage ?? '',
         ])];
         downloadCSV(`teams_${new Date().toISOString().slice(0,10)}.csv`, rows);
-        showToast('✅ CSV de Equipos descargado.');
+        showToast('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ CSV de Equipos descargado.');
     };
 
-    // ─── CSV IMPORT ──────────────────────────────────────────────────────────
-    const parseCSV = (text: string): { headers: string[]; rows: Record<string, string>[] } => {
-        const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').filter(Boolean);
-        const splitLine = (line: string): string[] => {
-            const result: string[] = [];
-            let cur = '', inQ = false;
-            for (let i = 0; i < line.length; i++) {
-                const c = line[i];
-                if (c === '"') { if (inQ && line[i+1] === '"') { cur += '"'; i++; } else inQ = !inQ; }
-                else if (c === ',' && !inQ) { result.push(cur.trim()); cur = ''; }
-                else cur += c;
-            }
-            result.push(cur.trim());
-            return result;
-        };
-        const headers = splitLine(lines[0].replace(/^\uFEFF/, ''));
-        const rows = lines.slice(1).map(l => {
-            const vals = splitLine(l);
-            return Object.fromEntries(headers.map((h, i) => [h, vals[i] ?? '']));
-        });
-        return { headers, rows };
-    };
-
+    // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ CSV IMPORT ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!importTarget || !e.target.files?.length) return;
         const file = e.target.files[0];
@@ -237,7 +182,7 @@ const AdminPanel: React.FC = () => {
         const required = importTarget === 'stars' ? requiredStars : requiredTeams;
         const missing = required.filter(h => !headers.includes(h));
         if (missing.length) {
-            showToast(`❌ Columnas faltantes: ${missing.join(', ')}`, 'error');
+            showToast(`ÃƒÂ¢Ã‚ÂÃ…â€™ Columnas faltantes: ${missing.join(', ')}`, 'error');
             return;
         }
 
@@ -288,18 +233,18 @@ const AdminPanel: React.FC = () => {
         setIsImporting(false);
         refresh();
         if (errs.length === 0) {
-            showToast(`✅ ${rows.length} registros importados correctamente.`);
+            showToast(`ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ ${rows.length} registros importados correctamente.`);
             setImportProgress(null);
         } else {
-            showToast(`⚠️ Importación completada con ${errs.length} errores.`, 'error');
+            showToast(`ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â ImportaciÃƒÆ’Ã‚Â³n completada con ${errs.length} errores.`, 'error');
         }
     };
 
     const handleSync = async (force = false) => {
-        const title = force ? '⚠️ Restablecimiento Total' : '🔄 Sincronización Inteligente';
+        const title = force ? 'ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Restablecimiento Total' : 'ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Å¾ SincronizaciÃƒÆ’Ã‚Â³n Inteligente';
         const message = force
-            ? '¡PELIGRO! Esto borrará TODOS los cambios en Firestore (incluyendo imágenes y arreglos manuales) y los reemplazará por los valores del código fuente. Esta acción es IRREVERSIBLE.'
-            : 'Esta acción buscará nuevos equipos o habilidades en el código y los añadirá a Firestore SIN borrar tus fotos ni cambios manuales.';
+            ? 'Ãƒâ€šÃ‚Â¡PELIGRO! Esto borrarÃƒÆ’Ã‚Â¡ TODOS los cambios en Firestore (incluyendo imÃƒÆ’Ã‚Â¡genes y arreglos manuales) y los reemplazarÃƒÆ’Ã‚Â¡ por los valores del cÃƒÆ’Ã‚Â³digo fuente. Esta acciÃƒÆ’Ã‚Â³n es IRREVERSIBLE.'
+            : 'Esta acciÃƒÆ’Ã‚Â³n buscarÃƒÆ’Ã‚Â¡ nuevos equipos o habilidades en el cÃƒÆ’Ã‚Â³digo y los aÃƒÆ’Ã‚Â±adirÃƒÆ’Ã‚Â¡ a Firestore SIN borrar tus fotos ni cambios manuales.';
 
         setConfirmModal({
             title,
@@ -312,8 +257,8 @@ const AdminPanel: React.FC = () => {
                     await syncMasterData(force);
                     setSyncProgress('done');
                     showToast(force
-                        ? '✅ Base de datos restablecida por completo.'
-                        : '✅ Sincronización completada. Nuevos elementos añadidos preservando tus cambios.');
+                        ? 'ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Base de datos restablecida por completo.'
+                        : 'ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ SincronizaciÃƒÆ’Ã‚Â³n completada. Nuevos elementos aÃƒÆ’Ã‚Â±adidos preservando tus cambios.');
                     setTimeout(() => setSyncProgress('idle'), 3000);
                 } catch (err: any) {
                     console.error('Error syncing:', err);
@@ -354,12 +299,12 @@ const AdminPanel: React.FC = () => {
                 } else {
                     await updateMasterItem('heraldo', editingItem.data.title, editingItem.data);
                 }
-                showToast('✅ Noticia guardada con éxito en la Base de Datos.');
+                showToast('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Noticia guardada con ÃƒÆ’Ã‚Â©xito en la Base de Datos.');
             }
 
             // This toast is for all other types that don't have a specific success message
             if (type !== 'heraldo') {
-                showToast('✅ Cambios guardados con éxito en la Base de Datos.');
+                showToast('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Cambios guardados con ÃƒÆ’Ã‚Â©xito en la Base de Datos.');
             }
             setEditingItem(null);
             refresh();
@@ -399,7 +344,7 @@ const AdminPanel: React.FC = () => {
                         </span>
                         <div>
                             <h2 className="text-4xl font-display font-black text-white italic tracking-tighter uppercase leading-none">Nursery de Nuffle</h2>
-                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em] mt-1 ml-1">Módulo de Administración de Datos Maestros</p>
+                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em] mt-1 ml-1">MÃƒÆ’Ã‚Â³dulo de AdministraciÃƒÆ’Ã‚Â³n de Datos Maestros</p>
                         </div>
                     </div>
                 </div>
@@ -433,7 +378,7 @@ const AdminPanel: React.FC = () => {
                         ) : (
                             <span className="material-symbols-outlined text-sm">sync</span>
                         )}
-                        {syncProgress === 'syncing' ? 'Sincronizando...' : syncProgress === 'done' ? '¡Completado!' : syncProgress === 'error' ? 'Error' : 'Sincronización Inteligente'}
+                        {syncProgress === 'syncing' ? 'Sincronizando...' : syncProgress === 'done' ? 'Ãƒâ€šÃ‚Â¡Completado!' : syncProgress === 'error' ? 'Error' : 'SincronizaciÃƒÆ’Ã‚Â³n Inteligente'}
                     </button>
                 </div>
             </header>
@@ -466,66 +411,21 @@ const AdminPanel: React.FC = () => {
                     className="space-y-8"
                 >
                     {activeTab === 'general' ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            {/* Hero Card */}
-                            <div className="glass-panel p-8 border-white/5 relative overflow-hidden group">
-                                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                                    <span className="material-symbols-outlined text-8xl">image</span>
-                                </div>
-                                <h4 className="text-xl font-display font-black text-white uppercase italic mb-4">Imagen de Cabecera</h4>
-                                <p className="text-sm text-slate-400 mb-6 max-w-sm">Esta es la imagen principal que aparece en el Inicio de la aplicación. Usa una URL directa de alta calidad.</p>
-
-                                <div className="relative mb-6 aspect-video rounded-2xl border border-white/10 bg-black/40 overflow-hidden shadow-2xl">
-                                    {heroImage ? (
-                                        <img src={heroImage} alt="Hero" className="w-full h-full object-cover" />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-slate-600 italic text-xs">Sin imagen configurada</div>
-                                    )}
-                                </div>
-
-                                <button
-                                    onClick={() => setEditingItem({ type: 'hero', data: { url: heroImage || '' } })}
-                                    className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white font-display font-black uppercase tracking-[0.2em] text-[10px] hover:bg-premium-gold hover:text-black hover:border-premium-gold transition-all"
-                                >
-                                    Editar Imagen Hero
-                                </button>
-                            </div>
-
-                            {/* Stats Card */}
-                            <div className="glass-panel p-8 border-white/5 flex flex-col justify-between">
-                                <div>
-                                    <h4 className="text-xl font-display font-black text-white uppercase italic mb-6">Estadísticas de Nuffle</h4>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        {[
-                                            { label: 'Facciones', val: teams.length, icon: 'groups' },
-                                            { label: 'Habilidades', val: skills.length, icon: 'bolt' },
-                                            { label: 'Star Players', val: starPlayers.length, icon: 'star' },
-                                            { label: 'Incentivos', val: inducements.length, icon: 'payments' },
-                                        ].map(stat => (
-                                            <div key={stat.label} className="bg-black/40 p-4 rounded-xl border border-white/5">
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <span className="material-symbols-outlined text-sm text-premium-gold">{stat.icon}</span>
-                                                    <span className="text-[10px] text-slate-500 font-bold uppercase truncate">{stat.label}</span>
-                                                </div>
-                                                <div className="text-2xl font-display font-black text-white italic">{stat.val}</div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                                <div className="mt-6 pt-6 border-t border-white/5">
-                                    <p className="text-[10px] text-slate-500 font-bold uppercase leading-relaxed italic">
-                                        * Los cambios realizados en el resto de pestañas se guardan directamente en Firestore y se reflejan instantáneamente para todos los usuarios.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                        <AdminGeneralForm
+                            heroImage={heroImage}
+                            teams={teams}
+                            skills={skills}
+                            starPlayers={starPlayers}
+                            inducements={inducements}
+                            setEditingItem={setEditingItem}
+                        />
                     ) : activeTab === 'arena' ? (
                         <div className="space-y-8">
                             <div className="glass-panel p-8 border-white/5 bg-black/40">
                                 <div className="flex justify-between items-center mb-8">
                                     <div>
                                         <h4 className="text-2xl font-display font-black text-white uppercase italic tracking-tighter">Reglamento de la Arena</h4>
-                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Configuración dinámica de SPP, Economía y Dados</p>
+                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">ConfiguraciÃƒÆ’Ã‚Â³n dinÃƒÆ’Ã‚Â¡mica de SPP, EconomÃƒÆ’Ã‚Â­a y Dados</p>
                                     </div>
                                     <button 
                                         onClick={() => setEditingItem({ type: 'arena', data: { ...arenaConfig } })}
@@ -557,7 +457,7 @@ const AdminPanel: React.FC = () => {
                                     <div className="bg-white/5 rounded-2xl p-6 border border-white/5 space-y-4">
                                         <div className="flex items-center gap-3 mb-2">
                                             <span className="material-symbols-outlined text-green-500">payments</span>
-                                            <span className="text-[10px] font-black text-white uppercase tracking-widest">Economía & Bonos</span>
+                                            <span className="text-[10px] font-black text-white uppercase tracking-widest">EconomÃƒÆ’Ã‚Â­a & Bonos</span>
                                         </div>
                                         <div className="space-y-2">
                                             <div className="flex justify-between items-center text-sm">
@@ -579,11 +479,11 @@ const AdminPanel: React.FC = () => {
                                     <div className="bg-white/5 rounded-2xl p-6 border border-white/5 space-y-4">
                                         <div className="flex items-center gap-3 mb-2">
                                             <span className="material-symbols-outlined text-sky-500">casino</span>
-                                            <span className="text-[10px] font-black text-white uppercase tracking-widest">Configuración Dados</span>
+                                            <span className="text-[10px] font-black text-white uppercase tracking-widest">ConfiguraciÃƒÆ’Ã‚Â³n Dados</span>
                                         </div>
                                         <div className="space-y-2">
                                             <div className="flex justify-between items-center text-sm">
-                                                <span className="text-slate-500 uppercase text-[10px] font-bold">Recaudación</span>
+                                                <span className="text-slate-500 uppercase text-[10px] font-bold">RecaudaciÃƒÆ’Ã‚Â³n</span>
                                                 <span className="text-white font-black bg-sky-500/10 px-2 py-0.5 rounded text-[10px]">{arenaConfig.dice.winnings}</span>
                                             </div>
                                             <div className="flex justify-between items-center text-sm">
@@ -655,7 +555,7 @@ const AdminPanel: React.FC = () => {
                                 <div className="glass-panel p-5 border-sky-500/30 bg-black/60 space-y-3 animate-slide-in-up">
                                     <div className="flex justify-between items-center">
                                         <span className="text-[10px] font-display font-black text-sky-400 uppercase tracking-widest">
-                                            {isImporting ? `Importando... ${importProgress.done} / ${importProgress.total}` : `✅ Completado: ${importProgress.done} filas`}
+                                            {isImporting ? `Importando... ${importProgress.done} / ${importProgress.total}` : `ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Completado: ${importProgress.done} filas`}
                                         </span>
                                         {!isImporting && (
                                             <button onClick={() => setImportProgress(null)} className="text-slate-500 hover:text-white text-xs">
@@ -733,8 +633,8 @@ const AdminPanel: React.FC = () => {
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         setConfirmModal({
-                                                            title: '¿Eliminar Noticia?',
-                                                            message: `Vas a borrar permanentemente "${item.title}". Esta acción no se puede deshacer.`,
+                                                            title: 'Ãƒâ€šÃ‚Â¿Eliminar Noticia?',
+                                                            message: `Vas a borrar permanentemente "${item.title}". Esta acciÃƒÆ’Ã‚Â³n no se puede deshacer.`,
                                                             danger: true,
                                                             onConfirm: async () => {
                                                                 try {
@@ -768,12 +668,12 @@ const AdminPanel: React.FC = () => {
                                         <button
                                             onClick={() => setEditingItem({ 
                                                 type: 'heraldo', 
-                                                data: { type: 'skill', title: 'NUEVA NOTICIA', active: true, tag: 'Destacado', content: '', category: 'Sección de Habilidades' } 
+                                                data: { type: 'skill', title: 'NUEVA NOTICIA', active: true, tag: 'Destacado', content: '', category: 'SecciÃƒÆ’Ã‚Â³n de Habilidades' } 
                                             })}
                                             className="px-6 py-3 rounded-xl bg-premium-gold/10 border border-premium-gold/30 text-premium-gold font-display font-black uppercase tracking-widest text-[10px] hover:bg-premium-gold hover:text-black transition-all flex items-center gap-2"
                                         >
                                             <span className="material-symbols-outlined text-sm">add</span>
-                                            Añadir Noticia
+                                            AÃƒÆ’Ã‚Â±adir Noticia
                                         </button>
                                     </div>
                                 )}
@@ -783,1143 +683,26 @@ const AdminPanel: React.FC = () => {
                 </motion.div>
             </AnimatePresence>
 
-            {/* Editing Modal */}
-            <AnimatePresence>
-                {editingItem && (
-                    <div className="fixed inset-0 bg-black/95 backdrop-blur-xl flex items-center justify-center z-[200] p-4">
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="bg-zinc-950 border border-white/10 rounded-[2.5rem] shadow-[0_0_100px_rgba(0,0,0,0.8)] w-full max-w-3xl overflow-hidden relative"
-                        >
-                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-premium-gold to-transparent opacity-50"></div>
-
-                            {/* Modal Header */}
-                            <div className="p-8 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
-                                <div>
-                                    <span className="text-[10px] font-black text-premium-gold uppercase tracking-[0.4em] mb-1 block opacity-70">
-                                        Editor de {tabs.find(t => t.id === (editingItem.type === 'hero' ? 'general' : editingItem.type))?.label}
-                                    </span>
-                                    <h3 className="text-2xl font-display font-black text-white uppercase tracking-tighter italic leading-none">
-                                        {editingItem.type === 'hero' ? 'Configurar Fondo Hero' : (editingItem.data.name || editingItem.data.keyEN)}
-                                    </h3>
-                                </div>
-                                <button
-                                    onClick={() => setEditingItem(null)}
-                                    className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center text-slate-500 hover:text-white hover:border-white/30 transition-all hover:rotate-90 duration-500"
-                                >
-                                    <span className="material-symbols-outlined">close</span>
-                                </button>
-                            </div>
-
-                            {/* Modal Form */}
-                            <div className="p-10 max-h-[70vh] overflow-y-auto custom-scrollbar bg-black/40">
-                                <form onSubmit={handleSave} className="space-y-8">
-                                    <div className="grid grid-cols-1 gap-8">
-
-                                        {/* ARENA CONFIG EDITOR */}
-                                        {editingItem.type === 'arena' && (
-                                            <div className="space-y-10">
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                                                    {/* SPP */}
-                                                    <div className="space-y-4">
-                                                        <h5 className="text-[10px] font-black text-premium-gold uppercase tracking-[0.3em] mb-4">Recompensas SPP</h5>
-                                                        <div className="space-y-4 bg-black/40 p-6 rounded-2xl border border-white/5">
-                                                            {Object.entries(editingItem.data.spp).map(([key, value]) => (
-                                                                <div key={key} className="flex justify-between items-center gap-4">
-                                                                    <label className="text-[10px] font-bold text-slate-500 uppercase flex-1">{key}</label>
-                                                                    <input 
-                                                                        type="number"
-                                                                        value={value as number}
-                                                                        onChange={(e) => setEditingItem({
-                                                                            ...editingItem,
-                                                                            data: {
-                                                                                ...editingItem.data,
-                                                                                spp: { ...editingItem.data.spp, [key]: parseInt(e.target.value) || 0 }
-                                                                            }
-                                                                        })}
-                                                                        className="w-20 bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-center text-white text-xs outline-none focus:border-premium-gold"
-                                                                    />
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Economics */}
-                                                    <div className="space-y-4">
-                                                        <h5 className="text-[10px] font-black text-green-500 uppercase tracking-[0.3em] mb-4">Parámetros Económicos</h5>
-                                                        <div className="space-y-4 bg-black/40 p-6 rounded-2xl border border-white/5">
-                                                            {Object.entries(editingItem.data.economics).map(([key, value]) => (
-                                                                <div key={key} className="flex justify-between items-center gap-4">
-                                                                    <label className="text-[10px] font-bold text-slate-500 uppercase flex-1">{key.replace(/_/g, ' ')}</label>
-                                                                    <input 
-                                                                        type="number"
-                                                                        value={value as number}
-                                                                        onChange={(e) => setEditingItem({
-                                                                            ...editingItem,
-                                                                            data: {
-                                                                                ...editingItem.data,
-                                                                                economics: { ...editingItem.data.economics, [key]: parseInt(e.target.value) || 0 }
-                                                                            }
-                                                                        })}
-                                                                        className="w-24 bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-center text-white text-xs outline-none focus:border-green-500"
-                                                                    />
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                {/* Dice */}
-                                                <div className="space-y-4">
-                                                    <h5 className="text-[10px] font-black text-sky-500 uppercase tracking-[0.3em] mb-4">Lógica de Dados</h5>
-                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-black/40 p-6 rounded-2xl border border-white/5">
-                                                        {Object.entries(editingItem.data.dice).map(([key, value]) => (
-                                                            <div key={key} className="space-y-2">
-                                                                <label className="text-[10px] font-bold text-slate-500 uppercase block text-center italic">{key}</label>
-                                                                <input 
-                                                                    type="text"
-                                                                    value={value as string}
-                                                                    onChange={(e) => setEditingItem({
-                                                                        ...editingItem,
-                                                                        data: {
-                                                                            ...editingItem.data,
-                                                                            dice: { ...editingItem.data.dice, [key]: e.target.value }
-                                                                        }
-                                                                    })}
-                                                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-2 px-4 text-center text-white text-xs font-black outline-none focus:border-sky-500"
-                                                                    placeholder="Ej: 1D3"
-                                                                />
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* IMAGE EXPLORER / DATA URL FIELD */}
-                                        {(editingItem.type === 'hero' || editingItem.type === 'teams' || editingItem.type === 'stars' || editingItem.type === 'heraldo') && (
-                                            <div className="space-y-6">
-                                                <div className="flex justify-between items-end">
-                                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Origen de la Imagen</label>
-                                                    <span className="text-[9px] font-bold text-premium-gold/50 uppercase tracking-tighter">Repositorio: jaz206/Bloodbowl-image</span>
-                                                                      {/* Repo Explorer (Foldable) */}
-                                                <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] overflow-hidden">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setIsImageExplorerExpanded(!isImageExplorerExpanded)}
-                                                        className="w-full flex items-center justify-between p-6 hover:bg-white/5 transition-colors group/fold"
-                                                    >
-                                                        <div className="flex items-center gap-4">
-                                                            <div className="w-10 h-10 rounded-xl bg-premium-gold/10 border border-premium-gold/20 flex items-center justify-center text-premium-gold">
-                                                                <span className="material-symbols-outlined text-sm">image_search</span>
-                                                            </div>
-                                                            <div className="text-left">
-                                                                <span className="block text-sm font-display font-black text-white uppercase italic">Explorador de GitHub</span>
-                                                                <span className="block text-[9px] font-bold text-slate-500 uppercase tracking-tighter">
-                                                                    {isImageExplorerExpanded ? 'Haz clic para plegar' : 'Haz clic para buscar imágenes en el repositorio'}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                        <span className={`material-symbols-outlined text-slate-500 transition-transform duration-500 ${isImageExplorerExpanded ? 'rotate-180' : ''}`}>
-                                                            expand_more
-                                                        </span>
-                                                    </button>
-
-                                                    <AnimatePresence>
-                                                        {isImageExplorerExpanded && (
-                                                            <motion.div
-                                                                initial={{ height: 0, opacity: 0 }}
-                                                                animate={{ height: 'auto', opacity: 1 }}
-                                                                exit={{ height: 0, opacity: 0 }}
-                                                                transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-                                                                className="border-t border-white/5"
-                                                            >
-                                                                <div className="p-6 space-y-6">
-                                                                    <div className="flex gap-4">
-                                                                        <div className="relative flex-1">
-                                                                            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm">search</span>
-                                                                            <input
-                                                                                type="text"
-                                                                                placeholder="Buscar imagen en el repositorio..."
-                                                                                value={githubSearch}
-                                                                                onChange={(e) => setGithubSearch(e.target.value)}
-                                                                                className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-xs text-white focus:border-premium-gold/30 outline-none"
-                                                                            />
-                                                                        </div>
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => { setGithubSearch(''); }}
-                                                                            className="px-4 py-2 bg-white/5 rounded-xl text-[10px] font-black hover:bg-white/10 text-slate-400"
-                                                                        >
-                                                                            Limpiar
-                                                                        </button>
-                                                                    </div>
-
-                                                                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 max-h-64 overflow-y-auto custom-scrollbar p-1">
-                                                                        {isLoadingGitHub ? (
-                                                                            Array(10).fill(0).map((_, i) => (
-                                                                                <div key={i} className="aspect-square bg-white/5 animate-pulse rounded-xl border border-white/5"></div>
-                                                                            ))
-                                                                        ) : (
-                                                                            gitHubImages
-                                                                                .filter(img => img.name.toLowerCase().includes(githubSearch.toLowerCase()))
-                                                                                .map((img) => {
-                                                                                    const currentImg = editingItem.type === 'hero' ? editingItem.data.url : editingItem.data.image;
-                                                                                    const isSelected = currentImg === img.download_url;
-
-                                                                                    return (
-                                                                                        <button
-                                                                                            key={img.sha}
-                                                                                            type="button"
-                                                                                            onClick={() => {
-                                                                                                setEditingItem({
-                                                                                                    ...editingItem,
-                                                                                                    data: { ...editingItem.data, [editingItem.type === 'hero' ? 'url' : 'image']: img.download_url }
-                                                                                                });
-                                                                                            }}
-                                                                                            className={`group relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${isSelected ? 'border-premium-gold shadow-[0_0_15px_rgba(202,138,4,0.3)]' : 'border-white/10 hover:border-white/30'}`}
-                                                                                        >
-                                                                                            <img src={img.download_url} alt={img.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
-                                                                                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2">
-                                                                                                <span className="text-[7px] text-white font-black uppercase text-center break-all leading-tight">
-                                                                                                    {img.name.split('.')[0]}
-                                                                                                </span>
-                                                                                            </div>
-                                                                                            {isSelected && (
-                                                                                                <div className="absolute top-1 right-1 bg-premium-gold text-black rounded-full w-4 h-4 flex items-center justify-center">
-                                                                                                    <span className="material-symbols-outlined text-[10px] font-black">check</span>
-                                                                                                </div>
-                                                                                            )}
-                                                                                        </button>
-                                                                                    );
-                                                                                })
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                            </motion.div>
-                                                        )}
-                                                    </AnimatePresence>
-                                                </div>                              </div>
-
-                                                <div className="relative">
-                                                    <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center px-8 opacity-20 pointer-events-none">
-                                                        <div className="h-px w-full bg-white/50"></div>
-                                                        <span className="mx-4 text-[9px] font-black uppercase tracking-widest bg-zinc-950 px-2 whitespace-nowrap">O introduce URL manual</span>
-                                                        <div className="h-px w-full bg-white/50"></div>
-                                                    </div>
-                                                    <div className="h-10"></div>
-                                                </div>
-
-                                                <div className="flex gap-4 items-center">
-                                                    <div className="grow">
-                                                        <input
-                                                            type="text"
-                                                            value={editingItem.type === 'hero' ? editingItem.data.url : (editingItem.data.image || editingItem.data.crestImage || '')}
-                                                            onChange={(e) => {
-                                                                const val = e.target.value;
-                                                                setEditingItem({
-                                                                    ...editingItem,
-                                                                    data: { ...editingItem.data, [editingItem.type === 'hero' ? 'url' : 'image']: val }
-                                                                });
-                                                            }}
-                                                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-[10px] text-slate-400 font-mono focus:border-premium-gold/50 outline-none transition-all"
-                                                            placeholder="URL personalizada..."
-                                                        />
-                                                    </div>
-                                                    <div className="w-24 h-16 rounded-2xl border border-white/10 bg-black overflow-hidden flex-shrink-0 flex items-center justify-center">
-                                                        {(editingItem.type === 'hero' ? editingItem.data.url : editingItem.data.image) ? (
-                                                            <img src={editingItem.type === 'hero' ? editingItem.data.url : editingItem.data.image} alt="" className="w-full h-full object-cover" />
-                                                        ) : (
-                                                            <span className="material-symbols-outlined text-white/10">image_not_supported</span>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* TEAMS SPECIFIC */}
-                                        {editingItem.type === 'teams' && (
-                                            <div className="space-y-6">
-                                                {/* Team Tabs Navigation */}
-                                                <div className="flex flex-wrap gap-2 p-1.5 bg-black/40 border border-white/5 rounded-2xl w-fit">
-                                                    {(['general', 'identidad', 'roster', 'nombres'] as const).map(tab => (
-                                                        <button
-                                                            key={tab}
-                                                            type="button"
-                                                            onClick={() => setActiveTeamTab(tab)}
-                                                            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTeamTab === tab
-                                                                ? 'bg-premium-gold text-black shadow-lg shadow-premium-gold/20'
-                                                                : 'text-slate-500 hover:text-white hover:bg-white/5'
-                                                                }`}
-                                                        >
-                                                            {tab}
-                                                        </button>
-                                                    ))}
-                                                </div>
-
-                                                {/* TAB: GENERAL */}
-                                                {activeTeamTab === 'general' && (
-                                                    <div className="space-y-12 animate-fade-in-up">
-                                                        {/* Core Config */}
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-white/[0.02] p-6 rounded-[2rem] border border-white/5">
-                                                            <div className="space-y-4">
-                                                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Costo Segunda Tirada</label>
-                                                                <input
-                                                                    type="number"
-                                                                    value={editingItem.data.rerollCost || 0}
-                                                                    onChange={(e) => setEditingItem({
-                                                                        ...editingItem,
-                                                                        data: { ...editingItem.data, rerollCost: parseInt(e.target.value) }
-                                                                    })}
-                                                                    className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-6 text-white text-sm focus:border-premium-gold/50 outline-none transition-all"
-                                                                />
-                                                            </div>
-                                                            <div className="space-y-4">
-                                                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Tier (Nivel)</label>
-                                                                <select
-                                                                    value={editingItem.data.tier || 1}
-                                                                    onChange={(e) => setEditingItem({
-                                                                        ...editingItem,
-                                                                        data: { ...editingItem.data, tier: parseInt(e.target.value) }
-                                                                    })}
-                                                                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none"
-                                                                >
-                                                                    {[1, 2, 3].map(t => <option key={t} value={t}>Tier {t}</option>)}
-                                                                </select>
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Mega Factions (Eligible Stars) */}
-                                                        <div className="space-y-4">
-                                                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Ligas y Alianzas (Para Star Players)</label>
-                                                            <div className="flex flex-wrap gap-2 p-6 bg-black/40 border border-white/5 rounded-[2rem]">
-                                                                {[
-                                                                    'Old World Classic', 'Worlds Edge Superleague', 'Lustrian Superleague',
-                                                                    'Badlands Brawl', 'Favoured of Nurgle', 'Favoured of Slaanesh', 'Favoured of Khorne',
-                                                                    'Favoured of Tzeentch', 'Underworld Challenge', 'Sylvanian Spotlight', 'Elven Kingdoms League'
-                                                                ].map(faction => {
-                                                                    const isSelected = (editingItem.data.megaFactions || []).includes(faction);
-                                                                    return (
-                                                                        <button
-                                                                            key={faction}
-                                                                            type="button"
-                                                                            onClick={() => {
-                                                                                const current = editingItem.data.megaFactions || [];
-                                                                                const next = isSelected 
-                                                                                    ? current.filter((f: string) => f !== faction)
-                                                                                    : [...current, faction];
-                                                                                setEditingItem({
-                                                                                    ...editingItem,
-                                                                                    data: { ...editingItem.data, megaFactions: next }
-                                                                                });
-                                                                            }}
-                                                                            className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${isSelected
-                                                                                ? 'bg-premium-gold/20 text-premium-gold border-premium-gold/30'
-                                                                                : 'bg-white/5 text-slate-500 border-white/5 hover:border-white/20'
-                                                                                }`}
-                                                                        >
-                                                                            {faction}
-                                                                        </button>
-                                                                    );
-                                                                })}
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Ratings for Teams */}
-                                                        <div className="space-y-4">
-                                                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Ratings de Facción</label>
-                                                            <div className="grid grid-cols-5 gap-3 bg-black/40 p-6 rounded-2xl border border-white/5">
-                                                                {[
-                                                                    { k: 'fuerza', l: 'FUE' },
-                                                                    { k: 'agilidad', l: 'AGI' },
-                                                                    { k: 'velocidad', l: 'VEL' },
-                                                                    { k: 'armadura', l: 'ARM' },
-                                                                    { k: 'pase', l: 'PAS' }
-                                                                ].map(stat => (
-                                                                    <div key={stat.k} className="space-y-1">
-                                                                        <span className="block text-[8px] font-bold text-slate-600 uppercase text-center">{stat.l}</span>
-                                                                        <input
-                                                                            type="number"
-                                                                            value={editingItem.data.ratings?.[stat.k] || 0}
-                                                                            onChange={(e) => setEditingItem({
-                                                                                ...editingItem,
-                                                                                data: {
-                                                                                    ...editingItem.data,
-                                                                                    ratings: { ...editingItem.data.ratings, [stat.k]: parseInt(e.target.value) }
-                                                                                }
-                                                                            })}
-                                                                            className="w-full bg-white/5 border border-white/10 rounded-xl py-2 px-1 text-center text-white focus:border-premium-gold/50 outline-none text-[10px]"
-                                                                        />
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {/* TAB: IDENTIDAD */}
-                                                {activeTeamTab === 'identidad' && (
-                                                    <div className="space-y-12 animate-fade-in-up">
-                                                        {/* History & Bio */}
-                                                        <div className="space-y-4">
-                                                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Biografía y Trasfondo de la Facción</label>
-                                                            <textarea
-                                                                value={editingItem.data.description || ''}
-                                                                onChange={(e) => setEditingItem({
-                                                                    ...editingItem,
-                                                                    data: { ...editingItem.data, description: e.target.value }
-                                                                })}
-                                                                className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none h-64 resize-none text-[10px] leading-relaxed transition-all"
-                                                                placeholder="Describe aquí el trasfondo de esta raza en el mundo de Blood Bowl..."
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {/* TAB: ROSTER */}
-                                                {activeTeamTab === 'roster' && (
-                                                    <div className="space-y-6 animate-fade-in-up">
-                                                        {/* Roster Editor */}
-                                                        <div className="flex justify-between items-center px-1">
-                                                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Roster de Jugadores (Posicionales)</label>
-                                                            <button 
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    const newPlayer = {
-                                                                        qty: '0-16',
-                                                                        position: 'Línea',
-                                                                        cost: 50000,
-                                                                        stats: { MV: 6, FU: '3', AG: '3+', PA: '4+', AR: '9+' },
-                                                                        skillKeys: [],
-                                                                        primary: 'G',
-                                                                        secondary: 'A, S'
-                                                                    };
-                                                                    setEditingItem({
-                                                                        ...editingItem,
-                                                                        data: { ...editingItem.data, roster: [...(editingItem.data.roster || []), newPlayer] }
-                                                                    });
-                                                                }}
-                                                                className="text-premium-gold hover:text-white transition-colors flex items-center gap-1 text-[9px] font-black uppercase tracking-widest"
-                                                            >
-                                                                <span className="material-symbols-outlined text-sm">add</span> Añadir Posición
-                                                            </button>
-                                                        </div>
-                                                        
-                                                        <div className="space-y-3 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
-                                                            {(editingItem.data.roster || []).map((player: any, idx: number) => (
-                                                                <div key={idx} className="bg-white/5 border border-white/5 rounded-2xl p-5 space-y-4">
-                                                                    <div className="flex justify-between gap-4">
-                                                                        <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                                                            <div className="space-y-1">
-                                                                                <label className="text-[8px] font-bold text-slate-600 uppercase ml-1">Posición</label>
-                                                                                <input 
-                                                                                    type="text"
-                                                                                    value={player.position}
-                                                                                    onChange={(e) => {
-                                                                                        const newRoster = [...editingItem.data.roster];
-                                                                                        newRoster[idx] = { ...newRoster[idx], position: e.target.value };
-                                                                                        setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
-                                                                                    }}
-                                                                                    className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-premium-gold/30"
-                                                                                />
-                                                                            </div>
-                                                                            <div className="space-y-1">
-                                                                                <label className="text-[8px] font-bold text-slate-600 uppercase ml-1">Cantidad</label>
-                                                                                <input 
-                                                                                    type="text"
-                                                                                    value={player.qty}
-                                                                                    onChange={(e) => {
-                                                                                        const newRoster = [...editingItem.data.roster];
-                                                                                        newRoster[idx] = { ...newRoster[idx], qty: e.target.value };
-                                                                                        setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
-                                                                                    }}
-                                                                                    className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-premium-gold/30"
-                                                                                />
-                                                                            </div>
-                                                                            <div className="space-y-1">
-                                                                                <label className="text-[8px] font-bold text-slate-600 uppercase ml-1">Costo (MO)</label>
-                                                                                <input 
-                                                                                    type="number"
-                                                                                    value={player.cost}
-                                                                                    onChange={(e) => {
-                                                                                        const newRoster = [...editingItem.data.roster];
-                                                                                        newRoster[idx] = { ...newRoster[idx], cost: parseInt(e.target.value) || 0 };
-                                                                                        setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
-                                                                                    }}
-                                                                                    className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-premium-gold/30"
-                                                                                />
-                                                                            </div>
-                                                                        </div>
-                                                                        <button 
-                                                                            type="button"
-                                                                            onClick={() => {
-                                                                                const newRoster = (editingItem.data.roster || []).filter((_: any, i: number) => i !== idx);
-                                                                                setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
-                                                                            }}
-                                                                            className="w-10 h-10 rounded-xl bg-blood-red/10 border border-blood-red/20 text-blood-red flex items-center justify-center hover:bg-blood-red hover:text-white transition-all self-end"
-                                                                        >
-                                                                            <span className="material-symbols-outlined text-sm">delete</span>
-                                                                        </button>
-                                                                    </div>
-
-                                                                    <div className="grid grid-cols-5 gap-3 bg-black/20 p-3 rounded-xl border border-white/5">
-                                                                        {['MV', 'FU', 'AG', 'PA', 'AR'].map(stat => (
-                                                                            <div key={stat} className="space-y-1">
-                                                                                <span className="block text-[8px] font-bold text-slate-600 uppercase text-center">{stat}</span>
-                                                                                <input
-                                                                                    type="text"
-                                                                                    value={player.stats?.[stat] || ''}
-                                                                                    onChange={(e) => {
-                                                                                        const newRoster = [...editingItem.data.roster];
-                                                                                        newRoster[idx] = { 
-                                                                                            ...newRoster[idx], 
-                                                                                            stats: { ...newRoster[idx].stats, [stat]: e.target.value } 
-                                                                                        };
-                                                                                        setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
-                                                                                    }}
-                                                                                    className="w-full bg-transparent border-b border-white/10 text-center text-white text-xs py-1 focus:border-premium-gold outline-none font-display font-black transition-colors"
-                                                                                />
-                                                                            </div>
-                                                                        ))}
-                                                                    </div>
-
-                                                                    <div className="grid grid-cols-2 gap-4">
-                                                                        <div className="space-y-1">
-                                                                            <label className="text-[8px] font-bold text-slate-600 uppercase ml-1">Primarias (Ejs: G, A, S)</label>
-                                                                            <input 
-                                                                                type="text"
-                                                                                value={player.primary || ''}
-                                                                                onChange={(e) => {
-                                                                                    const newRoster = [...editingItem.data.roster];
-                                                                                    newRoster[idx] = { ...newRoster[idx], primary: e.target.value };
-                                                                                    setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
-                                                                                }}
-                                                                                className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-premium-gold/30"
-                                                                            />
-                                                                        </div>
-                                                                        <div className="space-y-1">
-                                                                            <label className="text-[8px] font-bold text-slate-600 uppercase ml-1">Secundarias (Ejs: P, M)</label>
-                                                                            <input 
-                                                                                type="text"
-                                                                                value={player.secondary || ''}
-                                                                                onChange={(e) => {
-                                                                                    const newRoster = [...editingItem.data.roster];
-                                                                                    newRoster[idx] = { ...newRoster[idx], secondary: e.target.value };
-                                                                                    setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
-                                                                                }}
-                                                                                className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-premium-gold/30"
-                                                                            />
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div className="space-y-2">
-                                                                        <label className="text-[8px] font-bold text-slate-600 uppercase ml-1">Habilidades Iniciales (Canónicas)</label>
-                                                                        <div className="flex flex-wrap gap-1.5 min-h-[40px] p-3 bg-black/20 rounded-xl border border-white/5">
-                                                                            {skills.map((skill: any) => {
-                                                                                const isSelected = (player.skillKeys || []).includes(skill.keyEN);
-                                                                                return (
-                                                                                    <button
-                                                                                        key={skill.keyEN}
-                                                                                        type="button"
-                                                                                        onClick={() => {
-                                                                                            const currentKeys = player.skillKeys || [];
-                                                                                            const nextKeys = isSelected 
-                                                                                                ? currentKeys.filter((k: string) => k !== skill.keyEN)
-                                                                                                : [...currentKeys, skill.keyEN];
-                                                                                            const newRoster = [...editingItem.data.roster];
-                                                                                            newRoster[idx] = { ...newRoster[idx], skillKeys: nextKeys };
-                                                                                            setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
-                                                                                        }}
-                                                                                        className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-tighter border transition-all ${isSelected 
-                                                                                            ? 'bg-premium-gold/20 border-premium-gold/40 text-premium-gold' 
-                                                                                            : 'bg-white/5 border-white/5 text-slate-600 hover:text-white'}`}
-                                                                                    >
-                                                                                        {language === 'es' ? (skill.name_es || skill.name_en) : skill.name_en}
-                                                                                    </button>
-                                                                                );
-                                                                            })}
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {/* TAB: NOMBRES */}
-                                                {activeTeamTab === 'nombres' && (
-                                                    <div className="space-y-12 animate-fade-in-up">
-                                                        <div className="space-y-4">
-                                                            <label className="block text-[10px] font-black text-sky-500 uppercase tracking-widest ml-1">Diccionario de Nombres Temáticos</label>
-                                                            <textarea
-                                                                value={(editingItem.data.namePools?.length ? editingItem.data.namePools : (editingItem.data.name ? (PLAYER_NAMES[editingItem.data.name.toUpperCase()] || []) : [])).join(', ')}
-                                                                onChange={(e) => {
-                                                                    const names = e.target.value.split(',').map(n => n.trim()).filter(Boolean);
-                                                                    setEditingItem({
-                                                                        ...editingItem,
-                                                                        data: { ...editingItem.data, namePools: names }
-                                                                    });
-                                                                }}
-                                                                className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-sky-500/50 outline-none h-64 resize-none text-[10px] leading-relaxed transition-all"
-                                                                placeholder="Morg, Throg, Grashnak... (separados por comas)"
-                                                            />
-                                                            <p className="text-[9px] text-slate-500 uppercase tracking-tight ml-1 font-bold">
-                                                                {!editingItem.data.namePools?.length ? 'ℹ️ Mostrando borrador por defecto de las reglas base. Haz una pequeña modificación y se guardará como nombre de la liga.' : '✅ Diccionario personalizado guardado en Firestore para esta facción.'}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {/* STARS SPECIFIC */}
-                                        {editingItem.type === 'stars' && (
-                                            <div className="space-y-12 animate-fade-in-slow mt-8">
-                                                {/* IMAGE SECTION (FOLDABLE) */}
-                                                <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] overflow-hidden">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setIsImageExplorerExpanded(!isImageExplorerExpanded)}
-                                                        className="w-full flex items-center justify-between p-6 hover:bg-white/5 transition-colors group/fold"
-                                                    >
-                                                        <div className="flex items-center gap-4">
-                                                            <div className="w-10 h-10 rounded-xl bg-premium-gold/10 border border-premium-gold/20 flex items-center justify-center text-premium-gold">
-                                                                <span className="material-symbols-outlined text-sm">image</span>
-                                                            </div>
-                                                            <div className="text-left">
-                                                                <span className="block text-sm font-display font-black text-white uppercase italic">Imagen de la Estrella</span>
-                                                                <span className="block text-[9px] font-bold text-slate-500 uppercase tracking-tighter">
-                                                                    {isImageExplorerExpanded ? 'Haz clic para plegar' : 'Haz clic para configurar imagen'}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                        <span className={`material-symbols-outlined text-slate-500 transition-transform duration-500 ${isImageExplorerExpanded ? 'rotate-180' : ''}`}>
-                                                            expand_more
-                                                        </span>
-                                                    </button>
-
-                                                    <AnimatePresence>
-                                                        {isImageExplorerExpanded && (
-                                                            <motion.div
-                                                                initial={{ height: 0, opacity: 0 }}
-                                                                animate={{ height: 'auto', opacity: 1 }}
-                                                                exit={{ height: 0, opacity: 0 }}
-                                                                transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-                                                                className="border-t border-white/5 p-6 space-y-6"
-                                                            >
-                                                                <div className="space-y-4">
-                                                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">URL de Imagen</label>
-                                                                    <div className="flex gap-4 items-center">
-                                                                        <div className="grow">
-                                                                            <input
-                                                                                type="text"
-                                                                                value={editingItem.data.image || ''}
-                                                                                onChange={(e) => setEditingItem({
-                                                                                    ...editingItem,
-                                                                                    data: { ...editingItem.data, image: e.target.value }
-                                                                                })}
-                                                                                className="w-full bg-black/60 border border-white/10 rounded-2xl py-4 px-6 text-[10px] text-slate-400 font-mono focus:border-premium-gold/50 outline-none transition-all"
-                                                                                placeholder="Introduce URL o usa el explorador..."
-                                                                            />
-                                                                        </div>
-                                                                        {editingItem.data.image && (
-                                                                            <div className="w-20 h-20 rounded-2xl border border-white/10 bg-black overflow-hidden flex-shrink-0">
-                                                                                <img src={editingItem.data.image} alt="" className="w-full h-full object-cover" />
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-
-                                                                {/* GitHub Explorer integration or just instructions */}
-                                                                <div className="p-4 bg-premium-gold/5 rounded-xl border border-premium-gold/10">
-                                                                    <p className="text-[9px] text-premium-gold/60 font-medium leading-relaxed">
-                                                                        Tip: Puedes buscar imágenes en el repositorio jaz206/Bloodbowl-image usando el explorador de la pestaña General.
-                                                                    </p>
-                                                                </div>
-                                                            </motion.div>
-                                                        )}
-                                                    </AnimatePresence>
-                                                </div>
-
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                                    <div className="space-y-4">
-                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Precio de Fichaje (GP)</label>
-                                                        <input
-                                                            type="number"
-                                                            value={editingItem.data.cost || 0}
-                                                            onChange={(e) => setEditingItem({
-                                                                ...editingItem,
-                                                                data: { ...editingItem.data, cost: parseInt(e.target.value) }
-                                                            })}
-                                                            className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-6 text-white text-sm focus:border-premium-gold/50 outline-none transition-all"
-                                                        />
-                                                    </div>
-
-                                                    {/* Attributes Table */}
-                                                    <div className="space-y-4">
-                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Perfil de Atributos</label>
-                                                        <div className="grid grid-cols-5 gap-3 bg-black/40 p-4 rounded-2xl border border-white/5">
-                                                            {['MV', 'FU', 'AG', 'PA', 'AR'].map(stat => (
-                                                                <div key={stat} className="space-y-1">
-                                                                    <span className="block text-[8px] font-bold text-slate-600 uppercase text-center">{stat}</span>
-                                                                    <input
-                                                                        type="text"
-                                                                        value={editingItem.data.stats?.[stat] || ''}
-                                                                        onChange={(e) => setEditingItem({
-                                                                            ...editingItem,
-                                                                            data: {
-                                                                                ...editingItem.data,
-                                                                                stats: { ...editingItem.data.stats, [stat]: e.target.value }
-                                                                            }
-                                                                        })}
-                                                                        className="w-full bg-transparent border-b border-white/10 text-center text-white text-xs py-1 focus:border-premium-gold outline-none font-display font-black transition-colors"
-                                                                    />
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div className="space-y-4">
-                                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Habilidades Base (Seleccionables)</label>
-                                                    <div className="flex flex-wrap gap-2 p-6 bg-black/40 border border-white/5 rounded-2xl max-h-48 overflow-y-auto custom-scrollbar">
-                                                        {skills.sort((a,b) => {
-                                                            const nameA = language === 'es' ? (a?.name_es || a?.name_en || a?.name || '') : (a?.name_en || a?.name || '');
-                                                            const nameB = language === 'es' ? (b?.name_es || b?.name_en || b?.name || '') : (b?.name_en || b?.name || '');
-                                                            return nameA.localeCompare(nameB);
-                                                        }).map(skill => {
-                                                            const isSelected = (editingItem.data.skillKeys || []).includes(skill.keyEN);
-                                                            return (
-                                                                <button
-                                                                    key={skill.keyEN}
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        const current = editingItem.data.skillKeys || [];
-                                                                        const next = isSelected 
-                                                                            ? current.filter((s: string) => s !== skill.keyEN)
-                                                                            : [...current, skill.keyEN];
-                                                                        setEditingItem({
-                                                                            ...editingItem,
-                                                                            data: { ...editingItem.data, skillKeys: next }
-                                                                        });
-                                                                    }}
-                                                                    className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${isSelected
-                                                                        ? 'bg-sky-500/20 text-sky-400 border-sky-500/30'
-                                                                        : 'bg-white/5 text-slate-500 border-white/5 hover:border-white/20'
-                                                                        }`}
-                                                                >
-                                                                    {language === 'es' ? (skill.name_es || skill.name_en) : skill.name_en}
-                                                                </button>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                </div>
-
-                                                <div className="space-y-4">
-                                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Equipos Compatibles (Facciones)</label>
-                                                    <div className="flex flex-wrap gap-2 p-6 bg-black/40 border border-white/5 rounded-2xl">
-                                                        {[
-                                                            'Any Team', 'Old World Classic', 'Worlds Edge Superleague', 'Lustrian Superleague',
-                                                            'Badlands Brawl', 'Favoured of Nurgle', 'Favoured of Slaanesh', 'Favoured of Khorne',
-                                                            'Favoured of Tzeentch', 'Underworld Challenge', 'Sylvanian Spotlight', 'Elven Kingdoms League'
-                                                        ].map(faction => {
-                                                            const isSelected = (editingItem.data.playsFor || []).includes(faction);
-                                                            return (
-                                                                <button
-                                                                    key={faction}
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        const current = editingItem.data.playsFor || [];
-                                                                        const next = isSelected 
-                                                                            ? current.filter((f: string) => f !== faction)
-                                                                            : [...current, faction];
-                                                                        setEditingItem({
-                                                                            ...editingItem,
-                                                                            data: { ...editingItem.data, playsFor: next }
-                                                                        });
-                                                                    }}
-                                                                    className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${isSelected
-                                                                        ? 'bg-premium-gold/20 text-premium-gold border-premium-gold/30'
-                                                                        : 'bg-white/5 text-slate-500 border-white/5 hover:border-white/20'
-                                                                        }`}
-                                                                >
-                                                                    {faction}
-                                                                </button>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                </div>
-
-                                                {/* Rules and Background */}
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                                    <div className="space-y-4">
-                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Habilidad Maestra (Regla Especial ES)</label>
-                                                        <textarea
-                                                            value={editingItem.data.specialRules_es || ''}
-                                                            onChange={(e) => setEditingItem({
-                                                                ...editingItem,
-                                                                data: { ...editingItem.data, specialRules_es: e.target.value }
-                                                            })}
-                                                            className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none h-24 resize-none text-[10px] leading-relaxed transition-all"
-                                                            placeholder="Regla especial en español..."
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-4">
-                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Master Skill (Special Rule EN)</label>
-                                                        <textarea
-                                                            value={editingItem.data.specialRules_en || ''}
-                                                            onChange={(e) => setEditingItem({
-                                                                ...editingItem,
-                                                                data: { ...editingItem.data, specialRules_en: e.target.value }
-                                                            })}
-                                                            className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none h-24 resize-none text-[10px] leading-relaxed transition-all"
-                                                            placeholder="Special rule in English..."
-                                                        />
-                                                    </div>
-                                                </div>
-
-                                                <div className="space-y-4">
-                                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Biografía y Trasfondo</label>
-                                                    <textarea
-                                                        value={editingItem.data.description || ''}
-                                                        onChange={(e) => setEditingItem({
-                                                            ...editingItem,
-                                                            data: { ...editingItem.data, description: e.target.value }
-                                                        })}
-                                                        className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none h-32 resize-none text-[10px] leading-relaxed transition-all"
-                                                        placeholder="Describe aquí el trasfondo de la leyenda..."
-                                                    />
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* SKILLS SPECIFIC (Bilingual) */}
-                                        {editingItem.type === 'skills' && (
-                                            <div className="grid grid-cols-1 gap-8">
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                    <div className="space-y-4">
-                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Nombre (ES)</label>
-                                                        <input
-                                                            type="text"
-                                                            value={editingItem.data.name_es || ''}
-                                                            onChange={(e) => setEditingItem({ ...editingItem, data: { ...editingItem.data, name_es: e.target.value } })}
-                                                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none"
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-4">
-                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Name (EN)</label>
-                                                        <input
-                                                            type="text"
-                                                            value={editingItem.data.name_en || ''}
-                                                            onChange={(e) => setEditingItem({ ...editingItem, data: { ...editingItem.data, name_en: e.target.value } })}
-                                                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none"
-                                                        />
-                                                    </div>
-                                                </div>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                    <div className="space-y-4">
-                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Descripción (ES)</label>
-                                                        <textarea
-                                                            value={editingItem.data.desc_es || ''}
-                                                            onChange={(e) => setEditingItem({ ...editingItem, data: { ...editingItem.data, desc_es: e.target.value } })}
-                                                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none h-40 resize-none text-xs leading-relaxed"
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-4">
-                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Description (EN)</label>
-                                                        <textarea
-                                                            value={editingItem.data.desc_en || ''}
-                                                            onChange={(e) => setEditingItem({ ...editingItem, data: { ...editingItem.data, desc_en: e.target.value } })}
-                                                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none h-40 resize-none text-xs leading-relaxed"
-                                                        />
-                                                    </div>
-                                                </div>
-                                                <div className="space-y-4">
-                                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Categoría</label>
-                                                    <select
-                                                        value={editingItem.data.category || 'General'}
-                                                        onChange={(e) => setEditingItem({ ...editingItem, data: { ...editingItem.data, category: e.target.value } })}
-                                                        className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none"
-                                                    >
-                                                        {['General', 'Strength', 'Agility', 'Passing', 'Mutation', 'Trait'].map(c => <option key={c} value={c}>{c}</option>)}
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* INCENTIVOS SPECIFIC */}
-                                        {editingItem.type === 'inducements' && (
-                                            <div className="space-y-8">
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                    <div className="space-y-4">
-                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Nombre</label>
-                                                        <input
-                                                            type="text"
-                                                            value={editingItem.data.name || ''}
-                                                            onChange={(e) => setEditingItem({ ...editingItem, data: { ...editingItem.data, name: e.target.value } })}
-                                                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none"
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-4">
-                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Costo (GP)</label>
-                                                        <input
-                                                            type="number"
-                                                            value={editingItem.data.cost || 0}
-                                                            onChange={(e) => setEditingItem({ ...editingItem, data: { ...editingItem.data, cost: parseInt(e.target.value) } })}
-                                                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none"
-                                                        />
-                                                    </div>
-                                                </div>
-                                                <div className="space-y-4">
-                                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Descripción</label>
-                                                    <textarea
-                                                        value={editingItem.data.description || ''}
-                                                        onChange={(e) => setEditingItem({ ...editingItem, data: { ...editingItem.data, description: e.target.value } })}
-                                                        className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none h-40 resize-none text-sm leading-relaxed"
-                                                    />
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* HERALDO SPECIFIC */}
-                                        {editingItem.type === 'heraldo' && (
-                                            <div className="space-y-8">
-                                                <div className="bg-white/5 border border-white/5 rounded-3xl p-6 mb-8">
-                                                    <div className="flex items-center gap-4 mb-4">
-                                                        <div className="p-3 rounded-2xl bg-premium-gold/10">
-                                                            <span className="material-symbols-outlined text-premium-gold">auto_awesome</span>
-                                                        </div>
-                                                        <div>
-                                                            <h4 className="text-sm font-bold text-white uppercase tracking-tight">Plantilla: {editingItem.data.type === 'starplayer' ? 'Jugador Estrella' : editingItem.data.type === 'team' ? 'Equipo/Franquicia' : 'Regla de Juego'}</h4>
-                                                            <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mt-1">Los campos se adaptarán visualmente en el Heraldo según tu elección.</p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                    <div className="space-y-4">
-                                                        <label className="block text-[10px] font-black text-premium-gold uppercase tracking-widest ml-1">Tipo de Noticia (Plantilla)</label>
-                                                        <select
-                                                            value={editingItem.data.type || 'skill'}
-                                                            onChange={(e) => setEditingItem({ ...editingItem, data: { ...editingItem.data, type: e.target.value } })}
-                                                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none"
-                                                        >
-                                                            <option value="starplayer">Jugador Estrella (Retrato + Bio)</option>
-                                                            <option value="team">Equipo/Franquicia (Escudo + Crónica)</option>
-                                                            <option value="skill">Habilidad/Regla (Solo Texto / New Season)</option>
-                                                        </select>
-                                                    </div>
-                                                    <div className="space-y-4">
-                                                        <label className="block text-[10px] font-black text-premium-gold uppercase tracking-widest ml-1">
-                                                            {editingItem.data.type === 'starplayer' ? 'Nombre del Jugador' : editingItem.data.type === 'team' ? 'Nombre del Equipo' : 'Nombre de la Regla'}
-                                                        </label>
-                                                        <input
-                                                            type="text"
-                                                            value={editingItem.data.title || ''}
-                                                            onChange={(e) => setEditingItem({ ...editingItem, data: { ...editingItem.data, title: e.target.value } })}
-                                                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none uppercase italic font-display font-black"
-                                                            placeholder="Ej: MORG 'N' THORG"
-                                                        />
-                                                    </div>
-                                                </div>
-                                                
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                    <div className="space-y-4">
-                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Etiqueta (Tag)</label>
-                                                        <input
-                                                            type="text"
-                                                            value={editingItem.data.tag || ''}
-                                                            onChange={(e) => setEditingItem({ ...editingItem, data: { ...editingItem.data, tag: e.target.value } })}
-                                                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none"
-                                                            placeholder={editingItem.data.type === 'starplayer' ? 'Leyenda' : editingItem.data.type === 'team' ? 'Franquicia' : 'Destacado'}
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-4">
-                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Subtítulo / Categoría</label>
-                                                        <input
-                                                            type="text"
-                                                            value={editingItem.data.category || ''}
-                                                            onChange={(e) => setEditingItem({ ...editingItem, data: { ...editingItem.data, category: e.target.value } })}
-                                                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none"
-                                                            placeholder={editingItem.data.type === 'starplayer' ? 'Perfil de Jugador' : editingItem.data.type === 'team' ? 'Crónica del Gremio' : 'Sección de Habilidades'}
-                                                        />
-                                                    </div>
-                                                </div>
-
-                                                <div className="space-y-4">
-                                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
-                                                        {editingItem.data.type === 'starplayer' ? 'Biografía del Jugador' : editingItem.data.type === 'team' ? 'Últimos resultados / Historia' : 'Descripción de la Habilidad o Noticia'}
-                                                    </label>
-                                                    <textarea
-                                                        value={editingItem.data.content || ''}
-                                                        onChange={(e) => setEditingItem({ ...editingItem, data: { ...editingItem.data, content: e.target.value } })}
-                                                        className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none h-32 resize-none text-sm leading-relaxed"
-                                                        placeholder="Escribe la historia aquí..."
-                                                    />
-                                                </div>
-
-                                                <div className="space-y-4">
-                                                    <label className="block text-[10px] font-black text-blood uppercase tracking-widest ml-1">
-                                                        {editingItem.data.type === 'starplayer' ? 'Precio y Reglas Especiales' : editingItem.data.type === 'team' ? 'Estatus (En racha, Crisis...)' : 'Nota de Reglamento S3'}
-                                                    </label>
-                                                    <input
-                                                        type="text"
-                                                        value={editingItem.data.rule || ''}
-                                                        onChange={(e) => setEditingItem({ ...editingItem, data: { ...editingItem.data, rule: e.target.value } })}
-                                                        className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none text-blood font-bold"
-                                                        placeholder="Ej: 380,000 MO (S3)"
-                                                    />
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* BILINGUAL SPECIAL RULES FOR TEAMS/STARS */}
-                                        {(editingItem.type === 'teams' || editingItem.type === 'stars') && (
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                                <div className="space-y-4">
-                                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Reglas Especiales (ES)</label>
-                                                    <textarea
-                                                        value={editingItem.data.specialRules_es || ''}
-                                                        onChange={(e) => setEditingItem({ ...editingItem, data: { ...editingItem.data, specialRules_es: e.target.value } })}
-                                                        className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none h-40 resize-none text-xs leading-relaxed"
-                                                    />
-                                                </div>
-                                                <div className="space-y-4">
-                                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Special Rules (EN)</label>
-                                                    <textarea
-                                                        value={editingItem.data.specialRules_en || ''}
-                                                        onChange={(e) => setEditingItem({ ...editingItem, data: { ...editingItem.data, specialRules_en: e.target.value } })}
-                                                        className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none h-40 resize-none text-xs leading-relaxed"
-                                                    />
-                                                </div>
-                                            </div>
-                                        )}
-
-                                    </div>
-
-                                    <div className="flex justify-end gap-6 pt-10 border-t border-white/5">
-                                        <button
-                                            type="button"
-                                            onClick={() => setEditingItem(null)}
-                                            className="px-10 py-4 rounded-2xl border border-white/10 text-slate-400 font-display font-black uppercase tracking-widest text-[10px] hover:bg-white/5 transition-all"
-                                        >
-                                            Cancelar
-                                        </button>
-                                        <button
-                                            type="submit"
-                                            disabled={isSaving}
-                                            className="px-12 py-4 rounded-2xl bg-premium-gold text-black font-display font-black uppercase tracking-widest text-[10px] hover:shadow-[0_0_30px_rgba(202,138,4,0.4)] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 transition-all flex items-center gap-3"
-                                        >
-                                            {isSaving && <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin"></span>}
-                                            {isSaving ? 'Guardando...' : 'Confirmar Cambios'}
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
-
-            <style>{`
-                 @keyframes fade-in-slow {
-                    from { opacity: 0; transform: translateY(10px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                .animate-fade-in-slow {
-                    animation: fade-in-slow 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-                }
-                .custom-scrollbar::-webkit-scrollbar {
-                    width: 6px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-track {
-                    background: transparent;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background: rgba(202, 138, 4, 0.2);
-                    border-radius: 10px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                    background: rgba(202, 138, 4, 0.4);
-                }
-                .no-scrollbar::-webkit-scrollbar {
-                    display: none;
-                }
-                .no-scrollbar {
-                    -ms-overflow-style: none;
-                    scrollbar-width: none;
-                }
-                textarea::placeholder, input::placeholder {
-                    opacity: 0.3;
-                }
-            `}</style>
-            {/* ── Sync Progress Bar ─────────────────────────────── */}
-            {syncProgress === 'syncing' && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center z-[500] gap-8 pointer-events-none">
-                    <div className="flex flex-col items-center gap-4">
-                        <div className="w-20 h-20 rounded-3xl bg-premium-gold/10 border border-premium-gold/20 flex items-center justify-center">
-                            <span className="w-10 h-10 border-4 border-premium-gold/30 border-t-premium-gold rounded-full animate-spin"></span>
-                        </div>
-                        <p className="text-premium-gold font-black uppercase tracking-widest text-sm animate-pulse">Sincronizando con Nuffle...</p>
-                        <div className="w-64 h-1 bg-white/10 rounded-full overflow-hidden">
-                            <div className="h-full bg-premium-gold rounded-full animate-progress-bar"></div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* ── Confirmation Modal ────────────────────────────── */}
-            {confirmModal && (
-                <div className="fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center z-[400] p-4">
-                    <div className="bg-[#0a0a0a] border border-white/10 p-10 rounded-[2.5rem] shadow-2xl max-w-sm w-full text-center space-y-6">
-                        <div className={`size-16 rounded-3xl flex items-center justify-center mx-auto ${confirmModal.danger ? 'bg-red-500/10 text-red-500' : 'bg-premium-gold/10 text-premium-gold'
-                            }`}>
-                            <span className="material-symbols-outlined text-4xl">
-                                {confirmModal.danger ? 'dangerous' : 'sync'}
-                            </span>
-                        </div>
-                        <div className="space-y-2">
-                            <h3 className="text-xl font-black text-white italic uppercase tracking-tighter">{confirmModal.title}</h3>
-                            <p className="text-slate-400 text-sm font-medium leading-relaxed">{confirmModal.message}</p>
-                        </div>
-                        <div className="flex flex-col gap-3">
-                            <button
-                                onClick={confirmModal.onConfirm}
-                                className={`w-full py-4 font-black text-xs uppercase tracking-widest rounded-2xl transition-all ${confirmModal.danger
-                                    ? 'bg-red-600 text-white hover:bg-red-500 shadow-xl shadow-red-600/20'
-                                    : 'bg-premium-gold text-black hover:bg-premium-gold/90 shadow-xl shadow-premium-gold/20'
-                                    }`}
-                            >
-                                CONFIRMAR
-                            </button>
-                            <button
-                                onClick={() => setConfirmModal(null)}
-                                className="w-full py-4 bg-white/5 text-slate-400 font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-white/10 transition-all"
-                            >
-                                CANCELAR
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* ── Toast Notification ───────────────────────────── */}
-            {toastMessage && (
-                <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-[500] animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div className={`px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 backdrop-blur-xl border ${toastMessage.type === 'error'
-                        ? 'bg-red-950/80 border-red-500/30'
-                        : 'bg-zinc-900/90 border-white/10'
-                        }`}>
-                        <span className={`material-symbols-outlined font-bold ${toastMessage.type === 'error' ? 'text-red-400' : 'text-premium-gold'
-                            }`}>
-                            {toastMessage.type === 'error' ? 'error' : 'check_circle'}
-                        </span>
-                        <p className="text-white font-bold text-sm max-w-xs">{toastMessage.text}</p>
-                    </div>
-                </div>
-            )}
+            <AdminEditorModal
+                editingItem={editingItem}
+                tabs={tabs}
+                isSaving={isSaving}
+                language={language}
+                arenaConfig={arenaConfig}
+                heraldoItems={heraldoItems}
+                gitHubImages={gitHubImages}
+                isLoadingGitHub={isLoadingGitHub}
+                githubSearch={githubSearch}
+                setGithubSearch={setGithubSearch}
+                handleSave={handleSave}
+                setEditingItem={setEditingItem}
+            />
+            <AdminFeedbackOverlays
+                syncProgress={syncProgress}
+                confirmModal={confirmModal}
+                toastMessage={toastMessage}
+                onDismissConfirm={() => setConfirmModal(null)}
+            />
         </div>
     );
 };
