@@ -808,31 +808,53 @@ const updatePlayerSppAndAction = useCallback((
         const { matchMode, score, fame, gameLog, gameStatus, concessionState, currentChronicle } = state as any;
         if (!homeTeam) return;
 
-        if (matchMode === 'friendly') {
-            logEvent('INFO', 'Partido Amistoso finalizado.');
-        } else {
-            const matchResult = score.home > score.opponent ? 'W' : score.home < score.opponent ? 'L' : 'D';
-            const historyEntry = { id: Date.now().toString(), opponentName: opponentTeam?.name || 'Desconocido', score: `${score.home}-${score.opponent}`, date: new Date().toLocaleDateString('es-ES'), result: matchResult as 'W' | 'D' | 'L' };
-            const finalTeamWithStats = { ...finalTeamState, history: [historyEntry, ...(finalTeamState.history || [])].slice(0, 20), record: { wins: (finalTeamState.record?.wins || 0) + (matchResult === 'W' ? 1 : 0), draws: (finalTeamState.record?.draws || 0) + (matchResult === 'D' ? 1 : 0), losses: (finalTeamState.record?.losses || 0) + (matchResult === 'L' ? 1 : 0) } };
-
-            if (_props.onMatchReportCreate && liveHomeTeam && liveOpponentTeam) {
-                const stats = {
-                    passes: { home: gameLog.filter((e: any) => e.team === 'home' && (e.type === 'pass_complete' || e.type === 'PASS')).length, opponent: gameLog.filter((e: any) => e.team === 'opponent' && (e.type === 'pass_complete' || e.type === 'PASS')).length },
-                    casualties: { home: gameLog.filter((e: any) => e.team === 'home' && (e.type === 'injury_casualty' || e.type === 'INJURY')).length, opponent: gameLog.filter((e: any) => e.team === 'opponent' && (e.type === 'injury_casualty' || e.type === 'INJURY')).length }
-                };
-                const baseReport: any = { date: historyEntry.date, homeTeam: { id: homeTeam.id, name: liveHomeTeam.name, score: score.home }, opponentTeam: { id: opponentTeam?.id, name: liveOpponentTeam?.name, score: score.opponent }, gameLog, weather: gameStatus.weather?.title, winner: matchResult, stats, wasConceded: concessionState };
-                let finalNewsData;
-                if (currentChronicle) {
-                    const parts = currentChronicle.split('\n\n');
-                    finalNewsData = { headline: parts[0], article: parts.slice(1).join('\n\n'), summary: `Final: ${liveHomeTeam.name} ${score.home} - ${score.opponent} ${liveOpponentTeam?.name}` };
-                } else {
-                    finalNewsData = (await import('../../../../utils/newsGenerator')).generateMatchArticle(baseReport as any);
-                }
-                const reportId = await _props.onMatchReportCreate({ ...baseReport, ...finalNewsData });
-                if (reportId) historyEntry.id = reportId;
+        const matchResult = score.home > score.opponent ? 'W' : score.home < score.opponent ? 'L' : 'D';
+        const historyEntry = {
+            id: Date.now().toString(),
+            opponentName: opponentTeam?.name || 'Desconocido',
+            score: `${score.home}-${score.opponent}`,
+            date: new Date().toLocaleDateString('es-ES'),
+            result: matchResult as 'W' | 'D' | 'L'
+        };
+        const finalTeamWithStats = {
+            ...finalTeamState,
+            history: [historyEntry, ...(finalTeamState.history || [])].slice(0, 20),
+            record: {
+                wins: (finalTeamState.record?.wins || 0) + (matchResult === 'W' ? 1 : 0),
+                draws: (finalTeamState.record?.draws || 0) + (matchResult === 'D' ? 1 : 0),
+                losses: (finalTeamState.record?.losses || 0) + (matchResult === 'L' ? 1 : 0)
             }
-            _props.onTeamUpdate(finalTeamWithStats);
+        };
+
+        if (_props.onMatchReportCreate && liveHomeTeam && liveOpponentTeam) {
+            const stats = {
+                passes: { home: gameLog.filter((e: any) => e.team === 'home' && (e.type === 'pass_complete' || e.type === 'PASS')).length, opponent: gameLog.filter((e: any) => e.team === 'opponent' && (e.type === 'pass_complete' || e.type === 'PASS')).length },
+                casualties: { home: gameLog.filter((e: any) => e.team === 'home' && (e.type === 'injury_casualty' || e.type === 'INJURY')).length, opponent: gameLog.filter((e: any) => e.team === 'opponent' && (e.type === 'injury_casualty' || e.type === 'INJURY')).length }
+            };
+            const baseReport: any = {
+                date: historyEntry.date,
+                matchMode,
+                competitionId: _props.competition?.id,
+                homeTeam: { id: homeTeam.id, name: liveHomeTeam.name, score: score.home },
+                opponentTeam: { id: opponentTeam?.id, name: liveOpponentTeam?.name, score: score.opponent },
+                gameLog,
+                weather: gameStatus.weather?.title,
+                winner: matchResult,
+                stats,
+                wasConceded: concessionState
+            };
+            let finalNewsData;
+            if (currentChronicle) {
+                const parts = currentChronicle.split('\n\n');
+                finalNewsData = { headline: parts[0], article: parts.slice(1).join('\n\n'), summary: `Final: ${liveHomeTeam.name} ${score.home} - ${score.opponent} ${liveOpponentTeam?.name}` };
+            } else {
+                finalNewsData = (await import('../../../../utils/newsGenerator')).generateMatchArticle(baseReport as any);
+            }
+            const reportId = await _props.onMatchReportCreate({ ...baseReport, ...finalNewsData });
+            if (reportId) historyEntry.id = reportId;
         }
+        _props.onTeamUpdate(finalTeamWithStats);
+        logEvent('INFO', matchMode === 'friendly' ? 'Partido amistoso finalizado y archivado.' : 'Partido de competición cerrado y archivado.');
         resetGameState();
     }, [state, _props, homeTeam, opponentTeam, liveHomeTeam, liveOpponentTeam, logEvent, resetGameState]);
 

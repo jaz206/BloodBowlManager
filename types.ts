@@ -412,6 +412,8 @@ export interface MatchStats {
 export interface MatchReport {
   id: string;
   date: string;
+  matchMode?: 'friendly' | 'competition';
+  competitionId?: string;
   homeTeam: {
     id?: string;
     name: string;

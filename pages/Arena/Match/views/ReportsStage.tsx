@@ -29,11 +29,11 @@ const ReportsStage: React.FC = () => {
 
             <div className="grid grid-cols-1 gap-4">
                 {matchReports && matchReports.length > 0 ? matchReports.map(report => (
-                    <div
-                        key={report.id}
-                        onClick={() => setSelectedReport(report)}
-                        className="glass-panel p-6 border-white/5 bg-black/40 hover:border-premium-gold/30 hover:bg-premium-gold/5 transition-all cursor-pointer group flex flex-col md:flex-row items-center justify-between gap-6"
-                    >
+                            <div
+                                key={report.id}
+                                onClick={() => setSelectedReport(report)}
+                                className="glass-panel p-6 border-white/5 bg-black/40 hover:border-premium-gold/30 hover:bg-premium-gold/5 transition-all cursor-pointer group flex flex-col md:flex-row items-center justify-between gap-6"
+                            >
                         <div className="flex items-center gap-6 flex-1">
                             <div className="flex -space-x-4">
                                 <div className="w-14 h-14 rounded-2xl bg-black border border-white/10 overflow-hidden shadow-2xl relative z-10 group-hover:scale-105 transition-transform">
@@ -51,7 +51,15 @@ const ReportsStage: React.FC = () => {
                                 {report.summary && <p className="text-[10px] text-slate-400 mt-2 line-clamp-1 uppercase tracking-wider font-bold">{report.summary}</p>}
                             </div>
                         </div>
-                        <div className="flex items-center gap-8">
+                            <div className="flex items-center gap-8">
+                            <div className="hidden md:flex flex-col items-end gap-2">
+                                <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border ${report.matchMode === 'friendly' ? 'bg-sky-500/10 text-sky-400 border-sky-500/20' : 'bg-primary/10 text-primary border-primary/20'}`}>
+                                    {report.matchMode === 'friendly' ? 'Amistoso' : 'Competición'}
+                                </span>
+                                {report.competitionId && (
+                                    <span className="text-[8px] font-black uppercase tracking-widest text-slate-600">ID: {report.competitionId.slice(0, 6)}</span>
+                                )}
+                            </div>
                             <div className="text-center">
                                 <p className="text-2xl font-display font-black text-white italic tracking-tighter drop-shadow-sm">{report.homeTeam.score} - {report.opponentTeam.score}</p>
                                 <p className="text-[8px] font-display font-black text-slate-600 uppercase tracking-widest mt-1">Resultado Final</p>

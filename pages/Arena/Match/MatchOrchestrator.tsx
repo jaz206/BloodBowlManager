@@ -31,9 +31,10 @@ import SnapshotSelectionModal from './components/modals/system/SnapshotSelection
 import PlayerCardModal from './components/modals/shared/PlayerCardModal';
 import StarPlayerModal from './components/modals/shared/StarPlayerModal';
 import SkillModal from './components/modals/shared/SkillModal';
+import MatchFlowStepper from './components/MatchFlowStepper';
 
 const MatchOrchestrator: React.FC = () => {
-    const { gameState } = useMatch();
+    const { gameState, matchMode } = useMatch();
     
     console.log("[MatchOrchestrator] Current gameState:", gameState);
 
@@ -71,6 +72,7 @@ const MatchOrchestrator: React.FC = () => {
     return (
         <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-premium-gold selection:text-black">
             {/* Header / Stats Bar (Opacional, usualmente manejado por los views) */}
+            <MatchFlowStepper gameState={gameState} matchMode={matchMode} />
             
             <main className="relative z-10">
                 {renderContent()}
