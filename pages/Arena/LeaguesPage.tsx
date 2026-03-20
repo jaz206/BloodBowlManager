@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { ManagedTeam, Competition, Matchup, CompetitionTeam } from '../../types';
+import type { ManagedTeam, Competition, Matchup, CompetitionTeam, MatchResolution } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
 import PencilIcon from '../../components/icons/PencilIcon';
 import CalendarIcon from '../../components/icons/CalendarIcon';
 import QrCodeIcon from '../../components/icons/QrCodeIcon';
 import { TeamDashboard } from '../../components/guild/TeamDashboard';
-import { cloneCompetition, generateBracket, generateSchedule } from './competitionUtils';
+import { cloneCompetition, generateBracket, generateJoinCode, generateSchedule } from './competitionUtils';
+import CompetitionMatchResolutionModal from './CompetitionMatchResolutionModal';
+import { calculateTeamValue } from '../../utils/teamUtils';
 import LeaguesTabbedList from './LeaguesTabbedList';
 
 declare global {
@@ -86,7 +88,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
         const params = new URLSearchParams(window.location.search);
         const joinId = params.get('join');
         if (joinId && initialCompetitions.length > 0 && managedTeams.length > 0 && !joinModalState.comp) {
-            const compToJoin = initialCompetitions.find((c: Competition) => c.id === joinId);
+            const compToJoin = initialCompetitions.find((c: Competition) => c.id === joinId || c.joinCode === joinId);
             if (compToJoin) {
                 setJoinModalState({ comp: compToJoin, teamToJoin: managedTeams[0]?.name || '' });
                 window.history.replaceState({}, '', window.location.pathname);
@@ -100,7 +102,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
             let p = 0, w = 0, l = 0, d = 0, tdF = 0, tdA = 0;
             Object.values(selectedCompetition.schedule!).forEach(round => {
                 (round as Matchup[]).forEach(match => {
-                    if ((match.team1 === teamName || match.team2 === teamName) && match.score1 != null && match.score2 != null) {
+                    if ((match.team1 === teamName || match.team2 === teamName) && isMatchCompleted(match)) {
                         p++;
                         const isTeam1 = match.team1 === teamName;
                         const sF = isTeam1 ? match.score1 : match.score2;
@@ -120,6 +122,168 @@ export const Leagues: React.FC<LeaguesProps> = ({
         const finalRoundKey = Math.max(...Object.keys(selectedCompetition.bracket).map(Number)).toString();
         return selectedCompetition.bracket[finalRoundKey]?.[0]?.winner;
     }, [selectedCompetition]);
+
+    const isMatchCompleted = (match: Matchup) => Boolean(match.played || (match.score1 != null && match.score2 != null));
+
+    const rebuildBracketProgression = (bracket: Record<string, Matchup[]>, fromRoundIndex: number) => {
+        for (let i = fromRoundIndex; i < Object.keys(bracket).length - 1; i++) {
+            const currentRound = bracket[i.toString()];
+            const nextRound = bracket[(i + 1).toString()];
+            for (let j = 0; j < nextRound.length; j++) {
+                nextRound[j].team1 = currentRound[j * 2]?.winner || 'Por determinar';
+                nextRound[j].team2 = currentRound[j * 2 + 1]?.winner || 'Por determinar';
+
+                if (nextRound[j].team1 === 'BYE') {
+                    nextRound[j].winner = nextRound[j].team2;
+                    nextRound[j].played = true;
+                } else if (nextRound[j].team2 === 'BYE') {
+                    nextRound[j].winner = nextRound[j].team1;
+                    nextRound[j].played = true;
+                } else if (nextRound[j].team1 !== 'Por determinar' && nextRound[j].team2 !== 'Por determinar') {
+                    if (nextRound[j].winner && nextRound[j].winner !== nextRound[j].team1 && nextRound[j].winner !== nextRound[j].team2) {
+                        nextRound[j].winner = null;
+                        nextRound[j].played = false;
+                    }
+                }
+            }
+        }
+    };
+
+    const buildPlayerMatchSummary = (team: CompetitionTeam | undefined, opponentTeam: CompetitionTeam | undefined, teamResolution: any, opponentResolution: any, scoreFor: number, scoreAgainst: number) => {
+        const teamState = team?.teamState ? JSON.parse(JSON.stringify(team.teamState)) as ManagedTeam : undefined;
+        if (!teamState) return team;
+
+        teamState.players = teamState.players.map(player => {
+            const playerResult = teamResolution?.players?.find((p: any) => p.playerId === player.id);
+            if (!playerResult) return player;
+
+            const sppGain = (playerResult.td || 0) * 3 +
+                (playerResult.cas || 0) * 2 +
+                (playerResult.passes || 0) +
+                (playerResult.interceptions || 0) * 2 +
+                (playerResult.mvp ? 4 : 0);
+
+            const nextActions = { ...(player.sppActions || {}) };
+            if (playerResult.td) nextActions.TD = (nextActions.TD || 0) + playerResult.td;
+            if (playerResult.cas) nextActions.CASUALTY = (nextActions.CASUALTY || 0) + playerResult.cas;
+            if (playerResult.passes) nextActions.PASS = (nextActions.PASS || 0) + playerResult.passes;
+            if (playerResult.interceptions) nextActions.INT = (nextActions.INT || 0) + playerResult.interceptions;
+            if (playerResult.mvp) nextActions.MVP = (nextActions.MVP || 0) + 1;
+
+            const updatedPlayer: any = {
+                ...player,
+                spp: (player.spp || 0) + sppGain,
+                sppActions: nextActions,
+                missNextGame: playerResult.injury === 'mng' || playerResult.injury === 'casualty' || playerResult.injury === 'death'
+                    ? Math.max(player.missNextGame || 0, 1)
+                    : player.missNextGame,
+                lastingInjuries: [...(player.lastingInjuries || [])],
+                status: player.status,
+            };
+
+            if (playerResult.injury === 'stunned') {
+                updatedPlayer.status = 'Activo';
+            } else if (playerResult.injury === 'ko') {
+                updatedPlayer.status = 'KO';
+            } else if (playerResult.injury === 'mng' || playerResult.injury === 'casualty') {
+                updatedPlayer.status = 'Lesionado';
+            } else if (playerResult.injury === 'death') {
+                updatedPlayer.status = 'Muerto';
+            }
+
+            if ((playerResult.injury === 'casualty' || playerResult.injury === 'death') && playerResult.permanentInjury) {
+                if (!updatedPlayer.lastingInjuries.includes(playerResult.permanentInjury)) {
+                    updatedPlayer.lastingInjuries = [...updatedPlayer.lastingInjuries, playerResult.permanentInjury];
+                }
+            }
+
+            return updatedPlayer;
+        });
+
+        const previousRecord = teamState.record || { wins: 0, draws: 0, losses: 0 };
+        const result = scoreFor > scoreAgainst ? 'W' : scoreFor < scoreAgainst ? 'L' : 'D';
+        teamState.record = {
+            wins: previousRecord.wins + (result === 'W' ? 1 : 0),
+            draws: previousRecord.draws + (result === 'D' ? 1 : 0),
+            losses: previousRecord.losses + (result === 'L' ? 1 : 0),
+        };
+
+        teamState.history = [
+            ...(teamState.history || []),
+            {
+                id: crypto.randomUUID ? crypto.randomUUID() : `hist_${Date.now()}`,
+                opponentName: opponentTeam?.teamName || '',
+                score: `${scoreFor}-${scoreAgainst}`,
+                date: new Date().toLocaleDateString('es-ES'),
+                result,
+            }
+        ];
+        teamState.totalTV = calculateTeamValue(teamState);
+        teamState.updatedAt = new Date().toISOString();
+
+        const previousStats = team?.stats || { played: 0, won: 0, drawn: 0, lost: 0, tdFor: 0, tdAgainst: 0, casFor: 0, casAgainst: 0, points: 0 };
+        const updatedStats = {
+            played: previousStats.played + 1,
+            won: previousStats.won + (result === 'W' ? 1 : 0),
+            drawn: previousStats.drawn + (result === 'D' ? 1 : 0),
+            lost: previousStats.lost + (result === 'L' ? 1 : 0),
+            tdFor: previousStats.tdFor + scoreFor,
+            tdAgainst: previousStats.tdAgainst + scoreAgainst,
+            casFor: previousStats.casFor + ((teamResolution?.players || []).reduce((sum: number, p: any) => sum + (p.cas || 0), 0)),
+            casAgainst: previousStats.casAgainst + ((opponentResolution?.players || []).reduce((sum: number, p: any) => sum + (p.cas || 0), 0)),
+            points: previousStats.points + (result === 'W' ? 3 : result === 'D' ? 1 : 0),
+        };
+
+        return {
+            ...team!,
+            teamState,
+            stats: updatedStats,
+        } as CompetitionTeam;
+    };
+
+    const applyMatchResolution = (baseComp: Competition, roundIndex: string, matchIndex: number, resolution: MatchResolution) => {
+        const updatedComp = cloneCompetition(baseComp);
+        const matchupList = updatedComp.format === 'Liguilla' ? updatedComp.schedule : updatedComp.bracket;
+        if (!matchupList) return updatedComp;
+
+        const match = matchupList[roundIndex]?.[matchIndex];
+        if (!match) return updatedComp;
+
+        match.score1 = resolution.team1.score;
+        match.score2 = resolution.team2.score;
+        match.played = true;
+        match.resolution = resolution;
+
+        const winner = resolution.team1.score > resolution.team2.score
+            ? resolution.team1.teamName
+            : resolution.team2.score > resolution.team1.score
+                ? resolution.team2.teamName
+                : resolution.winnerTeam || null;
+
+        if (winner) {
+            match.winner = winner;
+        }
+
+        const team1 = updatedComp.teams.find(t => t.teamName === resolution.team1.teamName);
+        const team2 = updatedComp.teams.find(t => t.teamName === resolution.team2.teamName);
+
+        if (team1 && team2) {
+            const updatedTeam1 = buildPlayerMatchSummary(team1, team2, resolution.team1, resolution.team2, resolution.team1.score, resolution.team2.score);
+            const updatedTeam2 = buildPlayerMatchSummary(team2, team1, resolution.team2, resolution.team1, resolution.team2.score, resolution.team1.score);
+
+            updatedComp.teams = updatedComp.teams.map(team => {
+                if (team.teamName === updatedTeam1.teamName) return updatedTeam1;
+                if (team.teamName === updatedTeam2.teamName) return updatedTeam2;
+                return team;
+            });
+        }
+
+        if (updatedComp.format === 'Torneo' && match.winner) {
+            rebuildBracketProgression(updatedComp.bracket!, parseInt(roundIndex, 10));
+        }
+
+        return updatedComp;
+    };
 
     const handleCreateCompetition = () => {
         if (!newCompetitionName.trim() || !user) {
@@ -153,6 +317,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
             format: newCompetitionFormat,
             visibility: newCompVisibility,
             maxTeams: newCompMaxTeams,
+            joinCode: generateJoinCode(newCompetitionName.trim()),
             teams,
             ownerId: user.id,
             ownerName: user.name,
@@ -192,6 +357,16 @@ export const Leagues: React.FC<LeaguesProps> = ({
 
     const handleJoinCompetition = () => {
         if (!joinModalState.comp || !user) return;
+
+        if (joinModalState.comp.status !== 'Open') {
+            setConfirmation({
+                title: "Competición cerrada",
+                message: "No puedes inscribir equipos en una competición que ya ha comenzado o ha finalizado.",
+                onConfirm: () => setConfirmation(null),
+                type: 'info'
+            });
+            return;
+        }
         
         let targetTeamName = joinModalState.teamToJoin;
         
@@ -214,6 +389,16 @@ export const Leagues: React.FC<LeaguesProps> = ({
         if (!baseTeam) return;
 
         const cleanComp = cloneCompetition(joinModalState.comp);
+
+        if (cleanComp.maxTeams && cleanComp.teams.length >= cleanComp.maxTeams) {
+            setConfirmation({
+                title: "Cupo completo",
+                message: "Esta competición ya ha alcanzado el número máximo de equipos permitidos.",
+                onConfirm: () => setConfirmation(null),
+                type: 'info'
+            });
+            return;
+        }
         
         // Check if team already exists in competition
         if (cleanComp.teams.some(t => t.teamName === targetTeamName)) {
@@ -285,23 +470,9 @@ export const Leagues: React.FC<LeaguesProps> = ({
         setSelectedCompetition(updatedComp);
     };
 
-    const handleSaveScore = (score1: string, score2: string) => {
+    const handleSaveScore = (resolution: MatchResolution) => {
         if (!selectedCompetition || !scoreModalState) return;
-        const updatedComp = cloneCompetition(selectedCompetition);
-        const s1_val = parseInt(score1, 10);
-        const s2_val = parseInt(score2, 10);
-        const s1 = isNaN(s1_val) ? null : s1_val;
-        const s2 = isNaN(s2_val) ? null : s2_val;
-
-        if (updatedComp.format === 'Liguilla' && updatedComp.schedule) {
-            const match = updatedComp.schedule[scoreModalState.roundIndex][scoreModalState.matchIndex];
-            match.score1 = s1;
-            match.score2 = s2;
-        } else if (updatedComp.format === 'Torneo' && updatedComp.bracket) {
-            const match = updatedComp.bracket[scoreModalState.roundIndex][scoreModalState.matchIndex];
-            match.score1 = s1;
-            match.score2 = s2;
-        }
+        const updatedComp = applyMatchResolution(selectedCompetition, scoreModalState.roundIndex, scoreModalState.matchIndex, resolution);
         onCompetitionUpdate(updatedComp);
         setSelectedCompetition(updatedComp);
         setScoreModalState(null);
@@ -316,28 +487,13 @@ export const Leagues: React.FC<LeaguesProps> = ({
 
         if (currentMatch.winner === winnerTeam) { // Deselecting
             currentMatch.winner = null;
+            currentMatch.played = false;
         } else {
             currentMatch.winner = winnerTeam;
+            currentMatch.played = true;
         }
 
-        // Recalculate subsequent rounds
-        for (let i = parseInt(roundIndexStr); i < Object.keys(newBracket).length - 1; i++) {
-            const currentRound = newBracket[i.toString()];
-            const nextRound = newBracket[(i + 1).toString()];
-            for (let j = 0; j < nextRound.length; j++) {
-                nextRound[j].team1 = currentRound[j * 2]?.winner || 'Por determinar';
-                nextRound[j].team2 = currentRound[j * 2 + 1]?.winner || 'Por determinar';
-
-                if (nextRound[j].team1 === 'BYE') nextRound[j].winner = nextRound[j].team2;
-                else if (nextRound[j].team2 === 'BYE') nextRound[j].winner = nextRound[j].team1;
-                else if (nextRound[j].team1 !== 'Por determinar' && nextRound[j].team2 !== 'Por determinar') {
-                    // if both teams are now set, but a winner was previously selected that is no longer valid, clear winner.
-                    if (nextRound[j].winner && nextRound[j].winner !== nextRound[j].team1 && nextRound[j].winner !== nextRound[j].team2) {
-                        nextRound[j].winner = null;
-                    }
-                }
-            }
-        }
+        rebuildBracketProgression(newBracket, parseInt(roundIndexStr, 10));
 
         const updatedComp = { ...cleanComp, bracket: newBracket };
         onCompetitionUpdate(updatedComp);
@@ -873,7 +1029,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                         // Buscar en Ligas
                                         if (selectedCompetition.format === 'Liguilla' && selectedCompetition.schedule) {
                                             for (const round of Object.values(selectedCompetition.schedule)) {
-                                                const myMatch = round.find(m => !m.played && (m.team1 === user.name || m.team2 === user.name || selectedCompetition.teams.find(t => t.ownerId === user.id)?.teamName === m.team1 || selectedCompetition.teams.find(t => t.ownerId === user.id)?.teamName === m.team2));
+                                                const myMatch = round.find(m => !isMatchCompleted(m) && (m.team1 === user.name || m.team2 === user.name || selectedCompetition.teams.find(t => t.ownerId === user.id)?.teamName === m.team1 || selectedCompetition.teams.find(t => t.ownerId === user.id)?.teamName === m.team2));
                                                 if (myMatch) {
                                                     nextMatch = myMatch;
                                                     const myTeamName = selectedCompetition.teams.find(t => t.ownerId === user.id)?.teamName;
@@ -885,7 +1041,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                         // Buscar en Torneos
                                         else if (selectedCompetition.format === 'Torneo' && selectedCompetition.bracket) {
                                             for (const round of Object.values(selectedCompetition.bracket)) {
-                                                const myMatch = round.find(m => !m.played && m.team1 !== 'Por determinar' && m.team2 !== 'Por determinar' && (selectedCompetition.teams.find(t => t.ownerId === user.id)?.teamName === m.team1 || selectedCompetition.teams.find(t => t.ownerId === user.id)?.teamName === m.team2));
+                                                const myMatch = round.find(m => !isMatchCompleted(m) && m.team1 !== 'Por determinar' && m.team2 !== 'Por determinar' && (selectedCompetition.teams.find(t => t.ownerId === user.id)?.teamName === m.team1 || selectedCompetition.teams.find(t => t.ownerId === user.id)?.teamName === m.team2));
                                                 if (myMatch) {
                                                     nextMatch = myMatch;
                                                     const myTeamName = selectedCompetition.teams.find(t => t.ownerId === user.id)?.teamName;
@@ -970,12 +1126,23 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                         </div>
                                     )}
 
-                                    <div className="p-8 bg-primary/5 border border-primary/20 rounded-[2rem] text-center">
+                                    <div className="p-8 bg-primary/5 border border-primary/20 rounded-[2rem] text-center space-y-4">
                                         <span className="material-symbols-outlined text-primary text-4xl mb-3">share</span>
-                                        <h4 className="text-white font-black italic uppercase tracking-widest text-xs mb-4">Invita a más rivales</h4>
+                                        <h4 className="text-white font-black italic uppercase tracking-widest text-xs mb-4">
+                                            {selectedCompetition.visibility === 'Private' ? 'Código de acceso privado' : 'Invita a más rivales'}
+                                        </h4>
+                                        <div className="rounded-2xl border border-primary/20 bg-black/30 px-4 py-3 text-left">
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">
+                                                {selectedCompetition.visibility === 'Private' ? 'Comparte este código' : 'Enlace de invitación'}
+                                            </p>
+                                            <p className="text-[10px] font-black text-white break-all">
+                                                {selectedCompetition.joinCode || selectedCompetition.id}
+                                            </p>
+                                        </div>
                                         <button 
                                             onClick={() => {
-                                                navigator.clipboard.writeText(`${window.location.origin}?join=${selectedCompetition.id}`);
+                                                const inviteKey = selectedCompetition.joinCode || selectedCompetition.id;
+                                                navigator.clipboard.writeText(`${window.location.origin}?join=${inviteKey}`);
                                                 setConfirmation({
                                                     title: "Enlace Copiado",
                                                     message: "¡Enlace de invitación copiado al portapapeles!",
@@ -1175,12 +1342,13 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                                     <div className="font-black text-xl text-white w-8 text-center">{match.score1 ?? '-'}</div>
                                                                     <div className="text-[10px] font-black text-slate-600">VS</div>
                                                                     <div className="font-black text-xl text-white w-8 text-center">{match.score2 ?? '-'}</div>
-                                                                    {user?.id === selectedCompetition.ownerId && (
+                                                                    {!match.played && (user?.id === selectedCompetition.ownerId || selectedCompetition.teams.some(t => t.ownerId === user?.id && (t.teamName === match.team1 || t.teamName === match.team2))) && (
                                                                         <button
                                                                             onClick={() => setScoreModalState({ isOpen: true, roundIndex: roundIdx, matchIndex: matchIdx, matchup: match })}
                                                                             className="absolute inset-0 bg-primary/90 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center text-black"
                                                                         >
                                                                             <span className="material-symbols-outlined font-black">edit</span>
+                                                                            <span className="ml-2 text-[10px] font-black uppercase tracking-widest italic">Cerrar acta</span>
                                                                         </button>
                                                                     )}
                                                                 </div>
@@ -1207,23 +1375,24 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                         {(round as Matchup[]).map((match, matchIdx) => (
                                                             <div key={matchIdx} className="relative group">
                                                                 <div className="bg-zinc-900 border border-white/10 p-4 rounded-[2rem] shadow-2xl relative z-10 space-y-3">
-                                                                    <button
-                                                                        onClick={() => user?.id === selectedCompetition.ownerId && handleWinnerSelect(roundIdx, matchIdx, match.team1)}
-                                                                        disabled={match.team1 === 'BYE' || match.team1 === 'Por determinar'}
-                                                                        className={`w-full flex justify-between items-center p-3 rounded-2xl transition-all ${match.winner === match.team1 ? 'bg-primary text-black font-black italic' : 'bg-black/40 text-slate-400 font-bold hover:bg-white/5'}`}
-                                                                    >
+                                                                    <div className="w-full flex justify-between items-center p-3 rounded-2xl bg-black/40 text-slate-400 font-bold">
                                                                         <span className="truncate text-[10px] uppercase tracking-tighter">{match.team1}</span>
                                                                         <span className="font-black text-sm">{match.score1 ?? ''}</span>
-                                                                    </button>
+                                                                    </div>
                                                                     <div className="h-px bg-white/5 w-full mx-auto"></div>
-                                                                    <button
-                                                                        onClick={() => user?.id === selectedCompetition.ownerId && handleWinnerSelect(roundIdx, matchIdx, match.team2)}
-                                                                        disabled={match.team2 === 'BYE' || match.team2 === 'Por determinar'}
-                                                                        className={`w-full flex justify-between items-center p-3 rounded-2xl transition-all ${match.winner === match.team2 ? 'bg-primary text-black font-black italic' : 'bg-black/40 text-slate-400 font-bold hover:bg-white/5'}`}
-                                                                    >
+                                                                    <div className="w-full flex justify-between items-center p-3 rounded-2xl bg-black/40 text-slate-400 font-bold">
                                                                         <span className="truncate text-[10px] uppercase tracking-tighter">{match.team2}</span>
                                                                         <span className="font-black text-sm">{match.score2 ?? ''}</span>
-                                                                    </button>
+                                                                    </div>
+                                                                    {!match.played && (user?.id === selectedCompetition.ownerId || selectedCompetition.teams.some(t => t.ownerId === user?.id && (t.teamName === match.team1 || t.teamName === match.team2))) && (
+                                                                        <button
+                                                                            onClick={() => setScoreModalState({ isOpen: true, roundIndex: roundIdx, matchIndex: matchIdx, matchup: match })}
+                                                                            className="w-full mt-2 py-3 rounded-2xl bg-primary/10 hover:bg-primary/90 text-primary hover:text-black transition-all font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2"
+                                                                        >
+                                                                            <span className="material-symbols-outlined text-sm font-bold">edit</span>
+                                                                            {match.played ? 'Editar acta' : 'Cerrar acta'}
+                                                                        </button>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                         ))}
@@ -1421,43 +1590,17 @@ export const Leagues: React.FC<LeaguesProps> = ({
                 )}
             </AnimatePresence>
 
-            {/* Modal: Resultado */}
+            {/* Modal: Resultado / Acta */}
             <AnimatePresence>
-                {scoreModalState?.isOpen && (
-                    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={() => setScoreModalState(null)}>
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="bg-zinc-900 border border-white/5 rounded-[2.5rem] shadow-2xl max-w-sm w-full overflow-hidden"
-                            onClick={e => e.stopPropagation()}
-                        >
-                            <div className="p-8 border-b border-white/5">
-                                <h3 className="text-xl font-black text-white italic uppercase tracking-tighter">Marcador Final</h3>
-                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Registrar Touchdowns</p>
-                            </div>
-
-                            <form onSubmit={(e) => { e.preventDefault(); const s1 = (document.getElementById('score1') as HTMLInputElement).value; const s2 = (document.getElementById('score2') as HTMLInputElement).value; handleSaveScore(s1, s2); }}>
-                                <div className="p-8 space-y-6 text-center">
-                                    <div className="flex items-center justify-center gap-6">
-                                        <div className="flex-1 space-y-3">
-                                            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest truncate">{scoreModalState.matchup.team1}</p>
-                                            <input id="score1" type="number" defaultValue={scoreModalState.matchup.score1 ?? ''} className="w-full bg-black/60 border border-white/10 rounded-2xl py-6 text-2xl font-black text-white text-center focus:ring-2 focus:ring-primary/50 outline-none" />
-                                        </div>
-                                        <div className="text-slate-700 font-black italic pt-6">VS</div>
-                                        <div className="flex-1 space-y-3">
-                                            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest truncate">{scoreModalState.matchup.team2}</p>
-                                            <input id="score2" type="number" defaultValue={scoreModalState.matchup.score2 ?? ''} className="w-full bg-black/60 border border-white/10 rounded-2xl py-6 text-2xl font-black text-white text-center focus:ring-2 focus:ring-primary/50 outline-none" />
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="p-8 bg-black/40 flex gap-4">
-                                    <button type="button" onClick={() => setScoreModalState(null)} className="flex-1 py-4 text-slate-400 font-black uppercase tracking-widest text-[10px] hover:text-white transition-colors">Cancelar</button>
-                                    <button type="submit" className="flex-1 py-4 bg-primary text-black font-black rounded-2xl uppercase tracking-widest text-[10px] shadow-lg shadow-primary/10">Guardar Acta</button>
-                                </div>
-                            </form>
-                        </motion.div>
-                    </div>
+                {scoreModalState?.isOpen && selectedCompetition && (
+                    <CompetitionMatchResolutionModal
+                        competition={selectedCompetition}
+                        roundIndex={scoreModalState.roundIndex}
+                        matchIndex={scoreModalState.matchIndex}
+                        matchup={scoreModalState.matchup}
+                        onClose={() => setScoreModalState(null)}
+                        onSubmit={handleSaveScore}
+                    />
                 )}
             </AnimatePresence>
 

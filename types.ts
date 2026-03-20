@@ -215,6 +215,38 @@ export interface CompetitionTeam {
   };
 }
 
+export type MatchInjuryOutcome = 'none' | 'stunned' | 'ko' | 'mng' | 'casualty' | 'death';
+
+export interface MatchPlayerResult {
+  playerId: number;
+  playerName: string;
+  td: number;
+  cas: number;
+  passes: number;
+  interceptions: number;
+  mvp: boolean;
+  injury: MatchInjuryOutcome;
+  permanentInjury?: string;
+}
+
+export interface MatchTeamResult {
+  teamName: string;
+  ownerId: string;
+  ownerName: string;
+  score: number;
+  mvpPlayerId?: number | null;
+  players: MatchPlayerResult[];
+}
+
+export interface MatchResolution {
+  submittedBy?: string;
+  submittedAt?: any;
+  notes?: string;
+  winnerTeam?: string;
+  team1: MatchTeamResult;
+  team2: MatchTeamResult;
+}
+
 export interface Matchup {
   team1: string;
   team2: string;
@@ -222,6 +254,7 @@ export interface Matchup {
   score2?: number;
   winner?: string;
   played?: boolean;
+  resolution?: MatchResolution;
 }
 
 export interface CompetitionRules {
@@ -238,6 +271,7 @@ export interface Competition {
   ownerId: string;
   ownerName?: string;
   createdBy?: string;
+  joinCode?: string;
   format: 'Liguilla' | 'Torneo';
   status: 'Open' | 'In Progress' | 'Finished';
   visibility?: 'Public' | 'Private'; // Nueva propiedad

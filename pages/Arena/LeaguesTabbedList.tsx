@@ -29,16 +29,19 @@ const EmptyState: React.FC<{ icon: string; title: string; subtitle: string; ctaL
 );
 
 const MatchCompetitionCard: React.FC<{ competition: Competition; defaultTeamName: string; onJoinCompetition: (competition: Competition, teamName: string) => void; }> = ({ competition, defaultTeamName, onJoinCompetition }) => (
-    <div className="bg-zinc-900/40 border border-white/5 p-6 rounded-[2rem] flex justify-between items-center group relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2" />
-        <div className="min-w-0 relative z-10 space-y-2">
-            <p className="text-xl font-black text-white italic uppercase truncate group-hover:text-primary transition-colors">{competition.name}</p>
-            <div className="flex flex-wrap items-center gap-3 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                <span>{competition.ownerName}</span>
-                <span className="w-1 h-1 rounded-full bg-slate-700" />
-                <span>{competition.teams.length}{competition.maxTeams ? `/${competition.maxTeams}` : ''} equipos</span>
+        <div className="bg-zinc-900/40 border border-white/5 p-6 rounded-[2rem] flex justify-between items-center group relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2" />
+            <div className="min-w-0 relative z-10 space-y-2">
+                <p className="text-xl font-black text-white italic uppercase truncate group-hover:text-primary transition-colors">{competition.name}</p>
+                <div className="flex flex-wrap items-center gap-3 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                    <span>{competition.ownerName}</span>
+                    <span className="w-1 h-1 rounded-full bg-slate-700" />
+                    <span>{competition.teams.length}{competition.maxTeams ? `/${competition.maxTeams}` : ''} equipos</span>
+                    <span className={`px-2 py-1 rounded-lg ${competition.visibility === 'Private' ? 'bg-red-500/10 text-red-400' : 'bg-green-500/10 text-green-400'}`}>
+                        {competition.visibility === 'Private' ? 'Privada' : 'Pública'}
+                    </span>
+                </div>
             </div>
-        </div>
         <button
             onClick={() => onJoinCompetition(competition, defaultTeamName)}
             className="relative z-10 bg-primary/10 hover:bg-primary text-primary hover:text-black px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border border-primary/20 shrink-0"
@@ -219,6 +222,9 @@ const LeaguesTabbedList: React.FC<LeaguesTabbedListProps> = ({
                                             <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">military_tech</span> {c.format}</span>
                                             <span className="w-1 h-1 rounded-full bg-slate-700" />
                                             <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">groups</span> {c.teams.length}{c.maxTeams ? `/${c.maxTeams}` : ''} participantes</span>
+                                            <span className={`px-2 py-1 rounded-lg ${c.visibility === 'Private' ? 'bg-red-500/10 text-red-400' : 'bg-green-500/10 text-green-400'}`}>
+                                                {c.visibility === 'Private' ? 'Privada' : 'Pública'}
+                                            </span>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3 relative z-10 shrink-0">

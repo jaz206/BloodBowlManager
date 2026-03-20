@@ -1,23 +1,50 @@
 import type { Competition, Matchup } from '../../types';
 
+const cloneJson = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
+
+export const generateJoinCode = (name: string): string => {
+    const prefix = (name || 'BLOODBOWL')
+        .replace(/[^a-z0-9]/gi, '')
+        .slice(0, 4)
+        .toUpperCase() || 'BOWL';
+
+    const entropy = typeof crypto !== 'undefined' && 'randomUUID' in crypto
+        ? crypto.randomUUID().split('-')[0].toUpperCase()
+        : Math.random().toString(36).slice(2, 8).toUpperCase();
+
+    return `${prefix}-${entropy}`;
+};
+
 export const cloneCompetition = (comp: Competition): Competition => {
     const newComp: Competition = {
         id: comp.id,
         name: comp.name,
         format: comp.format,
-        teams: comp.teams.map(t => ({ ...t })),
+        teams: comp.teams.map(t => ({
+            ...t,
+            teamState: t.teamState ? cloneJson(t.teamState) : t.teamState,
+            stats: t.stats ? { ...t.stats } : t.stats,
+        })),
         ownerId: comp.ownerId,
         ownerName: comp.ownerName,
         createdBy: comp.createdBy,
+        joinCode: comp.joinCode,
+        visibility: comp.visibility,
+        maxTeams: comp.maxTeams,
         status: comp.status,
         rules: comp.rules ? { ...comp.rules } : undefined,
-        reports: comp.reports ? [...comp.reports] : [],
+        baseTeam: comp.baseTeam ? cloneJson(comp.baseTeam) : comp.baseTeam,
+        createdAt: comp.createdAt,
+        reports: comp.reports ? cloneJson(comp.reports) : [],
     };
     if (comp.schedule) {
         newComp.schedule = {};
         for (const round in comp.schedule) {
             if (Object.prototype.hasOwnProperty.call(comp.schedule, round)) {
-                newComp.schedule[round] = comp.schedule[round].map(matchup => ({ ...matchup }));
+                newComp.schedule[round] = comp.schedule[round].map(matchup => ({
+                    ...matchup,
+                    resolution: matchup.resolution ? JSON.parse(JSON.stringify(matchup.resolution)) : undefined,
+                }));
             }
         }
     } else {
@@ -27,7 +54,10 @@ export const cloneCompetition = (comp: Competition): Competition => {
         newComp.bracket = {};
         for (const round in comp.bracket) {
             if (Object.prototype.hasOwnProperty.call(comp.bracket, round)) {
-                newComp.bracket[round] = comp.bracket[round].map(matchup => ({ ...matchup }));
+                newComp.bracket[round] = comp.bracket[round].map(matchup => ({
+                    ...matchup,
+                    resolution: matchup.resolution ? JSON.parse(JSON.stringify(matchup.resolution)) : undefined,
+                }));
             }
         }
     } else {

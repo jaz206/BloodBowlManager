@@ -28,9 +28,14 @@ const CompetitionCard: React.FC<CompetitionCardProps> = ({ competition, myTeamIn
                             {competition.name}
                         </h3>
                     </div>
-                    <span className="shrink-0 ml-2 text-[9px] font-black bg-white/5 text-slate-400 px-2 py-1 rounded-lg uppercase tracking-widest">
-                        {competition.format === 'Liguilla' ? 'LIGA' : 'TORNEO'}
-                    </span>
+                    <div className="flex items-center gap-2 shrink-0 ml-2">
+                        <span className="text-[9px] font-black bg-white/5 text-slate-400 px-2 py-1 rounded-lg uppercase tracking-widest">
+                            {competition.format === 'Liguilla' ? 'LIGA' : 'TORNEO'}
+                        </span>
+                        <span className={`text-[9px] font-black px-2 py-1 rounded-lg uppercase tracking-widest ${competition.visibility === 'Private' ? 'bg-red-500/10 text-red-400' : 'bg-green-500/10 text-green-400'}`}>
+                            {competition.visibility === 'Private' ? 'PRIVADA' : 'PÚBLICA'}
+                        </span>
+                    </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
                     <span className="flex items-center gap-1">

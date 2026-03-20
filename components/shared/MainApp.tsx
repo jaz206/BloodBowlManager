@@ -29,6 +29,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import LanguageSelector from '../common/LanguageSelector';
 import { useMasterData } from '../../hooks/useMasterData';
 import { getGuestTeams } from '../../utils/testData';
+import { generateJoinCode } from '../../pages/Arena/competitionUtils';
 
 type View = 'home' | 'oracle' | 'starplayers' | 'guild' | 'tactical' | 'arena' | 'leagues' | 'guide' | 'admin';
 type SyncStatus = 'synced' | 'syncing' | 'error';
@@ -363,6 +364,7 @@ const MainApp: React.FC = () => {
       const competitionPayload = {
         ...newCompData,
         createdBy: newCompData.createdBy || user.id,
+        joinCode: newCompData.joinCode || generateJoinCode(newCompData.name),
       };
       if (isGuest) {
         setLeagues(prev => [...prev, { ...competitionPayload, id: `temp_comp_${Date.now()}` } as League]);
