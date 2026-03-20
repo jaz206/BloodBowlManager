@@ -6,6 +6,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../hooks/useAuth';
 import SkillBadge from '../../components/shared/SkillBadge';
 import SkillModal from '../../components/oracle/SkillModal';
+import { getStarPlayerImageUrl } from '../../utils/imageUtils';
 
 const StatBox: React.FC<{ label: string; value: string | number }> = ({ label, value }) => (
     <div className="bg-border-gold/40 p-2 rounded-lg border border-border-gold flex flex-col items-center justify-center min-w-[45px]">
@@ -45,7 +46,15 @@ const StarPlayerCard: React.FC<{
                 >
                     <img
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                        src={player.image || "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800&auto=format&fit=crop"}
+                        src={getStarPlayerImageUrl(player.name)}
+                        onError={(e) => {
+                            const img = e.target as HTMLImageElement;
+                            if (player.image && img.src !== player.image) {
+                                img.src = player.image;
+                            } else {
+                                img.src = "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800&auto=format&fit=crop";
+                            }
+                        }}
                         alt={player.name}
                     />
                 </motion.div>
@@ -296,7 +305,15 @@ const StarPlayers: React.FC = () => {
                                 >
                                     <img
                                         className="w-full h-full object-cover"
-                                        src={selectedPlayer.image || "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800&auto=format&fit=crop"}
+                                        src={getStarPlayerImageUrl(selectedPlayer.name)}
+                                        onError={(e) => {
+                                            const img = e.target as HTMLImageElement;
+                                            if (selectedPlayer.image && img.src !== selectedPlayer.image) {
+                                                img.src = selectedPlayer.image;
+                                            } else {
+                                                img.src = "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800&auto=format&fit=crop";
+                                            }
+                                        }}
                                         alt={selectedPlayer.name}
                                     />
                                 </motion.div>

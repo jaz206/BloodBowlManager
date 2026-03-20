@@ -160,10 +160,21 @@ export const getPlayerImageUrl = (rosterName: string, position: string, number: 
   return `${BASE_URL}${encodeURIComponent(teamPrefix)}/${encodeURIComponent(filename)}`;
 };
 
+const CREST_BASE_URL = "https://raw.githubusercontent.com/jaz206/Bloodbowl-image/main/Escudos/";
+
 /**
  * Special case for team logos if they follow a similar pattern
  */
 export const getTeamLogoUrl = (rosterName: string): string => {
-  const prefix = ROSTER_PREFIX_MAP[rosterName] || rosterName;
-  return `${BASE_URL}${encodeURIComponent(prefix + ".png")}`;
+  const prefix = getTeamPrefix(rosterName);
+  return `${CREST_BASE_URL}${encodeURIComponent(prefix + ".png")}`;
+};
+
+const STAR_BASE_URL = "https://raw.githubusercontent.com/jaz206/Bloodbowl-image/main/Star%20Players/";
+
+/**
+ * Generates the GitHub image URL for a star player
+ */
+export const getStarPlayerImageUrl = (starName: string): string => {
+  return `${STAR_BASE_URL}${encodeURIComponent("PJ - " + starName + ".png")}`;
 };
