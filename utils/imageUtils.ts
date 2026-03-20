@@ -108,17 +108,15 @@ export const getPlayerImageUrl = (rosterName: string, position: string, number: 
   if (teamPrefix === "Vampiros") teamPrefix = "Vampiros"; 
 
   // Special case for Vampires naming inconsistency in GitHub (-Thrall vs - Thrall)
-  let separator = " - ";
+  // If we move to subfolders, we can simplify this, but keeping it for backward compat if needed.
   if (posTag === "Thrall linea") {
-      // User's screenshot shows "Vampiros -Thrall linea 1.png" (no space after hyphen)
-      // but let's try to be safe and match what they have.
-      // If the URL fails, it fails, but I'll try to match the exact string "Vampiros -Thrall linea"
-      const filename = `${teamPrefix} -${posTag} ${number}.png`;
-      return `${BASE_URL}${encodeURIComponent(filename)}`;
+      // New structure: Vampiros/Thrall linea 1.png
+      return `${BASE_URL}${encodeURIComponent(teamPrefix)}/${encodeURIComponent(posTag + " " + number + ".png")}`;
   }
 
-  const filename = `${teamPrefix}${separator}${posTag} ${number}.png`;
-  return `${BASE_URL}${encodeURIComponent(filename)}`;
+  // New Recommended Structure: TeamFolder/Position Number.png
+  const filename = `${posTag} ${number}.png`;
+  return `${BASE_URL}${encodeURIComponent(teamPrefix)}/${encodeURIComponent(filename)}`;
 };
 
 /**

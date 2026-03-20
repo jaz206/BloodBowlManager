@@ -451,8 +451,9 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                                     {p.image && (
                                                         <div 
                                                             onClick={() => setZoomedImage(p.image!)}
-                                                            className="w-14 h-14 rounded-xl overflow-hidden border border-white/10 bg-black/40 cursor-zoom-in hover:scale-110 hover:border-primary/50 transition-all group/img"
+                                                            className="w-20 aspect-[4/3] rounded-lg overflow-hidden border-2 border-slate-800 bg-black/40 cursor-zoom-in hover:scale-105 hover:border-gold/50 transition-all group/img relative"
                                                         >
+                                                            <div className="absolute inset-0 border-[3px] border-black/20 pointer-events-none z-10 shadow-[inset_0_0_10px_rgba(0,0,0,0.5)]"></div>
                                                             <img 
                                                                 src={p.image} 
                                                                 alt={p.customName} 
@@ -804,13 +805,20 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
-                            className="relative max-w-4xl max-h-full flex items-center justify-center"
+                            className="relative flex items-center justify-center blood-bowl-photo-frame p-6"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <img src={zoomedImage} className="max-w-full max-h-[85vh] object-contain rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] border border-white/10" alt="Zoomed view" />
+                            <img src={zoomedImage} className="max-w-[80vw] max-h-[75vh] aspect-[4/3] object-cover rounded-sm shadow-[0_0_60px_rgba(0,0,0,0.9)] border-4 border-[#1a1a1a]" alt="Zoomed view" />
+                            
+                            {/* Decorative Rivets */}
+                            <div className="absolute top-2 left-2 w-3 h-3 rounded-full bg-slate-800 border border-slate-600 shadow-inner"></div>
+                            <div className="absolute top-2 right-2 w-3 h-3 rounded-full bg-slate-800 border border-slate-600 shadow-inner"></div>
+                            <div className="absolute bottom-2 left-2 w-3 h-3 rounded-full bg-slate-800 border border-slate-600 shadow-inner"></div>
+                            <div className="absolute bottom-2 right-2 w-3 h-3 rounded-full bg-slate-800 border border-slate-600 shadow-inner"></div>
+
                             <button 
                                 onClick={() => setZoomedImage(null)}
-                                className="absolute -top-4 -right-4 bg-primary text-black w-10 h-10 rounded-full flex items-center justify-center font-black shadow-xl hover:scale-110 transition-transform z-10"
+                                className="absolute -top-8 -right-8 bg-gold text-black w-10 h-10 rounded-full flex items-center justify-center font-black shadow-2xl hover:scale-110 transition-transform z-20 hover:bg-white"
                             >
                                 <span className="material-symbols-outlined">close</span>
                             </button>
@@ -819,6 +827,22 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                 )}
             </AnimatePresence>
 
+            <style>{`
+                .player-row-glow:hover { box-shadow: 0 0 20px rgba(202, 138, 4, 0.1); }
+                .blood-bowl-photo-frame {
+                    background: #2a2a2a;
+                    background-image: linear-gradient(135deg, #1f1f1f 25%, transparent 25%), 
+                                    linear-gradient(225deg, #1f1f1f 25%, transparent 25%), 
+                                    linear-gradient(45deg, #1f1f1f 25%, transparent 25%), 
+                                    linear-gradient(315deg, #1f1f1f 25%, #2a2a2a 25%);
+                    background-position: 10px 0, 10px 0, 0 0, 0 0;
+                    background-size: 20px 20px;
+                    background-repeat: repeat;
+                    border: 12px solid #1a1a1a;
+                    box-shadow: 0 0 40px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,0,0,0.5);
+                    border-radius: 8px;
+                }
+            `}</style>
             <input type="file" ref={crestInputRef} onChange={handleCrestUpload} accept="image/*" className="hidden" />
         </div>
     );
