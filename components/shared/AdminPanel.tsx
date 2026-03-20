@@ -111,9 +111,22 @@ const AdminPanel: React.FC = () => {
         if (!editingItem) return;
 
         const fetchGitHubImages = async () => {
+            const folder =
+                editingItem.type === 'teams'
+                    ? 'Escudos'
+                    : editingItem.type === 'stars'
+                        ? 'Star Players'
+                        : null;
+
+            if (!folder) {
+                setGitHubImages([]);
+                setIsLoadingGitHub(false);
+                return;
+            }
+
             setIsLoadingGitHub(true);
             try {
-                const response = await fetch('https://api.github.com/repos/jaz206/Bloodbowl-image/contents/');
+                const response = await fetch(`https://api.github.com/repos/jaz206/Bloodbowl-image/contents/${encodeURIComponent(folder)}?ref=main`);
                 if (!response.ok) throw new Error('Error al conectar con GitHub');
                 const data = await response.json();
                 // Filter only images
