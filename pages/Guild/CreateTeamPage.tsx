@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ManagedTeam, Team, Player, ManagedPlayer, Skill, StarPlayer } from '../../types';
 import { useMasterData } from '../../hooks/useMasterData';
@@ -35,8 +35,6 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
     const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
 
-    const carouselRef = useRef<HTMLDivElement>(null);
-
     // Initial Budget
     const startingTreasury = 1000000;
 
@@ -47,6 +45,30 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
     const currentFaction = useMemo(() => {
         return rosterTemplates[selectedFactionIdx] || null;
     }, [rosterTemplates, selectedFactionIdx]);
+
+    const selectedFactionInFilteredIdx = useMemo(() => {
+        if (!currentFaction) return -1;
+        return filteredFactions.findIndex(tm => tm.name === currentFaction.name);
+    }, [currentFaction, filteredFactions]);
+
+    const visibleFactions = useMemo(() => {
+        if (filteredFactions.length === 0) return [];
+
+        const centerIdx = selectedFactionInFilteredIdx >= 0 ? selectedFactionInFilteredIdx : 0;
+        const windowSize = 2;
+        const start = Math.max(0, centerIdx - windowSize);
+        const end = Math.min(filteredFactions.length - 1, centerIdx + windowSize);
+
+        return filteredFactions.slice(start, end + 1).map((tm, localIdx) => {
+            const globalIdx = start + localIdx;
+            return {
+                tm,
+                globalIdx,
+                distance: Math.abs(globalIdx - centerIdx),
+                isActive: globalIdx === centerIdx,
+            };
+        });
+    }, [filteredFactions, selectedFactionInFilteredIdx]);
 
     const factionStars = useMemo(() => {
         if (!currentFaction) return [];
@@ -74,9 +96,14 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
     }, [selectedFactionIdx]);
 
     const scrollCarousel = (direction: 'left' | 'right') => {
-        if (carouselRef.current) {
-            const scrollAmount = 400;
-            carouselRef.current.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
+        if (!filteredFactions.length) return;
+        const currentFilteredIdx = selectedFactionInFilteredIdx >= 0 ? selectedFactionInFilteredIdx : 0;
+        const nextIdx = direction === 'left'
+            ? Math.max(0, currentFilteredIdx - 1)
+            : Math.min(filteredFactions.length - 1, currentFilteredIdx + 1);
+        const nextMasterIdx = rosterTemplates.findIndex(tm => tm.name === filteredFactions[nextIdx]?.name);
+        if (nextMasterIdx !== -1) {
+            setSelectedFactionIdx(nextMasterIdx);
         }
     };
 
@@ -281,49 +308,92 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                             <p className="text-[12px] font-header font-black text-white italic uppercase tracking-tighter">Elección de Franquicia</p>
                         </div>
 
-                        <div className="relative flex-1 max-w-xl px-10 group">
+                        <div className="relative flex-1 max-w-4xl px-12 group">
                              <button 
                                 onClick={() => scrollCarousel('left')} 
-                                className="absolute left-0 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-gold hover:bg-gold/10 rounded-full transition-all z-20"
+                                className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center text-gold hover:bg-gold/10 rounded-full transition-all z-20 border border-gold/10 bg-black/30 backdrop-blur"
                             >
-                                <span className="material-symbols-outlined font-black text-sm">chevron_left</span>
+                                <span className="material-symbols-outlined font-black text-base">chevron_left</span>
                             </button>
                             
-                            <div ref={carouselRef} className="flex items-center gap-6 overflow-x-auto no-scrollbar scroll-smooth snap-x py-1">
-                                {filteredFactions.map((tm, idx) => {
-                                    const masterIdx = rosterTemplates.findIndex(f => f.name === tm.name);
-                                    const isSelected = selectedFactionIdx === masterIdx;
-                                    return (
-                                        <button 
-                                            key={tm.name} 
-                                            onClick={() => setSelectedFactionIdx(masterIdx)} 
-                                            className={`flex-none flex flex-col items-center gap-2 group transition-all duration-500 snap-center outline-none ${isSelected ? 'scale-105' : 'opacity-20 grayscale hover:opacity-100 hover:grayscale-0'}`}
-                                        >
-                                            <div className={`w-20 h-20 rounded-xl overflow-hidden bg-black/40 border transition-all duration-500 relative ${isSelected ? 'border-gold shadow-[0_0_15px_rgba(202,138,4,0.3)] rotate-0' : 'border-white/5 group-hover:border-white/20 -rotate-3 hover:rotate-0'}`}>
-                                                <img 
-                                                    src={getTeamLogoUrl(tm.name)} 
-                                                    onError={(e) => {
-                                                        const img = e.target as HTMLImageElement;
-                                                        if (img.src !== tm.image) img.src = tm.image;
-                                                    }}
-                                                    alt={tm.name} 
-                                                    className="w-full h-full object-contain p-2" 
-                                                />
-                                                {isSelected && (
-                                                    <motion.div layoutId="active-bg" className="absolute inset-0 bg-gold/5 pointer-events-none" />
-                                                )}
-                                            </div>
-                                            <span className={`w-24 text-[9px] font-black uppercase tracking-tight leading-tight text-center transition-colors ${isSelected ? 'text-white border-b border-gold pb-0.5' : 'text-gray-500'}`}>{tm.name}</span>
-                                        </button>
-                                    );
-                                })}
+                            <div className="flex items-center justify-center gap-4 py-2">
+                                <div className="hidden lg:flex items-center gap-4">
+                                    {visibleFactions.map(({ tm, globalIdx, distance, isActive }) => {
+                                        const masterIdx = rosterTemplates.findIndex(f => f.name === tm.name);
+                                        const sizeClass =
+                                            distance === 0 ? 'w-40 h-40 lg:w-44 lg:h-44' :
+                                            distance === 1 ? 'w-28 h-28 lg:w-32 lg:h-32' :
+                                            'w-24 h-24 lg:w-28 lg:h-28';
+                                        const toneClass = isActive
+                                            ? 'opacity-100 scale-100'
+                                            : distance === 1
+                                                ? 'opacity-75 scale-95'
+                                                : 'opacity-35 scale-90 grayscale';
+
+                                        return (
+                                            <button
+                                                key={tm.name}
+                                                onClick={() => setSelectedFactionIdx(masterIdx)}
+                                                className={`relative flex-none flex flex-col items-center gap-3 transition-all duration-500 outline-none ${toneClass}`}
+                                            >
+                                                <div className={`rounded-[1.5rem] overflow-hidden bg-black/60 border transition-all duration-500 relative ${sizeClass} ${isActive ? 'border-gold shadow-[0_0_28px_rgba(202,138,4,0.35)] -translate-y-1' : 'border-white/5 hover:border-white/20'}`}>
+                                                    <img
+                                                        src={getTeamLogoUrl(tm.name)}
+                                                        onError={(e) => {
+                                                            const img = e.target as HTMLImageElement;
+                                                            if (img.src !== tm.image) img.src = tm.image;
+                                                        }}
+                                                        alt={tm.name}
+                                                        className="w-full h-full object-contain p-3"
+                                                    />
+                                                    {isActive && (
+                                                        <motion.div layoutId="active-bg" className="absolute inset-0 bg-gold/10 pointer-events-none" />
+                                                    )}
+                                                </div>
+                                                <span className={`w-32 text-[9px] font-black uppercase tracking-tight leading-tight text-center transition-all ${isActive ? 'text-white border-b border-gold pb-1 text-[10px]' : 'text-gray-500'}`}>
+                                                    {tm.name}
+                                                </span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                <div className="lg:hidden flex items-center gap-3 overflow-x-auto no-scrollbar py-1 px-2">
+                                    {filteredFactions.map((tm) => {
+                                        const masterIdx = rosterTemplates.findIndex(f => f.name === tm.name);
+                                        const isSelected = selectedFactionIdx === masterIdx;
+                                        return (
+                                            <button
+                                                key={tm.name}
+                                                onClick={() => setSelectedFactionIdx(masterIdx)}
+                                                className={`flex-none flex flex-col items-center gap-2 group transition-all duration-500 outline-none ${isSelected ? 'scale-105' : 'opacity-30 grayscale'}`}
+                                            >
+                                                <div className={`w-24 h-24 rounded-2xl overflow-hidden bg-black/40 border transition-all duration-500 relative ${isSelected ? 'border-gold shadow-[0_0_15px_rgba(202,138,4,0.3)]' : 'border-white/5'}`}>
+                                                    <img
+                                                        src={getTeamLogoUrl(tm.name)}
+                                                        onError={(e) => {
+                                                            const img = e.target as HTMLImageElement;
+                                                            if (img.src !== tm.image) img.src = tm.image;
+                                                        }}
+                                                        alt={tm.name}
+                                                        className="w-full h-full object-contain p-2"
+                                                    />
+                                                    {isSelected && (
+                                                        <motion.div layoutId="active-bg-mobile" className="absolute inset-0 bg-gold/5 pointer-events-none" />
+                                                    )}
+                                                </div>
+                                                <span className={`w-24 text-[9px] font-black uppercase tracking-tight leading-tight text-center transition-colors ${isSelected ? 'text-white border-b border-gold pb-0.5' : 'text-gray-500'}`}>{tm.name}</span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
                             </div>
 
                             <button 
                                 onClick={() => scrollCarousel('right')} 
-                                className="absolute right-0 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-gold hover:bg-gold/10 rounded-full transition-all z-20"
+                                className="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center text-gold hover:bg-gold/10 rounded-full transition-all z-20 border border-gold/10 bg-black/30 backdrop-blur"
                             >
-                                <span className="material-symbols-outlined font-black text-sm">chevron_right</span>
+                                <span className="material-symbols-outlined font-black text-base">chevron_right</span>
                             </button>
                         </div>
 
