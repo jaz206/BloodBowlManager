@@ -8,6 +8,7 @@ interface MatchTeamRosterProps {
   side: TeamSide;
   activeTeamId: TeamSide;
   selectedPlayerId: number | null;
+  locked?: boolean;
   onSelectPlayer: (player: ManagedPlayer, side: TeamSide) => void;
 }
 
@@ -27,12 +28,19 @@ const getAccent = (side: TeamSide) => (
       }
 );
 
-const MatchTeamRoster: React.FC<MatchTeamRosterProps> = ({ team, side, activeTeamId, selectedPlayerId, onSelectPlayer }) => {
+const MatchTeamRoster: React.FC<MatchTeamRosterProps> = ({ team, side, activeTeamId, selectedPlayerId, locked = false, onSelectPlayer }) => {
   const accent = getAccent(side);
   const isActiveSide = activeTeamId === side;
 
   return (
-    <section className={`rounded-[2rem] border bg-black/25 backdrop-blur-xl p-5 ${accent.panel} ${accent.glow}`}>
+    <section className={`rounded-[2rem] border bg-black/25 backdrop-blur-xl p-5 relative overflow-hidden ${accent.panel} ${accent.glow} ${locked ? 'opacity-60' : ''}`}>
+      {locked && (
+        <div className="absolute inset-0 z-10 bg-black/45 backdrop-blur-[1px] flex items-center justify-center">
+          <div className="px-4 py-2 rounded-full border border-white/10 bg-black/80 text-[9px] font-black uppercase tracking-[0.35em] text-slate-300">
+            Esperando turno
+          </div>
+        </div>
+      )}
       <div className="flex items-center justify-between gap-4 mb-5">
         <div className="flex items-center gap-3 min-w-0">
           <div className="size-12 rounded-2xl bg-black/50 border border-white/5 overflow-hidden flex items-center justify-center shrink-0">
@@ -79,9 +87,11 @@ const MatchTeamRoster: React.FC<MatchTeamRosterProps> = ({ team, side, activeTea
           return (
             <button
               key={player.id}
+              disabled={locked}
               onClick={() => onSelectPlayer(player, side)}
               className={`relative text-left rounded-2xl border p-4 transition-all overflow-hidden group/card hover:-translate-y-0.5 hover:border-primary/30 hover:bg-white/5 ${
                 isSelected ? 'border-primary bg-primary/10 shadow-[0_0_24px_rgba(202,138,4,0.12)]' : 'border-white/5 bg-black/35'
+              } ${locked ? 'cursor-not-allowed opacity-70 hover:translate-y-0 hover:border-white/5 hover:bg-black/35' : ''}
               }`}
             >
               <div className="flex items-start gap-3">

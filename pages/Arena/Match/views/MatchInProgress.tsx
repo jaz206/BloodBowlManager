@@ -3,7 +3,6 @@ import { useMatch } from '../context/MatchContext';
 import GameLog from '../log/GameLog';
 import { S3ActionType } from '../types/match.types';
 import { ManagedPlayer } from '../../../../types';
-import MiniField from '../../../../components/common/MiniField';
 import S3ActionOrchestrator from '../components/S3ActionOrchestrator';
 import MatchTeamRoster from '../components/MatchTeamRoster';
 
@@ -17,13 +16,12 @@ const MatchInProgress: React.FC = () => {
         score, turn, half, activeTeamId, setActiveTeamId,
         selectedPlayerForAction, setSelectedPlayerForAction,
         rosterViewId, setRosterViewId,
-        rosterDisplayMode, setRosterDisplayMode,
         setIsTdModalOpen, setIsInjuryModalOpen, setIsPrayersModalOpen,
         setIsWeatherModalOpen, setIsSequenceGuideOpen,
         setIsMatchSummaryOpen, setIsConcedeModalOpen, 
         handleNextTurn, handleUpdatePlayerCondition, handleSkillClick,
         logEvent, useReroll, interactionState, setInteractionState, handleS3Action, playSound,
-        gameStatus, handleBribe, handleWizard, handlePlayerMove, ballCarrierId, handleDeselectPlayer,
+        gameStatus, handleBribe, handleWizard, ballCarrierId, handleDeselectPlayer,
         handleStrategicAction, turnActions
     } = useMatch();
 
@@ -39,7 +37,6 @@ const MatchInProgress: React.FC = () => {
 
     const { mode, pending } = interactionState;
     const activeTeam = activeTeamId === 'home' ? liveHomeTeam : liveOpponentTeam;
-    const idleTeam = activeTeamId === 'home' ? liveOpponentTeam : liveHomeTeam;
 
     // Lógica de Modificadores Climáticos (S3)
     const currentWeather = gameStatus.weather?.title || 'Perfecto';
@@ -159,10 +156,16 @@ const MatchInProgress: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-6">
-                        {/* Team Toggle (Plantilla View) */}
-                        <div className="flex bg-black/40 rounded-xl p-1 border border-white/5 ring-1 ring-white/5">
-                            <button onClick={() => setRosterViewId('home')} className={`px-4 py-1.5 rounded-lg text-[10px] font-black tracking-widest transition-all ${rosterViewId === 'home' ? 'bg-primary text-midnight shadow-lg' : 'text-slate-500 hover:text-white'}`}>LOCAL</button>
-                            <button onClick={() => setRosterViewId('opponent')} className={`px-4 py-1.5 rounded-lg text-[10px] font-black tracking-widest transition-all ${rosterViewId === 'opponent' ? 'bg-primary text-midnight shadow-lg' : 'text-slate-500 hover:text-white'}`}>RIVAL</button>
+                        <button
+                            onClick={handleNextTurn}
+                            className="px-4 py-2 rounded-full bg-primary hover:brightness-110 text-midnight text-[10px] font-black uppercase tracking-[0.3em] shadow-lg shadow-primary/20 border-b-4 border-primary-dark transition-all"
+                        >
+                            Terminar turno
+                        </button>
+                        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 border border-white/5 ring-1 ring-white/5">
+                            <span className={`size-2 rounded-full ${activeTeamId === 'home' ? 'bg-sky-400' : 'bg-red-400'} shadow-lg`} />
+                            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Actúa</span>
+                            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-diente-orco">{activeTeam.name}</span>
                         </div>
                         <div className="flex flex-col items-center">
                             <span className="text-[10px] uppercase text-slate-500 font-bold">Turno</span>
@@ -215,7 +218,7 @@ const MatchInProgress: React.FC = () => {
             {/* ── 2. CUERPO: GESTIÓN DE PLANTILLA Y DETALLE (THE HUB) ── */}
             <main className="flex-1 flex overflow-hidden p-6 gap-6 min-h-0">
                 
-                {/* ── Roster de Jugadores (Bento Grid) ── */}
+                {/* ── Roster de Jugadores (Mesa Única) ── */}
                 <section className="flex-[3] flex flex-col gap-4 overflow-hidden min-h-0">
                     <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-4">
                         <div>
@@ -224,86 +227,33 @@ const MatchInProgress: React.FC = () => {
                                 Mesa de Partido
                             </h2>
                             <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-600 mt-1">
-                                Toca una ficha para abrir su panel de acciones
+                                Solo actúa el equipo activo. Pulsa una ficha para abrir su panel.
                             </p>
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-3">
-                            <div className="flex gap-4 text-[10px] font-bold uppercase text-slate-500">
-                                <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-primary shadow-lg shadow-primary/40"></span> Listos</span>
-                                <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-slate-700"></span> Agotados</span>
-                            </div>
-                            <div className="flex bg-black/40 rounded-lg p-1 border border-white/5">
-                                <button 
-                                    onClick={() => setRosterDisplayMode('cards')}
-                                    className={`px-3 py-1 rounded-md text-[9px] font-black transition-all ${rosterDisplayMode === 'cards' ? 'bg-primary text-midnight shadow-lg' : 'text-slate-500 hover:text-white'}`}
-                                >
-                                    <span className="material-symbols-outlined text-xs mr-1 align-middle">grid_view</span>
-                                    CARTAS
-                                </button>
-                                <button 
-                                    onClick={() => setRosterDisplayMode('tactical')}
-                                    className={`px-3 py-1 rounded-md text-[9px] font-black transition-all ${rosterDisplayMode === 'tactical' ? 'bg-primary text-midnight shadow-lg' : 'text-slate-500 hover:text-white'}`}
-                                >
-                                    <span className="material-symbols-outlined text-xs mr-1 align-middle">sports_soccer</span>
-                                    TÁCTICO
-                                </button>
-                            </div>
+                        <div className="flex gap-4 text-[10px] font-bold uppercase text-slate-500">
+                            <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-primary shadow-lg shadow-primary/40"></span> Activo</span>
+                            <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-slate-700"></span> Bloqueado</span>
                         </div>
                     </div>
 
-                    <div className="flex-1 overflow-hidden">
-                        {rosterDisplayMode === 'cards' ? (
-                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 h-full min-h-0">
-                                <MatchTeamRoster
-                                    team={liveHomeTeam}
-                                    side="home"
-                                    activeTeamId={activeTeamId}
-                                    selectedPlayerId={selectedPlayerForAction?.id ?? null}
-                                    onSelectPlayer={(player) => openPlayerActionPanel(player, 'home')}
-                                />
-                                <MatchTeamRoster
-                                    team={liveOpponentTeam}
-                                    side="opponent"
-                                    activeTeamId={activeTeamId}
-                                    selectedPlayerId={selectedPlayerForAction?.id ?? null}
-                                    onSelectPlayer={(player) => openPlayerActionPanel(player, 'opponent')}
-                                />
-                            </div>
-                        ) : (
-                            <div className="h-full bg-black/40 rounded-3xl border border-white/5 p-4 flex flex-col items-center justify-center relative overflow-hidden group">
-                                <div className="absolute inset-0 flex items-center justify-center -z-10 opacity-[0.02]">
-                                    <span className="material-symbols-outlined text-[30rem] font-black group-hover:scale-110 transition-transform duration-[5s]">shield</span>
-                                </div>
-                                <div className="w-full max-w-4xl">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">
-                                            <span className="material-symbols-outlined text-primary text-lg">stadium</span>
-                                            Vista táctica
-                                        </div>
-                                        <div className="flex bg-black/40 rounded-lg p-1 border border-white/5">
-                                            <button onClick={() => setRosterViewId('home')} className={`px-3 py-1 rounded-md text-[9px] font-black transition-all ${rosterViewId === 'home' ? 'bg-primary text-midnight shadow-lg' : 'text-slate-500 hover:text-white'}`}>LOCAL</button>
-                                            <button onClick={() => setRosterViewId('opponent')} className={`px-3 py-1 rounded-md text-[9px] font-black transition-all ${rosterViewId === 'opponent' ? 'bg-primary text-midnight shadow-lg' : 'text-slate-500 hover:text-white'}`}>RIVAL</button>
-                                        </div>
-                                    </div>
-                                    <MiniField 
-                                        players={(rosterViewId === 'home' ? liveHomeTeam : liveOpponentTeam).players} 
-                                        teamColor={rosterViewId === 'home' ? 'bg-primary' : 'bg-slate-700'}
-                                        onPlayerMove={(pid, pos) => handlePlayerMove(rosterViewId, pid, pos)}
-                                        onPlayerClick={(p) => openPlayerActionPanel(p, rosterViewId)}
-                                        ballCarrierId={ballCarrierId}
-                                    />
-                                    <div className="mt-6 flex justify-center">
-                                         <div className="px-6 py-2 bg-black/60 rounded-full border border-gold/20 backdrop-blur-md">
-                                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-2">
-                                                 <span className="material-symbols-outlined text-gold text-lg">info</span>
-                                                 Puedes arrastrar y soltar los tokens para registrar posiciones
-                                             </p>
-                                         </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                    <div className="grid grid-cols-1 2xl:grid-cols-2 gap-6 flex-1 min-h-0">
+                        <MatchTeamRoster
+                            team={liveHomeTeam}
+                            side="home"
+                            activeTeamId={activeTeamId}
+                            selectedPlayerId={selectedPlayerForAction?.id ?? null}
+                            locked={activeTeamId !== 'home'}
+                            onSelectPlayer={(player) => openPlayerActionPanel(player, 'home')}
+                        />
+                        <MatchTeamRoster
+                            team={liveOpponentTeam}
+                            side="opponent"
+                            activeTeamId={activeTeamId}
+                            selectedPlayerId={selectedPlayerForAction?.id ?? null}
+                            locked={activeTeamId !== 'opponent'}
+                            onSelectPlayer={(player) => openPlayerActionPanel(player, 'opponent')}
+                        />
                     </div>
                 </section>
 
@@ -383,7 +333,6 @@ const MatchInProgress: React.FC = () => {
                                     </div>
                                 </div>
 
-                                {/* Toggles S3 & Soborno */}
                                 <div className="mt-4 pt-4 border-t border-white/10 flex flex-col gap-3">
                                     <div className="grid grid-cols-2 gap-2">
                                         <button onClick={() => handleUpdatePlayerCondition(selectedPlayerForAction.id, activeTeamId, 'isDistracted')} className={`py-2 rounded-xl border flex flex-col items-center transition-all ${selectedPlayerForAction.isDistracted ? 'bg-red-600 border-red-600 text-midnight' : 'border-red-600/30 text-red-500/60 hover:border-red-600 hover:text-red-600'}`}>
@@ -392,29 +341,50 @@ const MatchInProgress: React.FC = () => {
                                         </button>
                                         <button onClick={() => handleUpdatePlayerCondition(selectedPlayerForAction.id, activeTeamId, 'hasIndigestion')} className={`py-2 rounded-xl border flex flex-col items-center transition-all ${selectedPlayerForAction.hasIndigestion ? 'bg-amber-500 border-amber-500 text-midnight' : 'border-amber-500/30 text-amber-500/60 hover:border-amber-500 hover:text-amber-500'}`}>
                                             <span className="material-symbols-outlined text-sm">sick</span>
-                                            <span className="text-[8px] font-black uppercase mt-0.5 tracking-tighter">INDIGESTIÓN</span>
+                                            <span className="text-[8px] font-black uppercase mt-0.5 tracking-tighter">INDIGESTI�N</span>
                                         </button>
                                     </div>
+
                                     <div className="grid grid-cols-2 gap-2">
-                                        {activeTeam.tempBribes && rosterViewId === activeTeamId && (
+                                        {activeTeam.tempBribes && (
                                             <button onClick={() => handleBribe(activeTeamId)} className="w-full py-2 bg-green-900/40 border border-green-500/30 rounded-xl text-green-400 text-[9px] font-black uppercase hover:bg-green-500 hover:text-midnight transition-all flex items-center justify-center gap-2">
                                                 <span className="material-symbols-outlined text-xs">payments</span> SOBORNO
                                             </button>
                                         )}
-                                        {activeTeam.tempWizard && rosterViewId === activeTeamId && (
+                                        {activeTeam.tempWizard && (
                                             <button onClick={() => handleWizard(activeTeamId)} className="w-full py-2 bg-purple-900/40 border border-purple-500/30 rounded-xl text-purple-400 text-[9px] font-black uppercase hover:bg-purple-500 hover:text-midnight transition-all flex items-center justify-center gap-2">
                                                 <span className="material-symbols-outlined text-xs">magic_button</span> MAGO
                                             </button>
                                         )}
                                     </div>
 
-                                    {/* Advertencia de Solitario (Loner) */}
                                     {(selectedPlayerForAction.skillKeys?.includes('Loner') || selectedPlayerForAction.skillKeys?.includes('Solitario')) && (
                                         <div className="mt-2 p-2 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-center gap-2 animate-pulse">
                                             <span className="material-symbols-outlined text-amber-500 text-sm">warning</span>
                                             <span className="text-[8px] font-black text-amber-500 uppercase leading-none">Riesgo Solitario: Reroll exige 4+</span>
                                         </div>
                                     )}
+
+                                    <div className="mt-2 pt-4 border-t border-white/10">
+                                        <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 mb-3">Acciones del turno</h4>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <PEDockButton label="TD" pe="+3" icon="sports_score" onClick={() => handleTriggerAction('TOUCHDOWN')} warning={false} />
+                                            <PEDockButton label="BAJA" pe="+2" icon="skull" onClick={() => handleTriggerAction('CAS')} warning={false} />
+                                            <PEDockButton label="PASE" pe="+1" icon="near_me" onClick={() => handleTriggerAction('PASS')} warning={isSunny} />
+                                            <PEDockButton label="HAND" pe="+1" icon="rocket_launch" onClick={() => handleTriggerAction('HANDOFF')} warning={isRainy} />
+                                            <PEDockButton label="BLITZ" pe="S3" icon="bolt" onClick={() => handleStrategicAction('blitz')} warning={turnActions[activeTeamId].blitz} />
+                                            <PEDockButton label="FALTA" pe="S3" icon="gavel" onClick={() => handleStrategicAction('foul')} warning={turnActions[activeTeamId].foul} />
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-2 mt-2">
+                                            <OracleButton label="Rush (GFI)" icon="speed" onClick={() => handleTriggerAction('RUSH')} warning={isBlizzard} />
+                                            <OracleButton label="Asegurar" icon="inventory_2" onClick={() => handleTriggerAction('SECURE_BALL')} warning={isRainy} />
+                                            <OracleButton label="Clima" icon="wb_sunny" onClick={() => setIsWeatherModalOpen(true)} warning={false} />
+                                            <OracleButton label="Reglas" icon="menu_book" onClick={() => setIsSequenceGuideOpen(true)} warning={false} />
+                                            <OracleButton label="Concede" icon="flag" onClick={() => setIsConcedeModalOpen(true)} warning={false} />
+                                            <OracleButton label="Resumen" icon="dashboard" onClick={() => setIsMatchSummaryOpen(true)} warning={false} />
+                                        </div>
+                                    </div>
                                 </div>
                             </>
                         ) : (
@@ -427,62 +397,9 @@ const MatchInProgress: React.FC = () => {
                 </aside>
             </main>
 
-            {/* ── 3. EL ACTION DOCK (OPERATIVA) ── */}
+            {/* -- 3. EL CRONISTA NARRATIVO (single source of truth) -- */}
             <footer className="w-full glass border-t border-white/10 p-4 flex flex-col gap-4 mt-auto">
-                <div className="grid grid-cols-12 gap-4">
-                    {/* Acciones PE con Modificadores */}
-                    <div className="col-span-12 lg:col-span-5 flex flex-col gap-2">
-                        <h3 className="text-[10px] font-bold text-gold uppercase tracking-[0.2em] flex items-center gap-2 px-1">
-                            <span className="material-symbols-outlined text-sm">stars</span> PUNTOS DE EXPERIENCIA (PE)
-                        </h3>
-                        <div className="grid grid-cols-5 gap-2">
-                            <PEDockButton label="TD" pe="+3" icon="sports_score" onClick={() => handleTriggerAction('TOUCHDOWN')} warning={false} />
-                            <PEDockButton label="BAJA" pe="+2" icon="skull" onClick={() => handleTriggerAction('CAS')} warning={false} />
-                            <PEDockButton label="PASE" pe="+1" icon="near_me" onClick={() => handleTriggerAction('PASS')} warning={isSunny} />
-                            <PEDockButton label="HAND" pe="+1" icon="rocket_launch" onClick={() => handleTriggerAction('HANDOFF')} warning={isRainy} />
-                            <PEDockButton label="BLITZ" pe="S3" icon="bolt" onClick={() => handleStrategicAction('blitz')} warning={turnActions[activeTeamId].blitz} />
-                            <PEDockButton label="FALTA" pe="S3" icon="gavel" onClick={() => handleStrategicAction('foul')} warning={turnActions[activeTeamId].foul} />
-                        </div>
-                    </div>
-
-                    {/* Operativa de Turno */}
-                    <div className="col-span-12 lg:col-span-4 flex flex-col gap-2">
-                        <h3 className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] flex items-center gap-2 px-1">
-                            <span className="material-symbols-outlined text-sm">stadium</span> ACCIONES DE CAMPO (S3)
-                        </h3>
-                        <div className="grid grid-cols-2 gap-2 h-full">
-                            <div className="flex flex-col gap-2">
-                                <button onClick={() => logEvent('TURNOVER', 'Manual: Balón fuera.')} className="bg-red-950/40 border border-red-900/50 hover:bg-red-900 text-red-400 py-2 rounded-xl flex items-center justify-center gap-2 transition-all">
-                                    <span className="material-symbols-outlined text-sm">cancel</span>
-                                    <span className="text-[10px] font-black uppercase tracking-tighter">Turnover</span>
-                                </button>
-                                <button onClick={() => handleTriggerAction('SECURE_BALL')} className="bg-slate-800/40 border border-white/10 hover:bg-primary hover:text-midnight py-2 rounded-xl flex items-center justify-center gap-2 transition-all group relative">
-                                    <span className="material-symbols-outlined text-sm group-hover:scale-110">inventory_2</span>
-                                    <span className="text-[10px] font-black uppercase tracking-tighter">Asegurar</span>
-                                    {isRainy && <div className="warning-badge">-1</div>}
-                                </button>
-                            </div>
-                            <button onClick={handleNextTurn} className="bg-primary hover:brightness-110 text-midnight py-2 rounded-xl flex flex-col items-center justify-center gap-1 shadow-2xl shadow-primary/20 transition-all hover:scale-[1.02] border-b-4 border-primary-dark">
-                                <span className="material-symbols-outlined text-2xl font-black">logout</span>
-                                <span className="text-[10px] font-black uppercase tracking-widest leading-none">TERMINAR TURNO</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* El Oráculo */}
-                    <div className="col-span-12 lg:col-span-3 flex flex-col gap-2">
-                        <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] px-1">EL ORÁCULO</h3>
-                        <div className="grid grid-cols-2 gap-2">
-                            <OracleButton label="Rush (GFI)" icon="speed" onClick={() => handleTriggerAction('RUSH')} warning={isBlizzard} />
-                            <OracleButton label="Concede" icon="flag" onClick={() => setIsConcedeModalOpen(true)} warning={false} />
-                            <OracleButton label="Clima" icon="wb_sunny" onClick={() => setIsWeatherModalOpen(true)} warning={false} />
-                            <OracleButton label="Reglas" icon="menu_book" onClick={() => setIsSequenceGuideOpen(true)} warning={false} />
-                        </div>
-                    </div>
-                </div>
-
-                {/* ── 5. EL CRONISTA NARRATIVO (DOCK TICKER) ── */}
-                <div className="bg-black/90 rounded-xl p-5 border border-gold/30 font-mono text-sm h-48 overflow-hidden relative shadow-[0_-10px_40px_rgba(0,0,0,0.5)] flex flex-col backdrop-blur-xl">
+                <div className="bg-black/90 rounded-xl p-5 border border-gold/30 font-mono text-sm h-56 overflow-hidden relative shadow-[0_-10px_40px_rgba(0,0,0,0.5)] flex flex-col backdrop-blur-xl">
                     <div className="flex items-center justify-between mb-3 border-b border-white/10 pb-3">
                         <div className="flex items-center gap-3">
                             <span className="size-2.5 rounded-full bg-gold animate-pulse shadow-[0_0_10px_rgba(212,175,55,0.8)]"></span>
