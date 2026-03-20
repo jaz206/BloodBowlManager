@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useMatch } from '../context/MatchContext';
 import GameLog from '../log/GameLog';
 import { S3ActionType } from '../types/match.types';
@@ -47,9 +47,8 @@ const MatchInProgress: React.FC = () => {
     const openPlayerActionPanel = (player: ManagedPlayer, teamId: 'home' | 'opponent') => {
         setSelectedPlayerForAction(player);
         setActiveTeamId(teamId);
-        setInteractionState(prev => ({
-            ...prev,
-            mode: 'selecting_action',
+        setInteractionState({
+            mode: 'idle',
             pending: {
                 actorId: player.id,
                 actionType: null,
@@ -57,7 +56,7 @@ const MatchInProgress: React.FC = () => {
                 diceResult: null,
                 manualMode: true
             }
-        }));
+        });
     };
 
     const toggleStallingFlag = () => {
@@ -183,7 +182,7 @@ const MatchInProgress: React.FC = () => {
                     </div>
                 </div>
 
-                {/* ── Field Status Pill ── */}
+                {/* -- Field Status Pill -- */}
                 <div className="flex items-center justify-center -mt-1">
                     <div className="glass-dark px-6 py-1.5 rounded-full flex items-center gap-6 border border-gold/10 shadow-lg text-[10px] font-bold uppercase tracking-wider animate-in slide-in-from-top-4 duration-500">
                         <button onClick={() => setIsWeatherModalOpen(true)} className={`flex items-center gap-2 transition-colors hover:brightness-125 ${isRainy ? 'text-blue-400' : isSunny ? 'text-amber-400' : isBlizzard ? 'text-slate-200' : 'text-primary'}`}>
@@ -342,58 +341,66 @@ const MatchInProgress: React.FC = () => {
                                     </div>
                                 </div>
                                 <div className="mt-4 pt-4 border-t border-white/10 flex flex-col gap-3">
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <button onClick={() => {
-                                            const setTeam = activeTeamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
-                                            setTeam(prev => prev ? ({ ...prev, players: prev.players.map(p => p.id === selectedPlayerForAction.id ? { ...p, isActivated: true } : p) }) : prev);
-                                            setSelectedPlayerForAction(null);
-                                            setInteractionState({ mode: 'idle', pending: { actorId: null, actionType: null, objectiveId: null, diceResult: null, manualMode: true } });
-                                        }} className="py-3 rounded-xl border flex flex-col items-center transition-all bg-primary text-midnight border-primary-dark hover:brightness-110 shadow-lg shadow-primary/20">
-                                            <span className="material-symbols-outlined text-sm">task_alt</span>
-                                            <span className="text-[8px] font-black uppercase mt-0.5 tracking-tighter">ACCION OK</span>
-                                        </button>
-                                        <button onClick={() => {
-                                            const setTeam = activeTeamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
-                                            setTeam(prev => prev ? ({ ...prev, players: prev.players.map(p => p.id === selectedPlayerForAction.id ? { ...p, isActivated: true, status: 'KO' } : p) }) : prev);
-                                            logEvent('TURNOVER', `CaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­da o fallo de ${selectedPlayerForAction.customName}.`);
-                                            setSelectedPlayerForAction(null);
-                                            setInteractionState({ mode: 'idle', pending: { actorId: null, actionType: null, objectiveId: null, diceResult: null, manualMode: true } });
-                                        }} className="py-3 rounded-xl border flex flex-col items-center transition-all bg-red-600/15 border-red-500/30 text-red-300 hover:bg-red-500/25">
-                                            <span className="material-symbols-outlined text-sm">trending_down</span>
-                                            <span className="text-[8px] font-black uppercase mt-0.5 tracking-tighter">CAIDA / FALLO</span>
-                                        </button>
-                                        <button onClick={() => handleTriggerAction('BLOCK')} className="py-3 rounded-xl border flex flex-col items-center transition-all bg-orange-500/10 border-orange-500/20 text-orange-300 hover:bg-orange-500/20">
-                                            <span className="material-symbols-outlined text-sm">back_hand</span>
-                                            <span className="text-[8px] font-black uppercase mt-0.5 tracking-tighter">PLACAJE</span>
-                                        </button>
-                                        <button onClick={() => handleTriggerAction('FOUL')} className="py-3 rounded-xl border flex flex-col items-center transition-all bg-rose-500/10 border-rose-500/20 text-rose-300 hover:bg-rose-500/20">
-                                            <span className="material-symbols-outlined text-sm">gavel</span>
-                                            <span className="text-[8px] font-black uppercase mt-0.5 tracking-tighter">FALTA</span>
-                                        </button>
-                                        <button onClick={() => handleTriggerAction('PASS')} className="py-3 rounded-xl border flex flex-col items-center transition-all bg-sky-500/10 border-sky-500/20 text-sky-300 hover:bg-sky-500/20">
-                                            <span className="material-symbols-outlined text-sm">shortcut</span>
-                                            <span className="text-[8px] font-black uppercase mt-0.5 tracking-tighter">PASE</span>
-                                        </button>
-                                        <button onClick={() => handleTriggerAction('TOUCHDOWN')} className="py-3 rounded-xl border flex flex-col items-center transition-all bg-amber-500/10 border-amber-500/20 text-amber-300 hover:bg-amber-500/20">
-                                            <span className="material-symbols-outlined text-sm">sports_score</span>
-                                            <span className="text-[8px] font-black uppercase mt-0.5 tracking-tighter">TOUCHDOWN</span>
-                                        </button>
-                                        <button onClick={() => handleTriggerAction('SECURE_BALL')} className="py-3 rounded-xl border flex flex-col items-center transition-all bg-emerald-500/10 border-emerald-500/20 text-emerald-300 hover:bg-emerald-500/20">
-                                            <span className="material-symbols-outlined text-sm">inventory_2</span>
-                                            <span className="text-[8px] font-black uppercase mt-0.5 tracking-tighter">ASEGURAR</span>
-                                        </button>
-                                    </div>
+                                    {mode === 'idle' ? (
+                                        <>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <button onClick={() => {
+                                                    const setTeam = activeTeamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
+                                                    setTeam(prev => prev ? ({ ...prev, players: prev.players.map(p => p.id === selectedPlayerForAction.id ? { ...p, isActivated: true } : p) }) : prev);
+                                                    setSelectedPlayerForAction(null);
+                                                    setInteractionState({ mode: 'idle', pending: { actorId: null, actionType: null, objectiveId: null, diceResult: null, manualMode: true } });
+                                                }} className="py-3 rounded-xl border flex flex-col items-center transition-all bg-primary text-midnight border-primary-dark hover:brightness-110 shadow-lg shadow-primary/20">
+                                                    <span className="material-symbols-outlined text-sm">task_alt</span>
+                                                    <span className="text-[8px] font-black uppercase mt-0.5 tracking-tighter">ACCION OK</span>
+                                                </button>
+                                                <button onClick={() => {
+                                                    const setTeam = activeTeamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
+                                                    setTeam(prev => prev ? ({ ...prev, players: prev.players.map(p => p.id === selectedPlayerForAction.id ? { ...p, isActivated: true, status: 'KO' } : p) }) : prev);
+                                                    logEvent('TURNOVER', `Caída o fallo de ${selectedPlayerForAction.customName}.`);
+                                                    setSelectedPlayerForAction(null);
+                                                    setInteractionState({ mode: 'idle', pending: { actorId: null, actionType: null, objectiveId: null, diceResult: null, manualMode: true } });
+                                                }} className="py-3 rounded-xl border flex flex-col items-center transition-all bg-red-600/15 border-red-500/30 text-red-300 hover:bg-red-500/25">
+                                                    <span className="material-symbols-outlined text-sm">trending_down</span>
+                                                    <span className="text-[8px] font-black uppercase mt-0.5 tracking-tighter">CAIDA / FALLO</span>
+                                                </button>
+                                                <button onClick={() => handleTriggerAction('BLOCK')} className="py-3 rounded-xl border flex flex-col items-center transition-all bg-orange-500/10 border-orange-500/20 text-orange-300 hover:bg-orange-500/20">
+                                                    <span className="material-symbols-outlined text-sm">back_hand</span>
+                                                    <span className="text-[8px] font-black uppercase mt-0.5 tracking-tighter">PLACAJE</span>
+                                                </button>
+                                                <button onClick={() => handleTriggerAction('FOUL')} className="py-3 rounded-xl border flex flex-col items-center transition-all bg-rose-500/10 border-rose-500/20 text-rose-300 hover:bg-rose-500/20">
+                                                    <span className="material-symbols-outlined text-sm">gavel</span>
+                                                    <span className="text-[8px] font-black uppercase mt-0.5 tracking-tighter">FALTA</span>
+                                                </button>
+                                                <button onClick={() => handleTriggerAction('PASS')} className="py-3 rounded-xl border flex flex-col items-center transition-all bg-sky-500/10 border-sky-500/20 text-sky-300 hover:bg-sky-500/20">
+                                                    <span className="material-symbols-outlined text-sm">shortcut</span>
+                                                    <span className="text-[8px] font-black uppercase mt-0.5 tracking-tighter">PASE</span>
+                                                </button>
+                                                <button onClick={() => handleTriggerAction('TOUCHDOWN')} className="py-3 rounded-xl border flex flex-col items-center transition-all bg-amber-500/10 border-amber-500/20 text-amber-300 hover:bg-amber-500/20">
+                                                    <span className="material-symbols-outlined text-sm">sports_score</span>
+                                                    <span className="text-[8px] font-black uppercase mt-0.5 tracking-tighter">TOUCHDOWN</span>
+                                                </button>
+                                                <button onClick={() => handleTriggerAction('SECURE_BALL')} className="py-3 rounded-xl border flex flex-col items-center transition-all bg-emerald-500/10 border-emerald-500/20 text-emerald-300 hover:bg-emerald-500/20">
+                                                    <span className="material-symbols-outlined text-sm">inventory_2</span>
+                                                    <span className="text-[8px] font-black uppercase mt-0.5 tracking-tighter">ASEGURAR</span>
+                                                </button>
+                                            </div>
 
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <button onClick={() => handleUpdatePlayerCondition(selectedPlayerForAction.id, activeTeamId, 'isDistracted')} className={`py-2 rounded-xl border flex flex-col items-center transition-all ${selectedPlayerForAction.isDistracted ? 'bg-red-600 border-red-600 text-midnight' : 'border-red-600/30 text-red-500/60 hover:border-red-600 hover:text-red-600'}`}>
-                                            <span className="material-symbols-outlined text-sm">psychology_alt</span>
-                                            <span className="text-[8px] font-black uppercase mt-0.5 tracking-tighter">BONE HEAD</span>
-                                        </button>
-                                        <button onClick={() => handleUpdatePlayerCondition(selectedPlayerForAction.id, activeTeamId, 'hasIndigestion')} className={`py-2 rounded-xl border flex flex-col items-center transition-all ${selectedPlayerForAction.hasIndigestion ? 'bg-amber-500 border-amber-500 text-midnight' : 'border-amber-500/30 text-amber-500/60 hover:border-amber-500 hover:text-amber-500'}`}>
-                                            <span className="material-symbols-outlined text-sm">sick</span>
-                                            <span className="text-[8px] font-black uppercase mt-0.5 tracking-tighter">INDIGESTIÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œN</span>
-                                        </button>
-                                    </div>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <button onClick={() => handleUpdatePlayerCondition(selectedPlayerForAction.id, activeTeamId, 'isDistracted')} className={`py-2 rounded-xl border flex flex-col items-center transition-all ${selectedPlayerForAction.isDistracted ? 'bg-red-600 border-red-600 text-midnight' : 'border-red-600/30 text-red-500/60 hover:border-red-600 hover:text-red-600'}`}>
+                                                    <span className="material-symbols-outlined text-sm">psychology_alt</span>
+                                                    <span className="text-[8px] font-black uppercase mt-0.5 tracking-tighter">BONE HEAD</span>
+                                                </button>
+                                                <button onClick={() => handleUpdatePlayerCondition(selectedPlayerForAction.id, activeTeamId, 'hasIndigestion')} className={`py-2 rounded-xl border flex flex-col items-center transition-all ${selectedPlayerForAction.hasIndigestion ? 'bg-amber-500 border-amber-500 text-midnight' : 'border-amber-500/30 text-amber-500/60 hover:border-amber-500 hover:text-amber-500'}`}>
+                                                    <span className="material-symbols-outlined text-sm">sick</span>
+                                                    <span className="text-[8px] font-black uppercase mt-0.5 tracking-tighter">INDIGESTIÓN</span>
+                                                </button>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="rounded-2xl border border-white/5 bg-black/30 p-2">
+                                            <S3ActionOrchestrator />
+                                        </div>
+                                    )}
                                 </div>
                             </>
                         ) : (
@@ -422,19 +429,9 @@ const MatchInProgress: React.FC = () => {
                 </div>
             </footer>
 
-            {/* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ INTERACTIVE OVERLAYS: NUFFLE ORCHESTRATOR ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ */}
-            {mode !== 'idle' && (
-                <div className="absolute inset-0 z-[100] bg-midnight/90 backdrop-blur-xl flex items-center justify-center p-6 animate-in fade-in duration-300">
-                    <div className="max-w-xl w-full glass-dark rounded-3xl border-2 border-gold/20 p-8 shadow-3xl relative shadow-[0_0_50px_rgba(212,175,55,0.1)]">
-                        <S3ActionOrchestrator />
-                    </div>
-                </div>
-            )}
         </div>
     );
 };
-
-// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ SUB-COMPONENTES DE SOPORTE ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬
 
 const PEDockButton: React.FC<{ label: string, pe: string, icon: string, onClick: () => void, warning: boolean }> = ({ label, pe, icon, onClick, warning }) => (
     <button onClick={onClick} className="btn-pe flex flex-col items-center justify-center py-2.5 rounded-xl transition-all group relative overflow-hidden active:scale-95">
@@ -454,4 +451,5 @@ const OracleButton: React.FC<{ label: string, icon: string, onClick: () => void,
 );
 
 export default MatchInProgress;
+
 
