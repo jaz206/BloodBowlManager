@@ -74,6 +74,10 @@ export const Leagues: React.FC<LeaguesProps> = ({
     const [showReportModal, setShowReportModal] = useState(false);
     const [reportForm, setReportForm] = useState({ headline: '', subHeadline: '', article: '', homeTeam: '', opponentTeam: '', score1: 0, score2: 0 });
 
+    const isCompetitionOwnedByMe = (competition: Competition) => (
+        competition.ownerId === user?.id || competition.createdBy === user?.id
+    );
+
     // Ligas donde el usuario es un participante activo (como jugador)
     const myLeagues = useMemo(() => initialCompetitions.filter(c => c.format === 'Liguilla' && c.teams.some(t => t.ownerId === user?.id)), [initialCompetitions, user]);
     // Torneos donde el usuario participa activamente
@@ -82,7 +86,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
     const publicLeagues = useMemo(() => initialCompetitions.filter(c => c.format === 'Liguilla' && c.status === 'Open' && c.visibility !== 'Private' && !c.teams.some(t => t.ownerId === user?.id)), [initialCompetitions, user]);
     const publicTournaments = useMemo(() => initialCompetitions.filter(c => c.format === 'Torneo' && c.status === 'Open' && c.visibility !== 'Private' && !c.teams.some(t => t.ownerId === user?.id)), [initialCompetitions, user]);
     // Competiciones que el usuario ha CREADO (para gestionar)
-    const myCompetitions = useMemo(() => initialCompetitions.filter(c => c.ownerId === user?.id), [initialCompetitions, user]);
+    const myCompetitions = useMemo(() => initialCompetitions.filter(c => isCompetitionOwnedByMe(c)), [initialCompetitions, user]);
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);

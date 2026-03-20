@@ -369,10 +369,18 @@ const MainApp: React.FC = () => {
       if (isGuest) {
         setLeagues(prev => [...prev, { ...competitionPayload, id: `temp_comp_${Date.now()}` } as League]);
       } else {
-        await addDoc(collection(db, 'leagues'), {
+        const docRef = await addDoc(collection(db, 'leagues'), {
           ...competitionPayload,
           createdAt: serverTimestamp()
         });
+        setLeagues(prev => [
+          {
+            ...competitionPayload,
+            id: docRef.id,
+            createdAt: { seconds: Math.floor(Date.now() / 1000) }
+          } as League,
+          ...prev.filter(c => c.id !== docRef.id),
+        ]);
       }
       setSyncState('synced');
     } catch (error) {
@@ -391,6 +399,7 @@ const MainApp: React.FC = () => {
         const compRef = doc(db, 'leagues', updatedComp.id);
         const { id, ...data } = updatedComp;
         await updateDoc(compRef, data);
+        setLeagues(prev => prev.map(c => c.id === updatedComp.id ? updatedComp as League : c));
       }
       setSyncState('synced');
     } catch (error) {
@@ -407,6 +416,7 @@ const MainApp: React.FC = () => {
         setLeagues(prev => prev.filter(c => c.id !== compId));
       } else {
         await deleteDoc(doc(db, 'leagues', compId));
+        setLeagues(prev => prev.filter(c => c.id !== compId));
       }
       setSyncState('synced');
     } catch (error) {
