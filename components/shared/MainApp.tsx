@@ -366,9 +366,11 @@ const MainApp: React.FC = () => {
         createdBy: newCompData.createdBy || user.id,
         joinCode: newCompData.joinCode || generateJoinCode(newCompData.name),
       };
+      const tempCompetition = { ...competitionPayload, id: `temp_comp_${Date.now()}` } as League;
       if (isGuest) {
-        setLeagues(prev => [...prev, { ...competitionPayload, id: `temp_comp_${Date.now()}` } as League]);
+        setLeagues(prev => [tempCompetition, ...prev.filter(c => c.id !== tempCompetition.id)]);
       } else {
+        setLeagues(prev => [tempCompetition, ...prev.filter(c => c.id !== tempCompetition.id)]);
         const docRef = await addDoc(collection(db, 'leagues'), {
           ...competitionPayload,
           createdAt: serverTimestamp()
@@ -379,12 +381,13 @@ const MainApp: React.FC = () => {
             id: docRef.id,
             createdAt: { seconds: Math.floor(Date.now() / 1000) }
           } as League,
-          ...prev.filter(c => c.id !== docRef.id),
+          ...prev.filter(c => c.id !== docRef.id && c.id !== tempCompetition.id),
         ]);
       }
       setSyncState('synced');
     } catch (error) {
       console.error("Error creating competition:", error);
+      setLeagues(prev => prev.filter(c => !String(c.id).startsWith('temp_comp_')));
       setSyncState('error');
     }
   };
