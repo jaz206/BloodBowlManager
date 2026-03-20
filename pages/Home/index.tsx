@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import type { ManagedTeam, League as Competition, GameEvent, MatchReport } from '../../types';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../hooks/useAuth';
