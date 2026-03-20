@@ -8,6 +8,7 @@ import AdminGeneralForm from './AdminGeneralForm';
 import AdminEditorModal from './AdminEditorModal';
 import { downloadCSV, parseCSV, transformGitHubUrl } from './adminPanelUtils';
 import AdminFeedbackOverlays from './AdminFeedbackOverlays';
+import { getStarPlayerImageUrl, getTeamLogoUrl } from '../../utils/imageUtils';
 
 type AdminTab = 'general' | 'heraldo' | 'arena' | 'teams' | 'stars' | 'skills' | 'inducements';
 import { useArenaConfig, ArenaConfig } from '../../hooks/useArenaConfig';
@@ -26,6 +27,7 @@ const AdminPanel: React.FC = () => {
         syncMasterData,
         isFromFirestore,
         updateMasterItem,
+        replaceMasterItems,
         addItemToMaster,
         deleteMasterItem,
         heraldoItems
@@ -42,6 +44,7 @@ const AdminPanel: React.FC = () => {
     const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
     const [confirmModal, setConfirmModal] = useState<{ title: string; message: string; onConfirm: () => void; danger?: boolean } | null>(null);
     const [syncProgress, setSyncProgress] = useState<'idle' | 'syncing' | 'done' | 'error'>('idle');
+    const [isAutoFillingImages, setIsAutoFillingImages] = useState(false);
     const [importProgress, setImportProgress] = useState<{ total: number; done: number; errors: string[] } | null>(null);
     const [isImporting, setIsImporting] = useState(false);
     const importInputRef = React.useRef<HTMLInputElement>(null);
@@ -144,6 +147,52 @@ const AdminPanel: React.FC = () => {
 
         fetchGitHubImages();
     }, [editingItem]);
+
+    const getSuggestedImageUrl = (item: any, tab: 'teams' | 'stars') => {
+        return tab === 'teams'
+            ? getTeamLogoUrl(item.name)
+            : getStarPlayerImageUrl(item.name);
+    };
+
+    const handleAutofillImages = () => {
+        if (activeTab !== 'teams' && activeTab !== 'stars') return;
+
+        const total = activeTab === 'teams' ? teams.length : starPlayers.length;
+        setConfirmModal({
+            title: 'Autorrellenar imágenes',
+            message: activeTab === 'teams'
+                ? 'Se actualizaran todos los escudos de equipos usando el nombre de cada equipo como referencia. Esto sobrescribira las imagenes actuales de la pestaña Equipos.'
+                : 'Se actualizaran todas las imagenes de Star Players usando el nombre de cada jugador como referencia. Esto sobrescribira las imagenes actuales de la pestaña Estrellas.',
+            danger: true,
+            onConfirm: async () => {
+                setConfirmModal(null);
+                setIsAutoFillingImages(true);
+                try {
+                    if (activeTab === 'teams') {
+                        const updatedTeams = teams.map(team => {
+                            const image = getTeamLogoUrl(team.name);
+                            return { ...team, image, crestImage: image };
+                        });
+                        await replaceMasterItems('teams', updatedTeams);
+                        showToast(`${total} escudos actualizados automaticamente.`);
+                    } else {
+                        const updatedStars = starPlayers.map(star => {
+                            const image = getStarPlayerImageUrl(star.name);
+                            return { ...star, image };
+                        });
+                        await replaceMasterItems('star_players', updatedStars);
+                        showToast(`${total} estrellas actualizadas automaticamente.`);
+                    }
+                    refresh();
+                } catch (err) {
+                    console.error('Error autofilling images:', err);
+                    showToast('No se pudieron actualizar las imagenes automaticamente.', 'error');
+                } finally {
+                    setIsAutoFillingImages(false);
+                }
+            },
+        });
+    };
 
     // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ CSV EXPORT ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
     const handleExportStars = () => {
@@ -532,6 +581,16 @@ const AdminPanel: React.FC = () => {
 
                                 {(activeTab === 'stars' || activeTab === 'teams') && (
                                     <div className="flex gap-2">
+                                        <button
+                                            onClick={handleAutofillImages}
+                                            disabled={isAutoFillingImages}
+                                            className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 font-display font-black uppercase tracking-widest text-[10px] hover:bg-amber-500/20 transition-all whitespace-nowrap shadow-lg disabled:opacity-40"
+                                            title="Autorrellenar imagenes segun el nombre"
+                                        >
+                                            <span className="material-symbols-outlined text-sm">auto_fix_high</span>
+                                            {isAutoFillingImages ? 'Autorrellenando...' : 'Autorrellenar imagenes'}
+                                        </button>
+
                                         {/* Export CSV */}
                                         <button
                                             onClick={activeTab === 'stars' ? handleExportStars : handleExportTeams}
@@ -606,7 +665,17 @@ const AdminPanel: React.FC = () => {
                                         <div className="flex items-center gap-4 min-w-0">
                                             {(activeTab === 'teams' || activeTab === 'stars') && (
                                                 <div className="w-12 h-12 rounded-xl bg-black/60 border border-white/10 overflow-hidden flex-shrink-0 shadow-inner">
-                                                    <img src={item.image || item.crestImage} alt="" className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-500" />
+                                                        <img
+                                                        src={item.image || item.crestImage || getSuggestedImageUrl(item, activeTab as 'teams' | 'stars')}
+                                                        alt=""
+                                                        onError={(e) => {
+                                                            const fallback = getSuggestedImageUrl(item, activeTab as 'teams' | 'stars');
+                                                            if ((e.currentTarget as HTMLImageElement).src !== fallback) {
+                                                                (e.currentTarget as HTMLImageElement).src = fallback;
+                                                            }
+                                                        }}
+                                                        className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-500"
+                                                    />
                                                 </div>
                                             )}
                                             {activeTab === 'skills' && (

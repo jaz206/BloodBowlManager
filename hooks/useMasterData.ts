@@ -285,6 +285,20 @@ export const useMasterData = () => {
         await setDoc(ref, { items, updatedAt: serverTimestamp() }, { merge: true });
     }, []);
 
+    /**
+     * Replaces the full items array in a master_data document.
+     * Useful for bulk maintenance actions like image autofill.
+     */
+    const replaceMasterItems = useCallback(async (
+        docId: 'teams' | 'skills' | 'star_players' | 'inducements_es' | 'inducements_en' | 'heraldo',
+        items: any[]
+    ): Promise<void> => {
+        if (!db) return;
+
+        const ref = doc(db, MASTER_COL, docId);
+        await setDoc(ref, { items, updatedAt: serverTimestamp() }, { merge: true });
+    }, []);
+
     // ── Hero image helper ─────────────────────────────────────────────────────
     const updateHeroImage = useCallback(async (url: string): Promise<void> => {
         if (!db) return;
@@ -308,6 +322,7 @@ export const useMasterData = () => {
         // Actions
         syncMasterData,
         updateMasterItem,
+        replaceMasterItems,
         updateHeroImage,
         addItemToMaster: async (docId: 'teams' | 'skills' | 'star_players' | 'heraldo', item: any) => {
             if (!db) return;

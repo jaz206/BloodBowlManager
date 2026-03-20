@@ -1,5 +1,6 @@
 import React from 'react';
 import AdminGitHubImagePicker from './AdminGitHubImagePicker';
+import { getTeamLogoUrl } from '../../utils/imageUtils';
 
 type AdminTeamFormProps = {
     editingItem: any;
@@ -55,6 +56,7 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
     setGithubSearch,
 }) => {
     const currentImage = editingItem.data.image || editingItem.data.crestImage || '';
+    const suggestedImage = getTeamLogoUrl(editingItem.data.name || '');
 
     const updateTeamImage = (url: string) => {
         setEditingItem({
@@ -102,8 +104,18 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                         />
                     </div>
                     <div className="w-24 h-16 rounded-2xl border border-white/10 bg-black overflow-hidden flex-shrink-0 flex items-center justify-center">
-                        {currentImage ? (
-                            <img src={currentImage} alt="" className="w-full h-full object-cover" />
+                        {currentImage || suggestedImage ? (
+                            <img
+                                src={currentImage || suggestedImage}
+                                alt=""
+                                onError={(e) => {
+                                    const fallback = suggestedImage;
+                                    if ((e.currentTarget as HTMLImageElement).src !== fallback) {
+                                        (e.currentTarget as HTMLImageElement).src = fallback;
+                                    }
+                                }}
+                                className="w-full h-full object-cover"
+                            />
                         ) : (
                             <span className="material-symbols-outlined text-white/10">image_not_supported</span>
                         )}

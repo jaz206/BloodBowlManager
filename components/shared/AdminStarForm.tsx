@@ -1,5 +1,6 @@
 import React from 'react';
 import AdminGitHubImagePicker from './AdminGitHubImagePicker';
+import { getStarPlayerImageUrl } from '../../utils/imageUtils';
 
 type AdminStarFormProps = {
     editingItem: any;
@@ -42,6 +43,7 @@ const AdminStarForm: React.FC<AdminStarFormProps> = ({
     setGithubSearch,
 }) => {
     const currentImage = editingItem.data.image || '';
+    const suggestedImage = getStarPlayerImageUrl(editingItem.data.name || '');
 
     const updateImage = (url: string) => {
         setEditingItem({
@@ -80,8 +82,18 @@ const AdminStarForm: React.FC<AdminStarFormProps> = ({
                     <div className="space-y-4">
                         <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Vista previa</label>
                         <div className="w-full h-28 rounded-2xl border border-white/10 bg-black overflow-hidden flex items-center justify-center">
-                            {currentImage ? (
-                                <img src={currentImage} alt="" className="w-full h-full object-cover" />
+                            {currentImage || suggestedImage ? (
+                                <img
+                                    src={currentImage || suggestedImage}
+                                    alt=""
+                                    onError={(e) => {
+                                        const fallback = suggestedImage;
+                                        if ((e.currentTarget as HTMLImageElement).src !== fallback) {
+                                            (e.currentTarget as HTMLImageElement).src = fallback;
+                                        }
+                                    }}
+                                    className="w-full h-full object-cover"
+                                />
                             ) : (
                                 <span className="material-symbols-outlined text-white/10">image_not_supported</span>
                             )}
