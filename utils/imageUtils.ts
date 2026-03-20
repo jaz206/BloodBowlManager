@@ -191,41 +191,64 @@ export const getTeamLogoUrl = (rosterName: string): string => {
 const STAR_BASE_URL = "https://raw.githubusercontent.com/jaz206/Bloodbowl-image/main/Star%20Players/";
 
 /**
- * Generates the GitHub image URL for a star player
+ * Definitive lookup map: key = name in starPlayers.ts, value = exact filename in GitHub (without extension).
+ * Built from the GitHub API response. No heuristics — explicit for every player.
+ *
+ * Special prefix rules:
+ *  - Most files: "PJ - <name>.png"
+ *  - Kreek Rustgouger: "PJ -  Kreek Rustgouger.png" (double space)
+ *  - Ivar Eriksson:    "PJ- IVAR ERIKSSON.png" (no space before dash)
+ */
+const STAR_FILE_MAP: Record<string, string> = {
+  // ── Exact filename matches (curly quotes, & etc.) ──────────────────────────
+  "Boa Kon'ssstriktr":         "PJ - Boa Kon\u2019ssstriktr.png",
+  "Bryce 'The Slice' Cambuel": "PJ - Bryce \u2018The Slice\u2019 Cambuel.png",
+  "'Captain' Karina Von Riesz":"PJ - \u2018Captain\u2019 Karina Von Riesz.png",
+  "Frank 'n' Stein":           "PJ - Frank \u2018n\u2019 Stein.png",
+  "Morg 'n' Thorg":            "PJ - Morg \u2018n\u2019 Thorg.png",
+  "Dribl & Drull":             "PJ - Dribl and Drill.png",          // typo in GitHub: Drill
+  "Grak & Crumbleberry":       "PJ - Grak & Crumbleberry.png",
+  // ── ALL CAPS filenames ─────────────────────────────────────────────────────
+  "Gretchen Wachter":          "PJ - GRETCHEN WACHTER.png",
+  "Grim Ironjaw":              "PJ - GRIM IRONJAW.png",
+  "Helmut Wolf":               "PJ - HELMUT WULF.png",              // name differs: Wolf → WULF
+  "Ivan Deathshroud":          "PJ - IVAN DEATHSHROUD.png",
+  "Jeremiah Kool":             "PJ - JEREMIAH KOOL.png",
+  "Jordell Freshbreeze":       "PJ - JORDELL FRESHBREEZE.png",
+  "Josef Bugman":              "PJ - JOSEF BUGMAN.png",
+  "Rashnak Backstabber":       "PJ - RASHNAK BACKSTABBER.png",
+  "Ripper Bolgrot":            "PJ - RIPPER BOLGROT.png",
+  "Rodney Roachbait":          "PJ - RODNEY ROACHBAIT.png",
+  "Rowana Forestfoot":         "PJ - ROWANA FORESTFOOT.png",
+  "Roxanna Darknail":          "PJ - ROXANNA DARKNAIL.png",
+  "Scrappa Sorehead":          "PJ - SCRAPPA SOREHEAD.png",
+  "Scyla Anfingrimm":          "PJ - SCYLA ANFINGRIMM.png",
+  "Skitter Stab-Stab":         "PJ - SKITTER STAB-STAB.png",
+  "Skrorg Snowpelt":           "PJ - SKRORG SNOWPELT.png",
+  "Skrull Halfheight":         "PJ - SKRULL HALFHEIGHT.png",
+  "Swiftvine Glimmershard":    "PJ - SWIFTVINE GLIMMERSHARD.png",
+  "The Swift Twins":           "PJ - THE SWIFT TWINS.png",
+  "Thorsson Stoutmead":        "PJ - THORSSON STOUTMEAD.png",
+  "Wilhelm Chaney":            "PJ - WILHELM CHANEY.png",
+  "Willow Rosebark":           "PJ - WILLOW ROSEBARK.png",
+  "Zzharg Madeye":             "PJ - ZZHARG MADEYE.png",
+  // ── Extra suffix / anomalous prefix ───────────────────────────────────────
+  "Varag Ghoul-Chewer":        "PJ - Varag Ghoul-Chewer (Varag Masticamuertos).png",
+  "Kreek Rustgouger":          "PJ -  Kreek Rustgouger.png",        // double space
+  "Ivar Eriksson":             "PJ- IVAR ERIKSSON.png",             // no space before dash
+};
+
+/**
+ * Generates the GitHub raw image URL for a star player.
+ * Uses an explicit lookup map first; falls back to simple Title Case construction.
  */
 export const getStarPlayerImageUrl = (starName: string): string => {
-    // 1. Normalizar la entrada para la búsqueda (convertir comillas curvas a rectas y quitar espacios extra)
-    const lookupName = starName
-        .replace(/[‘’]/g, "'")
-        .replace(/[“”]/g, '"')
-        .trim();
+  // Normalise input (straight quotes) for the map lookup key
+  const key = starName
+    .replace(/['']/g, "'")
+    .replace(/[""]/g, '"')
+    .trim();
 
-    // Mapeo exhaustivo para corregir inconsistencias en los nombres de archivos de GitHub
-    const STAR_PLAYER_MAPPINGS: Record<string, string> = {
-        "Dribl & Drull": "Dribl and Drill", 
-        "Grak & Crumbleberry": "Grak & Crumbleberry",
-        "Frank 'n' Stein": "Frank ‘n’ Stein",
-        "Morg 'n' Thorg": "Morg ‘n’ Thorg",
-        "Boa Kon'ssstriktr": "Boa Kon’ssstriktr",
-        "Bryce 'The Slice' Cambuel": "Bryce ‘The Slice’ Cambuel",
-        "Captain Karina Von Riesz": "‘Captain’ Karina Von Riesz",
-        "Ivar Eriksson": "IVAR ERIKSSON",
-        "Kreek Rustgouger": " Kreek Rustgouger", // Tiene un doble espacio en GitHub: "PJ -  Kreek..."
-    };
-
-    let filename = "";
-    if (STAR_PLAYER_MAPPINGS[lookupName]) {
-        const mapped = STAR_PLAYER_MAPPINGS[lookupName];
-        if (lookupName === "Ivar Eriksson") {
-            filename = `PJ- ${mapped}.png`; // El archivo en GitHub es "PJ- IVAR ERIKSSON.png"
-        } else {
-            filename = `PJ - ${mapped}.png`;
-        }
-    } else {
-        // Normalización general para el resto
-        const normalized = lookupName.replace(/&/g, "and");
-        filename = `PJ - ${normalized}.png`;
-    }
-
-    return `${STAR_BASE_URL}${encodeURIComponent(filename)}`;
+  const filename = STAR_FILE_MAP[key] ?? `PJ - ${key}.png`;
+  return `${STAR_BASE_URL}${encodeURIComponent(filename)}`;
 };
