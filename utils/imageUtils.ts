@@ -194,37 +194,36 @@ const STAR_BASE_URL = "https://raw.githubusercontent.com/jaz206/Bloodbowl-image/
  * Generates the GitHub image URL for a star player
  */
 export const getStarPlayerImageUrl = (starName: string): string => {
-  // Normalize naming inconsistencies:
-  // 1. Curly quotes -> Straight quotes ('Captain', 'The Slice')
-  // 2. '&' -> 'and' (Dribl and Drill)
-  // 3. Curly ' -> straight ' (H’thark -> H'thark)
+    // 1. Normalizar la entrada para la búsqueda (convertir comillas curvas a rectas y quitar espacios extra)
+    const lookupName = starName
+        .replace(/[‘’]/g, "'")
+        .replace(/[“”]/g, '"')
+        .trim();
+
     // Mapeo exhaustivo para corregir inconsistencias en los nombres de archivos de GitHub
     const STAR_PLAYER_MAPPINGS: Record<string, string> = {
-        "Dribl & Drull": "Dribl and Drill", // El archivo en GitHub tiene un typo "Drill"
-        "Grak & Crumbleberry": "Grak & Crumbleberry", // Usa ampersand directamente
-        "Frank 'n' Stein": "Frank ‘n’ Stein", // Usa comillas curvas y 'n' minúscula
-        "Morg 'n' Thorg": "Morg ‘n’ Thorg", // Usa comillas curvas y 'n' minúscula
-        "Boa Kon'ssstriktr": "Boa Kon’ssstriktr", // Usa apóstrofo curvo
-        "Bryce 'The Slice' Cambuel": "Bryce ‘The Slice’ Cambuel", // Usa comillas curvas
-        "Captain Karina Von Riesz": "‘Captain’ Karina Von Riesz", // Añade comillas curvas
-        "‘Captain’ Karina Von Riesz": "‘Captain’ Karina Von Riesz",
-        "Ivar Eriksson": "IVAR ERIKSSON", // Caso especial PJ- sin espacio
+        "Dribl & Drull": "Dribl and Drill", 
+        "Grak & Crumbleberry": "Grak & Crumbleberry",
+        "Frank 'n' Stein": "Frank ‘n’ Stein",
+        "Morg 'n' Thorg": "Morg ‘n’ Thorg",
+        "Boa Kon'ssstriktr": "Boa Kon’ssstriktr",
+        "Bryce 'The Slice' Cambuel": "Bryce ‘The Slice’ Cambuel",
+        "Captain Karina Von Riesz": "‘Captain’ Karina Von Riesz",
+        "Ivar Eriksson": "IVAR ERIKSSON",
+        "Kreek Rustgouger": " Kreek Rustgouger", // Tiene un doble espacio en GitHub: "PJ -  Kreek..."
     };
 
     let filename = "";
-    if (STAR_PLAYER_MAPPINGS[starName]) {
-        const mapped = STAR_PLAYER_MAPPINGS[starName];
-        if (starName === "Ivar Eriksson") {
-            filename = `PJ- ${mapped}.png`;
+    if (STAR_PLAYER_MAPPINGS[lookupName]) {
+        const mapped = STAR_PLAYER_MAPPINGS[lookupName];
+        if (lookupName === "Ivar Eriksson") {
+            filename = `PJ- ${mapped}.png`; // El archivo en GitHub es "PJ- IVAR ERIKSSON.png"
         } else {
             filename = `PJ - ${mapped}.png`;
         }
     } else {
         // Normalización general para el resto
-        const normalized = starName
-            .replace(/[‘’]/g, "'")
-            .replace(/[“”]/g, '"')
-            .replace(/&/g, "and");
+        const normalized = lookupName.replace(/&/g, "and");
         filename = `PJ - ${normalized}.png`;
     }
 
