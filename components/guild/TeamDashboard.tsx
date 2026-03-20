@@ -10,7 +10,7 @@ import { generateRandomName } from '../../data/randomNames';
 import { PlayerAdvancementModal } from './PlayerAdvancementModal';
 import { useMasterData } from '../../hooks/useMasterData';
 import { calculateTeamValue } from '../../utils/teamUtils';
-import { getPlayerImageUrl, getNextImageNumber, getTeamLogoUrl } from '../../utils/imageUtils';
+import { getPlayerImageUrl, getRandomImageNumber, getTeamLogoUrl } from '../../utils/imageUtils';
 
 declare const QRCode: any;
 
@@ -228,7 +228,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
         if (team.players.length >= 16) return;
         if (team.treasury < player.cost && !team.isAutoCalculating) return;
 
-        const imgNumber = getNextImageNumber(team, player.position);
+        const imgNumber = getRandomImageNumber(team, player.position);
         const playerImageUrl = getPlayerImageUrl(team.rosterName, player.position, imgNumber);
 
         const newPlayer: ManagedPlayer = {
@@ -250,16 +250,18 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
     };
 
     const handleAutoSyncImages = () => {
-        const stats: Record<string, number> = {};
-        const updatedPlayers = team.players.map(p => {
-            const currentCount = stats[p.position] || 0;
-            const newCount = currentCount + 1;
-            stats[p.position] = newCount;
+        const updatedPlayers = [...team.players];
+        const positions = Array.from(new Set(updatedPlayers.map(p => p.position)));
+        
+        positions.forEach(pos => {
+            const posPlayers = updatedPlayers.filter(p => p.position === pos);
+            // Create a shuffled list of numbers 01-15 for this position group
+            const numbers = Array.from({ length: 15 }, (_, i) => i + 1).sort(() => Math.random() - 0.5);
             
-            return {
-                ...p,
-                image: getPlayerImageUrl(team.rosterName, p.position, newCount)
-            };
+            posPlayers.forEach((p, idx) => {
+                const imgNum = numbers[idx % numbers.length];
+                p.image = getPlayerImageUrl(team.rosterName, p.position, imgNum);
+            });
         });
 
         onUpdate({
@@ -267,6 +269,8 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
             crestImage: getTeamLogoUrl(team.rosterName) || team.crestImage,
             players: updatedPlayers
         });
+
+        // Small visual feedback is handled by onUpdate triggering re-render
     };
 
     const togglePlayerBenched = (playerId: number) => {

@@ -70,11 +70,24 @@ const POSITION_TAG_MAP: Record<string, string> = {
 };
 
 /**
- * Gets the number of players of the same position to avoid repeating images
+ * Gets a random photo number (01-15) for a position, trying to avoid immediate duplicates
  */
-export const getNextImageNumber = (team: ManagedTeam, position: string): number => {
-  const count = team.players.filter(p => p.position === position).length;
-  return count + 1;
+export const getRandomImageNumber = (team: ManagedTeam, position: string): number => {
+  const used = team.players
+    .filter(p => p.position === position && p.image)
+    .map(p => {
+        const match = p.image!.match(/(\d+)\.png$/);
+        return match ? parseInt(match[1]) : 0;
+    });
+  
+  // Try up to 10 times to get a number not in use
+  for (let i = 0; i < 10; i++) {
+    const candidate = Math.floor(Math.random() * 15) + 1;
+    if (!used.includes(candidate)) return candidate;
+  }
+  
+  // Fallback to random if all 15 are (unlikely) in use or bad luck
+  return Math.floor(Math.random() * 15) + 1;
 };
 
 /**
