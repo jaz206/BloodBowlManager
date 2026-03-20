@@ -164,6 +164,7 @@ export interface ManagedTeam {
   mortuaryAssistants?: number;
   tempWizard?: boolean;
   fanAttendance?: number;
+  hasStalled?: boolean;
   updatedAt?: any;
   totalTV?: number;
   record?: {
