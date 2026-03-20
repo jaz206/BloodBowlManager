@@ -823,10 +823,10 @@ export const Leagues: React.FC<LeaguesProps> = ({
                     Volver a la lista
                 </button>
 
-                <div className="flex flex-col md:flex-row justify-between items-start gap-8 bg-zinc-900/40 border border-white/5 p-10 rounded-[2.5rem] relative overflow-hidden backdrop-blur-xl">
+                <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-8 bg-zinc-900/40 border border-white/5 p-10 rounded-[2.5rem] relative overflow-visible backdrop-blur-xl">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-3xl rounded-full translate-x-1/3 -translate-y-1/3"></div>
 
-                    <div className="relative z-10 space-y-2">
+                    <div className="relative z-10 space-y-2 min-w-0 flex-1">
                         <div className="flex gap-2">
                             <span className={`text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-[0.2em] italic border ${selectedCompetition.status === 'Open' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-primary/10 text-primary border-primary/20'
                                 }`}>
@@ -855,7 +855,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
                     </div>
 
                     {user?.id === selectedCompetition.ownerId && (
-                        <div className="relative z-10 flex flex-wrap gap-3">
+                        <div className="relative z-10 flex flex-wrap gap-3 w-full xl:w-auto xl:justify-end shrink-0">
                             <button
                                 onClick={() => {
                                     navigator.clipboard.writeText(`${window.location.origin}?join=${selectedCompetition.id}`);
@@ -866,7 +866,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                         type: 'info'
                                     });
                                 }}
-                                className="bg-primary/10 text-primary border border-primary/30 hover:bg-primary hover:text-black font-black py-3 px-6 rounded-2xl text-[10px] uppercase tracking-widest transition-all shadow-xl shadow-primary/5 flex items-center gap-2"
+                                className="bg-primary/10 text-primary border border-primary/30 hover:bg-primary hover:text-black font-black py-3 px-6 rounded-2xl text-[10px] uppercase tracking-widest transition-all shadow-xl shadow-primary/5 flex items-center gap-2 whitespace-nowrap"
                             >
                                 <span className="material-symbols-outlined text-sm font-bold">link</span>
                                 Invitar
@@ -874,7 +874,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
                             {selectedCompetition.status === 'Open' && (
                                 <button
                                     onClick={() => handleStartCompetition(selectedCompetition)}
-                                    className="bg-green-600/20 text-green-400 border border-green-500/30 hover:bg-green-600 hover:text-white font-black py-3 px-8 rounded-2xl text-[10px] uppercase tracking-widest transition-all shadow-xl shadow-green-900/10"
+                                    className="bg-green-600/20 text-green-400 border border-green-500/30 hover:bg-green-600 hover:text-white font-black py-3 px-8 rounded-2xl text-[10px] uppercase tracking-widest transition-all shadow-xl shadow-green-900/10 whitespace-nowrap"
                                 >
                                     Iniciar Competición
                                 </button>
@@ -893,7 +893,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                         type: 'danger'
                                     });
                                 }}
-                                className="bg-red-600/20 text-red-500 border border-red-500/30 hover:bg-red-600 hover:text-white font-black py-3 px-8 rounded-2xl text-[10px] uppercase tracking-widest transition-all shadow-xl shadow-red-900/10"
+                                className="bg-red-600/20 text-red-500 border border-red-500/30 hover:bg-red-600 hover:text-white font-black py-3 px-8 rounded-2xl text-[10px] uppercase tracking-widest transition-all shadow-xl shadow-red-900/10 whitespace-nowrap"
                             >
                                 Eliminar
                             </button>

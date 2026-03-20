@@ -160,6 +160,21 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
     }, [showQr, team]);
 
     const teamValue = useMemo(() => calculateTeamValue(team), [team]);
+    const historySummary = useMemo(() => {
+        const matches = team.history || [];
+        return matches.reduce((acc, match) => {
+            acc.played += 1;
+            acc.wins += match.result === 'W' ? 1 : 0;
+            acc.draws += match.result === 'D' ? 1 : 0;
+            acc.losses += match.result === 'L' ? 1 : 0;
+            const [forScoreRaw, againstScoreRaw] = match.score.split('-');
+            const forScore = Number(forScoreRaw) || 0;
+            const againstScore = Number(againstScoreRaw) || 0;
+            acc.tdFor += forScore;
+            acc.tdAgainst += againstScore;
+            return acc;
+        }, { played: 0, wins: 0, draws: 0, losses: 0, tdFor: 0, tdAgainst: 0 });
+    }, [team.history]);
 
     const handleSkillClick = (skillName: string) => {
         const cleanedName = (skillName || '').split('(')[0].trim();
@@ -456,14 +471,20 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                         ...((p?.skills || '').toLowerCase() !== 'ninguna' ? (p?.skills || '').split(', ').map((s: string) => s.trim()).filter(Boolean) : []),
                                         ...p.gainedSkills
                                     ];
-                                    const hasLevelUp = p.spp >= (SPP_LEVELS[p.advancements?.length || 0] || 999);
+                                    const nextAdvanceCost = SPP_LEVELS[p.advancements?.length || 0] || 999;
+                                    const hasLevelUp = p.spp >= nextAdvanceCost;
                                     const isMNG = p.lastingInjuries?.includes('MNG');
                                     const isBenched = p.isBenched ?? true;
+                                    const statusLabel = p.statusDetail
+                                        || (hasLevelUp ? 'Pendiente de subida' : '')
+                                        || (isMNG ? `Lesionado${(p.missNextGame || 0) > 0 ? ` · MNG x${p.missNextGame}` : ''}` : '')
+                                        || (p.lastingInjuries?.length ? 'Con lesiones permanentes' : '')
+                                        || (isBenched ? 'Reserva' : 'Activo');
 
                                     return (
                                         <div
                                             key={p.id}
-                                            className={`bg-white/5 border rounded-2xl p-5 backdrop-blur-custom player-row-glow transition-all relative overflow-hidden group/card ${hasLevelUp ? 'border-primary/40 bg-primary/5' : 'border-white/10'} ${isBenched ? 'opacity-70 grayscale' : ''}`}
+                                            className={`bg-white/5 border rounded-2xl p-5 backdrop-blur-custom player-row-glow transition-all relative overflow-hidden group/card ${hasLevelUp ? 'border-primary/40 bg-primary/5' : 'border-white/10'} ${isBenched ? 'opacity-80' : ''}`}
                                         >
                                             {hasLevelUp && (
                                                 <div className="absolute top-0 left-0 w-1 h-full bg-primary shadow-[0_0_15px_rgba(202,138,4,0.6)]"></div>
@@ -476,22 +497,22 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                                             #{p.id.toString().slice(-2)}
                                                         </span>
                                                     </div>
-                                                    {p.image && (
-                                                        <div 
-                                                            onClick={() => setZoomedImage(p.image!)}
-                                                            className="w-24 aspect-[4/3] rounded-lg overflow-hidden border-2 border-slate-800 bg-black cursor-zoom-in hover:scale-105 hover:border-gold/50 transition-all group/img relative"
-                                                        >
-                                                            {/* Blurred layer */}
-                                                            <img src={p.image} className="absolute inset-0 w-full h-full object-cover blur-lg opacity-30 scale-125" alt="" />
-                                                            {/* Main Image layer */}
-                                                            <img 
-                                                                src={p.image} 
-                                                                alt={p.customName} 
-                                                                className="relative w-full h-full object-contain z-10 grayscale group-hover/img:grayscale-0 transition-all opacity-80 group-hover/img:opacity-100"
-                                                            />
-                                                        </div>
-                                                    )}
-                                                </div>
+                                                        {p.image && (
+                                                            <div 
+                                                                onClick={() => setZoomedImage(p.image!)}
+                                                                className="w-24 aspect-[4/3] rounded-lg overflow-hidden border-2 border-slate-800 bg-black cursor-zoom-in hover:scale-105 hover:border-gold/50 transition-all group/img relative"
+                                                            >
+                                                                {/* Blurred layer */}
+                                                                <img src={p.image} className="absolute inset-0 w-full h-full object-cover blur-lg opacity-30 scale-125" alt="" />
+                                                                {/* Main Image layer */}
+                                                                <img 
+                                                                    src={p.image} 
+                                                                    alt={p.customName} 
+                                                                    className="relative w-full h-full object-contain z-10 transition-all opacity-90 group-hover/img:opacity-100"
+                                                                />
+                                                            </div>
+                                                        )}
+                                                    </div>
 
                                                 <div className="flex-1 grid grid-cols-1 md:grid-cols-6 gap-6 items-center w-full">
                                                     <div className="md:col-span-1">
@@ -510,6 +531,33 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                                                     {p.customName}
                                                                 </h3>
                                                                 <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest leading-none">{p.position}</p>
+                                                                <div className="flex flex-wrap gap-1.5 mt-2">
+                                                                    {hasLevelUp && (
+                                                                        <span className="px-2 py-1 rounded-full bg-primary/15 border border-primary/25 text-primary text-[9px] font-black uppercase tracking-widest">
+                                                                            Subida pendiente
+                                                                        </span>
+                                                                    )}
+                                                                    {isMNG && (
+                                                                        <span className="px-2 py-1 rounded-full bg-blood/10 border border-blood/25 text-blood text-[9px] font-black uppercase tracking-widest">
+                                                                            Lesionado
+                                                                        </span>
+                                                                    )}
+                                                                    {(p.missNextGame || 0) > 0 && (
+                                                                        <span className="px-2 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-400 text-[9px] font-black uppercase tracking-widest">
+                                                                            MNG x{p.missNextGame}
+                                                                        </span>
+                                                                    )}
+                                                                    {(p.lastingInjuries?.length || 0) > 0 && (
+                                                                        <span className="px-2 py-1 rounded-full bg-white/5 border border-white/10 text-slate-300 text-[9px] font-black uppercase tracking-widest">
+                                                                            {p.lastingInjuries.length} lesión{p.lastingInjuries.length > 1 ? 'es' : ''}
+                                                                        </span>
+                                                                    )}
+                                                                    {isBenched && !hasLevelUp && !isMNG && (p.missNextGame || 0) === 0 && (
+                                                                        <span className="px-2 py-1 rounded-full bg-slate-800/80 border border-white/5 text-slate-400 text-[9px] font-black uppercase tracking-widest">
+                                                                            Reserva
+                                                                        </span>
+                                                                    )}
+                                                                </div>
                                                             </>
                                                         )}
                                                     </div>
@@ -546,13 +594,13 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                                         <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-widest leading-none">
                                                             <span className={hasLevelUp ? 'text-primary' : 'text-slate-500'}>SPP: {p.spp}</span>
                                                             {hasLevelUp && (
-                                                                <button onClick={() => setAdvancingPlayer(p)} className="material-symbols-outlined text-primary text-sm fill-1 hover:scale-125 transition-transform animate-pulse">star</button>
+                                                                <button onClick={() => setAdvancingPlayer(p)} className="material-symbols-outlined text-primary text-sm fill-1 hover:scale-125 transition-transform animate-pulse" title="Aplicar subida">star</button>
                                                             )}
                                                         </div>
                                                         <div className="flex-1 bg-black/40 h-1 rounded-full overflow-hidden border border-white/5">
                                                             <div
                                                                 className={`h-full transition-all duration-1000 ${hasLevelUp ? 'bg-primary shadow-[0_0_8px_rgba(202,138,4,0.5)]' : 'bg-slate-700'}`}
-                                                                style={{ width: `${Math.min(100, (p.spp / (SPP_LEVELS[p.advancements?.length || 0] || 999)) * 100)}%` }}
+                                                                style={{ width: `${Math.min(100, (p.spp / nextAdvanceCost) * 100)}%` }}
                                                             ></div>
                                                         </div>
                                                     </div>
@@ -560,9 +608,9 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                                     <div className="md:col-span-1 flex items-center justify-end gap-4 text-right">
                                                         <div>
                                                             <p className="text-2xl font-epilogue italic font-black text-white leading-none">{p.cost / 1000}k</p>
-                                                            <span className={`text-[9px] font-black uppercase tracking-widest flex items-center justify-end gap-1 mt-1 leading-none ${isMNG ? 'text-blood' : 'text-green-500'}`}>
-                                                                <span className="material-symbols-outlined text-[12px]">{isMNG ? 'cancel' : 'check_circle'}</span>
-                                                                {isMNG ? 'MNG' : isBenched ? 'RESERVA' : 'OK'}
+                                                            <span className={`text-[9px] font-black uppercase tracking-widest flex items-center justify-end gap-1 mt-1 leading-none ${hasLevelUp ? 'text-primary' : isMNG ? 'text-blood' : 'text-green-500'}`}>
+                                                                <span className="material-symbols-outlined text-[12px]">{hasLevelUp ? 'star' : isMNG ? 'cancel' : 'check_circle'}</span>
+                                                                {statusLabel}
                                                             </span>
                                                         </div>
                                                         <div className="relative group/menu">
@@ -697,6 +745,77 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
 
                         {activeTab === 'history' && (
                             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <div className="bg-white/5 border border-white/10 rounded-[2rem] p-8">
+                                    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+                                        <div>
+                                            <h3 className="text-xl font-epilogue font-black text-primary uppercase tracking-widest italic">Análisis de Partidos</h3>
+                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Balance real del clon en competición</p>
+                                        </div>
+                                        <span className="px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-widest">
+                                            {historySummary.played} jugados
+                                        </span>
+                                    </div>
+
+                                    {team.history && team.history.length > 0 ? (
+                                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                                            <div className="rounded-2xl bg-black/30 border border-white/5 p-5">
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Victorias</p>
+                                                <p className="text-3xl font-epilogue font-black text-green-400 italic mt-2">{historySummary.wins}</p>
+                                            </div>
+                                            <div className="rounded-2xl bg-black/30 border border-white/5 p-5">
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Empates</p>
+                                                <p className="text-3xl font-epilogue font-black text-amber-300 italic mt-2">{historySummary.draws}</p>
+                                            </div>
+                                            <div className="rounded-2xl bg-black/30 border border-white/5 p-5">
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Derrotas</p>
+                                                <p className="text-3xl font-epilogue font-black text-blood italic mt-2">{historySummary.losses}</p>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 p-8 text-center">
+                                            <p className="text-slate-400 font-black uppercase tracking-widest italic text-xs">Aún no hay partidos registrados para este clon</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {team.history && team.history.length > 0 && (
+                                    <div className="bg-white/5 border border-white/10 rounded-[2rem] p-8">
+                                        <h3 className="text-xl font-epilogue font-black text-primary uppercase tracking-widest mb-8 italic">Partidos Jugados</h3>
+                                        <div className="space-y-4">
+                                            {team.history.slice().reverse().map(match => {
+                                                const resultTone = match.result === 'W'
+                                                    ? 'bg-green-500/10 text-green-400 border-green-500/20'
+                                                    : match.result === 'D'
+                                                        ? 'bg-amber-500/10 text-amber-300 border-amber-500/20'
+                                                        : 'bg-blood/10 text-blood border-blood/20';
+
+                                                return (
+                                                    <div key={match.id} className="rounded-2xl bg-black/30 border border-white/5 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                                        <div className="min-w-0">
+                                                            <div className="flex flex-wrap items-center gap-2 mb-2">
+                                                                <span className={`px-2.5 py-1 rounded-full border text-[9px] font-black uppercase tracking-widest ${resultTone}`}>
+                                                                    {match.result === 'W' ? 'Victoria' : match.result === 'D' ? 'Empate' : 'Derrota'}
+                                                                </span>
+                                                                <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">{match.date}</span>
+                                                            </div>
+                                                            <p className="text-white font-black italic uppercase tracking-tight text-lg truncate">
+                                                                vs {match.opponentName}
+                                                            </p>
+                                                            <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">
+                                                                Marcador final: {match.score}
+                                                            </p>
+                                                        </div>
+                                                        <div className="shrink-0 text-right">
+                                                            <p className="text-2xl font-epilogue font-black italic text-white leading-none">{match.score}</p>
+                                                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mt-1">{match.result}</p>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div className="bg-white/5 border border-white/10 rounded-[2rem] p-8">
                                     <h3 className="text-xl font-epilogue font-black text-primary uppercase tracking-widest mb-8 italic">Archivo Histórico</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
