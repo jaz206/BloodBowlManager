@@ -1,86 +1,86 @@
-# 🩸 Blood Bowl Assistant – Arquitectura de la Aplicación
+﻿# Arquitectura de la Aplicacion
 
-Documento de diseño de navegación, arquitectura y estructura del proyecto para **Blood Bowl Assistant**.
+Documento de referencia del estado actual de Blood Bowl Manager.
 
-## stack tecnológico (V2026)
-- **Framework**: React 19 + Vite (Rápido, tipado estricto).
-- **Lenguaje**: TypeScript (Contratos robustos).
-- **Backend / DB**: Firebase Firestore (Clones de equipo en la nube).
-- **Almacenamiento**: Firebase Storage (Escudos y posters).
-- **Estilo**: Tailwind CSS (Glassmorphism, Dark Fantasy Premium).
+## Stack
+- React 19
+- Vite
+- TypeScript
+- Firestore
+- Tailwind CSS
+- Framer Motion
 
----
+## Mapa funcional
 
-## 🗺️ Mapa de Navegación Maestro
+### Home
+- Dashboard de arena con competicion activa.
+- Accesos rapidos a gremio, oraculo y arena.
 
-### HOME (Portal Principal)
-- **Estado de la Arena**: Dashboard dinámico con `activeCompId`.
-  - Selector de liga propio/participante.
-  - Pestañas: Clasificación | Anotadores | Carniceros.
-  - Siguiente Encuentro: Enlace directo al Match Center con pre-carga de equipos.
-- **Acceso Rápido**: Gremio (Equipos), Oráculo (Reglas), Arena (Ligas).
+### Oraculo
+- Equipos.
+- Habilidades.
+- Star players.
+- Incentivos.
+- Reglas y calculadoras.
 
-### ORÁCULO (Enciclopedia)
-- **Enciclopedia de Equipos**: Ficha detallada + Radar Chart.
-- **Manual de Habilidades**: Listado bilingüe categorizado (ahora incluye Triquiñuelas S3).
-- **Jugadores Estrella**: Compendio de mercenarios.
-- **Calculadora**: Probabilidades de tiradas 1D6, 2D6 y Bloqueos.
+### Gremio
+- Gestion de equipos.
+- Roster.
+- Pizarra tactica.
+- Historico y snapshots.
 
-### GREMIO (Gestión de Equipos)
-- **Mis Equipos**: Lista filtrable por valor y raza.
-- **Ficha de Equipo**:
-  - Roster / Jugadores / Snapshots (Cápsulas de tiempo).
-  - Pizarra táctica / Historial de crónicas.
-- **Creación de Equipo**: Draft interactivo S3.
+### Arena
+- Mis ligas.
+- Mis torneos.
+- Descubrir.
+- Organizacion.
+- Partido en vivo y cronica.
 
-### ARENA (Competición)
-- **Ligas (Pestañas)**:
-  - **Mis Ligas**: Liguillas Round-Robin jugadas por el usuario.
-  - **Mis Torneos**: Brackets y eliminatorias jugadas por el usuario.
-  - **Descubrir**: Buscador de competiciones públicas.
-  - **Organización**: Herramientas de administrador para ligas creadas.
-- **Partido en Vivo**:
-  - **Consola de Match**: Orquestador de turnos y eventos técnicos.
-  - **El Cronista de Nuffle**: Narración automática épica en vivo.
-  - **Post-Game Wizard**: Cierre de acta, SPP, MVP y Crónica final.
+## Particion del codigo
 
----
+### Admin panel
+El panel de admin se dividio en piezas pequenas para reducir acoplamiento:
+- `components/shared/AdminPanel.tsx`: contenedor principal y logica de datos.
+- `components/shared/AdminEditorModal.tsx`: modal de edicion.
+- `components/shared/AdminGeneralForm.tsx`: editor general.
+- `components/shared/AdminTeamForm.tsx`: editor de equipos.
+- `components/shared/AdminStarForm.tsx`: editor de estrellas.
+- `components/shared/AdminSkillsForm.tsx`: editor de habilidades.
+- `components/shared/AdminInducementForm.tsx`: editor de incentivos.
+- `components/shared/AdminHeraldoForm.tsx`: editor de heraldo.
+- `components/shared/AdminGitHubImagePicker.tsx`: explorador de imagenes.
+- `components/shared/AdminFeedbackOverlays.tsx`: overlays de feedback.
+- `components/shared/adminPanelUtils.ts`: CSV y normalizacion de URLs.
 
-## 📁 Arquitectura Documental del Código
+### Competiciones
+La vista de ligas tambien se separo:
+- `pages/Arena/LeaguesPage.tsx`
+- `pages/Arena/CompetitionCard.tsx`
+- `pages/Arena/LeaguesTabbedList.tsx`
+- `pages/Arena/competitionUtils.ts`
 
-```text
-src/
-├── components/
-│   ├── arena/           # MatchCenterPage, MatchOrchestrator, EventLog.
-│   ├── common/          # Componentes básicos (MiniField, PlayerStatusCard).
-│   ├── layout/          # Navbar, Sidebars, Footer.
-│   └── modals/          # RulesModals (Injury, Foul), SystemModals (Join, Delete).
-├── pages/
-│   ├── Home/            # Estado de la Arena dashboard.
-│   ├── Oracle/          # SkillsPage, StarPlayersPage, Inducements.
-│   ├── Guild/           # ManageTeams, TeamDetailDashboard.
-│   └── Arena/           # LeaguesPage (Tabs architecture).
-├── contexts/
-│   ├── LanguageContext/ # Bilingüismo (ES/EN).
-│   └── MatchContext/    # Estado inyectado para el partido en vivo.
-├── data/                # skills_es.ts, teams.ts, match_rules_s3.
-└── types.ts             # El contrato maestro de interfaces (Competition, ManagedTeam, MatchReport).
-```
+## Flujo del admin
+1. `AdminPanel` carga maestros y estado de arena.
+2. `AdminEditorModal` recibe props y decide que formulario renderizar.
+3. Los formularios especializados actualizan solo su dominio.
+4. El selector de imagenes consulta GitHub y guarda URLs directas.
+5. El modal escribe `createdBy` cuando toca competiciones o contenido con ownership.
 
----
+## Flujo de imagenes
+- Equipos -> carpeta `Escudos`.
+- Star players -> carpeta `Star Players`.
+- El panel consulta la API de GitHub por carpeta, no por la raiz del repo.
+- Las URLs se guardan como enlaces directos a `raw.githubusercontent.com`.
 
-## 🎮 El Motor de Nuffle (Lógica de Partido)
-El partido funciona como una **línea temporal de eventos inyectada**.
-1. **MatchProvider**: Crea el almacén de datos (teams, turns, events).
-2. **MatchEngine**: Procesa la entrada (click en "Touchdown") y genera:
-   - Actualización de marcador.
-   - SPP para el autor.
-   - Log técnico.
-   - **Narrativa Épica**: El motor de `newsGenerator` traduce el dato a un relato periódico.
+## Firestore
+- `master_data`: lectura publica, escritura admin.
+- `settings_master`: lectura publica, escritura admin.
+- `users/{uid}`: solo propietario.
+- `competitions` y `leagues`: compatibles con `createdBy` y `ownerId`.
+- `live_matches` y `tactical_plays`: creador o admin.
+- Deny-by-default al final.
 
-Esto permite que al final del encuentro, la aplicación genere un **MatchReport** persistente en Firestore que alimenta **La Gaceta** de la liga.
-
----
-
-## 🎯 Objetivo: La Biblia del Blood Bowl
-Este documento debe servir como blueprint para una futura migración a **Android (Kotlin/Compose)**. Los estados de Firestore y la lógica de los Engines son la única fuente de verdad (Single Source of Truth).
+## Notas de mantenimiento
+- Cuando un bloque de UI se haga largo, debe salir a un subcomponente o a un hook.
+- Si una vista mezcla logica de datos y markup, conviene separar primero las utilidades puras.
+- Los archivos grandes que mas conviene seguir partiendo son `AdminPanel.tsx` y `AdminEditorModal.tsx`.

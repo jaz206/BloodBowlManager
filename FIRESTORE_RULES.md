@@ -1,3 +1,17 @@
+﻿# Reglas de Firestore
+
+Este archivo documenta las reglas reales que debe tener Firestore en este proyecto.
+La version viva debe mantenerse sincronizada con `firestore.rules`.
+
+## Objetivo
+- Deny by default.
+- Mantener compatibilidad con documentos nuevos (`createdBy`) y antiguos (`ownerId`).
+- Proteger datos maestros, usuarios y competiciones.
+- Mantener el admin panel funcional sin abrir escritura global.
+
+## Reglas actuales
+
+```firestore
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -48,7 +62,7 @@ service cloud.firestore {
       );
     }
 
-    // Dueño de una competición padre (colección nueva)
+    // DueÃ±o de una competiciÃ³n padre (colecciÃ³n nueva)
     function isCompetitionOwner(compId) {
       return signedIn()
         && (
@@ -57,7 +71,7 @@ service cloud.firestore {
         );
     }
 
-    // Dueño de una liga padre (colección legado)
+    // DueÃ±o de una liga padre (colecciÃ³n legado)
     function isLeagueOwner(compId) {
       return signedIn()
         && (
@@ -80,7 +94,7 @@ service cloud.firestore {
     }
 
     // -----------------------------
-    // USERS (privado por dueño)
+    // USERS (privado por dueÃ±o)
     // -----------------------------
     match /users/{userId} {
       allow read: if isOwner(userId);
@@ -89,7 +103,7 @@ service cloud.firestore {
       allow create: if isOwner(userId)
         && !(request.resource.data.isAdmin == true);
 
-      // Dueño puede editar su doc, pero no tocar isAdmin (salvo admin real)
+      // DueÃ±o puede editar su doc, pero no tocar isAdmin (salvo admin real)
       allow update, delete: if isOwner(userId)
         && (
           !('isAdmin' in request.resource.data)
@@ -116,14 +130,14 @@ service cloud.firestore {
       allow update: if (isAdmin() || isDocOwnerOrCreator()) && keepsOwnership();
       allow delete: if isAdmin() || isDocOwnerOrCreator();
 
-      // Subcolecciones: heredan permiso del dueño de la competición padre
+      // Subcolecciones: heredan permiso del dueÃ±o de la competiciÃ³n padre
       match /{document=**} {
         allow read: if true;
         allow write: if isAdmin() || isCompetitionOwner(compId);
       }
     }
 
-    // Compatibilidad con la colección actualmente usada por la app
+    // Compatibilidad con la colecciÃ³n actualmente usada por la app
     match /leagues/{compId} {
       allow read: if true;
 
@@ -173,3 +187,17 @@ service cloud.firestore {
     }
   }
 }
+
+```
+
+## Resumen operativo
+- `master_data` y `settings_master` permiten lectura publica y escritura solo a admins.
+- `users/{uid}` queda aislado por propietario.
+- `competitions` y `leagues` aceptan ownership por `createdBy` o `ownerId`.
+- `live_matches` y `tactical_plays` solo aceptan documentos creados por el usuario autenticado.
+- Las subcolecciones heredan permisos del documento padre.
+
+## Migracion
+- Si un documento viejo solo tiene `ownerId`, sigue siendo valido.
+- Si creas o actualizas datos nuevos, usa `createdBy`.
+- Cuando puedas, migra los documentos antiguos para que lleven ambos campos durante la transicion.
