@@ -361,16 +361,16 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                         <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="bg-white/[0.02] border border-white/10 rounded-2xl px-10 py-8 group hover:bg-white/[0.04] transition-all">
                                 <p className="text-[10px] text-gray-500 font-black tracking-[0.3em] uppercase mb-4">Total Partidos</p>
-                                <p className="text-6xl font-header font-black text-white group-hover:text-gold transition-colors">{activeSummaryTeamData.total}</p>
+                                <p className="text-6xl font-header font-black text-white group-hover:text-gold transition-colors">{activeSummaryTeamData?.total || 0}</p>
                             </div>
                             <div className="bg-white/[0.02] border border-white/10 rounded-2xl px-10 py-8 group hover:bg-white/[0.04] transition-all">
                                 <p className="text-[10px] text-gray-500 font-black tracking-[0.3em] uppercase mb-4">Victorias</p>
-                                <p className="text-6xl font-header font-black text-gold">{activeSummaryTeamData.wins}</p>
+                                <p className="text-6xl font-header font-black text-gold">{activeSummaryTeamData?.wins || 0}</p>
                             </div>
                             <div className="bg-white/[0.02] border border-white/10 rounded-2xl px-10 py-8 group hover:bg-white/[0.04] transition-all">
                                 <p className="text-[10px] text-gray-500 font-black tracking-[0.3em] uppercase mb-4">Palmarés</p>
                                 <p className="text-6xl font-header font-black text-white group-hover:text-gold transition-colors">
-                                    {(activeSummaryTeam as any).titles || 0} 
+                                    {activeSummaryTeam ? (activeSummaryTeam as any).titles || 0 : 0} 
                                     <span className="text-xs font-black text-gray-600 uppercase ml-4 tracking-widest italic">Título</span>
                                 </p>
                             </div>

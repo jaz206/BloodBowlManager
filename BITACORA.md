@@ -58,7 +58,11 @@ root/
 *   *Archivos Afectados*: `Home/index.tsx`, `LeaguesPage.tsx`, `newsGenerator.ts`, `MatchSummaryModal.tsx`, `types.ts`.
 
 ### [2026-03-16] El Orquestador de la Arena (Modularización)
-*   **MatchPage Orchestrator**: Refactorización de la lógica de partido en submódulos de reglas y vistas independientes.
+*   **MatchPage Orchestrator**:- [x] Normalización de nombres de Star Players (comillas y '&').
+- [x] Implementación de fallback heráldico en Dashboard y Gremio.
+- [x] Actualización de reglas de seguridad Firestore (v2 Segura).
+- [x] Separación de activos para Orcos y Orcos Negros.
+ independientes.
 *   **Motor de Reglas S3**: Extracción de `injuryEngine`, `foulEngine` y `sppEngine`.
 *   *Archivos Afectados*: `MatchPage.tsx`, `MatchOrchestrator.tsx`, `useMatchState.ts`.
 
