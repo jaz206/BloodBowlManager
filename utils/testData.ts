@@ -3,8 +3,24 @@ import { teamsData } from '../data/teams';
 
 const generateId = () => Math.floor(Math.random() * 1000000);
 
+const normalizeRosterLabel = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/gi, '')
+    .toLowerCase();
+
 const createPlayerFromRoster = (teamRoster: any[], positionName: string, customName: string, id: number): ManagedPlayer => {
-  const rosterEntry = teamRoster.find(p => p.position === positionName);
+  const normalizedTarget = normalizeRosterLabel(positionName);
+  const rosterEntry = teamRoster.find(p => {
+    if (!p?.position) return false;
+    if (p.position === positionName) return true;
+
+    const normalizedRosterPosition = normalizeRosterLabel(String(p.position));
+    return normalizedRosterPosition === normalizedTarget
+      || normalizedRosterPosition.includes(normalizedTarget)
+      || normalizedTarget.includes(normalizedRosterPosition);
+  });
   if (!rosterEntry) {
     throw new Error(`Position ${positionName} not found in roster`);
   }
