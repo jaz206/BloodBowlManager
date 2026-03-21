@@ -240,7 +240,11 @@ const MainApp: React.FC = () => {
       if (!db) return;
       // Sanitizar datos para evitar errores de Firestore (eliminar undefined)
       const sanitizedTeam = JSON.parse(JSON.stringify(newTeamData));
-      await addDoc(collection(db, 'users', user.id, 'teams'), sanitizedTeam);
+      const teamRef = await addDoc(collection(db, 'users', user.id, 'teams'), sanitizedTeam);
+      setManagedTeams(prev => {
+        if (prev.some(team => team.id === teamRef.id)) return prev;
+        return [...prev, { ...sanitizedTeam, id: teamRef.id } as ManagedTeam];
+      });
       setSyncState('synced');
     } catch (error) {
       console.error("Error creating team in Firestore:", error);
@@ -305,6 +309,7 @@ const MainApp: React.FC = () => {
     setSyncState('syncing');
     try {
       await deleteDoc(doc(db, 'users', user.id, 'teams', teamId));
+      setManagedTeams(prev => prev.filter(team => team.id !== teamId));
       setSyncState('synced');
     } catch (error) {
       console.error("Error deleting team:", error);

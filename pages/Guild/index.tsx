@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import type { ManagedTeam } from '../../types';
 import TeamCreator from './CreateTeamPage';
@@ -156,7 +156,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
         try {
             await onTeamCreate(teamData);
             setIsCreating(false);
-            showToast('¡Franquicia fundada con éxito!');
+            showToast('Â¡Franquicia fundada con Ã©xito!');
         } catch (error) {
             showToast('Error al fundar la franquicia.');
         }
@@ -188,7 +188,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                 const importedTeams = JSON.parse(text);
 
                 if (!Array.isArray(importedTeams) || (importedTeams.length > 0 && (!importedTeams[0].name || !importedTeams[0].rosterName))) {
-                    throw new Error("El archivo no parece contener una lista de equipos válida.");
+                    throw new Error("El archivo no parece contener una lista de equipos vÃ¡lida.");
                 }
 
                 const existingTeamNames = new Set(teams.map(t => t.name.toLowerCase()));
@@ -206,9 +206,9 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                 }
 
                 let importResult = '';
-                if (newTeamsCount > 0) importResult += `${newTeamsCount} equipos importados con éxito.`;
+                if (newTeamsCount > 0) importResult += `${newTeamsCount} equipos importados con Ã©xito.`;
                 if (skippedTeams.length > 0) importResult += `${skippedTeams.length} duplicados omitidos.`;
-                if (!importResult) importResult = 'No se importaron nuevos equipos. Archivo vacío o duplicados.';
+                if (!importResult) importResult = 'No se importaron nuevos equipos. Archivo vacÃ­o o duplicados.';
                 showToast(importResult.trim());
 
 
@@ -270,13 +270,42 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
         setSelectedTeamsForExport([]);
     };
 
+    const requestTeamDeletion = (team: ManagedTeam) => {
+        const activeComp = competitions?.find(c =>
+            c.status === 'In Progress' &&
+            c.teams.some(t => t.teamName === team.name && t.ownerId === user?.id)
+        );
+
+        if (activeComp) {
+            setConfirmation({
+                title: 'Equipo en Competición',
+                message: `No puedes disolver a los "${team.name}" porque están disputando la competición "${activeComp.name}". Retira al equipo de la competición o finalízala antes de borrarlo.`,
+                type: 'info',
+                onConfirm: () => setConfirmation(null)
+            });
+            return;
+        }
+
+        setConfirmation({
+            title: '¿Abandonar Franquicia?',
+            message: `Vas a retirar permanentemente a los "${team.name}" del Gremio. Todo su progreso se perderá.`,
+            type: 'danger',
+            onConfirm: () => {
+                if (openTeamId === team.id) {
+                    setOpenTeamId(null);
+                }
+                onTeamDelete(team.id!);
+            }
+        });
+    };
+
     if (openTeam) {
         return (
             <div className="animate-in fade-in duration-500">
                 <TeamDashboard
                     team={openTeam}
                     onUpdate={onTeamUpdate}
-                    onDeleteRequest={onTeamDelete}
+                    onDeleteRequest={() => requestTeamDeletion(openTeam)}
                     onBack={() => setOpenTeamId(null)}
                     isGuest={isGuest}
                     matchReports={matchReports}
@@ -290,7 +319,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
             <div className="p-6 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
                 <button onClick={() => setIsCreating(false)} className="flex items-center gap-2 text-gold font-black uppercase tracking-widest text-[10px] hover:underline group italic">
                     <span className="material-symbols-outlined font-bold group-hover:-translate-x-1 transition-transform">arrow_back</span>
-                    Cancelar Fundación
+                    Cancelar FundaciÃ³n
                 </button>
                 <TeamCreator onTeamCreate={handleTeamCreate} initialRosterName={initialRosterForCreation} />
             </div>
@@ -368,10 +397,10 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                 <p className="text-6xl font-header font-black text-gold">{activeSummaryTeamData?.wins || 0}</p>
                             </div>
                             <div className="bg-white/[0.02] border border-white/10 rounded-2xl px-10 py-8 group hover:bg-white/[0.04] transition-all">
-                                <p className="text-[10px] text-gray-500 font-black tracking-[0.3em] uppercase mb-4">Palmarés</p>
+                                <p className="text-[10px] text-gray-500 font-black tracking-[0.3em] uppercase mb-4">PalmarÃ©s</p>
                                 <p className="text-6xl font-header font-black text-white group-hover:text-gold transition-colors">
                                     {activeSummaryTeam ? (activeSummaryTeam as any).titles || 0 : 0} 
-                                    <span className="text-xs font-black text-gray-600 uppercase ml-4 tracking-widest italic">Título</span>
+                                    <span className="text-xs font-black text-gray-600 uppercase ml-4 tracking-widest italic">TÃ­tulo</span>
                                 </p>
                             </div>
                         </section>
@@ -384,8 +413,8 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                         <div className="col-span-4">Equipo / Nombre</div>
                         <div className="col-span-2 text-center">Raza</div>
                         <div className="col-span-2 text-center">VAE</div>
-                        <div className="col-span-2 text-center">Récord (V-E-D)</div>
-                        <div className="col-span-2 text-right">Acción</div>
+                        <div className="col-span-2 text-center">RÃ©cord (V-E-D)</div>
+                        <div className="col-span-2 text-right">AcciÃ³n</div>
                     </div>
 
                     <div className="space-y-3">
@@ -479,7 +508,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                     {/* Record */}
                                     <div className="col-span-2 text-center">
                                         <span className="text-[11px] font-black tracking-[0.2em] text-gray-300 bg-white/5 px-6 py-3 rounded-2xl border border-white/5 inline-block group-hover:border-gold/10 transition-colors">
-                                            {record.wins} — {record.draws} — {record.losses}
+                                            {record.wins} â€” {record.draws} â€” {record.losses}
                                         </span>
                                     </div>
 
@@ -492,32 +521,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                             "Gestionar mi banquillo"
                                         </button>
                                         <button 
-                                            onClick={(e) => { 
-                                                e.stopPropagation(); 
-                                                
-                                                // Check if the team is currently in an active competition
-                                                const activeComp = competitions?.find(c => 
-                                                    c.status === 'In Progress' && 
-                                                    c.teams.some(t => t.teamName === team.name && t.ownerId === user?.id)
-                                                );
-
-                                                if (activeComp) {
-                                                    setConfirmation({
-                                                        title: 'Equipo en Competición',
-                                                        message: `No puedes disolver a los "${team.name}" porque están disputando la competición "${activeComp.name}". Retira al equipo de la competición o finalízala antes de borrarlo.`,
-                                                        type: 'info',
-                                                        onConfirm: () => setConfirmation(null)
-                                                    });
-                                                    return;
-                                                }
-
-                                                setConfirmation({
-                                                    title: '¿Abandonar Franquicia?',
-                                                    message: `Vas a retirar permanentemente a los "${team.name}" del Gremio. Todo su progreso se perderá.`,
-                                                    type: 'danger',
-                                                    onConfirm: () => onTeamDelete(team.id!)
-                                                });
-                                            }}
+                                            onClick={(e) => { e.stopPropagation(); requestTeamDeletion(team); }}
                                             className="w-12 h-12 rounded-xl border border-white/5 bg-white/5 text-gray-500 hover:bg-blood hover:text-white hover:border-blood transition-all flex items-center justify-center group/del"
                                         >
                                             <span className="material-symbols-outlined text-lg">delete</span>
@@ -539,7 +543,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
             </main>
 
             <footer className="max-w-7xl mx-auto px-6 py-20 border-t border-white/5 text-center mt-20">
-                <p className="text-gray-600 text-[10px] uppercase tracking-[0.6em] font-black">© 2499 BLOOD BOWL MANAGEMENT SYSTEM — EL GREMIO DE REIKLAND</p>
+                <p className="text-gray-600 text-[10px] uppercase tracking-[0.6em] font-black">Â© 2499 BLOOD BOWL MANAGEMENT SYSTEM â€” EL GREMIO DE REIKLAND</p>
                 <div className="mt-6 flex justify-center gap-6">
                     <button onClick={handleImportClick} className="text-[9px] font-black text-gray-500 hover:text-gold uppercase tracking-widest transition-all">Importar JSON</button>
                     <button onClick={() => setIsExportModalOpen(true)} className="text-[9px] font-black text-gray-500 hover:text-gold uppercase tracking-widest transition-all">Exportar Datos</button>
@@ -591,3 +595,4 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
 };
 
 export default TeamManager;
+

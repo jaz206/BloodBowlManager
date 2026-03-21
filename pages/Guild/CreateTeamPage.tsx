@@ -119,6 +119,13 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
     const remainingBudget = startingTreasury - totalCost;
     const isBudgetNegative = remainingBudget < 0;
     const canFinalize = teamName.trim().length >= 3 && draftedPlayers.length >= 11 && !isBudgetNegative;
+    const finalizeHints = useMemo(() => {
+        const hints: string[] = [];
+        if (teamName.trim().length < 3) hints.push('elige un nombre de al menos 3 caracteres');
+        if (draftedPlayers.length < 11) hints.push(`faltan ${11 - draftedPlayers.length} jugadores para el mínimo`);
+        if (isBudgetNegative) hints.push('ajusta el presupuesto para no quedar en negativo');
+        return hints;
+    }, [teamName, draftedPlayers.length, isBudgetNegative]);
 
     const getRandomFantasyName = (faction: string, position: string, teamPlayers: ManagedPlayer[]): string => {
         const posLower = position.toLowerCase();
@@ -863,6 +870,9 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                             <span className="material-symbols-outlined text-lg font-black">gavel</span>
                             Sellar Franquicia
                         </button>
+                        <p className={`mt-3 text-center text-[9px] font-black uppercase tracking-[0.15em] ${canFinalize ? 'text-emerald-500' : 'text-gray-500'}`}>
+                            {canFinalize ? 'Plantilla lista para fundarse' : finalizeHints.join(' · ')}
+                        </p>
                     </div>
                 </aside>
             </main>
