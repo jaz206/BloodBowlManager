@@ -300,6 +300,62 @@ const updatePlayerSppAndAction = useCallback((
         handleNextTurn();
     }, [logEvent, playSound, handleNextTurn, setIsTurnoverModalOpen]);
 
+    /** Resuelve daño automático de una caída o tropiezo. */
+    const resolveAutomaticFallDamage = useCallback((player: ManagedPlayer, teamId: 'home' | 'opponent') => {
+        const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
+        const armorValue = Number.parseInt(String(player.stats.AR).replace('+', ''), 10);
+        const armorRoll = (Math.floor(Math.random() * 6) + 1) + (Math.floor(Math.random() * 6) + 1);
+
+        if (Number.isNaN(armorValue)) {
+            logEvent('WARNING', `Caída de ${player.customName}: no se pudo calcular la armadura.`);
+            return;
+        }
+
+        if (armorRoll <= armorValue) {
+            setTeam(prev => prev ? ({
+                ...prev,
+                players: prev.players.map(p => p.id === player.id ? {
+                    ...p,
+                    isActivated: true,
+                    statusDetail: 'Caído'
+                } : p)
+            }) : prev);
+            logEvent('INFO', `Caída de ${player.customName}: la armadura resiste (${armorRoll} vs ${armorValue}).`, { team: teamId, player: player.id });
+            return;
+        }
+
+        const injuryRoll = (Math.floor(Math.random() * 6) + 1) + (Math.floor(Math.random() * 6) + 1);
+        let finalStatus: PlayerStatus = 'Activo';
+        let statusDetail = 'Aturdido';
+
+        if (injuryRoll <= 7) {
+            finalStatus = 'Activo';
+            statusDetail = 'Aturdido';
+        } else if (injuryRoll <= 9) {
+            finalStatus = 'KO';
+            statusDetail = 'KO';
+        } else {
+            finalStatus = 'Lesionado';
+            statusDetail = 'Lesionado';
+        }
+
+        setTeam(prev => prev ? ({
+            ...prev,
+            players: prev.players.map(p => p.id === player.id ? {
+                ...p,
+                isActivated: true,
+                status: finalStatus,
+                statusDetail
+            } : p)
+        }) : prev);
+        playSound('injury');
+        logEvent(
+            finalStatus === 'Lesionado' ? 'WARNING' : 'INFO',
+            `Caída de ${player.customName}: armadura ${armorRoll} vs ${armorValue}, heridas ${injuryRoll} => ${statusDetail}.`,
+            { team: teamId, player: player.id }
+        );
+    }, [setLiveHomeTeam, setLiveOpponentTeam, logEvent, playSound]);
+
     /** Mecánica de Soborno (S3): 1 falla, 2-6 éxito. */
     const handleBribe = useCallback((teamId: 'home' | 'opponent') => {
         const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
@@ -405,6 +461,7 @@ const updatePlayerSppAndAction = useCallback((
             case 'DODGE': {
                 const roll = parseInt(result);
                 if (roll < 2) {
+                    resolveAutomaticFallDamage(actor, activeTeamId);
                     handleTurnover(`fallo al esquivar por parte de ${actor.customName}`);
                 }
                 break;
@@ -426,6 +483,7 @@ const updatePlayerSppAndAction = useCallback((
             case 'RUSH': {
                 const roll = parseInt(result);
                 if (roll === 1) {
+                    resolveAutomaticFallDamage(actor, activeTeamId);
                     handleTurnover(`¡TROPIEZO! ${actor.customName} cae al intentar ir A Por Ellos.`);
                 } else {
                     logEvent('INFO', `${actor.customName} corre extra con éxito.`);
@@ -474,7 +532,7 @@ const updatePlayerSppAndAction = useCallback((
             default:
                 logEvent('S3_ACTION', `Acción ${actionType} registrada para ${actor.customName}. Resultado: ${result}`);
         }
-    }, [activeTeamId, liveHomeTeam, liveOpponentTeam, handleSelectTdScorer, handleTurnover, setIsInjuryModalOpen, setInjuryState, handleUpdatePlayerCondition, logEvent, setBallCarrierId]);
+    }, [activeTeamId, liveHomeTeam, liveOpponentTeam, handleSelectTdScorer, handleTurnover, setIsInjuryModalOpen, setInjuryState, handleUpdatePlayerCondition, logEvent, setBallCarrierId, resolveAutomaticFallDamage]);
 
     /** Alterna el estado Activo/Reserva de un jugador durante el despliegue. */
     const handlePlayerStatusToggle = useCallback((player: ManagedPlayer, teamId: 'home' | 'opponent') => {

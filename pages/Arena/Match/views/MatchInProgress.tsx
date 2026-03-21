@@ -2,7 +2,7 @@
 import { useMatch } from '../context/MatchContext';
 import GameLog from '../log/GameLog';
 import { S3ActionType } from '../types/match.types';
-import { ManagedPlayer, PlayerStatus } from '../../../../types';
+import { ManagedPlayer } from '../../../../types';
 import S3ActionOrchestrator from '../components/S3ActionOrchestrator';
 import MatchTeamRoster from '../components/MatchTeamRoster';
 
@@ -57,62 +57,6 @@ const MatchInProgress: React.FC = () => {
                 manualMode: true
             }
         });
-    };
-
-    const applyAutoFallDamage = (player: ManagedPlayer, teamId: 'home' | 'opponent') => {
-        const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
-        const armorValue = Number.parseInt(String(player.stats.AR).replace('+', ''), 10);
-        const armorRoll = Math.floor(Math.random() * 6) + 1 + Math.floor(Math.random() * 6) + 1;
-
-        if (Number.isNaN(armorValue)) {
-            logEvent('WARNING', `No se pudo resolver la armadura de ${player.customName}. Se registra la caída sin daño adicional.`, { team: teamId, player: player.id });
-            return;
-        }
-
-        if (armorRoll <= armorValue) {
-            logEvent('INFO', `Caída de ${player.customName}: armadura aguanta (${armorRoll} vs ${armorValue}).`, { team: teamId, player: player.id });
-            setTeam(prev => prev ? ({
-                ...prev,
-                players: prev.players.map(p => p.id === player.id ? {
-                    ...p,
-                    isActivated: true,
-                    statusDetail: 'Caído'
-                } : p)
-            }) : prev);
-            return;
-        }
-
-        const injuryRoll = Math.floor(Math.random() * 6) + 1 + Math.floor(Math.random() * 6) + 1;
-        let finalStatus: PlayerStatus = 'Activo';
-        let statusDetail = 'Aturdido';
-
-        if (injuryRoll <= 7) {
-            finalStatus = 'Activo';
-            statusDetail = 'Aturdido';
-        } else if (injuryRoll <= 9) {
-            finalStatus = 'KO';
-            statusDetail = 'KO';
-        } else {
-            finalStatus = 'Lesionado';
-            statusDetail = 'Lesionado';
-        }
-
-        playSound('injury');
-        logEvent(
-            finalStatus === 'Lesionado' ? 'WARNING' : 'INFO',
-            `Caída de ${player.customName}: armadura ${armorRoll} vs ${armorValue}, heridas ${injuryRoll} => ${statusDetail}.`,
-            { team: teamId, player: player.id }
-        );
-
-        setTeam(prev => prev ? ({
-            ...prev,
-            players: prev.players.map(p => p.id === player.id ? {
-                ...p,
-                isActivated: true,
-                status: finalStatus,
-                statusDetail
-            } : p)
-        }) : prev);
     };
 
     const toggleStallingFlag = () => {
@@ -410,14 +354,7 @@ const MatchInProgress: React.FC = () => {
                                                     <span className="text-[8px] font-black uppercase mt-0.5 tracking-tighter">ACCION OK</span>
                                                 </button>
                                                 <button onClick={() => {
-                                                    if (selectedPlayerForAction) {
-                                                        applyAutoFallDamage(selectedPlayerForAction, activeTeamId);
-                                                    }
-                                                    logEvent('TURNOVER', `Caída o fallo de ${selectedPlayerForAction?.customName || 'el jugador seleccionado'}.`);
-                                                    playSound('turnover');
-                                                    handleNextTurn();
-                                                    setSelectedPlayerForAction(null);
-                                                    setInteractionState({ mode: 'idle', pending: { actorId: null, actionType: null, objectiveId: null, diceResult: null, manualMode: true } });
+                                                    handleTriggerAction('DODGE');
                                                 }} className="py-3 rounded-xl border flex flex-col items-center transition-all bg-red-600/15 border-red-500/30 text-red-300 hover:bg-red-500/25">
                                                     <span className="material-symbols-outlined text-sm">trending_down</span>
                                                     <span className="text-[8px] font-black uppercase mt-0.5 tracking-tighter">CAIDA / FALLO</span>
