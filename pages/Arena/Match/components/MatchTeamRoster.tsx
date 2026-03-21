@@ -75,12 +75,15 @@ const MatchTeamRoster: React.FC<MatchTeamRosterProps> = ({ team, side, activeTea
           const isActivated = !!player.isActivated;
           const isMNG = (player.missNextGame || 0) > 0;
           const injuries = player.lastingInjuries?.length || 0;
+          const isDown = ['Derribado', 'Aturdido', 'Caído'].includes(player.statusDetail || '');
           const statusTone = player.status === 'Muerto'
             ? 'text-slate-500 border-white/5 bg-white/5'
             : player.status === 'Lesionado' || isMNG
               ? 'text-blood border-blood/20 bg-blood/10'
               : player.status === 'KO'
                 ? 'text-amber-300 border-amber-500/20 bg-amber-500/10'
+                : isDown
+                  ? 'text-amber-200 border-amber-500/20 bg-amber-500/10'
                 : hasLevelUp
                   ? 'text-primary border-primary/25 bg-primary/10'
                   : 'text-slate-300 border-white/10 bg-white/5';
@@ -129,6 +132,11 @@ const MatchTeamRoster: React.FC<MatchTeamRosterProps> = ({ team, side, activeTea
                     <span className={`px-2 py-1 rounded-full border text-[8px] font-black uppercase tracking-widest ${statusTone}`}>
                       {player.statusDetail || player.status}
                     </span>
+                    {isDown && (
+                      <span className="px-2 py-1 rounded-full border text-[8px] font-black uppercase tracking-widest bg-amber-500/10 border-amber-500/20 text-amber-200">
+                        Tumbado
+                      </span>
+                    )}
                     {hasLevelUp && (
                       <span className="px-2 py-1 rounded-full border text-[8px] font-black uppercase tracking-widest bg-primary/10 border-primary/20 text-primary">
                         Subida

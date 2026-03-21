@@ -210,7 +210,9 @@ const S3ActionOrchestrator: React.FC = () => {
                 )}
 
                 {mode === 'awaiting_dice' && (
-                    <div className="space-y-6 flex flex-col items-center py-6">
+                    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/75 backdrop-blur-md p-4">
+                        <div className="w-full max-w-2xl rounded-[2rem] border border-gold/30 bg-midnight/95 shadow-[0_30px_120px_rgba(0,0,0,0.65)] overflow-hidden">
+                            <div className="space-y-6 flex flex-col items-center py-6 px-5">
                         {(() => {
                             const currentAction = ACTIONS.find(a => a.type === pending.actionType);
 
@@ -300,6 +302,8 @@ const S3ActionOrchestrator: React.FC = () => {
                                 </div>
                             );
                         })()}
+                            </div>
+                        </div>
                     </div>
                 )}
                         

@@ -317,10 +317,10 @@ const updatePlayerSppAndAction = useCallback((
                 players: prev.players.map(p => p.id === player.id ? {
                     ...p,
                     isActivated: true,
-                    statusDetail: 'Caído'
+                    statusDetail: 'Derribado'
                 } : p)
             }) : prev);
-            logEvent('INFO', `Caída de ${player.customName}: la armadura resiste (${armorRoll} vs ${armorValue}).`, { team: teamId, player: player.id });
+            logEvent('INFO', `Caída de ${player.customName}: la armadura resiste (${armorRoll} vs ${armorValue}). Queda derribado.`, { team: teamId, player: player.id });
             return;
         }
 

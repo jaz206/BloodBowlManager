@@ -43,6 +43,27 @@ root/
 
 ## 📜 REGISTRO DE CAMBIOS RECIENTES (Hitos Temporada 3)
 
+### [2026-03-21] Caídas de Mesa y Bitácora de Continuidad
+*   **Flujo físico de la caída**: Se documenta el flujo real del tablero de mesa para llevarlo a la arena:
+    - `Sprint / Esquiva fallida` => `TURNOVER` inmediato.
+    - La miniatura queda `Boca Arriba` en la casilla.
+    - Si la armadura no se rompe: la secuencia termina y el jugador queda derribado.
+    - Si la armadura se rompe: se tira herida y se aplican estados `Aturdido`, `KO` o `Lesionado`.
+    - `KO` se traduce a recuperación posterior en banquillo.
+    - `Lesionado / Baja` queda persistente para acta, cronica y postpartido.
+*   **Modal unico de tiradas**: Las acciones con dados de la arena ahora se resuelven en un modal flotante con:
+    - entrada manual por casillas
+    - resolucion automatica con un boton
+    Este patron se aplica a todas las tiradas que lo requieran para evitar flujos duplicados en el panel lateral.
+*   **Arena en modo mesa**: El panel de partido sigue simplificándose para que el flujo sea:
+    - seleccionar jugador
+    - abrir tirada manual o automatica
+    - resolver evento
+    - registrar cronica
+    - pasar turno
+*   **Bitacora viva**: Se crea `bitacora-GPT.md` como referencia de continuidad tecnica para retomar el proyecto sin perder decisiones ni contexto.
+*   **Pendiente inmediato**: Unificar el modal de tiradas de toda la arena para que lesiones, faltas y demas secuencias usen exactamente el mismo patron manual/auto.
+
 ### [2026-03-19] El Renacer de la Arena y El Heraldo de Nuffle
 *   **Estado de la Arena (Dashboard)**: Rediseño total del panel central en la Home. Ahora es un dashboard dinámico que permite elegir entre tus ligas/torneos mediante un selector premium.
 *   **Rankings en Vivo**: Implementación de tablas switchables para ver la `Clasificación`, los `Anotadores` (TD) y los `Carniceros` (CAS) de tu liga seleccionada sin salir de la Home.
