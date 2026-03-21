@@ -10,7 +10,15 @@ import { generateRandomName } from '../../data/randomNames';
 import { PlayerAdvancementModal } from './PlayerAdvancementModal';
 import { useMasterData } from '../../hooks/useMasterData';
 import { calculateTeamValue } from '../../utils/teamUtils';
-import { getPlayerImageUrl, getRandomImageNumber, getTeamLogoUrl, fetchTeamImageStock, type PositionStock, getPosTag } from '../../utils/imageUtils';
+import {
+    getPlayerImageUrl,
+    getLegacyPlayerImageUrl,
+    getTeamLogoUrl,
+    fetchTeamImageStock,
+    type PositionStock,
+    type PositionStockEntry,
+    getPosTag
+} from '../../utils/imageUtils';
 
 declare const QRCode: any;
 
@@ -246,20 +254,35 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
         });
     };
 
-    const getExpectedPlayerFilename = (position: string, number: number): string => {
-        const posTag = getPosTag(position);
-        if (posTag === "Thrall linea") {
-            return `${posTag} ${number}.png`;
-        }
-        const paddedNumber = number < 10 ? `0${number}` : `${number}`;
-        const capitalizedPos = posTag.charAt(0).toUpperCase() + posTag.slice(1);
-        return `${capitalizedPos} ${paddedNumber}.png`;
+    const getImageStockEntry = (position: string): PositionStockEntry | null => {
+        const posTag = getPosTag(position).toLowerCase();
+        return imageStock?.[posTag] || null;
     };
 
-    const getExistingFilename = (url?: string): string => {
-        if (!url) return "";
-        const filename = url.split("/").pop() || "";
-        return decodeURIComponent(filename).split("?")[0];
+    const getExistingImageParts = (url?: string): { folder: string; filename: string } => {
+        if (!url) return { folder: '', filename: '' };
+        const cleanUrl = url.split('?')[0];
+        const parts = cleanUrl.split('/').map(part => decodeURIComponent(part));
+        return {
+            folder: (parts[parts.length - 2] || '').toLowerCase(),
+            filename: parts[parts.length - 1] || ''
+        };
+    };
+
+    const isValidNestedImage = (url: string | undefined, position: string, numbers: number[]): boolean => {
+        if (!url) return false;
+        const { folder, filename } = getExistingImageParts(url);
+        if (folder !== getPosTag(position).toLowerCase()) return false;
+        return numbers.some(number => filename === `${number < 10 ? `0${number}` : `${number}`}.png`);
+    };
+
+    const isValidLegacyImage = (url: string | undefined, position: string, numbers: number[]): boolean => {
+        if (!url) return false;
+        const { filename } = getExistingImageParts(url);
+        return numbers.some(number => {
+            const legacyFilename = decodeURIComponent(getLegacyPlayerImageUrl(team.rosterName, position, number).split('/').pop() || '');
+            return filename === legacyFilename;
+        });
     };
 
     const handleHirePlayer = (player: Player) => {
@@ -269,11 +292,11 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
         if (team.treasury < player.cost && !team.isAutoCalculating) return;
 
         // Use stock if available, else fallback to 15
-        const posTag = getPosTag(player.position).toLowerCase();
-        const availableNumbers = imageStock?.[posTag] || Array.from({length: 15}, (_, i) => i + 1);
+        const stockEntry = getImageStockEntry(player.position);
+        const availableNumbers = stockEntry?.numbers || Array.from({ length: 15 }, (_, i) => i + 1);
         const imgNumber = availableNumbers[Math.floor(Math.random() * availableNumbers.length)];
         
-        const playerImageUrl = getPlayerImageUrl(team.rosterName, player.position, imgNumber);
+        const playerImageUrl = getPlayerImageUrl(team.rosterName, player.position, imgNumber, stockEntry?.storage || 'nested');
 
         const newPlayer: ManagedPlayer = {
             ...player,
@@ -297,12 +320,13 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
         const stock = imageStock || await fetchTeamImageStock(team.rosterName);
         const updatedPlayers = team.players.map(p => {
             const posTag = getPosTag(p.position).toLowerCase();
-            const availableNumbers = stock[posTag] || Array.from({length: 15}, (_, i) => i + 1);
-            const expectedFilenames = availableNumbers.map(num => getExpectedPlayerFilename(p.position, num));
-            const existingFilename = getExistingFilename(p.image);
+            const stockEntry = stock[posTag] || null;
+            const availableNumbers = stockEntry?.numbers || Array.from({ length: 15 }, (_, i) => i + 1);
 
-            // Keep the image only if it already matches one of the valid filenames for that position.
-            if (existingFilename && expectedFilenames.includes(existingFilename)) {
+            if (stockEntry && (
+                isValidNestedImage(p.image, p.position, availableNumbers) ||
+                isValidLegacyImage(p.image, p.position, availableNumbers)
+            )) {
                 return p;
             }
 
@@ -310,7 +334,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
 
             return {
                 ...p,
-                image: getPlayerImageUrl(team.rosterName, p.position, imgNum)
+                image: getPlayerImageUrl(team.rosterName, p.position, imgNum, stockEntry?.storage || 'nested')
             };
         });
 

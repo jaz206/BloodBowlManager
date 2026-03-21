@@ -1,10 +1,11 @@
-
-import type { ManagedTeam, Player } from '../types';
+import type { ManagedTeam } from '../types';
 
 const BASE_URL = "https://raw.githubusercontent.com/jaz206/Bloodbowl-image/main/Foto%20plantilla/";
+const CREST_BASE_URL = "https://raw.githubusercontent.com/jaz206/Bloodbowl-image/main/Escudos/";
+const STAR_BASE_URL = "https://raw.githubusercontent.com/jaz206/Bloodbowl-image/main/Star%20Players/";
 
-// Map internal roster names to GitHub prefix
-// Map internal roster names to GitHub folder prefix (For player images)
+export type PlayerImageStorageMode = 'nested' | 'legacy';
+
 const ROSTER_PREFIX_MAP: Record<string, string> = {
   "Amazonas": "Amazonas",
   "Orcos": "Orcos",
@@ -23,22 +24,26 @@ const ROSTER_PREFIX_MAP: Record<string, string> = {
   "Nurgle": "Nurgle",
   "No Muertos": "No Muertos",
   "Nigromantes": "Nigromantes",
+  "NÃ³rdicos": "Nordicos",
+  "Nordicos": "Nordicos",
   "Nórdicos": "Nordicos",
   "Ogros": "Ogros",
   "Skaven": "Skaven",
   "Slaanesh": "Slaanesh",
   "Tomb Kings": "Khemri",
+  "UniÃ³n Ã‰lfica": "Union Elfica",
+  "Union Elfica": "Union Elfica",
   "Unión Élfica": "Union Elfica",
   "Vampiros": "Vampiros",
   "Wood Elves": "Silvanos"
 };
 
-// Map internal roster names to GitHub shield filenames (For Crests)
 const CREST_PREFIX_MAP: Record<string, string> = {
   "Amazonas": "Amazonas",
-  "Orcos": "Orcos", 
+  "Orcos": "Orcos",
   "Orcos Negros": "Orcos Negros",
   "Union Elfica": "Union Elfica",
+  "UniÃ³n Ã‰lfica": "Union Elfica",
   "Unión Élfica": "Union Elfica",
   "Renegados del Caos": "Renegados del Caos",
   "Enanos del Caos": "Enanos del caos",
@@ -48,68 +53,37 @@ const CREST_PREFIX_MAP: Record<string, string> = {
   "Elfos Oscuros": "Elfos Oscuros"
 };
 
-export const getTeamPrefix = (rosterName: string): string => {
-  let prefix = ROSTER_PREFIX_MAP[rosterName] || rosterName;
-  if (prefix === "Orcos Negros") prefix = "Orcos negros";
-  if (prefix === "Humanos") prefix = "Humanos";
-  return prefix;
-};
-
-export interface PositionStock {
-    [posTag: string]: number[]; // List of available numbers for that position
-}
-
-export const fetchTeamImageStock = async (rosterName: string): Promise<PositionStock> => {
-  const prefix = getTeamPrefix(rosterName);
-  try {
-    const res = await fetch(`https://api.github.com/repos/jaz206/Bloodbowl-image/contents/Foto%20plantilla/${encodeURIComponent(prefix)}`);
-    if (!res.ok) return {};
-    const files = await res.json();
-    
-    const stock: PositionStock = {};
-    files.forEach((f: any) => {
-        if (f.type === 'file' && f.name.endsWith('.png')) {
-            const parts = f.name.split(' ');
-            if (parts.length >= 2) {
-                const tag = parts.slice(0, -1).join(' ').toLowerCase();
-                const numMatch = parts[parts.length - 1].match(/\d+/);
-                if (numMatch) {
-                    const num = parseInt(numMatch[0]);
-                    if (!stock[tag]) stock[tag] = [];
-                    stock[tag].push(num);
-                }
-            }
-        }
-    });
-    return stock;
-  } catch (e) {
-    return {};
-  }
-};
-
-// Map internal position names to GitHub position tags
-const POSITION_TAG_MAP: Record<string, string> = {
+const LEGACY_POSITION_FILE_MAP: Record<string, string> = {
   "Vampiros Corredor": "Vampire Runner",
   "Vampiros Lanzador": "Vampire Thrower",
   "Vampiros Placador": "Vampire Blitzer",
   "Vargheist": "Vargheist",
   "Thrall": "Thrall linea",
+  "LÃ­nea": "linea",
   "Línea": "linea",
+  "Linea": "linea",
+  "Bloqueador LÃ­nea": "linea",
   "Bloqueador Línea": "linea",
+  "Eagle Guerrero LÃ­nea": "linea",
   "Eagle Guerrero Línea": "linea",
   "Bestia del Caos": "linea",
+  "Hobgoblin LÃ­nea": "linea",
   "Hobgoblin Línea": "linea",
+  "Skeleton LÃ­nea": "linea",
   "Skeleton Línea": "linea",
+  "Zombi LÃ­nea": "linea",
   "Zombi Línea": "linea",
   "Lineman": "linea",
   "Bloqueador": "bloqueador",
+  "Enanos Bloqueador LÃ­nea": "bloqueador",
   "Enanos Bloqueador Línea": "bloqueador",
   "Elegido Bloqueador": "bloqueador",
-  "Placador Blitzer": "blitzer",
-  "Blitzer Orco": "blitzer orco",
+  "Placador Blitzer": "Blitzer",
+  "Blitzer Orco": "Blitzer orco",
+  "Untrained Troll": "Untrained Troll",
   "Corredor": "corredor",
   "Python Guerrero Lanzador": "lanzador",
-  "Lanzador": "lanzador",
+  "Lanzador": "Lanzador",
   "Piranha Guerrero Placador": "placador",
   "Placador": "placador",
   "Receptor": "receptor",
@@ -120,7 +94,7 @@ const POSITION_TAG_MAP: Record<string, string> = {
   "Kroxigor": "kroxigor",
   "Big Un": "orco negro",
   "Orcos Negros": "orco negro",
-  "Troll": "troll",
+  "Troll": "Troll",
   "Ogre": "ogro",
   "Rat Ogre": "rata ogro",
   "Minotaur": "minotauro",
@@ -128,95 +102,182 @@ const POSITION_TAG_MAP: Record<string, string> = {
   "Witch Elf": "witch elf"
 };
 
-/**
- * Gets a random photo number (01-15) for a position, trying to avoid immediate duplicates
- */
+const fixMojibake = (value: string): string => value
+  .replace(/Ã¡/g, 'a')
+  .replace(/Ã©/g, 'e')
+  .replace(/Ã­/g, 'i')
+  .replace(/Ã³/g, 'o')
+  .replace(/Ãº/g, 'u')
+  .replace(/Ã±/g, 'n')
+  .replace(/Ã‰/g, 'E')
+  .replace(/Ã"/g, 'O')
+  .replace(/Ã/g, 'A')
+  .replace(/Çð/g, 'i')
+  .replace(/Çün/g, 'on')
+  .replace(/Ç%l/g, 'El');
+
+const slugify = (value: string): string =>
+  fixMojibake(value)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+export const getTeamPrefix = (rosterName: string): string => {
+  let prefix = ROSTER_PREFIX_MAP[rosterName] || fixMojibake(rosterName);
+  if (prefix === "Orcos Negros") prefix = "Orcos negros";
+  if (prefix === "Humanos") prefix = "Humano";
+  return prefix;
+};
+
+export interface PositionStockEntry {
+  numbers: number[];
+  storage: PlayerImageStorageMode;
+}
+
+export interface PositionStock {
+  [posTag: string]: PositionStockEntry;
+}
+
+const addStockNumber = (
+  stock: PositionStock,
+  key: string,
+  number: number,
+  storage: PlayerImageStorageMode
+) => {
+  if (!stock[key]) {
+    stock[key] = { numbers: [], storage };
+  }
+
+  if (!stock[key].numbers.includes(number)) {
+    stock[key].numbers.push(number);
+  }
+};
+
+export const getPosTag = (position: string): string => slugify(position || 'jugador');
+
+const getLegacyPosTag = (position: string): string => {
+  for (const [key, value] of Object.entries(LEGACY_POSITION_FILE_MAP)) {
+    if (position.includes(key)) {
+      return value;
+    }
+  }
+
+  const fixedPosition = fixMojibake(position);
+  return fixedPosition.split(' ').pop() || 'jugador';
+};
+
+export const fetchTeamImageStock = async (rosterName: string): Promise<PositionStock> => {
+  const teamFolder = getTeamPrefix(rosterName);
+
+  try {
+    const response = await fetch(`https://api.github.com/repos/jaz206/Bloodbowl-image/contents/Foto%20plantilla/${encodeURIComponent(teamFolder)}`);
+    if (!response.ok) return {};
+
+    const entries = await response.json();
+    const stock: PositionStock = {};
+    const hasNestedFolders = entries.some((entry: any) => entry.type === 'dir');
+
+    if (hasNestedFolders) {
+      await Promise.all(entries.map(async (entry: any) => {
+        if (entry.type !== 'dir') return;
+
+        const folderResponse = await fetch(entry.url);
+        if (!folderResponse.ok) return;
+
+        const folderEntries = await folderResponse.json();
+        folderEntries.forEach((file: any) => {
+          if (file.type !== 'file' || !file.name.endsWith('.png')) return;
+          const match = file.name.match(/(\d+)\.png$/i);
+          if (!match) return;
+          addStockNumber(stock, entry.name.toLowerCase(), parseInt(match[1], 10), 'nested');
+        });
+      }));
+
+      return stock;
+    }
+
+    entries.forEach((entry: any) => {
+      if (entry.type !== 'file' || !entry.name.endsWith('.png')) return;
+      const decodedName = decodeURIComponent(entry.name);
+      const numberMatch = decodedName.match(/(\d+)\.png$/i);
+      if (!numberMatch) return;
+
+      const label = decodedName.replace(/\s+\d+\.png$/i, '');
+      addStockNumber(stock, getPosTag(label), parseInt(numberMatch[1], 10), 'legacy');
+    });
+
+    return stock;
+  } catch {
+    return {};
+  }
+};
+
 export const getRandomImageNumber = (team: ManagedTeam, position: string): number => {
   const used = team.players
     .filter(p => p.position === position && p.image)
     .map(p => {
-        const match = p.image!.match(/(\d+)\.png$/);
-        return match ? parseInt(match[1]) : 0;
+      const match = p.image!.match(/(\d+)\.png$/);
+      return match ? parseInt(match[1], 10) : 0;
     });
-  
-  // Try up to 10 times to get a number not in use
+
   for (let i = 0; i < 10; i++) {
     const candidate = Math.floor(Math.random() * 15) + 1;
     if (!used.includes(candidate)) return candidate;
   }
-  
-  // Fallback to random if all 15 are (unlikely) in use or bad luck
+
   return Math.floor(Math.random() * 15) + 1;
 };
 
-export const getPosTag = (position: string): string => {
-  let posTag = "";
-  for (const [key, tag] of Object.entries(POSITION_TAG_MAP)) {
-    if (position.includes(key)) {
-      posTag = tag;
-      break;
-    }
-  }
-  
-  if (!posTag) {
-    posTag = position.toLowerCase().replace(/línea/g, 'linea').split(' ').pop() || 'jugador';
-  }
-  return posTag;
-};
-
-export const getPlayerImageUrl = (rosterName: string, position: string, number: number): string => {
+export const getLegacyPlayerImageUrl = (rosterName: string, position: string, number: number): string => {
   const teamPrefix = getTeamPrefix(rosterName);
-  const posTag = getPosTag(position);
+  const posTag = getLegacyPosTag(position);
 
-  // Special case for Vampires naming inconsistency in GitHub (-Thrall vs - Thrall)
   if (posTag === "Thrall linea") {
-      return `${BASE_URL}${encodeURIComponent(teamPrefix)}/${encodeURIComponent(posTag + " " + number + ".png")}`;
+    return `${BASE_URL}${encodeURIComponent(teamPrefix)}/${encodeURIComponent(`${posTag} ${number}.png`)}`;
   }
 
   const paddedNumber = number < 10 ? `0${number}` : `${number}`;
-  const capitalizedPos = posTag.charAt(0).toUpperCase() + posTag.slice(1);
-  const filename = `${capitalizedPos} ${paddedNumber}.png`;
-  
+  const filename = `${posTag} ${paddedNumber}.png`;
   return `${BASE_URL}${encodeURIComponent(teamPrefix)}/${encodeURIComponent(filename)}`;
 };
 
-const CREST_BASE_URL = "https://raw.githubusercontent.com/jaz206/Bloodbowl-image/main/Escudos/";
+export const getPlayerImageUrl = (
+  rosterName: string,
+  position: string,
+  number: number,
+  storage: PlayerImageStorageMode = 'nested'
+): string => {
+  if (storage === 'legacy') {
+    return getLegacyPlayerImageUrl(rosterName, position, number);
+  }
 
-/**
- * Special case for team logos if they follow a similar pattern
- */
+  const teamPrefix = getTeamPrefix(rosterName);
+  const positionFolder = getPosTag(position);
+  const paddedNumber = number < 10 ? `0${number}` : `${number}`;
+
+  return `${BASE_URL}${encodeURIComponent(teamPrefix)}/${encodeURIComponent(positionFolder)}/${encodeURIComponent(`${paddedNumber}.png`)}`;
+};
+
 export const getTeamLogoUrl = (rosterName: string): string => {
   const prefix = CREST_PREFIX_MAP[rosterName] || getTeamPrefix(rosterName);
   return `${CREST_BASE_URL}${encodeURIComponent(prefix + ".png")}`;
 };
 
-const STAR_BASE_URL = "https://raw.githubusercontent.com/jaz206/Bloodbowl-image/main/Star%20Players/";
-
-/**
- * Definitive lookup map: key = name in starPlayers.ts, value = exact filename in GitHub (without extension).
- * Built from the GitHub API response. No heuristics — explicit for every player.
- *
- * Special prefix rules:
- *  - Most files: "PJ - <name>.png"
- *  - Kreek Rustgouger: "PJ -  Kreek Rustgouger.png" (double space)
- *  - Ivar Eriksson:    "PJ- IVAR ERIKSSON.png" (no space before dash)
- */
 const STAR_FILE_MAP: Record<string, string> = {
-  // ── Exact filename matches (curly quotes, & etc.) ──────────────────────────
   "Boa Kon'ssstriktr":         "PJ - Boa Kon\u2019ssstriktr.png",
   "Bryce 'The Slice' Cambuel": "PJ - Bryce \u2018The Slice\u2019 Cambuel.png",
   "'Captain' Karina Von Riesz":"PJ - \u2018Captain\u2019 Karina Von Riesz.png",
   "Frank 'n' Stein":           "PJ - Frank \u2018n\u2019 Stein.png",
   "Morg 'n' Thorg":            "PJ - Morg \u2018n\u2019 Thorg.png",
-  "Dribl & Drull":             "PJ - Dribl and Drill.png",          // typo in GitHub: Drill
+  "Dribl & Drull":             "PJ - Dribl and Drill.png",
   "Grak & Crumbleberry":       "PJ - Grak & Crumbleberry.png",
-  // H'thark: curly apostrophe (U+2019) from starPlayers.ts → straight apostrophe in GitHub filename
   "H\u2019thark the Unstoppable": "PJ - H'thark the Unstoppable.png",
-  "H'thark the Unstoppable":   "PJ - H'thark the Unstoppable.png", // fallback straight apostrophe
-  // ── ALL CAPS filenames ─────────────────────────────────────────────────────
+  "H'thark the Unstoppable":   "PJ - H'thark the Unstoppable.png",
   "Gretchen Wachter":          "PJ - GRETCHEN WACHTER.png",
   "Grim Ironjaw":              "PJ - GRIM IRONJAW.png",
-  "Helmut Wolf":               "PJ - HELMUT WULF.png",              // name differs: Wolf → WULF
+  "Helmut Wolf":               "PJ - HELMUT WULF.png",
   "Ivan Deathshroud":          "PJ - IVAN DEATHSHROUD.png",
   "Jeremiah Kool":             "PJ - JEREMIAH KOOL.png",
   "Jordell Freshbreeze":       "PJ - JORDELL FRESHBREEZE.png",
@@ -237,25 +298,17 @@ const STAR_FILE_MAP: Record<string, string> = {
   "Wilhelm Chaney":            "PJ - WILHELM CHANEY.png",
   "Willow Rosebark":           "PJ - WILLOW ROSEBARK.png",
   "Zzharg Madeye":             "PJ - ZZHARG MADEYE.png",
-  // ── Extra suffix / anomalous prefix ───────────────────────────────────────
   "Varag Ghoul-Chewer":        "PJ - Varag Ghoul-Chewer (Varag Masticamuertos).png",
-  "Kreek Rustgouger":          "PJ -  Kreek Rustgouger.png",        // double space
-  "Ivar Eriksson":             "PJ- IVAR ERIKSSON.png",             // no space before dash
+  "Kreek Rustgouger":          "PJ -  Kreek Rustgouger.png",
+  "Ivar Eriksson":             "PJ- IVAR ERIKSSON.png",
 };
 
-/**
- * Generates the GitHub raw image URL for a star player.
- * Uses an explicit lookup map first; falls back to simple Title Case construction.
- */
 export const getStarPlayerImageUrl = (starName: string): string => {
-  // Normalise input: convert all curly/smart quotes to straight ASCII equivalents
   const key = starName
-    .replace(/[\u2018\u2019\u02BC\u0060]/g, "'")   // curly/smart single quotes → '
-    .replace(/[\u201C\u201D]/g, '"')                  // curly double quotes → "
+    .replace(/[\u2018\u2019\u02BC\u0060]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
     .trim();
 
   const filename = STAR_FILE_MAP[key] ?? `PJ - ${key}.png`;
   return `${STAR_BASE_URL}${encodeURIComponent(filename)}`;
 };
-
-
