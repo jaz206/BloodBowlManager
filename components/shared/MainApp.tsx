@@ -24,7 +24,7 @@ import StadiumIcon from '../icons/StadiumIcon';
 import type { ManagedTeam, League, Play, GameEvent, MatchReport, Competition } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
 import { db } from '../../firebaseConfig';
-import { collection, onSnapshot, setDoc, doc, updateDoc, deleteDoc, query, limit, orderBy, serverTimestamp } from "firebase/firestore";
+import { addDoc, collection, onSnapshot, setDoc, doc, updateDoc, deleteDoc, query, limit, orderBy, serverTimestamp } from "firebase/firestore";
 import { useLanguage } from '../../contexts/LanguageContext';
 import LanguageSelector from '../common/LanguageSelector';
 import { useMasterData } from '../../hooks/useMasterData';
