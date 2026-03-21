@@ -18,6 +18,7 @@ interface InjuryEngineContext {
     logEvent: (type: any, description: string, extra?: any) => void;
     setIsInjuryModalOpen: (isOpen: boolean) => void;
     setIsApothecaryModalOpen: (isOpen: boolean) => void;
+    handleTurnover: (reason: string) => void;
     initialInjuryState: InjuryState;
     playSound: (type: 'td' | 'injury' | 'turnover' | 'dice') => void;
     turn: number;
@@ -34,7 +35,7 @@ export const handleInjuryActionLogic = (ctx: InjuryEngineContext, action: 'next'
         setLiveHomeTeam, setLiveOpponentTeam,
         updatePlayerStatus, updatePlayerSppAndAction,
         logEvent, setIsInjuryModalOpen,
-        setIsApothecaryModalOpen, initialInjuryState, playSound
+        setIsApothecaryModalOpen, handleTurnover, initialInjuryState, playSound
     } = ctx;
 
     const {
@@ -266,8 +267,14 @@ export const handleInjuryActionLogic = (ctx: InjuryEngineContext, action: 'next'
                 logEvent('injury_casualty', `Herida a ${victimPlayer?.customName}. ${finalLog}`, { team: victimTeamId!, player: victimPlayer?.id });
             }
 
+            const shouldAutoTurnover = injuryState.autoTurnover || injuryState.source === 'fall';
+
             setIsInjuryModalOpen(false);
             setInjuryState(initialInjuryState);
+
+            if (shouldAutoTurnover) {
+                handleTurnover(`caída de ${victimPlayer?.customName || 'un jugador'}`);
+            }
             break;
         }
     }

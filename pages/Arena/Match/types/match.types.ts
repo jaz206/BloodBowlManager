@@ -54,6 +54,8 @@ export interface FoulState {
 
 export interface InjuryState {
     step: 'select_casualty_type' | 'select_attacker_team' | 'select_attacker' | 'select_victim_team' | 'select_victim' | 'armor_roll' | 'injury_roll' | 'apothecary' | 'casualty_roll' | 'lasting_injury_roll' | 'regeneration_check' | 'regeneration_roll' | 'staff_reroll_choice' | 'summary';
+    source?: 'fall' | 'block' | 'foul' | 'other' | null;
+    autoTurnover?: boolean;
     victimTeamId: 'home' | 'opponent' | null;
     victimPlayer: ManagedPlayer | null;
     attackerTeamId: 'home' | 'opponent' | null;

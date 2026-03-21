@@ -42,6 +42,8 @@ export const initialFoulState: FoulState = {
 
 export const initialInjuryState: InjuryState = {
     step: 'select_casualty_type',
+    source: null,
+    autoTurnover: false,
     victimTeamId: null,
     victimPlayer: null,
     attackerTeamId: null,

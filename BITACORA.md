@@ -55,6 +55,7 @@ root/
     - entrada manual por casillas
     - resolucion automatica con un boton
     Este patron se aplica a todas las tiradas que lo requieran para evitar flujos duplicados en el panel lateral.
+*   **Caida reutiliza el modal de lesiones**: La secuencia `DODGE / RUSH` fallida abre el modal de lesiones existente en `armor_roll`, pasa por `injury_roll` y cierra con `TURNOVER` al terminar la resolucion.
 *   **Arena en modo mesa**: El panel de partido sigue simplificándose para que el flujo sea:
     - seleccionar jugador
     - abrir tirada manual o automatica

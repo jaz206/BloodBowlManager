@@ -173,10 +173,10 @@ const updatePlayerSppAndAction = useCallback((
             setLiveHomeTeam, setLiveOpponentTeam,
             updatePlayerStatus, updatePlayerSppAndAction,
             logEvent, setIsInjuryModalOpen,
-            setIsApothecaryModalOpen, initialInjuryState, playSound,
+            setIsApothecaryModalOpen, handleTurnover, initialInjuryState, playSound,
             turn
         }, action);
-    }, [injuryState, setInjuryState, liveHomeTeam, liveOpponentTeam, setLiveHomeTeam, setLiveOpponentTeam, updatePlayerStatus, updatePlayerSppAndAction, logEvent, setIsInjuryModalOpen, setIsApothecaryModalOpen, playSound, turn]);
+    }, [injuryState, setInjuryState, liveHomeTeam, liveOpponentTeam, setLiveHomeTeam, setLiveOpponentTeam, updatePlayerStatus, updatePlayerSppAndAction, logEvent, setIsInjuryModalOpen, setIsApothecaryModalOpen, handleTurnover, playSound, turn]);
 
     // ─── ACCIONES DE UI ──────────────────────────────────────────────────────
 
@@ -356,6 +356,20 @@ const updatePlayerSppAndAction = useCallback((
         );
     }, [setLiveHomeTeam, setLiveOpponentTeam, logEvent, playSound]);
 
+    /** Abre el flujo de lesión para una caída accidental. */
+    const openFallInjuryModal = useCallback((player: ManagedPlayer, teamId: 'home' | 'opponent') => {
+        setIsInjuryModalOpen(true);
+        setInjuryState({
+            ...initialInjuryState,
+            source: 'fall',
+            autoTurnover: true,
+            isCasualty: false,
+            victimPlayer: player,
+            victimTeamId: teamId,
+            step: 'armor_roll'
+        });
+    }, [initialInjuryState, setInjuryState, setIsInjuryModalOpen]);
+
     /** Mecánica de Soborno (S3): 1 falla, 2-6 éxito. */
     const handleBribe = useCallback((teamId: 'home' | 'opponent') => {
         const setTeam = teamId === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
@@ -461,8 +475,7 @@ const updatePlayerSppAndAction = useCallback((
             case 'DODGE': {
                 const roll = parseInt(result);
                 if (roll < 2) {
-                    resolveAutomaticFallDamage(actor, activeTeamId);
-                    handleTurnover(`fallo al esquivar por parte de ${actor.customName}`);
+                    openFallInjuryModal(actor, activeTeamId);
                 }
                 break;
             }
@@ -483,8 +496,7 @@ const updatePlayerSppAndAction = useCallback((
             case 'RUSH': {
                 const roll = parseInt(result);
                 if (roll === 1) {
-                    resolveAutomaticFallDamage(actor, activeTeamId);
-                    handleTurnover(`¡TROPIEZO! ${actor.customName} cae al intentar ir A Por Ellos.`);
+                    openFallInjuryModal(actor, activeTeamId);
                 } else {
                     logEvent('INFO', `${actor.customName} corre extra con éxito.`);
                 }
