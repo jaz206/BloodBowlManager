@@ -112,6 +112,41 @@ const S3ActionOrchestrator: React.FC = () => {
         handleDiceResult(die);
     };
 
+    const getRollTitle = () => {
+        switch (pending.actionType) {
+            case 'BLOCK':
+                return 'Tirada de Bloqueo';
+            case 'PASS':
+                return 'Tirada de Pase';
+            case 'HANDOFF':
+                return 'Tirada de Entrega';
+            case 'FOUL':
+                return 'Tirada de Falta';
+            case 'TOUCHDOWN':
+                return 'Confirmar Touchdown';
+            case 'SECURE_BALL':
+                return 'Tirada de Asegurar Balón';
+            case 'DODGE':
+                return 'Tirada de Esquiva';
+            case 'RUSH':
+                return 'Tirada de Sprint';
+            case 'MOVE':
+                return 'Tirada de Movimiento';
+            case 'BONE_HEAD':
+                return 'Tirada de Cabeza Dura';
+            default:
+                return 'Entrada de Resultados';
+        }
+    };
+
+    const getRollSubtitle = () => {
+        const actionData = ACTIONS.find(a => a.type === pending.actionType);
+        if (!actionData) return 'Introduce los dados manualmente o usa la resolución automática.';
+        if (actionData.diceType === 'block') return 'Elige una cara de bloque o resuelve la tirada de forma automática.';
+        if (actionData.diceType === '2d6') return 'Introduce dos dados y la app sumará el resultado total.';
+        return 'Introduce una tirada de 1D6 o deja que la app la resuelva por ti.';
+    };
+
     if (mode === 'idle') {
         return (
             <div className="flex flex-col items-center justify-center p-8 bg-zinc-900/40 border-2 border-dashed border-white/5 rounded-3xl h-full text-center">
@@ -213,6 +248,11 @@ const S3ActionOrchestrator: React.FC = () => {
                     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/75 backdrop-blur-md p-4">
                         <div className="w-full max-w-2xl rounded-[2rem] border border-gold/30 bg-midnight/95 shadow-[0_30px_120px_rgba(0,0,0,0.65)] overflow-hidden">
                             <div className="space-y-6 flex flex-col items-center py-6 px-5">
+                                <div className="w-full flex flex-col items-center text-center gap-2 border-b border-white/5 pb-4">
+                                    <span className="text-[9px] font-black uppercase tracking-[0.35em] text-primary/80">Secuencia de tirada</span>
+                                    <h4 className="text-lg font-black italic uppercase text-white tracking-tight">{getRollTitle()}</h4>
+                                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] max-w-md">{getRollSubtitle()}</p>
+                                </div>
                         {(() => {
                             const currentAction = ACTIONS.find(a => a.type === pending.actionType);
 
