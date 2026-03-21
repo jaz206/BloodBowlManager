@@ -1,6 +1,6 @@
 # BITACORA GPT - BLOOD BOWL MANAGER
 
-Documento vivo para retomar el trabajo sin perder el hilo.  
+Documento vivo para retomar el trabajo sin perder el hilo.
 Ultima actualizacion: 2026-03-21
 
 ## Proposito
@@ -16,11 +16,12 @@ Registrar el estado real del proyecto, las decisiones tomadas y el siguiente pas
 
 El proyecto ya tiene:
 - Admin panel modularizado y dividido en subformularios.
-- Ligas y torneos con competiciones privadas de prueba.
-- Clonacion de equipos para competiciones.
+- Ligas y torneos con competiciones privadas de prueba desde admin.
+- Clonacion de equipos para competiciones y acta de partido.
 - Arena orientada a partido de mesa, no a videojuego completo.
 - Flujo de acciones del partido en panel lateral.
-- Tiradas manuales o automaticas en el motor de acciones.
+- Tiradas manuales o automaticas en un modal unico.
+- Caidas que reutilizan el flujo de lesion y terminan en turnover.
 - Postpartido y cronica conectados al cierre del encuentro.
 - Escudos e imagenes alineados con el repo `Bloodbowl-image`.
 
@@ -36,9 +37,9 @@ El proyecto ya tiene:
   - heraldo
   - general
   - competiciones
-- Se corrigieron varios `ReferenceError` por props que no estaban llegando.
-- Se reconnected el explorador de imagenes al repositorio correcto.
-- Se anadio autocompletado de imagenes por nombre para reducir trabajo manual.
+- Se corrigieron varios `ReferenceError` por props y estados que no estaban llegando.
+- Se reconnecto el explorador de imagenes al repositorio correcto.
+- Se anadio autocompletado y reparacion de imagenes por nombre para reducir trabajo manual.
 
 ### Home / Gremio / Oraculo
 - La Home recupera mejor los escudos del gremio.
@@ -56,23 +57,24 @@ El proyecto ya tiene:
   - cronica
 
 ### Arena / Match
-- La arena se esta reorientando como una suite circular:
+- La arena se reoriento como una suite circular:
   - prepartido
   - partido
   - postpartido
   - cronica
-- El panel principal de partido ya muestra dos plantillas y un panel de accion.
-- El jugador seleccionado se puede marcar como agotado / usado.
-- `Caida / Fallo` ya no salta turno en bruto: pasa por el flujo de tirada.
+- El panel principal de partido muestra dos plantillas y un panel de accion.
+- El jugador seleccionado se marca como usado / agotado.
+- `Accion OK` no ensucia el log.
+- `Caida / Fallo` abre tirada, pasa por el flujo de lesion y termina con turnover.
 - Las tiradas admiten:
   - entrada manual por casillas
   - resolucion automatica con boton
-- El motor ya resuelve turnovers y daño automatico en fallos de `DODGE` y `RUSH`.
+- El modal de tiradas ahora es unico y contextual para toda la arena.
 
 ## Ultimas decisiones de diseno
 
 ### Flujo de acciones en partido
-El tablero debe ser rapido y de mesa, no una doble capa de juego.
+La mesa debe ser rapida y de tablero, no una doble capa de juego.
 
 Reglas de interfaz acordadas:
 - `ACCION OK`
@@ -123,7 +125,7 @@ Reglas de interfaz acordadas:
 
 - Build correcto con `npm run build`.
 - Cambios recientes ya subidos a `main`.
-- La bitacora nueva aun no se ha sincronizado como referencia oficial del proyecto.
+- La bitacora nueva ya sirve como referencia de continuidad tecnica.
 
 ## Pendientes inmediatos
 
@@ -157,4 +159,3 @@ Si el trabajo se queda a medias, retomar por este orden:
 2. Postpartido / cronica
 3. Competiciones / clones
 4. Admin panel / datos maestros
-

@@ -1,68 +1,83 @@
-# ⚙️ Guía de Eventos y Motor Técnico (Match Engine)
+# Guia de Eventos y Motor Tecnico
 
-Este documento es la referencia técnica para desarrolladores sobre cómo la aplicación traduce las acciones del campo de juego en datos estructurados y estados lógicos.
+Este documento explica como la aplicacion traduce acciones de mesa en estado, log y cronica.
 
----
+## 1. Estructura de evento
+Cada accion relevante genera un objeto `GameEvent` que alimenta:
+- el log del partido,
+- la cronica,
+- el postpartido,
+- y, si procede, el historial de competicion.
 
-## 1. Estructura Técnica del Evento (JSON)
-Cada interacción en la Arena genera un objeto `GameEvent` que se almacena en el log del partido y en Firestore.
+Campos habituales:
+- `id`
+- `turn`
+- `half`
+- `team`
+- `player`
+- `type`
+- `result`
+- `target`
+- `description`
+- `timestamp`
 
-```json
-{
-  "id": 171023456,
-  "matchId": "uuid_del_partido",
-  "team": "identificador_del_equipo",
-  "player": "id_o_nombre_del_jugador",
-  "turn": 5,
-  "half": 1,
-  "type": "TOUCHDOWN",
-  "result": "success",
-  "target": "id_del_afectado",
-  "description": "Gorbag anota tras una carrera épica.",
-  "timestamp": "2026-03-19T14:15:00Z"
-}
-```
+## 2. Tipos de evento
+Los eventos mas relevantes hoy son:
+- `TURNOVER`
+- `TOUCHDOWN`
+- `INJURY`
+- `FOUL`
+- `PASS`
+- `CASUALTY`
+- `MVP`
+- `WEATHER`
+- `INFO`
+- `WARNING`
+- `SUCCESS`
 
----
+## 3. Fases del partido
+La arena se divide en estas fases:
+1. `selection`
+2. `pre_game`
+3. `in_progress`
+4. `ko_recovery`
+5. `post_game`
+6. `reports`
 
-## 2. Catálogo de Tipos de Eventos (`GameEventType`)
+## 4. Acciones del jugador
+La interfaz del partido usa un panel unico con acciones de mesa:
+- `ACCION OK`
+- `CAIDA / FALLO`
+- `PLACAJE`
+- `FALTA`
+- `PASE`
+- `TOUCHDOWN`
+- `ASEGURAR`
 
-| Categoría | Tipos Principales |
-| :--- | :--- |
-| **Partido/Turno** | `match_start`, `match_end`, `turn_start`, `turn_end`, `KICKOFF`, `TURNOVER` |
-| **Anotación/SPP** | `TOUCHDOWN`, `INJURY`, `FOUL`, `INTERCEPTION`, `PASS`, `MVP_AWARDED` |
-| **Movimiento** | `move`, `rush`, `rush_fail`, `dodge`, `dodge_fail`, `pickup_ball`, `pickup_fail` |
-| **Combate** | `block`, `push`, `knockdown`, `both_down`, `attacker_down` |
-| **Daño/Médico** | `armor_break`, `armor_hold`, `injury_stunned`, `injury_ko`, `injury_casualty`, `DEATH` |
-| **Recursos** | `reroll_used`, `apothecary_used`, `bribe_used` |
+## 5. Sistema de tiradas
+Todas las tiradas siguen el mismo patron:
+- entrada manual por casillas,
+- o resolucion automatica.
 
----
+El modal muestra titulo contextual para saber si se esta tirando:
+- armadura,
+- heridas,
+- pase,
+- bloqueo,
+- esquiva,
+- sprint,
+- falta,
+- o asegurado.
 
-## 3. Máquina de Estados del Partido (`GameState`)
-El orquestador central (`MatchOrchestrator.tsx`) gestiona el flujo del partido a través de estas fases:
+## 6. Caida de mesa
+El flujo de `CAIDA / FALLO` en arena sigue la logica de Blood Bowl de mesa:
+- fallo de esquiva o sprint -> turnover;
+- el jugador queda derribado;
+- si no rompe armadura, la secuencia acaba;
+- si rompe armadura, se resuelve herida;
+- el resultado puede dejar al jugador aturdido, KO o lesionado;
+- el cierre se registra en log y cronica.
 
-1. **`selection`**: Carga de equipos (QR/Firestore) y validación de rosters.
-2. **`pre_game`**: 
-   - Paso 1: Jornaleros (Journeymen).
-   - Paso 2: Compra de Incentivos (Underdog + Tesorería propia).
-   - Paso 3: Clima, Sorteo y Patada Inicial.
-3. **`in_progress`**: El bucle principal de juego (8 turnos por parte).
-4. **`ko_recovery`**: Intermedio entre drives para chequear recuperación de jugadores bajo el clima actual.
-5. **`post_game`**: Wizard de cierre (Ganancias, SPP, MVP, Crónica).
-6. **`reports`**: Visualización de "La Gaceta" y estadísticas finales.
-
----
-
-## 4. Panel de Control (Acciones Registrables)
-La interfaz del Match Center presenta botones de acción rápida que disparan secuencias lógicas:
-
-- **Placaje (Block)**: Dispara la secuencia `Dice Selection -> Armor Roll -> Injury Roll`.
-- **Falta (Foul)**: Activa el `foulEngine` para chequear expulsión (dobles naturales).
-- **Asegurar Balón**: Acción automática S3 (2+ en 1D6) que termina la activación.
-- **Bone Head / Stupid**: Aplica el estado **Distraído** (Pérdida de ZD y habilidades).
-- **Stalling**: Chequeo automático al final del turno si el jugador retiene el balón en zona de marca.
-
----
-
-## 5. Integración Narrativa
-Cada evento procesado por esta lógica alimenta el `newsGenerator.ts`, que traduce los códigos (ej: `injury_casualty`) en frases descriptivas para la crónica final del partido en Firestore.
+## 7. Integracion narrativa
+La cronica se alimenta de los eventos del partido y del cierre del acta.
+El `newsGenerator.ts` puede transformar el resumen tecnico en un reporte narrativo de la jornada.

@@ -1,34 +1,40 @@
-﻿# Blood Bowl Manager
+# Blood Bowl Manager
 
 Blood Bowl Manager es una aplicacion React + Vite para gestionar equipos, competiciones, reglas y contenido maestro de Blood Bowl.
 
-## Lo que hace la app
-- Gestion de equipos, estrellas, habilidades, incentivos y heraldo desde el panel de admin.
-- Explorador de competiciones con ligas y torneos.
+## Que hace ahora
+- Gestion de equipos, estrellas, habilidades, incentivos, heraldo y competiciones desde el panel de admin.
+- Explorador de competiciones con ligas, torneos, organizacion y competiciones privadas de prueba.
+- Arena de partido orientada a mesa: prepartido, accion del jugador, tiradas manuales o automaticas, postpartido y cronica.
 - Biblioteca de reglas, jugadores estrella y datos del juego.
 - Integracion con Firestore para persistencia.
-- Explorador de imagenes desde el repositorio `jaz206/Bloodbowl-image` para escudos y star players.
+- Explorador de imagenes desde `jaz206/Bloodbowl-image` para escudos y jugadores.
 
 ## Estructura actual del proyecto
-- `components/shared/AdminPanel.tsx`: panel principal de administracion, filtros, import/export CSV y sincronizacion.
+- `components/shared/AdminPanel.tsx`: contenedor principal de administracion, filtros, import/export CSV y sincronizacion.
 - `components/shared/AdminEditorModal.tsx`: modal de edicion de items maestros.
 - `components/shared/AdminGeneralForm.tsx`, `AdminTeamForm.tsx`, `AdminStarForm.tsx`, `AdminSkillsForm.tsx`, `AdminInducementForm.tsx`, `AdminHeraldoForm.tsx`: formularios separados por dominio.
 - `components/shared/AdminGitHubImagePicker.tsx`: selector plegable para buscar imagenes en GitHub.
+- `components/shared/AdminCompetitionLab.tsx`: laboratorio para crear competiciones privadas de prueba.
 - `pages/Arena/LeaguesPage.tsx`: vista de competiciones, ya separada en piezas reutilizables.
 - `pages/Arena/CompetitionCard.tsx`, `LeaguesTabbedList.tsx`, `competitionUtils.ts`: componentes y utilidades extraidos de la vista principal.
+- `pages/Arena/Match/views/MatchInProgress.tsx`: mesa de partido con panel de jugador y cronista.
+- `pages/Arena/Match/components/S3ActionOrchestrator.tsx`: modal unico de tiradas manuales / automaticas.
 - `components/shared/adminPanelUtils.ts`: utilidades comunes del admin.
 
 ## Datos y reglas
 - Firestore usa una base `deny-by-default`.
 - `master_data` y `settings_master` solo admiten escritura de admins.
 - `users/{uid}` queda aislado por propietario.
-- `competitions` y `leagues` son compatibles con el modelo nuevo (`createdBy`) y el legado (`ownerId`).
+- `competitions` y `leagues` son compatibles con `createdBy` y `ownerId`.
 - `live_matches` y `tactical_plays` exigen que el creador sea el propietario del documento.
 
 ## Imagenes
 - Los escudos viven en `Bloodbowl-image/Escudos`.
 - Las imagenes de star players viven en `Bloodbowl-image/Star Players`.
-- El panel de admin carga esas carpetas de forma dinamica y usa las URLs directas de `raw.githubusercontent.com`.
+- Las fotos de plantillas viven en `Bloodbowl-image/Foto plantilla/<raza>`.
+- El panel de admin carga esas carpetas de forma dinamica y usa URLs directas de `raw.githubusercontent.com`.
+- El sistema de jugador reparte mejor imagenes con nombres compuestos como `Blitzer orco 05.png`.
 
 ## Desarrollo local
 1. Instala dependencias con `npm install`.
@@ -50,4 +56,5 @@ El admin se dividio para que editar sea mas comodo y seguro:
 - la logica pesada quedo en el modal y en formularios especializados,
 - el selector de imagenes quedo aislado,
 - los bloques de feedback y utilidades estan separados,
-- la vista de ligas se partio en componentes mas pequenos.
+- la vista de ligas se partio en componentes mas pequenos,
+- la arena ahora usa un modal comun de tiradas y un panel lateral de accion.
