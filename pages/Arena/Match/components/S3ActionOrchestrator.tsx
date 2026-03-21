@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useMatch } from '../context/MatchContext';
 import { S3ActionType, InteractionMode } from '../types/match.types';
 import { ManagedPlayer, ELITE_SKILLS } from '../../../../types';
@@ -9,14 +9,14 @@ const ACTIONS: { type: S3ActionType; label: string; icon: string; needsObjective
     { type: 'HANDOFF', label: 'Entrega', icon: 'front_hand', needsObjective: true, color: 'bg-green-600', attribute: 'AG', diceType: '1d6' },
     { type: 'FOUL', label: 'Falta', icon: 'gavel', needsObjective: true, color: 'bg-red-700', attribute: 'FU', diceType: '2d6' },
     { type: 'TOUCHDOWN', label: 'Touchdown', icon: 'sports_score', needsObjective: false, color: 'bg-yellow-500', diceType: '1d6' },
-    { type: 'SECURE_BALL', label: 'Asegurar Balón', icon: 'inventory_2', needsObjective: false, color: 'bg-emerald-600', diceType: '1d6' },
+    { type: 'SECURE_BALL', label: 'Asegurar BalÃ³n', icon: 'inventory_2', needsObjective: false, color: 'bg-emerald-600', diceType: '1d6' },
     { type: 'DODGE', label: 'Esquivar', icon: 'directions_run', needsObjective: false, color: 'bg-indigo-600', attribute: 'AG', diceType: '1d6' },
     { type: 'RUSH', label: 'A por ellos', icon: 'speed', needsObjective: false, color: 'bg-rose-600', diceType: '1d6' },
     { type: 'MOVE', label: 'Mover', icon: 'footprint', needsObjective: false, color: 'bg-blue-600', diceType: '1d6' },
     { type: 'BONE_HEAD', label: 'Cabeza Dura', icon: 'psychology', needsObjective: false, color: 'bg-stone-600', diceType: '1d6' },
 ];
 
-const BLOCK_FACES = ['Calavera', 'Ambos', 'Empujón', 'Empujón', 'Flecha', 'Zaca!'];
+const BLOCK_FACES = ['Calavera', 'Ambos', 'EmpujÃ³n', 'EmpujÃ³n', 'Flecha', 'Zaca!'];
 
 const S3ActionOrchestrator: React.FC = () => {
     const { 
@@ -30,6 +30,9 @@ const S3ActionOrchestrator: React.FC = () => {
 
     const activeTeam = activeTeamId === 'home' ? liveHomeTeam : liveOpponentTeam;
     const opponentTeam = activeTeamId === 'home' ? liveOpponentTeam : liveHomeTeam;
+    const [manualDie1, setManualDie1] = useState('');
+    const [manualDie2, setManualDie2] = useState('');
+    const [manualBlockFace, setManualBlockFace] = useState(BLOCK_FACES[0]);
 
     const handleSelectActor = (player: ManagedPlayer) => {
         setInteractionState(prev => ({
@@ -44,9 +47,9 @@ const S3ActionOrchestrator: React.FC = () => {
         const actionData = ACTIONS.find(a => a.type === action);
         const actor = activeTeam?.players.find(p => p.id === pending.actorId);
 
-        // Lógica S3: Validar PA "-"
+        // LÃ³gica S3: Validar PA "-"
         if (action === 'PASS' && actor?.stats.PA === '-') {
-            logEvent('WARNING', `¡ACCIÓN BLOQUEADA! ${actor.customName} tiene PA "-" y no puede lanzar pases.`);
+            logEvent('WARNING', `Â¡ACCIÃ“N BLOQUEADA! ${actor.customName} tiene PA "-" y no puede lanzar pases.`);
             return;
         }
 
@@ -83,6 +86,30 @@ const S3ActionOrchestrator: React.FC = () => {
             pending: { actorId: null, actionType: null, objectiveId: null, diceResult: null, manualMode: true }
         });
         setSelectedPlayerForAction(null);
+        setManualDie1('');
+        setManualDie2('');
+        setManualBlockFace(BLOCK_FACES[0]);
+    };
+
+    const submitManualRoll = () => {
+        const actionData = ACTIONS.find(a => a.type === pending.actionType);
+
+        if (actionData?.diceType === 'block') {
+            handleDiceResult(manualBlockFace);
+            return;
+        }
+
+        if (actionData?.diceType === '2d6') {
+            const die1 = Number.parseInt(manualDie1, 10);
+            const die2 = Number.parseInt(manualDie2, 10);
+            if (Number.isNaN(die1) || Number.isNaN(die2)) return;
+            handleDiceResult(die1 + die2);
+            return;
+        }
+
+        const die = Number.parseInt(manualDie1, 10);
+        if (Number.isNaN(die)) return;
+        handleDiceResult(die);
     };
 
     if (mode === 'idle') {
@@ -114,10 +141,10 @@ const S3ActionOrchestrator: React.FC = () => {
                         {mode === 'selecting_action' ? '1' : mode === 'selecting_objective' ? '2' : '3'}
                     </div>
                     <div>
-                        <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">S3: Vínculo de Nuffle</p>
+                        <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">S3: VÃ­nculo de Nuffle</p>
                         <h4 className="text-xs font-black text-white uppercase italic">
-                            {mode === 'selecting_action' && "Confirmar Acción"}
-                            {mode === 'selecting_objective' && "¿Contra quién?"}
+                            {mode === 'selecting_action' && "Confirmar AcciÃ³n"}
+                            {mode === 'selecting_objective' && "Â¿Contra quiÃ©n?"}
                             {mode === 'awaiting_dice' && "Entrada de Resultados"}
                         </h4>
                     </div>
@@ -184,69 +211,98 @@ const S3ActionOrchestrator: React.FC = () => {
 
                 {mode === 'awaiting_dice' && (
                     <div className="space-y-6 flex flex-col items-center py-6">
-                        {pending.actionType === 'BLOCK' ? (
-                            <div className="grid grid-cols-3 gap-4">
-                                {['Calavera', 'Ambos', 'Empujón', 'Zaca!', 'Flecha'].map(d => (
-                                    <button 
-                                        key={d} 
-                                        onClick={() => handleDiceResult(d)}
-                                        className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex flex-col items-center justify-center hover:bg-primary/20 hover:border-primary/40 transition-all"
-                                    >
-                                        <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center mb-1">
-                                            <span className="material-symbols-outlined text-xs">casino</span>
+                        {(() => {
+                            const currentAction = ACTIONS.find(a => a.type === pending.actionType);
+
+                            if (currentAction?.diceType === 'block') {
+                                return (
+                                    <div className="w-full space-y-3">
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {BLOCK_FACES.map(face => (
+                                                <button
+                                                    key={face}
+                                                    onClick={() => setManualBlockFace(face)}
+                                                    className={`rounded-xl border px-3 py-2 text-[9px] font-black uppercase tracking-[0.2em] transition-all ${manualBlockFace === face
+                                                        ? 'bg-primary text-midnight border-primary shadow-lg shadow-primary/20'
+                                                        : 'bg-white/5 text-slate-300 border-white/10 hover:border-primary/30 hover:bg-white/10'
+                                                    }`}
+                                                >
+                                                    {face}
+                                                </button>
+                                            ))}
                                         </div>
-                                        <span className="text-[8px] font-black text-white uppercase">{d}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        ) : ACTIONS.find(a => a.type === pending.actionType)?.diceType === '2d6' ? (
-                            <div className="grid grid-cols-4 gap-3 max-w-sm">
-                                {[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(n => (
-                                    <button 
-                                        key={n} 
-                                        onClick={() => handleDiceResult(n)}
-                                        className={`w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-black transition-all border
-                                            ${n >= 9 ? 'bg-red-600/20 border-red-600/40 text-red-500 hover:bg-red-600/40' : 'bg-white/5 border-white/10 text-white hover:bg-primary/20 hover:border-primary/40'}
-                                        `}
-                                    >
-                                        {n}
-                                    </button>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-3 gap-3">
-                                {[1, 2, 3, 4, 5, 6].map(n => (
-                                    <button 
-                                        key={n} 
-                                        onClick={() => handleDiceResult(n)}
-                                        className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-xl font-black text-white hover:bg-primary/20 hover:border-primary/40 transition-all"
-                                    >
-                                        {n}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                        
-                        <div className="w-full h-px bg-white/5 my-4"></div>
-                        
-                        <button 
-                            onClick={() => {
-                                const actionData = ACTIONS.find(a => a.type === pending.actionType);
-                                if (actionData?.diceType === 'block') {
-                                    const face = BLOCK_FACES[Math.floor(Math.random() * 6)];
-                                    handleDiceResult(face);
-                                } else if (actionData?.diceType === '2d6') {
-                                    handleDiceResult((Math.floor(Math.random() * 6) + 1) + (Math.floor(Math.random() * 6) + 1));
-                                } else {
-                                    handleDiceResult(Math.floor(Math.random() * 6) + 1);
-                                }
-                            }}
-                            className="w-full bg-primary text-black font-black py-4 rounded-2xl text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all"
-                        >
-                            Lanzamiento Digital (App)
-                        </button>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={submitManualRoll}
+                                                className="flex-1 bg-white/10 hover:bg-white/15 text-white font-black py-3 rounded-2xl border border-white/10 transition-all uppercase tracking-[0.2em] text-[10px]"
+                                            >
+                                                Aplicar manualmente
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    const face = BLOCK_FACES[Math.floor(Math.random() * BLOCK_FACES.length)];
+                                                    handleDiceResult(face);
+                                                }}
+                                                className="bg-primary text-black font-black py-3 px-4 rounded-2xl text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-primary/20 hover:brightness-110 transition-all"
+                                            >
+                                                Auto
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            }
+
+                            const isTwoDice = currentAction?.diceType === '2d6';
+                            return (
+                                <div className="w-full space-y-3">
+                                    <div className={`grid ${isTwoDice ? 'grid-cols-2' : 'grid-cols-1'} gap-3`}>
+                                        <input
+                                            type="number"
+                                            min={1}
+                                            max={6}
+                                            value={manualDie1}
+                                            onChange={(e) => setManualDie1(e.target.value)}
+                                            placeholder={isTwoDice ? 'Dado 1' : 'Dado'}
+                                            className="w-full rounded-2xl bg-black/40 border border-white/10 px-4 py-3 text-center text-white font-black text-lg outline-none focus:border-primary/50"
+                                        />
+                                        {isTwoDice && (
+                                            <input
+                                                type="number"
+                                                min={1}
+                                                max={6}
+                                                value={manualDie2}
+                                                onChange={(e) => setManualDie2(e.target.value)}
+                                                placeholder="Dado 2"
+                                                className="w-full rounded-2xl bg-black/40 border border-white/10 px-4 py-3 text-center text-white font-black text-lg outline-none focus:border-primary/50"
+                                            />
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={submitManualRoll}
+                                            className="flex-1 bg-white/10 hover:bg-white/15 text-white font-black py-3 rounded-2xl border border-white/10 transition-all uppercase tracking-[0.2em] text-[10px]"
+                                        >
+                                            Aplicar manualmente
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                if (isTwoDice) {
+                                                    handleDiceResult((Math.floor(Math.random() * 6) + 1) + (Math.floor(Math.random() * 6) + 1));
+                                                } else {
+                                                    handleDiceResult(Math.floor(Math.random() * 6) + 1);
+                                                }
+                                            }}
+                                            className="bg-primary text-black font-black py-3 px-4 rounded-2xl text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-primary/20 hover:brightness-110 transition-all"
+                                        >
+                                            Auto
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        })()}
                     </div>
                 )}
+                        
             </div>
             
             {/* Footer con resumen de la secuencia */}
@@ -272,3 +328,4 @@ const S3ActionOrchestrator: React.FC = () => {
 };
 
 export default S3ActionOrchestrator;
+
