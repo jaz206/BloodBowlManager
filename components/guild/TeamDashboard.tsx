@@ -246,6 +246,22 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
         });
     };
 
+    const getExpectedPlayerFilename = (position: string, number: number): string => {
+        const posTag = getPosTag(position);
+        if (posTag === "Thrall linea") {
+            return `${posTag} ${number}.png`;
+        }
+        const paddedNumber = number < 10 ? `0${number}` : `${number}`;
+        const capitalizedPos = posTag.charAt(0).toUpperCase() + posTag.slice(1);
+        return `${capitalizedPos} ${paddedNumber}.png`;
+    };
+
+    const getExistingFilename = (url?: string): string => {
+        if (!url) return "";
+        const filename = url.split("/").pop() || "";
+        return decodeURIComponent(filename).split("?")[0];
+    };
+
     const handleHirePlayer = (player: Player) => {
         const limit = parseInt((player?.qty || '0-16').split('-')[1]);
         if (team.players.filter(p => p.position === player.position).length >= limit) return;
@@ -280,11 +296,16 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
     const handleAutoSyncImages = async () => {
         const stock = imageStock || await fetchTeamImageStock(team.rosterName);
         const updatedPlayers = team.players.map(p => {
-            // Respect existing images as requested
-            if (p.image) return p;
-
             const posTag = getPosTag(p.position).toLowerCase();
             const availableNumbers = stock[posTag] || Array.from({length: 15}, (_, i) => i + 1);
+            const expectedFilenames = availableNumbers.map(num => getExpectedPlayerFilename(p.position, num));
+            const existingFilename = getExistingFilename(p.image);
+
+            // Keep the image only if it already matches one of the valid filenames for that position.
+            if (existingFilename && expectedFilenames.includes(existingFilename)) {
+                return p;
+            }
+
             const imgNum = availableNumbers[Math.floor(Math.random() * availableNumbers.length)];
 
             return {

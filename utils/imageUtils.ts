@@ -71,8 +71,8 @@ export const fetchTeamImageStock = async (rosterName: string): Promise<PositionS
         if (f.type === 'file' && f.name.endsWith('.png')) {
             const parts = f.name.split(' ');
             if (parts.length >= 2) {
-                const tag = parts[0].toLowerCase();
-                const numMatch = parts[1].match(/\d+/);
+                const tag = parts.slice(0, -1).join(' ').toLowerCase();
+                const numMatch = parts[parts.length - 1].match(/\d+/);
                 if (numMatch) {
                     const num = parseInt(numMatch[0]);
                     if (!stock[tag]) stock[tag] = [];
@@ -105,6 +105,8 @@ const POSITION_TAG_MAP: Record<string, string> = {
   "Bloqueador": "bloqueador",
   "Enanos Bloqueador Línea": "bloqueador",
   "Elegido Bloqueador": "bloqueador",
+  "Placador Blitzer": "blitzer",
+  "Blitzer Orco": "blitzer orco",
   "Corredor": "corredor",
   "Python Guerrero Lanzador": "lanzador",
   "Lanzador": "lanzador",
@@ -255,4 +257,5 @@ export const getStarPlayerImageUrl = (starName: string): string => {
   const filename = STAR_FILE_MAP[key] ?? `PJ - ${key}.png`;
   return `${STAR_BASE_URL}${encodeURIComponent(filename)}`;
 };
+
 
