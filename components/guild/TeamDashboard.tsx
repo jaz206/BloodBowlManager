@@ -12,7 +12,6 @@ import { useMasterData } from '../../hooks/useMasterData';
 import { calculateTeamValue } from '../../utils/teamUtils';
 import {
     getPlayerImageUrl,
-    getLegacyPlayerImageUrl,
     getTeamLogoUrl,
     fetchTeamImageStock,
     type PositionStock,
@@ -269,20 +268,20 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
         };
     };
 
-    const isValidNestedImage = (url: string | undefined, position: string, numbers: number[]): boolean => {
+    const isValidNestedImage = (url: string | undefined, position: string, filenames: string[]): boolean => {
         if (!url) return false;
         const { folder, filename } = getExistingImageParts(url);
         if (folder !== getPosTag(position).toLowerCase()) return false;
-        return numbers.some(number => filename === `${number < 10 ? `0${number}` : `${number}`}.png`);
+        return filenames.includes(filename);
     };
 
-    const isValidLegacyImage = (url: string | undefined, position: string, numbers: number[]): boolean => {
+    const isValidLegacyImage = (url: string | undefined, position: string, filenames: string[]): boolean => {
         if (!url) return false;
         const { filename } = getExistingImageParts(url);
-        return numbers.some(number => {
-            const legacyFilename = decodeURIComponent(getLegacyPlayerImageUrl(team.rosterName, position, number).split('/').pop() || '');
-            return filename === legacyFilename;
-        });
+        if (filenames.length > 0) {
+            return filenames.includes(filename);
+        }
+        return false;
     };
 
     const handleHirePlayer = (player: Player) => {
@@ -294,9 +293,19 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
         // Use stock if available, else fallback to 15
         const stockEntry = getImageStockEntry(player.position);
         const availableNumbers = stockEntry?.numbers || Array.from({ length: 15 }, (_, i) => i + 1);
+        const availableFiles = stockEntry?.files || [];
         const imgNumber = availableNumbers[Math.floor(Math.random() * availableNumbers.length)];
+        const selectedFilename = availableFiles.length > 0
+            ? availableFiles[Math.floor(Math.random() * availableFiles.length)]
+            : undefined;
         
-        const playerImageUrl = getPlayerImageUrl(team.rosterName, player.position, imgNumber, stockEntry?.storage || 'nested');
+        const playerImageUrl = getPlayerImageUrl(
+            team.rosterName,
+            player.position,
+            imgNumber,
+            stockEntry?.storage || 'nested',
+            selectedFilename
+        );
 
         const newPlayer: ManagedPlayer = {
             ...player,
@@ -322,19 +331,29 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
             const posTag = getPosTag(p.position).toLowerCase();
             const stockEntry = stock[posTag] || null;
             const availableNumbers = stockEntry?.numbers || Array.from({ length: 15 }, (_, i) => i + 1);
+            const availableFiles = stockEntry?.files || [];
 
             if (stockEntry && (
-                isValidNestedImage(p.image, p.position, availableNumbers) ||
-                isValidLegacyImage(p.image, p.position, availableNumbers)
+                isValidNestedImage(p.image, p.position, availableFiles) ||
+                isValidLegacyImage(p.image, p.position, availableFiles)
             )) {
                 return p;
             }
 
             const imgNum = availableNumbers[Math.floor(Math.random() * availableNumbers.length)];
+            const selectedFilename = availableFiles.length > 0
+                ? availableFiles[Math.floor(Math.random() * availableFiles.length)]
+                : undefined;
 
             return {
                 ...p,
-                image: getPlayerImageUrl(team.rosterName, p.position, imgNum, stockEntry?.storage || 'nested')
+                image: getPlayerImageUrl(
+                    team.rosterName,
+                    p.position,
+                    imgNum,
+                    stockEntry?.storage || 'nested',
+                    selectedFilename
+                )
             };
         });
 

@@ -133,6 +133,7 @@ export const getTeamPrefix = (rosterName: string): string => {
 
 export interface PositionStockEntry {
   numbers: number[];
+  files: string[];
   storage: PlayerImageStorageMode;
 }
 
@@ -144,14 +145,19 @@ const addStockNumber = (
   stock: PositionStock,
   key: string,
   number: number,
-  storage: PlayerImageStorageMode
+  storage: PlayerImageStorageMode,
+  filename: string
 ) => {
   if (!stock[key]) {
-    stock[key] = { numbers: [], storage };
+    stock[key] = { numbers: [], files: [], storage };
   }
 
   if (!stock[key].numbers.includes(number)) {
     stock[key].numbers.push(number);
+  }
+
+  if (!stock[key].files.includes(filename)) {
+    stock[key].files.push(filename);
   }
 };
 
@@ -191,7 +197,7 @@ export const fetchTeamImageStock = async (rosterName: string): Promise<PositionS
           if (file.type !== 'file' || !file.name.endsWith('.png')) return;
           const match = file.name.match(/(\d+)\.png$/i);
           if (!match) return;
-          addStockNumber(stock, entry.name.toLowerCase(), parseInt(match[1], 10), 'nested');
+          addStockNumber(stock, entry.name.toLowerCase(), parseInt(match[1], 10), 'nested', file.name);
         });
       }));
 
@@ -205,7 +211,7 @@ export const fetchTeamImageStock = async (rosterName: string): Promise<PositionS
       if (!numberMatch) return;
 
       const label = decodedName.replace(/\s+\d+\.png$/i, '');
-      addStockNumber(stock, getPosTag(label), parseInt(numberMatch[1], 10), 'legacy');
+      addStockNumber(stock, getPosTag(label), parseInt(numberMatch[1], 10), 'legacy', decodedName);
     });
 
     return stock;
@@ -247,17 +253,22 @@ export const getPlayerImageUrl = (
   rosterName: string,
   position: string,
   number: number,
-  storage: PlayerImageStorageMode = 'nested'
+  storage: PlayerImageStorageMode = 'nested',
+  filename?: string
 ): string => {
   if (storage === 'legacy') {
+    if (filename) {
+      const teamPrefix = getTeamPrefix(rosterName);
+      return `${BASE_URL}${encodeURIComponent(teamPrefix)}/${encodeURIComponent(filename)}`;
+    }
     return getLegacyPlayerImageUrl(rosterName, position, number);
   }
 
   const teamPrefix = getTeamPrefix(rosterName);
   const positionFolder = getPosTag(position);
-  const paddedNumber = number < 10 ? `0${number}` : `${number}`;
+  const resolvedFilename = filename || `${number < 10 ? `0${number}` : `${number}`}.png`;
 
-  return `${BASE_URL}${encodeURIComponent(teamPrefix)}/${encodeURIComponent(positionFolder)}/${encodeURIComponent(`${paddedNumber}.png`)}`;
+  return `${BASE_URL}${encodeURIComponent(teamPrefix)}/${encodeURIComponent(positionFolder)}/${encodeURIComponent(resolvedFilename)}`;
 };
 
 export const getTeamLogoUrl = (rosterName: string): string => {
