@@ -165,6 +165,14 @@ const updatePlayerSppAndAction = useCallback((
         }, action);
     }, [foulState, setFoulState, liveHomeTeam, liveOpponentTeam, setLiveHomeTeam, setLiveOpponentTeam, updatePlayerStatus, logEvent, setIsFoulModalOpen, playSound]);
 
+    /** Registra un turnover y avanza al siguiente turno. */
+    const handleTurnover = useCallback((reason: string) => {
+        logEvent('TURNOVER', `¡Fin de turno! ${reason}.`);
+        playSound('turnover');
+        setIsTurnoverModalOpen(false);
+        handleNextTurn();
+    }, [logEvent, playSound, handleNextTurn, setIsTurnoverModalOpen]);
+
     /** Gestiona el flujo paso a paso de una lesión. */
     const handleInjuryAction = useCallback((action: 'next' | 'back') => {
         handleInjuryActionLogic({
@@ -291,14 +299,6 @@ const updatePlayerSppAndAction = useCallback((
             setGameState('ko_recovery');
         }
     }, [tdModalTeam, liveHomeTeam, liveOpponentTeam, logEvent, setScore, playSound, updatePlayerSppAndAction, setIsTdModalOpen, setTdModalTeam, turn, half, handleHalftime, setGameState]);
-
-    /** Registra un turnover y avanza al siguiente turno. */
-    const handleTurnover = useCallback((reason: string) => {
-        logEvent('TURNOVER', `¡Fin de turno! ${reason}.`);
-        playSound('turnover');
-        setIsTurnoverModalOpen(false);
-        handleNextTurn();
-    }, [logEvent, playSound, handleNextTurn, setIsTurnoverModalOpen]);
 
     /** Resuelve daño automático de una caída o tropiezo. */
     const resolveAutomaticFallDamage = useCallback((player: ManagedPlayer, teamId: 'home' | 'opponent') => {
