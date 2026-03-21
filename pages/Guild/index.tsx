@@ -149,8 +149,9 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
     const handleTeamCreate = async (newTeam: ManagedTeam) => {
         const teamNameExists = teams.some(team => team.name.toLowerCase() === newTeam.name.toLowerCase());
         if (teamNameExists) {
-            setConfirmation({ title: 'Nombre en uso', message: 'Ya existe un equipo con este nombre en el Gremio.', onConfirm: () => setConfirmation(null), type: 'info' });
-            return;
+            const message = 'Ya existe un equipo con este nombre en el Gremio.';
+            showToast(message);
+            throw new Error(message);
         }
         const { id, ...teamData } = newTeam;
         try {
@@ -158,7 +159,9 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
             setIsCreating(false);
             showToast('Â¡Franquicia fundada con Ã©xito!');
         } catch (error) {
-            showToast('Error al fundar la franquicia.');
+            const message = error instanceof Error ? error.message : 'Error al fundar la franquicia.';
+            showToast(message);
+            throw error;
         }
     };
 

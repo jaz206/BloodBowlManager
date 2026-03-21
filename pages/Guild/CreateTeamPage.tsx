@@ -9,7 +9,7 @@ import { PLAYER_NAMES } from './playerNames';
 import { getPlayerImageUrl, getTeamLogoUrl, getStarPlayerImageUrl } from '../../utils/imageUtils';
 
 interface TeamCreatorProps {
-    onTeamCreate: (team: Omit<ManagedTeam, 'id'>) => void;
+    onTeamCreate: (team: Omit<ManagedTeam, 'id'>) => Promise<void> | void;
     initialRosterName?: string | null;
 }
 
@@ -34,6 +34,8 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
     const [apothecary, setApothecary] = useState(false);
     const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [submitError, setSubmitError] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Initial Budget
     const startingTreasury = 1000000;
@@ -263,8 +265,10 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
         return found?.name_es ?? found?.name ?? keyEN;
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!canFinalize || !currentFaction) return;
+        setSubmitError(null);
+        setIsSubmitting(true);
         const newTeam: Omit<ManagedTeam, 'id'> = {
             name: teamName.trim(),
             rosterName: currentFaction.name,
@@ -277,7 +281,13 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
             players: draftedPlayers,
             crestImage: getTeamLogoUrl(currentFaction.name) || currentFaction.image
         };
-        onTeamCreate(newTeam);
+        try {
+            await onTeamCreate(newTeam);
+        } catch (error) {
+            setSubmitError(error instanceof Error ? error.message : 'No se pudo fundar la franquicia.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     if (loading || !currentFaction) {
@@ -859,20 +869,25 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                     {/* FINAL ACTION - COMPACT */}
                     <div className="p-5 border-t border-white/10 bg-black">
                         <button 
-                            disabled={!canFinalize}
+                            disabled={!canFinalize || isSubmitting}
                             onClick={handleSubmit}
                             className={`w-full py-4 rounded-xl font-header font-black text-lg tracking-tighter uppercase italic flex items-center justify-center gap-3 transition-all duration-500 ${
-                                canFinalize 
+                                canFinalize && !isSubmitting
                                 ? 'bg-gold text-black hover:scale-[1.01] active:scale-95 shadow-lg shadow-gold/20' 
                                 : 'bg-white/5 text-gray-800 border border-white/5 cursor-not-allowed'
                             }`}
                         >
                             <span className="material-symbols-outlined text-lg font-black">gavel</span>
-                            Sellar Franquicia
+                            {isSubmitting ? 'Sellando...' : 'Sellar Franquicia'}
                         </button>
                         <p className={`mt-3 text-center text-[9px] font-black uppercase tracking-[0.15em] ${canFinalize ? 'text-emerald-500' : 'text-gray-500'}`}>
                             {canFinalize ? 'Plantilla lista para fundarse' : finalizeHints.join(' · ')}
                         </p>
+                        {submitError && (
+                            <p className="mt-2 text-center text-[10px] font-black uppercase tracking-[0.12em] text-blood">
+                                {submitError}
+                            </p>
+                        )}
                     </div>
                 </aside>
             </main>
