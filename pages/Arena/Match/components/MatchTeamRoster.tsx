@@ -72,6 +72,7 @@ const MatchTeamRoster: React.FC<MatchTeamRosterProps> = ({ team, side, activeTea
         {team.players.map(player => {
           const hasLevelUp = player.spp >= (((player.advancements?.length || 0) + 1) * 16);
           const isSelected = selectedPlayerId === player.id;
+          const isActivated = !!player.isActivated;
           const isMNG = (player.missNextGame || 0) > 0;
           const injuries = player.lastingInjuries?.length || 0;
           const statusTone = player.status === 'Muerto'
@@ -87,17 +88,17 @@ const MatchTeamRoster: React.FC<MatchTeamRosterProps> = ({ team, side, activeTea
           return (
             <button
               key={player.id}
-              disabled={locked}
+              disabled={locked || isActivated}
               onClick={() => onSelectPlayer(player, side)}
               className={`relative text-left rounded-2xl border p-4 transition-all overflow-hidden group/card hover:-translate-y-0.5 hover:border-primary/30 hover:bg-white/5 ${
                 isSelected ? 'border-primary bg-primary/10 shadow-[0_0_24px_rgba(202,138,4,0.12)]' : 'border-white/5 bg-black/35'
-              } ${locked ? 'cursor-not-allowed opacity-70 hover:translate-y-0 hover:border-white/5 hover:bg-black/35' : ''}
+              } ${isActivated ? 'opacity-45 grayscale-[0.85]' : ''} ${locked || isActivated ? 'cursor-not-allowed hover:translate-y-0 hover:border-white/5 hover:bg-black/35' : ''}
               }`}
             >
               <div className="flex items-start gap-3">
                 <div className="size-14 rounded-xl bg-black border border-white/10 overflow-hidden shrink-0 relative">
                   {player.image ? (
-                    <img src={player.image} alt={player.customName} className="w-full h-full object-cover" />
+                    <img src={player.image} alt={player.customName} className={`w-full h-full object-cover ${isActivated ? 'saturate-50' : ''}`} />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-slate-700 font-black italic">
                       #{player.id.toString().slice(-2)}
@@ -112,9 +113,16 @@ const MatchTeamRoster: React.FC<MatchTeamRosterProps> = ({ team, side, activeTea
                       <h4 className="text-sm font-black italic uppercase tracking-tighter text-white truncate">{player.customName}</h4>
                       <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest truncate">{player.position}</p>
                     </div>
-                    {hasLevelUp && (
-                      <span className="material-symbols-outlined text-primary text-sm animate-pulse">star</span>
-                    )}
+                    <div className="flex items-center gap-1.5">
+                      {isActivated && (
+                        <span className="px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[8px] font-black uppercase tracking-[0.25em] text-slate-400">
+                          Usado
+                        </span>
+                      )}
+                      {hasLevelUp && (
+                        <span className="material-symbols-outlined text-primary text-sm animate-pulse">star</span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="mt-3 flex flex-wrap gap-1.5">
