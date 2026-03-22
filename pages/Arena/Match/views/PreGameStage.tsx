@@ -470,32 +470,56 @@ const DeploymentStep: React.FC = () => {
 
     if (!liveHomeTeam || !liveOpponentTeam) return null;
 
-    const handleConfirmDeployment = () => {
-        const homeOnField = liveHomeTeam.players.filter((p: any) => p.status === 'Activo').length;
-        const oppOnField = liveOpponentTeam.players.filter((p: any) => p.status === 'Activo').length;
-        const homeAvailable = liveHomeTeam.players.filter((p: any) => p.status !== 'Muerto' && p.status !== 'Lesionado' && (p.missNextGame || 0) <= 0).length;
-        const oppAvailable = liveOpponentTeam.players.filter((p: any) => p.status !== 'Muerto' && p.status !== 'Lesionado' && (p.missNextGame || 0) <= 0).length;
+    const homeOnField = liveHomeTeam.players.filter((p: any) => p.status === 'Activo').length;
+    const oppOnField = liveOpponentTeam.players.filter((p: any) => p.status === 'Activo').length;
+    const homeAvailable = liveHomeTeam.players.filter((p: any) => p.status !== 'Muerto' && p.status !== 'Lesionado' && (p.missNextGame || 0) <= 0).length;
+    const oppAvailable = liveOpponentTeam.players.filter((p: any) => p.status !== 'Muerto' && p.status !== 'Lesionado' && (p.missNextGame || 0) <= 0).length;
 
+    const handleConfirmDeployment = () => {
         if (homeOnField === 0 || oppOnField === 0) {
             alert('Ambos equipos deben tener al menos un guerrero en el campo para la batalla.');
             return;
         }
         if ((homeOnField < 11 && homeOnField < homeAvailable) || (oppOnField < 11 && oppOnField < oppAvailable)) {
-            if (!confirm('Uno de los equipos tiene menos de 11 jugadores pudiendo desplegar más. ¿Continuar?')) return;
+            if (!confirm('Uno de los equipos tiene menos de 11 jugadores pudiendo desplegar mas. �Continuar?')) return;
         }
         setPreGameStep(3);
-        logEvent('INFO', 'Despliegue confirmado. ¡Que ruede el balón!');
+        logEvent('INFO', 'Despliegue confirmado. Que ruede el bal�n.');
     };
 
     return (
         <div className="space-y-10">
-            <div className="text-center max-w-lg mx-auto">
-                <p className="text-slate-500 text-sm leading-relaxed tracking-wide italic">
-                    "Despliega tus tropas. El campo de batalla se tiñe de verde y gloria. Solo 11 guerreros pueden pisar el césped al unísono."
-                </p>
+            <div className="rounded-[2rem] border border-white/10 bg-black/35 p-6 md:p-8">
+                <div className="grid grid-cols-1 gap-6 xl:grid-cols-[0.9fr_1.1fr] xl:items-center">
+                    <div className="space-y-3">
+                        <p className="text-[10px] font-display font-black uppercase tracking-[0.32em] text-premium-gold/70">Formacion inicial</p>
+                        <h3 className="text-3xl font-display font-black uppercase italic tracking-tighter text-white">Despliegue de guerra</h3>
+                        <p className="max-w-xl text-sm leading-relaxed text-slate-400">
+                            Prepara ambos banquillos antes del saque. Puedes dejar a la app sugerir la once inicial o ajustar cada guerrero manualmente.
+                        </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="rounded-[1.4rem] border border-white/10 bg-white/5 p-4">
+                            <p className="mb-1 text-[9px] font-display font-black uppercase tracking-[0.22em] text-slate-500">Local en campo</p>
+                            <p className="text-2xl font-display font-black italic text-white">{homeOnField}/11</p>
+                        </div>
+                        <div className="rounded-[1.4rem] border border-white/10 bg-white/5 p-4">
+                            <p className="mb-1 text-[9px] font-display font-black uppercase tracking-[0.22em] text-slate-500">Rival en campo</p>
+                            <p className="text-2xl font-display font-black italic text-white">{oppOnField}/11</p>
+                        </div>
+                        <div className="rounded-[1.4rem] border border-white/10 bg-white/5 p-4">
+                            <p className="mb-1 text-[9px] font-display font-black uppercase tracking-[0.22em] text-slate-500">Disponibles local</p>
+                            <p className="text-2xl font-display font-black italic text-white">{homeAvailable}</p>
+                        </div>
+                        <div className="rounded-[1.4rem] border border-white/10 bg-white/5 p-4">
+                            <p className="mb-1 text-[9px] font-display font-black uppercase tracking-[0.22em] text-slate-500">Disponibles rival</p>
+                            <p className="text-2xl font-display font-black italic text-white">{oppAvailable}</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+            <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
                 {([liveHomeTeam, liveOpponentTeam] as any[]).map((team, index) => {
                     const teamId = index === 0 ? 'home' : 'opponent';
                     const onField = team.players.filter((p: any) => p.status === 'Activo');
@@ -518,14 +542,25 @@ const DeploymentStep: React.FC = () => {
                                 </div>
                                 <div className="text-right">
                                     <div className={`text-xl font-display font-black ${onField.length > 11 ? 'text-red-500' : 'text-white'}`}>{onField.length}/11</div>
-                                    <div className="text-[8px] font-bold text-slate-600 uppercase">En el Campo</div>
+                                    <div className="text-[8px] font-bold text-slate-600 uppercase">En el campo</div>
                                 </div>
                             </div>
 
-                            {/* Mini campo */}
                             <div className="relative group">
                                 <div className={`absolute -inset-1 bg-gradient-to-b from-${accentColor}-500/20 to-transparent rounded-[2.5rem] blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000`}></div>
-                                <div className="relative bg-black/60 rounded-[2.5rem] border border-white/10 p-4">
+                                <div className="relative rounded-[2.5rem] border border-white/10 bg-black/60 p-4">
+                                    <div className="mb-4 flex items-center justify-between gap-4 rounded-2xl border border-white/5 bg-white/5 px-4 py-3">
+                                        <div>
+                                            <p className="text-[9px] font-display font-black uppercase tracking-[0.2em] text-slate-500">Plano tactico</p>
+                                            <p className="text-xs font-bold uppercase tracking-wide text-white">Arrastra o recoloca para definir la salida</p>
+                                        </div>
+                                        <button
+                                            onClick={() => handleAutoSelectTeam(teamId)}
+                                            className="rounded-xl border border-premium-gold/20 bg-premium-gold/10 px-3 py-2 text-[9px] font-display font-black uppercase tracking-[0.18em] text-premium-gold transition-all hover:bg-premium-gold hover:text-black"
+                                        >
+                                            Once inicial
+                                        </button>
+                                    </div>
                                     <MiniField
                                         players={onField}
                                         teamColor={teamId === 'home' ? 'bg-sky-500' : 'bg-red-500'}
@@ -535,21 +570,20 @@ const DeploymentStep: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Roster */}
-                            <div className="bg-black/40 border border-white/5 rounded-3xl p-5 h-[350px] overflow-hidden flex flex-col">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h5 className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest">
-                                        Roster de Guerra
-                                        <span className="ml-2 text-[8px] bg-white/5 px-2 py-0.5 rounded-full">{team.players.length} Total</span>
+                            <div className="flex h-[350px] flex-col overflow-hidden rounded-3xl border border-white/5 bg-black/40 p-5">
+                                <div className="mb-4 flex items-center justify-between">
+                                    <h5 className="text-[10px] font-display font-black uppercase tracking-widest text-slate-500">
+                                        Banco y plantilla
+                                        <span className="ml-2 rounded-full bg-white/5 px-2 py-0.5 text-[8px]">{team.players.length} Total</span>
                                     </h5>
                                     <button
                                         onClick={() => handleAutoSelectTeam(teamId)}
-                                        className="text-[8px] font-display font-black text-premium-gold hover:text-white border border-premium-gold/30 hover:border-premium-gold bg-premium-gold/5 px-3 py-1.5 rounded-lg transition-all uppercase tracking-widest"
+                                        className="rounded-lg border border-premium-gold/30 bg-premium-gold/5 px-3 py-1.5 text-[8px] font-display font-black uppercase tracking-widest text-premium-gold transition-all hover:border-premium-gold hover:text-white"
                                     >
-                                        Sugerir 11 Inicial
+                                        Sugerir once
                                     </button>
                                 </div>
-                                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-2">
+                                <div className="custom-scrollbar flex-1 space-y-2 overflow-y-auto pr-2">
                                     {team.players.map((p: any) => (
                                         <PlayerStatusCard
                                             key={p.id}
@@ -568,31 +602,41 @@ const DeploymentStep: React.FC = () => {
                 })}
             </div>
 
-            {/* Actions */}
-            <div className="flex flex-wrap justify-center gap-6 pt-10 border-t border-white/5">
-                <button
-                    onClick={handleConfirmDeployment}
-                    className="bg-premium-gold text-black font-display font-black py-4 px-12 rounded-2xl shadow-xl hover:scale-105 transition-all text-xs uppercase tracking-[0.3em]"
-                >
-                    Confirmar Despliegue
-                </button>
-                <button
-                    onClick={() => {
-                        if (liveHomeTeam.players.filter((p: any) => p.status === 'Activo').length === 0) handleAutoSelectTeam('home');
-                        if (liveOpponentTeam.players.filter((p: any) => p.status === 'Activo').length === 0) handleAutoSelectTeam('opponent');
-                        handleSuggestDeployment();
-                    }}
-                    className="bg-white/5 border border-white/10 text-white font-display font-black py-4 px-8 rounded-2xl hover:bg-white/10 transition-all text-xs uppercase tracking-widest"
-                >
-                    Sugerir Despliegue
-                </button>
+            <div className="rounded-[2rem] border border-white/10 bg-black/35 px-6 py-8">
+                <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <p className="text-[10px] font-display font-black uppercase tracking-[0.28em] text-premium-gold/70">Validacion final</p>
+                        <h4 className="text-2xl font-display font-black uppercase italic tracking-tight text-white">Listos para el saque</h4>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1 text-[9px] font-display font-black uppercase tracking-[0.18em] text-sky-300">Local: {homeOnField}/11</span>
+                        <span className="rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-[9px] font-display font-black uppercase tracking-[0.18em] text-red-300">Rival: {oppOnField}/11</span>
+                    </div>
+                </div>
+                <div className="flex flex-wrap justify-center gap-6 border-t border-white/5 pt-6">
+                    <button
+                        onClick={handleConfirmDeployment}
+                        className="bg-premium-gold text-black font-display font-black py-4 px-12 rounded-2xl shadow-xl hover:scale-105 transition-all text-xs uppercase tracking-[0.3em]"
+                    >
+                        Confirmar Despliegue
+                    </button>
+                    <button
+                        onClick={() => {
+                            if (liveHomeTeam.players.filter((p: any) => p.status === 'Activo').length === 0) handleAutoSelectTeam('home');
+                            if (liveOpponentTeam.players.filter((p: any) => p.status === 'Activo').length === 0) handleAutoSelectTeam('opponent');
+                            handleSuggestDeployment();
+                        }}
+                        className="bg-white/5 border border-white/10 text-white font-display font-black py-4 px-8 rounded-2xl hover:bg-white/10 transition-all text-xs uppercase tracking-widest"
+                    >
+                        Sugerir Despliegue
+                    </button>
+                </div>
             </div>
         </div>
     );
 };
 
-// ────────────────────────────────────────────────────────────
-// SubComponent: Step 3 — Kickoff Event
+// Step 3 - Kickoff event
 // ────────────────────────────────────────────────────────────
 const KickoffStep: React.FC = () => {
     const {
@@ -633,14 +677,14 @@ const KickoffStep: React.FC = () => {
             logEvent('KICKOFF', `Evento de Patada (${roll}): ${event.title}`);
             
             // EFECTOS INMEDIATOS (S3)
-            if (event.title === 'Árbitro Intimidado') {
+            if (event.title === '�rbitro Intimidado') {
                 setLiveHomeTeam(prev => prev ? ({ ...prev, tempBribes: (prev.tempBribes || 0) + 1 }) : null);
                 setLiveOpponentTeam(prev => prev ? ({ ...prev, tempBribes: (prev.tempBribes || 0) + 1 }) : null);
-                logEvent('SUCCESS', '¡Ambos equipos reciben un Soborno gratuito!');
+                logEvent('SUCCESS', 'Ambos equipos reciben un soborno gratuito.');
             }
             
             if (event.title === 'Tiempo Muerto') {
-                const isKickerTurnLate = (turn >= 6); // Simplificación
+                const isKickerTurnLate = (turn >= 6);
                 if (isKickerTurnLate) {
                     setTurn(t => Math.max(0, t - 1));
                     logEvent('INFO', 'Tiempo Muerto: Los marcadores de turno retroceden un espacio.');
@@ -651,7 +695,7 @@ const KickoffStep: React.FC = () => {
             }
 
             // Solo se marca como completado si no requiere tiradas adicionales
-            const needsExtra = ['Clima Cambiante', 'Defensa Sólida', 'Anticipación', '¡A la Carga! (Blitz)', 'Los Hinchas Animan', 'Entrenador Brillante', 'Indigestión', 'Invasión de Campo'].includes(event.title);
+            const needsExtra = ['Clima Cambiante', 'Defensa S�lida', 'Anticipaci�n', '�A la Carga! (Blitz)', 'Los Hinchas Animan', 'Entrenador Brillante', 'Indigestion', 'Invasi�n de Campo'].includes(event.title);
             if (!needsExtra) setKickoffActionCompleted(true);
         }
         setManualKickoffRoll('');
@@ -665,25 +709,25 @@ const KickoffStep: React.FC = () => {
         const roll2 = d2 || (Math.floor(Math.random() * 6) + 1);
         
         let msg = '';
-        if (['Los Hinchas Animan', 'Entrenador Brillante', 'Indigestión', 'Invasión de Campo'].includes(title)) {
+        if (['Los Hinchas Animan', 'Entrenador Brillante', 'Indigestion', 'Invasi�n de Campo'].includes(title)) {
             const winner = roll1 > roll2 ? 'home' : roll1 < roll2 ? 'opponent' : 'draw';
             const winnerName = winner === 'home' ? liveHomeTeam.name : liveOpponentTeam.name;
 
             if (title === 'Entrenador Brillante' && winner !== 'draw') {
                 const setWinnerTeam = winner === 'home' ? setLiveHomeTeam : setLiveOpponentTeam;
                 setWinnerTeam(prev => prev ? ({ ...prev, liveRerolls: (prev.liveRerolls || 0) + 1 }) : null);
-                msg = `¡Entrenador Brillante! ${winnerName} obtiene una Segunda Oportunidad extra (Dados: ${roll1} vs ${roll2}).`;
-            } else if (title === 'Indigestión' && winner !== 'draw') {
+                msg = `Entrenador brillante: ${winnerName} obtiene una segunda oportunidad extra (${roll1} vs ${roll2}).`;
+            } else if (title === 'Indigestion' && winner !== 'draw') {
                 const loserName = winner === 'home' ? liveOpponentTeam.name : liveHomeTeam.name;
-                msg = `¡Indigestión! El equipo de ${loserName} sufre las consecuencias del rancho barato (Dados: ${roll1} vs ${roll2}).`;
-            } else if (title === 'Invasión de Campo' && winner !== 'draw') {
+                msg = `Indigestion: ${loserName} sufre las consecuencias del rancho barato (${roll1} vs ${roll2}).`;
+            } else if (title === 'Invasi�n de Campo' && winner !== 'draw') {
                 const loserName = winner === 'home' ? liveOpponentTeam.name : liveHomeTeam.name;
-                msg = `¡Invasión de Campo! Los hinchas de ${winnerName} saltan al campo. ${loserName} tiene problemas (Dados: ${roll1} vs ${roll2}).`;
+                msg = `Invasion de campo: los hinchas de ${winnerName} saltan al campo. ${loserName} tiene problemas (${roll1} vs ${roll2}).`;
             } else {
-                msg = `Resolución de Evento — ${liveHomeTeam.name}: ${roll1}, ${liveOpponentTeam.name}: ${roll2}`;
+                msg = `Resolucion de evento - ${liveHomeTeam.name}: ${roll1}, ${liveOpponentTeam.name}: ${roll2}`;
             }
         } else {
-            msg = `Resolución de Evento (1D3+3 jugadores afectados): ${Math.floor(roll1/2)+3}`;
+            msg = `Resolucion de evento (1D3+3 jugadores afectados): ${Math.floor(roll1/2)+3}`;
         }
         
         logEvent('INFO', msg);
@@ -691,8 +735,8 @@ const KickoffStep: React.FC = () => {
         playSound('dice');
     };
 
-    const needsEventDice = ['Defensa SÃ³lida', 'AnticipaciÃ³n', 'Â¡A la Carga! (Blitz)', 'Los Hinchas Animan', 'Entrenador Brillante', 'IndigestiÃ³n', 'InvasiÃ³n de Campo'].includes(gameStatus.kickoffEvent?.title || '');
-    const versusEvent = ['Los Hinchas Animan', 'Entrenador Brillante', 'IndigestiÃ³n', 'InvasiÃ³n de Campo'].includes(gameStatus.kickoffEvent?.title || '');
+    const needsEventDice = ['Defensa S�lida', 'Anticipaci�n', '�A la Carga! (Blitz)', 'Los Hinchas Animan', 'Entrenador Brillante', 'Indigestion', 'Invasi�n de Campo'].includes(gameStatus.kickoffEvent?.title || '');
+    const versusEvent = ['Los Hinchas Animan', 'Entrenador Brillante', 'Indigestion', 'Invasi�n de Campo'].includes(gameStatus.kickoffEvent?.title || '');
 
     return (
         <div className='max-w-4xl mx-auto space-y-6 py-4'>
