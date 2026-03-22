@@ -128,12 +128,12 @@ const MatchInProgress: React.FC = () => {
         setLiveOpponentTeam,
         selectedPlayerForAction,
         setSelectedPlayerForAction,
-        setIsTdModalOpen,
         setIsInjuryModalOpen,
         setIsWeatherModalOpen,
         setIsMatchSummaryOpen,
         handleNextTurn,
         handleUpdatePlayerCondition,
+        handleSelectTdScorer,
         handleSkillClick,
         logEvent,
         interactionState,
@@ -226,7 +226,18 @@ const MatchInProgress: React.FC = () => {
         }
 
         if (type === 'TD' || type === 'TOUCHDOWN') {
-            setIsTdModalOpen(true);
+            handleSelectTdScorer(selectedPlayerForAction, activeTeamId);
+            setSelectedPlayerForAction(null);
+            setInteractionState({
+                mode: 'idle',
+                pending: {
+                    actorId: null,
+                    actionType: null,
+                    objectiveId: null,
+                    diceResult: null,
+                    manualMode: true
+                }
+            });
             return;
         }
 
