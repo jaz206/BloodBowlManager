@@ -76,6 +76,9 @@ const MatchTeamRoster: React.FC<MatchTeamRosterProps> = ({ team, side, activeTea
           const isMNG = (player.missNextGame || 0) > 0;
           const injuries = player.lastingInjuries?.length || 0;
           const isDown = ['Derribado', 'Aturdido', 'Caído'].includes(player.statusDetail || '');
+          const isDead = player.status === 'Muerto' || (player.statusDetail || '').toLowerCase().includes('muerto');
+          const isSeriousInjury = player.status === 'Lesionado' || injuries > 0 || isMNG;
+          const isKo = player.status === 'KO';
           const statusTone = player.status === 'Muerto'
             ? 'text-slate-500 border-white/5 bg-white/5'
             : player.status === 'Lesionado' || isMNG
@@ -87,6 +90,20 @@ const MatchTeamRoster: React.FC<MatchTeamRosterProps> = ({ team, side, activeTea
                 : hasLevelUp
                   ? 'text-primary border-primary/25 bg-primary/10'
                   : 'text-slate-300 border-white/10 bg-white/5';
+          const cardSeverityTone = isDead
+            ? 'border-red-700/60 bg-red-950/20 shadow-[0_0_30px_rgba(127,29,29,0.18)]'
+            : isSeriousInjury
+              ? 'border-blood/35 bg-blood/5 shadow-[0_0_20px_rgba(127,29,29,0.12)]'
+              : isKo
+                ? 'border-amber-500/25 bg-amber-500/5'
+                : 'border-white/5 bg-black/35';
+          const portraitTone = isDead
+            ? 'grayscale brightness-50 saturate-0'
+            : isSeriousInjury
+              ? 'saturate-50 brightness-75'
+              : isActivated
+                ? 'saturate-50'
+                : '';
 
           return (
             <button
@@ -94,14 +111,33 @@ const MatchTeamRoster: React.FC<MatchTeamRosterProps> = ({ team, side, activeTea
               disabled={locked || isActivated}
               onClick={() => onSelectPlayer(player, side)}
               className={`relative text-left rounded-2xl border p-4 transition-all overflow-hidden group/card hover:-translate-y-0.5 hover:border-primary/30 hover:bg-white/5 ${
-                isSelected ? 'border-primary bg-primary/10 ring-1 ring-primary/40 shadow-[0_0_30px_rgba(202,138,4,0.18)] -translate-y-1' : 'border-white/5 bg-black/35'
+                isSelected ? 'border-primary bg-primary/10 ring-1 ring-primary/40 shadow-[0_0_30px_rgba(202,138,4,0.18)] -translate-y-1' : cardSeverityTone
               } ${isActivated ? 'opacity-45 grayscale-[0.85]' : ''} ${locked || isActivated ? 'cursor-not-allowed hover:translate-y-0 hover:border-white/5 hover:bg-black/35' : ''}
               }`}
             >
+              {(isDead || isSeriousInjury || isKo) && (
+                <div className="absolute right-3 top-3 z-[1] flex gap-1.5">
+                  {isDead && (
+                    <span className="rounded-full border border-red-500/30 bg-red-500/15 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.25em] text-red-300">
+                      Muerto
+                    </span>
+                  )}
+                  {!isDead && isSeriousInjury && (
+                    <span className="rounded-full border border-blood/30 bg-blood/15 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.25em] text-blood">
+                      Baja
+                    </span>
+                  )}
+                  {!isDead && !isSeriousInjury && isKo && (
+                    <span className="rounded-full border border-amber-500/30 bg-amber-500/15 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.25em] text-amber-200">
+                      KO
+                    </span>
+                  )}
+                </div>
+              )}
               <div className="flex items-start gap-3">
                 <div className="size-14 rounded-xl bg-black border border-white/10 overflow-hidden shrink-0 relative">
                   {player.image ? (
-                    <img src={player.image} alt={player.customName} className={`w-full h-full object-cover ${isActivated ? 'saturate-50' : ''}`} />
+                    <img src={player.image} alt={player.customName} className={`w-full h-full object-cover ${portraitTone}`} />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-slate-700 font-black italic">
                       #{player.id.toString().slice(-2)}
@@ -148,8 +184,8 @@ const MatchTeamRoster: React.FC<MatchTeamRosterProps> = ({ team, side, activeTea
                       </span>
                     )}
                     {injuries > 0 && (
-                      <span className="px-2 py-1 rounded-full border text-[8px] font-black uppercase tracking-widest bg-white/5 border-white/10 text-slate-300">
-                        {injuries} lesión{injuries > 1 ? 'es' : ''}
+                      <span className="px-2 py-1 rounded-full border text-[8px] font-black uppercase tracking-widest bg-blood/10 border-blood/20 text-blood">
+                        {injuries} lesión{injuries > 1 ? 'es' : ''} grave{injuries > 1 ? 's' : ''}
                       </span>
                     )}
                   </div>

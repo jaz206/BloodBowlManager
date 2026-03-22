@@ -144,7 +144,11 @@ const InjuryModal: React.FC = () => {
                             <h3 className="text-xl font-display font-black text-white uppercase italic tracking-tighter">Comprobar Regeneración</h3>
                             <p className="text-slate-400 text-sm italic">"Los dioses pueden conceder una secundaria oportunidad."</p>
                         </div>
-                        <button onClick={() => handleInjuryAction('next')} className="w-full bg-emerald-600 text-white font-display font-black py-4 rounded-2xl shadow-xl hover:bg-emerald-500 transition-all uppercase tracking-[0.2em] text-xs">Apelar a los Dioses</button>
+                        <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                            <p className="text-[10px] font-display font-black uppercase tracking-[0.2em] text-slate-500">Siguiente paso</p>
+                            <p className="mt-1 text-sm font-display font-black uppercase italic text-white">Tirada de regeneración 4+</p>
+                        </div>
+                        <button onClick={() => handleInjuryAction('next')} className="w-full bg-emerald-600 text-white font-display font-black py-4 rounded-2xl shadow-xl hover:bg-emerald-500 transition-all uppercase tracking-[0.2em] text-xs">Ir a la tirada</button>
                     </div>
                 );
             case 'regeneration_roll':

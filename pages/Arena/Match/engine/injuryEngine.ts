@@ -159,7 +159,8 @@ export const handleInjuryActionLogic = (ctx: InjuryEngineContext, action: 'next'
         }
 
         case 'regeneration_check': {
-            const hasRegeneration = victimPlayer?.skills.toLowerCase().includes('regeneración')
+            const skillsText = String((victimPlayer as any)?.skills || '').toLowerCase();
+            const hasRegeneration = skillsText.includes('regeneraci')
                 || (victimPlayer?.skillKeys || []).includes('Regeneration');
             if (hasRegeneration) {
                 setInjuryState(prev => ({ ...prev, step: 'regeneration_roll' }));
@@ -289,3 +290,4 @@ export const checkBoneHeadS3 = (dieRoll: number, player: ManagedPlayer): { succe
     }
     return { success: dieRoll >= 2, isDistracted: false };
 };
+
