@@ -6,7 +6,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../hooks/useAuth';
 import SkillModal from '../../components/oracle/SkillModal';
 import { PLAYER_NAMES } from './playerNames';
-import { getPlayerImageUrl, getTeamLogoUrl, getStarPlayerImageUrl } from '../../utils/imageUtils';
+import { fetchTeamImageStock, getPlayerImageUrl, getPosTag, getTeamLogoUrl, getStarPlayerImageUrl, type PositionStock } from '../../utils/imageUtils';
 
 interface TeamCreatorProps {
     onTeamCreate: (team: Omit<ManagedTeam, 'id'>) => Promise<void> | void;
@@ -36,6 +36,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
     const [searchQuery, setSearchQuery] = useState('');
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [imageStock, setImageStock] = useState<PositionStock>({});
 
     // Initial Budget
     const startingTreasury = 1000000;
@@ -95,7 +96,23 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
         setAssistantCoaches(0);
         setCheerleaders(0);
         setApothecary(false);
+        setImageStock({});
     }, [selectedFactionIdx]);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        const loadImageStock = async () => {
+            if (!currentFaction?.name) return;
+            const stock = await fetchTeamImageStock(currentFaction.name);
+            if (!cancelled) setImageStock(stock);
+        };
+
+        loadImageStock();
+        return () => {
+            cancelled = true;
+        };
+    }, [currentFaction?.name]);
 
     const scrollCarousel = (direction: 'left' | 'right') => {
         if (!filteredFactions.length) return;
@@ -233,15 +250,67 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
         return `${position} #${teamPlayers.length + 1}`;
     };
 
+    const extractFilenameFromUrl = (url?: string): string => {
+        if (!url) return '';
+        const parts = url.split('/').map(part => decodeURIComponent(part));
+        return parts[parts.length - 1] || '';
+    };
+
+    const buildDraftPlayerImage = (
+        position: string,
+        draftIndexForPosition: number,
+        existingPlayers: ManagedPlayer[],
+        stockSource: PositionStock = imageStock
+    ): string => {
+        const rosterName = currentFaction?.name || '';
+        const stockEntry = stockSource[getPosTag(position).toLowerCase()];
+
+        if (stockEntry?.files?.length) {
+            const usedFiles = existingPlayers
+                .filter(player => player.position === position)
+                .map(player => extractFilenameFromUrl(player.image));
+
+            const availableFiles = stockEntry.files.filter(file => !usedFiles.includes(file));
+            const selectedFilename = availableFiles[0] || stockEntry.files[draftIndexForPosition % stockEntry.files.length];
+            const fileMatch = selectedFilename.match(/(\d+)\.png$/i);
+            const fileNumber = fileMatch ? parseInt(fileMatch[1], 10) : draftIndexForPosition + 1;
+
+            return getPlayerImageUrl(
+                rosterName,
+                position,
+                fileNumber,
+                stockEntry.storage,
+                selectedFilename
+            );
+        }
+
+        return getPlayerImageUrl(rosterName, position, draftIndexForPosition + 1);
+    };
+
+    useEffect(() => {
+        if (!currentFaction?.name || Object.keys(imageStock).length === 0 || draftedPlayers.length === 0) return;
+
+        setDraftedPlayers(prevPlayers => {
+            const seenByPosition: Record<string, number> = {};
+            return prevPlayers.map((player, index) => {
+                const draftIndexForPosition = seenByPosition[player.position] || 0;
+                seenByPosition[player.position] = draftIndexForPosition + 1;
+                return {
+                    ...player,
+                    image: buildDraftPlayerImage(player.position, draftIndexForPosition, prevPlayers.slice(0, index))
+                };
+            });
+        });
+    }, [imageStock, currentFaction?.name]);
+
     const handleHirePlayer = (pos: Player) => {
         if (draftedPlayers.length >= 16) return;
         const count = draftedPlayers.filter(p => p.position === pos.position).length;
         const limitStr = pos.qty.split('-')[1] || pos.qty;
         if (count >= parseInt(limitStr)) return;
 
-        // Calcular número de imagen basado en la posición actual en el draft
         const countInDraft = draftedPlayers.filter(p => p.position === pos.position).length;
-        const playerImageUrl = getPlayerImageUrl(currentFaction?.name || '', pos.position, countInDraft + 1);
+        const playerImageUrl = buildDraftPlayerImage(pos.position, countInDraft, draftedPlayers);
 
         const newPlayer: ManagedPlayer = {
             ...pos,
@@ -254,7 +323,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
             image: playerImageUrl,
         };
         setDraftedPlayers([...draftedPlayers, newPlayer]);
-    }
+    };
 
     const handleFirePlayer = (id: number) => {
         setDraftedPlayers(draftedPlayers.filter(p => p.id !== id));
@@ -269,6 +338,17 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
         if (!canFinalize || !currentFaction) return;
         setSubmitError(null);
         setIsSubmitting(true);
+        const finalStock = Object.keys(imageStock).length > 0
+            ? imageStock
+            : await fetchTeamImageStock(currentFaction.name);
+        const finalPlayers = draftedPlayers.map((player, index) => {
+            const priorPlayers = draftedPlayers.slice(0, index);
+            const draftIndexForPosition = priorPlayers.filter(p => p.position === player.position).length;
+            return {
+                ...player,
+                image: buildDraftPlayerImage(player.position, draftIndexForPosition, priorPlayers, finalStock)
+            };
+        });
         const newTeam: Omit<ManagedTeam, 'id'> = {
             name: teamName.trim(),
             rosterName: currentFaction.name,
@@ -278,7 +358,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
             assistantCoaches,
             cheerleaders,
             apothecary,
-            players: draftedPlayers,
+            players: finalPlayers,
             crestImage: getTeamLogoUrl(currentFaction.name) || currentFaction.image
         };
         try {

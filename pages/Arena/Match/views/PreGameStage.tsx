@@ -468,7 +468,18 @@ const DeploymentStep: React.FC = () => {
         handleAutoSelectTeam, handleSuggestDeployment, setViewingPlayer, handleSkillClick
     } = useMatch();
 
+    const [showAdvanced, setShowAdvanced] = useState(false);
+    const [homePreset, setHomePreset] = useState('balanceado');
+    const [opponentPreset, setOpponentPreset] = useState('cobertura-profunda');
+
     if (!liveHomeTeam || !liveOpponentTeam) return null;
+
+    const presetOptions = [
+        { id: 'balanceado', label: 'Equilibrado', note: 'Salida estable para cualquier drive.' },
+        { id: 'linea-dura', label: 'Linea dura', note: 'Presencia central y contacto temprano.' },
+        { id: 'cobertura-profunda', label: 'Cobertura profunda', note: 'Mas seguridad ante recepcion y avance rival.' },
+        { id: 'presion-blitz', label: 'Presion blitz', note: 'Pensado para patear y atacar la primera jugada.' },
+    ] as const;
 
     const homeOnField = liveHomeTeam.players.filter((p: any) => p.status === 'Activo').length;
     const oppOnField = liveOpponentTeam.players.filter((p: any) => p.status === 'Activo').length;
@@ -480,145 +491,196 @@ const DeploymentStep: React.FC = () => {
             alert('Ambos equipos deben tener al menos un guerrero en el campo para la batalla.');
             return;
         }
+
         if ((homeOnField < 11 && homeOnField < homeAvailable) || (oppOnField < 11 && oppOnField < oppAvailable)) {
-            if (!confirm('Uno de los equipos tiene menos de 11 jugadores pudiendo desplegar mas. ¿Continuar?')) return;
+            if (!confirm('Uno de los equipos tiene menos de 11 jugadores pudiendo desplegar mas. ?Continuar?')) return;
         }
+
+        const homePresetLabel = presetOptions.find(option => option.id === homePreset)?.label || 'Equilibrado';
+        const opponentPresetLabel = presetOptions.find(option => option.id === opponentPreset)?.label || 'Equilibrado';
+
+        logEvent('INFO', `Despliegue express confirmado. ${liveHomeTeam.name}: ${homePresetLabel}. ${liveOpponentTeam.name}: ${opponentPresetLabel}.`);
         setPreGameStep(3);
-        logEvent('INFO', 'Despliegue confirmado. Que ruede el balón.');
+    };
+
+    const renderTeamPanel = (team: any, teamId: 'home' | 'opponent', preset: string, setPreset: (value: string) => void) => {
+        const onField = team.players.filter((p: any) => p.status === 'Activo');
+        const accentClass = teamId === 'home' ? 'sky' : 'red';
+
+        return (
+            <div key={teamId} className='flex flex-col gap-5 rounded-[2rem] border border-white/10 bg-black/35 p-5'>
+                <div className='flex items-center justify-between gap-4 border-b border-white/5 pb-4'>
+                    <div className='flex items-center gap-4'>
+                        <div className='h-12 w-12 overflow-hidden rounded-2xl border border-white/10 bg-black/60 flex items-center justify-center'>
+                            {team.crestImage
+                                ? <img src={team.crestImage} className='h-full w-full object-cover' alt={team.name} />
+                                : <ShieldCheckIcon className='h-6 w-6 text-slate-700' />
+                            }
+                        </div>
+                        <div>
+                            <h4 className={`text-lg font-display font-black uppercase italic tracking-tighter text-${accentClass}-400`}>{team.name}</h4>
+                            <p className='text-[10px] font-bold uppercase tracking-widest text-slate-500'>{team.rosterName}</p>
+                        </div>
+                    </div>
+                    <div className='text-right'>
+                        <p className='text-[8px] font-display font-black uppercase tracking-[0.2em] text-slate-500'>En campo</p>
+                        <p className='text-2xl font-display font-black italic text-white'>{onField.length}/11</p>
+                    </div>
+                </div>
+
+                <div className='grid gap-4 xl:grid-cols-[0.95fr_1.05fr]'>
+                    <div className='rounded-[1.5rem] border border-white/10 bg-white/5 p-4 space-y-4'>
+                        <div>
+                            <p className='mb-1 text-[9px] font-display font-black uppercase tracking-[0.22em] text-premium-gold/70'>Preset tactico</p>
+                            <h5 className='text-base font-display font-black uppercase italic text-white'>Despliegue express</h5>
+                        </div>
+                        <div className='grid gap-2'>
+                            {presetOptions.map(option => (
+                                <button
+                                    key={option.id}
+                                    onClick={() => setPreset(option.id)}
+                                    className={`rounded-2xl border px-4 py-3 text-left transition-all ${preset === option.id ? 'border-premium-gold bg-premium-gold/10 text-white shadow-[0_0_20px_rgba(202,138,4,0.16)]' : 'border-white/10 bg-black/20 text-slate-300 hover:border-white/25 hover:bg-white/5'}`}
+                                >
+                                    <p className='text-[10px] font-display font-black uppercase tracking-[0.18em]'>{option.label}</p>
+                                    <p className='mt-1 text-xs text-slate-500'>{option.note}</p>
+                                </button>
+                            ))}
+                        </div>
+                        <div className='flex flex-wrap gap-2 pt-2'>
+                            <button
+                                onClick={() => handleAutoSelectTeam(teamId)}
+                                className='rounded-xl border border-premium-gold/20 bg-premium-gold/10 px-3 py-2 text-[9px] font-display font-black uppercase tracking-[0.16em] text-premium-gold transition-all hover:bg-premium-gold hover:text-black'
+                            >
+                                Once inicial
+                            </button>
+                            <span className='rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-[9px] font-display font-black uppercase tracking-[0.16em] text-slate-400'>
+                                Disponibles: {teamId === 'home' ? homeAvailable : oppAvailable}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className='flex h-[360px] flex-col overflow-hidden rounded-[1.5rem] border border-white/10 bg-black/25 p-4'>
+                        <div className='mb-3 flex items-center justify-between gap-4'>
+                            <div>
+                                <p className='text-[9px] font-display font-black uppercase tracking-[0.2em] text-slate-500'>Plantilla activa</p>
+                                <p className='text-xs font-bold uppercase tracking-wide text-white'>Marca quien sale al campo y quien espera en banquillo</p>
+                            </div>
+                            <span className='rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[9px] font-display font-black uppercase tracking-[0.16em] text-slate-400'>{team.players.length} total</span>
+                        </div>
+                        <div className='custom-scrollbar flex-1 space-y-2 overflow-y-auto pr-2'>
+                            {team.players.map((player: any) => (
+                                <PlayerStatusCard
+                                    key={player.id}
+                                    player={player}
+                                    playerNumber={player.status === 'Activo' ? onField.findIndex((pl: any) => pl.id === player.id) + 1 : undefined}
+                                    onViewPlayer={setViewingPlayer}
+                                    onSkillClick={handleSkillClick}
+                                    canToggleStatus={true}
+                                    onStatusToggle={() => handlePlayerStatusToggle(player, teamId)}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
     };
 
     return (
-        <div className="space-y-10">
-            <div className="rounded-[2rem] border border-white/10 bg-black/35 p-6 md:p-8">
-                <div className="grid grid-cols-1 gap-6 xl:grid-cols-[0.9fr_1.1fr] xl:items-center">
-                    <div className="space-y-3">
-                        <p className="text-[10px] font-display font-black uppercase tracking-[0.32em] text-premium-gold/70">Formacion inicial</p>
-                        <h3 className="text-3xl font-display font-black uppercase italic tracking-tighter text-white">Despliegue de guerra</h3>
-                        <p className="max-w-xl text-sm leading-relaxed text-slate-400">
-                            Prepara ambos banquillos antes del saque. Puedes dejar a la app sugerir la once inicial o ajustar cada guerrero manualmente.
+        <div className='space-y-8'>
+            <div className='rounded-[2rem] border border-white/10 bg-black/35 p-6 md:p-8'>
+                <div className='grid grid-cols-1 gap-6 xl:grid-cols-[0.85fr_1.15fr] xl:items-center'>
+                    <div className='space-y-3'>
+                        <p className='text-[10px] font-display font-black uppercase tracking-[0.32em] text-premium-gold/70'>Despliegue rapido</p>
+                        <h3 className='text-3xl font-display font-black uppercase italic tracking-tighter text-white'>Preparar drive sin friccion</h3>
+                        <p className='max-w-xl text-sm leading-relaxed text-slate-400'>
+                            Aqui solo decidimos quienes saltan al campo y con que enfoque abre cada equipo. El ajuste manual del mini campo queda como modo avanzado opcional.
                         </p>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="rounded-[1.4rem] border border-white/10 bg-white/5 p-4">
-                            <p className="mb-1 text-[9px] font-display font-black uppercase tracking-[0.22em] text-slate-500">Local en campo</p>
-                            <p className="text-2xl font-display font-black italic text-white">{homeOnField}/11</p>
+                    <div className='grid grid-cols-2 gap-4'>
+                        <div className='rounded-[1.4rem] border border-white/10 bg-white/5 p-4'>
+                            <p className='mb-1 text-[9px] font-display font-black uppercase tracking-[0.22em] text-slate-500'>Local en campo</p>
+                            <p className='text-2xl font-display font-black italic text-white'>{homeOnField}/11</p>
                         </div>
-                        <div className="rounded-[1.4rem] border border-white/10 bg-white/5 p-4">
-                            <p className="mb-1 text-[9px] font-display font-black uppercase tracking-[0.22em] text-slate-500">Rival en campo</p>
-                            <p className="text-2xl font-display font-black italic text-white">{oppOnField}/11</p>
+                        <div className='rounded-[1.4rem] border border-white/10 bg-white/5 p-4'>
+                            <p className='mb-1 text-[9px] font-display font-black uppercase tracking-[0.22em] text-slate-500'>Rival en campo</p>
+                            <p className='text-2xl font-display font-black italic text-white'>{oppOnField}/11</p>
                         </div>
-                        <div className="rounded-[1.4rem] border border-white/10 bg-white/5 p-4">
-                            <p className="mb-1 text-[9px] font-display font-black uppercase tracking-[0.22em] text-slate-500">Disponibles local</p>
-                            <p className="text-2xl font-display font-black italic text-white">{homeAvailable}</p>
+                        <div className='rounded-[1.4rem] border border-white/10 bg-white/5 p-4'>
+                            <p className='mb-1 text-[9px] font-display font-black uppercase tracking-[0.22em] text-slate-500'>Disponibles local</p>
+                            <p className='text-2xl font-display font-black italic text-white'>{homeAvailable}</p>
                         </div>
-                        <div className="rounded-[1.4rem] border border-white/10 bg-white/5 p-4">
-                            <p className="mb-1 text-[9px] font-display font-black uppercase tracking-[0.22em] text-slate-500">Disponibles rival</p>
-                            <p className="text-2xl font-display font-black italic text-white">{oppAvailable}</p>
+                        <div className='rounded-[1.4rem] border border-white/10 bg-white/5 p-4'>
+                            <p className='mb-1 text-[9px] font-display font-black uppercase tracking-[0.22em] text-slate-500'>Disponibles rival</p>
+                            <p className='text-2xl font-display font-black italic text-white'>{oppAvailable}</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
-                {([liveHomeTeam, liveOpponentTeam] as any[]).map((team, index) => {
-                    const teamId = index === 0 ? 'home' : 'opponent';
-                    const onField = team.players.filter((p: any) => p.status === 'Activo');
-                    const accentColor = teamId === 'home' ? 'sky' : 'red';
+            <div className='grid grid-cols-1 gap-8 xl:grid-cols-2'>
+                {renderTeamPanel(liveHomeTeam, 'home', homePreset, setHomePreset)}
+                {renderTeamPanel(liveOpponentTeam, 'opponent', opponentPreset, setOpponentPreset)}
+            </div>
 
-                    return (
-                        <div key={teamId} className="flex flex-col gap-6">
-                            <div className="flex items-center justify-between border-b border-white/5 pb-4">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-2xl bg-black/60 border border-white/10 flex items-center justify-center overflow-hidden">
-                                        {team.crestImage
-                                            ? <img src={team.crestImage} className="w-full h-full object-cover" alt={team.name} />
-                                            : <ShieldCheckIcon className="w-6 h-6 text-slate-700" />
-                                        }
-                                    </div>
-                                    <div>
-                                        <h4 className={`text-lg font-display font-black text-${accentColor}-400 uppercase italic tracking-tighter leading-none`}>{team.name}</h4>
-                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{team.rosterName}</p>
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <div className={`text-xl font-display font-black ${onField.length > 11 ? 'text-red-500' : 'text-white'}`}>{onField.length}/11</div>
-                                    <div className="text-[8px] font-bold text-slate-600 uppercase">En el campo</div>
-                                </div>
-                            </div>
+            <div className='rounded-[2rem] border border-white/10 bg-black/35 p-6'>
+                <button
+                    onClick={() => setShowAdvanced(prev => !prev)}
+                    className='flex w-full items-center justify-between rounded-[1.5rem] border border-white/10 bg-white/5 px-5 py-4 text-left transition-all hover:border-premium-gold/30 hover:bg-white/10'
+                >
+                    <div>
+                        <p className='text-[9px] font-display font-black uppercase tracking-[0.22em] text-slate-500'>Modo avanzado</p>
+                        <p className='text-sm font-display font-black uppercase italic text-white'>Ajuste manual del mini campo</p>
+                    </div>
+                    <span className='material-symbols-outlined text-slate-400'>{showAdvanced ? 'expand_less' : 'expand_more'}</span>
+                </button>
 
-                            <div className="relative group">
-                                <div className={`absolute -inset-1 bg-gradient-to-b from-${accentColor}-500/20 to-transparent rounded-[2.5rem] blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000`}></div>
-                                <div className="relative rounded-[2.5rem] border border-white/10 bg-black/60 p-4">
-                                    <div className="mb-4 flex items-center justify-between gap-4 rounded-2xl border border-white/5 bg-white/5 px-4 py-3">
+                {showAdvanced && (
+                    <div className='mt-5 grid grid-cols-1 gap-6 xl:grid-cols-2 animate-fade-in-slow'>
+                        {[
+                            { team: liveHomeTeam, teamId: 'home' as const, color: 'bg-sky-500', label: 'Local' },
+                            { team: liveOpponentTeam, teamId: 'opponent' as const, color: 'bg-red-500', label: 'Rival' },
+                        ].map(({ team, teamId, color, label }) => {
+                            const onField = team.players.filter((player: any) => player.status === 'Activo');
+                            return (
+                                <div key={teamId} className='rounded-[1.75rem] border border-white/10 bg-black/20 p-4'>
+                                    <div className='mb-3 flex items-center justify-between gap-4'>
                                         <div>
-                                            <p className="text-[9px] font-display font-black uppercase tracking-[0.2em] text-slate-500">Plano tactico</p>
-                                            <p className="text-xs font-bold uppercase tracking-wide text-white">Arrastra o recoloca para definir la salida</p>
+                                            <p className='text-[9px] font-display font-black uppercase tracking-[0.22em] text-slate-500'>{label}</p>
+                                            <p className='text-sm font-display font-black uppercase italic text-white'>Posicion manual opcional</p>
                                         </div>
-                                        <button
-                                            onClick={() => handleAutoSelectTeam(teamId)}
-                                            className="rounded-xl border border-premium-gold/20 bg-premium-gold/10 px-3 py-2 text-[9px] font-display font-black uppercase tracking-[0.18em] text-premium-gold transition-all hover:bg-premium-gold hover:text-black"
-                                        >
-                                            Once inicial
-                                        </button>
+                                        <span className='rounded-xl border border-white/10 bg-white/5 px-3 py-1 text-[9px] font-display font-black uppercase tracking-[0.16em] text-slate-400'>{onField.length} fichas</span>
                                     </div>
                                     <MiniField
                                         players={onField}
-                                        teamColor={teamId === 'home' ? 'bg-sky-500' : 'bg-red-500'}
+                                        teamColor={color}
                                         onPlayerMove={(playerId: number, pos: any) => handlePlayerMove(teamId, playerId, pos)}
                                         ballCarrierId={ballCarrierId}
                                     />
                                 </div>
-                            </div>
-
-                            <div className="flex h-[350px] flex-col overflow-hidden rounded-3xl border border-white/5 bg-black/40 p-5">
-                                <div className="mb-4 flex items-center justify-between">
-                                    <h5 className="text-[10px] font-display font-black uppercase tracking-widest text-slate-500">
-                                        Banco y plantilla
-                                        <span className="ml-2 rounded-full bg-white/5 px-2 py-0.5 text-[8px]">{team.players.length} Total</span>
-                                    </h5>
-                                    <button
-                                        onClick={() => handleAutoSelectTeam(teamId)}
-                                        className="rounded-lg border border-premium-gold/30 bg-premium-gold/5 px-3 py-1.5 text-[8px] font-display font-black uppercase tracking-widest text-premium-gold transition-all hover:border-premium-gold hover:text-white"
-                                    >
-                                        Sugerir once
-                                    </button>
-                                </div>
-                                <div className="custom-scrollbar flex-1 space-y-2 overflow-y-auto pr-2">
-                                    {team.players.map((p: any) => (
-                                        <PlayerStatusCard
-                                            key={p.id}
-                                            player={p}
-                                            playerNumber={p.status === 'Activo' ? onField.findIndex((pl: any) => pl.id === p.id) + 1 : undefined}
-                                            onViewPlayer={setViewingPlayer}
-                                            onSkillClick={handleSkillClick}
-                                            canToggleStatus={true}
-                                            onStatusToggle={() => handlePlayerStatusToggle(p, teamId)}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    );
-                })}
+                            );
+                        })}
+                    </div>
+                )}
             </div>
 
-            <div className="rounded-[2rem] border border-white/10 bg-black/35 px-6 py-8">
-                <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+            <div className='rounded-[2rem] border border-white/10 bg-black/35 px-6 py-8'>
+                <div className='mb-6 flex flex-wrap items-center justify-between gap-4'>
                     <div>
-                        <p className="text-[10px] font-display font-black uppercase tracking-[0.28em] text-premium-gold/70">Validacion final</p>
-                        <h4 className="text-2xl font-display font-black uppercase italic tracking-tight text-white">Listos para el saque</h4>
+                        <p className='text-[10px] font-display font-black uppercase tracking-[0.28em] text-premium-gold/70'>Validacion final</p>
+                        <h4 className='text-2xl font-display font-black uppercase italic tracking-tight text-white'>Listos para el saque</h4>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                        <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1 text-[9px] font-display font-black uppercase tracking-[0.18em] text-sky-300">Local: {homeOnField}/11</span>
-                        <span className="rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-[9px] font-display font-black uppercase tracking-[0.18em] text-red-300">Rival: {oppOnField}/11</span>
+                    <div className='flex flex-wrap gap-2'>
+                        <span className='rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1 text-[9px] font-display font-black uppercase tracking-[0.18em] text-sky-300'>Local: {homeOnField}/11</span>
+                        <span className='rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-[9px] font-display font-black uppercase tracking-[0.18em] text-red-300'>Rival: {oppOnField}/11</span>
                     </div>
                 </div>
-                <div className="flex flex-wrap justify-center gap-6 border-t border-white/5 pt-6">
+                <div className='flex flex-wrap justify-center gap-6 border-t border-white/5 pt-6'>
                     <button
                         onClick={handleConfirmDeployment}
-                        className="bg-premium-gold text-black font-display font-black py-4 px-12 rounded-2xl shadow-xl hover:scale-105 transition-all text-xs uppercase tracking-[0.3em]"
+                        className='rounded-2xl bg-premium-gold px-12 py-4 text-xs font-display font-black uppercase tracking-[0.3em] text-black shadow-xl transition-all hover:scale-105'
                     >
-                        Confirmar Despliegue
+                        Confirmar despliegue
                     </button>
                     <button
                         onClick={() => {
@@ -626,9 +688,9 @@ const DeploymentStep: React.FC = () => {
                             if (liveOpponentTeam.players.filter((p: any) => p.status === 'Activo').length === 0) handleAutoSelectTeam('opponent');
                             handleSuggestDeployment();
                         }}
-                        className="bg-white/5 border border-white/10 text-white font-display font-black py-4 px-8 rounded-2xl hover:bg-white/10 transition-all text-xs uppercase tracking-widest"
+                        className='rounded-2xl border border-white/10 bg-white/5 px-8 py-4 text-xs font-display font-black uppercase tracking-widest text-white transition-all hover:bg-white/10'
                     >
-                        Sugerir Despliegue
+                        Sugerir despliegue
                     </button>
                 </div>
             </div>
