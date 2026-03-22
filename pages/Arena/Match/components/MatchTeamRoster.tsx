@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import type { ManagedPlayer, ManagedTeam } from '../../../../../types';
 
 type TeamSide = 'home' | 'opponent';
@@ -94,7 +94,7 @@ const MatchTeamRoster: React.FC<MatchTeamRosterProps> = ({ team, side, activeTea
               disabled={locked || isActivated}
               onClick={() => onSelectPlayer(player, side)}
               className={`relative text-left rounded-2xl border p-4 transition-all overflow-hidden group/card hover:-translate-y-0.5 hover:border-primary/30 hover:bg-white/5 ${
-                isSelected ? 'border-primary bg-primary/10 shadow-[0_0_24px_rgba(202,138,4,0.12)]' : 'border-white/5 bg-black/35'
+                isSelected ? 'border-primary bg-primary/10 ring-1 ring-primary/40 shadow-[0_0_30px_rgba(202,138,4,0.18)] -translate-y-1' : 'border-white/5 bg-black/35'
               } ${isActivated ? 'opacity-45 grayscale-[0.85]' : ''} ${locked || isActivated ? 'cursor-not-allowed hover:translate-y-0 hover:border-white/5 hover:bg-black/35' : ''}
               }`}
             >
@@ -179,3 +179,4 @@ const MatchTeamRoster: React.FC<MatchTeamRosterProps> = ({ team, side, activeTea
 };
 
 export default MatchTeamRoster;
+

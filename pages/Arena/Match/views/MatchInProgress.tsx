@@ -13,18 +13,19 @@ type ActionButtonConfig = {
     label: string;
     icon: string;
     tone: string;
+    group: 'primary' | 'secondary';
 };
 
 const actionButtons: ActionButtonConfig[] = [
-    { key: 'ACTION_OK', label: 'Acción OK', icon: 'task_alt', tone: 'bg-primary text-midnight border-primary-dark shadow-lg shadow-primary/20' },
-    { key: 'DODGE', label: 'Caída / Fallo', icon: 'trending_down', tone: 'bg-red-600/15 border-red-500/30 text-red-300 hover:bg-red-500/25' },
-    { key: 'BLOCK', label: 'Placaje', icon: 'back_hand', tone: 'bg-orange-500/10 border-orange-500/20 text-orange-300 hover:bg-orange-500/20' },
-    { key: 'FOUL', label: 'Falta', icon: 'gavel', tone: 'bg-rose-500/10 border-rose-500/20 text-rose-300 hover:bg-rose-500/20' },
-    { key: 'PASS', label: 'Pase', icon: 'shortcut', tone: 'bg-sky-500/10 border-sky-500/20 text-sky-300 hover:bg-sky-500/20' },
-    { key: 'TOUCHDOWN', label: 'Touchdown', icon: 'sports_score', tone: 'bg-amber-500/10 border-amber-500/20 text-amber-300 hover:bg-amber-500/20' },
-    { key: 'SECURE_BALL', label: 'Asegurar', icon: 'inventory_2', tone: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300 hover:bg-emerald-500/20' },
-    { key: 'BONE_HEAD', label: 'Bone Head', icon: 'psychology_alt', tone: 'border-red-600/30 text-red-500/70 hover:border-red-500 hover:text-red-300 bg-red-500/5' },
-    { key: 'INDIGESTION', label: 'Indigestión', icon: 'sick', tone: 'border-amber-500/30 text-amber-500/70 hover:border-amber-500 hover:text-amber-300 bg-amber-500/5' }
+    { key: 'ACTION_OK', label: 'Acción OK', icon: 'task_alt', tone: 'bg-primary text-midnight border-primary-dark shadow-lg shadow-primary/20', group: 'primary' },
+    { key: 'DODGE', label: 'Caída / Fallo', icon: 'trending_down', tone: 'bg-red-600/15 border-red-500/30 text-red-300 hover:bg-red-500/25', group: 'primary' },
+    { key: 'BLOCK', label: 'Placaje', icon: 'back_hand', tone: 'bg-orange-500/10 border-orange-500/20 text-orange-300 hover:bg-orange-500/20', group: 'primary' },
+    { key: 'FOUL', label: 'Falta', icon: 'gavel', tone: 'bg-rose-500/10 border-rose-500/20 text-rose-300 hover:bg-rose-500/20', group: 'primary' },
+    { key: 'PASS', label: 'Pase', icon: 'shortcut', tone: 'bg-sky-500/10 border-sky-500/20 text-sky-300 hover:bg-sky-500/20', group: 'primary' },
+    { key: 'TOUCHDOWN', label: 'Touchdown', icon: 'sports_score', tone: 'bg-amber-500/10 border-amber-500/20 text-amber-300 hover:bg-amber-500/20', group: 'primary' },
+    { key: 'SECURE_BALL', label: 'Asegurar', icon: 'inventory_2', tone: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300 hover:bg-emerald-500/20', group: 'primary' },
+    { key: 'BONE_HEAD', label: 'Bone Head', icon: 'psychology_alt', tone: 'border-red-600/30 text-red-500/70 hover:border-red-500 hover:text-red-300 bg-red-500/5', group: 'secondary' },
+    { key: 'INDIGESTION', label: 'Indigestión', icon: 'sick', tone: 'border-amber-500/30 text-amber-500/70 hover:border-amber-500 hover:text-amber-300 bg-amber-500/5', group: 'secondary' }
 ];
 
 const weatherMeta = {
@@ -53,7 +54,7 @@ const TeamScoreCard: React.FC<{
     score: number;
     rerolls: number;
     isActive: boolean;
-    scorers: string[];
+    scorers: { name: string; turn: number; half: number }[];
     onToggleStalling: () => void;
 }> = ({ side, team, score, rerolls, isActive, scorers, onToggleStalling }) => {
     const isHome = side === 'home';
@@ -97,9 +98,9 @@ const TeamScoreCard: React.FC<{
                         </div>
                     </div>
                     <div className={`mt-3 flex flex-wrap gap-2 ${isHome ? '' : 'justify-end'}`}>
-                        {(scorers.length ? scorers : ['Sin TD']).map((scorer, index) => (
-                            <span key={`${scorer}-${index}`} className="px-2.5 py-1 rounded-full border border-white/10 bg-white/5 text-[8px] font-black uppercase tracking-widest text-slate-300">
-                                {scorer}
+                        {(scorers.length ? scorers : [{ name: 'Sin TD', turn: 0, half: 0 }]).map((scorer, index) => (
+                            <span key={`${scorer.name}-${index}`} className="px-2.5 py-1 rounded-full border border-white/10 bg-white/5 text-[8px] font-black uppercase tracking-widest text-slate-300">
+                                {scorer.turn > 0 ? `T${scorer.turn}·P${scorer.half} ${scorer.name}` : scorer.name}
                             </span>
                         ))}
                     </div>
@@ -171,10 +172,29 @@ const MatchInProgress: React.FC = () => {
         );
 
         return {
-            home: tdEvents.filter((event: any) => event.team === 'home').map((event: any) => getScorerName(event, { home: liveHomeTeam, opponent: liveOpponentTeam })),
-            opponent: tdEvents.filter((event: any) => event.team === 'opponent').map((event: any) => getScorerName(event, { home: liveHomeTeam, opponent: liveOpponentTeam }))
+            home: tdEvents.filter((event: any) => event.team === 'home').map((event: any) => ({
+                name: getScorerName(event, { home: liveHomeTeam, opponent: liveOpponentTeam }),
+                turn: event.turn || 0,
+                half: event.half || 1
+            })),
+            opponent: tdEvents.filter((event: any) => event.team === 'opponent').map((event: any) => ({
+                name: getScorerName(event, { home: liveHomeTeam, opponent: liveOpponentTeam }),
+                turn: event.turn || 0,
+                half: event.half || 1
+            }))
         };
     }, [gameLog, liveHomeTeam, liveOpponentTeam]);
+
+    const primaryButtons = actionButtons.filter(button => button.group === 'primary');
+    const secondaryButtons = actionButtons.filter(button => button.group === 'secondary');
+    const selectedSummary = selectedPlayerForAction
+        ? `${selectedPlayerForAction.customName} · ${selectedPlayerForAction.position}`
+        : 'Ninguna pieza seleccionada';
+    const modeSummary = mode === 'idle'
+        ? 'Esperando acción'
+        : mode === 'selecting_objective'
+            ? 'Seleccionando objetivo'
+            : 'Resolviendo tirada';
 
     const openPlayerActionPanel = (player: ManagedPlayer, teamId: TeamSide) => {
         setSelectedPlayerForAction(player);
@@ -322,6 +342,20 @@ const MatchInProgress: React.FC = () => {
                                 <span className="text-white/15">•</span>
                                 <span className="text-primary">Actúa {activeTeam.name}</span>
                             </div>
+                            <div className="mt-4 w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 grid grid-cols-3 gap-3 text-center">
+                                <div>
+                                    <p className="text-[8px] font-black uppercase tracking-[0.25em] text-slate-600">Equipo activo</p>
+                                    <p className="mt-1 text-[11px] font-black uppercase tracking-[0.12em] text-white truncate">{activeTeam.name}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[8px] font-black uppercase tracking-[0.25em] text-slate-600">Pieza activa</p>
+                                    <p className="mt-1 text-[11px] font-black uppercase tracking-[0.12em] text-primary truncate">{selectedPlayerForAction ? selectedPlayerForAction.customName : '—'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[8px] font-black uppercase tracking-[0.25em] text-slate-600">Acción en curso</p>
+                                    <p className="mt-1 text-[11px] font-black uppercase tracking-[0.12em] text-white truncate">{modeSummary}</p>
+                                </div>
+                            </div>
                         </div>
 
                         <TeamScoreCard
@@ -374,8 +408,8 @@ const MatchInProgress: React.FC = () => {
 
                     <div className={`mt-4 rounded-[1.75rem] border p-4 ${actionPanelEnabled ? 'border-primary/25 bg-primary/5' : 'border-white/10 bg-black/30'}`}>
                         {selectedPlayerForAction ? (
-                            <div className="flex items-center gap-4">
-                                <div className={`size-20 rounded-2xl border overflow-hidden bg-black/50 shrink-0 ${selectedPlayerForAction.isDistracted ? 'border-slate-600 grayscale' : 'border-gold/30'}`}>
+                            <div className="grid grid-cols-[72px_1fr] gap-4 items-center">
+                                <div className={`size-[72px] rounded-2xl border overflow-hidden bg-black/50 shrink-0 ${selectedPlayerForAction.isDistracted ? 'border-slate-600 grayscale' : 'border-gold/30 shadow-[0_0_18px_rgba(202,138,4,0.18)]'}`}>
                                     {selectedPlayerForAction.image ? <img src={selectedPlayerForAction.image} alt={selectedPlayerForAction.customName} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-2xl font-black text-slate-700">#{selectedPlayerForAction.id.toString().slice(-2)}</div>}
                                 </div>
                                 <div className="min-w-0 flex-1">
@@ -393,7 +427,7 @@ const MatchInProgress: React.FC = () => {
                                             <span className="material-symbols-outlined text-sm">close</span>
                                         </button>
                                     </div>
-                                    <div className="mt-3 grid grid-cols-5 gap-2">
+                                    <div className="mt-3 grid grid-cols-5 gap-1.5">
                                         {[
                                             ['MA', selectedPlayerForAction.stats.MV],
                                             ['FU', selectedPlayerForAction.stats.FU],
@@ -401,12 +435,15 @@ const MatchInProgress: React.FC = () => {
                                             ['PA', selectedPlayerForAction.stats.PA],
                                             ['AV', selectedPlayerForAction.stats.AR]
                                         ].map(([label, value]) => (
-                                            <div key={String(label)} className="rounded-xl border border-white/5 bg-black/40 py-2 text-center">
+                                            <div key={String(label)} className="rounded-xl border border-white/5 bg-black/40 py-1.5 text-center">
                                                 <p className="text-[8px] font-black uppercase tracking-widest text-slate-600">{label}</p>
                                                 <p className="text-sm font-black text-white">{String(value).replace('undefined', '--')}</p>
                                             </div>
                                         ))}
                                     </div>
+                                    <p className="mt-3 text-[9px] font-black uppercase tracking-[0.18em] text-slate-500 truncate">
+                                        {selectedSummary}
+                                    </p>
                                 </div>
                             </div>
                         ) : (
@@ -418,8 +455,13 @@ const MatchInProgress: React.FC = () => {
                         )}
                     </div>
 
-                    <div className={`mt-4 grid grid-cols-2 gap-2 ${actionPanelEnabled ? '' : 'opacity-45'}`}>
-                        {actionButtons.map(button => {
+                    <div className="mt-4">
+                        <div className="flex items-center justify-between mb-2">
+                            <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-500">Acciones principales</p>
+                            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600">{actionPanelEnabled ? 'Panel activo' : 'Selecciona una pieza'}</p>
+                        </div>
+                        <div className={`grid grid-cols-2 gap-2 ${actionPanelEnabled ? '' : 'opacity-45'}`}>
+                        {primaryButtons.map(button => {
                             const isToggle = button.key === 'BONE_HEAD' || button.key === 'INDIGESTION';
                             const isPressed = button.key === 'BONE_HEAD'
                                 ? !!selectedPlayerForAction?.isDistracted
@@ -439,6 +481,33 @@ const MatchInProgress: React.FC = () => {
                                 </button>
                             );
                         })}
+                        </div>
+                    </div>
+
+                    <div className="mt-3">
+                        <div className="flex items-center justify-between mb-2">
+                            <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-500">Estados y condiciones</p>
+                            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600">Toggles de mesa</p>
+                        </div>
+                        <div className={`grid grid-cols-2 gap-2 ${actionPanelEnabled ? '' : 'opacity-45'}`}>
+                        {secondaryButtons.map(button => {
+                            const isPressed = button.key === 'BONE_HEAD'
+                                ? !!selectedPlayerForAction?.isDistracted
+                                : !!selectedPlayerForAction?.hasIndigestion;
+
+                            return (
+                                <button
+                                    key={button.key}
+                                    disabled={!actionPanelEnabled || mode !== 'idle'}
+                                    onClick={() => handleActionButton(button)}
+                                    className={`py-3 rounded-2xl border flex flex-col items-center justify-center transition-all ${button.tone} ${isPressed ? 'ring-2 ring-primary/50' : ''} ${!actionPanelEnabled || mode !== 'idle' ? 'cursor-not-allowed opacity-60' : ''}`}
+                                >
+                                    <span className="material-symbols-outlined text-base">{button.icon}</span>
+                                    <span className="text-[9px] font-black uppercase mt-1 tracking-[0.18em]">{button.label}</span>
+                                </button>
+                            );
+                        })}
+                        </div>
                     </div>
 
                     <div className="mt-4 flex-1 min-h-0 flex flex-col">
