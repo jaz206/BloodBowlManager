@@ -259,27 +259,30 @@ const CommandCenterStep: React.FC = () => {
                         </div>
                         <h3 className="text-xl font-display font-black text-white uppercase italic">Destino y Entorno</h3>
                     </div>
-                    <div className="glass-panel p-5 border-white/10 bg-black/40 space-y-3">
+                    <div className="glass-panel p-5 border-white/10 bg-black/40 space-y-4">
                         {/* Clima */}
-                        <div className={`p-4 rounded-2xl border transition-all ${gameStatus.weather ? 'bg-sky-500/10 border-sky-500/30' : 'bg-white/5 border-white/5'}`}>
-                            <p className="text-[10px] font-display font-black text-sky-400 uppercase tracking-widest mb-2">Clima (2D6)</p>
+                        <div className={`p-4 rounded-[1.5rem] border transition-all ${gameStatus.weather ? 'bg-sky-500/10 border-sky-500/30' : 'bg-white/5 border-white/5'}`}>
+                            <div className="mb-3 flex items-center justify-between gap-4">
+                                <p className="text-[10px] font-display font-black text-sky-400 uppercase tracking-widest">Clima</p>
+                                <span className="rounded-full border border-sky-500/20 bg-black/20 px-3 py-1 text-[9px] font-display font-black uppercase tracking-[0.2em] text-sky-300">2D6</span>
+                            </div>
                             {gameStatus.weather ? (
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-3 rounded-xl border border-sky-500/20 bg-black/20 px-4 py-3">
                                     <span className="material-symbols-outlined text-2xl text-white">cloud_queue</span>
-                                    <h4 className="text-lg font-display font-black text-white uppercase italic">{gameStatus.weather.title}</h4>
+                                    <h4 className="text-lg font-display font-black text-white uppercase italic tracking-tight">{gameStatus.weather.title}</h4>
                                 </div>
                             ) : (
                                 <div className="flex gap-2">
                                     <input 
                                         type="number" min="2" max="12" placeholder="2D6" 
-                                        className="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-center text-xs font-black text-white focus:border-sky-500 transition-all"
+                                        className="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-3 text-center text-sm font-black text-white focus:border-sky-500 transition-all"
                                         value={manualWeather} onChange={(e) => setManualWeather(e.target.value)}
                                     />
                                     <button 
                                         onClick={() => manualWeather && handleWeatherRoll(Number(manualWeather))}
-                                        className="bg-sky-500 text-black px-4 rounded-xl font-black text-[10px] uppercase hover:bg-white transition-all shadow-lg"
+                                        className="bg-white text-black px-4 rounded-xl font-display font-black text-[10px] uppercase tracking-[0.16em] hover:bg-sky-500 transition-all"
                                     >
-                                        OK
+                                        Manual
                                     </button>
                                 </div>
                             )}
@@ -287,15 +290,18 @@ const CommandCenterStep: React.FC = () => {
                         <button
                             disabled={!!gameStatus.weather}
                             onClick={() => handleWeatherRoll()}
-                            className={`w-full font-display font-black py-3 rounded-2xl transition-all flex items-center justify-center gap-3 text-[10px] uppercase tracking-[0.2em] ${gameStatus.weather ? 'bg-green-900/30 text-green-500 border border-green-500/20 cursor-not-allowed opacity-60' : 'bg-sky-500 text-black hover:scale-105 active:scale-95 shadow-lg'}`}
+                            className={`w-full font-display font-black py-3 rounded-xl transition-all flex items-center justify-center gap-3 text-[10px] uppercase tracking-[0.2em] ${gameStatus.weather ? 'bg-green-900/30 text-green-500 border border-green-500/20 cursor-not-allowed opacity-60' : 'bg-sky-500 text-black hover:scale-[1.01] hover:bg-white'}`}
                         >
                             <span className="material-symbols-outlined text-base">{gameStatus.weather ? 'check_circle' : 'thunderstorm'}</span>
-                            {gameStatus.weather ? 'Clima Registrado' : 'Generar Aleatorio'}
+                            {gameStatus.weather ? 'Clima resuelto' : 'Resolver aleatorio'}
                         </button>
 
                         {/* Fans / FAMA */}
-                        <div className={`p-4 rounded-2xl border transition-all ${fansRoll.home ? 'bg-amber-500/10 border-amber-500/30' : 'bg-white/5 border-white/5'}`}>
-                            <p className="text-[10px] font-display font-black text-amber-500 uppercase tracking-widest mb-2">Influencia de FAMA (1D3 vs 1D3)</p>
+                        <div className={`p-4 rounded-[1.5rem] border transition-all ${fansRoll.home ? 'bg-amber-500/10 border-amber-500/30' : 'bg-white/5 border-white/5'}`}>
+                            <div className="mb-3 flex items-center justify-between gap-4">
+                                <p className="text-[10px] font-display font-black text-amber-500 uppercase tracking-widest">FAMA</p>
+                                <span className="rounded-full border border-amber-500/20 bg-black/20 px-3 py-1 text-[9px] font-display font-black uppercase tracking-[0.2em] text-amber-300">1D3 vs 1D3</span>
+                            </div>
                             {fansRoll.home ? (
                                 <div className="flex justify-around items-center text-center">
                                     <div>
@@ -312,20 +318,20 @@ const CommandCenterStep: React.FC = () => {
                                 <div className="space-y-2">
                                     <div className="flex gap-2">
                                         <input 
-                                            type="number" min="1" max="3" placeholder="Loc. 1D3" 
-                                            className="w-full bg-black/40 border border-white/10 rounded-xl px-2 py-2 text-center text-[10px] font-black text-white focus:border-amber-500 transition-all"
+                                            type="number" min="1" max="3" placeholder="Local" 
+                                            className="w-full bg-black/40 border border-white/10 rounded-xl px-2 py-3 text-center text-[10px] font-black text-white focus:border-amber-500 transition-all"
                                             value={manualFansHome} onChange={(e) => setManualFansHome(e.target.value)}
                                         />
                                         <input 
-                                            type="number" min="1" max="3" placeholder="Riv. 1D3" 
-                                            className="w-full bg-black/40 border border-white/10 rounded-xl px-2 py-2 text-center text-[10px] font-black text-white focus:border-amber-500 transition-all"
+                                            type="number" min="1" max="3" placeholder="Rival" 
+                                            className="w-full bg-black/40 border border-white/10 rounded-xl px-2 py-3 text-center text-[10px] font-black text-white focus:border-amber-500 transition-all"
                                             value={manualFansOpp} onChange={(e) => setManualFansOpp(e.target.value)}
                                         />
                                         <button 
                                             onClick={() => manualFansHome && manualFansOpp && handleFansRoll(Number(manualFansHome), Number(manualFansOpp))}
-                                            className="bg-amber-500 text-black px-4 rounded-xl font-black text-[10px] uppercase hover:bg-white transition-all shadow-lg"
+                                            className="bg-white text-black px-4 rounded-xl font-display font-black text-[10px] uppercase tracking-[0.16em] hover:bg-amber-500 transition-all"
                                         >
-                                            OK
+                                            Manual
                                         </button>
                                     </div>
                                 </div>
@@ -334,25 +340,23 @@ const CommandCenterStep: React.FC = () => {
                         <button
                             disabled={!!fansRoll.home}
                             onClick={() => handleFansRoll()}
-                            className={`w-full font-display font-black py-3 rounded-2xl transition-all flex items-center justify-center gap-3 text-[10px] uppercase tracking-[0.2em] ${fansRoll.home ? 'bg-green-900/30 text-green-500 border border-green-500/20 cursor-not-allowed opacity-60' : 'bg-amber-500 text-black hover:scale-105 active:scale-95 shadow-lg'}`}
+                            className={`w-full font-display font-black py-3 rounded-xl transition-all flex items-center justify-center gap-3 text-[10px] uppercase tracking-[0.2em] ${fansRoll.home ? 'bg-green-900/30 text-green-500 border border-green-500/20 cursor-not-allowed opacity-60' : 'bg-amber-500 text-black hover:scale-[1.01] hover:bg-white'}`}
                         >
                             <span className="material-symbols-outlined text-base">{fansRoll.home ? 'check_circle' : 'groups'}</span>
-                            {fansRoll.home ? 'Hinchas Registrados' : 'Generar Aleatorio'}
+                            {fansRoll.home ? 'FAMA resuelta' : 'Resolver aleatorio'}
                         </button>
-                    </div>
-
-                    {/* Coin Toss — visible solo cuando clima y fans están listos */}
+                        {/* Coin Toss */}
                     <div className={`space-y-6 transition-all duration-500 ${(!gameStatus.weather || !fansRoll.home) ? 'opacity-40 pointer-events-none select-none' : 'opacity-100'}`}>
                         <div className="flex items-center gap-4 mb-2">
                             <div className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all ${(gameStatus.weather && fansRoll.home) ? 'bg-amber-500/10 border-amber-500/30' : 'bg-white/5 border-white/10'}`}>
                                 <span className={`material-symbols-outlined ${(gameStatus.weather && fansRoll.home) ? 'text-amber-500' : 'text-slate-600'}`}>toll</span>
                             </div>
                             <div>
-                                <h3 className="text-xl font-display font-black text-white uppercase italic">Juicio de la Moneda</h3>
-                                {!gameStatus.weather && <p className="text-[9px] font-display font-black text-blood-red/60 uppercase tracking-[0.2em] animate-pulse mt-0.5">Consulta los Oráculos primero ↑</p>}
+                                <h3 className="text-xl font-display font-black text-white uppercase italic">Juicio de la moneda</h3>
+                                {!gameStatus.weather && <p className="text-[9px] font-display font-black text-blood-red/60 uppercase tracking-[0.2em] animate-pulse mt-0.5">Resuelve clima y FAMA antes de lanzar la moneda</p>}
                             </div>
                         </div>
-                        <div className="glass-panel p-6 border-white/10 bg-black/40 space-y-6">
+                        <div className="rounded-[1.75rem] border border-premium-gold/20 bg-premium-gold/5 p-5 space-y-6">
                             {!gameStatus.coinTossWinner ? (
                                 <div className="space-y-6">
                                     <div className="flex justify-center gap-6">
@@ -361,7 +365,7 @@ const CommandCenterStep: React.FC = () => {
                                             <input 
                                                 type="number" min="1" max="6" placeholder="D6"
                                                 value={manualCoinHome} onChange={(e) => setManualCoinHome(e.target.value)}
-                                                className="w-16 bg-black/60 border border-sky-500/30 rounded-xl px-2 py-2 text-center text-xl font-black text-white focus:border-sky-500 outline-none"
+                                                className="w-20 bg-black/60 border border-sky-500/30 rounded-xl px-2 py-3 text-center text-xl font-black text-white focus:border-sky-500 outline-none"
                                             />
                                         </div>
                                         <div className="flex items-center text-slate-700 font-display font-black text-xs pt-6 italic">VS</div>
@@ -370,36 +374,36 @@ const CommandCenterStep: React.FC = () => {
                                             <input 
                                                 type="number" min="1" max="6" placeholder="D6"
                                                 value={manualCoinOpp} onChange={(e) => setManualCoinOpp(e.target.value)}
-                                                className="w-16 bg-black/60 border border-red-500/30 rounded-xl px-2 py-2 text-center text-xl font-black text-white focus:border-red-500 outline-none"
+                                                className="w-20 bg-black/60 border border-red-500/30 rounded-xl px-2 py-3 text-center text-xl font-black text-white focus:border-red-500 outline-none"
                                             />
                                         </div>
                                     </div>
                                     <div className="flex gap-3">
                                         <button 
                                             onClick={() => manualCoinHome && manualCoinOpp && handleCoinTossRoll(Number(manualCoinHome), Number(manualCoinOpp))}
-                                            className="flex-1 bg-white text-black py-3 rounded-xl font-black text-[10px] uppercase hover:bg-premium-gold transition-all shadow-lg"
+                                            className="flex-1 bg-white text-black py-3 rounded-xl font-display font-black text-[10px] uppercase tracking-[0.18em] hover:bg-premium-gold transition-all shadow-lg"
                                         >
                                             Confirmar manual
                                         </button>
                                         <button 
                                             onClick={() => handleCoinTossRoll()}
-                                            className="flex-1 bg-sky-500 text-black py-3 rounded-xl font-black text-[10px] uppercase hover:bg-white transition-all shadow-lg flex items-center justify-center gap-2"
+                                            className="flex-1 bg-premium-gold text-black py-3 rounded-xl font-display font-black text-[10px] uppercase tracking-[0.18em] hover:bg-white transition-all shadow-lg flex items-center justify-center gap-2"
                                         >
-                                            <span className="material-symbols-outlined text-sm">casino</span> Sorteo Digital
+                                            <span className="material-symbols-outlined text-sm">casino</span> Sorteo digital
                                         </button>
                                     </div>
                                     <div className="flex items-center gap-4 w-full">
                                         <div className="h-px bg-white/5 flex-1"></div>
-                                        <span className="text-[8px] font-bold text-slate-700 uppercase">O bien, selección manual directa:</span>
+                                        <span className="text-[8px] font-bold text-slate-700 uppercase">o elige ganador</span>
                                         <div className="h-px bg-white/5 flex-1"></div>
                                     </div>
-                                    <div className="flex gap-4">
-                                        <button onClick={() => { setGameStatus((p: any) => ({ ...p, coinTossWinner: 'home' })); logEvent('INFO', `Duelo Ganado (Moneda): ${liveHomeTeam.name}`); }} className="flex-1 p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-sky-500/20 hover:border-sky-500/40 transition-all text-center group">
-                                            <p className="text-[10px] font-display font-black text-slate-500 group-hover:text-sky-400 uppercase tracking-widest mb-1">Cara (Local)</p>
+                                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                                        <button onClick={() => { setGameStatus((p: any) => ({ ...p, coinTossWinner: 'home' })); logEvent('INFO', `Duelo ganado (moneda): ${liveHomeTeam.name}`); }} className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-sky-500/20 hover:border-sky-500/40 transition-all text-center group">
+                                            <p className="text-[10px] font-display font-black text-slate-500 group-hover:text-sky-400 uppercase tracking-widest mb-1">Cara</p>
                                             <p className="text-xs font-display font-black text-white uppercase truncate">{liveHomeTeam?.name?.split(' ')[0] || 'Local'}</p>
                                         </button>
-                                        <button onClick={() => { setGameStatus((p: any) => ({ ...p, coinTossWinner: 'opponent' })); logEvent('INFO', `Duelo Ganado (Moneda): ${liveOpponentTeam.name}`); }} className="flex-1 p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-red-500/20 hover:border-red-500/40 transition-all text-center group">
-                                            <p className="text-[10px] font-display font-black text-slate-500 group-hover:text-red-400 uppercase tracking-widest mb-1">Cruz (Rival)</p>
+                                        <button onClick={() => { setGameStatus((p: any) => ({ ...p, coinTossWinner: 'opponent' })); logEvent('INFO', `Duelo ganado (moneda): ${liveOpponentTeam.name}`); }} className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-red-500/20 hover:border-red-500/40 transition-all text-center group">
+                                            <p className="text-[10px] font-display font-black text-slate-500 group-hover:text-red-400 uppercase tracking-widest mb-1">Cruz</p>
                                             <p className="text-xs font-display font-black text-white uppercase truncate">{liveOpponentTeam?.name?.split(' ')[0] || 'Rival'}</p>
                                         </button>
                                     </div>
@@ -407,15 +411,15 @@ const CommandCenterStep: React.FC = () => {
                             ) : (
                                 <div className="animate-slide-in-up space-y-4">
                                     <div className={`p-4 rounded-2xl border ${gameStatus.coinTossWinner === 'home' ? 'bg-sky-500/10 border-sky-500/30' : 'bg-red-500/10 border-red-500/30'} text-center`}>
-                                        <p className="text-[10px] font-display font-black uppercase tracking-widest opacity-60">Ganador del Sorteo</p>
+                                        <p className="text-[10px] font-display font-black uppercase tracking-widest opacity-60">Ganador del sorteo</p>
                                         <p className="text-lg font-display font-black text-white uppercase italic">{(gameStatus.coinTossWinner === 'home' ? liveHomeTeam : liveOpponentTeam).name}</p>
                                     </div>
                                     {!gameStatus.receivingTeam ? (
-                                        <div className="flex gap-3">
-                                            <button onClick={() => { setGameStatus((p: any) => ({ ...p, receivingTeam: gameStatus.coinTossWinner })); logEvent('INFO', `${(gameStatus.coinTossWinner === 'home' ? liveHomeTeam : liveOpponentTeam).name} ha decidido RECIBIR.`); }} className="flex-1 py-3 rounded-xl bg-premium-gold/10 border border-premium-gold/30 text-premium-gold text-[10px] font-display font-black uppercase tracking-widest hover:bg-premium-gold hover:text-black transition-all">
-                                                Recibir el Balón
+                                        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                                            <button onClick={() => { setGameStatus((p: any) => ({ ...p, receivingTeam: gameStatus.coinTossWinner })); logEvent('INFO', `${(gameStatus.coinTossWinner === 'home' ? liveHomeTeam : liveOpponentTeam).name} ha decidido recibir.`); }} className="py-3 rounded-xl bg-premium-gold/10 border border-premium-gold/30 text-premium-gold text-[10px] font-display font-black uppercase tracking-widest hover:bg-premium-gold hover:text-black transition-all">
+                                                Recibir el balon
                                             </button>
-                                            <button onClick={() => { const kicker = gameStatus.coinTossWinner; const receiver = kicker === 'home' ? 'opponent' : 'home'; setGameStatus((p: any) => ({ ...p, receivingTeam: receiver })); logEvent('INFO', `${(gameStatus.coinTossWinner === 'home' ? liveHomeTeam : liveOpponentTeam).name} ha decidido PATEAR.`); }} className="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-[10px] font-display font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all">
+                                            <button onClick={() => { const kicker = gameStatus.coinTossWinner; const receiver = kicker === 'home' ? 'opponent' : 'home'; setGameStatus((p: any) => ({ ...p, receivingTeam: receiver })); logEvent('INFO', `${(gameStatus.coinTossWinner === 'home' ? liveHomeTeam : liveOpponentTeam).name} ha decidido patear.`); }} className="py-3 rounded-xl bg-white/5 border border-white/10 text-white text-[10px] font-display font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all">
                                                 Patear
                                             </button>
                                         </div>
@@ -423,7 +427,7 @@ const CommandCenterStep: React.FC = () => {
                                         <div className="flex items-center justify-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/5">
                                             <span className="material-symbols-outlined text-green-500 text-sm">check_circle</span>
                                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                                {gameStatus.receivingTeam === 'home' ? liveHomeTeam.name : liveOpponentTeam.name} Recibe
+                                                {gameStatus.receivingTeam === 'home' ? liveHomeTeam.name : liveOpponentTeam.name} recibe
                                             </p>
                                         </div>
                                     )}
@@ -431,8 +435,9 @@ const CommandCenterStep: React.FC = () => {
                             )}
                         </div>
                     </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
             {/* CTA final */}
             {gameStatus.receivingTeam && (
@@ -686,180 +691,205 @@ const KickoffStep: React.FC = () => {
         playSound('dice');
     };
 
+    const needsEventDice = ['Defensa SÃ³lida', 'AnticipaciÃ³n', 'Â¡A la Carga! (Blitz)', 'Los Hinchas Animan', 'Entrenador Brillante', 'IndigestiÃ³n', 'InvasiÃ³n de Campo'].includes(gameStatus.kickoffEvent?.title || '');
+    const versusEvent = ['Los Hinchas Animan', 'Entrenador Brillante', 'IndigestiÃ³n', 'InvasiÃ³n de Campo'].includes(gameStatus.kickoffEvent?.title || '');
+
     return (
-        <div className='max-w-xl mx-auto space-y-12 text-center py-6'>
+        <div className='max-w-4xl mx-auto space-y-6 py-4'>
             {!gameStatus.kickoffEvent ? (
-                <div className="space-y-10">
-                    <div className="flex flex-col items-center gap-6">
-                        <div className="w-40 h-40 bg-premium-gold/5 rounded-[3rem] border-2 border-premium-gold/20 flex items-center justify-center shadow-[0_0_80px_rgba(245,159,10,0.1)] relative">
-                            <div className="absolute inset-0 bg-premium-gold/10 rounded-[3rem] blur-2xl animate-pulse"></div>
-                            <span className="material-symbols-outlined text-7xl text-premium-gold relative z-10 animate-bounce">sports_football</span>
+                <div className="rounded-[2rem] border border-premium-gold/20 bg-black/45 p-6 md:p-8">
+                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+                        <div className="flex flex-col items-center gap-5 text-center">
+                            <div className="relative flex h-32 w-32 items-center justify-center rounded-[2rem] border border-premium-gold/20 bg-premium-gold/5">
+                                <div className="absolute inset-0 rounded-[2rem] bg-premium-gold/10 blur-2xl"></div>
+                                <span className="material-symbols-outlined relative z-10 text-6xl text-premium-gold">sports_football</span>
+                            </div>
+                            <div className="space-y-2">
+                                <p className="text-[10px] font-display font-black uppercase tracking-[0.35em] text-premium-gold/70">Kickoff</p>
+                                <h3 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter">Patada inicial</h3>
+                                <p className="max-w-sm text-sm text-slate-400">
+                                    Resuelve el evento que abre el drive. Puedes introducir el 2D6 manualmente o dejar que Nuffle lo determine.
+                                </p>
+                            </div>
                         </div>
-                        <div className="space-y-2">
-                            <h3 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter">La Patada Inicial</h3>
-                            <p className="text-slate-500 text-sm max-w-xs mx-auto">Lanza los dados del destino para determinar el evento que marcará el inicio del asalto.</p>
-                        </div>
-                    </div>
-                    <div className="flex flex-col items-center gap-4">
-                        <div className="flex gap-2">
-                            <input 
-                                type="number" min="2" max="12" placeholder="2D6 Evento"
-                                className="w-32 bg-black/60 border border-premium-gold/30 rounded-xl px-4 py-2 text-center text-xl font-black text-white focus:outline-none focus:border-premium-gold transition-all"
-                                value={manualKickoffRoll}
-                                onChange={(e) => setManualKickoffRoll(e.target.value)}
-                            />
-                            <button 
-                                onClick={() => manualKickoffRoll && handleKickoffRoll(Number(manualKickoffRoll))}
-                                className="bg-premium-gold text-black px-6 py-2 rounded-xl font-black text-xs uppercase hover:bg-white transition-all shadow-lg shadow-premium-gold/20"
+
+                        <div className="space-y-4 rounded-[1.75rem] border border-white/10 bg-white/5 p-5">
+                            <div className="flex items-center justify-between gap-4">
+                                <div>
+                                    <p className="mb-1 text-[9px] font-display font-black uppercase tracking-[0.28em] text-slate-500">Evento de saque</p>
+                                    <h4 className="text-lg font-display font-black uppercase italic tracking-tight text-white">Tirada principal</h4>
+                                </div>
+                                <span className="rounded-full border border-premium-gold/20 bg-premium-gold/10 px-3 py-1 text-[9px] font-display font-black uppercase tracking-[0.2em] text-premium-gold">2D6</span>
+                            </div>
+
+                            <div className="grid grid-cols-[1fr_auto] gap-3">
+                                <input
+                                    type="number" min="2" max="12" placeholder="2D6 evento"
+                                    className="rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-center text-xl font-black text-white focus:outline-none focus:border-premium-gold transition-all"
+                                    value={manualKickoffRoll}
+                                    onChange={(e) => setManualKickoffRoll(e.target.value)}
+                                />
+                                <button
+                                    onClick={() => manualKickoffRoll && handleKickoffRoll(Number(manualKickoffRoll))}
+                                    className="rounded-xl bg-white px-5 text-[10px] font-display font-black uppercase tracking-[0.18em] text-black transition-all hover:bg-premium-gold"
+                                >
+                                    Aplicar
+                                </button>
+                            </div>
+
+                            <button
+                                onClick={() => handleKickoffRoll()}
+                                className="w-full rounded-xl bg-premium-gold py-3 text-[10px] font-display font-black uppercase tracking-[0.22em] text-black transition-all hover:bg-white"
                             >
-                                Aplicar
+                                Resolver automatico
                             </button>
                         </div>
-                        <div className="flex items-center gap-4 w-full max-w-[200px]">
-                            <div className="h-px bg-white/5 flex-1"></div>
-                            <span className="text-[8px] font-bold text-slate-600 uppercase">O bien</span>
-                            <div className="h-px bg-white/5 flex-1"></div>
-                        </div>
-                        <DiceRollButton onRoll={() => handleKickoffRoll()} onPlaySound={() => playSound('dice')} />
                     </div>
                 </div>
             ) : (
-                <div className="space-y-10 animate-slide-in-up">
-                    <div className="relative">
-                        <div className="absolute -inset-8 bg-sky-500/10 blur-[80px] rounded-full"></div>
-                        <div className="relative glass-panel border-sky-500/30 bg-black/60 p-10 rounded-[4rem] shadow-4xl transform hover:scale-[1.02] transition-transform duration-700">
-                            <div className="text-[10px] font-display font-black text-sky-400 uppercase tracking-[0.4em] mb-4">Intervención del Destino</div>
-                            <h4 className="text-4xl font-display font-black text-white italic uppercase tracking-tighter mb-4">{gameStatus.kickoffEvent.title}</h4>
-                            <div className="w-16 h-1 bg-sky-500/30 mx-auto mb-6 rounded-full"></div>
-                            <p className="text-slate-400 text-sm leading-relaxed max-w-sm mx-auto italic">{gameStatus.kickoffEvent.description}</p>
+                <div className="space-y-6 animate-slide-in-up">
+                    <div className="rounded-[2rem] border border-sky-500/20 bg-sky-500/5 p-6 md:p-8">
+                        <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+                            <div className="space-y-3">
+                                <p className="text-[10px] font-display font-black uppercase tracking-[0.35em] text-sky-300">Intervencion del destino</p>
+                                <h4 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter">{gameStatus.kickoffEvent.title}</h4>
+                                <p className="max-w-2xl text-sm leading-relaxed text-slate-300">{gameStatus.kickoffEvent.description}</p>
+                            </div>
+                            <div className="rounded-2xl border border-sky-500/20 bg-black/25 px-4 py-3 text-center">
+                                <p className="text-[9px] font-display font-black uppercase tracking-[0.22em] text-sky-300 mb-1">Estado</p>
+                                <p className="text-sm font-display font-black uppercase italic text-white">{kickoffActionCompleted ? 'Listo para drive' : 'Pendiente de resolver'}</p>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Caso especial: Clima Cambiante RESOLUTION (Season 3) */}
                     {gameStatus.kickoffEvent.title === 'Clima Cambiante' && !kickoffActionCompleted && (
-                        <div className="mt-8 p-6 glass-dark rounded-3xl border border-sky-500/20 space-y-6 animate-in fade-in zoom-in duration-500">
-                             <p className="text-[10px] font-black text-sky-400 uppercase tracking-widest">Nueva Tirada de Clima</p>
-                             <div className="flex flex-col items-center gap-4">
-                                 <div className="flex gap-2">
-                                     <input 
-                                        type="number" 
-                                        min="2" max="12" 
-                                        value={manualWeatherRoll}
-                                        onChange={(e) => setManualWeatherRoll(e.target.value)}
-                                        placeholder="2-12"
-                                        className="w-24 bg-black/60 border border-sky-500/30 rounded-xl px-4 py-2 text-center text-xl font-black text-white focus:outline-none focus:border-sky-500 transition-all"
-                                     />
-                                     <button 
-                                        onClick={() => manualWeatherRoll && handleKickoffWeatherRoll(Number(manualWeatherRoll))}
-                                        className="bg-sky-500 text-black px-6 py-2 rounded-xl font-black text-xs uppercase hover:bg-white transition-all shadow-lg shadow-sky-500/20"
-                                     >
-                                         Confirmar
-                                     </button>
-                                 </div>
-                                 <div className="flex items-center gap-4 w-full max-w-[200px]">
-                                     <div className="h-px bg-white/5 flex-1"></div>
-                                     <span className="text-[8px] font-bold text-slate-600 uppercase">O bien</span>
-                                     <div className="h-px bg-white/5 flex-1"></div>
-                                 </div>
-                                 <button 
-                                    onClick={() => handleKickoffWeatherRoll(Math.floor(Math.random() * 6) + Math.floor(Math.random() * 6) + 2)}
-                                    className="text-[10px] font-black text-sky-400 hover:text-white uppercase tracking-widest flex items-center gap-2 transition-colors"
-                                 >
-                                     <span className="material-symbols-outlined text-sm">casino</span> Dejar que Nuffle elija
-                                 </button>
-                             </div>
-                        </div>
-                    )}
+                        <div className="rounded-[1.75rem] border border-sky-500/20 bg-black/35 p-5 space-y-4">
+                            <div className="flex items-center justify-between gap-4">
+                                <div>
+                                    <p className="mb-1 text-[9px] font-display font-black uppercase tracking-[0.28em] text-sky-300">Resolucion extra</p>
+                                    <h5 className="text-lg font-display font-black uppercase italic tracking-tight text-white">Nueva tirada de clima</h5>
+                                </div>
+                                <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1 text-[9px] font-display font-black uppercase tracking-[0.2em] text-sky-300">2D6</span>
+                            </div>
 
-                    {/* Otros Eventos que requieren tirada (Season 3) */}
-                    {['Defensa Sólida', 'Anticipación', '¡A la Carga! (Blitz)', 'Los Hinchas Animan', 'Entrenador Brillante', 'Indigestión', 'Invasión de Campo'].includes(gameStatus.kickoffEvent.title) && !kickoffActionCompleted && (
-                        <div className="mt-8 p-6 glass-dark rounded-3xl border border-premium-gold/20 space-y-6 animate-in fade-in zoom-in duration-500">
-                             <p className="text-[10px] font-black text-premium-gold uppercase tracking-widest">Resolución del Suceso</p>
-                             <div className="flex flex-col items-center gap-4">
-                                 <div className="flex gap-4">
-                                     <div className="flex flex-col items-center gap-1">
-                                         <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">
-                                             {['Defensa Sólida', 'Anticipación', '¡A la Carga! (Blitz)'].includes(gameStatus.kickoffEvent.title) ? 'Dado (1D3)' : 'Local (1D6)'}
-                                         </span>
-                                         <input 
-                                            type="number" min="1" max="6" value={manualEventDice1} onChange={e => setManualEventDice1(e.target.value)}
-                                            className="w-16 bg-black/60 border border-white/10 rounded-xl px-2 py-2 text-center text-xl font-black text-white focus:border-premium-gold"
-                                            placeholder="?"
-                                         />
-                                     </div>
-                                     {['Los Hinchas Animan', 'Entrenador Brillante', 'Indigestión', 'Invasión de Campo'].includes(gameStatus.kickoffEvent.title) && (
-                                         <>
-                                            <div className="flex items-center pt-6 font-display font-black text-xs text-slate-700">VS</div>
-                                            <div className="flex flex-col items-center gap-1">
-                                                <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Rival (1D6)</span>
-                                                <input 
-                                                    type="number" min="1" max="6" value={manualEventDice2} onChange={e => setManualEventDice2(e.target.value)}
-                                                    className="w-16 bg-black/60 border border-white/10 rounded-xl px-2 py-2 text-center text-xl font-black text-white focus:border-premium-gold"
-                                                    placeholder="?"
-                                                />
-                                            </div>
-                                         </>
-                                     )}
-                                 </div>
-                                 <div className="flex gap-3 w-full">
-                                     <button 
-                                        onClick={() => handleResolveEventDice(Number(manualEventDice1), Number(manualEventDice2))}
-                                        className="flex-1 bg-white text-black py-3 rounded-xl font-black text-[10px] uppercase hover:bg-premium-gold transition-all shadow-lg"
-                                     >
-                                         Confirmar Dados
-                                     </button>
-                                     <button 
-                                        onClick={() => handleResolveEventDice()}
-                                        className="flex-1 bg-black/40 border border-white/10 text-white py-3 rounded-xl font-black text-[10px] uppercase hover:bg-white hover:text-black transition-all flex items-center justify-center gap-2"
-                                     >
-                                         <span className="material-symbols-outlined text-sm">casino</span> Azar
-                                     </button>
-                                 </div>
-                             </div>
-                        </div>
-                    )}
-                     {kickoffActionCompleted && (
-                        <div className="mt-8 p-8 glass-panel border-premium-gold/30 bg-black/40 space-y-6 animate-in fade-in zoom-in duration-700">
-                             <div className="flex items-center justify-between border-b border-white/5 pb-4 mb-4">
-                                 <div className="flex items-center gap-3">
-                                     <span className="material-symbols-outlined text-premium-gold">explore</span>
-                                     <h5 className="text-[10px] font-display font-black text-white uppercase tracking-[0.2em]">Resolución de Desvío</h5>
-                                 </div>
-                                 <span className="text-[8px] font-bold text-slate-500 uppercase">Season 3: 1D8 + 1D6</span>
-                             </div>
-
-                             <div className="flex flex-col items-center gap-4">
-                                 <div className="flex gap-4">
-                                     <div className="flex flex-col gap-1 items-center">
-                                         <p className="text-[8px] font-bold text-slate-500 uppercase">Dirección (D8)</p>
-                                         <input 
-                                            type="number" min="1" max="8" value={manualScatterDir} onChange={e => setManualScatterDir(e.target.value)}
-                                            className="w-16 bg-black/60 border border-white/10 rounded-xl px-2 py-2 text-center text-xl font-black text-white focus:border-premium-gold"
-                                            placeholder="?"
-                                         />
-                                     </div>
-                                     <div className="flex flex-col gap-1 items-center">
-                                         <p className="text-[8px] font-bold text-slate-500 uppercase">Distancia (D6)</p>
-                                         <input 
-                                            type="number" min="1" max="6" value={manualScatterDist} onChange={e => setManualScatterDist(e.target.value)}
-                                            className="w-16 bg-black/60 border border-white/10 rounded-xl px-2 py-2 text-center text-xl font-black text-white focus:border-premium-gold"
-                                            placeholder="?"
-                                         />
-                                     </div>
-                                 </div>
-                                 <button 
-                                    onClick={() => {
-                                        const d8 = manualScatterDir ? Number(manualScatterDir) : (Math.floor(Math.random() * 8) + 1);
-                                        const d6 = manualScatterDist ? Number(manualScatterDist) : (Math.floor(Math.random() * 6) + 1);
-                                        logEvent('INFO', `Desvío del Balón — Dirección: ${d8}, Distancia: ${d6} casillas.`);
-                                        handleStartDrive();
-                                    }}
-                                    className="w-full bg-premium-gold text-black py-4 rounded-xl font-display font-black text-xs uppercase tracking-widest hover:bg-white transition-all shadow-xl shadow-premium-gold/20"
+                            <div className="grid grid-cols-[1fr_auto] gap-3">
+                                <input
+                                    type="number"
+                                    min="2" max="12"
+                                    value={manualWeatherRoll}
+                                    onChange={(e) => setManualWeatherRoll(e.target.value)}
+                                    placeholder="2-12"
+                                    className="rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-center text-xl font-black text-white focus:outline-none focus:border-sky-500 transition-all"
+                                />
+                                <button
+                                    onClick={() => manualWeatherRoll && handleKickoffWeatherRoll(Number(manualWeatherRoll))}
+                                    className="rounded-xl bg-white px-5 text-[10px] font-display font-black uppercase tracking-[0.18em] text-black transition-all hover:bg-sky-500"
                                 >
-                                     Comenzar el Asalto
+                                    Aplicar
                                 </button>
-                                 <p className="text-[8px] font-medium text-slate-600 uppercase italic">Dados automáticos si se dejan en blanco</p>
-                             </div>
+                            </div>
+
+                            <button
+                                onClick={() => handleKickoffWeatherRoll(Math.floor(Math.random() * 6) + Math.floor(Math.random() * 6) + 2)}
+                                className="w-full rounded-xl border border-sky-500/20 bg-sky-500/10 py-3 text-[10px] font-display font-black uppercase tracking-[0.22em] text-sky-300 transition-all hover:bg-sky-500 hover:text-black"
+                            >
+                                Resolver automatico
+                            </button>
+                        </div>
+                    )}
+
+                    {needsEventDice && !kickoffActionCompleted && (
+                        <div className="rounded-[1.75rem] border border-premium-gold/20 bg-black/35 p-5 space-y-4">
+                            <div className="flex items-center justify-between gap-4">
+                                <div>
+                                    <p className="mb-1 text-[9px] font-display font-black uppercase tracking-[0.28em] text-premium-gold/80">Resolucion extra</p>
+                                    <h5 className="text-lg font-display font-black uppercase italic tracking-tight text-white">Dados del suceso</h5>
+                                </div>
+                                <span className="rounded-full border border-premium-gold/20 bg-premium-gold/10 px-3 py-1 text-[9px] font-display font-black uppercase tracking-[0.2em] text-premium-gold">{versusEvent ? '1D6 vs 1D6' : '1D3'}</span>
+                            </div>
+
+                            <div className={`grid gap-3 ${versusEvent ? 'grid-cols-[1fr_auto_1fr]' : 'grid-cols-1 max-w-[160px]'}`}>
+                                <div>
+                                    <p className="mb-2 text-[9px] font-display font-black uppercase tracking-[0.2em] text-slate-500">{versusEvent ? 'Local' : 'Dado'}</p>
+                                    <input
+                                        type="number" min="1" max="6" value={manualEventDice1} onChange={e => setManualEventDice1(e.target.value)}
+                                        className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-3 text-center text-xl font-black text-white focus:border-premium-gold"
+                                        placeholder="?"
+                                    />
+                                </div>
+                                {versusEvent && (
+                                    <>
+                                        <div className="flex items-end justify-center pb-3 text-xs font-display font-black italic text-slate-600">VS</div>
+                                        <div>
+                                            <p className="mb-2 text-[9px] font-display font-black uppercase tracking-[0.2em] text-slate-500">Rival</p>
+                                            <input
+                                                type="number" min="1" max="6" value={manualEventDice2} onChange={e => setManualEventDice2(e.target.value)}
+                                                className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-3 text-center text-xl font-black text-white focus:border-premium-gold"
+                                                placeholder="?"
+                                            />
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                                <button
+                                    onClick={() => handleResolveEventDice(Number(manualEventDice1), Number(manualEventDice2))}
+                                    className="rounded-xl bg-white py-3 text-[10px] font-display font-black uppercase tracking-[0.2em] text-black transition-all hover:bg-premium-gold"
+                                >
+                                    Confirmar dados
+                                </button>
+                                <button
+                                    onClick={() => handleResolveEventDice()}
+                                    className="rounded-xl border border-white/10 bg-white/5 py-3 text-[10px] font-display font-black uppercase tracking-[0.2em] text-white transition-all hover:bg-white hover:text-black"
+                                >
+                                    Resolver automatico
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {kickoffActionCompleted && (
+                        <div className="rounded-[1.75rem] border border-premium-gold/20 bg-black/35 p-5 space-y-4">
+                            <div className="flex items-center justify-between gap-4">
+                                <div>
+                                    <p className="mb-1 text-[9px] font-display font-black uppercase tracking-[0.28em] text-premium-gold/80">Ultimo paso</p>
+                                    <h5 className="text-lg font-display font-black uppercase italic tracking-tight text-white">Desvio del balon</h5>
+                                </div>
+                                <span className="rounded-full border border-premium-gold/20 bg-premium-gold/10 px-3 py-1 text-[9px] font-display font-black uppercase tracking-[0.2em] text-premium-gold">1D8 + 1D6</span>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3 max-w-xs">
+                                <div>
+                                    <p className="mb-2 text-[9px] font-display font-black uppercase tracking-[0.2em] text-slate-500">Direccion</p>
+                                    <input
+                                        type="number" min="1" max="8" value={manualScatterDir} onChange={e => setManualScatterDir(e.target.value)}
+                                        className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-3 text-center text-xl font-black text-white focus:border-premium-gold"
+                                        placeholder="D8"
+                                    />
+                                </div>
+                                <div>
+                                    <p className="mb-2 text-[9px] font-display font-black uppercase tracking-[0.2em] text-slate-500">Distancia</p>
+                                    <input
+                                        type="number" min="1" max="6" value={manualScatterDist} onChange={e => setManualScatterDist(e.target.value)}
+                                        className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-3 text-center text-xl font-black text-white focus:border-premium-gold"
+                                        placeholder="D6"
+                                    />
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={() => {
+                                    const d8 = manualScatterDir ? Number(manualScatterDir) : (Math.floor(Math.random() * 8) + 1);
+                                    const d6 = manualScatterDist ? Number(manualScatterDist) : (Math.floor(Math.random() * 6) + 1);
+                                    logEvent('INFO', `Desvio del balon - Direccion: ${d8}, Distancia: ${d6} casillas.`);
+                                    handleStartDrive();
+                                }}
+                                className="w-full rounded-xl bg-premium-gold py-4 text-xs font-display font-black uppercase tracking-[0.26em] text-black transition-all hover:bg-white"
+                            >
+                                Comenzar el asalto
+                            </button>
+                            <p className="text-[9px] font-display font-black uppercase tracking-[0.18em] text-slate-500">Dados automaticos si se dejan en blanco</p>
                         </div>
                     )}
                 </div>
