@@ -876,8 +876,101 @@ const preGameTitles = [
     "El Gran Kickoff"            // 3 - Kickoff Event
 ];
 
+const PreGameStatusChip: React.FC<{ label: string; value: string; accent?: 'gold' | 'sky' | 'green' | 'red' }> = ({
+    label,
+    value,
+    accent = 'gold',
+}) => {
+    const accentMap = {
+        gold: 'text-premium-gold border-premium-gold/20 bg-premium-gold/5',
+        sky: 'text-sky-400 border-sky-500/20 bg-sky-500/5',
+        green: 'text-green-400 border-green-500/20 bg-green-500/5',
+        red: 'text-red-400 border-red-500/20 bg-red-500/5',
+    };
+
+    return (
+        <div className={`rounded-2xl border px-4 py-3 ${accentMap[accent]}`}>
+            <p className="mb-1 text-[9px] font-display font-black uppercase tracking-[0.25em] opacity-70">{label}</p>
+            <p className="text-sm font-display font-black uppercase italic tracking-tight text-white">{value}</p>
+        </div>
+    );
+};
+
+const PreGameSectionFrame: React.FC<{
+    step: number;
+    currentStep: number;
+    eyebrow: string;
+    title: string;
+    description: string;
+    children: React.ReactNode;
+}> = ({ step, currentStep, eyebrow, title, description, children }) => {
+    const isActive = currentStep === step;
+    const isUnlocked = currentStep >= step;
+
+    return (
+        <section
+            className={`relative overflow-hidden rounded-[2rem] border transition-all duration-300 ${
+                isActive
+                    ? 'border-premium-gold/35 bg-black/55 shadow-[0_0_50px_rgba(245,159,10,0.08)]'
+                    : isUnlocked
+                        ? 'border-white/10 bg-black/40'
+                        : 'border-white/5 bg-black/30 opacity-75'
+            }`}
+        >
+            <div className="border-b border-white/5 px-6 py-5">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div className="space-y-2">
+                        <p className="text-[9px] font-display font-black uppercase tracking-[0.35em] text-premium-gold/70">
+                            {eyebrow}
+                        </p>
+                        <h3 className="text-2xl font-display font-black uppercase italic tracking-tighter text-white">
+                            {title}
+                        </h3>
+                        <p className="max-w-2xl text-xs text-slate-400">{description}</p>
+                    </div>
+                    <div
+                        className={`rounded-full border px-3 py-1 text-[9px] font-display font-black uppercase tracking-[0.28em] ${
+                            isActive
+                                ? 'border-premium-gold/30 bg-premium-gold/10 text-premium-gold'
+                                : isUnlocked
+                                    ? 'border-green-500/20 bg-green-500/10 text-green-400'
+                                    : 'border-white/10 bg-white/5 text-slate-500'
+                        }`}
+                    >
+                        {isActive ? 'Activa' : isUnlocked ? 'Lista' : `Paso ${step}`}
+                    </div>
+                </div>
+            </div>
+
+            {!isUnlocked && (
+                <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-black/65 backdrop-blur-[2px]">
+                    <div className="rounded-2xl border border-white/10 bg-black/70 px-6 py-4 text-center">
+                        <p className="mb-2 text-[9px] font-display font-black uppercase tracking-[0.3em] text-slate-500">
+                            Bloqueado
+                        </p>
+                        <p className="text-sm font-display font-black uppercase italic tracking-tight text-white">
+                            Resuelve el paso anterior
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            <div className="p-6 md:p-8">{children}</div>
+        </section>
+    );
+};
+
 const PreGameStage: React.FC = () => {
-    const { liveHomeTeam, liveOpponentTeam, preGameStep, journeymenNotification } = useMatch();
+    const {
+        liveHomeTeam,
+        liveOpponentTeam,
+        preGameStep,
+        journeymenNotification,
+        gameStatus,
+        inducementState,
+        fame,
+        fansRoll,
+    } = useMatch();
 
     if (!liveHomeTeam || !liveOpponentTeam) {
         return (
@@ -889,31 +982,123 @@ const PreGameStage: React.FC = () => {
 
     if (journeymenNotification) return <JourneymenNotification />;
 
+    const activeTeam =
+        preGameStep === 1
+            ? 'Centro de mando'
+            : preGameStep === 2
+                ? 'Despliegue'
+                : 'Patada inicial';
+
+    const setupSummary = [
+        gameStatus.weather ? `Clima: ${gameStatus.weather.title}` : 'Clima pendiente',
+        fansRoll.home ? `FAMA ${fame.home} - ${fame.opponent}` : 'Hinchas pendientes',
+        gameStatus.receivingTeam
+            ? `${gameStatus.receivingTeam === 'home' ? liveHomeTeam.name : liveOpponentTeam.name} recibe`
+            : 'Sin receptor decidido',
+    ];
+
+    const underdogName =
+        inducementState.underdog === 'home'
+            ? liveHomeTeam.name
+            : inducementState.underdog === 'opponent'
+                ? liveOpponentTeam.name
+                : 'Sin underdog';
+
     return (
-        <div className="max-w-6xl mx-auto space-y-10 py-6 animate-fade-in">
-            {/* Stepper Header */}
-            <div className="flex flex-col items-center">
-                <div className="text-[10px] font-display font-black text-premium-gold uppercase tracking-[0.4em] mb-2 opacity-60">
-                    Fase de Preparación
+        <div className="max-w-[1600px] mx-auto space-y-8 py-6 animate-fade-in">
+            <div className="rounded-[2rem] border border-white/10 bg-black/45 px-6 py-6 md:px-8">
+                <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+                    <div className="space-y-3">
+                        <p className="text-[10px] font-display font-black uppercase tracking-[0.45em] text-premium-gold/70">
+                            Sala de Operaciones
+                        </p>
+                        <h2 className="text-4xl md:text-5xl font-display font-black text-white italic tracking-tighter uppercase">
+                            Prepartido Integrado
+                        </h2>
+                        <p className="max-w-3xl text-sm text-slate-400">
+                            Todo el arranque del encuentro en una sola mesa: incentivos, clima, decision de recepcion,
+                            despliegue y kickoff. Resolvemos cada bloque una vez y dejamos el drive listo para entrar al partido.
+                        </p>
+                    </div>
+                    <div className="rounded-2xl border border-premium-gold/20 bg-premium-gold/5 px-4 py-3">
+                        <p className="mb-1 text-[9px] font-display font-black uppercase tracking-[0.35em] text-premium-gold/70">
+                            Fase activa
+                        </p>
+                        <p className="text-lg font-display font-black uppercase italic tracking-tight text-white">
+                            {activeTeam}
+                        </p>
+                    </div>
                 </div>
-                <h2 className="text-4xl font-display font-black text-white italic tracking-tighter uppercase text-center">
-                    {preGameTitles[preGameStep]}
-                </h2>
-                <div className="mt-4 flex gap-1">
-                    {preGameTitles.map((_, i) => (
-                        <div
-                            key={i}
-                            className={`h-1 rounded-full transition-all duration-500 ${i === preGameStep ? 'w-8 bg-premium-gold' : i < preGameStep ? 'w-4 bg-premium-gold/40' : 'w-4 bg-white/5'}`}
-                        />
+
+                <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-6">
+                    <PreGameStatusChip label="Local" value={liveHomeTeam.name} accent="sky" />
+                    <PreGameStatusChip label="Rival" value={liveOpponentTeam.name} accent="red" />
+                    <PreGameStatusChip
+                        label="Clima"
+                        value={gameStatus.weather?.title || 'Pendiente'}
+                        accent={gameStatus.weather ? 'green' : 'gold'}
+                    />
+                    <PreGameStatusChip
+                        label="FAMA"
+                        value={fansRoll.home ? `${fame.home} - ${fame.opponent}` : 'Pendiente'}
+                        accent={fansRoll.home ? 'green' : 'gold'}
+                    />
+                    <PreGameStatusChip label="Underdog" value={underdogName} accent="gold" />
+                    <PreGameStatusChip
+                        label="Recibe"
+                        value={
+                            gameStatus.receivingTeam
+                                ? gameStatus.receivingTeam === 'home'
+                                    ? liveHomeTeam.name
+                                    : liveOpponentTeam.name
+                                : 'Pendiente'
+                        }
+                        accent={gameStatus.receivingTeam ? 'green' : 'gold'}
+                    />
+                </div>
+
+                <div className="mt-6 flex flex-wrap gap-2">
+                    {setupSummary.map((item, index) => (
+                        <span
+                            key={index}
+                            className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[10px] font-display font-black uppercase tracking-[0.22em] text-slate-300"
+                        >
+                            {item}
+                        </span>
                     ))}
                 </div>
             </div>
 
-            {/* Step Content */}
-            <div className="glass-panel border-white/5 bg-black/40 p-8 shadow-2xl">
-                {preGameStep === 1 && <CommandCenterStep />}
-                {preGameStep === 2 && <DeploymentStep />}
-                {preGameStep === 3 && <KickoffStep />}
+            <div className="grid grid-cols-1 gap-8">
+                <PreGameSectionFrame
+                    step={1}
+                    currentStep={preGameStep}
+                    eyebrow="Paso 1"
+                    title="Centro de mando"
+                    description="Gestiona incentivos, determina clima, resuelve la FAMA y decide quien recibe el balon."
+                >
+                    <CommandCenterStep />
+                </PreGameSectionFrame>
+
+                <PreGameSectionFrame
+                    step={2}
+                    currentStep={preGameStep}
+                    eyebrow="Paso 2"
+                    title="Despliegue"
+                    description="Ambos banquillos preparan el drive inicial. Manten el campo visible y valida el once antes de pasar."
+                >
+                    <DeploymentStep />
+                </PreGameSectionFrame>
+
+                <PreGameSectionFrame
+                    step={3}
+                    currentStep={preGameStep}
+                    eyebrow="Paso 3"
+                    title="Patada inicial"
+                    description="Resuelve el evento de kickoff, aplica las tiradas necesarias y deja el balon listo para comenzar el asalto."
+                >
+                    <KickoffStep />
+                </PreGameSectionFrame>
             </div>
         </div>
     );
