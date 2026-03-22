@@ -104,6 +104,12 @@ const MatchTeamRoster: React.FC<MatchTeamRosterProps> = ({ team, side, activeTea
               : isActivated
                 ? 'saturate-50'
                 : '';
+          const statusIcons = [
+            isDead ? { icon: 'skull', label: 'Muerto', tone: 'bg-red-500/20 border-red-500/40 text-red-200' } : null,
+            !isDead && injuries > 0 ? { icon: 'cardiology', label: 'Lesión permanente', tone: 'bg-blood/20 border-blood/40 text-blood' } : null,
+            !isDead && isMNG ? { icon: 'event_busy', label: 'Miss next game', tone: 'bg-orange-500/20 border-orange-500/40 text-orange-200' } : null,
+            !isDead && !isMNG && isKo ? { icon: 'bed', label: 'KO', tone: 'bg-amber-500/20 border-amber-500/40 text-amber-200' } : null,
+          ].filter(Boolean) as { icon: string; label: string; tone: string }[];
 
           return (
             <button
@@ -141,6 +147,21 @@ const MatchTeamRoster: React.FC<MatchTeamRosterProps> = ({ team, side, activeTea
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-slate-700 font-black italic">
                       #{player.id.toString().slice(-2)}
+                    </div>
+                  )}
+                  {statusIcons.length > 0 && (
+                    <div className="absolute left-1.5 top-1.5 flex flex-col gap-1">
+                      {statusIcons.map((statusIcon, index) => (
+                        <span
+                          key={`${statusIcon.label}-${index}`}
+                          title={statusIcon.label}
+                          className={`size-5 rounded-full border flex items-center justify-center backdrop-blur-sm ${statusIcon.tone}`}
+                        >
+                          <span className="material-symbols-outlined text-[11px] leading-none">
+                            {statusIcon.icon}
+                          </span>
+                        </span>
+                      ))}
                     </div>
                   )}
                 </div>
