@@ -141,9 +141,11 @@ const CommandCenterStep: React.FC = () => {
         playSound('dice');
     };
 
+    const commandReady = !!gameStatus.weather && !!fansRoll.home;
+
     return (
-        <div className='space-y-10 animate-fade-in'>
-            <div className="grid grid-cols-1 xl:grid-cols-12 gap-10">
+        <div className='space-y-8 animate-fade-in'>
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
 
                 {/* ── Left: Mercado de Incentivos ── */}
                 <div className="xl:col-span-7 space-y-6">
@@ -155,9 +157,9 @@ const CommandCenterStep: React.FC = () => {
                     </div>
 
                     {inducementState.underdog ? (
-                        <div className="space-y-6">
+                        <div className="space-y-4">
                             {/* Underdog Banner */}
-                            <div className="bg-gradient-to-r from-green-500/20 to-transparent p-4 rounded-2xl border-l-4 border-green-500 flex items-center gap-4 animate-slide-in-right">
+                            <div className="rounded-[1.75rem] border border-green-500/20 bg-green-500/5 p-5 flex items-center gap-4 animate-slide-in-right">
                                 <div className="w-12 h-12 rounded-xl bg-black/40 border border-green-500/30 flex items-center justify-center">
                                      {underdogTeam.crestImage 
                                          ? <img src={underdogTeam.crestImage} className="w-10 h-10 object-contain" alt="Underdog" />
@@ -168,26 +170,26 @@ const CommandCenterStep: React.FC = () => {
                                      <p className="text-[10px] font-display font-black text-green-500 uppercase tracking-widest leading-none mb-1">Equipo Infractor / Underdog</p>
                                      <h4 className="text-lg font-display font-black text-white uppercase italic tracking-tighter leading-none">{underdogTeam.name}</h4>
                                  </div>
-                                 <div className="ml-auto bg-green-500/10 px-3 py-1.5 rounded-lg border border-green-500/20 text-center">
+                                 <div className="ml-auto bg-black/20 px-3 py-2 rounded-xl border border-green-500/20 text-center">
                                      <p className="text-[8px] font-black text-green-500 uppercase leading-none">Incentivos</p>
                                      <p className="text-xs font-black text-white">S3 Match</p>
                                  </div>
                              </div>
 
                              {/* Wallet */}
-                             <div className="glass-panel p-6 border-green-500/20 bg-green-500/5 flex items-center justify-between">
+                             <div className="rounded-[1.75rem] border border-premium-gold/20 bg-premium-gold/5 p-5 flex items-center justify-between">
                                  <div>
-                                     <p className="text-[10px] font-display font-black text-green-500 uppercase tracking-widest mb-1">Tesoro de Indulgencia</p>
+                                     <p className="text-[10px] font-display font-black text-premium-gold uppercase tracking-widest mb-1">Bolsa de Incentivos</p>
                                      <p className="text-3xl font-display font-black text-white italic">
-                                         {inducementState.money.toLocaleString()} <span className="text-xs text-green-500/50">m.o.</span>
+                                         {inducementState.money.toLocaleString()} <span className="text-xs text-premium-gold/50">m.o.</span>
                                      </p>
                                  </div>
                                  <div className="w-16 h-16 rounded-full bg-black/60 border border-white/10 flex items-center justify-center">
-                                     <span className="material-symbols-outlined text-green-500 text-3xl">account_balance_wallet</span>
+                                     <span className="material-symbols-outlined text-premium-gold text-3xl">account_balance_wallet</span>
                                  </div>
                              </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 xl:grid-cols-[1.1fr_0.9fr] gap-4">
                                 {/* Options */}
                                 <div className="space-y-3">
                                     <h4 className="text-[10px] font-display font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Favores y Personal</h4>
@@ -216,7 +218,7 @@ const CommandCenterStep: React.FC = () => {
                                 {/* Star Players */}
                                 <div className="space-y-4">
                                     <h4 className="text-[10px] font-display font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Jugadores Estrella</h4>
-                                    <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                    <div className="space-y-2 max-h-[280px] overflow-y-auto pr-2 custom-scrollbar">
                                         {eligibleStars.map((star: StarPlayer) => {
                                             const isHired = inducementState.hiredStars.some((s: StarPlayer) => s.name === star.name);
                                             return (
@@ -240,24 +242,24 @@ const CommandCenterStep: React.FC = () => {
                             </div>
                         </div>
                     ) : (
-                        <div className="glass-panel p-10 border-white/5 bg-white/5 text-center space-y-4">
+                        <div className="glass-panel p-8 border-white/5 bg-white/5 text-center space-y-4">
                             <div className="w-16 h-16 mx-auto bg-white/10 rounded-full flex items-center justify-center mb-2">
                                 <span className="material-symbols-outlined text-slate-500 text-3xl">balance</span>
                             </div>
-                            <p className="text-slate-400 text-sm font-medium italic">"Los equipos están equilibrados. Nuffle no otorga oro adicional hoy."</p>
+                            <p className="text-slate-400 text-sm font-medium italic">Los equipos estan equilibrados. Nuffle no otorga oro adicional hoy.</p>
                         </div>
                     )}
                 </div>
 
                 {/* ── Right: Destino y Entorno ── */}
-                <div className="xl:col-span-5 space-y-8">
+                <div className="xl:col-span-5 space-y-5">
                     <div className="flex items-center gap-4 mb-2">
                         <div className="w-10 h-10 rounded-full bg-sky-500/10 border border-sky-500/30 flex items-center justify-center">
                             <span className="material-symbols-outlined text-sky-400">cyclone</span>
                         </div>
                         <h3 className="text-xl font-display font-black text-white uppercase italic">Destino y Entorno</h3>
                     </div>
-                    <div className="glass-panel p-6 border-white/10 bg-black/40 space-y-4">
+                    <div className="glass-panel p-5 border-white/10 bg-black/40 space-y-3">
                         {/* Clima */}
                         <div className={`p-4 rounded-2xl border transition-all ${gameStatus.weather ? 'bg-sky-500/10 border-sky-500/30' : 'bg-white/5 border-white/5'}`}>
                             <p className="text-[10px] font-display font-black text-sky-400 uppercase tracking-widest mb-2">Clima (2D6)</p>
@@ -293,7 +295,7 @@ const CommandCenterStep: React.FC = () => {
 
                         {/* Fans / FAMA */}
                         <div className={`p-4 rounded-2xl border transition-all ${fansRoll.home ? 'bg-amber-500/10 border-amber-500/30' : 'bg-white/5 border-white/5'}`}>
-                            <p className="text-[10px] font-display font-black text-amber-500 uppercase tracking-widest mb-2">Influencia de FAMA (1D3 x2)</p>
+                            <p className="text-[10px] font-display font-black text-amber-500 uppercase tracking-widest mb-2">Influencia de FAMA (1D3 vs 1D3)</p>
                             {fansRoll.home ? (
                                 <div className="flex justify-around items-center text-center">
                                     <div>
@@ -377,7 +379,7 @@ const CommandCenterStep: React.FC = () => {
                                             onClick={() => manualCoinHome && manualCoinOpp && handleCoinTossRoll(Number(manualCoinHome), Number(manualCoinOpp))}
                                             className="flex-1 bg-white text-black py-3 rounded-xl font-black text-[10px] uppercase hover:bg-premium-gold transition-all shadow-lg"
                                         >
-                                            Confirmar Fisicos
+                                            Confirmar manual
                                         </button>
                                         <button 
                                             onClick={() => handleCoinTossRoll()}
@@ -1105,3 +1107,5 @@ const PreGameStage: React.FC = () => {
 };
 
 export default PreGameStage;
+
+
