@@ -10,6 +10,7 @@ import type {
 } from '../../../../types';
 
 export type GameState = 'setup' | 'selection' | 'pre_game' | 'in_progress' | 'post_game' | 'ko_recovery' | 'reports' | '_pre_game_legacy' | '_in_progress_legacy';
+export type DriveResetTarget = 'next_drive' | 'halftime' | 'post_game' | null;
 
 export type InteractionMode = 'idle' | 'selecting_actor' | 'selecting_action' | 'selecting_objective' | 'awaiting_dice' | 'processing';
 

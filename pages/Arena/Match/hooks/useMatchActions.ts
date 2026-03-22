@@ -32,7 +32,8 @@ export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props:
         setIsApothecaryModalOpen, setSelectedSkillForModal,
         setBallCarrierId, setSelectedPlayerForAction, selectedPlayerForAction,
         tdModalTeam, setInteractionState, setIsTurnoverModalOpen, setRosterViewId,
-        setIsWeatherModalOpen, setIsChangingWeatherModalOpen, setWeatherRerollInput, weatherRerollInput
+        setIsWeatherModalOpen, setIsChangingWeatherModalOpen, setWeatherRerollInput, weatherRerollInput,
+        driveResetTarget, setDriveResetTarget
     } = state;
 
     // ─── HELPER S3: BRUTOS BRUTALES ──────────────────────────────────────────
@@ -292,15 +293,14 @@ const updatePlayerSppAndAction = useCallback((
         setTdModalTeam(null);
 
         const currentTurn = turn === 0 ? 1 : turn;
-        if (currentTurn >= 8 && half === 1) {
-            handleHalftime();
-        } else if (currentTurn >= 8 && half === 2) {
-            logEvent('INFO', '¡Fin del partido!');
-            setGameState('post_game');
-        } else {
-            setGameState('ko_recovery');
-        }
-    }, [tdModalTeam, liveHomeTeam, liveOpponentTeam, logEvent, setScore, playSound, updatePlayerSppAndAction, setIsTdModalOpen, setTdModalTeam, turn, half, handleHalftime, setGameState]);
+        const nextResetTarget =
+            currentTurn >= 8
+                ? (half === 1 ? 'halftime' : 'post_game')
+                : 'next_drive';
+
+        setDriveResetTarget(nextResetTarget);
+        setGameState('ko_recovery');
+    }, [tdModalTeam, liveHomeTeam, liveOpponentTeam, logEvent, setScore, playSound, updatePlayerSppAndAction, setIsTdModalOpen, setTdModalTeam, turn, half, setDriveResetTarget, setGameState]);
 
     /** Resuelve daño automático de una caída o tropiezo. */
     const resolveAutomaticFallDamage = useCallback((player: ManagedPlayer, teamId: 'home' | 'opponent') => {
@@ -625,14 +625,18 @@ const updatePlayerSppAndAction = useCallback((
     /** Transiciona de pre_game a in_progress al inicio de cada drive. */
     const handleStartDrive = useCallback(() => {
         setGameState('in_progress');
+        if (state.gameStatus.receivingTeam) {
+            setActiveTeamId(state.gameStatus.receivingTeam);
+            setRosterViewId(state.gameStatus.receivingTeam);
+        }
         const isFirstTurnOfHalf = turn === 0;
         if (isFirstTurnOfHalf) {
             setTurn(1);
-            logEvent('INFO', half === 1 ? '¡Comienza el partido!' : '¡Comienza la segunda parte!');
+            logEvent('INFO', half === 1 ? 'Comienza el partido!' : 'Comienza la segunda parte!');
         } else {
             logEvent('INFO', `Comienza la patada del turno ${turn}.`);
         }
-    }, [turn, half, setTurn, setGameState, logEvent]);
+    }, [state.gameStatus.receivingTeam, turn, half, setTurn, setGameState, setActiveTeamId, setRosterViewId, logEvent]);
 
     /** Compra un incentivo del mercado de pre_game. */
     const handleBuyInducement = useCallback((name: string, cost: number) => {
@@ -841,13 +845,76 @@ const updatePlayerSppAndAction = useCallback((
 
     /** Reinicia el estado necesario para comenzar una nueva patada tras un TD o fin de mitad. */
     const handleStartNextDrive = useCallback(() => {
-        const { setKoRecoveryRolls, setGameStatus, setTurn, setPreGameStep } = state as any;
+        const {
+            setKoRecoveryRolls,
+            setGameStatus,
+            setTurn,
+            setPreGameStep,
+            setKickoffActionCompleted
+        } = state as any;
+
         setKoRecoveryRolls({});
-        setGameStatus((prev: any) => ({ ...prev, kickoffEvent: null, receivingTeam: prev.receivingTeam === 'home' ? 'opponent' : 'home' }));
+        setKickoffActionCompleted(false);
+        setSelectedPlayerForAction(null);
+        setTurnActions({
+            home: { blitz: false, pass: false, foul: false, handoff: false },
+            opponent: { blitz: false, pass: false, foul: false, handoff: false }
+        });
+
+        if (driveResetTarget === 'post_game') {
+            logEvent('INFO', 'Fin del partido!');
+            setDriveResetTarget('next_drive');
+            setGameState('post_game');
+            return;
+        }
+
+        if (driveResetTarget === 'halftime') {
+            const secondHalfReceiver =
+                firstHalfReceiver === 'home'
+                    ? 'opponent'
+                    : firstHalfReceiver === 'opponent'
+                        ? 'home'
+                        : null;
+            setTurn(0);
+            setHalf(2);
+            setGameStatus((prev: any) => ({
+                ...prev,
+                kickoffEvent: null,
+                receivingTeam: secondHalfReceiver || prev.receivingTeam
+            }));
+            if (secondHalfReceiver) {
+                setActiveTeamId(secondHalfReceiver);
+                setRosterViewId(secondHalfReceiver);
+                const receiverName = secondHalfReceiver === 'home' ? homeTeam?.name : opponentTeam?.name;
+                logEvent('INFO', `Fin de la primera parte. ${receiverName} recibira la segunda parte.`);
+            } else {
+                logEvent('INFO', 'Fin de la primera parte. Preparamos la segunda parte.');
+            }
+            setPreGameStep(2);
+            setDriveResetTarget('next_drive');
+            setGameState('pre_game');
+            return;
+        }
+
+        let nextReceiver: 'home' | 'opponent' | null = null;
+        setGameStatus((prev: any) => {
+            nextReceiver =
+                prev.receivingTeam === 'home'
+                    ? 'opponent'
+                    : prev.receivingTeam === 'opponent'
+                        ? 'home'
+                        : null;
+            return { ...prev, kickoffEvent: null, receivingTeam: nextReceiver };
+        });
+        if (nextReceiver) {
+            setActiveTeamId(nextReceiver);
+            setRosterViewId(nextReceiver);
+        }
         setTurn((t: number) => t + 1);
-        setPreGameStep(2); 
+        setPreGameStep(2);
+        setDriveResetTarget('next_drive');
         setGameState('pre_game');
-    }, [state, setGameState]);
+    }, [state, driveResetTarget, firstHalfReceiver, homeTeam?.name, opponentTeam?.name, logEvent, setActiveTeamId, setDriveResetTarget, setGameState, setHalf, setRosterViewId, setSelectedPlayerForAction, setTurnActions]);
 
     /** Resetea todo el estado del partido a sus valores iniciales. */
     const resetGameState = useCallback(() => {
@@ -859,7 +926,7 @@ const updatePlayerSppAndAction = useCallback((
             setBallCarrierId, setKoRecoveryRolls, setFoulState, setInjuryState,
             setSelectedPlayerForAction, setSppModalState, setIsMatchSummaryOpen,
             setActiveTab, setActiveTeamId, setRosterViewId, setJourneymenNotification,
-            setPendingJourneymen, setMatchMode
+            setPendingJourneymen, setMatchMode, setDriveResetTarget
         } = state as any;
 
         setLiveHomeTeam(null); setLiveOpponentTeam(null); setGameLog([]);
@@ -868,6 +935,7 @@ const updatePlayerSppAndAction = useCallback((
         setPreGameStep(0); setGameStatus({ weather: null, kickoffEvent: null, coinTossWinner: null, receivingTeam: null });
         setKickoffActionCompleted(false); setInducementState({ underdog: null, money: 0, hiredStars: [] });
         setFirstHalfReceiver(null); setPlayersMissingNextGame([]); setBallCarrierId(null);
+        setDriveResetTarget('next_drive');
         setKoRecoveryRolls({}); setFoulState(initialFoulState); setInjuryState(initialInjuryState);
         setSelectedPlayerForAction(null); setSppModalState({ isOpen: false, type: null, step: 'select_team', teamId: null, selectedPlayer: null });
         setIsMatchSummaryOpen(false); setActiveTab('assistant'); setActiveTeamId('home');

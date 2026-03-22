@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useArenaConfig } from '../../../../hooks/useArenaConfig';
 import { 
     GameState, 
+    DriveResetTarget,
     GameBoardProps, 
     FoulState, 
     InjuryState, 
@@ -102,6 +103,7 @@ export const useMatchState = (props: GameBoardProps) => {
     const [firstHalfReceiver, setFirstHalfReceiver] = useState<'home' | 'opponent' | null>(null);
     const [activeTeamId, setActiveTeamId] = useState<'home' | 'opponent'>('home');
     const [ballCarrierId, setBallCarrierId] = useState<number | null>(null);
+    const [driveResetTarget, setDriveResetTarget] = useState<DriveResetTarget>('next_drive');
 
     // ESTADOS DE PRE-GAME
     const [preGameStep, setPreGameStep] = useState(0);
@@ -272,6 +274,7 @@ export const useMatchState = (props: GameBoardProps) => {
         firstHalfReceiver, setFirstHalfReceiver,
         activeTeamId, setActiveTeamId,
         ballCarrierId, setBallCarrierId,
+        driveResetTarget, setDriveResetTarget,
         preGameStep, setPreGameStep,
         gameStatus, setGameStatus,
         inducementState, setInducementState,
