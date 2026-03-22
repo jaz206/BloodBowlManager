@@ -1108,6 +1108,9 @@ const PreGameStage: React.FC = () => {
         inducementState,
         fame,
         fansRoll,
+        score,
+        turn,
+        half,
     } = useMatch();
 
     if (!liveHomeTeam || !liveOpponentTeam) {
@@ -1119,6 +1122,8 @@ const PreGameStage: React.FC = () => {
     }
 
     if (journeymenNotification) return <JourneymenNotification />;
+
+    const isDriveReset = preGameStep >= 2 && ((score.home + score.opponent) > 0 || turn > 0 || half > 1);
 
     const activeTeam =
         preGameStep === 1
@@ -1141,6 +1146,94 @@ const PreGameStage: React.FC = () => {
             : inducementState.underdog === 'opponent'
                 ? liveOpponentTeam.name
                 : 'Sin underdog';
+
+    if (isDriveReset) {
+        return (
+            <div className="max-w-[1600px] mx-auto space-y-8 py-6 animate-fade-in">
+                <div className="rounded-[2rem] border border-white/10 bg-black/45 px-6 py-6 md:px-8">
+                    <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+                        <div className="space-y-3">
+                            <p className="text-[10px] font-display font-black uppercase tracking-[0.45em] text-premium-gold/70">
+                                Siguiente drive
+                            </p>
+                            <h2 className="text-4xl md:text-5xl font-display font-black text-white italic tracking-tighter uppercase">
+                                Reinicio rapido
+                            </h2>
+                            <p className="max-w-3xl text-sm text-slate-400">
+                                Venimos de un touchdown o de un descanso. Aqui solo resolvemos el despliegue rapido y el kickoff
+                                para volver al partido sin repetir el centro de mando completo.
+                            </p>
+                        </div>
+                        <div className="rounded-2xl border border-premium-gold/20 bg-premium-gold/5 px-4 py-3">
+                            <p className="mb-1 text-[9px] font-display font-black uppercase tracking-[0.35em] text-premium-gold/70">
+                                Estado del drive
+                            </p>
+                            <p className="text-lg font-display font-black uppercase italic tracking-tight text-white">
+                                {activeTeam}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+                        <PreGameStatusChip label="Marcador" value={`${score.home} - ${score.opponent}`} accent="gold" />
+                        <PreGameStatusChip label="Parte" value={`Parte ${half}`} accent="green" />
+                        <PreGameStatusChip
+                            label="Recibe"
+                            value={
+                                gameStatus.receivingTeam
+                                    ? gameStatus.receivingTeam === 'home'
+                                        ? liveHomeTeam.name
+                                        : liveOpponentTeam.name
+                                    : 'Pendiente'
+                            }
+                            accent={gameStatus.receivingTeam ? 'green' : 'gold'}
+                        />
+                        <PreGameStatusChip
+                            label="Clima"
+                            value={gameStatus.weather?.title || 'Pendiente'}
+                            accent={gameStatus.weather ? 'green' : 'gold'}
+                        />
+                    </div>
+
+                    <div className="mt-6 flex flex-wrap gap-2">
+                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[10px] font-display font-black uppercase tracking-[0.22em] text-slate-300">
+                            Sin centro de mando: solo despliegue y kickoff
+                        </span>
+                        {setupSummary.map((item, index) => (
+                            <span
+                                key={index}
+                                className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[10px] font-display font-black uppercase tracking-[0.22em] text-slate-300"
+                            >
+                                {item}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-8">
+                    <PreGameSectionFrame
+                        step={2}
+                        currentStep={preGameStep}
+                        eyebrow="Drive reset"
+                        title="Despliegue express"
+                        description="Configura la once del siguiente drive. El mini campo solo queda como ajuste avanzado opcional."
+                    >
+                        <DeploymentStep />
+                    </PreGameSectionFrame>
+
+                    <PreGameSectionFrame
+                        step={3}
+                        currentStep={preGameStep}
+                        eyebrow="Kickoff"
+                        title="Patada inicial"
+                        description="Resuelve el evento de kickoff y vuelve a la arena con el siguiente drive listo."
+                    >
+                        <KickoffStep />
+                    </PreGameSectionFrame>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-[1600px] mx-auto space-y-8 py-6 animate-fade-in">

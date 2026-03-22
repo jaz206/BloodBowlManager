@@ -121,13 +121,15 @@ const updatePlayerSppAndAction = useCallback((
 
     /** Gestiona la transición al descanso (Half Time). */
     const handleHalftime = useCallback(() => {
+        const { setPreGameStep } = state as any;
         handleHalftimeLogic({
             turn, half, setTurn, setHalf, logEvent,
             setGameStatus, firstHalfReceiver,
             homeTeam, opponentTeam, setGameState,
             setInteractionState
         });
-    }, [turn, half, setTurn, setHalf, logEvent, setGameStatus, firstHalfReceiver, homeTeam, opponentTeam, setGameState, setInteractionState]);
+        setPreGameStep(2);
+    }, [state, turn, half, setTurn, setHalf, logEvent, setGameStatus, firstHalfReceiver, homeTeam, opponentTeam, setGameState, setInteractionState]);
 
     /** Avanza al siguiente turno alternando el equipo activo. */
     const handleNextTurn = useCallback(() => {
