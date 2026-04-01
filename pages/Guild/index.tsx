@@ -433,20 +433,24 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                             const hasLevelUps = team.players.some(p => p.spp >= (SPP_LEVELS[p.advancements?.length || 0] || 999));
                             const hasInjuries = team.players.some(p => p.lastingInjuries?.some(i => i.includes('MNG')) || p.missNextGame);
                             const record = teamRecords[team.id || team.name] || { wins: 0, draws: 0, losses: 0 };
+                            const rosterLabel = team.rosterName.split(' ').slice(0, 2).join(' ');
 
                             return (
                                 <div 
                                     key={team.id}
                                     onClick={() => setActiveSummaryTeamId(team.id!)}
-                                    className={`group relative grid grid-cols-1 md:grid-cols-12 items-center gap-6 px-10 py-8 border rounded-3xl transition-all duration-300 ${
+                                    className={`group relative grid grid-cols-1 md:grid-cols-12 items-center gap-6 px-10 py-8 border rounded-[2rem] overflow-hidden transition-all duration-300 ${
                                         isSelected 
-                                        ? 'bg-gold/[0.03] border-gold/40 shadow-2xl shadow-gold/5' 
-                                        : 'bg-white/[0.02] border-white/5 hover:border-white/10'
+                                        ? 'bg-gradient-to-r from-gold/10 via-white/[0.03] to-white/[0.01] border-gold/40 shadow-2xl shadow-gold/5' 
+                                        : 'bg-gradient-to-r from-white/[0.04] to-white/[0.015] border-white/5 hover:border-white/10'
                                     }`}
                                 >
+                                    <div className={`absolute inset-y-0 left-0 w-1.5 ${isSelected ? 'bg-gold' : 'bg-white/5 group-hover:bg-gold/20'} transition-colors`} />
+                                    <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_right,rgba(202,138,4,0.08),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.04),transparent_28%)]" />
+
                                     {/* Team Name & Crest */}
-                                    <div className="col-span-4 flex items-center gap-6">
-                                        <div className="w-20 h-20 bg-black/40 rounded-2xl border border-white/5 p-2 flex items-center justify-center shrink-0 overflow-hidden relative group-hover:border-gold/20 transition-all shadow-xl">
+                                    <div className="col-span-4 flex items-center gap-6 relative z-10">
+                                        <div className="w-24 h-24 bg-black/45 rounded-[1.5rem] border border-white/10 p-3 flex items-center justify-center shrink-0 overflow-hidden relative shadow-xl shadow-black/20 group-hover:border-gold/30 transition-all">
                                             <img 
                                                 src={resolveGuildTeamCrestUrl(team)} 
                                                 onError={(e) => {
@@ -462,11 +466,11 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                                     }
                                                 }}
                                                 alt={team.name} 
-                                                className="w-full h-full object-contain" 
+                                                className="w-full h-full object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.05)]" 
                                             />
                                         </div>
                                         <div className="min-w-0">
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex items-center gap-2 mb-2">
                                                 {isEditing ? (
                                                     <input 
                                                         autoFocus
@@ -495,7 +499,8 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                                 )}
                                             </div>
                                             <div className="flex items-center gap-2 mt-2 flex-wrap">
-                                                <span className="text-[10px] font-mono tracking-tighter text-gray-700 uppercase">#FR-{team.id?.slice(0, 4)}</span>
+                                                <span className="text-[10px] font-mono tracking-tighter text-gray-600 uppercase">#FR-{team.id?.slice(0, 4)}</span>
+                                                <span className="text-[9px] font-black px-2.5 py-1 rounded-full bg-white/5 border border-white/5 text-gray-400 uppercase tracking-widest">{rosterLabel}</span>
                                                 {hasLevelUps && <span className="bg-gold text-black text-[8px] font-black px-2 py-0.5 rounded-sm tracking-widest uppercase italic">PTE. MEJORA</span>}
                                                 {hasInjuries && <span className="bg-blood text-white text-[8px] font-black px-2 py-0.5 rounded-sm tracking-widest uppercase italic">LESIONADOS</span>}
                                             </div>
@@ -503,30 +508,37 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                     </div>
 
                                     {/* Race */}
-                                    <div className="col-span-2 text-center">
-                                        <span className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em]">{team.rosterName}</span>
+                                    <div className="col-span-2 text-center relative z-10">
+                                        <span className="text-[9px] text-gray-500 font-black uppercase tracking-[0.35em] block mb-1">Raza</span>
+                                        <span className="text-[10px] text-white/70 font-black uppercase tracking-[0.16em]">{team.rosterName}</span>
                                     </div>
 
                                     {/* VAE */}
-                                    <div className="col-span-2 text-center">
+                                    <div className="col-span-2 text-center relative z-10">
+                                        <span className="text-[9px] text-gray-500 font-black uppercase tracking-[0.35em] block mb-1">VAE</span>
                                         <span className="font-header text-3xl font-black text-gold italic leading-none">{tv.toLocaleString()}</span>
                                         <span className="text-[8px] text-gold/40 block font-black tracking-widest mt-1">MO</span>
                                     </div>
 
                                     {/* Record */}
-                                    <div className="col-span-2 text-center">
-                                        <span className="text-[11px] font-black tracking-[0.2em] text-gray-300 bg-white/5 px-6 py-3 rounded-2xl border border-white/5 inline-block group-hover:border-gold/10 transition-colors">
-                                            {record.wins} — {record.draws} — {record.losses}
-                                        </span>
+                                    <div className="col-span-2 text-center relative z-10">
+                                        <span className="text-[9px] text-gray-500 font-black uppercase tracking-[0.35em] block mb-1">Récord</span>
+                                        <div className="inline-flex items-center gap-2 bg-white/5 px-4 py-2.5 rounded-2xl border border-white/5 group-hover:border-gold/15 transition-colors">
+                                            <span className="text-[11px] font-black text-white/90">{record.wins}</span>
+                                            <span className="text-white/20">•</span>
+                                            <span className="text-[11px] font-black text-white/90">{record.draws}</span>
+                                            <span className="text-white/20">•</span>
+                                            <span className="text-[11px] font-black text-white/90">{record.losses}</span>
+                                        </div>
                                     </div>
 
                                     {/* Action */}
-                                    <div className="col-span-2 flex items-center justify-end gap-3">
+                                    <div className="col-span-2 flex items-center justify-end gap-3 relative z-10">
                                         <button 
                                             onClick={(e) => { e.stopPropagation(); setOpenTeamId(team.id!); }}
                                             className="px-6 py-3 rounded-xl bg-gold text-black font-header font-black text-[10px] uppercase tracking-widest shadow-xl shadow-gold/10 hover:shadow-gold/20 hover:scale-105 active:scale-95 transition-all"
                                         >
-                                            Gestionar mi banquillo
+                                            Abrir dossier
                                         </button>
                                         <button 
                                             onClick={(e) => { e.stopPropagation(); requestTeamDeletion(team); }}
