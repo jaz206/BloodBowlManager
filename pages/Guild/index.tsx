@@ -40,6 +40,11 @@ const sanitizeTeamForExport = (team: ManagedTeam): Omit<ManagedTeam, 'id'> => {
 
 const calculateTV = (team: ManagedTeam) => calculateTeamValue(team);
 
+const resolveGuildTeamCrestUrl = (team: ManagedTeam): string => {
+    const staticTeam = teamsData.find(t => t.name === team.rosterName);
+    return team.crestImage || staticTeam?.image || getTeamLogoUrl(team.rosterName) || '';
+};
+
 interface TeamManagerProps {
     teams: ManagedTeam[];
     onTeamCreate: (team: Omit<ManagedTeam, 'id'>, index?: number) => void;
@@ -443,7 +448,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                     <div className="col-span-4 flex items-center gap-6">
                                         <div className="w-20 h-20 bg-black/40 rounded-2xl border border-white/5 p-2 flex items-center justify-center shrink-0 overflow-hidden relative group-hover:border-gold/20 transition-all shadow-xl">
                                             <img 
-                                                src={team.crestImage || getTeamLogoUrl(team.rosterName)} 
+                                                src={resolveGuildTeamCrestUrl(team)} 
                                                 onError={(e) => {
                                                     const img = e.target as HTMLImageElement;
                                                     const githubUrl = getTeamLogoUrl(team.rosterName);
@@ -521,7 +526,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                             onClick={(e) => { e.stopPropagation(); setOpenTeamId(team.id!); }}
                                             className="px-6 py-3 rounded-xl bg-gold text-black font-header font-black text-[10px] uppercase tracking-widest shadow-xl shadow-gold/10 hover:shadow-gold/20 hover:scale-105 active:scale-95 transition-all"
                                         >
-                                            "Gestionar mi banquillo"
+                                            Gestionar mi banquillo
                                         </button>
                                         <button 
                                             onClick={(e) => { e.stopPropagation(); requestTeamDeletion(team); }}

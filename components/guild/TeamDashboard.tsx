@@ -85,6 +85,11 @@ const AssetCard: React.FC<AssetCardProps> = ({ title, value, limit, price, onBuy
     </div>
 );
 
+const resolveTeamCrestUrl = (team: ManagedTeam): string => {
+    const staticTeam = teamsData.find(t => t.name === team.rosterName);
+    return team.crestImage || staticTeam?.image || getTeamLogoUrl(team.rosterName) || '';
+};
+
 interface TeamDashboardProps {
     team: ManagedTeam;
     onUpdate: (team: ManagedTeam) => void;
@@ -359,7 +364,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
 
         onUpdate({
             ...team,
-            crestImage: getTeamLogoUrl(team.rosterName) || team.crestImage,
+            crestImage: resolveTeamCrestUrl(team) || team.crestImage,
             players: updatedPlayers
         });
     };
@@ -424,7 +429,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                             onClick={() => crestInputRef.current?.click()}
                         >
                             <img 
-                                src={team.crestImage || getTeamLogoUrl(team.rosterName)} 
+                                src={resolveTeamCrestUrl(team)} 
                                 onError={(e) => {
                                     const img = e.target as HTMLImageElement;
                                     const githubUrl = getTeamLogoUrl(team.rosterName);
@@ -926,10 +931,10 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                 className="aspect-square bg-black/40 border-2 border-dashed border-white/10 rounded-2xl flex items-center justify-center cursor-pointer hover:border-primary/40 transition-all overflow-hidden relative z-10"
                                 onClick={() => crestInputRef.current?.click()}
                             >
-                                {team.crestImage ? (
+                                {resolveTeamCrestUrl(team) ? (
                                     <div className="w-24 h-24 rounded-3xl overflow-hidden bg-black/40 border border-white/5 flex items-center justify-center relative group">
                                         <img 
-                                            src={team.crestImage || getTeamLogoUrl(team.rosterName)} 
+                                            src={resolveTeamCrestUrl(team)} 
                                             onError={(e) => {
                                                 const img = e.target as HTMLImageElement;
                                                 const githubUrl = getTeamLogoUrl(team.rosterName);
