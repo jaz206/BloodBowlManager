@@ -97,7 +97,7 @@ const RulesPage: React.FC = () => {
                         Manual de <span className="text-[#ca8a04]">Campo</span>
                     </h2>
                     <p className="blood-ui-light-body text-sm md:text-base max-w-3xl leading-relaxed">
-                        Reglas oficiales de la Tercera Temporada. Todo lo que necesitas saber antes, durante y despu?s del caos en el emparrillado.
+                        Reglas oficiales de la Tercera Temporada. Todo lo que necesitas saber antes, durante y después del caos en el emparrillado.
                     </p>
                 </div>
             </header>

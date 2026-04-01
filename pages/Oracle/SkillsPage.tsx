@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useLayoutEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ELITE_SKILLS, type Skill } from '../../types';
 import { useMasterData } from '../../hooks/useMasterData';
@@ -65,8 +65,8 @@ const SkillCard: React.FC<{ skill: Skill; onClick: () => void; isSelected: boole
 };
 
 interface SkillsProps {
-    initialCategory?: string;
-    initialSearchTerm?: string;
+    initialCategory: string;
+    initialSearchTerm: string;
 }
 
 const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = '' }) => {
@@ -74,6 +74,8 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
     const { t, language } = useLanguage();
     const [activeCategory, setActiveCategory] = useState(initialCategory || 'General');
     const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
+    const searchInputRef = useRef<HTMLInputElement | null>(null);
+    const restoreSearchFocusRef = useRef(false);
 
     // Sync search term if changed from parent
     React.useEffect(() => {
@@ -81,6 +83,20 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
             setSearchTerm(initialSearchTerm);
         }
     }, [initialSearchTerm]);
+
+    useLayoutEffect(() => {
+        if (!restoreSearchFocusRef.current) return;
+        const input = searchInputRef.current;
+        if (!input) return;
+        input.focus({ preventScroll: true });
+        const end = input.value.length;
+        try {
+            input.setSelectionRange(end, end);
+        } catch {
+            // Ignore selection restore failures.
+        }
+        restoreSearchFocusRef.current = false;
+    }, [searchTerm, activeCategory]);
 
     const [selectedSkillName, setSelectedSkillName] = useState<string | null>(null);
     const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
@@ -97,12 +113,12 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
         return skills.filter(skill => {
             const searchTermLower = searchTerm.trim().toLowerCase();
             const matchesSearch = !searchTermLower ||
-                (skill.name_es?.toLowerCase().includes(searchTermLower)) ||
-                (skill.name_en?.toLowerCase().includes(searchTermLower)) ||
-                (skill.desc_es?.toLowerCase().includes(searchTermLower)) ||
-                (skill.desc_en?.toLowerCase().includes(searchTermLower)) ||
-                (skill.name?.toLowerCase().includes(searchTermLower)) ||
-                (skill.description?.toLowerCase().includes(searchTermLower));
+                (skill.name_es.toLowerCase().includes(searchTermLower)) ||
+                (skill.name_en.toLowerCase().includes(searchTermLower)) ||
+                (skill.desc_es.toLowerCase().includes(searchTermLower)) ||
+                (skill.desc_en.toLowerCase().includes(searchTermLower)) ||
+                (skill.name.toLowerCase().includes(searchTermLower)) ||
+                (skill.description.toLowerCase().includes(searchTermLower));
 
             // If there's a search term, allow matches across all categories
             if (searchTermLower) return matchesSearch;
@@ -130,7 +146,7 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
     }, [selectedSkillName, filteredSkills, skills]);
 
     const activeCategoryLabel = useMemo(() => {
-        return Categories.find(cat => cat.id === activeCategory)?.label || activeCategory;
+        return Categories.find(cat => cat.id === activeCategory).label || activeCategory;
     }, [activeCategory]);
 
     const handlePinSkill = (skill: Skill) => {
@@ -241,10 +257,11 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
                         <span className="material-symbols-outlined text-[#7b6853] text-sm group-focus-within:text-[#ca8a04] transition-colors">search</span>
                     </span>
                     <input
+                        ref={searchInputRef}
                         type="text"
                         placeholder="Buscar habilidad por nombre o efecto..."
                         value={searchTerm}
-                        onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                        onChange={e => { restoreSearchFocusRef.current = true; setSearchTerm(e.target.value); setCurrentPage(1); }}
                         className="w-full blood-ui-light-card border border-[rgba(202,138,4,0.14)] text-[#2b1d12] text-xs rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-[rgba(202,138,4,0.35)] transition-all font-medium placeholder:text-[#8d7a63] shadow-inner"
                     />
                 </div>
@@ -276,7 +293,7 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
                         >
                             <div className="absolute top-0 right-0 p-12 opacity-[0.03]">
                                 <span className="material-symbols-outlined !text-[200px] text-[#ca8a04]">
-                                    {Categories.find(c => c.id === featuredSkill.category)?.icon || 'auto_awesome'}
+                                    {Categories.find(c => c.id === featuredSkill.category).icon || 'auto_awesome'}
                                 </span>
                             </div>
 
@@ -307,7 +324,7 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
                                             }`}
                                     >
                                         <span className="material-symbols-outlined text-sm">{pinnedSkills.includes(featuredSkill.name) ? 'bookmark_added' : 'bookmark_add'}</span>
-                                        {pinnedSkills.includes(featuredSkill.name) ? 'En Mi Referencia' : 'Añadir a Referencia'}
+                                        {pinnedSkills.includes(featuredSkill.name) ? 'En Mi Referencia' : 'A?adir a Referencia'}
                                     </button>
                                 </div>
                             </div>

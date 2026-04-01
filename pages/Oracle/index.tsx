@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useLayoutEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 // Subpáginas del Oráculo
 import Teams from './TeamsPage';
@@ -11,19 +11,19 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useMasterData } from '../../hooks/useMasterData';
 import { getStarPlayerImageUrl, getTeamLogoUrl } from '../../utils/imageUtils';
 import { teamsData as staticTeams } from '../../data/teams';
-import type { ManagedTeam } from '../../types';
+import { ELITE_SKILLS, type ManagedTeam } from '../../types';
 
 type SubView = 'hub' | 'teams' | 'skills' | 'star_players' | 'calculator' | 'inducements' | 'rules';
 
 const SKILL_CATEGORIES = [
     { id: 'General', label: 'General' },
-    { id: 'Elite', label: '?lite' },
+    { id: 'Elite', label: 'Élite' },
     { id: 'Strength', label: 'Fuerza' },
     { id: 'Agility', label: 'Agilidad' },
     { id: 'Passing', label: 'Pase' },
-    { id: 'Mutation', label: 'Mutaci?n' },
+    { id: 'Mutation', label: 'Mutación' },
     { id: 'Trait', label: 'Rasgo' },
-    { id: 'Triqui?uelas', label: 'Triqui?uelas' }
+    { id: 'Triquiñuelas', label: 'Triquiñuelas' }
 ];
 
 interface OraclePageProps {
@@ -40,9 +40,12 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
     const [initialSkillCategory, setInitialSkillCategory] = useState<string>('General');
     const [hubSearchTerm, setHubSearchTerm] = useState(initialSearchTerm);
     const hubSearchInputRef = useRef<HTMLInputElement | null>(null);
+    const restoreHubFocusRef = useRef(false);
 
-    const resolveHubTeamImage = (team: ManagedTeam & { crestImage?: string; image?: string }) =>
-        team.crestImage || getTeamLogoUrl(team.name) || team.image || '';
+    const resolveHubTeamImage = (team: ManagedTeam & { crestImage?: string; image?: string }) => {
+        const staticTeam = staticTeams.find(t => t.name === team.name);
+        return team.crestImage || team.image || staticTeam?.image || getTeamLogoUrl(team.name) || '';
+    };
 
     // Update search term when initialSearchTerm changes from outside
     React.useEffect(() => {
@@ -82,7 +85,9 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
     const codexCategories = useMemo(() => {
         return SKILL_CATEGORIES.map(category => ({
             ...category,
-            count: skills.filter(skill => skill.category === category.id).length
+            count: category.id === 'Elite'
+                ? skills.filter(skill => ELITE_SKILLS.includes(skill.keyEN)).length
+                : skills.filter(skill => skill.category === category.id).length
         }));
     }, [skills]);
 
@@ -98,6 +103,25 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
         setInitialSkillCategory(category);
         setActiveView('skills');
     };
+
+    useLayoutEffect(() => {
+        if (!restoreHubFocusRef.current) return;
+        if (activeView !== 'hub') {
+            restoreHubFocusRef.current = false;
+            return;
+        }
+
+        const input = hubSearchInputRef.current;
+        if (!input) return;
+        input.focus({ preventScroll: true });
+        const end = input.value.length;
+        try {
+            input.setSelectionRange(end, end);
+        } catch {
+            // Some browsers or mobile layouts may not allow selection restore.
+        }
+        restoreHubFocusRef.current = false;
+    }, [hubSearchTerm, activeView]);
 
     const openSubview = (view: Exclude<SubView, 'hub'>) => {
         setActiveView(view);
@@ -145,10 +169,8 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                             placeholder="Buscar equipos, habilidades, reglas o estrellas..."
                             value={hubSearchTerm}
                             onChange={(e) => {
+                                restoreHubFocusRef.current = true;
                                 setHubSearchTerm(e.target.value);
-                                requestAnimationFrame(() => {
-                                    hubSearchInputRef.current?.focus();
-                                });
                             }}
                         />
                     </div>
@@ -161,7 +183,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                         </div>
                         <div className="min-w-0 flex-1">
                             <p className="blood-ui-light-title text-base uppercase italic leading-tight">Calculadora</p>
-                            <p className="blood-ui-light-body text-[11px] mt-1 leading-relaxed">Probabilidades de tirada y apoyo matem?tico.</p>
+                            <p className="blood-ui-light-body text-[11px] mt-1 leading-relaxed">Probabilidades de tirada y apoyo matemático.</p>
                         </div>
                         <span className="material-symbols-outlined text-[rgba(202,138,4,0.9)]">chevron_right</span>
                     </button>
@@ -171,7 +193,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                         </div>
                         <div className="min-w-0 flex-1">
                             <p className="blood-ui-light-title text-base uppercase italic leading-tight">Incentivos</p>
-                            <p className="blood-ui-light-body text-[11px] mt-1 leading-relaxed">Sobornos, magos, apotecarios y m?s.</p>
+                            <p className="blood-ui-light-body text-[11px] mt-1 leading-relaxed">Sobornos, magos, apotecarios y más.</p>
                         </div>
                         <span className="material-symbols-outlined text-[rgba(202,138,4,0.9)]">chevron_right</span>
                     </button>
@@ -228,7 +250,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                         onClick={() => setActiveView('teams')}
                         className="blood-ui-light-button-secondary px-6 py-4 rounded-2xl text-xs uppercase italic tracking-widest"
                     >
-                        Ver cat?logo de equipos
+                        Ver catálogo de equipos
                     </button>
                 </div>
 
@@ -242,7 +264,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                     </div>
 
                     <p className="blood-ui-light-body text-sm leading-relaxed">
-                        Entra por categor?a y navega el cat?logo completo de habilidades, reglas y rasgos.
+                        Entra por categoría y navega el catálogo completo de habilidades, reglas y rasgos.
                     </p>
 
                     <div className="grid grid-cols-2 gap-3">
@@ -280,7 +302,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                     </div>
 
                     <p className="blood-ui-light-body text-sm leading-relaxed relative z-10">
-                        Leyendas, mercenarios y piezas m?ticas listas para entrar al campo cuando una franquicia necesita un golpe de autoridad.
+                        Leyendas, mercenarios y piezas míticas listas para entrar al campo cuando una franquicia necesita un golpe de autoridad.
                     </p>
 
                     <div className="relative z-10 space-y-3">
@@ -316,7 +338,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                         onClick={() => setActiveView('star_players')}
                         className="blood-ui-light-button-secondary px-6 py-4 rounded-2xl text-xs uppercase italic tracking-widest relative z-10"
                     >
-                        Ver cat?logo de estrellas
+                        Ver catálogo de estrellas
                     </button>
                 </div>
             </div>

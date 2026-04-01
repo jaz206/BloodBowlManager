@@ -283,11 +283,57 @@ export const useMasterData = () => {
 
         const ref = doc(db, MASTER_COL, docId);
         const snap = await getDoc(ref);
-        if (!snap.exists()) throw new Error(`Documento ${docId} no encontrado`);
 
-        const items: any[] = snap.data().items ?? [];
-        const idx = items.findIndex(i => normalizeMasterKey(String(i.keyEN ?? i.name ?? i.title ?? '')) === normalizeMasterKey(itemId));
-        if (idx === -1) throw new Error(`Item "${itemId}" no encontrado en ${docId}`);
+        const getFallbackItems = () => {
+            if (docId === 'teams') return staticTeamsData as any[];
+            if (docId === 'skills') return staticSkills as any[];
+            if (docId === 'star_players') return staticStarsData as any[];
+            if (docId === 'inducements_es') return staticInducementsEs as any[];
+            if (docId === 'inducements_en') return staticInducementsEn as any[];
+            return heraldoItems as any[];
+        };
+
+        const getMatchIndex = (items: any[]) => items.findIndex((item) => {
+            const candidates = [
+                item?.keyEN,
+                item?.name,
+                item?.title,
+                item?.slug,
+                item?.rosterName,
+                item?.displayName
+            ].filter(Boolean).map(value => normalizeMasterKey(String(value)));
+            const normalizedItemId = normalizeMasterKey(itemId);
+            return candidates.includes(normalizedItemId);
+        });
+
+        const currentItems: any[] = snap.exists() ? (snap.data().items ?? []) : [];
+        const items = [...currentItems];
+        let idx = getMatchIndex(items);
+
+        if (idx === -1) {
+            const fallbackItems = getFallbackItems();
+            const fallbackIdx = getMatchIndex(fallbackItems);
+
+            if (fallbackIdx === -1) {
+                throw new Error(`Item "${itemId}" no encontrado en ${docId}`);
+            }
+
+            const mergedFallbackItems = fallbackItems.map((item, index) => index === fallbackIdx ? { ...item, ...patch } : item);
+            const mergedItems = items.length > 0 ? [...items] : mergedFallbackItems;
+
+            if (items.length > 0) {
+                mergedItems[fallbackIdx] = { ...(mergedItems[fallbackIdx] || fallbackItems[fallbackIdx]), ...patch };
+            }
+
+            await setDoc(ref, { items: mergedItems, updatedAt: serverTimestamp() }, { merge: true });
+
+            if (docId === 'teams') setTeams(mergedItems as Team[]);
+            if (docId === 'skills') setSkills(mergedItems as Skill[]);
+            if (docId === 'star_players') setStarPlayers(mergedItems as StarPlayer[]);
+            if (docId === 'inducements_es' || docId === 'inducements_en') setInducements(mergedItems as Inducement[]);
+            if (docId === 'heraldo') setHeraldoItems(mergedItems);
+            return;
+        }
 
         items[idx] = { ...items[idx], ...patch };
         await setDoc(ref, { items, updatedAt: serverTimestamp() }, { merge: true });
@@ -295,7 +341,8 @@ export const useMasterData = () => {
         if (docId === 'teams') setTeams(items as Team[]);
         if (docId === 'skills') setSkills(items as Skill[]);
         if (docId === 'star_players') setStarPlayers(items as StarPlayer[]);
-        if (docId === 'inducements_es') setInducements(items as Inducement[]);
+        if (docId === 'inducements_es' || docId === 'inducements_en') setInducements(items as Inducement[]);
+        if (docId === 'heraldo') setHeraldoItems(items);
     }, []);
 
     /**

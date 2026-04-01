@@ -9,6 +9,8 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { getTeamLogoUrl } from '../../utils/imageUtils';
 import { getStarPlayerImageUrl } from '../../utils/imageUtils';
 import { useMasterData } from '../../hooks/useMasterData';
+import StatValue from '../../components/oracle/StatValue';
+import { teamsData as staticTeamsData } from '../../data/teams';
 
 interface TeamDetailPageProps {
     team: Team;
@@ -44,7 +46,12 @@ const TeamDetailPage: React.FC<TeamDetailPageProps> = ({ team, onBack, onRequest
     const [isFullscreenImage, setIsFullscreenImage] = useState(false);
     const [activeTab, setActiveTab] = useState<'roster' | 'stars' | 'rules'>('roster');
 
-    const heroImage = (team as Team & { crestImage?: string }).crestImage || team.image || getTeamLogoUrl(team.name);
+    const staticTeam = staticTeamsData.find(t => t.name === team.name);
+    const heroImage =
+        (team as Team & { crestImage?: string }).crestImage ||
+        team.image ||
+        staticTeam?.image ||
+        getTeamLogoUrl(team.name);
 
     const currentSpecialRulesStr = language === 'es' ? (team.specialRules_es || team.specialRules) : (team.specialRules_en || team.specialRules);
     
@@ -79,18 +86,6 @@ const TeamDetailPage: React.FC<TeamDetailPageProps> = ({ team, onBack, onRequest
             });
         }).sort((a, b) => a.cost - b.cost);
     }, [starPlayers, specialRulesList, team.name]);
-
-    const renderPlusValue = (value: string | number | null | undefined) => {
-        const raw = value == null || value === 'undefined' || value === 'null' ? '-' : String(value);
-        const hasPlus = raw.endsWith('+');
-        const numeric = hasPlus ? raw.slice(0, -1) : raw;
-        return (
-            <span className="inline-flex min-w-[2.75ch] items-center justify-center gap-0.5 font-black tabular-nums not-italic leading-none text-[#2b1d12] text-[1.1rem] tracking-tight">
-                <span className="leading-none">{numeric}</span>
-                {hasPlus && <span className="leading-none">+</span>}
-            </span>
-        );
-    };
 
     const starPreview = useMemo(() => eligibleStars.slice(0, 4), [eligibleStars]);
 
@@ -249,13 +244,13 @@ const TeamDetailPage: React.FC<TeamDetailPageProps> = ({ team, onBack, onRequest
                             {[
                                 { label: 'Movimiento (MA)', val: team.ratings.velocidad },
                                 { label: 'Fuerza (ST)', val: team.ratings.fuerza },
-                                { label: 'Agilidad (AG)', val: renderPlusValue(`${team.ratings.agilidad}+`) },
-                                { label: 'Pase (PA)', val: renderPlusValue(`${team.ratings.pase}+`) },
-                                { label: 'Armadura (AV)', val: renderPlusValue(`${team.ratings.armadura}+`) }
+                                { label: 'Agilidad (AG)', val: `${team.ratings.agilidad}+` },
+                                { label: 'Pase (PA)', val: `${team.ratings.pase}+` },
+                                { label: 'Armadura (AV)', val: `${team.ratings.armadura}+` }
                             ].map((stat, i) => (
                                 <div key={i} className="flex justify-between items-center text-sm group/stat">
                                     <span className="text-[#7b6853] font-black uppercase tracking-wider text-[10px] italic group-hover/stat:text-[#ca8a04] transition-colors">{stat.label}</span>
-                                    <span className="text-[#2b1d12] font-black text-[1.1rem] tabular-nums leading-none">{stat.val}</span>
+                                    <StatValue value={stat.val} />
                                 </div>
                             ))}
                         </div>
@@ -349,11 +344,11 @@ const TeamDetailPage: React.FC<TeamDetailPageProps> = ({ team, onBack, onRequest
                                                             <span className="blood-ui-light-meta text-[9px] font-bold uppercase tracking-widest">{player.qty} x equipo</span>
                                                         </div>
                                                     </td>
-                                                    <td className="py-6 px-2 text-center">{renderPlusValue(player.stats.MV)}</td>
-                                                    <td className="py-6 px-2 text-center">{renderPlusValue(player.stats.FU)}</td>
-                                                    <td className="py-6 px-2 text-center">{renderPlusValue(player.stats.AG)}</td>
-                                                    <td className="py-6 px-2 text-center">{renderPlusValue(player.stats.PA)}</td>
-                                                    <td className="py-6 px-2 text-center">{renderPlusValue(player.stats.AR)}</td>
+                                                        <td className="py-6 px-2 text-center"><StatValue value={player.stats.MV} /></td>
+                                                    <td className="py-6 px-2 text-center"><StatValue value={player.stats.FU} /></td>
+                                                    <td className="py-6 px-2 text-center"><StatValue value={player.stats.AG} /></td>
+                                                    <td className="py-6 px-2 text-center"><StatValue value={player.stats.PA} /></td>
+                                                    <td className="py-6 px-2 text-center"><StatValue value={player.stats.AR} /></td>
                                                     <td className="py-6 px-10">
                                                         <div className="flex flex-wrap gap-2">
                                                             {(player.skillKeys || []).map(skillKey => (

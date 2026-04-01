@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useLayoutEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { teamsData as staticTeams } from '../../data/teams';
 import type { Team, Skill } from '../../types';
@@ -10,24 +10,16 @@ import SkillModal from '../../components/oracle/SkillModal';
 import ImageModal from '../../components/common/ImageModal';
 import RadarChart from '../../components/oracle/RadarChart';
 import RadarChartModal from '../../components/oracle/RadarChartModal';
+import StatValue from '../../components/oracle/StatValue';
 import TeamDetailPage from './TeamDetailPage';
 import SkillBadge from '../../components/shared/SkillBadge';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { getTeamLogoUrl } from '../../utils/imageUtils';
 
-const renderPlusValue = (value: string | number) => {
-    const raw = value == null || value === 'undefined' || value === 'null' ? '-' : String(value);
-    const hasPlus = raw.endsWith('+');
-    const numeric = hasPlus ? raw.slice(0, -1) : raw;
-    return (
-        <span className="inline-flex min-w-[2.75ch] items-center justify-center gap-0.5 font-display font-black italic tabular-nums text-[#2b1d12] text-[1.1rem] leading-none tracking-tight">
-            <span className="leading-none">{numeric}</span>
-            {hasPlus && <span className="leading-none">+</span>}
-        </span>
-    );
+const resolveTeamImage = (team: Team) => {
+    const staticTeam = staticTeams.find(t => t.name === team.name);
+    return (team as Team & { crestImage: string }).crestImage || team.image || staticTeam.image || getTeamLogoUrl(team.name);
 };
-
-const resolveTeamImage = (team: Team) => (team as Team & { crestImage?: string }).crestImage || team.image || getTeamLogoUrl(team.name);
 const PopularTeamCard: React.FC<{ team: Team; icon: string; subtitle: string; onClick: () => void }> = ({ team, icon, subtitle, onClick }) => (
     <motion.button
         type="button"
@@ -43,7 +35,7 @@ const PopularTeamCard: React.FC<{ team: Team; icon: string; subtitle: string; on
                 className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                 onError={(e) => {
                     const img = e.currentTarget;
-                    const fallback = `${getTeamLogoUrl(team.name)}?v=${Date.now()}`;
+                    const fallback = `${getTeamLogoUrl(team.name)}v=${Date.now()}`;
                     if (img.src !== fallback) img.src = fallback;
                 }}
             />
@@ -131,7 +123,7 @@ const TeamArticle: React.FC<{
                             className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                             onError={(e) => {
                                 const img = e.currentTarget;
-                                const fallback = `${getTeamLogoUrl(team.name)}?v=${Date.now()}`;
+                                const fallback = `${getTeamLogoUrl(team.name)}v=${Date.now()}`;
                                 if (img.src !== fallback) img.src = fallback;
                             }}
                         />
@@ -223,11 +215,11 @@ const TeamArticle: React.FC<{
                                                         <span className="text-[9px] text-[#7b6853] uppercase tracking-[0.28em] font-black">{player.qty} x equipo</span>
                                                     </div>
                                                 </td>
-                                                <td className="py-4 px-2 text-center text-[#2b1d12] font-display text-lg">{renderPlusValue(player.stats.MV)}</td>
-                                                <td className="py-4 px-2 text-center text-[#2b1d12] font-display text-lg">{renderPlusValue(player.stats.FU)}</td>
-                                                <td className="py-4 px-2 text-center text-[#2b1d12] font-display text-lg">{renderPlusValue(player.stats.AG)}</td>
-                                                <td className="py-4 px-2 text-center text-[#2b1d12] font-display text-lg">{renderPlusValue(player.stats.PA)}</td>
-                                                <td className="py-4 px-2 text-center text-[#2b1d12] font-display text-lg">{renderPlusValue(player.stats.AR)}</td>
+                                                <td className="py-4 px-2 text-center text-[#2b1d12] font-display text-lg"><StatValue value={player.stats.MV} /></td>
+                                                <td className="py-4 px-2 text-center text-[#2b1d12] font-display text-lg"><StatValue value={player.stats.FU} /></td>
+                                                <td className="py-4 px-2 text-center text-[#2b1d12] font-display text-lg"><StatValue value={player.stats.AG} /></td>
+                                                <td className="py-4 px-2 text-center text-[#2b1d12] font-display text-lg"><StatValue value={player.stats.PA} /></td>
+                                                <td className="py-4 px-2 text-center text-[#2b1d12] font-display text-lg"><StatValue value={player.stats.AR} /></td>
                                                 <td className="py-4 px-2">
                                                     <div className="flex flex-wrap gap-1.5">
                                                         {(player.skillKeys || []).map(skillKey => (
@@ -345,8 +337,8 @@ const TeamArticle: React.FC<{
 };
 
 const Teams: React.FC<{
-    onRequestTeamCreation?: (rosterName: string) => void;
-    initialTeamName?: string | null;
+    onRequestTeamCreation: (rosterName: string) => void;
+    initialTeamName: string | null;
 }> = ({ onRequestTeamCreation = (_name: string) => { }, initialTeamName }) => {
     const { teams: fetchedTeams, updateMasterItem, syncMasterData, loading } = useMasterData();
     const { isAdmin } = useAuth();
@@ -359,10 +351,10 @@ const Teams: React.FC<{
                 ...(st || {}),
                 ...ft,
                 roster: ft.roster && ft.roster.length > 0 ? ft.roster : st?.roster || []
-            } as Team & { crestImage?: string };
+            } as Team & { crestImage: string };
 
-            if (!merged.image && st?.image) merged.image = st.image;
-            if (!merged.crestImage && (st as any)?.crestImage) merged.crestImage = (st as any).crestImage;
+            if (!merged.image && st.image) merged.image = st.image;
+            if (!merged.crestImage && (st as any).crestImage) merged.crestImage = (st as any).crestImage;
 
             return merged as Team;
         });
@@ -371,6 +363,8 @@ const Teams: React.FC<{
     const [selectedTeamName, setSelectedTeamName] = useState<string | null>(null);
     const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const searchInputRef = useRef<HTMLInputElement | null>(null);
+    const restoreSearchFocusRef = useRef(false);
     const [selectedTiers, setSelectedTiers] = useState<number[]>([]);
     const [sortOrder, setSortOrder] = useState<'alpha' | 'tier_asc' | 'tier_desc'>('alpha');
     const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -392,6 +386,20 @@ const Teams: React.FC<{
             }
         }
     }, [initialTeamName, teams]);
+
+    useLayoutEffect(() => {
+        if (!restoreSearchFocusRef.current) return;
+        const input = searchInputRef.current;
+        if (!input) return;
+        input.focus({ preventScroll: true });
+        const end = input.value.length;
+        try {
+            input.setSelectionRange(end, end);
+        } catch {
+            // Ignore selection restore failures.
+        }
+        restoreSearchFocusRef.current = false;
+    }, [searchTerm]);
 
     const selectedTeam = useMemo(
         () => (selectedTeamName ? teams.find(t => t.name === selectedTeamName) || null : null),
@@ -449,7 +457,7 @@ const Teams: React.FC<{
     const handleSync = () => {
         setConfirmModal({
             title: 'Sincronizar Facciones',
-             message: '¿Quieres buscar y añadir nuevas razas desde el código fuente sin sobreescribir tus cambios actuales?',
+             message: '¿Quieres buscar y añadir nuevas razas desde el código fuente sin sobreescribir tus cambios actuales',
             onConfirm: async () => {
                 setConfirmModal(null);
                 setIsSyncing(true);
@@ -466,9 +474,15 @@ const Teams: React.FC<{
     };
 
     const updateTeamImage = async (teamName: string) => {
-        const officialLogo = `${getTeamLogoUrl(teamName)}?v=${Date.now()}`;
-        await updateMasterItem('teams', teamName, { image: officialLogo, crestImage: officialLogo });
-        showToast(`Escudo actualizado para ${teamName}.`);
+        try {
+            const staticTeam = staticTeams.find(team => team.name === teamName);
+            const officialLogo = `${(staticTeam.crestImage || staticTeam.image || getTeamLogoUrl(teamName))}v=${Date.now()}`;
+            await updateMasterItem('teams', teamName, { image: officialLogo, crestImage: officialLogo });
+            showToast(`Escudo actualizado para ${teamName}.`);
+        } catch (error) {
+            console.error('No se pudo actualizar el escudo', error);
+            showToast(`No se pudo actualizar el escudo de ${teamName}.`, 'error');
+        }
     };
 
     if (selectedTeam) {
@@ -506,10 +520,11 @@ const Teams: React.FC<{
                                     <span className="material-symbols-outlined text-[#7b6853] text-sm group-focus-within:text-[#ca8a04] transition-colors">search</span>
                                 </span>
                                 <input
+                                    ref={searchInputRef}
                                     type="text"
                                     placeholder="Buscar raza..."
                                     value={searchTerm}
-                                    onChange={e => setSearchTerm(e.target.value)}
+                                    onChange={e => { restoreSearchFocusRef.current = true; setSearchTerm(e.target.value); }}
                                     className="blood-ui-light-input block w-full pl-11 p-3 rounded-2xl text-sm"
                                 />
                             </div>
@@ -575,7 +590,7 @@ const Teams: React.FC<{
                     {[
                         { label: 'Total Facciones', value: `${teams.length} Razas`, icon: 'groups' },
                         { label: 'Niveles Disponibles', value: 'Tier 1 - 3', icon: 'military_tech' },
-                        { label: '?ltima Actualizaci?n', value: 'Edici?n 2020', icon: 'update' }
+                        { label: 'Última actualización', value: 'Edición 2020', icon: 'update' }
                     ].map((stat, i) => (
                         <div key={i} className="rounded-[1.4rem] border border-[rgba(111,87,56,0.12)] bg-[rgba(255,251,241,0.74)] p-5 flex items-center gap-4 hover:border-[rgba(202,138,4,0.2)] transition-colors group">
                             <div className="size-12 rounded-full bg-[rgba(202,138,4,0.12)] flex items-center justify-center text-[#ca8a04] group-hover:scale-110 transition-transform">
@@ -687,7 +702,7 @@ const Teams: React.FC<{
                     <div
                         className={`px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 backdrop-blur-xl border ${
                             toastMessage.type === 'error'
-                                ? 'bg-[rgba(115,28,28,0.92)] border-[rgba(220,38,38,0.35)] text-[#ffe4e4]'
+                                    ? 'bg-[rgba(115,28,28,0.92)] border-[rgba(220,38,38,0.35)] text-[#ffe4e4]'
                                 : 'bg-[rgba(255,248,231,0.92)] border-[rgba(111,87,56,0.16)] text-[#2b1d12]'
                         }`}
                     >
