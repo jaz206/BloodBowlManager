@@ -18,7 +18,7 @@ import { getTeamLogoUrl } from '../../utils/imageUtils';
 
 const resolveTeamImage = (team: Team) => {
     const staticTeam = staticTeams.find(t => t.name === team.name);
-    return (team as Team & { crestImage: string }).crestImage || team.image || staticTeam.image || getTeamLogoUrl(team.name);
+    return (team as Team & { crestImage?: string }).crestImage || team.image || staticTeam?.image || getTeamLogoUrl(team.name);
 };
 const PopularTeamCard: React.FC<{ team: Team; icon: string; subtitle: string; onClick: () => void }> = ({ team, icon, subtitle, onClick }) => (
     <motion.button
@@ -476,7 +476,7 @@ const Teams: React.FC<{
     const updateTeamImage = async (teamName: string) => {
         try {
             const staticTeam = staticTeams.find(team => team.name === teamName);
-            const officialLogo = `${(staticTeam.crestImage || staticTeam.image || getTeamLogoUrl(teamName))}v=${Date.now()}`;
+            const officialLogo = `${(staticTeam?.crestImage || staticTeam?.image || getTeamLogoUrl(teamName))}v=${Date.now()}`;
             await updateMasterItem('teams', teamName, { image: officialLogo, crestImage: officialLogo });
             showToast(`Escudo actualizado para ${teamName}.`);
         } catch (error) {
