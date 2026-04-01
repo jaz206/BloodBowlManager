@@ -267,7 +267,7 @@ const Home: React.FC<HomeProps> = ({
     };
 
     return (
-        <div className="blood-ui-shell max-w-[1600px] mx-auto w-full space-y-8 pb-32 animate-in fade-in duration-700 bg-[radial-gradient(circle_at_center,_rgba(202, 138, 4, 0.03) 0%, transparent 70%)] pt-12">
+        <div className="home-panel-light max-w-[1600px] mx-auto w-full space-y-8 pb-32 animate-in fade-in duration-700 bg-[radial-gradient(circle_at_center,_rgba(202, 138, 4, 0.03) 0%, transparent 70%)] pt-8 rounded-[3rem] px-4 md:px-6 lg:px-8">
             
             {/* Hero War Room */}
             <section className="blood-ui-card-strong relative overflow-hidden rounded-[2rem] p-8 md:p-10">
@@ -291,6 +291,22 @@ const Home: React.FC<HomeProps> = ({
                         <p className="max-w-3xl text-slate-300 text-sm md:text-base leading-relaxed">
                             Gestiona tu gremio, consulta el oráculo, prepara partidos y sigue tus competiciones desde una sala de operaciones con identidad de guerra, no un panel SaaS.
                         </p>
+                        <div className="flex flex-wrap items-center gap-3 pt-2">
+                            <button
+                                onClick={() => onCreateTeam?.()}
+                                className="blood-ui-button-primary px-6 py-3 rounded-2xl text-[10px] shadow-xl shadow-premium-gold/20 flex items-center gap-2"
+                            >
+                                <span className="material-symbols-outlined text-base">add_circle</span>
+                                Fundar franquicia
+                            </button>
+                            <button
+                                onClick={() => onNavigate('guild')}
+                                className="blood-ui-button-secondary px-6 py-3 rounded-2xl text-[10px] flex items-center gap-2"
+                            >
+                                <span className="material-symbols-outlined text-base">groups</span>
+                                Gestionar gremio
+                            </button>
+                        </div>
                     </div>
                     <div className="lg:col-span-4 grid grid-cols-3 gap-3">
                         <div className="blood-ui-card-soft rounded-2xl p-4">
@@ -407,12 +423,20 @@ const Home: React.FC<HomeProps> = ({
                         )}
                     </div>
 
-                    <button 
-                        onClick={() => onNavigate('guild')}
-                        className="w-full mt-8 blood-ui-button-secondary text-primary hover:text-black py-4 rounded-xl border border-primary/30 font-header text-xs tracking-widest transition-all btn-interact"
-                    >
-                        Gestionar mi banquillo
-                    </button>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-8">
+                        <button 
+                            onClick={() => onCreateTeam?.()}
+                            className="w-full blood-ui-button-primary py-4 rounded-xl font-header text-xs tracking-widest transition-all btn-interact"
+                        >
+                            FUNDAR FRANQUICIA
+                        </button>
+                        <button 
+                            onClick={() => onNavigate('guild')}
+                            className="w-full blood-ui-button-secondary py-4 rounded-xl border border-primary/30 font-header text-xs tracking-widest transition-all btn-interact text-primary hover:text-black"
+                        >
+                            GESTIONAR BANQUILLO
+                        </button>
+                    </div>
                 </section>
 
                 {/* 2. EL ORÁCULO (40%) */}

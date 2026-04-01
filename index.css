@@ -253,6 +253,69 @@ h1, h2, h3, h4, .font-display {
     border-color: rgba(202, 138, 4, 0.16);
 }
 
+.home-panel-light {
+    background:
+        linear-gradient(180deg, rgba(248, 233, 198, 0.98), rgba(238, 217, 178, 0.96)),
+        radial-gradient(circle at top right, rgba(202, 138, 4, 0.14), transparent 24%),
+        radial-gradient(circle at bottom left, rgba(139, 0, 0, 0.08), transparent 18%);
+    color: #2b1d12;
+    border: 1px solid rgba(90, 61, 30, 0.16);
+    box-shadow:
+        0 24px 70px rgba(84, 55, 24, 0.2),
+        0 0 0 1px rgba(255, 255, 255, 0.3) inset;
+}
+
+.home-panel-light .text-white {
+    color: #2b1d12 !important;
+}
+
+.home-panel-light .text-slate-300 {
+    color: #5f4a39 !important;
+}
+
+.home-panel-light .text-slate-400 {
+    color: #79614c !important;
+}
+
+.home-panel-light .text-slate-500 {
+    color: #8f745c !important;
+}
+
+.home-panel-light .text-slate-600 {
+    color: #a58a70 !important;
+}
+
+.home-panel-light .text-primary {
+    color: var(--blood-red) !important;
+}
+
+.home-panel-light .section-title:hover {
+    color: var(--blood-red) !important;
+}
+
+.home-panel-light .blood-ui-chip--gold {
+    color: #5c3900;
+    border-color: rgba(202, 138, 4, 0.34);
+}
+
+.home-panel-light .blood-ui-chip--red {
+    color: #6d1118;
+    border-color: rgba(185, 28, 28, 0.24);
+}
+
+.home-panel-light .blood-ui-card-soft {
+    background: linear-gradient(180deg, rgba(255, 248, 230, 0.8), rgba(232, 214, 175, 0.86));
+    border-color: rgba(96, 69, 38, 0.12);
+    box-shadow: 0 16px 34px rgba(89, 59, 21, 0.12);
+}
+
+.home-panel-light .blood-ui-card-strong {
+    background:
+        linear-gradient(180deg, rgba(249, 237, 211, 0.96), rgba(229, 207, 162, 0.96));
+    border-color: rgba(94, 66, 35, 0.16);
+    box-shadow: 0 24px 60px rgba(89, 59, 21, 0.18);
+}
+
 .blood-ui-focus-ring {
     box-shadow: 0 0 0 3px rgba(202, 138, 4, 0.14);
 }
