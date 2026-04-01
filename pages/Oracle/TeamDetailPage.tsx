@@ -6,6 +6,7 @@ import RadarChartModal from '../../components/oracle/RadarChartModal';
 import SkillBadge from '../../components/shared/SkillBadge';
 import SkillModal from '../../components/oracle/SkillModal';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { getTeamLogoUrl } from '../../utils/imageUtils';
 import { getStarPlayerImageUrl } from '../../utils/imageUtils';
 import { useMasterData } from '../../hooks/useMasterData';
 
@@ -79,10 +80,21 @@ const TeamDetailPage: React.FC<TeamDetailPageProps> = ({ team, onBack, onRequest
 
     const renderPlusValue = (value: string | number | null | undefined) => {
         const raw = value == null || value === 'undefined' || value === 'null' ? '—' : String(value);
+        const match = raw.match(/^(\d+)(\+)?$/);
 
+        if (!match) {
+            return (
+                <span className="inline-flex min-w-[2.75ch] items-center justify-center font-black tabular-nums not-italic leading-none text-[#2b1d12] text-[1.1rem] tracking-tight">
+                    {raw}
+                </span>
+            );
+        }
+
+        const [, numberPart, plusPart] = match;
         return (
             <span className="inline-flex min-w-[2.75ch] items-center justify-center font-black tabular-nums not-italic leading-none text-[#2b1d12] text-[1.1rem] tracking-tight">
-                {raw}
+                <span>{numberPart}</span>
+                {plusPart && <span className="font-black leading-none ml-[1px]">{plusPart}</span>}
             </span>
         );
     };
@@ -98,7 +110,7 @@ const TeamDetailPage: React.FC<TeamDetailPageProps> = ({ team, onBack, onRequest
         >
             {/* Breadcrumbs */}
             <nav className="flex items-center gap-3 text-[#2b1d12] text-xs font-black uppercase tracking-[0.28em] mb-8">
-                <button onClick={onBack} className="blood-ui-button-secondary px-4 py-2 rounded-2xl text-[10px] uppercase italic tracking-[0.22em] shadow-[0_10px_24px_rgba(43,29,18,0.18)] hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(43,29,18,0.24)] transition-all">Enciclopedia</button>
+                <button onClick={onBack} className="bg-[#ca8a04] text-[#2b1d12] border border-[rgba(202,138,4,0.25)] px-4 py-2 rounded-2xl text-[10px] uppercase italic tracking-[0.22em] font-black shadow-[0_10px_24px_rgba(202,138,4,0.12)] hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(202,138,4,0.18)] transition-all">Enciclopedia</button>
                 <span className="material-symbols-outlined text-[14px]">chevron_right</span>
                 <span className="text-[#2b1d12] italic font-black">{team.name}</span>
             </nav>
@@ -106,13 +118,31 @@ const TeamDetailPage: React.FC<TeamDetailPageProps> = ({ team, onBack, onRequest
             {/* Hero Section */}
             <section className="flex flex-col md:flex-row gap-8 items-center md:items-start mb-12 animate-in fade-in slide-in-from-top-4 duration-700">
                 <div
-                    onClick={() => team.image && setIsFullscreenImage(true)}
+                    onClick={() => setIsFullscreenImage(true)}
                     className="w-full md:w-[450px] aspect-video rounded-[2rem] border border-[rgba(111,87,56,0.12)] bg-[rgba(255,251,241,0.88)] flex items-center justify-center relative overflow-hidden group shadow-[0_20px_60px_rgba(92,68,39,0.12)] cursor-pointer shrink-0"
                 >
                     {team.image ? (
-                        <img src={team.image} alt={team.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                        <img
+                            src={team.image}
+                            alt={team.name}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                            onError={(e) => {
+                                const img = e.currentTarget;
+                                const fallback = getTeamLogoUrl(team.name);
+                                if (img.src !== fallback) img.src = fallback;
+                            }}
+                        />
                     ) : (
-                        <span className="material-symbols-outlined text-[#ca8a04] text-8xl relative z-10 opacity-30">landscape</span>
+                        <img
+                            src={getTeamLogoUrl(team.name)}
+                            alt={team.name}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                            onError={(e) => {
+                                const img = e.currentTarget;
+                                const fallback = getTeamLogoUrl(team.name);
+                                if (img.src !== fallback) img.src = fallback;
+                            }}
+                        />
                     )}
 
                     <div className="absolute inset-0 bg-gradient-to-t from-[rgba(43,29,18,0.72)] via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity"></div>
@@ -239,9 +269,9 @@ const TeamDetailPage: React.FC<TeamDetailPageProps> = ({ team, onBack, onRequest
                             {[
                                 { label: 'Movimiento (MA)', val: team.ratings.velocidad },
                                 { label: 'Fuerza (ST)', val: team.ratings.fuerza },
-                                { label: 'Agilidad (AG)', val: team.ratings.agilidad + '+' },
-                                { label: 'Pase (PA)', val: team.ratings.pase + '+' },
-                                { label: 'Armadura (AV)', val: team.ratings.armadura + '+' }
+                                { label: 'Agilidad (AG)', val: renderPlusValue(`${team.ratings.agilidad}+`) },
+                                { label: 'Pase (PA)', val: renderPlusValue(`${team.ratings.pase}+`) },
+                                { label: 'Armadura (AV)', val: renderPlusValue(`${team.ratings.armadura}+`) }
                             ].map((stat, i) => (
                                 <div key={i} className="flex justify-between items-center text-sm group/stat">
                                     <span className="text-[#7b6853] font-black uppercase tracking-wider text-[10px] italic group-hover/stat:text-[#ca8a04] transition-colors">{stat.label}</span>
@@ -485,7 +515,7 @@ const TeamDetailPage: React.FC<TeamDetailPageProps> = ({ team, onBack, onRequest
             <div className="mt-16 flex justify-between items-center border-t border-primary/20 pt-10 pb-20">
                 <button
                     onClick={onBack}
-                    className="bg-[#2b1d12] text-[#fff6e6] border border-[#2b1d12] flex items-center gap-3 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] group italic shadow-[0_10px_24px_rgba(43,29,18,0.2)]"
+                    className="bg-[#ca8a04] text-[#2b1d12] border border-[rgba(202,138,4,0.25)] flex items-center gap-3 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] group italic shadow-[0_10px_24px_rgba(202,138,4,0.12)]"
                 >
                     <span className="material-symbols-outlined font-bold group-hover:-translate-x-2 transition-transform">arrow_back</span>
                     {language === 'es' ? 'Volver a la Enciclopedia' : 'Back to Oracle'}
@@ -512,7 +542,16 @@ const TeamDetailPage: React.FC<TeamDetailPageProps> = ({ team, onBack, onRequest
                         onClick={() => setIsFullscreenImage(false)}
                         className="fixed inset-0 z-50 bg-[rgba(255,248,231,0.72)] backdrop-blur-xl flex items-center justify-center p-4"
                     >
-                        <img src={team.image} alt={team.name} className="max-w-full max-h-full object-contain rounded-3xl shadow-[0_24px_80px_rgba(92,68,39,0.22)]" />
+                        <img
+                            src={team.image || getTeamLogoUrl(team.name)}
+                            alt={team.name}
+                            className="max-w-full max-h-full object-contain rounded-3xl shadow-[0_24px_80px_rgba(92,68,39,0.22)]"
+                            onError={(e) => {
+                                const img = e.currentTarget;
+                                const fallback = getTeamLogoUrl(team.name);
+                                if (img.src !== fallback) img.src = fallback;
+                            }}
+                        />
                         <button className="absolute top-8 right-8 text-[#7b6853] hover:text-[#2b1d12] transition-colors">
                             <span className="material-symbols-outlined text-5xl">close</span>
                         </button>

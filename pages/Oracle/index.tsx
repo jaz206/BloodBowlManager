@@ -1,6 +1,6 @@
-﻿import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-// Subpáginas del Oráculo
+// Subp�ginas del Or�culo
 import Teams from './TeamsPage';
 import Skills from './SkillsPage';
 import StarPlayers from './StarPlayersPage';
@@ -20,7 +20,7 @@ const SKILL_CATEGORIES = [
     { id: 'Strength', label: 'Fuerza' },
     { id: 'Agility', label: 'Agilidad' },
     { id: 'Passing', label: 'Pase' },
-    { id: 'Mutation', label: 'Mutación' }
+    { id: 'Mutation', label: 'Mutaci�n' }
 ];
 
 interface OraclePageProps {
@@ -36,6 +36,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
     const [selectedHubTeam, setSelectedHubTeam] = useState<string | null>(null);
     const [initialSkillCategory, setInitialSkillCategory] = useState<string>('General');
     const [hubSearchTerm, setHubSearchTerm] = useState(initialSearchTerm);
+    const hubSearchInputRef = useRef<HTMLInputElement>(null);
 
     // Update search term when initialSearchTerm changes from outside
     React.useEffect(() => {
@@ -158,7 +159,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                     </div>
 
                     <p className="blood-ui-light-body text-sm leading-relaxed">
-                        Consulta las franquicias, sus plantillas y el ADN táctico de cada raza.
+                        Consulta las franquicias, sus plantillas y el ADN t�ctico de cada raza.
                     </p>
 
                     <div className="space-y-3">
@@ -187,7 +188,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                         onClick={() => setActiveView('teams')}
                         className="blood-ui-light-button-secondary px-6 py-4 rounded-2xl text-xs uppercase italic tracking-widest"
                     >
-                        Ver catálogo de equipos
+                        Ver cat�logo de equipos
                     </button>
                 </div>
 
@@ -201,7 +202,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                     </div>
 
                     <p className="blood-ui-light-body text-sm leading-relaxed">
-                        Entra por categoría y navega el catálogo completo de habilidades, reglas y rasgos.
+                        Entra por categor�a y navega el cat�logo completo de habilidades, reglas y rasgos.
                     </p>
 
                     <div className="grid grid-cols-2 gap-3">
@@ -223,7 +224,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                     <div className="blood-ui-light-card rounded-2xl p-5 border border-[rgba(111,87,56,0.12)]">
                         <p className="text-[10px] uppercase tracking-[0.25em] font-black text-[#7b6853] italic mb-2">Acceso directo</p>
                         <p className="blood-ui-light-body text-sm leading-relaxed">
-                            Pulsa una categoría para abrir su catálogo completo. Cada rama vive en su propia pantalla para que el acceso sea rápido.
+                            Pulsa una categor�a para abrir su cat�logo completo. Cada rama vive en su propia pantalla para que el acceso sea r�pido.
                         </p>
                     </div>
                 </div>
@@ -232,14 +233,14 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                     <div className="absolute -right-8 -top-8 text-[220px] leading-none text-[rgba(202,138,4,0.08)] pointer-events-none select-none">star</div>
                     <div className="relative z-10 flex items-start justify-between gap-4">
                         <div>
-                            <p className="text-[10px] uppercase tracking-[0.25em] font-black text-[#7b6853] italic mb-2">Catálogo de leyendas</p>
+                            <p className="text-[10px] uppercase tracking-[0.25em] font-black text-[#7b6853] italic mb-2">Cat�logo de leyendas</p>
                             <h2 className="blood-ui-light-title text-2xl md:text-3xl font-black uppercase italic tracking-tighter">Jugadores estrella</h2>
                         </div>
                         <button onClick={() => setActiveView('star_players')} className="blood-ui-button-primary px-5 py-3 rounded-2xl text-[10px] uppercase italic tracking-widest">Abrir</button>
                     </div>
 
                     <p className="blood-ui-light-body text-sm leading-relaxed relative z-10">
-                        Leyendas, mercenarios y piezas míticas listas para entrar al campo cuando una franquicia necesita un golpe de autoridad.
+                        Leyendas, mercenarios y piezas m�ticas listas para entrar al campo cuando una franquicia necesita un golpe de autoridad.
                     </p>
 
                     <div className="relative z-10 space-y-3">
@@ -275,7 +276,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                         onClick={() => setActiveView('star_players')}
                         className="blood-ui-light-button-secondary px-6 py-4 rounded-2xl text-xs uppercase italic tracking-widest relative z-10"
                     >
-                        Ver catálogo de estrellas
+                        Ver cat�logo de estrellas
                     </button>
                 </div>
             </div>
@@ -284,14 +285,14 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                 <div className="flex items-center justify-between gap-4 mb-5">
                     <div>
                         <p className="text-[10px] uppercase tracking-[0.25em] font-black text-[#7b6853] italic mb-2">Accesos de mando</p>
-                        <h3 className="blood-ui-light-title text-xl md:text-2xl uppercase italic tracking-tighter">Herramientas del Oráculo</h3>
+                        <h3 className="blood-ui-light-title text-xl md:text-2xl uppercase italic tracking-tighter">Herramientas del Or�culo</h3>
                     </div>
-                    <span className="text-[10px] uppercase tracking-[0.28em] font-black text-[#7b6853] italic">Rápido / Directo / Siempre visible</span>
+                    <span className="text-[10px] uppercase tracking-[0.28em] font-black text-[#7b6853] italic">R�pido / Directo / Siempre visible</span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {[
-                        { id: 'calculator', title: 'Calculadora', desc: 'Probabilidades de tirada y apoyo matemático.', icon: 'calculate' },
-                        { id: 'inducements', title: 'Incentivos', desc: 'Sobornos, magos, apotecarios y más.', icon: 'payments' },
+                        { id: 'calculator', title: 'Calculadora', desc: 'Probabilidades de tirada y apoyo matem�tico.', icon: 'calculate' },
+                        { id: 'inducements', title: 'Incentivos', desc: 'Sobornos, magos, apotecarios y m�s.', icon: 'payments' },
                         { id: 'rules', title: 'Manual', desc: 'Patada inicial, clima y reglas del campo.', icon: 'menu_book' }
                     ].map(item => (
                         <button
@@ -364,6 +365,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
 };
 
 export default OraclePage;
+
 
 
 

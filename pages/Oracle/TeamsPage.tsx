@@ -17,8 +17,21 @@ import { getTeamLogoUrl } from '../../utils/imageUtils';
 
 const renderPlusValue = (value: string | number) => {
     const raw = value == null || value === 'undefined' || value === 'null' ? '—' : String(value);
-    return <span className="inline-flex min-w-[2.75ch] items-center justify-center font-black tabular-nums not-italic leading-none text-[#2b1d12] text-[1.1rem] tracking-tight">{raw}</span>;
+    const match = raw.match(/^(\d+)(\+)?$/);
+    if (!match) {
+        return <span className="inline-flex min-w-[2.75ch] items-center justify-center font-black tabular-nums not-italic leading-none text-[#2b1d12] text-[1.1rem] tracking-tight">{raw}</span>;
+    }
+
+    const [, numberPart, plusPart] = match;
+    return (
+        <span className="inline-flex min-w-[2.75ch] items-center justify-center font-black tabular-nums not-italic leading-none text-[#2b1d12] text-[1.1rem] tracking-tight">
+            <span>{numberPart}</span>
+            {plusPart && <span className="font-black leading-none ml-[1px]">{plusPart}</span>}
+        </span>
+    );
 };
+
+const resolveTeamImage = (team: Team) => team.image || getTeamLogoUrl(team.name);
 
 const PopularTeamCard: React.FC<{ team: Team; icon: string; subtitle: string; onClick: () => void }> = ({ team, icon, subtitle, onClick }) => (
     <motion.button
@@ -30,12 +43,12 @@ const PopularTeamCard: React.FC<{ team: Team; icon: string; subtitle: string; on
     >
         <div className="relative h-44 overflow-hidden">
             <img
-                src={team.image || getTeamLogoUrl(team.name)}
+                src={resolveTeamImage(team)}
                 alt={team.name}
                 className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                 onError={(e) => {
                     const img = e.currentTarget;
-                    const fallback = getTeamLogoUrl(team.name);
+                    const fallback = `${getTeamLogoUrl(team.name)}?v=${Date.now()}`;
                     if (img.src !== fallback) img.src = fallback;
                 }}
             />
@@ -119,12 +132,12 @@ const TeamArticle: React.FC<{
                         className="group relative w-full aspect-[4/3] rounded-[1.6rem] overflow-hidden border border-[rgba(111,87,56,0.14)] shadow-[0_18px_40px_rgba(92,68,39,0.16)] cursor-pointer"
                     >
                         <img
-                            src={team.image || getTeamLogoUrl(team.name)}
+                            src={resolveTeamImage(team)}
                             alt={team.name}
                             className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                             onError={(e) => {
                                 const img = e.currentTarget;
-                                const fallback = getTeamLogoUrl(team.name);
+                                const fallback = `${getTeamLogoUrl(team.name)}?v=${Date.now()}`;
                                 if (img.src !== fallback) img.src = fallback;
                             }}
                         />
@@ -324,7 +337,7 @@ const TeamArticle: React.FC<{
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
-                            src={team.image || getTeamLogoUrl(team.name)}
+                            src={resolveTeamImage(team)}
                             alt={team.name}
                             className="max-w-full max-h-full object-contain shadow-[0_0_100px_rgba(202,138,4,0.2)] rounded-3xl"
                         />
@@ -353,6 +366,9 @@ const Teams: React.FC<{
                 ...ft, // Override with Firestore fields
                 roster: ft.roster && ft.roster.length > 0 ? ft.roster : st?.roster || [] // Ensure roster exists
             };
+            if (!merged.image && st?.image) merged.image = st.image;
+            if (!merged.crestImage && (st as any)?.crestImage) merged.crestImage = (st as any).crestImage;
+            return merged;
         });
     }, [fetchedTeams]);
 
@@ -449,7 +465,7 @@ const Teams: React.FC<{
     };
 
     const updateTeamImage = async (teamName: string) => {
-        const officialLogo = getTeamLogoUrl(teamName);
+        const officialLogo = `${getTeamLogoUrl(teamName)}?v=${Date.now()}`;
         await updateMasterItem('teams', teamName, { image: officialLogo });
         showToast(`Escudo actualizado para ${teamName}.`);
     };
