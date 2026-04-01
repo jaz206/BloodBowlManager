@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Skill } from '../../types';
 import { useMasterData } from '../../hooks/useMasterData';
@@ -40,22 +40,22 @@ const SkillCard: React.FC<{ skill: Skill; onClick: () => void; isSelected: boole
             exit={{ opacity: 0, scale: 0.9 }}
             whileHover={{ y: -5 }}
             onClick={onClick}
-            className={`group flex flex-col p-6 rounded-2xl bg-surface-dark border transition-all cursor-pointer shadow-xl ${isSelected ? 'border-primary ring-1 ring-primary/30' : 'border-primary/10 hover:border-primary/50'
+            className={`group flex flex-col p-6 rounded-2xl blood-ui-light-card border transition-all cursor-pointer shadow-xl ${isSelected ? 'border-primary ring-1 ring-primary/30' : 'border-[rgba(202,138,4,0.14)] hover:border-[rgba(202,138,4,0.35)]'
                 }`}
         >
             <div className="flex justify-between items-start mb-4">
-                <div className={`p-3 rounded-xl transition-colors ${isSelected ? 'bg-primary text-black' : 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-black'
+                <div className={`p-3 rounded-xl transition-colors ${isSelected ? 'bg-[#ca8a04] text-[#2b1d12]' : 'bg-[rgba(202,138,4,0.12)] text-[#ca8a04] group-hover:bg-primary group-hover:text-black'
                     }`}>
                     <span className="material-symbols-outlined text-sm">
                         {Categories.find(c => c.id === skill.category)?.icon || 'auto_awesome'}
                     </span>
                 </div>
-                <span className="text-[10px] font-black text-accent-gold uppercase tracking-[0.2em]">{skill.category}</span>
+                <span className="text-[10px] font-black text-[#7b6853] uppercase tracking-[0.2em]">{skill.category}</span>
             </div>
-            <h4 className="text-xl font-black text-slate-100 mb-2 uppercase italic tracking-tighter group-hover:text-primary transition-colors">
+            <h4 className="text-xl font-black text-[#2b1d12] mb-2 uppercase italic tracking-tighter group-hover:text-[#ca8a04] transition-colors">
                 {name}
             </h4>
-            <div className="text-sm text-accent-gold line-clamp-3 leading-relaxed font-medium italic">
+            <div className="text-sm text-[#7b6853] line-clamp-3 leading-relaxed font-medium italic">
                 {description}
             </div>
         </motion.div>
@@ -159,7 +159,7 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 20 }}
-                        className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-primary text-black font-black text-[10px] uppercase tracking-widest italic px-6 py-4 rounded-2xl shadow-2xl shadow-primary/20"
+                        className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-[#ca8a04] text-[#2b1d12] font-black text-[10px] uppercase tracking-widest italic px-6 py-4 rounded-2xl shadow-2xl shadow-primary/20"
                     >
                         <span className="material-symbols-outlined text-sm align-middle mr-2">check_circle</span>
                         {toastMessage}
@@ -170,7 +170,7 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
             {/* Sidebar: Categories */}
             <aside className="lg:w-64 shrink-0 space-y-8">
                 <div>
-                    <h3 className="text-[10px] font-black text-accent-gold uppercase tracking-[0.3em] mb-6 pl-2">Categorías</h3>
+                    <h3 className="text-[10px] font-black text-[#7b6853] uppercase tracking-[0.3em] mb-6 pl-2">Categorías</h3>
                     <nav className="flex flex-col gap-2">
                         {Categories.map((cat) => (
                             <button
@@ -183,8 +183,8 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
                                     setCurrentPage(1);
                                 }}
                                 className={`flex items-center gap-3 px-5 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${activeCategory === cat.id
-                                    ? 'bg-primary text-black shadow-lg shadow-primary/20'
-                                    : 'text-accent-gold hover:bg-white/5 hover:text-white border border-transparent'
+                                    ? 'bg-[#ca8a04] text-[#2b1d12] shadow-lg shadow-primary/20'
+                                    : 'text-[#7b6853] hover:bg-[rgba(255,251,241,0.62)] hover:text-[#2b1d12] border border-transparent'
                                     }`}
                             >
                                 <span className="material-symbols-outlined text-sm">{cat.icon}</span>
@@ -196,14 +196,14 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
 
                 {/* My Reference / Oracle Tip */}
                 {pinnedSkills.length > 0 ? (
-                    <div className="p-6 rounded-3xl bg-surface-dark border border-primary/20 text-white shadow-2xl space-y-3">
-                        <h4 className="font-black text-xs mb-3 uppercase italic tracking-tighter text-primary flex items-center gap-2">
+                    <div className="p-6 rounded-3xl blood-ui-light-card border border-[rgba(202,138,4,0.2)] text-[#2b1d12] shadow-2xl space-y-3">
+                        <h4 className="font-black text-xs mb-3 uppercase italic tracking-tighter text-[#ca8a04] flex items-center gap-2">
                             <span className="material-symbols-outlined text-sm">bookmark</span>
                             Mi Referencia
                         </h4>
                         {pinnedSkills.map(name => (
-                            <div key={name} className="flex items-center justify-between gap-2 py-1 border-b border-white/5 last:border-0">
-                                <span className="text-[10px] text-slate-300 font-black italic uppercase truncate">{name}</span>
+                            <div key={name} className="flex items-center justify-between gap-2 py-1 border-b border-[rgba(111,87,56,0.12)] last:border-0">
+                                <span className="text-[10px] text-[#6f5738] font-black italic uppercase truncate">{name}</span>
                                 <button onClick={() => handlePinSkill({ keyEN: name, name_en: name, name_es: name, category: '', desc_en: '', desc_es: '' })} className="text-slate-600 hover:text-red-400 transition-colors shrink-0">
                                     <span className="material-symbols-outlined text-xs">close</span>
                                 </button>
@@ -211,12 +211,12 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
                         ))}
                     </div>
                 ) : (
-                    <div className="p-6 rounded-3xl bg-surface-dark border border-primary/20 text-white shadow-2xl relative overflow-hidden group">
+                    <div className="p-6 rounded-3xl blood-ui-light-card border border-[rgba(202,138,4,0.2)] text-[#2b1d12] shadow-2xl relative overflow-hidden group">
                         <div className="absolute -right-4 -top-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <span className="material-symbols-outlined text-7xl text-primary font-black">psychology</span>
+                            <span className="material-symbols-outlined text-7xl text-[#ca8a04] font-black">psychology</span>
                         </div>
-                        <h4 className="font-black text-xs mb-3 uppercase italic tracking-tighter text-primary">Consejo del Oráculo</h4>
-                        <p className="text-[11px] text-accent-gold leading-relaxed italic font-medium">
+                        <h4 className="font-black text-xs mb-3 uppercase italic tracking-tighter text-[#ca8a04]">Consejo del Oráculo</h4>
+                        <p className="text-[11px] text-[#7b6853] leading-relaxed italic font-medium">
                             {OracleTips[activeCategory] || 'Selecciona una habilidad para ver su descripción completa.'}
                         </p>
                     </div>
@@ -228,23 +228,23 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
                 {/* Search Header */}
                 <div className="relative group">
                     <span className="absolute inset-y-0 left-0 flex items-center pl-4">
-                        <span className="material-symbols-outlined text-slate-500 text-sm group-focus-within:text-primary transition-colors">search</span>
+                        <span className="material-symbols-outlined text-[#7b6853] text-sm group-focus-within:text-[#ca8a04] transition-colors">search</span>
                     </span>
                     <input
                         type="text"
                         placeholder="Buscar habilidad por nombre o efecto..."
                         value={searchTerm}
                         onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-                        className="w-full bg-surface-dark border border-primary/10 text-white text-xs rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-primary/50 transition-all font-medium placeholder:text-slate-600 shadow-inner"
+                        className="w-full blood-ui-light-card border border-[rgba(202,138,4,0.14)] text-[#2b1d12] text-xs rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-[rgba(202,138,4,0.35)] transition-all font-medium placeholder:text-[#8d7a63] shadow-inner"
                     />
                 </div>
 
                 {/* Header */}
-                <div className="flex items-center justify-between border-b border-white/5 pb-4">
-                    <h2 className="text-2xl font-black text-slate-100 uppercase italic tracking-tighter">
-                        Habilidades: <span className="text-primary">{activeCategory}</span>
+                <div className="flex items-center justify-between border-b border-[rgba(111,87,56,0.12)] pb-4">
+                    <h2 className="text-2xl font-black text-[#2b1d12] uppercase italic tracking-tighter">
+                        Habilidades: <span className="text-[#ca8a04]">{activeCategory}</span>
                     </h2>
-                    <span className="text-[10px] text-accent-gold uppercase font-black tracking-widest opacity-60">
+                    <span className="text-[10px] text-[#7b6853] uppercase font-black tracking-widest opacity-60">
                         {filteredSkills.length} resultados
                     </span>
                 </div>
@@ -257,10 +257,10 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
-                            className="relative overflow-hidden rounded-[2.5rem] bg-surface-dark border border-primary/20 p-8 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.5)] group"
+                            className="relative overflow-hidden rounded-[2.5rem] blood-ui-light-card border border-[rgba(202,138,4,0.2)] p-8 md:p-12 shadow-[0_20px_50px_rgba(92,68,39,0.12)] group"
                         >
                             <div className="absolute top-0 right-0 p-12 opacity-[0.03]">
-                                <span className="material-symbols-outlined !text-[200px] text-primary">
+                                <span className="material-symbols-outlined !text-[200px] text-[#ca8a04]">
                                     {Categories.find(c => c.id === featuredSkill.category)?.icon || 'auto_awesome'}
                                 </span>
                             </div>
@@ -268,18 +268,18 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
                             <div className="relative z-10 flex flex-col md:flex-row gap-10 items-start justify-between">
                                 <div className="space-y-6 flex-1">
                                     <div className="flex items-center gap-3">
-                                        <span className="px-3 py-1 rounded-lg bg-primary/20 text-primary text-[8px] font-black uppercase tracking-[0.2em] border border-primary/20">
+                                        <span className="px-3 py-1 rounded-lg bg-[rgba(202,138,4,0.16)] text-[#ca8a04] text-[8px] font-black uppercase tracking-[0.2em] border border-[rgba(202,138,4,0.2)]">
                                             Habilidad Destacada
                                         </span>
-                                        <span className="flex items-center gap-1 text-[8px] text-accent-gold font-black uppercase tracking-[0.3em]">
-                                            <span className="material-symbols-outlined text-sm text-primary">bolt</span>
+                                        <span className="flex items-center gap-1 text-[8px] text-[#7b6853] font-black uppercase tracking-[0.3em]">
+                                            <span className="material-symbols-outlined text-sm text-[#ca8a04]">bolt</span>
                                             {featuredSkill.category}
                                         </span>
                                     </div>
-                                    <h3 className="text-4xl md:text-6xl font-black text-slate-100 uppercase italic tracking-tighter leading-none">
+                                    <h3 className="text-4xl md:text-6xl font-black text-[#2b1d12] uppercase italic tracking-tighter leading-none">
                                         {language === 'es' ? (featuredSkill.name_es || featuredSkill.name_en || featuredSkill.name) : (featuredSkill.name_en || featuredSkill.name)}
                                     </h3>
-                                    <p className="text-lg md:text-xl text-accent-gold leading-relaxed font-medium italic max-w-2xl border-l-2 border-primary/30 pl-6">
+                                    <p className="text-lg md:text-xl text-[#7b6853] leading-relaxed font-medium italic max-w-2xl border-l-2 border-primary/30 pl-6">
                                         {language === 'es' ? (featuredSkill.desc_es || featuredSkill.desc_en || featuredSkill.description) : (featuredSkill.desc_en || featuredSkill.description)}
                                     </p>
                                 </div>
@@ -287,8 +287,8 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
                                     <button
                                         onClick={() => handlePinSkill(featuredSkill)}
                                         className={`w-full py-4 font-black uppercase tracking-widest text-[10px] rounded-2xl transition-all transform hover:scale-105 active:scale-95 shadow-xl italic flex items-center justify-center gap-2 ${pinnedSkills.includes(featuredSkill.name)
-                                            ? 'bg-primary/20 text-primary border border-primary/50'
-                                            : 'bg-primary text-black shadow-primary/10'
+                                            ? 'bg-[rgba(202,138,4,0.16)] text-[#ca8a04] border border-[rgba(202,138,4,0.35)]'
+                                            : 'bg-[#ca8a04] text-[#2b1d12] shadow-primary/10'
                                             }`}
                                     >
                                         <span className="material-symbols-outlined text-sm">{pinnedSkills.includes(featuredSkill.name) ? 'bookmark_added' : 'bookmark_add'}</span>
@@ -298,7 +298,7 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
                             </div>
                         </motion.div>
                     ) : (
-                        <div className="py-20 text-center bg-surface-dark border border-white/5 rounded-[2.5rem] italic text-slate-500 uppercase tracking-widest text-xs">
+                        <div className="py-20 text-center blood-ui-light-card border border-[rgba(111,87,56,0.12)] rounded-[2.5rem] italic text-[#7b6853] uppercase tracking-widest text-xs">
                             No se encontraron habilidades
                         </div>
                     )}
@@ -324,7 +324,7 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
                         <button
                             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                             disabled={currentPage === 1}
-                            className="size-12 flex items-center justify-center rounded-2xl bg-surface-dark border border-primary/10 text-accent-gold font-black hover:border-primary transition-all text-xs italic disabled:opacity-30 disabled:cursor-not-allowed"
+                            className="size-12 flex items-center justify-center rounded-2xl blood-ui-light-card border border-[rgba(202,138,4,0.14)] text-[#7b6853] font-black hover:border-primary transition-all text-xs italic disabled:opacity-30 disabled:cursor-not-allowed"
                         >
                             <span className="material-symbols-outlined text-sm font-bold">chevron_left</span>
                         </button>
@@ -333,8 +333,8 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
                                 key={page}
                                 onClick={() => setCurrentPage(page)}
                                 className={`size-12 flex items-center justify-center rounded-2xl font-black italic text-xs transition-all ${currentPage === page
-                                    ? 'bg-primary text-black shadow-xl shadow-primary/20'
-                                    : 'bg-surface-dark border border-primary/10 text-accent-gold hover:border-primary'
+                                    ? 'bg-[#ca8a04] text-[#2b1d12] shadow-xl shadow-primary/20'
+                                    : 'blood-ui-light-card border border-[rgba(202,138,4,0.14)] text-[#7b6853] hover:border-primary'
                                     }`}
                             >
                                 {page}
@@ -343,7 +343,7 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
                         <button
                             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                             disabled={currentPage === totalPages}
-                            className="size-12 flex items-center justify-center rounded-2xl bg-surface-dark border border-primary/10 text-accent-gold font-black hover:border-primary transition-all text-xs italic disabled:opacity-30 disabled:cursor-not-allowed"
+                            className="size-12 flex items-center justify-center rounded-2xl blood-ui-light-card border border-[rgba(202,138,4,0.14)] text-[#7b6853] font-black hover:border-primary transition-all text-xs italic disabled:opacity-30 disabled:cursor-not-allowed"
                         >
                             <span className="material-symbols-outlined text-sm font-bold">chevron_right</span>
                         </button>
@@ -364,3 +364,4 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
 };
 
 export default Skills;
+

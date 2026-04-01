@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-// Sub-páginas del Oráculo
+// Subpáginas del Oráculo
 import Teams from './TeamsPage';
 import Skills from './SkillsPage';
 import StarPlayers from './StarPlayersPage';
@@ -8,6 +8,9 @@ import ProbabilityCalculator from './ProbabilitiesPage';
 import InducementTable from './InducementsPage';
 import RulesPage from './RulesPage';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useMasterData } from '../../hooks/useMasterData';
+import { getStarPlayerImageUrl } from '../../utils/imageUtils';
+import { teamsData as staticTeams } from '../../data/teams';
 import type { ManagedTeam } from '../../types';
 
 type SubView = 'hub' | 'teams' | 'skills' | 'star_players' | 'calculator' | 'inducements' | 'rules';
@@ -28,6 +31,7 @@ interface OraclePageProps {
 
 const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTeamCreation = () => { }, initialSearchTerm = '' }) => {
     const { t } = useLanguage();
+    const { skills, starPlayers } = useMasterData();
     const [activeView, setActiveView] = useState<SubView>('hub');
     const [selectedHubTeam, setSelectedHubTeam] = useState<string | null>(null);
     const [initialSkillCategory, setInitialSkillCategory] = useState<string>('General');
@@ -68,6 +72,16 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
 
     const rivalTv = useMemo(() => userTv + 230000, [userTv]);
 
+    const codexCategories = useMemo(() => {
+        return SKILL_CATEGORIES.map(category => ({
+            ...category,
+            count: skills.filter(skill => skill.category === category.id).length
+        }));
+    }, [skills]);
+
+    const featuredTeams = useMemo(() => staticTeams.slice(0, 4), []);
+    const featuredStarPlayers = useMemo(() => starPlayers.slice(0, 4), [starPlayers]);
+
     const handleBackToHub = () => {
         setActiveView('hub');
         setSelectedHubTeam(null);
@@ -78,36 +92,38 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
         setActiveView('skills');
     };
 
-    const handleNavigateToTeam = (teamName: string) => {
-        setSelectedHubTeam(teamName);
-        setActiveView('teams');
-    };
-
     const HubView = () => (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="space-y-12 pb-20"
+            className="space-y-10 pb-24"
         >
-            {/* Hero Section & Search */}
-            <section className="flex flex-col gap-6 py-6 text-center md:text-left">
-                <div className="flex flex-col gap-2">
-                    <h1 className="text-white text-4xl md:text-6xl font-black leading-tight tracking-tighter italic uppercase">
+            <section className="blood-ui-light-card rounded-[2.5rem] p-8 md:p-10 shadow-[0_24px_60px_rgba(75,52,27,0.14)]">
+                <div className="flex flex-col gap-4 text-center md:text-left max-w-4xl">
+                    <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                        <span className="px-3 py-1 rounded-full border border-[rgba(111,87,56,0.22)] bg-[rgba(255,249,236,0.7)] text-[10px] font-black uppercase tracking-[0.25em] text-[#6b553b] italic">Equipos</span>
+                        <span className="px-3 py-1 rounded-full border border-[rgba(111,87,56,0.22)] bg-[rgba(255,249,236,0.7)] text-[10px] font-black uppercase tracking-[0.25em] text-[#6b553b] italic">Codex</span>
+                        <span className="px-3 py-1 rounded-full border border-[rgba(111,87,56,0.22)] bg-[rgba(255,249,236,0.7)] text-[10px] font-black uppercase tracking-[0.25em] text-[#6b553b] italic">Estrellas</span>
+                    </div>
+                    <h1 className="blood-ui-light-title text-4xl md:text-6xl font-black leading-tight tracking-tighter italic uppercase">
                         {t('oracle.hub.title')}
                     </h1>
-                    <p className="text-premium-gold text-lg md:text-xl font-bold tracking-widest uppercase opacity-80 decoration-blood-red decoration-2 underline-offset-8 underline">
+                    <p className="blood-ui-light-body text-lg md:text-xl font-bold tracking-widest uppercase underline decoration-blood-red decoration-2 underline-offset-8">
                         {t('oracle.hub.subtitle')}
                     </p>
+                    <p className="blood-ui-light-body text-sm md:text-base leading-relaxed max-w-3xl">
+                        Tres puertas del mismo santuario: consulta tus franquicias, domina el reglamento y despliega leyendas cuando la mesa lo exija.
+                    </p>
                 </div>
-                <div className="relative mt-8 max-w-3xl mx-auto md:mx-0">
-                    <div className="blood-ui-card-strong flex w-full items-stretch rounded-2xl h-16 focus-within:border-premium-gold/50 transition-all group">
+                <div className="relative mt-8 max-w-4xl mx-auto md:mx-0">
+                    <div className="blood-ui-light-card blood-ui-light-input flex w-full items-stretch rounded-2xl h-16 focus-within:border-premium-gold/50 transition-all group">
                         <div className="text-premium-gold flex items-center justify-center pl-6">
                             <span className="material-symbols-outlined font-bold group-hover:scale-110 transition-transform">search</span>
                         </div>
                         <input
-                            className="blood-ui-input w-full bg-transparent border-none focus:ring-0 text-white placeholder:text-slate-600 px-6 text-lg font-medium rounded-r-2xl"
-                            placeholder={t('oracle.hub.search.placeholder')}
+                            className="blood-ui-input w-full bg-transparent border-none focus:ring-0 text-[#2b1d12] placeholder:text-[#7b6853] px-6 text-lg font-medium rounded-r-2xl"
+                            placeholder="Buscar equipos, habilidades, reglas o estrellas..."
                             value={hubSearchTerm}
                             onChange={(e) => setHubSearchTerm(e.target.value)}
                         />
@@ -123,256 +139,140 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                 </div>
             </section>
 
-            {/* Grid Layout for Main Features */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                {/* Enciclopedia de Equipos */}
-                <div className="blood-ui-card-strong lg:col-span-8 flex flex-col gap-6 p-8 rounded-[2.5rem] group">
-                    <div className="flex items-center justify-between border-b border-white/5 pb-4">
-                        <div className="flex items-center gap-4">
-                            <div className="size-10 rounded-xl bg-premium-gold/10 flex items-center justify-center text-premium-gold border border-premium-gold/20">
-                                <span className="material-symbols-outlined font-bold">groups</span>
-                            </div>
-                            <h2 className="text-white text-xl font-black uppercase italic tracking-tighter">{t('oracle.hub.teams.title')}</h2>
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                <div className="blood-ui-light-card rounded-[2.5rem] p-8 md:p-10 flex flex-col gap-6">
+                    <div className="flex items-start justify-between gap-4">
+                        <div>
+                            <p className="text-[10px] uppercase tracking-[0.25em] font-black text-[#7b6853] italic mb-2">Enciclopedia viva</p>
+                            <h2 className="blood-ui-light-title text-2xl md:text-3xl font-black uppercase italic tracking-tighter">Equipos</h2>
                         </div>
-                        <button
-                            onClick={() => setActiveView('teams')}
-                            className="text-premium-gold text-[10px] font-black uppercase tracking-[0.2em] hover:underline"
-                        >
-                            {t('oracle.hub.teams.viewAll')}
-                        </button>
+                        <button onClick={() => setActiveView('teams')} className="blood-ui-button-primary px-5 py-3 rounded-2xl text-[10px] uppercase italic tracking-widest">Abrir</button>
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-2">
-                        {/* Team Cards */}
-                        {[
-                            { name: 'No Muertos', icon: 'skull', key: 'No Muertos' },
-                            { name: 'Elfos Silvanos', icon: 'forest', key: 'Elfos Silvanos' },
-                            { name: 'Humanos', icon: 'shield', key: 'Humanos' },
-                            { name: 'Orcos', icon: 'bolt', key: 'Orcos' }
-                        ].map((race) => (
-                            <div
-                                key={race.key}
-                                onClick={() => handleNavigateToTeam(race.key)}
-                                className="blood-ui-card-soft flex flex-col items-center gap-4 p-6 rounded-2xl hover:border-premium-gold/50 cursor-pointer group/card transition-all hover:scale-105 hover:shadow-2xl shadow-premium-gold/5"
+
+                    <p className="blood-ui-light-body text-sm leading-relaxed">
+                        Consulta las franquicias, sus plantillas y el ADN táctico de cada raza.
+                    </p>
+
+                    <div className="space-y-3">
+                        {featuredTeams.map(team => (
+                            <button
+                                key={team.name}
+                                onClick={() => {
+                                    setSelectedHubTeam(team.name);
+                                    setActiveView('teams');
+                                }}
+                                className="w-full blood-ui-light-card rounded-2xl p-4 flex items-center gap-4 text-left hover:border-[rgba(202,138,4,0.28)] transition-all"
                             >
-                                <div className="size-16 rounded-full bg-zinc-800 flex items-center justify-center border border-white/5 group-hover/card:bg-premium-gold/10 group-hover/card:border-premium-gold/40 transition-all">
-                                    <span className="material-symbols-outlined text-4xl text-slate-500 group-hover/card:text-premium-gold transition-colors">{race.icon}</span>
+                                <div className="size-14 rounded-2xl overflow-hidden flex-shrink-0 border border-[rgba(111,87,56,0.16)] bg-[rgba(255,249,236,0.42)]">
+                                    <img src={team.image} alt={team.name} className="w-full h-full object-cover" />
                                 </div>
-                                <span className="text-slate-300 text-[10px] font-black uppercase tracking-widest text-center">{race.name}</span>
-                            </div>
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-[10px] uppercase tracking-[0.22em] font-black text-[#7b6853] italic mb-1">Tier {team.tier}</p>
+                                    <h3 className="blood-ui-light-title text-base md:text-lg font-black uppercase italic leading-tight truncate">{team.name}</h3>
+                                </div>
+                                <span className="material-symbols-outlined text-premium-gold/80">chevron_right</span>
+                            </button>
                         ))}
                     </div>
-                </div>
 
-                {/* Probabilidades Card (Oracle Dice) */}
-                <div className="lg:col-span-4 bg-gradient-to-br from-premium-gold to-orange-600 p-8 rounded-[2.5rem] flex flex-col justify-between shadow-2xl shadow-premium-gold/10 border-4 border-black/10 group overflow-hidden relative">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/20 blur-[60px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-1000"></div>
-                    <div className="flex items-center gap-4 text-black relative">
-                        <span className="material-symbols-outlined text-4xl font-black italic">casino</span>
-                        <h2 className="text-2xl font-black uppercase italic tracking-tighter">{t('oracle.hub.dice.title')}</h2>
-                    </div>
-                    <div className="py-8 relative">
-                        <div className="bg-black/10 rounded-2xl p-6 backdrop-blur-md border border-white/10 shadow-inner">
-                            <p className="text-black font-black text-[10px] uppercase tracking-[0.2em] mb-3 opacity-70 italic">{t('oracle.hub.dice.success')}</p>
-                            <div className="text-5xl font-black text-black tracking-tighter italic">97.2%</div>
-                        </div>
-                    </div>
                     <button
-                        onClick={() => setActiveView('calculator')}
-                        className="w-full bg-black text-premium-gold font-black py-4 rounded-2xl hover:scale-[1.03] active:scale-95 transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-xs italic shadow-xl relative"
+                        onClick={() => setActiveView('teams')}
+                        className="blood-ui-light-button-secondary px-6 py-4 rounded-2xl text-xs uppercase italic tracking-widest"
                     >
-                        {t('oracle.hub.dice.btn')} <span className="material-symbols-outlined text-sm font-bold">arrow_forward</span>
+                        Ver catálogo de equipos
                     </button>
                 </div>
 
-                {/* Codex de Habilidades */}
-                <div className="blood-ui-card-strong lg:col-span-8 p-8 rounded-[2.5rem]">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8 border-b border-white/5 pb-4">
-                        <div className="flex items-center gap-4">
-                            <div className="size-10 rounded-xl bg-premium-gold/10 flex items-center justify-center text-premium-gold border border-premium-gold/20">
-                                <span className="material-symbols-outlined font-bold">auto_awesome</span>
-                            </div>
-                            <h2 className="text-white text-xl font-black uppercase italic tracking-tighter">{t('oracle.hub.skills.title')}</h2>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                            {SKILL_CATEGORIES.map((cat, i) => (
-                                <button
-                                    key={cat.id}
-                                    onClick={() => handleNavigateToSkills(cat.id)}
-                                    className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 ${i === 0 ? 'blood-ui-button-primary text-black' : 'blood-ui-button-secondary text-slate-500 hover:text-white hover:border-premium-gold/30'}`}
-                                >
-                                    {cat.label}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                    <div className="space-y-3">
-                        <div
-                            onClick={() => setActiveView('skills')}
-                            className="blood-ui-card-soft flex items-center justify-between p-4 rounded-2xl hover:border-premium-gold/30 transition-all cursor-pointer group"
-                        >
-                            <div className="flex items-center gap-5">
-                                <span className="size-10 rounded-xl bg-premium-gold/10 flex items-center justify-center text-premium-gold font-black italic shadow-inner border border-premium-gold/20">G</span>
-                                <div>
-                                    <h4 className="text-white font-black text-sm italic uppercase tracking-tight group-hover:text-premium-gold transition-colors">Placar (Block)</h4>
-                                    <p className="text-slate-500 text-xs font-medium italic">No cae al obtener un resultado de "Ambos Derribados".</p>
-                                </div>
-                            </div>
-                            <span className="material-symbols-outlined text-slate-700 group-hover:text-premium-gold transition-all transform group-hover:translate-x-1">chevron_right</span>
-                        </div>
-                        <div
-                            onClick={() => setActiveView('skills')}
-                            className="blood-ui-card-soft flex items-center justify-between p-4 rounded-2xl hover:border-premium-gold/30 transition-all cursor-pointer group"
-                        >
-                            <div className="flex items-center gap-5">
-                                <span className="size-10 rounded-xl bg-premium-gold/10 flex items-center justify-center text-premium-gold font-black italic shadow-inner border border-premium-gold/20">G</span>
-                                <div>
-                                    <h4 className="text-white font-black text-sm italic uppercase tracking-tight group-hover:text-premium-gold transition-colors">Esquivar (Dodge)</h4>
-                                    <p className="text-slate-500 text-xs font-medium italic">Repite una tirada fallida de esquiva por turno.</p>
-                                </div>
-                            </div>
-                            <span className="material-symbols-outlined text-slate-700 group-hover:text-premium-gold transition-all transform group-hover:translate-x-1">chevron_right</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Tabla de Incentivos */}
-                <div className="blood-ui-card-strong lg:col-span-4 p-8 rounded-[2.5rem] flex flex-col gap-6 relative overflow-hidden">
-                    <div className="flex items-center gap-4">
-                        <div className="size-10 rounded-xl bg-premium-gold/10 flex items-center justify-center text-premium-gold border border-premium-gold/20">
-                            <span className="material-symbols-outlined font-bold">payments</span>
-                        </div>
-                        <h2 className="text-white text-xl font-black uppercase italic tracking-tighter">{t('oracle.hub.inducements.title')}</h2>
-                    </div>
-                    <p className="text-slate-500 text-xs font-medium italic leading-relaxed">{t('oracle.hub.inducements.desc')}</p>
-                    <div className="mt-4 space-y-6">
-                        <div className="flex flex-col gap-2">
-                            <span className="text-[10px] text-slate-600 uppercase font-black tracking-widest ml-1">{t('oracle.hub.inducements.yourTv')}</span>
-                            <div className="blood-ui-card-soft rounded-2xl p-4 text-premium-gold font-mono text-2xl text-center italic font-black">
-                                {userTv.toLocaleString()}
-                            </div>
-                        </div>
-                        <div className="flex flex-col gap-2">
-                            <span className="text-[10px] text-slate-600 uppercase font-black tracking-widest ml-1">{t('oracle.hub.inducements.rivalTv')}</span>
-                            <div className="blood-ui-card-soft rounded-2xl p-4 text-slate-400 font-mono text-2xl text-center italic font-black">
-                                {rivalTv.toLocaleString()}
-                            </div>
-                        </div>
-                        <div className="pt-6 border-t border-white/5 mt-2">
-                            <div className="flex justify-between items-center mb-6 px-1">
-                                <span className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">{t('oracle.hub.inducements.budget')}</span>
-                                <span className="text-premium-gold text-2xl font-black italic tracking-tighter">
-                                    {Math.max(0, (rivalTv - userTv) / 1000)}k
-                                </span>
-                            </div>
-                            <button
-                                onClick={() => setActiveView('inducements')}
-                                className="w-full bg-premium-gold text-black font-black py-4 rounded-2xl hover:scale-[1.03] active:scale-95 transition-all shadow-xl shadow-premium-gold/10 uppercase tracking-widest text-xs italic"
-                            >
-                                {t('oracle.hub.inducements.btn')}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Star Player Compendium */}
-                <div className="lg:col-span-8 bg-zinc-900/40 p-8 rounded-[2.5rem] border border-white/5 shadow-inner relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-12 opacity-[0.03] group-hover:opacity-10 transition-opacity pointer-events-none">
-                        <span className="material-symbols-outlined !text-[180px] text-premium-gold font-black">star</span>
-                    </div>
-
-                    <div className="relative z-10 flex flex-col h-full justify-between">
+                <div className="blood-ui-light-card rounded-[2.5rem] p-8 md:p-10 flex flex-col gap-6">
+                    <div className="flex items-start justify-between gap-4">
                         <div>
-                            <div className="flex items-center gap-4 mb-6">
-                                <div className="size-10 rounded-xl bg-premium-gold/10 flex items-center justify-center text-premium-gold border border-premium-gold/20">
-                                    <span className="material-symbols-outlined font-bold">star</span>
-                                </div>
-                                <h2 className="text-white text-xl font-black uppercase italic tracking-tighter">{t('oracle.hub.stars.title')}</h2>
-                            </div>
-                            <p className="text-slate-500 text-sm font-medium italic leading-relaxed max-w-lg mb-8">
-                                {t('oracle.hub.stars.desc')}
-                            </p>
-
-                            <div className="flex flex-wrap gap-4 mb-8">
-                                {[
-                                    { name: 'Griff Oberwald', role: 'Human Super Star' },
-                                    { name: 'Morg \'n\' Thorg', role: 'Ogre Mercenary' },
-                                    { name: 'Deeproot Strongbranch', role: 'Treeman Legend' }
-                                ].map(p => (
-                                    <div key={p.name} className="px-4 py-2 bg-black/40 border border-white/5 rounded-xl">
-                                        <p className="text-[10px] text-premium-gold font-black uppercase tracking-tight leading-none mb-1">{p.name}</p>
-                                        <p className="text-[8px] text-slate-600 font-bold uppercase italic">{p.role}</p>
-                                    </div>
-                                ))}
-                            </div>
+                            <p className="text-[10px] uppercase tracking-[0.25em] font-black text-[#7b6853] italic mb-2">Codex de Nuffle</p>
+                            <h2 className="blood-ui-light-title text-2xl md:text-3xl font-black uppercase italic tracking-tighter">Habilidades y rasgos</h2>
                         </div>
-
-                        <button
-                            onClick={() => setActiveView('star_players')}
-                            className="w-auto self-start bg-white/5 border border-white/10 text-white font-black py-4 px-10 rounded-2xl hover:bg-premium-gold hover:text-black hover:border-premium-gold transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-xs italic shadow-xl group/btn"
-                        >
-                            {t('oracle.hub.stars.btn')}
-                            <span className="material-symbols-outlined text-sm font-bold group-hover/btn:translate-x-1 transition-transform">arrow_forward</span>
-                        </button>
+                        <button onClick={() => setActiveView('skills')} className="blood-ui-button-primary px-5 py-3 rounded-2xl text-[10px] uppercase italic tracking-widest">Abrir</button>
                     </div>
-                </div>
 
-                {/* Rules & Sequences Card */}
-                <div className="lg:col-span-4 bg-zinc-900/60 p-8 rounded-[2.5rem] border border-white/5 flex flex-col justify-between shadow-2xl relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2 group-hover:scale-150 transition-transform duration-1000"></div>
-                    <div>
-                        <div className="flex items-center gap-4 mb-6">
-                            <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
-                                <span className="material-symbols-outlined font-bold">menu_book</span>
-                            </div>
-                            <h2 className="text-white text-xl font-black uppercase italic tracking-tighter">Manual de Campo</h2>
-                        </div>
-                        <p className="text-slate-500 text-xs font-medium italic leading-relaxed mb-8">
-                            Consulta las secuencias oficiales de Pre-Partido, Post-Partido y Tablas de Eventos de la Season 3.
+                    <p className="blood-ui-light-body text-sm leading-relaxed">
+                        Entra por categoría y navega el catálogo completo de habilidades, reglas y rasgos.
+                    </p>
+
+                    <div className="grid grid-cols-2 gap-3">
+                        {codexCategories.map(category => (
+                            <button
+                                key={category.id}
+                                onClick={() => handleNavigateToSkills(category.id)}
+                                className="blood-ui-light-card rounded-2xl p-4 text-left hover:scale-[1.01] transition-all border border-[rgba(111,87,56,0.12)]"
+                            >
+                                <p className="text-[10px] uppercase tracking-[0.22em] font-black text-[#7b6853] italic mb-2">{category.label}</p>
+                                <div className="flex items-end justify-between gap-2">
+                                    <span className="blood-ui-light-title text-3xl font-black italic leading-none">{category.count}</span>
+                                    <span className="material-symbols-outlined text-premium-gold/80 text-lg">library_books</span>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="blood-ui-light-card rounded-2xl p-5 border border-[rgba(111,87,56,0.12)]">
+                        <p className="text-[10px] uppercase tracking-[0.25em] font-black text-[#7b6853] italic mb-2">Acceso directo</p>
+                        <p className="blood-ui-light-body text-sm leading-relaxed">
+                            Pulsa una categoría para abrir su catálogo completo. Cada rama vive en su propia pantalla para que el acceso sea rápido.
                         </p>
                     </div>
+                </div>
+
+                <div className="blood-ui-light-card rounded-[2.5rem] p-8 md:p-10 flex flex-col gap-6 relative overflow-hidden">
+                    <div className="absolute -right-8 -top-8 text-[220px] leading-none text-[rgba(202,138,4,0.08)] pointer-events-none select-none">star</div>
+                    <div className="relative z-10 flex items-start justify-between gap-4">
+                        <div>
+                            <p className="text-[10px] uppercase tracking-[0.25em] font-black text-[#7b6853] italic mb-2">Catálogo de leyendas</p>
+                            <h2 className="blood-ui-light-title text-2xl md:text-3xl font-black uppercase italic tracking-tighter">Jugadores estrella</h2>
+                        </div>
+                        <button onClick={() => setActiveView('star_players')} className="blood-ui-button-primary px-5 py-3 rounded-2xl text-[10px] uppercase italic tracking-widest">Abrir</button>
+                    </div>
+
+                    <p className="blood-ui-light-body text-sm leading-relaxed relative z-10">
+                        Leyendas, mercenarios y piezas míticas listas para entrar al campo cuando una franquicia necesita un golpe de autoridad.
+                    </p>
+
+                    <div className="relative z-10 space-y-3">
+                        {featuredStarPlayers.map(player => (
+                            <button
+                                key={player.name}
+                                onClick={() => setActiveView('star_players')}
+                                className="w-full blood-ui-light-card rounded-2xl p-4 flex items-center gap-4 text-left hover:border-[rgba(202,138,4,0.28)] transition-all"
+                            >
+                                <div className="size-14 rounded-2xl overflow-hidden flex-shrink-0 border border-[rgba(111,87,56,0.16)] bg-[rgba(255,249,236,0.42)]">
+                                    <img
+                                        src={getStarPlayerImageUrl(player.name)}
+                                        alt={player.name}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            const img = e.target as HTMLImageElement;
+                                            if (player.image && img.src !== player.image) {
+                                                img.src = player.image;
+                                            }
+                                        }}
+                                    />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-[10px] uppercase tracking-[0.22em] font-black text-[#7b6853] italic mb-1">{player.playsFor?.[0] || 'Leyenda'}</p>
+                                    <h3 className="blood-ui-light-title text-base md:text-lg font-black uppercase italic leading-tight truncate">{player.name}</h3>
+                                </div>
+                                <span className="material-symbols-outlined text-premium-gold/80">chevron_right</span>
+                            </button>
+                        ))}
+                    </div>
+
                     <button
-                        onClick={() => setActiveView('rules')}
-                        className="w-full bg-white/5 border border-white/10 text-white font-black py-4 rounded-xl hover:bg-primary hover:text-black hover:border-primary transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-[10px] italic"
+                        onClick={() => setActiveView('star_players')}
+                        className="blood-ui-light-button-secondary px-6 py-4 rounded-2xl text-xs uppercase italic tracking-widest relative z-10"
                     >
-                        Abrir Manual
+                        Ver catálogo de estrellas
                     </button>
                 </div>
             </div>
-
-            {/* Quick Links / Recent Rules */}
-            <section className="mt-12 bg-zinc-900/20 p-8 rounded-[2.5rem] border border-white/5">
-                <h3 className="text-white text-lg font-black italic uppercase tracking-tighter mb-8 flex items-center gap-3">
-                    <span className="material-symbols-outlined text-premium-gold font-bold">history</span>
-                    {t('oracle.hub.recent.title')}
-                </h3>
-                <div className="flex flex-wrap gap-4">
-                    {[
-                        { label: t('oracle.hub.recent.weather'), icon: 'device_thermostat', act: 'inducements' },
-                        { label: t('oracle.hub.recent.injuries'), icon: 'medication', act: 'inducements' },
-                        { label: t('oracle.hub.recent.throwFriend'), icon: 'sports_kabaddi', act: 'skills', cat: 'Strength' },
-                        { label: t('oracle.hub.recent.stars'), icon: 'star', act: 'star_players' }
-                    ].map((link) => (
-                        <button
-                            key={link.label}
-                            onClick={() => {
-                                if (!link.act) return;
-                                if (link.act === 'skills' && (link as any).cat) {
-                                    handleNavigateToSkills((link as any).cat);
-                                } else {
-                                    setActiveView(link.act as SubView);
-                                }
-                            }}
-                            className="px-6 py-3 bg-black/40 border border-white/5 rounded-2xl text-[10px] font-black text-slate-400 uppercase tracking-widest hover:border-premium-gold/40 hover:text-premium-gold hover:scale-105 transition-all flex items-center gap-3 shadow-lg"
-                        >
-                            <span className="material-symbols-outlined text-sm font-bold opacity-60">{link.icon}</span>
-                            {link.label}
-                        </button>
-                    ))}
-                </div>
-            </section>
         </motion.div>
     );
-
     return (
         <div className="blood-ui-shell min-h-screen px-4 md:px-0">
             <AnimatePresence mode="wait">
@@ -387,9 +287,9 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                     >
                         <button
                             onClick={handleBackToHub}
-                            className="blood-ui-chip blood-ui-chip--gold flex items-center gap-3 mb-8 hover:shadow-[0_0_24px_rgba(202,138,4,0.14)] group italic"
+                            className="bg-[rgba(255,249,236,0.92)] text-[#2b1d12] border border-[rgba(111,87,56,0.16)] flex items-center gap-3 mb-8 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.22em] shadow-[0_10px_24px_rgba(92,68,39,0.12)] hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(92,68,39,0.16)] transition-all group italic"
                         >
-                            <span className="material-symbols-outlined font-bold transform group-hover:-translate-x-1 transition-transform">arrow_back</span>
+                            <span className="material-symbols-outlined font-bold transform group-hover:-translate-x-1 transition-transform text-[#ca8a04]">arrow_back</span>
                             {t('common.back')}
                         </button>
 
@@ -410,7 +310,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                                         if (tab.id !== 'skills') setHubSearchTerm('');
                                         setSelectedHubTeam(null);
                                     }}
-                                    className={`blood-ui-nav-button flex-1 py-4 px-2 text-center relative font-display uppercase tracking-widest text-[10px] font-black rounded-none border-b-0 ${activeView === tab.id ? 'text-premium-gold' : 'text-slate-500 hover:text-white'}`}
+                                    className={`blood-ui-nav-button flex-1 py-4 px-2 text-center relative font-display uppercase tracking-widest text-[10px] font-black rounded-none border-b-0 ${activeView === tab.id ? 'text-premium-gold' : 'text-stone-700 hover:text-stone-900'}`}
                                 >
                                     {tab.label}
                                     {activeView === tab.id && (
@@ -451,3 +351,6 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
 };
 
 export default OraclePage;
+
+
+

@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+﻿import React, { useMemo, useState, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import type { ManagedTeam, League as Competition, GameEvent, MatchReport } from '../../types';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -291,21 +291,9 @@ const Home: React.FC<HomeProps> = ({
                         <p className="max-w-3xl text-slate-300 text-sm md:text-base leading-relaxed">
                             Gestiona tu gremio, consulta el oráculo, prepara partidos y sigue tus competiciones desde una sala de operaciones con identidad de guerra, no un panel SaaS.
                         </p>
-                        <div className="flex flex-wrap items-center gap-3 pt-2">
-                            <button
-                                onClick={() => onCreateTeam?.()}
-                                className="blood-ui-button-primary px-6 py-3 rounded-2xl text-[10px] shadow-xl shadow-premium-gold/20 flex items-center gap-2"
-                            >
-                                <span className="material-symbols-outlined text-base">add_circle</span>
-                                Fundar franquicia
-                            </button>
-                            <button
-                                onClick={() => onNavigate('guild')}
-                                className="blood-ui-button-secondary px-6 py-3 rounded-2xl text-[10px] flex items-center gap-2"
-                            >
-                                <span className="material-symbols-outlined text-base">groups</span>
-                                Gestionar gremio
-                            </button>
+                                                <div className="flex items-center gap-3 pt-2 text-[10px] font-black uppercase tracking-[0.28em] text-slate-500">
+                            <span className="material-symbols-outlined text-sm text-primary/70">info</span>
+                            Las acciones de alta y gestión viven en el Gremio
                         </div>
                     </div>
                     <div className="lg:col-span-4 grid grid-cols-3 gap-3">
@@ -349,10 +337,10 @@ const Home: React.FC<HomeProps> = ({
                                 <div 
                                     key={team.id}
                                     onClick={() => onNavigate('guild', team.id)}
-                                    className="bg-white/5 border border-white/5 rounded-xl p-5 flex items-center justify-between group hover:bg-white/[0.07] transition-all cursor-pointer relative"
+                                    className="guild-summary-card rounded-xl p-5 flex items-center justify-between group hover:bg-white/[0.07] transition-all cursor-pointer relative overflow-hidden"
                                 >
                                     <div className="flex items-center gap-5">
-                                        <div className="size-16 rounded-lg bg-black flex items-center justify-center border border-white/10 overflow-hidden">
+                                        <div className="size-16 rounded-lg bg-black/90 flex items-center justify-center border border-white/10 overflow-hidden shrink-0 shadow-[0_8px_22px_rgba(0,0,0,0.18)]">
                                             <img
                                                 alt={team.name}
                                                 className="size-full object-cover grayscale group-hover:grayscale-0 transition-all"
@@ -367,18 +355,18 @@ const Home: React.FC<HomeProps> = ({
                                                 }}
                                             />
                                         </div>
-                                        <div>
+                                        <div className="pl-2">
                                             <h3 
-                                                className="font-header text-lg group-hover:text-primary transition-colors cursor-default"
+                                                className="font-header text-lg text-[#2b1d12] group-hover:text-primary transition-colors cursor-default"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    // Reservado para navegación a liga/historial futura
+                                                    // Reservado para navegaciÃ³n a liga/historial futura
                                                 }}
                                             >
                                                 {team.name}
                                             </h3>
                                             <div className="flex gap-4 mt-1">
-                                                <div className={`flex gap-1 items-center px-2 py-0.5 rounded border ${hasLevelUp ? 'bg-primary/20 border-primary/40 animate-pulse' : 'bg-white/5 border-white/10'}`}>
+                                                <div className={`flex gap-1 items-center px-2 py-0.5 rounded border ${hasLevelUp ? 'bg-primary/20 border-primary/40 animate-pulse' : 'bg-white/30 border-stone-300/60'}`}>
                                                     <span className={`material-symbols-outlined text-xs ${hasLevelUp ? 'text-primary fill-1' : 'text-slate-500'}`}>star</span>
                                                     <span className={`text-[10px] font-bold ${hasLevelUp ? 'text-primary' : 'text-slate-500'}`}>
                                                         {team.players?.filter(p => {
@@ -399,11 +387,11 @@ const Home: React.FC<HomeProps> = ({
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="text-right">
+                                    <div className="text-right pl-4">
                                         <div className="flex flex-col items-end">
-                                            <span className="text-[9px] font-header text-slate-500 uppercase mb-1">Treasury</span>
-                                            <div className={`flex items-center gap-1.5 px-3 py-1 rounded border transition-colors ${expensiveMistake ? 'bg-blood/20 border-blood/40' : 'bg-primary/10 border-primary/20'}`}>
-                                                <span className={`text-sm font-bold ${expensiveMistake ? 'text-blood' : 'text-primary'}`}>
+                                            <span className="text-[9px] font-header text-[#8a7357] uppercase mb-1">Treasury</span>
+                                            <div className={`flex items-center gap-1.5 px-3 py-1 rounded border transition-colors ${expensiveMistake ? 'bg-blood/10 border-blood/25' : 'bg-white/35 border-stone-300/70'}`}>
+                                                <span className={`text-sm font-bold ${expensiveMistake ? 'text-blood' : 'text-[#2b1d12]'}`}>
                                                     {team.treasury ? `${team.treasury / 1000}k` : '0k'} GP
                                                 </span>
                                                 {expensiveMistake && <span className="material-symbols-outlined text-sm text-blood animate-pulse">warning</span>}
@@ -424,17 +412,17 @@ const Home: React.FC<HomeProps> = ({
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-8">
-                        <button 
+                        <button
                             onClick={() => onCreateTeam?.()}
                             className="w-full blood-ui-button-primary py-4 rounded-xl font-header text-xs tracking-widest transition-all btn-interact"
                         >
                             FUNDAR FRANQUICIA
                         </button>
-                        <button 
+                        <button
                             onClick={() => onNavigate('guild')}
-                            className="w-full blood-ui-button-secondary py-4 rounded-xl border border-primary/30 font-header text-xs tracking-widest transition-all btn-interact text-primary hover:text-black"
+                            className="w-full blood-ui-light-button-secondary py-4 rounded-xl font-header text-xs tracking-widest transition-all btn-interact"
                         >
-                            GESTIONAR BANQUILLO
+                            GESTIONAR GREMIO
                         </button>
                     </div>
                 </section>
@@ -447,11 +435,11 @@ const Home: React.FC<HomeProps> = ({
                     </div>
 
                     <div className="relative mb-6">
-                        <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">search</span>
+                        <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 blood-ui-light-meta">search</span>
                         <input 
                             value={oracleSearch}
                             onChange={(e) => setOracleSearch(e.target.value)}
-                            className="blood-ui-input w-full rounded-xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:border-primary/50 transition-all text-white placeholder-slate-600" 
+                            className="blood-ui-input blood-ui-light-input w-full rounded-xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:border-primary/50 transition-all" 
                             placeholder="Consultar Nufflepedia..." 
                             type="text" 
                         />
@@ -462,11 +450,11 @@ const Home: React.FC<HomeProps> = ({
                             <div 
                                 key={skill.keyEN}
                                 onClick={() => setSelectedSkill(skill)}
-                                className="blood-ui-card-soft flex items-center justify-between p-4 rounded-xl border border-transparent hover:border-primary/30 cursor-pointer transition-all group"
+                                className="blood-ui-card-soft blood-ui-light-card flex items-center justify-between p-4 rounded-xl border border-transparent hover:border-primary/30 cursor-pointer transition-all group"
                             >
                                 <div className="flex flex-col">
-                                    <span className="font-bold text-slate-200 group-hover:text-primary transition-colors">{skill.name}</span>
-                                    <span className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">{skill.category}</span>
+                                    <span className="font-bold blood-ui-light-title group-hover:text-primary transition-colors">{skill.name}</span>
+                                    <span className="text-[10px] blood-ui-light-meta uppercase font-bold tracking-widest">{skill.category}</span>
                                 </div>
                                 {ELITE_SKILLS.includes(skill.name) && (
                                     <span className="text-[10px] px-2 py-1 bg-primary/20 text-primary border border-primary/30 rounded font-black uppercase tracking-tight">+10k MO</span>
@@ -793,3 +781,9 @@ const Home: React.FC<HomeProps> = ({
 };
 
 export default Home;
+
+
+
+
+
+

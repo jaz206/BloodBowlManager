@@ -17,20 +17,20 @@ const RadarChartModal: React.FC<RadarChartModalProps> = ({ team, onClose, custom
 
   return (
     <div
-      className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[2000] p-4 animate-fade-in-fast"
+      className="fixed inset-0 bg-[rgba(255,248,231,0.68)] backdrop-blur-md flex items-center justify-center z-[2000] p-4 animate-fade-in-fast"
       style={{ zIndex: 2000 }}
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"
     >
-      <div className="glass-panel max-w-lg w-full transform animate-slide-in-up border-white/10 overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)]">
-        <div className="flex justify-between items-center p-6 border-b border-white/5 bg-white/5">
+      <div className="blood-ui-light-card max-w-lg w-full transform animate-slide-in-up overflow-hidden shadow-[0_24px_70px_rgba(92,68,39,0.16)] rounded-[1.8rem]">
+        <div className="flex justify-between items-center p-6 border-b border-[rgba(111,87,56,0.12)] bg-[rgba(255,251,241,0.55)]">
           {customTitle ? customTitle : (
-            <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter leading-none">Análisis Táctico: {team.name}</h2>
+            <h2 className="blood-ui-light-title text-2xl uppercase italic tracking-tighter leading-none">Análisis Táctico: {team.name}</h2>
           )}
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-white/5 transition-premium"
+            className="text-[#7b6853] hover:text-[#2b1d12] p-2 rounded-xl hover:bg-white/50 transition-premium"
             aria-label="Cerrar modal"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -39,24 +39,24 @@ const RadarChartModal: React.FC<RadarChartModalProps> = ({ team, onClose, custom
           </button>
         </div>
         <div className="p-8 flex flex-col items-center">
-          <div className="w-full max-w-sm sm:max-w-md bg-black/20 rounded-3xl p-4 border border-white/5 shadow-inner">
+          <div className="w-full max-w-sm sm:max-w-md rounded-3xl p-4 border border-[rgba(111,87,56,0.12)] bg-[rgba(255,251,241,0.68)] shadow-inner">
             <RadarChart
               ratings={[{ data: team.ratings, color: '#f59e0b' }]}
               size={400}
               showValues={true}
             />
           </div>
-          <div className="mt-8 bento-card bg-white/5 border-white/5 p-6 relative overflow-hidden group">
-            <div className="absolute top-0 left-0 w-1 h-full bg-premium-gold/30"></div>
-            <p className="text-[11px] font-display font-medium text-white/50 italic leading-relaxed">
+          <div className="mt-8 blood-ui-light-card p-6 relative overflow-hidden group rounded-[1.4rem]">
+            <div className="absolute top-0 left-0 w-1 h-full bg-[#ca8a04]/30"></div>
+            <p className="blood-ui-light-body text-[11px] font-medium italic leading-relaxed">
               Este gráfico representa una valoración militar-deportiva del estilo de juego de la facción, proyectada sobre una escala de 0 a 100 basada en estadísticas de roster y entrenamiento avanzado.
             </p>
           </div>
         </div>
-        <div className="p-4 bg-black/20 border-t border-white/5">
+        <div className="p-4 bg-[rgba(255,251,241,0.62)] border-t border-[rgba(111,87,56,0.12)]">
           <button
             onClick={onClose}
-            className="w-full text-[10px] font-display font-black uppercase tracking-[0.2em] text-slate-500 hover:text-white transition-premium py-2"
+            className="w-full text-[10px] font-display font-black uppercase tracking-[0.2em] text-[#7b6853] hover:text-[#2b1d12] transition-premium py-2"
           >
             Cerrar Análisis
           </button>

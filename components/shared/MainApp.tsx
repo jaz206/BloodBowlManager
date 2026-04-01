@@ -484,27 +484,27 @@ const MainApp: React.FC = () => {
     }
   };
 
-  const NavButton: React.FC<{
-    view: View;
-    label: string;
-    icon: React.ReactElement<{ className?: string }>;
-  }> = ({ view, label, icon }) => {
-    const isActive = activeView === view;
+    const NavButton: React.FC<{
+      view: View;
+      label: string;
+      icon: React.ReactElement<{ className?: string }>;
+    }> = ({ view, label, icon }) => {
+      const isActive = activeView === view;
     return (
-      <button
-        onClick={() => setActiveView(view)}
-        data-active={isActive}
-        className="blood-ui-nav-button group flex items-center gap-3 px-4 h-full rounded-none border-b-0"
-      >
-        {React.cloneElement(icon, {
-          className: `w-4 h-4 transition-all duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`
-        })}
-        <span className={`text-[9px] font-display font-black uppercase tracking-[0.2em] ${isActive ? 'opacity-100' : 'opacity-40 group-hover:opacity-100'}`}>
-          {label}
-        </span>
-      </button>
-    );
-  };
+        <button
+          onClick={() => setActiveView(view)}
+          data-active={isActive}
+          className="blood-ui-nav-button group flex items-center gap-3 px-4 h-full"
+        >
+          {React.cloneElement(icon, {
+            className: `w-4 h-4 transition-all duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`
+          })}
+          <span className={`text-[9px] font-display font-black uppercase tracking-[0.2em] ${isActive ? 'opacity-100' : 'opacity-70 group-hover:opacity-100'}`}>
+            {label}
+          </span>
+        </button>
+      );
+    };
 
   const mainClasses = (activeView === 'arena' || activeView === 'tactical' || activeView === 'admin') ? '' : 'container mx-auto max-w-7xl px-2 sm:px-6 pb-2 sm:pb-6';
 
@@ -546,7 +546,7 @@ const MainApp: React.FC = () => {
             </div>
 
             {/* Center: Main Navigation */}
-            <nav className="h-full hidden md:flex items-center">
+              <nav className="blood-ui-topnav h-full hidden md:flex items-center gap-1">
                 <NavButton view="home" label={t('nav.home')} icon={<HomeIcon />} />
                 <NavButton view="oracle" label={t('nav.oracle')} icon={<BookOpenIcon />} />
                 <NavButton view="guild" label={t('nav.guild')} icon={<UsersIcon />} />
