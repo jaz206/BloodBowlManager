@@ -373,8 +373,3 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
 };
 
 export default OraclePage;
-
-
-
-
-

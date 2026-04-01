@@ -381,5 +381,3 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
 };
 
 export default Skills;
-
-

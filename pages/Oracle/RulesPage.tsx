@@ -89,7 +89,7 @@ const RulesPage: React.FC = () => {
                         Manual de <span className="text-[#ca8a04]">Campo</span>
                     </h2>
                     <p className="blood-ui-light-body text-sm md:text-base max-w-3xl leading-relaxed">
-                        Reglas oficiales de la Tercera Temporada. Todo lo que necesitas saber antes, durante y despu?s del caos en el emparrillado.
+                        Reglas oficiales de la Tercera Temporada. Todo lo que necesitas saber antes, durante y después del caos en el emparrillado.
                     </p>
                 </div>
             </header>
@@ -105,10 +105,10 @@ const RulesPage: React.FC = () => {
                             <h3 className="blood-ui-light-title text-lg uppercase italic tracking-tighter">{section.label}</h3>
                         </div>
                         <p className="blood-ui-light-body text-sm leading-relaxed">
-                            {section.id === 'pre' && 'Incentivos, clima, hinchas, moneda y orden de preparaci?n.'}
+                            {section.id === 'pre' && 'Incentivos, clima, hinchas, moneda y orden de preparación.'}
                             {section.id === 'kick' && 'Patada inicial, eventos aleatorios y cambios de ritmo del drive.'}
                             {section.id === 'weather' && 'Tabla completa del clima y sus efectos en mesa.'}
-                            {section.id === 'post' && 'Cierre de partido, econom?a y seguimiento final.'}
+                            {section.id === 'post' && 'Cierre de partido, economía y seguimiento final.'}
                         </p>
                     </div>
                 ))}

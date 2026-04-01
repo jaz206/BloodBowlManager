@@ -87,7 +87,7 @@ const AssetCard: React.FC<AssetCardProps> = ({ title, value, limit, price, onBuy
 
 const resolveTeamCrestUrl = (team: ManagedTeam): string => {
     const staticTeam = teamsData.find(t => t.name === team.rosterName);
-    return team.crestImage || staticTeam?.image || getTeamLogoUrl(team.rosterName) || '';
+    return team.crestImage || staticTeam?.crestImage || staticTeam?.image || getTeamLogoUrl(team.rosterName) || '';
 };
 
 interface TeamDashboardProps {
@@ -187,6 +187,8 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
             return acc;
         }, { played: 0, wins: 0, draws: 0, losses: 0, tdFor: 0, tdAgainst: 0 });
     }, [team.history]);
+    const recordSummary = `${historySummary.wins}-${historySummary.draws}-${historySummary.losses}`;
+    const hasRegisteredCrest = Boolean(team.crestImage || baseRoster?.crestImage);
 
     const handleSkillClick = (skillName: string) => {
         const cleanedName = (skillName || '').split('(')[0].trim();
@@ -422,14 +424,14 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
         <div className="blood-ui-shell min-h-screen text-slate-100 font-display">
             {/* Top Navigation & Header */}
             <header className={`blood-ui-header border-b border-white/10 backdrop-blur-md sticky ${stickyOffset} z-50`}>
-                <div className="max-w-[1400px] mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
-                    <div className="flex items-center gap-6">
+                <div className="max-w-[1400px] mx-auto px-6 py-4 flex flex-col xl:flex-row xl:items-end justify-between gap-5">
+                    <div className="flex items-start gap-5 md:gap-6">
                         <div
-                            className="size-12 blood-ui-card-soft rounded-xl flex items-center justify-center text-background-dark shadow-glow cursor-pointer hover:scale-105 transition-transform overflow-hidden"
+                            className="w-16 h-16 md:w-20 md:h-20 blood-ui-card-soft rounded-2xl flex items-center justify-center text-background-dark shadow-glow cursor-pointer hover:scale-105 transition-transform overflow-hidden shrink-0 border border-[rgba(202,138,4,0.2)]"
                             onClick={() => crestInputRef.current?.click()}
                         >
-                            <img 
-                                src={resolveTeamCrestUrl(team)} 
+                            <img
+                                src={resolveTeamCrestUrl(team)}
                                 onError={(e) => {
                                     const img = e.target as HTMLImageElement;
                                     const githubUrl = getTeamLogoUrl(team.rosterName);
@@ -442,15 +444,37 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                         }
                                     }
                                 }}
-                                alt={team.name} 
-                                className="w-full h-full object-contain p-1" 
+                                alt={team.name}
+                                className="w-full h-full object-contain p-1"
                             />
                         </div>
-                        <div>
-                            <h1 className="font-epilogue text-3xl md:text-4xl italic font-black tracking-tighter text-primary uppercase leading-tight text-shadow-premium">
+                        <div className="space-y-3">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <span className="px-3 py-1.5 rounded-full border border-[rgba(202,138,4,0.22)] bg-[rgba(255,251,241,0.72)] text-[9px] font-black uppercase tracking-[0.28em] text-[#7b6853] italic">
+                                    Dossier de franquicia
+                                </span>
+                                <span className="px-3 py-1.5 rounded-full border border-[rgba(111,87,56,0.12)] bg-[rgba(255,251,241,0.72)] text-[9px] font-black uppercase tracking-[0.28em] text-[#7b6853] italic">
+                                    Franquicia activa
+                                </span>
+                            </div>
+                            <h1 className="font-epilogue text-3xl md:text-5xl italic font-black tracking-tighter text-primary uppercase leading-tight text-shadow-premium">
                                 {team.name}
                             </h1>
                             <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">{team.rosterName}</p>
+                            <div className="flex flex-wrap gap-2">
+                                <span className="px-3 py-1.5 rounded-full bg-[rgba(255,251,241,0.84)] border border-[rgba(111,87,56,0.12)] text-[#2b1d12] text-[9px] font-black uppercase tracking-[0.28em]">
+                                    VAE {teamValue.toLocaleString('es-ES')}
+                                </span>
+                                <span className="px-3 py-1.5 rounded-full bg-[rgba(255,251,241,0.84)] border border-[rgba(111,87,56,0.12)] text-[#2b1d12] text-[9px] font-black uppercase tracking-[0.28em]">
+                                    Roster {team.players.length}/16
+                                </span>
+                                <span className="px-3 py-1.5 rounded-full bg-[rgba(255,251,241,0.84)] border border-[rgba(111,87,56,0.12)] text-[#2b1d12] text-[9px] font-black uppercase tracking-[0.28em]">
+                                    Récord {recordSummary}
+                                </span>
+                                <span className="px-3 py-1.5 rounded-full bg-[rgba(202,138,4,0.14)] border border-[rgba(202,138,4,0.18)] text-[#ca8a04] text-[9px] font-black uppercase tracking-[0.28em]">
+                                    Tier {team.tier}
+                                </span>
+                            </div>
                         </div>
                     </div>
 
@@ -475,7 +499,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                         <div className="flex items-center gap-2">
                             <button onClick={handleAutoSyncImages} className="blood-ui-button-secondary border border-gold/20 text-gold px-4 py-2 rounded-xl text-[10px] font-black tracking-widest transition-all uppercase flex items-center gap-2 shadow-lg shadow-gold/5" title="Sincronizar fotos desde GitHub">
                                 <span className="material-symbols-outlined text-base">image</span>
-                                Fotos
+                                Sincronizar fotos
                             </button>
                             <button onClick={onBack} className="blood-ui-button-secondary border border-white/10 text-slate-400 px-4 py-2 rounded-xl text-[10px] font-black tracking-widest transition-all uppercase flex items-center gap-2">
                                 <span className="material-symbols-outlined text-base">arrow_back</span>
@@ -933,23 +957,22 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                             >
                                 {resolveTeamCrestUrl(team) ? (
                                     <div className="w-24 h-24 rounded-3xl overflow-hidden bg-black/40 border border-white/5 flex items-center justify-center relative group">
-                                        <img 
-                                            src={resolveTeamCrestUrl(team)} 
+                                        <img
+                                            src={resolveTeamCrestUrl(team)}
                                             onError={(e) => {
                                                 const img = e.target as HTMLImageElement;
                                                 const githubUrl = getTeamLogoUrl(team.rosterName);
                                                 if (img.src !== githubUrl) {
                                                     img.src = githubUrl;
                                                 } else {
-                                                    // Final fallback if github is also missing
                                                     const originalData = teamsData.find(t => t.name === team.rosterName);
                                                     if (originalData && img.src !== originalData.image) {
                                                         img.src = originalData.image;
                                                     }
                                                 }
                                             }}
-                                            alt={team.name} 
-                                            className="w-full h-full object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.1)] group-hover:scale-110 transition-transform duration-500" 
+                                            alt={team.name}
+                                            className="w-full h-full object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.1)] group-hover:scale-110 transition-transform duration-500"
                                         />
                                     </div>
                                 ) : (
@@ -959,6 +982,17 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                     </div>
                                 )}
                             </div>
+                            <button
+                                type="button"
+                                onClick={() => crestInputRef.current?.click()}
+                                className="mt-4 w-full blood-ui-button-secondary border border-gold/20 text-gold px-4 py-3 rounded-2xl text-[10px] font-black tracking-widest transition-all uppercase flex items-center justify-center gap-2 shadow-lg shadow-gold/5"
+                            >
+                                <span className="material-symbols-outlined text-base">edit</span>
+                                Cambiar escudo
+                            </button>
+                            <p className="mt-3 text-[9px] font-black uppercase tracking-[0.22em] text-slate-500">
+                                {hasRegisteredCrest ? 'Escudo registrado' : 'Escudo pendiente'}
+                            </p>
                         </div>
 
                         <div className="blood-ui-card-strong border border-white/10 rounded-[2rem] p-8">
@@ -967,7 +1001,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                 {[
                                     { label: 'Rerolls', val: team.rerolls, icon: 'refresh' },
                                     { label: 'Fans', val: team.dedicatedFans, icon: 'campaign' },
-                                    { label: 'Boticario', val: team.apothecary ? 'SÍ' : 'NO', icon: 'emergency' }
+                                    { label: 'Boticario', val: team.apothecary ? 'Sí' : 'NO', icon: 'emergency' }
                                 ].map(item => (
                                     <div key={item.label} className="flex items-center justify-between p-3 bg-black/40 rounded-xl border border-white/5">
                                         <div className="flex items-center gap-3">
