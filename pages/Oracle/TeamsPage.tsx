@@ -353,8 +353,8 @@ const Teams: React.FC<{
                 roster: ft.roster && ft.roster.length > 0 ? ft.roster : st?.roster || []
             } as Team & { crestImage: string };
 
-            if (!merged.image && st.image) merged.image = st.image;
-            if (!merged.crestImage && (st as any).crestImage) merged.crestImage = (st as any).crestImage;
+            if (!merged.image && st?.image) merged.image = st.image;
+            if (!merged.crestImage && (st as any)?.crestImage) merged.crestImage = (st as any).crestImage;
 
             return merged as Team;
         });
