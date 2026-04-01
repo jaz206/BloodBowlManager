@@ -44,7 +44,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
 
     const resolveHubTeamImage = (team: ManagedTeam & { crestImage?: string; image?: string }) => {
         const staticTeam = staticTeams.find(t => t.name === team.name);
-        return team.crestImage || team.image || staticTeam?.image || getTeamLogoUrl(team.name) || '';
+        return team?.crestImage || team?.image || staticTeam?.image || getTeamLogoUrl(team.name) || '';
     };
 
     // Update search term when initialSearchTerm changes from outside

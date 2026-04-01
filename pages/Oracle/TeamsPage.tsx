@@ -160,7 +160,7 @@ const TeamArticle: React.FC<{
                             </div>
                             <div className="rounded-2xl border border-[rgba(111,87,56,0.12)] bg-[rgba(255,251,241,0.7)] p-4">
                                 <p className="text-[8px] uppercase tracking-[0.35em] text-[#7b6853] font-black">Escudo</p>
-                                <p className="text-[#2b1d12] font-black italic mt-2 text-sm">{(team as any).crestImage ? 'Disponible' : 'Pendiente'}</p>
+                                <p className="text-[#2b1d12] font-black italic mt-2 text-sm">{(team as any)?.crestImage ? 'Disponible' : 'Pendiente'}</p>
                             </div>
                         </div>
                         <button
