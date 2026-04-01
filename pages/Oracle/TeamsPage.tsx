@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { teamsData as staticTeams } from '../../data/teams';
 import type { Team, Skill } from '../../types';
@@ -16,23 +16,18 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { getTeamLogoUrl } from '../../utils/imageUtils';
 
 const renderPlusValue = (value: string | number) => {
-    const raw = value == null || value === 'undefined' || value === 'null' ? '—' : String(value);
-    const match = raw.match(/^(\d+)(\+)?$/);
-    if (!match) {
-        return <span className="inline-flex min-w-[2.75ch] items-center justify-center font-black tabular-nums not-italic leading-none text-[#2b1d12] text-[1.1rem] tracking-tight">{raw}</span>;
-    }
-
-    const [, numberPart, plusPart] = match;
+    const raw = value == null || value === 'undefined' || value === 'null' ? '-' : String(value);
+    const hasPlus = raw.endsWith('+');
+    const numeric = hasPlus ? raw.slice(0, -1) : raw;
     return (
-        <span className="inline-flex min-w-[2.75ch] items-center justify-center font-black tabular-nums not-italic leading-none text-[#2b1d12] text-[1.1rem] tracking-tight">
-            <span>{numberPart}</span>
-            {plusPart && <span className="font-black leading-none ml-[1px]">{plusPart}</span>}
+        <span className="inline-flex min-w-[2.75ch] items-center justify-center gap-0.5 font-display font-black italic tabular-nums text-[#2b1d12] text-[1.1rem] leading-none tracking-tight">
+            <span className="leading-none">{numeric}</span>
+            {hasPlus && <span className="leading-none">+</span>}
         </span>
     );
 };
 
-const resolveTeamImage = (team: Team) => team.image || getTeamLogoUrl(team.name);
-
+const resolveTeamImage = (team: Team) => (team as Team & { crestImage?: string }).crestImage || team.image || getTeamLogoUrl(team.name);
 const PopularTeamCard: React.FC<{ team: Team; icon: string; subtitle: string; onClick: () => void }> = ({ team, icon, subtitle, onClick }) => (
     <motion.button
         type="button"
@@ -97,14 +92,13 @@ const PopularTeamCard: React.FC<{ team: Team; icon: string; subtitle: string; on
 );
 
 const TeamStatValue: React.FC<{ value: string | number }> = ({ value }) => {
-    const raw = value == null ? '—' : String(value);
+    const raw = value == null || value === 'undefined' || value === 'null' ? '-' : String(value);
     return (
-        <span className="inline-flex items-baseline justify-center font-black tabular-nums italic text-[#2b1d12]">
+        <span className="inline-flex items-center justify-center font-display font-black italic tabular-nums text-[#2b1d12] leading-none tracking-tight">
             {raw}
         </span>
     );
 };
-
 
 const TeamArticle: React.FC<{
     team: Team;
@@ -174,7 +168,7 @@ const TeamArticle: React.FC<{
                             </div>
                             <div className="rounded-2xl border border-[rgba(111,87,56,0.12)] bg-[rgba(255,251,241,0.7)] p-4">
                                 <p className="text-[8px] uppercase tracking-[0.35em] text-[#7b6853] font-black">Escudo</p>
-                                <p className="text-[#2b1d12] font-black italic mt-2 text-sm">{team.image ? 'Disponible' : 'Pendiente'}</p>
+                                <p className="text-[#2b1d12] font-black italic mt-2 text-sm">{(team as any).crestImage ? 'Disponible' : 'Pendiente'}</p>
                             </div>
                         </div>
                         <button
@@ -361,18 +355,20 @@ const Teams: React.FC<{
     const teams = useMemo(() => {
         return fetchedTeams.map(ft => {
             const st = staticTeams.find(s => s.name === ft.name);
-            return {
-                ...st, // Use static as base
-                ...ft, // Override with Firestore fields
-                roster: ft.roster && ft.roster.length > 0 ? ft.roster : st?.roster || [] // Ensure roster exists
-            };
+            const merged = {
+                ...(st || {}),
+                ...ft,
+                roster: ft.roster && ft.roster.length > 0 ? ft.roster : st?.roster || []
+            } as Team & { crestImage?: string };
+
             if (!merged.image && st?.image) merged.image = st.image;
             if (!merged.crestImage && (st as any)?.crestImage) merged.crestImage = (st as any).crestImage;
-            return merged;
+
+            return merged as Team;
         });
     }, [fetchedTeams]);
 
-    const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
+    const [selectedTeamName, setSelectedTeamName] = useState<string | null>(null);
     const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedTiers, setSelectedTiers] = useState<number[]>([]);
@@ -392,10 +388,15 @@ const Teams: React.FC<{
         if (initialTeamName) {
             const team = teams.find(t => t.name === initialTeamName);
             if (team) {
-                setSelectedTeam(team);
+                setSelectedTeamName(team.name);
             }
         }
     }, [initialTeamName, teams]);
+
+    const selectedTeam = useMemo(
+        () => (selectedTeamName ? teams.find(t => t.name === selectedTeamName) || null : null),
+        [selectedTeamName, teams]
+    );
 
     const filteredTeams = useMemo(() => {
         let result = teams;
@@ -466,7 +467,7 @@ const Teams: React.FC<{
 
     const updateTeamImage = async (teamName: string) => {
         const officialLogo = `${getTeamLogoUrl(teamName)}?v=${Date.now()}`;
-        await updateMasterItem('teams', teamName, { image: officialLogo });
+        await updateMasterItem('teams', teamName, { image: officialLogo, crestImage: officialLogo });
         showToast(`Escudo actualizado para ${teamName}.`);
     };
 
@@ -474,7 +475,7 @@ const Teams: React.FC<{
         return (
             <TeamDetailPage
                 team={selectedTeam}
-                onBack={() => setSelectedTeam(null)}
+                onBack={() => setSelectedTeamName(null)}
                 onRequestTeamCreation={onRequestTeamCreation}
             />
         );
@@ -490,12 +491,12 @@ const Teams: React.FC<{
             <section className="blood-ui-light-card rounded-[2rem] p-6 md:p-8 mb-10 shadow-[0_26px_70px_rgba(92,68,39,0.12)]">
                 <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6">
                     <div className="max-w-3xl space-y-4">
-                        <p className="blood-ui-light-meta text-[9px] uppercase tracking-[0.35em] font-black">Enciclopedia t?ctica</p>
+                        <p className="blood-ui-light-meta text-[9px] uppercase tracking-[0.35em] font-black">Enciclopedia táctica</p>
                         <h1 className="blood-ui-light-title text-5xl md:text-6xl uppercase italic leading-[0.95]">
                             Equipos, rosters y ADN <span className="text-[#ca8a04]">Blood Bowl</span>
                         </h1>
                         <p className="blood-ui-light-body text-sm md:text-base max-w-2xl leading-relaxed">
-                            Explora todas las facciones del Viejo Mundo, compara sus estad?sticas, abre sus fichas completas y analiza qu? estrellas pueden usar antes de planificar tu pr?xima temporada.
+                            Explora todas las facciones del Viejo Mundo, compara sus estadísticas, abre sus fichas completas y analiza qué estrellas pueden usar antes de planificar tu próxima temporada.
                         </p>
                     </div>
                     <div className="flex flex-col gap-3 w-full xl:w-auto xl:min-w-[560px]">
@@ -608,7 +609,7 @@ const Teams: React.FC<{
                                     team={team}
                                     icon={icon}
                                     subtitle={subtitle}
-                                    onClick={() => setSelectedTeam(team)}
+                                    onClick={() => setSelectedTeamName(team.name)}
                                 />
                             );
                         })}
@@ -644,7 +645,7 @@ const Teams: React.FC<{
                                     key={team.name}
                                     team={team}
                                     isAdmin={!!isAdmin}
-                                    onViewRoster={() => setSelectedTeam(team)}
+                                    onViewRoster={() => setSelectedTeamName(team.name)}
                                     onSkillClick={handleSkillClick}
                                     onUpdateImage={updateTeamImage}
                                 />

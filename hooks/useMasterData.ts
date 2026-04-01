@@ -266,6 +266,14 @@ export const useMasterData = () => {
      * Updates a single item within a master_data document's items array.
      * Finds the item by keyEN (skills) or name (teams/stars/inducements).
      */
+    const normalizeMasterKey = (value: string) =>
+        fixMojibake(value)
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .replace(/\s+/g, ' ')
+            .trim();
+
     const updateMasterItem = useCallback(async (
         docId: 'teams' | 'skills' | 'star_players' | 'inducements_es' | 'inducements_en' | 'heraldo',
         itemId: string,
@@ -278,11 +286,16 @@ export const useMasterData = () => {
         if (!snap.exists()) throw new Error(`Documento ${docId} no encontrado`);
 
         const items: any[] = snap.data().items ?? [];
-        const idx = items.findIndex(i => (i.keyEN ?? i.name) === itemId);
+        const idx = items.findIndex(i => normalizeMasterKey(String(i.keyEN ?? i.name ?? i.title ?? '')) === normalizeMasterKey(itemId));
         if (idx === -1) throw new Error(`Item "${itemId}" no encontrado en ${docId}`);
 
         items[idx] = { ...items[idx], ...patch };
         await setDoc(ref, { items, updatedAt: serverTimestamp() }, { merge: true });
+
+        if (docId === 'teams') setTeams(items as Team[]);
+        if (docId === 'skills') setSkills(items as Skill[]);
+        if (docId === 'star_players') setStarPlayers(items as StarPlayer[]);
+        if (docId === 'inducements_es') setInducements(items as Inducement[]);
     }, []);
 
     /**

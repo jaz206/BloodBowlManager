@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-// Subpáginas del Oráculo
+// SubpÃ¡ginas del OrÃ¡culo
 import Teams from './TeamsPage';
 import Skills from './SkillsPage';
 import StarPlayers from './StarPlayersPage';
@@ -9,7 +9,7 @@ import InducementTable from './InducementsPage';
 import RulesPage from './RulesPage';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useMasterData } from '../../hooks/useMasterData';
-import { getStarPlayerImageUrl } from '../../utils/imageUtils';
+import { getStarPlayerImageUrl, getTeamLogoUrl } from '../../utils/imageUtils';
 import { teamsData as staticTeams } from '../../data/teams';
 import type { ManagedTeam } from '../../types';
 
@@ -17,10 +17,13 @@ type SubView = 'hub' | 'teams' | 'skills' | 'star_players' | 'calculator' | 'ind
 
 const SKILL_CATEGORIES = [
     { id: 'General', label: 'General' },
+    { id: 'Elite', label: '?lite' },
     { id: 'Strength', label: 'Fuerza' },
     { id: 'Agility', label: 'Agilidad' },
     { id: 'Passing', label: 'Pase' },
-    { id: 'Mutation', label: 'Mutación' }
+    { id: 'Mutation', label: 'Mutaci?n' },
+    { id: 'Trait', label: 'Rasgo' },
+    { id: 'Triqui?uelas', label: 'Triqui?uelas' }
 ];
 
 interface OraclePageProps {
@@ -36,7 +39,10 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
     const [selectedHubTeam, setSelectedHubTeam] = useState<string | null>(null);
     const [initialSkillCategory, setInitialSkillCategory] = useState<string>('General');
     const [hubSearchTerm, setHubSearchTerm] = useState(initialSearchTerm);
-    const hubSearchInputRef = useRef<HTMLInputElement>(null);
+    const hubSearchInputRef = useRef<HTMLInputElement | null>(null);
+
+    const resolveHubTeamImage = (team: ManagedTeam & { crestImage?: string; image?: string }) =>
+        team.crestImage || getTeamLogoUrl(team.name) || team.image || '';
 
     // Update search term when initialSearchTerm changes from outside
     React.useEffect(() => {
@@ -131,20 +137,54 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                             <span className="material-symbols-outlined font-bold group-hover:scale-110 transition-transform">search</span>
                         </div>
                         <input
+                            ref={hubSearchInputRef}
+                            autoComplete="off"
+                            autoCorrect="off"
+                            spellCheck={false}
                             className="blood-ui-input w-full bg-transparent border-none focus:ring-0 text-[#2b1d12] placeholder:text-[#7b6853] px-6 text-lg font-medium rounded-r-2xl"
                             placeholder="Buscar equipos, habilidades, reglas o estrellas..."
                             value={hubSearchTerm}
-                            onChange={(e) => setHubSearchTerm(e.target.value)}
+                            onChange={(e) => {
+                                setHubSearchTerm(e.target.value);
+                                requestAnimationFrame(() => {
+                                    hubSearchInputRef.current?.focus();
+                                });
+                            }}
                         />
-                        <div className="flex items-center pr-2">
-                            <button
-                                onClick={() => setActiveView('skills')}
-                                className="blood-ui-button-primary px-8 h-12 rounded-xl uppercase italic tracking-tighter"
-                            >
-                                Buscar
-                            </button>
-                        </div>
                     </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-6">
+                    <button onClick={() => openSubview('calculator')} className="blood-ui-light-card rounded-2xl p-4 text-left flex items-center gap-4 hover:border-[rgba(202,138,4,0.28)] transition-all group">
+                        <div className="size-12 rounded-2xl bg-[rgba(202,138,4,0.12)] border border-[rgba(202,138,4,0.16)] flex items-center justify-center text-[#ca8a04] shrink-0 group-hover:bg-[rgba(202,138,4,0.18)] transition-colors">
+                            <span className="material-symbols-outlined">calculate</span>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                            <p className="blood-ui-light-title text-base uppercase italic leading-tight">Calculadora</p>
+                            <p className="blood-ui-light-body text-[11px] mt-1 leading-relaxed">Probabilidades de tirada y apoyo matem?tico.</p>
+                        </div>
+                        <span className="material-symbols-outlined text-[rgba(202,138,4,0.9)]">chevron_right</span>
+                    </button>
+                    <button onClick={() => openSubview('inducements')} className="blood-ui-light-card rounded-2xl p-4 text-left flex items-center gap-4 hover:border-[rgba(202,138,4,0.28)] transition-all group">
+                        <div className="size-12 rounded-2xl bg-[rgba(202,138,4,0.12)] border border-[rgba(202,138,4,0.16)] flex items-center justify-center text-[#ca8a04] shrink-0 group-hover:bg-[rgba(202,138,4,0.18)] transition-colors">
+                            <span className="material-symbols-outlined">payments</span>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                            <p className="blood-ui-light-title text-base uppercase italic leading-tight">Incentivos</p>
+                            <p className="blood-ui-light-body text-[11px] mt-1 leading-relaxed">Sobornos, magos, apotecarios y m?s.</p>
+                        </div>
+                        <span className="material-symbols-outlined text-[rgba(202,138,4,0.9)]">chevron_right</span>
+                    </button>
+                    <button onClick={() => openSubview('rules')} className="blood-ui-light-card rounded-2xl p-4 text-left flex items-center gap-4 hover:border-[rgba(202,138,4,0.28)] transition-all group">
+                        <div className="size-12 rounded-2xl bg-[rgba(202,138,4,0.12)] border border-[rgba(202,138,4,0.16)] flex items-center justify-center text-[#ca8a04] shrink-0 group-hover:bg-[rgba(202,138,4,0.18)] transition-colors">
+                            <span className="material-symbols-outlined">menu_book</span>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                            <p className="blood-ui-light-title text-base uppercase italic leading-tight">Manual</p>
+                            <p className="blood-ui-light-body text-[11px] mt-1 leading-relaxed">Patada inicial, clima y reglas del campo.</p>
+                        </div>
+                        <span className="material-symbols-outlined text-[rgba(202,138,4,0.9)]">chevron_right</span>
+                    </button>
                 </div>
             </section>
 
@@ -159,7 +199,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                     </div>
 
                     <p className="blood-ui-light-body text-sm leading-relaxed">
-                        Consulta las franquicias, sus plantillas y el ADN táctico de cada raza.
+                        Consulta las franquicias, sus plantillas y el ADN tÃ¡ctico de cada raza.
                     </p>
 
                     <div className="space-y-3">
@@ -173,7 +213,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                                 className="w-full blood-ui-light-card rounded-2xl p-4 flex items-center gap-4 text-left hover:border-[rgba(202,138,4,0.28)] transition-all"
                             >
                                 <div className="size-14 rounded-2xl overflow-hidden flex-shrink-0 border border-[rgba(111,87,56,0.16)] bg-[rgba(255,249,236,0.42)]">
-                                    <img src={team.image} alt={team.name} className="w-full h-full object-cover" />
+                                    <img src={resolveHubTeamImage(team)} alt={team.name} className="w-full h-full object-cover" />
                                 </div>
                                 <div className="min-w-0 flex-1">
                                     <p className="text-[10px] uppercase tracking-[0.22em] font-black text-[#7b6853] italic mb-1">Tier {team.tier}</p>
@@ -188,7 +228,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                         onClick={() => setActiveView('teams')}
                         className="blood-ui-light-button-secondary px-6 py-4 rounded-2xl text-xs uppercase italic tracking-widest"
                     >
-                        Ver catálogo de equipos
+                        Ver cat?logo de equipos
                     </button>
                 </div>
 
@@ -202,7 +242,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                     </div>
 
                     <p className="blood-ui-light-body text-sm leading-relaxed">
-                        Entra por categoría y navega el catálogo completo de habilidades, reglas y rasgos.
+                        Entra por categor?a y navega el cat?logo completo de habilidades, reglas y rasgos.
                     </p>
 
                     <div className="grid grid-cols-2 gap-3">
@@ -224,7 +264,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                     <div className="blood-ui-light-card rounded-2xl p-5 border border-[rgba(111,87,56,0.12)]">
                         <p className="text-[10px] uppercase tracking-[0.25em] font-black text-[#7b6853] italic mb-2">Acceso directo</p>
                         <p className="blood-ui-light-body text-sm leading-relaxed">
-                            Pulsa una categoría para abrir su catálogo completo. Cada rama vive en su propia pantalla para que el acceso sea rápido.
+                            Pulsa una categorÃ­a para abrir su catÃ¡logo completo. Cada rama vive en su propia pantalla para que el acceso sea rÃ¡pido.
                         </p>
                     </div>
                 </div>
@@ -233,14 +273,14 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                     <div className="absolute -right-8 -top-8 text-[220px] leading-none text-[rgba(202,138,4,0.08)] pointer-events-none select-none">star</div>
                     <div className="relative z-10 flex items-start justify-between gap-4">
                         <div>
-                            <p className="text-[10px] uppercase tracking-[0.25em] font-black text-[#7b6853] italic mb-2">Catálogo de leyendas</p>
+                            <p className="text-[10px] uppercase tracking-[0.25em] font-black text-[#7b6853] italic mb-2">CatÃ¡logo de leyendas</p>
                             <h2 className="blood-ui-light-title text-2xl md:text-3xl font-black uppercase italic tracking-tighter">Jugadores estrella</h2>
                         </div>
                         <button onClick={() => setActiveView('star_players')} className="blood-ui-button-primary px-5 py-3 rounded-2xl text-[10px] uppercase italic tracking-widest">Abrir</button>
                     </div>
 
                     <p className="blood-ui-light-body text-sm leading-relaxed relative z-10">
-                        Leyendas, mercenarios y piezas míticas listas para entrar al campo cuando una franquicia necesita un golpe de autoridad.
+                        Leyendas, mercenarios y piezas m?ticas listas para entrar al campo cuando una franquicia necesita un golpe de autoridad.
                     </p>
 
                     <div className="relative z-10 space-y-3">
@@ -276,42 +316,11 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                         onClick={() => setActiveView('star_players')}
                         className="blood-ui-light-button-secondary px-6 py-4 rounded-2xl text-xs uppercase italic tracking-widest relative z-10"
                     >
-                        Ver catálogo de estrellas
+                        Ver cat?logo de estrellas
                     </button>
                 </div>
             </div>
 
-            <section className="blood-ui-light-card rounded-[2rem] p-6 md:p-8 shadow-[0_24px_60px_rgba(75,52,27,0.14)]">
-                <div className="flex items-center justify-between gap-4 mb-5">
-                    <div>
-                        <p className="text-[10px] uppercase tracking-[0.25em] font-black text-[#7b6853] italic mb-2">Accesos de mando</p>
-                        <h3 className="blood-ui-light-title text-xl md:text-2xl uppercase italic tracking-tighter">Herramientas del Oráculo</h3>
-                    </div>
-                    <span className="text-[10px] uppercase tracking-[0.28em] font-black text-[#7b6853] italic">Rápido / Directo / Siempre visible</span>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {[
-                        { id: 'calculator', title: 'Calculadora', desc: 'Probabilidades de tirada y apoyo matemático.', icon: 'calculate' },
-                        { id: 'inducements', title: 'Incentivos', desc: 'Sobornos, magos, apotecarios y más.', icon: 'payments' },
-                        { id: 'rules', title: 'Manual', desc: 'Patada inicial, clima y reglas del campo.', icon: 'menu_book' }
-                    ].map(item => (
-                        <button
-                            key={item.id}
-                            onClick={() => openSubview(item.id as Exclude<SubView, 'hub'>)}
-                            className="blood-ui-light-card rounded-2xl p-5 text-left flex items-center gap-4 hover:border-[rgba(202,138,4,0.28)] transition-all group"
-                        >
-                            <div className="size-14 rounded-2xl bg-[rgba(202,138,4,0.12)] border border-[rgba(202,138,4,0.16)] flex items-center justify-center text-[#ca8a04] shrink-0 group-hover:bg-[rgba(202,138,4,0.18)] transition-colors">
-                                <span className="material-symbols-outlined">{item.icon}</span>
-                            </div>
-                            <div className="min-w-0 flex-1">
-                                <p className="blood-ui-light-title text-base uppercase italic leading-tight">{item.title}</p>
-                                <p className="blood-ui-light-body text-[11px] mt-1 leading-relaxed">{item.desc}</p>
-                            </div>
-                            <span className="material-symbols-outlined text-[rgba(202,138,4,0.9)]">chevron_right</span>
-                        </button>
-                    ))}
-                </div>
-            </section>
         </motion.div>
     );
     return (
@@ -365,6 +374,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
 };
 
 export default OraclePage;
+
 
 
 

@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ELITE_SKILLS, type Skill } from '../../types';
 import { useMasterData } from '../../hooks/useMasterData';
@@ -9,12 +9,12 @@ const SKILLS_PER_PAGE = 8;
 
 const Categories = [
     { id: 'General', label: 'General', icon: 'shield' },
+    { id: 'Elite', label: 'Élite', icon: 'workspace_premium' },
     { id: 'Strength', label: 'Fuerza', icon: 'fitness_center' },
     { id: 'Agility', label: 'Agilidad', icon: 'directions_run' },
     { id: 'Passing', label: 'Pase', icon: 'sports_football' },
     { id: 'Mutation', label: 'Mutación', icon: 'genetics' },
     { id: 'Trait', label: 'Rasgo', icon: 'star' },
-    { id: 'Elite', label: 'Élite', icon: 'workspace_premium' },
     { id: 'Triquiñuelas', label: 'Triquiñuelas', icon: 'casino' },
 ];
 
@@ -25,8 +25,8 @@ const OracleTips: Record<string, string> = {
     Passing: 'Pase Seguro y Manos Seguras son la base de cualquier estrategia de bombardeo.',
     Mutation: 'Brazo Extra es la mutación más disruptiva, especialmente en portadores de balón.',
     Trait: 'Los rasgos son exclusivos de ciertos perfiles; consulta siempre la plantilla del equipo.',
-    Elite: 'Las habilidades de élite son la élite táctica del juego: potentes, raras y decisivas.',
-    Triquiñuelas: 'Recursos de juego sucio y trucos de mesa para cambiar una partida en un instante.',
+    Elite: 'Habilidades raras y decisivas que pueden cambiar una partida en una sola activación.',
+    Triquiñuelas: 'Trucos de mesa, juego sucio y recursos oscuros para torcer una entrada en el momento exacto.',
 };
 
 const SkillCard: React.FC<{ skill: Skill; onClick: () => void; isSelected: boolean }> = ({ skill, onClick, isSelected }) => {
@@ -42,7 +42,7 @@ const SkillCard: React.FC<{ skill: Skill; onClick: () => void; isSelected: boole
             exit={{ opacity: 0, scale: 0.9 }}
             whileHover={{ y: -5 }}
             onClick={onClick}
-            className={`group flex flex-col p-6 rounded-2xl blood-ui-light-card border transition-all cursor-pointer shadow-xl ${isSelected ? 'border-primary ring-1 ring-primary/30' : 'border-[rgba(202,138,4,0.14)] hover:border-[rgba(202,138,4,0.35)]'
+            className={`group flex flex-col p-6 rounded-[1.6rem] blood-ui-light-card border transition-all cursor-pointer shadow-[0_16px_36px_rgba(92,68,39,0.10)] ${isSelected ? 'border-[rgba(202,138,4,0.5)] ring-1 ring-[rgba(202,138,4,0.2)]' : 'border-[rgba(202,138,4,0.14)] hover:border-[rgba(202,138,4,0.35)]'
                 }`}
         >
             <div className="flex justify-between items-start mb-4">
@@ -54,10 +54,10 @@ const SkillCard: React.FC<{ skill: Skill; onClick: () => void; isSelected: boole
                 </div>
                 <span className="text-[10px] font-black text-[#7b6853] uppercase tracking-[0.2em]">{skill.category}</span>
             </div>
-            <h4 className="text-xl font-black text-[#2b1d12] mb-2 uppercase italic tracking-tighter group-hover:text-[#ca8a04] transition-colors">
+            <h4 className="text-[1.05rem] font-black text-[#2b1d12] mb-2 uppercase italic tracking-tighter group-hover:text-[#ca8a04] transition-colors">
                 {name}
             </h4>
-            <div className="text-sm text-[#7b6853] line-clamp-3 leading-relaxed font-medium italic">
+            <div className="text-sm text-[#6f5738] line-clamp-3 leading-relaxed font-medium italic">
                 {description}
             </div>
         </motion.div>
@@ -180,8 +180,8 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
             {/* Sidebar: Categories */}
             <aside className="lg:w-64 shrink-0 space-y-8">
                 <div>
-                    <h3 className="text-[10px] font-black text-[#7b6853] uppercase tracking-[0.3em] mb-6 pl-2">Categorías</h3>
-                    <nav className="flex flex-col gap-2">
+                    <h3 className="text-[10px] font-black text-[#7b6853] uppercase tracking-[0.3em] mb-4 pl-2">Categorías</h3>
+                    <nav className="grid grid-cols-1 gap-2">
                         {Categories.map((cat) => (
                             <button
                                 key={cat.id}
@@ -192,7 +192,7 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
                                     setSelectedSkill(null);
                                     setCurrentPage(1);
                                 }}
-                                className={`flex items-center gap-3 px-5 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${activeCategory === cat.id
+                                className={`flex items-center gap-3 px-4 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${activeCategory === cat.id
                                     ? 'bg-[#ca8a04] text-[#2b1d12] shadow-lg shadow-primary/20'
                                     : 'text-[#7b6853] hover:bg-[rgba(255,251,241,0.62)] hover:text-[#2b1d12] border border-transparent'
                                     }`}
@@ -258,6 +258,11 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
                         {filteredSkills.length} resultados
                     </span>
                 </div>
+                {activeCategory === 'Elite' && (
+                    <div className="rounded-2xl border border-[rgba(202,138,4,0.16)] bg-[rgba(202,138,4,0.08)] px-4 py-3 text-[10px] uppercase tracking-[0.28em] font-black text-[#8a5f10] italic">
+                        Habilidades de Élite activas en este catálogo.
+                    </div>
+                )}
 
                 {/* Featured Detail Card */}
                 <AnimatePresence mode="wait">
@@ -374,4 +379,3 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
 };
 
 export default Skills;
-

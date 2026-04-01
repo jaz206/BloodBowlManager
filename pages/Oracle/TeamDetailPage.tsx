@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Team, StarPlayer, Skill } from '../../types';
 import RadarChart from '../../components/oracle/RadarChart';
@@ -44,6 +44,8 @@ const TeamDetailPage: React.FC<TeamDetailPageProps> = ({ team, onBack, onRequest
     const [isFullscreenImage, setIsFullscreenImage] = useState(false);
     const [activeTab, setActiveTab] = useState<'roster' | 'stars' | 'rules'>('roster');
 
+    const heroImage = (team as Team & { crestImage?: string }).crestImage || team.image || getTeamLogoUrl(team.name);
+
     const currentSpecialRulesStr = language === 'es' ? (team.specialRules_es || team.specialRules) : (team.specialRules_en || team.specialRules);
     
     // Parse special rules into a list
@@ -79,22 +81,13 @@ const TeamDetailPage: React.FC<TeamDetailPageProps> = ({ team, onBack, onRequest
     }, [starPlayers, specialRulesList, team.name]);
 
     const renderPlusValue = (value: string | number | null | undefined) => {
-        const raw = value == null || value === 'undefined' || value === 'null' ? '—' : String(value);
-        const match = raw.match(/^(\d+)(\+)?$/);
-
-        if (!match) {
-            return (
-                <span className="inline-flex min-w-[2.75ch] items-center justify-center font-black tabular-nums not-italic leading-none text-[#2b1d12] text-[1.1rem] tracking-tight">
-                    {raw}
-                </span>
-            );
-        }
-
-        const [, numberPart, plusPart] = match;
+        const raw = value == null || value === 'undefined' || value === 'null' ? '-' : String(value);
+        const hasPlus = raw.endsWith('+');
+        const numeric = hasPlus ? raw.slice(0, -1) : raw;
         return (
-            <span className="inline-flex min-w-[2.75ch] items-center justify-center font-black tabular-nums not-italic leading-none text-[#2b1d12] text-[1.1rem] tracking-tight">
-                <span>{numberPart}</span>
-                {plusPart && <span className="font-black leading-none ml-[1px]">{plusPart}</span>}
+            <span className="inline-flex min-w-[2.75ch] items-center justify-center gap-0.5 font-black tabular-nums not-italic leading-none text-[#2b1d12] text-[1.1rem] tracking-tight">
+                <span className="leading-none">{numeric}</span>
+                {hasPlus && <span className="leading-none">+</span>}
             </span>
         );
     };
@@ -109,11 +102,11 @@ const TeamDetailPage: React.FC<TeamDetailPageProps> = ({ team, onBack, onRequest
             className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(255,248,231,0.96),rgba(239,214,162,0.88)_36%,rgba(214,184,126,0.6)_100%)] text-[#2b1d12] font-display p-4 md:p-0"
         >
             {/* Breadcrumbs */}
-            <nav className="flex items-center gap-3 text-[#2b1d12] text-xs font-black uppercase tracking-[0.28em] mb-8">
-                <button onClick={onBack} className="bg-[#ca8a04] text-[#2b1d12] border border-[rgba(202,138,4,0.25)] px-4 py-2 rounded-2xl text-[10px] uppercase italic tracking-[0.22em] font-black shadow-[0_10px_24px_rgba(202,138,4,0.12)] hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(202,138,4,0.18)] transition-all">Enciclopedia</button>
+            <div className="flex gap-2 p-1 blood-ui-light-card rounded-2xl mb-6 border border-[rgba(111,87,56,0.12)] bg-[rgba(255,251,241,0.9)] shadow-[0_12px_30px_rgba(92,68,39,0.1)]">
+                <button onClick={onBack} className="inline-flex items-center gap-3 rounded-2xl border border-[rgba(43,29,18,0.18)] bg-[linear-gradient(180deg,rgba(43,29,18,0.96),rgba(60,41,24,0.96))] px-5 py-3 text-[#fff8e7] text-[10px] uppercase italic tracking-[0.22em] font-black shadow-[0_14px_28px_rgba(43,29,18,0.24)] hover:-translate-y-0.5 hover:shadow-[0_18px_34px_rgba(43,29,18,0.3)] transition-all">Volver</button>
                 <span className="material-symbols-outlined text-[14px]">chevron_right</span>
                 <span className="text-[#2b1d12] italic font-black">{team.name}</span>
-            </nav>
+            </div>
 
             {/* Hero Section */}
             <section className="flex flex-col md:flex-row gap-8 items-center md:items-start mb-12 animate-in fade-in slide-in-from-top-4 duration-700">
@@ -121,33 +114,20 @@ const TeamDetailPage: React.FC<TeamDetailPageProps> = ({ team, onBack, onRequest
                     onClick={() => setIsFullscreenImage(true)}
                     className="w-full md:w-[450px] aspect-video rounded-[2rem] border border-[rgba(111,87,56,0.12)] bg-[rgba(255,251,241,0.88)] flex items-center justify-center relative overflow-hidden group shadow-[0_20px_60px_rgba(92,68,39,0.12)] cursor-pointer shrink-0"
                 >
-                    {team.image ? (
-                        <img
-                            src={team.image}
-                            alt={team.name}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                            onError={(e) => {
-                                const img = e.currentTarget;
-                                const fallback = getTeamLogoUrl(team.name);
-                                if (img.src !== fallback) img.src = fallback;
-                            }}
-                        />
-                    ) : (
-                        <img
-                            src={getTeamLogoUrl(team.name)}
-                            alt={team.name}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                            onError={(e) => {
-                                const img = e.currentTarget;
-                                const fallback = getTeamLogoUrl(team.name);
-                                if (img.src !== fallback) img.src = fallback;
-                            }}
-                        />
-                    )}
+                    <img
+                        src={heroImage}
+                        alt={team.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                        onError={(e) => {
+                            const img = e.currentTarget;
+                            const fallback = getTeamLogoUrl(team.name);
+                            if (img.src !== fallback) img.src = fallback;
+                        }}
+                    />
 
                     <div className="absolute inset-0 bg-gradient-to-t from-[rgba(43,29,18,0.72)] via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity"></div>
 
-                    {team.image && (
+                    {heroImage && (
                         <div className="absolute inset-0 z-20 bg-transparent group-hover:bg-[rgba(255,248,231,0.08)] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
                             <div className="bg-[rgba(43,29,18,0.86)] backdrop-blur-md border border-[rgba(202,138,4,0.25)] px-6 py-3 rounded-full flex items-center gap-3 shadow-[0_14px_30px_rgba(43,29,18,0.24)]">
                                 <span className="material-symbols-outlined text-[#f59f0a] text-2xl">zoom_in</span>
@@ -308,7 +288,7 @@ const TeamDetailPage: React.FC<TeamDetailPageProps> = ({ team, onBack, onRequest
                 {/* Main Content Area with Tabs */}
                 <div className="lg:col-span-8 space-y-6">
                     {/* Tabs Navigation */}
-                    <div className="flex gap-2 p-1 blood-ui-light-card rounded-2xl mb-6 sticky top-4 z-30 backdrop-blur-md">
+                    <div className="flex gap-2 p-1 blood-ui-light-card rounded-2xl mb-6 border border-[rgba(111,87,56,0.12)] bg-[rgba(255,251,241,0.9)] shadow-[0_12px_30px_rgba(92,68,39,0.1)]">
                         {[
                             { id: 'roster', label: language === 'es' ? 'Roster' : 'Roster', icon: 'groups' },
                             { id: 'stars', label: language === 'es' ? 'Estrellas' : 'Star Players', icon: 'star', count: eligibleStars.length },
@@ -464,7 +444,7 @@ const TeamDetailPage: React.FC<TeamDetailPageProps> = ({ team, onBack, onRequest
                                         ) : (
                                             <div className="col-span-full py-20 bg-[rgba(255,251,241,0.55)] border border-dashed border-[rgba(111,87,56,0.14)] rounded-2xl flex flex-col items-center justify-center text-[#6f5738]">
                                                 <span className="material-symbols-outlined text-4xl mb-2 opacity-20">sentiment_dissatisfied</span>
-                                                <p className="text-xs font-black uppercase tracking-widest italic">No se encontraron Estrellas elegibles</p>
+                                                <p className="text-xs font-black uppercase tracking-widest italic">No se encontraron estrellas elegibles</p>
                                             </div>
                                         )}
                                     </div>
@@ -543,7 +523,7 @@ const TeamDetailPage: React.FC<TeamDetailPageProps> = ({ team, onBack, onRequest
                         className="fixed inset-0 z-50 bg-[rgba(255,248,231,0.72)] backdrop-blur-xl flex items-center justify-center p-4"
                     >
                         <img
-                            src={team.image || getTeamLogoUrl(team.name)}
+                            src={heroImage}
                             alt={team.name}
                             className="max-w-full max-h-full object-contain rounded-3xl shadow-[0_24px_80px_rgba(92,68,39,0.22)]"
                             onError={(e) => {
@@ -563,6 +543,4 @@ const TeamDetailPage: React.FC<TeamDetailPageProps> = ({ team, onBack, onRequest
 };
 
 export default TeamDetailPage;
-
-
 

@@ -97,12 +97,12 @@ const RulesPage: React.FC = () => {
                         Manual de <span className="text-[#ca8a04]">Campo</span>
                     </h2>
                     <p className="blood-ui-light-body text-sm md:text-base max-w-3xl leading-relaxed">
-                        Reglas oficiales de la Tercera Temporada. Todo lo que necesitas saber antes, durante y después del caos en el emparrillado.
+                        Reglas oficiales de la Tercera Temporada. Todo lo que necesitas saber antes, durante y despu?s del caos en el emparrillado.
                     </p>
                 </div>
             </header>
 
-            <div className="blood-ui-light-card rounded-[2rem] p-2 md:p-3 shadow-[0_16px_40px_rgba(75,52,27,0.12)] sticky top-4 z-40 backdrop-blur-md">
+            <div className="blood-ui-light-card rounded-[2rem] p-2 md:p-3 border border-[rgba(111,87,56,0.12)] bg-[rgba(255,251,241,0.9)] shadow-[0_16px_40px_rgba(75,52,27,0.12)]">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                     {sections.map((section) => (
                         <button
