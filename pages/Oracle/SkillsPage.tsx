@@ -1,6 +1,6 @@
 ﻿import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { Skill } from '../../types';
+import { ELITE_SKILLS, type Skill } from '../../types';
 import { useMasterData } from '../../hooks/useMasterData';
 import { useLanguage } from '../../contexts/LanguageContext';
 import SkillModal from '../../components/oracle/SkillModal';
@@ -14,7 +14,8 @@ const Categories = [
     { id: 'Passing', label: 'Pase', icon: 'sports_football' },
     { id: 'Mutation', label: 'Mutación', icon: 'genetics' },
     { id: 'Trait', label: 'Rasgo', icon: 'star' },
-    { id: 'Triquiñuelas', label: 'Triquiñuelas', icon: 'vocal_remover' },
+    { id: 'Elite', label: 'Élite', icon: 'workspace_premium' },
+    { id: 'Triquiñuelas', label: 'Triquiñuelas', icon: 'casino' },
 ];
 
 const OracleTips: Record<string, string> = {
@@ -24,7 +25,8 @@ const OracleTips: Record<string, string> = {
     Passing: 'Pase Seguro y Manos Seguras son la base de cualquier estrategia de bombardeo.',
     Mutation: 'Brazo Extra es la mutación más disruptiva, especialmente en portadores de balón.',
     Trait: 'Los rasgos son exclusivos de ciertos perfiles; consulta siempre la plantilla del equipo.',
-    Triquiñuelas: 'Habilidades especiales de Temporada 3. Perfectas para jugar sucio y sorprender al rival.',
+    Elite: 'Las habilidades de élite son la élite táctica del juego: potentes, raras y decisivas.',
+    Triquiñuelas: 'Recursos de juego sucio y trucos de mesa para cambiar una partida en un instante.',
 };
 
 const SkillCard: React.FC<{ skill: Skill; onClick: () => void; isSelected: boolean }> = ({ skill, onClick, isSelected }) => {
@@ -44,7 +46,7 @@ const SkillCard: React.FC<{ skill: Skill; onClick: () => void; isSelected: boole
                 }`}
         >
             <div className="flex justify-between items-start mb-4">
-                <div className={`p-3 rounded-xl transition-colors ${isSelected ? 'bg-[#ca8a04] text-[#2b1d12]' : 'bg-[rgba(202,138,4,0.12)] text-[#ca8a04] group-hover:bg-primary group-hover:text-black'
+                <div className={`p-3 rounded-xl transition-colors ${isSelected ? 'bg-[#ca8a04] text-[#2b1d12]' : 'bg-[rgba(202,138,4,0.12)] text-[#ca8a04] group-hover:bg-primary group-hover:text-[#2b1d12]'
                     }`}>
                     <span className="material-symbols-outlined text-sm">
                         {Categories.find(c => c.id === skill.category)?.icon || 'auto_awesome'}
@@ -106,6 +108,10 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
             if (searchTermLower) return matchesSearch;
 
             // Otherwise match current category
+            if (activeCategory === 'Elite') {
+                return ELITE_SKILLS.includes(skill.keyEN);
+            }
+
             return skill.category === activeCategory;
         });
     }, [activeCategory, searchTerm, skills]);
@@ -122,6 +128,10 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
         }
         return filteredSkills[0];
     }, [selectedSkillName, filteredSkills, skills]);
+
+    const activeCategoryLabel = useMemo(() => {
+        return Categories.find(cat => cat.id === activeCategory)?.label || activeCategory;
+    }, [activeCategory]);
 
     const handlePinSkill = (skill: Skill) => {
         if (pinnedSkills.includes(skill.name)) {
@@ -144,7 +154,7 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
                 <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                    className="size-12 border-4 border-primary border-t-white rounded-full"
+                    className="size-12 border-4 border-primary border-t-transparent rounded-full"
                 />
             </div>
         );
@@ -242,7 +252,7 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-[rgba(111,87,56,0.12)] pb-4">
                     <h2 className="text-2xl font-black text-[#2b1d12] uppercase italic tracking-tighter">
-                        Habilidades: <span className="text-[#ca8a04]">{activeCategory}</span>
+                        Habilidades: <span className="text-[#ca8a04]">{activeCategoryLabel}</span>
                     </h2>
                     <span className="text-[10px] text-[#7b6853] uppercase font-black tracking-widest opacity-60">
                         {filteredSkills.length} resultados

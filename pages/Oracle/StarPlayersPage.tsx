@@ -9,9 +9,9 @@ import SkillModal from '../../components/oracle/SkillModal';
 import { getStarPlayerImageUrl } from '../../utils/imageUtils';
 
 const StatBox: React.FC<{ label: string; value: string | number }> = ({ label, value }) => (
-    <div className="bg-border-gold/40 p-2 rounded-lg border border-border-gold flex flex-col items-center justify-center min-w-[45px]">
-        <span className="block text-[9px] text-slate-400 font-bold uppercase tracking-tighter">{label}</span>
-        <span className="text-base font-black text-white italic leading-tight">{value}</span>
+    <div className="blood-ui-light-card p-2 rounded-xl border border-[rgba(111,87,56,0.12)] flex flex-col items-center justify-center min-w-[45px] shadow-[0_10px_20px_rgba(92,68,39,0.08)]">
+        <span className="block text-[9px] text-[#7b6853] font-bold uppercase tracking-tighter">{label}</span>
+        <span className="text-base font-black text-[#2b1d12] italic leading-tight">{value}</span>
     </div>
 );
 
@@ -31,11 +31,11 @@ const StarPlayerCard: React.FC<{
             animate={{ opacity: 1, y: 0 }}
             whileHover={{ y: -5 }}
             onClick={onSelect}
-            className={`group bg-card-dark border ${isSelected ? 'border-primary ring-2 ring-primary ring-offset-4 ring-offset-background-dark' : 'border-border-gold'} rounded-xl overflow-hidden hover:border-primary/50 transition-all flex flex-col shadow-lg cursor-pointer h-full`}
+            className={`group blood-ui-light-card border ${isSelected ? 'border-primary ring-2 ring-primary ring-offset-4 ring-offset-[rgba(255,248,231,0.92)]' : 'border-[rgba(111,87,56,0.18)]'} rounded-[1.6rem] overflow-hidden hover:border-primary/50 transition-all flex flex-col shadow-[0_18px_48px_rgba(92,68,39,0.12)] cursor-pointer h-full`}
         >
             <div className="h-52 relative overflow-hidden">
                 {isSelected && (
-                    <div className="absolute top-4 left-4 z-10 bg-primary text-background-dark rounded-full p-1 shadow-lg">
+                    <div className="absolute top-4 left-4 z-10 bg-[#ca8a04] text-[#2b1d12] rounded-full p-1 shadow-lg">
                         <span className="material-symbols-outlined text-sm font-bold">check</span>
                     </div>
                 )}
@@ -58,18 +58,18 @@ const StarPlayerCard: React.FC<{
                         alt={player.name}
                     />
                 </motion.div>
-                <div className="absolute inset-0 bg-gradient-to-t from-card-dark via-transparent to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[rgba(43,29,18,0.78)] via-transparent to-transparent"></div>
 
-                <div className={`absolute top-4 right-4 font-black px-3 py-1 rounded-full text-[10px] italic z-10 ${isElite ? 'bg-primary text-background-dark' : 'bg-slate-700 text-white'
+                <div className={`absolute top-4 right-4 font-black px-3 py-1 rounded-full text-[10px] italic z-10 ${isElite ? 'bg-primary text-background-dark' : 'bg-[rgba(43,29,18,0.8)] text-white'
                     }`}>
                     {isElite ? 'ELITE' : isBrutal ? 'BRUTAL' : 'LEYENDA'}
                 </div>
 
                 <div className="absolute bottom-4 left-4">
-                    <h3 className="text-white text-xl font-black italic uppercase leading-none tracking-tight group-hover:text-primary transition-colors">
+                    <h3 className="text-[#fff8e7] text-xl font-black italic uppercase leading-none tracking-tight group-hover:text-[#ca8a04] transition-colors">
                         {player.name}
                     </h3>
-                    <p className="text-primary font-bold text-[10px] mt-1 uppercase tracking-widest">{player.playsFor[0]}</p>
+                    <p className="text-[#ca8a04] font-bold text-[10px] mt-1 uppercase tracking-widest">{player.playsFor[0]}</p>
                 </div>
             </div>
 
@@ -97,7 +97,7 @@ const StarPlayerCard: React.FC<{
                             />
                         ))}
                         {(player.skillKeys?.length || 0) > 4 && (
-                            <span className="text-[9px] text-slate-500 font-bold px-1">...</span>
+                            <span className="text-[9px] text-[#7b6853] font-bold px-1">...</span>
                         )}
                     </div>
                 </div>
@@ -105,7 +105,7 @@ const StarPlayerCard: React.FC<{
                 {/* Footer */}
                 <div className="pt-4 border-t border-border-gold/30">
                     <div className="flex flex-col">
-                        <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest">Coste</span>
+                        <span className="text-[9px] text-[#7b6853] font-black uppercase tracking-widest">Coste</span>
                         <span className="text-primary font-black text-lg italic leading-none">{(player.cost / 1000)}k MO</span>
                     </div>
                 </div>
@@ -182,18 +182,18 @@ const StarPlayers: React.FC = () => {
 
             {/* Breadcrumbs */}
             <nav className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
-                <span className="text-slate-500">Oráculo</span>
-                <span className="text-slate-700">/</span>
+                <span className="text-[#7b6853]">Oráculo</span>
+                <span className="text-[#2b1d12]">/</span>
                 <span className="text-primary italic">Jugadores Estrella</span>
             </nav>
 
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                 <div>
-                    <h1 className="text-slate-100 text-4xl md:text-5xl font-black leading-tight tracking-tight uppercase italic border-l-4 border-primary pl-6">
+                    <h1 className="text-[#2b1d12] text-4xl md:text-5xl font-black leading-tight tracking-tight uppercase italic border-l-4 border-primary pl-6">
                         Compendio de <span className="text-primary italic">Estrellas</span>
                     </h1>
-                    <p className="text-slate-400 text-sm mt-3 font-medium italic opacity-80 max-w-xl">
+                    <p className="text-[#7b6853] text-sm mt-3 font-medium italic opacity-80 max-w-xl">
                         Consulta las leyendas vivas de los campos de Blood Bowl. Contrataciones de élite para entrenadores con ambición.
                     </p>
                 </div>
@@ -209,26 +209,26 @@ const StarPlayers: React.FC = () => {
             </div>
 
             {/* Filters */}
-            <section className="grid grid-cols-1 lg:grid-cols-4 gap-6 bg-card-dark/40 p-8 rounded-[2rem] border border-border-gold shadow-2xl backdrop-blur-sm">
+            <section className="grid grid-cols-1 lg:grid-cols-4 gap-6 blood-ui-light-card p-8 rounded-[2rem] border border-[rgba(111,87,56,0.16)] shadow-[0_18px_50px_rgba(92,68,39,0.12)]">
                 <div className="lg:col-span-2">
-                    <label className="block text-[10px] font-black text-slate-400 uppercase mb-3 tracking-[0.2em] italic pl-1">Buscar Leyenda</label>
+                    <label className="block text-[10px] font-black text-[#7b6853] uppercase mb-3 tracking-[0.2em] italic pl-1">Buscar Leyenda</label>
                     <div className="relative group">
-                        <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors text-sm">search</span>
+                        <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#7b6853] group-focus-within:text-primary transition-colors text-sm">search</span>
                         <input
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
-                            className="w-full bg-border-gold/20 border-border-gold/50 rounded-2xl pl-12 pr-4 py-4 text-xs text-slate-100 placeholder:text-slate-600 focus:ring-1 focus:ring-primary focus:border-primary transition-all font-bold italic"
+                            className="blood-ui-light-input w-full rounded-2xl pl-12 pr-4 py-4 text-xs text-[#2b1d12] placeholder:text-[#8d7a63] focus:ring-1 focus:ring-primary focus:border-primary transition-all font-bold italic"
                             placeholder="Ej: Morg 'n' Thorg, Griff Oberwald..."
                             type="text"
                         />
                     </div>
                 </div>
                 <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase mb-3 tracking-[0.2em] italic pl-1">Afiliación / Raza</label>
+                    <label className="block text-[10px] font-black text-[#7b6853] uppercase mb-3 tracking-[0.2em] italic pl-1">Afiliación / Raza</label>
                     <select
                         value={selectedFaction}
                         onChange={e => setSelectedFaction(e.target.value)}
-                        className="w-full bg-border-gold/20 border-border-gold/50 rounded-2xl py-4 px-5 text-xs text-slate-100 focus:ring-1 focus:ring-primary focus:border-primary appearance-none transition-all font-bold italic"
+                        className="blood-ui-light-input w-full rounded-2xl py-4 px-5 text-xs text-[#2b1d12] focus:ring-1 focus:ring-primary focus:border-primary appearance-none transition-all font-bold italic"
                     >
                         {factions.map(f => <option key={f} value={f} className="bg-slate-900">{f}</option>)}
                     </select>
@@ -236,14 +236,14 @@ const StarPlayers: React.FC = () => {
                 <div className="flex items-end gap-2">
                     <button
                         onClick={() => setViewMode('grid')}
-                        className={`flex-1 flex items-center justify-center gap-2 h-14 rounded-2xl transition-all ${viewMode === 'grid' ? 'bg-primary text-background-dark font-black' : 'bg-border-gold/20 text-slate-500 font-bold hover:bg-border-gold/40'}`}
+                        className={`flex-1 flex items-center justify-center gap-2 h-14 rounded-2xl transition-all ${viewMode === 'grid' ? 'bg-primary text-background-dark font-black' : 'bg-border-gold/20 text-[#7b6853] font-bold hover:bg-border-gold/40'}`}
                     >
                         <span className="material-symbols-outlined text-sm">grid_view</span>
                         <span className="text-[10px] uppercase tracking-widest">Cuadrícula</span>
                     </button>
                     <button
                         onClick={() => setViewMode('list')}
-                        className={`flex-1 flex items-center justify-center gap-2 h-14 rounded-2xl transition-all ${viewMode === 'list' ? 'bg-primary text-background-dark font-black' : 'bg-border-gold/20 text-slate-500 font-bold hover:bg-border-gold/40'}`}
+                        className={`flex-1 flex items-center justify-center gap-2 h-14 rounded-2xl transition-all ${viewMode === 'list' ? 'bg-primary text-background-dark font-black' : 'bg-border-gold/20 text-[#7b6853] font-bold hover:bg-border-gold/40'}`}
                     >
                         <span className="material-symbols-outlined text-sm">format_list_bulleted</span>
                         <span className="text-[10px] uppercase tracking-widest">Lista</span>
@@ -276,7 +276,7 @@ const StarPlayers: React.FC = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[150] flex flex-col items-center justify-start p-4 md:p-20 bg-black/80 backdrop-blur-md overflow-y-auto"
+                        className="fixed inset-0 z-[150] flex flex-col items-center justify-start p-4 md:p-20 bg-[rgba(255,248,231,0.72)] backdrop-blur-md overflow-y-auto"
                         onClick={() => setSelectedPlayerName(null)}
                     >
                         <motion.section
@@ -285,13 +285,13 @@ const StarPlayers: React.FC = () => {
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 30 }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="w-full max-w-6xl max-h-none md:max-h-[85vh] grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12 bg-card-dark border-2 border-primary/30 p-8 md:p-14 rounded-[3rem] shadow-[0_50px_100px_rgba(0,0,0,0.8)] relative overflow-y-auto overflow-x-hidden premium-scrollbar my-auto"
+                            className="w-full max-w-6xl max-h-none md:max-h-[85vh] grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12 blood-ui-light-card border border-[rgba(111,87,56,0.16)] p-8 md:p-14 rounded-[3rem] shadow-[0_50px_100px_rgba(92,68,39,0.16)] relative overflow-y-auto overflow-x-hidden premium-scrollbar my-auto"
                             onClick={e => e.stopPropagation()}
                         >
                             {/* Close Button */}
                             <button
                                 onClick={() => setSelectedPlayerName(null)}
-                                className="absolute top-8 right-8 size-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-primary transition-all z-50 hover:bg-white/10"
+                                className="absolute top-8 right-8 size-12 rounded-full bg-[rgba(255,251,241,0.8)] border border-[rgba(111,87,56,0.12)] flex items-center justify-center text-[#7b6853] hover:text-[#ca8a04] transition-all z-50 hover:bg-white/70"
                             >
                                 <span className="material-symbols-outlined font-bold">close</span>
                             </button>
@@ -301,7 +301,7 @@ const StarPlayers: React.FC = () => {
                             <div className="lg:col-span-1 space-y-8 relative z-10">
                                 <motion.div
                                     layoutId={`img-${selectedPlayer.name}`}
-                                    className="aspect-[3/4] rounded-3xl border-2 border-primary overflow-hidden shadow-[0_30px_60px_rgba(245,159,10,0.15)] bg-black"
+                                    className="aspect-[3/4] rounded-3xl border-2 border-primary overflow-hidden shadow-[0_30px_60px_rgba(245,159,10,0.15)] bg-[rgba(255,251,241,0.82)]"
                                 >
                                     <img
                                         className="w-full h-full object-cover"
@@ -332,40 +332,40 @@ const StarPlayers: React.FC = () => {
                             <div className="lg:col-span-2 space-y-8 relative z-10 flex flex-col justify-between">
                                 <div className="space-y-8">
                                     <div>
-                                        <h2 className="text-4xl md:text-7xl font-black text-white italic uppercase mb-2 tracking-tighter">
+                                        <h2 className="text-4xl md:text-7xl font-black text-[#2b1d12] italic uppercase mb-2 tracking-tighter">
                                             {selectedPlayer.name}
                                         </h2>
-                                        <p className="text-xl text-primary font-black italic tracking-tight">{selectedPlayer.playsFor[0]}</p>
+                                        <p className="text-xl text-[#ca8a04] font-black italic tracking-tight">{selectedPlayer.playsFor[0]}</p>
                                     </div>
 
-                                    <div className="p-8 bg-black/40 rounded-3xl border border-white/5 space-y-4 shadow-inner">
-                                        <h4 className="text-slate-100 font-black italic uppercase tracking-widest text-xs flex items-center gap-3">
+                                    <div className="p-8 bg-[rgba(255,251,241,0.7)] rounded-3xl border border-[rgba(111,87,56,0.12)] space-y-4 shadow-inner">
+                                        <h4 className="text-[#2b1d12] font-black italic uppercase tracking-widest text-xs flex items-center gap-3">
                                             <span className="material-symbols-outlined text-primary text-sm">info</span>
                                             Biografía y Trasfondo
                                         </h4>
-                                        <p className="text-slate-400 leading-relaxed text-sm font-medium italic">
+                                        <p className="text-[#7b6853] leading-relaxed text-sm font-medium italic">
                                             {selectedPlayer.description || `Esta leyenda de los campos de Blood Bowl es conocida por su impecable técnica y su capacidad para cambiar el rumbo de cualquier partido. Con un coste de ${(selectedPlayer.cost / 1000)},000 monedas de oro, es una inversión en victoria.`}
                                         </p>
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                        <div className="p-8 bg-black/30 rounded-3xl border border-white/10 shadow-xl">
-                                            <h4 className="text-slate-100 font-black italic uppercase tracking-widest text-xs mb-6">Regla Especial</h4>
+                                        <div className="p-8 bg-[rgba(255,251,241,0.66)] rounded-3xl border border-[rgba(111,87,56,0.16)] shadow-xl">
+                                            <h4 className="text-[#2b1d12] font-black italic uppercase tracking-widest text-xs mb-6">Regla Especial</h4>
                                             <div className="flex gap-4">
                                                 <div className="size-10 rounded-2xl bg-primary/20 flex items-center justify-center shrink-0 border border-primary/20">
                                                     <span className="material-symbols-outlined text-lg text-primary">star</span>
                                                 </div>
                                                 <div>
-                                                    <span className="text-slate-200 font-black italic block text-sm mb-2">Habilidad Maestra</span>
-                                                    <p className="text-[11px] text-slate-500 font-medium italic leading-relaxed">
+                                                    <span className="text-[#2b1d12] font-black italic block text-sm mb-2">Habilidad Maestra</span>
+                                                    <p className="text-[11px] text-[#7b6853] font-medium italic leading-relaxed">
                                                         {language === 'es' ? (selectedPlayer.specialRules_es || selectedPlayer.specialRules) : (selectedPlayer.specialRules_en || selectedPlayer.specialRules)}
                                                     </p>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="p-8 bg-black/30 rounded-3xl border border-white/10 shadow-xl">
-                                            <h4 className="text-slate-100 font-black italic uppercase tracking-widest text-xs mb-6">Habilidades Base</h4>
+                                        <div className="p-8 bg-[rgba(255,251,241,0.66)] rounded-3xl border border-[rgba(111,87,56,0.16)] shadow-xl">
+                                            <h4 className="text-[#2b1d12] font-black italic uppercase tracking-widest text-xs mb-6">Habilidades Base</h4>
                                             <div className="flex flex-wrap gap-2">
                                                 {(selectedPlayer.skillKeys || []).map((skillKey) => (
                                                     <SkillBadge
@@ -405,12 +405,12 @@ const StarPlayers: React.FC = () => {
             </AnimatePresence>
 
             {/* Rules / Engine Citation */}
-            <div className="pt-20 border-t border-white/5 flex flex-col items-center gap-6">
+            <div className="pt-20 border-t border-[rgba(111,87,56,0.12)] flex flex-col items-center gap-6">
                 <div className="flex items-center gap-3 bg-card-dark/50 px-6 py-3 rounded-full border border-border-gold">
                     <span className="material-symbols-outlined text-primary text-lg">auto_fix</span>
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 italic">BB Oracle Core Engine v2.4.0</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#7b6853] italic">BB Oracle Core Engine v2.4.0</span>
                 </div>
-                <div className="flex gap-8 text-[9px] font-black text-slate-700 uppercase tracking-[0.3em]">
+                <div className="flex gap-8 text-[9px] font-black text-[#2b1d12] uppercase tracking-[0.3em]">
                     <a href="#" className="hover:text-primary transition-colors">Privacidad</a>
                     <a href="#" className="hover:text-primary transition-colors">Términos</a>
                     <a href="#" className="hover:text-primary transition-colors">API Endpoint</a>

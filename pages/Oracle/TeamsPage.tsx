@@ -13,6 +13,7 @@ import RadarChartModal from '../../components/oracle/RadarChartModal';
 import TeamDetailPage from './TeamDetailPage';
 import SkillBadge from '../../components/shared/SkillBadge';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { getTeamLogoUrl } from '../../utils/imageUtils';
 
 const renderPlusValue = (value: string | number) => {
     const raw = value == null || value === 'undefined' || value === 'null' ? '—' : String(value);
@@ -28,17 +29,16 @@ const PopularTeamCard: React.FC<{ team: Team; icon: string; subtitle: string; on
         className="blood-ui-light-card group relative overflow-hidden rounded-[1.6rem] text-left shadow-[0_20px_60px_rgba(92,68,39,0.12)] focus:outline-none focus:ring-2 focus:ring-[rgba(202,138,4,0.25)]"
     >
         <div className="relative h-44 overflow-hidden">
-            {team.image ? (
-                <img
-                    src={team.image}
-                    alt={team.name}
-                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-            ) : (
-                <div className="h-full w-full bg-[linear-gradient(135deg,rgba(255,247,228,0.75),rgba(238,216,170,0.9))] flex items-center justify-center">
-                    <span className="material-symbols-outlined text-[72px] text-[#7b6853]/30">{icon}</span>
-                </div>
-            )}
+            <img
+                src={team.image || getTeamLogoUrl(team.name)}
+                alt={team.name}
+                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                onError={(e) => {
+                    const img = e.currentTarget;
+                    const fallback = getTeamLogoUrl(team.name);
+                    if (img.src !== fallback) img.src = fallback;
+                }}
+            />
             <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,244,218,0.08),rgba(40,25,13,0.72))]" />
             <div className="absolute left-4 top-4 flex items-center gap-2">
                 <span className="blood-ui-light-button-secondary px-3 py-1 rounded-full text-[9px] uppercase tracking-[0.28em]">
@@ -98,7 +98,7 @@ const TeamArticle: React.FC<{
     onViewRoster: () => void;
     onSkillClick: (skill: Skill) => void;
     isAdmin: boolean;
-    onUpdateImage: (name: string, url: string) => Promise<void>;
+    onUpdateImage: (name: string) => Promise<void>;
 }> = ({ team, onViewRoster, onSkillClick, isAdmin, onUpdateImage }) => {
     const [isRadarModalOpen, setIsRadarModalOpen] = useState(false);
     const [isFullscreenImage, setIsFullscreenImage] = useState(false);
@@ -115,16 +115,19 @@ const TeamArticle: React.FC<{
             <div className="grid grid-cols-1 lg:grid-cols-12">
                 <div className="lg:col-span-4 p-6 md:p-8 border-b lg:border-b-0 lg:border-r border-[rgba(111,87,56,0.12)] bg-[linear-gradient(180deg,rgba(255,249,235,0.84),rgba(243,227,192,0.64))]">
                     <div
-                        onClick={() => team.image && setIsFullscreenImage(true)}
+                        onClick={() => setIsFullscreenImage(true)}
                         className="group relative w-full aspect-[4/3] rounded-[1.6rem] overflow-hidden border border-[rgba(111,87,56,0.14)] shadow-[0_18px_40px_rgba(92,68,39,0.16)] cursor-pointer"
                     >
-                        {team.image ? (
-                            <img src={team.image} alt={team.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                        ) : (
-                            <div className="h-full w-full bg-[linear-gradient(135deg,rgba(255,247,228,0.7),rgba(238,216,170,0.85))] flex items-center justify-center">
-                                <span className="material-symbols-outlined text-[72px] text-[#7b6853]/30">shield</span>
-                            </div>
-                        )}
+                        <img
+                            src={team.image || getTeamLogoUrl(team.name)}
+                            alt={team.name}
+                            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                            onError={(e) => {
+                                const img = e.currentTarget;
+                                const fallback = getTeamLogoUrl(team.name);
+                                if (img.src !== fallback) img.src = fallback;
+                            }}
+                        />
                         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,251,241,0.06),rgba(40,25,13,0.72))]" />
                         <div className="absolute inset-x-0 bottom-0 p-4 flex items-center justify-between gap-3">
                             <span className="blood-ui-light-button-secondary px-3 py-1.5 rounded-full text-[9px] uppercase tracking-[0.28em]">
@@ -171,7 +174,7 @@ const TeamArticle: React.FC<{
 
                     {isAdmin && (
                         <button
-                            onClick={() => onUpdateImage(team.name, team.image || '')}
+                            onClick={() => onUpdateImage(team.name)}
                             className="mt-4 w-full blood-ui-button-secondary py-3 rounded-2xl text-[10px]"
                         >
                             Gestionar imagen
@@ -321,7 +324,7 @@ const TeamArticle: React.FC<{
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
-                            src={team.image}
+                            src={team.image || getTeamLogoUrl(team.name)}
                             alt={team.name}
                             className="max-w-full max-h-full object-contain shadow-[0_0_100px_rgba(202,138,4,0.2)] rounded-3xl"
                         />
@@ -445,8 +448,10 @@ const Teams: React.FC<{
         });
     };
 
-    const updateTeamImage = async (teamName: string, url: string) => {
-        await updateMasterItem('teams', teamName, { image: url });
+    const updateTeamImage = async (teamName: string) => {
+        const officialLogo = getTeamLogoUrl(teamName);
+        await updateMasterItem('teams', teamName, { image: officialLogo });
+        showToast(`Escudo actualizado para ${teamName}.`);
     };
 
     if (selectedTeam) {

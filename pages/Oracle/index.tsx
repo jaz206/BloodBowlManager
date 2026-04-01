@@ -92,7 +92,15 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
         setActiveView('skills');
     };
 
-    const HubView = () => (
+    const openSubview = (view: Exclude<SubView, 'hub'>) => {
+        setActiveView(view);
+        setSelectedHubTeam(null);
+        if (view !== 'skills') {
+            setHubSearchTerm('');
+        }
+    };
+
+    const hubView = (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -271,12 +279,44 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                     </button>
                 </div>
             </div>
+
+            <section className="blood-ui-light-card rounded-[2rem] p-6 md:p-8 shadow-[0_24px_60px_rgba(75,52,27,0.14)]">
+                <div className="flex items-center justify-between gap-4 mb-5">
+                    <div>
+                        <p className="text-[10px] uppercase tracking-[0.25em] font-black text-[#7b6853] italic mb-2">Accesos de mando</p>
+                        <h3 className="blood-ui-light-title text-xl md:text-2xl uppercase italic tracking-tighter">Herramientas del Oráculo</h3>
+                    </div>
+                    <span className="text-[10px] uppercase tracking-[0.28em] font-black text-[#7b6853] italic">Rápido / Directo / Siempre visible</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {[
+                        { id: 'calculator', title: 'Calculadora', desc: 'Probabilidades de tirada y apoyo matemático.', icon: 'calculate' },
+                        { id: 'inducements', title: 'Incentivos', desc: 'Sobornos, magos, apotecarios y más.', icon: 'payments' },
+                        { id: 'rules', title: 'Manual', desc: 'Patada inicial, clima y reglas del campo.', icon: 'menu_book' }
+                    ].map(item => (
+                        <button
+                            key={item.id}
+                            onClick={() => openSubview(item.id as Exclude<SubView, 'hub'>)}
+                            className="blood-ui-light-card rounded-2xl p-5 text-left flex items-center gap-4 hover:border-[rgba(202,138,4,0.28)] transition-all group"
+                        >
+                            <div className="size-14 rounded-2xl bg-[rgba(202,138,4,0.12)] border border-[rgba(202,138,4,0.16)] flex items-center justify-center text-[#ca8a04] shrink-0 group-hover:bg-[rgba(202,138,4,0.18)] transition-colors">
+                                <span className="material-symbols-outlined">{item.icon}</span>
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <p className="blood-ui-light-title text-base uppercase italic leading-tight">{item.title}</p>
+                                <p className="blood-ui-light-body text-[11px] mt-1 leading-relaxed">{item.desc}</p>
+                            </div>
+                            <span className="material-symbols-outlined text-[rgba(202,138,4,0.9)]">chevron_right</span>
+                        </button>
+                    ))}
+                </div>
+            </section>
         </motion.div>
     );
     return (
         <div className="blood-ui-shell min-h-screen px-4 md:px-0">
             <AnimatePresence mode="wait">
-                {activeView === 'hub' && <HubView key="hub" />}
+                {activeView === 'hub' && hubView}
                 {activeView !== 'hub' && (
                     <motion.div
                         key="subview"
@@ -293,33 +333,6 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                             {t('common.back')}
                         </button>
 
-                        {/* Traditional Tab Navigation for sub-views */}
-                        <div className="blood-ui-card-strong flex border-b border-white/5 mb-8 rounded-2xl overflow-hidden sticky top-16 z-20 transition-all">
-                            {[
-                                { id: 'teams', label: t('oracle.tabs.teams') },
-                                { id: 'skills', label: t('oracle.tabs.skills') },
-                                { id: 'star_players', label: t('oracle.tabs.stars') },
-                                { id: 'calculator', label: t('oracle.tabs.oracle') },
-                                { id: 'inducements', label: t('oracle.tabs.inducements') },
-                                { id: 'rules', label: 'Manual' }
-                            ].map(tab => (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => {
-                                        setActiveView(tab.id as SubView);
-                                        if (tab.id !== 'skills') setHubSearchTerm('');
-                                        setSelectedHubTeam(null);
-                                    }}
-                                    className={`blood-ui-nav-button flex-1 py-4 px-2 text-center relative font-display uppercase tracking-widest text-[10px] font-black rounded-none border-b-0 ${activeView === tab.id ? 'text-premium-gold' : 'text-stone-700 hover:text-stone-900'}`}
-                                >
-                                    {tab.label}
-                                    {activeView === tab.id && (
-                                        <motion.div layoutId="oracle-underline" className="absolute bottom-0 left-0 right-0 h-0.5 bg-premium-gold shadow-[0_0_10px_rgba(202,138,4,0.5)]" />
-                                    )}
-                                </button>
-                            ))}
-                        </div>
-
                         <div className="max-w-6xl mx-auto">
                             {activeView === 'teams' && (
                                 <Teams
@@ -330,14 +343,14 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                             {activeView === 'skills' && <Skills initialCategory={initialSkillCategory} initialSearchTerm={hubSearchTerm} />}
                             {activeView === 'star_players' && <StarPlayers />}
                             {activeView === 'calculator' && (
-                                <div className="blood-ui-card-strong max-w-md mx-auto py-10 p-8 rounded-[2.5rem]">
-                                    <h3 className="text-xl font-display font-black text-white italic tracking-tighter uppercase mb-8 text-center">{t('oracle.calculator.title')}</h3>
+                                <div className="blood-ui-light-card max-w-3xl mx-auto py-10 p-8 rounded-[2.5rem] shadow-[0_24px_60px_rgba(75,52,27,0.14)]">
+                                    <h3 className="blood-ui-light-title text-xl md:text-2xl font-black italic tracking-tighter uppercase mb-4 text-center">{t('oracle.calculator.title')}</h3>
                                     <ProbabilityCalculator />
                                 </div>
                             )}
                             {activeView === 'inducements' && (
-                                <div className="blood-ui-card-strong max-w-4xl mx-auto py-10 p-8 rounded-[2.5rem]">
-                                    <h3 className="text-xl font-display font-black text-white italic tracking-tighter uppercase mb-8 text-center">{t('oracle.inducements.title')}</h3>
+                                <div className="blood-ui-light-card max-w-5xl mx-auto py-10 p-8 rounded-[2.5rem] shadow-[0_24px_60px_rgba(75,52,27,0.14)]">
+                                    <h3 className="blood-ui-light-title text-xl md:text-2xl font-black italic tracking-tighter uppercase mb-4 text-center">{t('oracle.inducements.title')}</h3>
                                     <InducementTable />
                                 </div>
                             )}
