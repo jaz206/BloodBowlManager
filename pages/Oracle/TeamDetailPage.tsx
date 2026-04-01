@@ -48,8 +48,9 @@ const TeamDetailPage: React.FC<TeamDetailPageProps> = ({ team, onBack, onRequest
 
     const staticTeam = staticTeamsData.find(t => t.name === team.name);
     const heroImage =
-        (team as Team & { crestImage?: string }).crestImage ||
+        (team as Team & { crestImage?: string })?.crestImage ||
         team.image ||
+        staticTeam?.crestImage ||
         staticTeam?.image ||
         getTeamLogoUrl(team.name);
 
@@ -98,7 +99,10 @@ const TeamDetailPage: React.FC<TeamDetailPageProps> = ({ team, onBack, onRequest
         >
             {/* Breadcrumbs */}
             <div className="flex gap-2 p-1 blood-ui-light-card rounded-2xl mb-6 border border-[rgba(111,87,56,0.12)] bg-[rgba(255,251,241,0.9)] shadow-[0_12px_30px_rgba(92,68,39,0.1)]">
-                <button onClick={onBack} className="inline-flex items-center gap-3 rounded-2xl border border-[rgba(43,29,18,0.18)] bg-[linear-gradient(180deg,rgba(43,29,18,0.96),rgba(60,41,24,0.96))] px-5 py-3 text-[#fff8e7] text-[10px] uppercase italic tracking-[0.22em] font-black shadow-[0_14px_28px_rgba(43,29,18,0.24)] hover:-translate-y-0.5 hover:shadow-[0_18px_34px_rgba(43,29,18,0.3)] transition-all">Volver</button>
+                <button onClick={onBack} className="inline-flex items-center gap-3 rounded-2xl border border-[rgba(202,138,4,0.24)] bg-[rgba(202,138,4,0.12)] px-5 py-3 text-[#2b1d12] text-[10px] uppercase italic tracking-[0.22em] font-black shadow-[0_14px_28px_rgba(202,138,4,0.10)] hover:-translate-y-0.5 hover:border-[rgba(202,138,4,0.36)] hover:bg-[rgba(202,138,4,0.18)] transition-all">
+                    <span className="material-symbols-outlined text-[#ca8a04] text-sm">arrow_back</span>
+                    Volver
+                </button>
                 <span className="material-symbols-outlined text-[14px]">chevron_right</span>
                 <span className="text-[#2b1d12] italic font-black">{team.name}</span>
             </div>

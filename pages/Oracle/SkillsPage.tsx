@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useLayoutEffect, useRef } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ELITE_SKILLS, type Skill } from '../../types';
 import { useMasterData } from '../../hooks/useMasterData';
@@ -75,7 +75,6 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
     const [activeCategory, setActiveCategory] = useState(initialCategory || 'General');
     const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
     const searchInputRef = useRef<HTMLInputElement | null>(null);
-    const restoreSearchFocusRef = useRef(false);
 
     // Sync search term if changed from parent
     React.useEffect(() => {
@@ -83,20 +82,6 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
             setSearchTerm(initialSearchTerm);
         }
     }, [initialSearchTerm]);
-
-    useLayoutEffect(() => {
-        if (!restoreSearchFocusRef.current) return;
-        const input = searchInputRef.current;
-        if (!input) return;
-        input.focus({ preventScroll: true });
-        const end = input.value.length;
-        try {
-            input.setSelectionRange(end, end);
-        } catch {
-            // Ignore selection restore failures.
-        }
-        restoreSearchFocusRef.current = false;
-    }, [searchTerm, activeCategory]);
 
     const [selectedSkillName, setSelectedSkillName] = useState<string | null>(null);
     const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
@@ -261,7 +246,7 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
                         type="text"
                         placeholder="Buscar habilidad por nombre o efecto..."
                         value={searchTerm}
-                        onChange={e => { restoreSearchFocusRef.current = true; setSearchTerm(e.target.value); setCurrentPage(1); }}
+                        onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                         className="w-full blood-ui-light-card border border-[rgba(202,138,4,0.14)] text-[#2b1d12] text-xs rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-[rgba(202,138,4,0.35)] transition-all font-medium placeholder:text-[#8d7a63] shadow-inner"
                     />
                 </div>
@@ -324,7 +309,7 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
                                             }`}
                                     >
                                         <span className="material-symbols-outlined text-sm">{pinnedSkills.includes(featuredSkill.name) ? 'bookmark_added' : 'bookmark_add'}</span>
-                                        {pinnedSkills.includes(featuredSkill.name) ? 'En Mi Referencia' : 'A?adir a Referencia'}
+                                        {pinnedSkills.includes(featuredSkill.name) ? 'En Mi Referencia' : 'Añadir a Referencia'}
                                     </button>
                                 </div>
                             </div>
@@ -396,3 +381,5 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
 };
 
 export default Skills;
+
+

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useLayoutEffect, useRef } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 // Subpáginas del Oráculo
 import Teams from './TeamsPage';
@@ -40,11 +40,10 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
     const [initialSkillCategory, setInitialSkillCategory] = useState<string>('General');
     const [hubSearchTerm, setHubSearchTerm] = useState(initialSearchTerm);
     const hubSearchInputRef = useRef<HTMLInputElement | null>(null);
-    const restoreHubFocusRef = useRef(false);
 
     const resolveHubTeamImage = (team: ManagedTeam & { crestImage?: string; image?: string }) => {
         const staticTeam = staticTeams.find(t => t.name === team.name);
-        return team?.crestImage || team?.image || staticTeam?.image || getTeamLogoUrl(team.name) || '';
+        return team?.crestImage || team?.image || staticTeam?.crestImage || staticTeam?.image || getTeamLogoUrl(team.name) || '';
     };
 
     // Update search term when initialSearchTerm changes from outside
@@ -104,25 +103,6 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
         setActiveView('skills');
     };
 
-    useLayoutEffect(() => {
-        if (!restoreHubFocusRef.current) return;
-        if (activeView !== 'hub') {
-            restoreHubFocusRef.current = false;
-            return;
-        }
-
-        const input = hubSearchInputRef.current;
-        if (!input) return;
-        input.focus({ preventScroll: true });
-        const end = input.value.length;
-        try {
-            input.setSelectionRange(end, end);
-        } catch {
-            // Some browsers or mobile layouts may not allow selection restore.
-        }
-        restoreHubFocusRef.current = false;
-    }, [hubSearchTerm, activeView]);
-
     const openSubview = (view: Exclude<SubView, 'hub'>) => {
         setActiveView(view);
         setSelectedHubTeam(null);
@@ -168,10 +148,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                             className="blood-ui-input w-full bg-transparent border-none focus:ring-0 text-[#2b1d12] placeholder:text-[#7b6853] px-6 text-lg font-medium rounded-r-2xl"
                             placeholder="Buscar equipos, habilidades, reglas o estrellas..."
                             value={hubSearchTerm}
-                            onChange={(e) => {
-                                restoreHubFocusRef.current = true;
-                                setHubSearchTerm(e.target.value);
-                            }}
+                            onChange={(e) => setHubSearchTerm(e.target.value)}
                         />
                     </div>
                 </div>

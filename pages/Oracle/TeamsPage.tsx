@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useLayoutEffect, useRef } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { teamsData as staticTeams } from '../../data/teams';
 import type { Team, Skill } from '../../types';
@@ -16,9 +16,10 @@ import SkillBadge from '../../components/shared/SkillBadge';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { getTeamLogoUrl } from '../../utils/imageUtils';
 
-const resolveTeamImage = (team: Team) => {
+const resolveTeamImage = (team?: Team | null) => {
+    if (!team) return '';
     const staticTeam = staticTeams.find(t => t.name === team.name);
-    return (team as Team & { crestImage?: string }).crestImage || team.image || staticTeam?.image || getTeamLogoUrl(team.name);
+    return (team as Team & { crestImage?: string })?.crestImage || team.image || staticTeam?.crestImage || staticTeam?.image || getTeamLogoUrl(team.name);
 };
 const PopularTeamCard: React.FC<{ team: Team; icon: string; subtitle: string; onClick: () => void }> = ({ team, icon, subtitle, onClick }) => (
     <motion.button
@@ -364,7 +365,6 @@ const Teams: React.FC<{
     const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const searchInputRef = useRef<HTMLInputElement | null>(null);
-    const restoreSearchFocusRef = useRef(false);
     const [selectedTiers, setSelectedTiers] = useState<number[]>([]);
     const [sortOrder, setSortOrder] = useState<'alpha' | 'tier_asc' | 'tier_desc'>('alpha');
     const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -386,20 +386,6 @@ const Teams: React.FC<{
             }
         }
     }, [initialTeamName, teams]);
-
-    useLayoutEffect(() => {
-        if (!restoreSearchFocusRef.current) return;
-        const input = searchInputRef.current;
-        if (!input) return;
-        input.focus({ preventScroll: true });
-        const end = input.value.length;
-        try {
-            input.setSelectionRange(end, end);
-        } catch {
-            // Ignore selection restore failures.
-        }
-        restoreSearchFocusRef.current = false;
-    }, [searchTerm]);
 
     const selectedTeam = useMemo(
         () => (selectedTeamName ? teams.find(t => t.name === selectedTeamName) || null : null),
@@ -476,7 +462,7 @@ const Teams: React.FC<{
     const updateTeamImage = async (teamName: string) => {
         try {
             const staticTeam = staticTeams.find(team => team.name === teamName);
-            const officialLogo = `${(staticTeam?.crestImage || staticTeam?.image || getTeamLogoUrl(teamName))}v=${Date.now()}`;
+            const officialLogo = staticTeam?.crestImage || staticTeam?.image || getTeamLogoUrl(teamName);
             await updateMasterItem('teams', teamName, { image: officialLogo, crestImage: officialLogo });
             showToast(`Escudo actualizado para ${teamName}.`);
         } catch (error) {
@@ -524,7 +510,7 @@ const Teams: React.FC<{
                                     type="text"
                                     placeholder="Buscar raza..."
                                     value={searchTerm}
-                                    onChange={e => { restoreSearchFocusRef.current = true; setSearchTerm(e.target.value); }}
+                                    onChange={e => setSearchTerm(e.target.value)}
                                     className="blood-ui-light-input block w-full pl-11 p-3 rounded-2xl text-sm"
                                 />
                             </div>

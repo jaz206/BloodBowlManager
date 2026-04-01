@@ -15,8 +15,8 @@ const StatValue: React.FC<StatValueProps> = ({ value, className = '' }) => {
       className={`inline-flex min-w-[2.9ch] items-center justify-center gap-0.5 font-black not-italic tabular-nums text-[#2b1d12] text-[1.15rem] leading-none tracking-tight ${className}`}
       style={{ fontVariantNumeric: 'tabular-nums' }}
     >
-      <span className="leading-none">{numeric}</span>
-      {hasPlus && <span className="leading-none">+</span>}
+      <span className="leading-none font-black">{numeric}</span>
+      {hasPlus && <span className="leading-none font-black">+</span>}
     </span>
   );
 };
