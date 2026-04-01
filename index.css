@@ -1,22 +1,53 @@
-@import url('https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,700;1,900&family=Epilogue:ital,wght@1,300;1,400;1,700;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,700;1,900&family=Epilogue:ital,wght@0,600;0,700;0,800;0,900;1,600;1,700;1,800;1,900&display=swap');
 
 :root {
-    --blood-red: #8B0000;
-    --premium-gold: #CA8A04;
-    --pitch-green: #1B4332;
-    --primary: #CA8A04;
-    --background-dark: #0a0a0a;
+    --blood-red: #8b0000;
+    --blood-red-2: #b91c1c;
+    --blood-red-glow: rgba(185, 28, 28, 0.26);
+    --premium-gold: #ca8a04;
+    --premium-gold-2: #f59e0b;
+    --premium-gold-glow: rgba(202, 138, 4, 0.26);
+    --pitch-green: #1b4332;
+    --background-dark: #050505;
+    --surface-0: rgba(10, 10, 10, 0.92);
+    --surface-1: rgba(17, 17, 17, 0.88);
+    --surface-2: rgba(24, 24, 24, 0.82);
+    --surface-3: rgba(31, 31, 31, 0.78);
+    --border-soft: rgba(255, 255, 255, 0.08);
+    --border-gold: rgba(202, 138, 4, 0.22);
+    --border-red: rgba(185, 28, 28, 0.26);
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted: #64748b;
+    --shadow-surface: 0 24px 60px rgba(0, 0, 0, 0.45);
+    --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+html {
+    background:
+        radial-gradient(circle at top, rgba(202, 138, 4, 0.18), transparent 24%),
+        radial-gradient(circle at 20% 10%, rgba(139, 0, 0, 0.12), transparent 18%),
+        radial-gradient(circle at 80% 15%, rgba(27, 67, 50, 0.18), transparent 18%),
+        linear-gradient(180deg, #ead9b8 0%, #d4bf96 35%, #b99663 100%);
+    color-scheme: dark;
 }
 
 body {
-    background-color: #0a0a0a;
-    color: #f8fafc;
+    background:
+        radial-gradient(circle at top, rgba(202, 138, 4, 0.18), transparent 24%),
+        radial-gradient(circle at 12% 20%, rgba(185, 28, 28, 0.12), transparent 18%),
+        radial-gradient(circle at 88% 18%, rgba(27, 67, 50, 0.15), transparent 18%),
+        linear-gradient(180deg, #ead9b8 0%, #d6c19a 35%, #b8935d 100%);
+    color: var(--text-primary);
     -webkit-tap-highlight-color: transparent;
     font-family: 'Public Sans', sans-serif;
 }
 
 h1, h2, h3, h4, .font-display {
-    font-family: 'Public Sans', sans-serif;
+    font-family: 'Epilogue', sans-serif;
+    font-weight: 900;
+    font-style: italic;
+    letter-spacing: -0.03em;
 }
 
 .font-epilogue { font-family: 'Epilogue', sans-serif; }
@@ -36,6 +67,225 @@ h1, h2, h3, h4, .font-display {
     -webkit-backdrop-filter: blur(8px);
 }
 
+
+.blood-ui-shell {
+    background:
+        radial-gradient(circle at top, rgba(202, 138, 4, 0.18), transparent 22%),
+        radial-gradient(circle at 20% 18%, rgba(139, 0, 0, 0.11), transparent 18%),
+        radial-gradient(circle at 80% 14%, rgba(27, 67, 50, 0.14), transparent 16%),
+        linear-gradient(180deg, rgba(234, 217, 184, 0.96) 0%, rgba(216, 192, 151, 0.95) 40%, rgba(183, 144, 88, 0.92) 100%);
+}
+
+.blood-ui-header {
+    background:
+        linear-gradient(180deg, rgba(33, 24, 16, 0.94), rgba(22, 16, 11, 0.9)),
+        linear-gradient(90deg, rgba(202, 138, 4, 0.08), rgba(185, 28, 28, 0.04));
+    border-bottom: 1px solid rgba(202, 138, 4, 0.22);
+    box-shadow: 0 18px 50px rgba(48, 29, 10, 0.35);
+}
+
+.blood-ui-card {
+    background:
+        linear-gradient(180deg, rgba(53, 39, 26, 0.86), rgba(29, 21, 15, 0.92));
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow:
+        var(--shadow-surface),
+        var(--shadow-inset);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+.blood-ui-card-strong {
+    background:
+        linear-gradient(180deg, rgba(59, 43, 29, 0.9), rgba(28, 20, 14, 0.96));
+    border: 1px solid rgba(202, 138, 4, 0.2);
+    box-shadow:
+        0 24px 70px rgba(42, 23, 8, 0.38),
+        0 0 0 1px rgba(202, 138, 4, 0.05) inset,
+        0 0 40px rgba(202, 138, 4, 0.08);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+}
+
+.blood-ui-card-strong:hover {
+    border-color: rgba(202, 138, 4, 0.3);
+}
+
+.blood-ui-input {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(0, 0, 0, 0.22));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+    transition: all 180ms ease;
+}
+
+.blood-ui-input::placeholder {
+    color: rgba(148, 163, 184, 0.65);
+}
+
+.blood-ui-input:focus,
+.blood-ui-input:focus-within {
+    outline: none;
+    border-color: rgba(202, 138, 4, 0.5);
+    box-shadow: 0 0 0 3px rgba(202, 138, 4, 0.12), 0 0 24px rgba(202, 138, 4, 0.14);
+}
+
+.blood-ui-button-primary,
+.blood-ui-button-secondary,
+.blood-ui-button-danger {
+    transition: all 180ms ease;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-family: 'Epilogue', sans-serif;
+    font-weight: 900;
+    font-style: italic;
+}
+
+.blood-ui-button-primary {
+    background: linear-gradient(180deg, var(--premium-gold-2) 0%, var(--premium-gold) 100%);
+    color: #090909;
+    box-shadow: 0 12px 28px rgba(202, 138, 4, 0.26), 0 0 0 1px rgba(255, 255, 255, 0.18) inset;
+}
+
+.blood-ui-button-primary:hover {
+    filter: brightness(1.05);
+    transform: translateY(-1px);
+    box-shadow: 0 16px 34px rgba(202, 138, 4, 0.32), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+}
+
+.blood-ui-button-secondary {
+    background: linear-gradient(180deg, rgba(50, 38, 27, 0.94), rgba(20, 15, 10, 0.94));
+    color: var(--text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.blood-ui-button-secondary:hover {
+    border-color: rgba(202, 138, 4, 0.24);
+    box-shadow: 0 0 24px rgba(202, 138, 4, 0.08);
+    transform: translateY(-1px);
+}
+
+.blood-ui-button-danger {
+    background: linear-gradient(180deg, rgba(127, 29, 29, 0.96), rgba(69, 10, 10, 0.96));
+    color: #fff5f5;
+    border: 1px solid rgba(239, 68, 68, 0.26);
+    box-shadow: 0 12px 26px rgba(185, 28, 28, 0.22);
+}
+
+.blood-ui-button-danger:hover {
+    filter: brightness(1.04);
+    box-shadow: 0 18px 34px rgba(185, 28, 28, 0.3);
+    transform: translateY(-1px);
+}
+
+.blood-ui-nav-button {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.5rem;
+    padding: 0.65rem 1rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(180deg, rgba(55, 39, 24, 0.94), rgba(19, 14, 10, 0.94));
+    color: rgba(148, 163, 184, 0.92);
+    transition: all 180ms ease;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.blood-ui-nav-button:hover {
+    color: #fff;
+    border-color: rgba(202, 138, 4, 0.2);
+    transform: translateY(-1px);
+    box-shadow: 0 0 24px rgba(202, 138, 4, 0.08);
+}
+
+.blood-ui-nav-button[data-active="true"] {
+    background: linear-gradient(180deg, rgba(202, 138, 4, 0.98), rgba(180, 120, 4, 0.96));
+    color: #090909;
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 14px 30px rgba(202, 138, 4, 0.28), 0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+}
+
+.blood-ui-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(226, 232, 240, 0.9);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-weight: 900;
+    font-style: italic;
+}
+
+.blood-ui-chip--gold {
+    border-color: rgba(202, 138, 4, 0.22);
+    background: rgba(202, 138, 4, 0.08);
+    color: #f8d66d;
+}
+
+.blood-ui-chip--red {
+    border-color: rgba(185, 28, 28, 0.28);
+    background: rgba(185, 28, 28, 0.1);
+    color: #fda4af;
+}
+
+.blood-ui-chip--slate {
+    border-color: rgba(148, 163, 184, 0.18);
+    background: rgba(31, 26, 20, 0.55);
+    color: #cbd5e1;
+}
+
+.blood-ui-card-soft {
+    background: linear-gradient(180deg, rgba(79, 58, 38, 0.55), rgba(34, 25, 18, 0.8));
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 16px 34px rgba(38, 22, 9, 0.28);
+}
+
+.blood-ui-card-soft:hover {
+    border-color: rgba(202, 138, 4, 0.16);
+}
+
+.blood-ui-focus-ring {
+    box-shadow: 0 0 0 3px rgba(202, 138, 4, 0.14);
+}
+
+.blood-ui-divider {
+    background: linear-gradient(90deg, transparent, rgba(202, 138, 4, 0.18), transparent);
+    height: 1px;
+}
+
+.blood-ui-bg-noise {
+    position: relative;
+}
+
+.blood-ui-bg-noise::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.04;
+    background-image:
+        radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.9) 1px, transparent 0);
+    background-size: 16px 16px;
+    mix-blend-mode: screen;
+}
+
+.blood-ui-shell h1,
+.blood-ui-shell h2,
+.blood-ui-shell h3,
+.blood-ui-shell h4,
+.blood-ui-shell .section-title,
+.blood-ui-shell .font-display {
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.45), 0 0 20px rgba(202, 138, 4, 0.08);
+}
 
 .font-header { 
     font-family: 'Epilogue', sans-serif; 

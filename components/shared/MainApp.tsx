@@ -493,10 +493,8 @@ const MainApp: React.FC = () => {
     return (
       <button
         onClick={() => setActiveView(view)}
-        className={`group flex items-center gap-3 px-4 h-full transition-all duration-300 relative border-b-2 ${isActive
-          ? 'text-[#CA8A04] border-[#CA8A04] bg-[#CA8A04]/5'
-          : 'text-slate-500 border-transparent hover:text-white hover:bg-white/5'
-          }`}
+        data-active={isActive}
+        className="blood-ui-nav-button group flex items-center gap-3 px-4 h-full rounded-none border-b-0"
       >
         {React.cloneElement(icon, {
           className: `w-4 h-4 transition-all duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`
@@ -511,13 +509,13 @@ const MainApp: React.FC = () => {
   const mainClasses = (activeView === 'arena' || activeView === 'tactical' || activeView === 'admin') ? '' : 'container mx-auto max-w-7xl px-2 sm:px-6 pb-2 sm:pb-6';
 
   return (
-    <div className="min-h-screen bg-[#050505] text-slate-200 font-sans antialiased selection:bg-premium-gold selection:text-black">
+    <div className="min-h-screen blood-ui-shell text-slate-200 font-sans antialiased selection:bg-premium-gold selection:text-black">
       {isGuest && <GuestWarningBanner />}
       {/* Dot Grid Background Layer */}
-      <div className="fixed inset-0 pointer-events-none opacity-40 z-0" style={{ backgroundImage: 'radial-gradient(rgba(202, 138, 4, 0.15) 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
+      <div className="fixed inset-0 pointer-events-none opacity-40 z-0 blood-ui-bg-noise" style={{ backgroundImage: 'radial-gradient(rgba(202, 138, 4, 0.15) 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
 
       <div className="w-full fixed top-0 left-0 z-[100]">
-          <header className="h-16 bg-black/90 backdrop-blur-xl border-b border-[#CA8A04]/20 flex items-center justify-between px-10 shadow-2xl relative group">
+          <header className="blood-ui-header h-16 flex items-center justify-between px-10 relative group">
             {/* Top accent line */}
             <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#CA8A04]/40 to-transparent opacity-50"></div>
 
@@ -537,9 +535,9 @@ const MainApp: React.FC = () => {
               {isAdmin && (
                 <button
                   onClick={() => setActiveView('admin')}
-                  className={`px-3 py-1.5 rounded-sm border text-[8px] font-display font-black uppercase tracking-widest transition-all ${activeView === 'admin'
-                    ? 'bg-[#CA8A04] text-black border-[#CA8A04]'
-                    : 'border-white/10 text-slate-500 hover:border-[#CA8A04] hover:text-[#CA8A04]'
+                  className={`blood-ui-chip blood-ui-chip--gold px-3 py-1.5 transition-all ${activeView === 'admin'
+                    ? 'shadow-[0_0_0_1px_rgba(255,255,255,0.14)_inset]'
+                    : 'hover:shadow-[0_0_20px_rgba(202,138,4,0.15)]'
                     }`}
                 >
                   {t('nav.admin')}
@@ -575,7 +573,7 @@ const MainApp: React.FC = () => {
           </header>
       </div>
 
-      <main className={`${mainClasses} pt-64 pb-12 transition-all duration-700`}>
+      <main className={`${mainClasses} pt-28 pb-12 transition-all duration-700`}>
         <div className="min-h-[60vh] relative group/main">
           {!dataInitiallyLoaded ? (
             <div className="flex flex-col items-center justify-center text-white py-40">

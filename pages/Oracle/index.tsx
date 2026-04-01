@@ -101,12 +101,12 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                     </p>
                 </div>
                 <div className="relative mt-8 max-w-3xl mx-auto md:mx-0">
-                    <div className="flex w-full items-stretch rounded-2xl h-16 bg-zinc-900/80 border border-white/5 focus-within:border-premium-gold/50 transition-all shadow-2xl backdrop-blur-xl group">
+                    <div className="blood-ui-card-strong flex w-full items-stretch rounded-2xl h-16 focus-within:border-premium-gold/50 transition-all group">
                         <div className="text-premium-gold flex items-center justify-center pl-6">
                             <span className="material-symbols-outlined font-bold group-hover:scale-110 transition-transform">search</span>
                         </div>
                         <input
-                            className="w-full bg-transparent border-none focus:ring-0 text-white placeholder:text-slate-600 px-6 text-lg font-medium"
+                            className="blood-ui-input w-full bg-transparent border-none focus:ring-0 text-white placeholder:text-slate-600 px-6 text-lg font-medium rounded-r-2xl"
                             placeholder={t('oracle.hub.search.placeholder')}
                             value={hubSearchTerm}
                             onChange={(e) => setHubSearchTerm(e.target.value)}
@@ -114,7 +114,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                         <div className="flex items-center pr-2">
                             <button
                                 onClick={() => setActiveView('skills')}
-                                className="bg-premium-gold text-black font-black px-8 h-12 rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-premium-gold/20 uppercase italic tracking-tighter"
+                                className="blood-ui-button-primary px-8 h-12 rounded-xl uppercase italic tracking-tighter"
                             >
                                 Buscar
                             </button>
@@ -126,7 +126,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
             {/* Grid Layout for Main Features */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 {/* Enciclopedia de Equipos */}
-                <div className="lg:col-span-8 flex flex-col gap-6 bg-zinc-900/40 p-8 rounded-[2.5rem] border border-white/5 shadow-inner group">
+                <div className="blood-ui-card-strong lg:col-span-8 flex flex-col gap-6 p-8 rounded-[2.5rem] group">
                     <div className="flex items-center justify-between border-b border-white/5 pb-4">
                         <div className="flex items-center gap-4">
                             <div className="size-10 rounded-xl bg-premium-gold/10 flex items-center justify-center text-premium-gold border border-premium-gold/20">
@@ -152,7 +152,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                             <div
                                 key={race.key}
                                 onClick={() => handleNavigateToTeam(race.key)}
-                                className="flex flex-col items-center gap-4 p-6 rounded-2xl bg-black/40 border border-white/5 hover:border-premium-gold/50 cursor-pointer group/card transition-all hover:scale-105 hover:shadow-2xl shadow-premium-gold/5"
+                                className="blood-ui-card-soft flex flex-col items-center gap-4 p-6 rounded-2xl hover:border-premium-gold/50 cursor-pointer group/card transition-all hover:scale-105 hover:shadow-2xl shadow-premium-gold/5"
                             >
                                 <div className="size-16 rounded-full bg-zinc-800 flex items-center justify-center border border-white/5 group-hover/card:bg-premium-gold/10 group-hover/card:border-premium-gold/40 transition-all">
                                     <span className="material-symbols-outlined text-4xl text-slate-500 group-hover/card:text-premium-gold transition-colors">{race.icon}</span>
@@ -185,7 +185,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                 </div>
 
                 {/* Codex de Habilidades */}
-                <div className="lg:col-span-8 bg-zinc-900/40 p-8 rounded-[2.5rem] border border-white/5 shadow-inner">
+                <div className="blood-ui-card-strong lg:col-span-8 p-8 rounded-[2.5rem]">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8 border-b border-white/5 pb-4">
                         <div className="flex items-center gap-4">
                             <div className="size-10 rounded-xl bg-premium-gold/10 flex items-center justify-center text-premium-gold border border-premium-gold/20">
@@ -198,7 +198,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                                 <button
                                     key={cat.id}
                                     onClick={() => handleNavigateToSkills(cat.id)}
-                                    className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 ${i === 0 ? 'bg-premium-gold text-black' : 'bg-black/40 text-slate-500 border border-white/5 hover:text-white hover:bg-premium-gold/20 hover:border-premium-gold/30'}`}
+                                    className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 ${i === 0 ? 'blood-ui-button-primary text-black' : 'blood-ui-button-secondary text-slate-500 hover:text-white hover:border-premium-gold/30'}`}
                                 >
                                     {cat.label}
                                 </button>
@@ -208,7 +208,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                     <div className="space-y-3">
                         <div
                             onClick={() => setActiveView('skills')}
-                            className="flex items-center justify-between p-4 rounded-2xl bg-black/40 border border-white/5 hover:border-premium-gold/30 hover:bg-black/60 transition-all cursor-pointer group"
+                            className="blood-ui-card-soft flex items-center justify-between p-4 rounded-2xl hover:border-premium-gold/30 transition-all cursor-pointer group"
                         >
                             <div className="flex items-center gap-5">
                                 <span className="size-10 rounded-xl bg-premium-gold/10 flex items-center justify-center text-premium-gold font-black italic shadow-inner border border-premium-gold/20">G</span>
@@ -221,7 +221,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                         </div>
                         <div
                             onClick={() => setActiveView('skills')}
-                            className="flex items-center justify-between p-4 rounded-2xl bg-black/40 border border-white/5 hover:border-premium-gold/30 hover:bg-black/60 transition-all cursor-pointer group"
+                            className="blood-ui-card-soft flex items-center justify-between p-4 rounded-2xl hover:border-premium-gold/30 transition-all cursor-pointer group"
                         >
                             <div className="flex items-center gap-5">
                                 <span className="size-10 rounded-xl bg-premium-gold/10 flex items-center justify-center text-premium-gold font-black italic shadow-inner border border-premium-gold/20">G</span>
@@ -236,7 +236,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                 </div>
 
                 {/* Tabla de Incentivos */}
-                <div className="lg:col-span-4 bg-zinc-900/60 p-8 rounded-[2.5rem] border border-white/5 flex flex-col gap-6 shadow-2xl relative overflow-hidden">
+                <div className="blood-ui-card-strong lg:col-span-4 p-8 rounded-[2.5rem] flex flex-col gap-6 relative overflow-hidden">
                     <div className="flex items-center gap-4">
                         <div className="size-10 rounded-xl bg-premium-gold/10 flex items-center justify-center text-premium-gold border border-premium-gold/20">
                             <span className="material-symbols-outlined font-bold">payments</span>
@@ -247,13 +247,13 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                     <div className="mt-4 space-y-6">
                         <div className="flex flex-col gap-2">
                             <span className="text-[10px] text-slate-600 uppercase font-black tracking-widest ml-1">{t('oracle.hub.inducements.yourTv')}</span>
-                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 text-premium-gold font-mono text-2xl text-center italic font-black shadow-inner">
+                            <div className="blood-ui-card-soft rounded-2xl p-4 text-premium-gold font-mono text-2xl text-center italic font-black">
                                 {userTv.toLocaleString()}
                             </div>
                         </div>
                         <div className="flex flex-col gap-2">
                             <span className="text-[10px] text-slate-600 uppercase font-black tracking-widest ml-1">{t('oracle.hub.inducements.rivalTv')}</span>
-                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 text-slate-400 font-mono text-2xl text-center italic font-black shadow-inner">
+                            <div className="blood-ui-card-soft rounded-2xl p-4 text-slate-400 font-mono text-2xl text-center italic font-black">
                                 {rivalTv.toLocaleString()}
                             </div>
                         </div>
@@ -374,7 +374,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
     );
 
     return (
-        <div className="min-h-screen px-4 md:px-0">
+        <div className="blood-ui-shell min-h-screen px-4 md:px-0">
             <AnimatePresence mode="wait">
                 {activeView === 'hub' && <HubView key="hub" />}
                 {activeView !== 'hub' && (
@@ -387,14 +387,14 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                     >
                         <button
                             onClick={handleBackToHub}
-                            className="flex items-center gap-3 text-premium-gold font-black uppercase tracking-widest text-[10px] mb-8 hover:underline group italic"
+                            className="blood-ui-chip blood-ui-chip--gold flex items-center gap-3 mb-8 hover:shadow-[0_0_24px_rgba(202,138,4,0.14)] group italic"
                         >
                             <span className="material-symbols-outlined font-bold transform group-hover:-translate-x-1 transition-transform">arrow_back</span>
                             {t('common.back')}
                         </button>
 
                         {/* Traditional Tab Navigation for sub-views */}
-                        <div className="flex border-b border-white/5 mb-8 bg-[#0a0a0a]/80 rounded-2xl overflow-hidden shadow-xl sticky top-16 z-20 backdrop-blur-xl transition-all">
+                        <div className="blood-ui-card-strong flex border-b border-white/5 mb-8 rounded-2xl overflow-hidden sticky top-16 z-20 transition-all">
                             {[
                                 { id: 'teams', label: t('oracle.tabs.teams') },
                                 { id: 'skills', label: t('oracle.tabs.skills') },
@@ -410,7 +410,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                                         if (tab.id !== 'skills') setHubSearchTerm('');
                                         setSelectedHubTeam(null);
                                     }}
-                                    className={`flex-1 py-4 px-2 text-center transition-all duration-300 relative font-display uppercase tracking-widest text-[10px] font-black ${activeView === tab.id ? 'text-premium-gold' : 'text-slate-500 hover:text-white'}`}
+                                    className={`blood-ui-nav-button flex-1 py-4 px-2 text-center relative font-display uppercase tracking-widest text-[10px] font-black rounded-none border-b-0 ${activeView === tab.id ? 'text-premium-gold' : 'text-slate-500 hover:text-white'}`}
                                 >
                                     {tab.label}
                                     {activeView === tab.id && (
@@ -430,13 +430,13 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                             {activeView === 'skills' && <Skills initialCategory={initialSkillCategory} initialSearchTerm={hubSearchTerm} />}
                             {activeView === 'star_players' && <StarPlayers />}
                             {activeView === 'calculator' && (
-                                <div className="max-w-md mx-auto py-10 bg-zinc-900/40 p-8 rounded-[2.5rem] border border-white/5">
+                                <div className="blood-ui-card-strong max-w-md mx-auto py-10 p-8 rounded-[2.5rem]">
                                     <h3 className="text-xl font-display font-black text-white italic tracking-tighter uppercase mb-8 text-center">{t('oracle.calculator.title')}</h3>
                                     <ProbabilityCalculator />
                                 </div>
                             )}
                             {activeView === 'inducements' && (
-                                <div className="max-w-4xl mx-auto py-10 bg-zinc-900/40 p-8 rounded-[2.5rem] border border-white/5">
+                                <div className="blood-ui-card-strong max-w-4xl mx-auto py-10 p-8 rounded-[2.5rem]">
                                     <h3 className="text-xl font-display font-black text-white italic tracking-tighter uppercase mb-8 text-center">{t('oracle.inducements.title')}</h3>
                                     <InducementTable />
                                 </div>

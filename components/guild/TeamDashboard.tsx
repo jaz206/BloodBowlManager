@@ -414,13 +414,13 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
     }, [starPlayers, specialRulesList, team.rosterName]);
 
     return (
-        <div className="min-h-screen bg-background-dark text-slate-100 font-display">
+        <div className="blood-ui-shell min-h-screen text-slate-100 font-display">
             {/* Top Navigation & Header */}
-            <header className={`border-b border-white/10 bg-black/40 backdrop-blur-md sticky ${stickyOffset} z-50`}>
+            <header className={`blood-ui-header border-b border-white/10 backdrop-blur-md sticky ${stickyOffset} z-50`}>
                 <div className="max-w-[1400px] mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-6">
                         <div
-                            className="size-12 bg-black/40 rounded-xl flex items-center justify-center text-background-dark shadow-glow cursor-pointer hover:scale-105 transition-transform overflow-hidden"
+                            className="size-12 blood-ui-card-soft rounded-xl flex items-center justify-center text-background-dark shadow-glow cursor-pointer hover:scale-105 transition-transform overflow-hidden"
                             onClick={() => crestInputRef.current?.click()}
                         >
                             <img 
@@ -442,7 +442,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                             />
                         </div>
                         <div>
-                            <h1 className="font-epilogue text-3xl md:text-4xl italic font-black tracking-tighter text-primary uppercase leading-tight">
+                            <h1 className="font-epilogue text-3xl md:text-4xl italic font-black tracking-tighter text-primary uppercase leading-tight text-shadow-premium">
                                 {team.name}
                             </h1>
                             <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">{team.rosterName}</p>
@@ -468,16 +468,16 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                         </nav>
 
                         <div className="flex items-center gap-2">
-                            <button onClick={handleAutoSyncImages} className="bg-gold/10 border border-gold/20 text-gold px-4 py-2 rounded-xl text-[10px] font-black tracking-widest hover:bg-gold/20 transition-all uppercase flex items-center gap-2 shadow-lg shadow-gold/5" title="Sincronizar fotos desde GitHub">
+                            <button onClick={handleAutoSyncImages} className="blood-ui-button-secondary border border-gold/20 text-gold px-4 py-2 rounded-xl text-[10px] font-black tracking-widest transition-all uppercase flex items-center gap-2 shadow-lg shadow-gold/5" title="Sincronizar fotos desde GitHub">
                                 <span className="material-symbols-outlined text-base">image</span>
                                 Fotos
                             </button>
-                            <button onClick={onBack} className="bg-white/5 border border-white/10 text-slate-400 px-4 py-2 rounded-xl text-[10px] font-black tracking-widest hover:bg-white/10 transition-all uppercase flex items-center gap-2">
+                            <button onClick={onBack} className="blood-ui-button-secondary border border-white/10 text-slate-400 px-4 py-2 rounded-xl text-[10px] font-black tracking-widest transition-all uppercase flex items-center gap-2">
                                 <span className="material-symbols-outlined text-base">arrow_back</span>
                                 Volver
                             </button>
                             {!isGuest && (
-                                <button onClick={() => onSync ? onSync() : setShowQr(true)} className="bg-primary/10 border border-primary/20 text-primary px-4 py-2 rounded-xl text-[10px] font-black tracking-widest hover:bg-primary/20 transition-all uppercase flex items-center gap-2">
+                                <button onClick={() => onSync ? onSync() : setShowQr(true)} className="blood-ui-button-primary border border-primary/20 text-primary px-4 py-2 rounded-xl text-[10px] font-black tracking-widest transition-all uppercase flex items-center gap-2">
                                     <span className="material-symbols-outlined text-base">{onSync ? 'sync' : 'qr_code'}</span>
                                     {syncLabel}
                                 </button>
@@ -490,13 +490,13 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
             <main className="max-w-[1400px] mx-auto px-6 py-8">
                 {/* KPIs Section */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                    <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-custom flex flex-col items-center justify-center text-center group hover:border-primary/30 transition-all">
+                    <div className="blood-ui-card-strong rounded-2xl p-6 backdrop-blur-custom flex flex-col items-center justify-center text-center group hover:border-primary/30 transition-all">
                         <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">VAE (Valor de Equipo)</p>
                         <p className="text-primary text-4xl font-black italic font-epilogue tracking-tight group-hover:scale-105 transition-transform">
                             {teamValue.toLocaleString()}
                         </p>
                     </div>
-                    <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-custom flex flex-col items-center justify-center text-center group hover:border-primary/30 transition-all">
+                    <div className="blood-ui-card-strong rounded-2xl p-6 backdrop-blur-custom flex flex-col items-center justify-center text-center group hover:border-primary/30 transition-all">
                         <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Tesorería</p>
                         <div className="flex items-baseline gap-2 group-hover:scale-105 transition-transform">
                             <p className={`text-4xl font-black italic font-epilogue tracking-tight ${team.treasury > 100000 ? 'text-blood animate-pulse' : 'text-primary'}`}>
@@ -505,7 +505,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                             <span className="text-slate-600 text-[10px] font-black">MO</span>
                         </div>
                     </div>
-                    <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-custom flex flex-col items-center justify-center text-center group hover:border-primary/30 transition-all">
+                    <div className="blood-ui-card-strong rounded-2xl p-6 backdrop-blur-custom flex flex-col items-center justify-center text-center group hover:border-primary/30 transition-all">
                         <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Segundas Oportunidades</p>
                         <div className="flex items-center gap-3 group-hover:scale-105 transition-transform">
                             <span className="material-symbols-outlined text-primary text-3xl">refresh</span>
@@ -548,7 +548,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                     return (
                                         <div
                                             key={p.id}
-                                            className={`bg-white/5 border rounded-2xl p-5 backdrop-blur-custom player-row-glow transition-all relative overflow-hidden group/card ${hasLevelUp ? 'border-primary/40 bg-primary/5' : 'border-white/10'} ${isBenched ? 'opacity-80' : ''}`}
+                                            className={`blood-ui-card-strong border rounded-2xl p-5 backdrop-blur-custom player-row-glow transition-all relative overflow-hidden group/card ${hasLevelUp ? 'border-primary/40 bg-primary/8' : 'border-white/10'} ${isBenched ? 'opacity-80' : ''}`}
                                         >
                                             {hasLevelUp && (
                                                 <div className="absolute top-0 left-0 w-1 h-full bg-primary shadow-[0_0_15px_rgba(202,138,4,0.6)]"></div>
@@ -564,7 +564,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                                         {p.image && (
                                                             <div 
                                                                 onClick={() => setZoomedImage(p.image!)}
-                                                                className="w-24 aspect-[4/3] rounded-lg overflow-hidden border-2 border-slate-800 bg-black cursor-zoom-in hover:scale-105 hover:border-gold/50 transition-all group/img relative"
+                                                                className="w-24 aspect-[4/3] rounded-lg overflow-hidden border-2 border-slate-800 bg-[#efe0bf] cursor-zoom-in hover:scale-105 hover:border-gold/50 transition-all group/img relative"
                                                             >
                                                                 {/* Blurred layer */}
                                                                 <img src={p.image} className="absolute inset-0 w-full h-full object-cover blur-lg opacity-30 scale-125" alt="" />
@@ -586,7 +586,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                                                 value={editingName}
                                                                 onChange={(e) => setEditingName(e.target.value)}
                                                                 onBlur={handleNameUpdate}
-                                                                className="bg-black/40 border border-primary text-white rounded px-2 py-1 w-full text-sm font-black uppercase italic"
+                                                                className="blood-ui-input bg-black/40 border border-primary text-white rounded px-2 py-1 w-full text-sm font-black uppercase italic"
                                                                 autoFocus
                                                             />
                                                         ) : (
@@ -708,7 +708,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
 
                         {activeTab === 'recruit' && (
                             <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                <div className="bg-white/5 border border-white/10 rounded-[2rem] p-8">
+                                <div className="blood-ui-card-strong border border-white/10 rounded-[2rem] p-8">
                                     <h3 className="text-xl font-epilogue font-black text-primary uppercase tracking-widest mb-8 italic">Contratar Plantilla</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                         {(baseRoster?.roster || []).map(pos => {
@@ -748,14 +748,14 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                 </div>
 
                                 {eligibleStars.length > 0 && (
-                                    <div className="bg-white/5 border border-white/10 rounded-[2rem] p-8">
+                                    <div className="blood-ui-card-strong border border-white/10 rounded-[2rem] p-8">
                                         <div className="flex items-center justify-between mb-8">
                                             <h3 className="text-xl font-epilogue font-black text-primary uppercase tracking-widest italic">Mercenarios y Estrellas</h3>
                                             <span className="px-3 py-1 bg-primary/10 border border-primary/20 rounded-full text-[9px] font-black text-primary uppercase tracking-widest">Incentivos S3</span>
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                             {eligibleStars.map(star => (
-                                                <div key={star.name} className="bg-black/60 border border-white/5 rounded-2xl p-5 hover:border-primary/30 transition-all group">
+                                                <div key={star.name} className="blood-ui-card-soft border rounded-2xl p-5 hover:border-primary/30 transition-all group">
                                                     <div className="flex justify-between items-start mb-3">
                                                         <h4 className="text-sm font-epilogue font-black uppercase text-white italic tracking-tighter group-hover:text-primary transition-colors">{star.name}</h4>
                                                         <span className="text-xs font-epilogue font-black text-primary">{(star.cost / 1000)}k</span>
@@ -776,7 +776,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                         )}
 
                         {activeTab === 'staff' && (
-                            <div className="bg-white/5 border border-white/10 rounded-[2rem] p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="blood-ui-card-strong border border-white/10 rounded-[2rem] p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 <h3 className="text-xl font-epilogue font-black text-primary uppercase tracking-widest mb-8 italic">Staff Técnico</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <AssetCard title="Segundas Oportunidades" value={team.rerolls} limit={8} price={baseRoster?.rerollCost || 60000} onBuy={() => handleBuyAsset('rerolls', baseRoster?.rerollCost || 60000, 8)} onSell={() => handleSellAsset('rerolls', (baseRoster?.rerollCost || 60000) / 2)} icon="refresh" canSell={team.rerolls > 0} />
@@ -784,7 +784,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                     <AssetCard title="Animadoras" value={team.cheerleaders} limit={12} price={10000} onBuy={() => handleBuyAsset('cheerleaders', 10000, 12)} onSell={() => handleSellAsset('cheerleaders', 5000)} icon="celebration" canSell={team.cheerleaders > 0} />
                                     <AssetCard title="Ayudantes de Entrenador" value={team.assistantCoaches} limit={6} price={10000} onBuy={() => handleBuyAsset('assistantCoaches', 10000, 6)} onSell={() => handleSellAsset('assistantCoaches', 5000)} icon="sports" canSell={team.assistantCoaches > 0} />
 
-                                    <div className={`p-6 rounded-[2rem] border flex items-center justify-between transition-all ${team.apothecary ? 'bg-green-500/5 border-green-500/20' : 'bg-black/40 border-white/5'}`}>
+                                    <div className={`p-6 rounded-[2rem] border flex items-center justify-between transition-all ${team.apothecary ? 'bg-green-500/10 border-green-500/30' : 'blood-ui-card-soft'}`}>
                                         <div className="flex items-center gap-6">
                                             <div className={`size-16 rounded-2xl flex items-center justify-center shadow-2xl ${team.apothecary ? 'bg-green-500 text-black' : 'bg-slate-800 text-slate-500'}`}>
                                                 <span className="material-symbols-outlined text-3xl">emergency</span>
@@ -809,7 +809,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
 
                         {activeTab === 'history' && (
                             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                <div className="bg-white/5 border border-white/10 rounded-[2rem] p-8">
+                                <div className="blood-ui-card-strong border border-white/10 rounded-[2rem] p-8">
                                     <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
                                         <div>
                                             <h3 className="text-xl font-epilogue font-black text-primary uppercase tracking-widest italic">Análisis de Partidos</h3>
@@ -843,7 +843,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                 </div>
 
                                 {team.history && team.history.length > 0 && (
-                                    <div className="bg-white/5 border border-white/10 rounded-[2rem] p-8">
+                                    <div className="blood-ui-card-strong border border-white/10 rounded-[2rem] p-8">
                                         <h3 className="text-xl font-epilogue font-black text-primary uppercase tracking-widest mb-8 italic">Partidos Jugados</h3>
                                         <div className="space-y-4">
                                             {team.history.slice().reverse().map(match => {
@@ -880,7 +880,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                     </div>
                                 )}
 
-                                <div className="bg-white/5 border border-white/10 rounded-[2rem] p-8">
+                                <div className="blood-ui-card-strong border border-white/10 rounded-[2rem] p-8">
                                     <h3 className="text-xl font-epilogue font-black text-primary uppercase tracking-widest mb-8 italic">Archivo Histórico</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                         {team.snapshots?.map(snapshot => (
@@ -956,7 +956,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                             </div>
                         </div>
 
-                        <div className="bg-white/5 border border-white/10 rounded-[2rem] p-8">
+                        <div className="blood-ui-card-strong border border-white/10 rounded-[2rem] p-8">
                             <h3 className="text-sm font-epilogue font-black text-primary uppercase italic tracking-widest mb-6">Resumen de Staff</h3>
                             <div className="space-y-4">
                                 {[
@@ -1086,3 +1086,4 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
         </div>
     );
 };
+

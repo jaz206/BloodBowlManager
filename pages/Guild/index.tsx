@@ -335,18 +335,18 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
     );
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a] text-gray-200 font-inter">
+        <div className="blood-ui-shell min-h-screen text-gray-200 font-inter">
             {/* Confirmation Modal */}
             {confirmation && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[500] p-4">
-                    <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+                    <div className="blood-ui-card-strong rounded-2xl p-6 max-w-sm w-full">
                         <h3 className="text-xl font-header font-black text-white uppercase italic mb-2">{confirmation.title}</h3>
                         <p className="text-gray-400 text-sm mb-6">{confirmation.message}</p>
                         <div className="flex gap-3">
-                            <button onClick={() => setConfirmation(null)} className="flex-1 py-3 rounded-xl bg-white/5 text-gray-400 font-bold text-[10px] uppercase tracking-widest hover:bg-white/10 transition-all">Cancelar</button>
+                            <button onClick={() => setConfirmation(null)} className="flex-1 py-3 rounded-xl blood-ui-button-secondary text-gray-400 font-bold text-[10px] uppercase tracking-widest">Cancelar</button>
                             <button 
                                 onClick={() => { confirmation.onConfirm(); setConfirmation(null); }}
-                                className={`flex-1 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all ${confirmation.type === 'danger' ? 'bg-blood text-white shadow-lg shadow-blood/20' : 'bg-gold text-black shadow-lg shadow-gold/20'}`}
+                                className={`flex-1 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all ${confirmation.type === 'danger' ? 'blood-ui-button-danger' : 'blood-ui-button-primary'}`}
                             >
                                 Confirmar
                             </button>
@@ -356,10 +356,10 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
             )}
 
             {/* Header Section */}
-            <header className="w-full border-b border-white/10 bg-[#0a0a0a]/90 backdrop-blur-xl sticky top-16 z-50 px-6 py-4">
+            <header className="blood-ui-header w-full sticky top-16 z-50 px-6 py-4">
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
-                        <h1 className="text-3xl font-header font-black text-gold tracking-tight uppercase italic leading-none">
+                        <h1 className="text-3xl font-header font-black text-gold tracking-tight uppercase italic leading-none text-shadow-premium">
                             EL GREMIO
                         </h1>
                         <p className="text-[10px] text-gray-500 font-black uppercase tracking-[0.2em] mt-2">Equipos Activos: {teams.length}</p>
@@ -369,14 +369,14 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                         <div className="relative group max-w-xs w-full">
                             <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none material-symbols-outlined text-gray-500 text-sm">search</span>
                             <input 
-                                className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-[10px] focus:ring-1 focus:ring-gold/50 focus:border-gold/50 text-gray-300 placeholder-gray-600 transition-all font-bold uppercase tracking-widest" 
+                                className="blood-ui-input w-full rounded-xl pl-10 pr-4 py-2.5 text-[10px] text-gray-300 placeholder-gray-600 transition-all font-bold uppercase tracking-widest" 
                                 placeholder="Filtrar por nombre o raza..." 
                                 type="text"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
-                        <button onClick={() => setIsCreating(true)} className="bg-pitch/20 hover:bg-pitch/40 text-gold px-6 py-2.5 rounded-xl border border-gold/30 font-header font-black text-[10px] tracking-widest shadow-lg transition-all flex items-center gap-2 group">
+                        <button onClick={() => setIsCreating(true)} className="blood-ui-button-primary px-6 py-2.5 rounded-xl font-header font-black text-[10px] tracking-widest shadow-lg transition-all flex items-center gap-2 group">
                             <span className="opacity-50 group-hover:opacity-100 transition-opacity">[+]</span> FUNDAR NUEVA FRANQUICIA
                         </button>
                     </div>
@@ -391,15 +391,15 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                             <span className="opacity-50">RESUMEN:</span> {activeSummaryTeam.name}
                         </h2>
                         <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="bg-white/[0.02] border border-white/10 rounded-2xl px-10 py-8 group hover:bg-white/[0.04] transition-all">
+                            <div className="blood-ui-card-strong rounded-2xl px-10 py-8 group transition-all">
                                 <p className="text-[10px] text-gray-500 font-black tracking-[0.3em] uppercase mb-4">Total Partidos</p>
                                 <p className="text-6xl font-header font-black text-white group-hover:text-gold transition-colors">{activeSummaryTeamData?.total || 0}</p>
                             </div>
-                            <div className="bg-white/[0.02] border border-white/10 rounded-2xl px-10 py-8 group hover:bg-white/[0.04] transition-all">
+                            <div className="blood-ui-card-strong rounded-2xl px-10 py-8 group transition-all">
                                 <p className="text-[10px] text-gray-500 font-black tracking-[0.3em] uppercase mb-4">Victorias</p>
                                 <p className="text-6xl font-header font-black text-gold">{activeSummaryTeamData?.wins || 0}</p>
                             </div>
-                            <div className="bg-white/[0.02] border border-white/10 rounded-2xl px-10 py-8 group hover:bg-white/[0.04] transition-all">
+                            <div className="blood-ui-card-strong rounded-2xl px-10 py-8 group transition-all">
                                 <p className="text-[10px] text-gray-500 font-black tracking-[0.3em] uppercase mb-4">PalmarÃ©s</p>
                                 <p className="text-6xl font-header font-black text-white group-hover:text-gold transition-colors">
                                     {activeSummaryTeam ? (activeSummaryTeam as any).titles || 0 : 0} 

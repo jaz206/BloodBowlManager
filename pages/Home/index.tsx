@@ -241,6 +241,10 @@ const Home: React.FC<HomeProps> = ({
         return foundMatch ? { match: foundMatch, round: foundRound, myTeamClone, oppTeamClone } : null;
     }, [activeComp, user]);
 
+    const liveTeamsCount = managedTeams.length;
+    const activeCompetitionsCount = myCompetitions.length;
+    const recentEventsCount = recentEvents?.length || 0;
+
     const handleJumpToMatch = () => {
         if (!nextMatchData || !nextMatchData.match) {
             onNavigate('arena');
@@ -263,13 +267,53 @@ const Home: React.FC<HomeProps> = ({
     };
 
     return (
-        <div className="max-w-[1600px] mx-auto w-full space-y-8 pb-32 animate-in fade-in duration-700 bg-[radial-gradient(circle_at_center,_rgba(202, 138, 4, 0.03) 0%, transparent 70%)] pt-12">
+        <div className="blood-ui-shell max-w-[1600px] mx-auto w-full space-y-8 pb-32 animate-in fade-in duration-700 bg-[radial-gradient(circle_at_center,_rgba(202, 138, 4, 0.03) 0%, transparent 70%)] pt-12">
+            
+            {/* Hero War Room */}
+            <section className="blood-ui-card-strong relative overflow-hidden rounded-[2rem] p-8 md:p-10">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(202,138,4,0.18),transparent_34%),radial-gradient(circle_at_bottom_left,_rgba(185,28,28,0.18),transparent_28%)] pointer-events-none"></div>
+                {heroImage && (
+                    <img
+                        src={heroImage}
+                        alt="War room backdrop"
+                        className="absolute inset-0 h-full w-full object-cover opacity-10 mix-blend-screen pointer-events-none"
+                    />
+                )}
+                <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-end">
+                    <div className="lg:col-span-8 space-y-4">
+                        <div className="flex items-center gap-3">
+                            <span className="blood-ui-chip blood-ui-chip--gold">WAR ROOM</span>
+                            <span className="blood-ui-chip blood-ui-chip--red">BLOOD BOWL S3</span>
+                        </div>
+                        <h1 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter leading-none text-white text-shadow-premium">
+                            Centro de mando del entrenador
+                        </h1>
+                        <p className="max-w-3xl text-slate-300 text-sm md:text-base leading-relaxed">
+                            Gestiona tu gremio, consulta el oráculo, prepara partidos y sigue tus competiciones desde una sala de operaciones con identidad de guerra, no un panel SaaS.
+                        </p>
+                    </div>
+                    <div className="lg:col-span-4 grid grid-cols-3 gap-3">
+                        <div className="blood-ui-card-soft rounded-2xl p-4">
+                            <p className="text-[10px] uppercase tracking-[0.28em] text-slate-500 font-black">Equipos</p>
+                            <p className="mt-2 text-3xl font-black italic text-white">{liveTeamsCount}</p>
+                        </div>
+                        <div className="blood-ui-card-soft rounded-2xl p-4">
+                            <p className="text-[10px] uppercase tracking-[0.28em] text-slate-500 font-black">Ligas</p>
+                            <p className="mt-2 text-3xl font-black italic text-premium-gold">{activeCompetitionsCount}</p>
+                        </div>
+                        <div className="blood-ui-card-soft rounded-2xl p-4">
+                            <p className="text-[10px] uppercase tracking-[0.28em] text-slate-500 font-black">Eventos</p>
+                            <p className="mt-2 text-3xl font-black italic text-blood-red">{recentEventsCount}</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
             
             {/* ROW 1: GREMIO & ORÁCULO */}
             <div className="grid grid-cols-1 md:grid-cols-10 gap-8">
                 
                 {/* 1. EL GREMIO (60%) */}
-                <section className="col-span-1 md:col-span-6 bento-card rounded-2xl p-6 md:p-8 flex flex-col">
+                <section className="blood-ui-card-strong col-span-1 md:col-span-6 rounded-2xl p-6 md:p-8 flex flex-col">
                     <div className="flex justify-between items-center mb-6">
                         <h2 onClick={() => onNavigate('guild')} className="font-header text-3xl section-title">El Gremio</h2>
                         <span className="text-[10px] font-header tracking-widest text-primary/60 uppercase">S3 Active Franchises</span>
@@ -365,14 +409,14 @@ const Home: React.FC<HomeProps> = ({
 
                     <button 
                         onClick={() => onNavigate('guild')}
-                        className="w-full mt-8 bg-primary/10 hover:bg-primary text-primary hover:text-black py-4 rounded-xl border border-primary/30 font-header text-xs tracking-widest transition-all btn-interact"
+                        className="w-full mt-8 blood-ui-button-secondary text-primary hover:text-black py-4 rounded-xl border border-primary/30 font-header text-xs tracking-widest transition-all btn-interact"
                     >
                         Gestionar mi banquillo
                     </button>
                 </section>
 
                 {/* 2. EL ORÁCULO (40%) */}
-                <section className="col-span-1 md:col-span-4 bento-card rounded-2xl p-6 md:p-8 flex flex-col">
+                <section className="blood-ui-card-strong col-span-1 md:col-span-4 rounded-2xl p-6 md:p-8 flex flex-col">
                     <div className="flex justify-between items-center mb-6">
                         <h2 onClick={() => onNavigate('oracle')} className="font-header text-3xl section-title">El Oráculo</h2>
                         <span className="material-symbols-outlined text-primary/60">auto_awesome</span>
@@ -383,7 +427,7 @@ const Home: React.FC<HomeProps> = ({
                         <input 
                             value={oracleSearch}
                             onChange={(e) => setOracleSearch(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:border-primary/50 transition-all text-white placeholder-slate-600" 
+                            className="blood-ui-input w-full rounded-xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:border-primary/50 transition-all text-white placeholder-slate-600" 
                             placeholder="Consultar Nufflepedia..." 
                             type="text" 
                         />
@@ -394,7 +438,7 @@ const Home: React.FC<HomeProps> = ({
                             <div 
                                 key={skill.keyEN}
                                 onClick={() => setSelectedSkill(skill)}
-                                className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-transparent hover:border-primary/30 cursor-pointer transition-all group"
+                                className="blood-ui-card-soft flex items-center justify-between p-4 rounded-xl border border-transparent hover:border-primary/30 cursor-pointer transition-all group"
                             >
                                 <div className="flex flex-col">
                                     <span className="font-bold text-slate-200 group-hover:text-primary transition-colors">{skill.name}</span>
@@ -410,7 +454,7 @@ const Home: React.FC<HomeProps> = ({
             </div>
 
             {/* ROW 2: COMPETICIÓN (100%) */}
-            <section className="bento-card rounded-2xl p-6 md:p-8 w-full overflow-hidden">
+            <section className="blood-ui-card-strong rounded-2xl p-6 md:p-8 w-full overflow-hidden">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-3 group cursor-pointer" onClick={() => onNavigate('leagues')}>
@@ -439,7 +483,7 @@ const Home: React.FC<HomeProps> = ({
                     </div>
                     
                     {activeComp?.format === 'Liguilla' && (
-                        <div className="flex p-1 bg-black/40 border border-white/5 rounded-xl">
+                        <div className="blood-ui-card-soft flex p-1 rounded-xl">
                             {[
                                 { id: 'standings', label: 'CLASIFICACIÓN' },
                                 { id: 'scorers', label: 'ANOTADORES' },
@@ -469,7 +513,7 @@ const Home: React.FC<HomeProps> = ({
                 ) : (
                     <div className="grid grid-cols-12 gap-8">
                         {/* Left: Stats Tables */}
-                        <div className="col-span-12 lg:col-span-7 bg-black/30 rounded-2xl border border-white/5 overflow-hidden">
+                        <div className="blood-ui-card-soft col-span-12 lg:col-span-7 rounded-2xl overflow-hidden">
                             {activeComp?.format === 'Liguilla' ? (
                                 <div className="overflow-x-auto min-h-[300px]">
                                     <table className="w-full text-left border-collapse">
@@ -525,7 +569,7 @@ const Home: React.FC<HomeProps> = ({
 
                         {/* Right: Smart Next Match Info */}
                         <div className="col-span-12 lg:col-span-5 flex flex-col gap-4">
-                            <div className="flex-1 bg-gradient-to-br from-white/[0.08] to-transparent rounded-2xl border border-white/10 p-8 flex flex-col items-center justify-center text-center relative overflow-hidden group">
+                            <div className="blood-ui-card-strong flex-1 bg-gradient-to-br from-white/[0.08] to-transparent rounded-2xl p-8 flex flex-col items-center justify-center text-center relative overflow-hidden group">
                                 <div className={`absolute top-0 right-0 p-3 border-l border-b rounded-bl-xl tracking-widest text-[10px] font-header font-bold ${nextMatchData ? 'bg-primary/20 border-primary/30 text-primary' : 'bg-slate-800 border-white/10 text-slate-500'}`}>
                                     PRÓXIMO ENCUENTRO
                                 </div>
@@ -567,7 +611,7 @@ const Home: React.FC<HomeProps> = ({
                             <button 
                                 onClick={handleJumpToMatch}
                                 disabled={!nextMatchData}
-                                className={`w-full font-header text-xs py-5 rounded-xl tracking-widest uppercase transition-all ${nextMatchData ? 'bg-primary border border-primary text-black font-black hover:bg-[#A16D00] hover:scale-[1.02] shadow-[0_0_20px_rgba(202,138,4,0.2)]' : 'bg-white/5 border border-white/5 text-slate-600 cursor-not-allowed hidden'}`}
+                                className={`w-full font-header text-xs py-5 rounded-xl tracking-widest uppercase transition-all ${nextMatchData ? 'blood-ui-button-primary border border-primary text-black font-black hover:scale-[1.02]' : 'bg-white/5 border border-white/5 text-slate-600 cursor-not-allowed hidden'}`}
                             >
                                 IR A MATCH CENTER CON DATOS
                             </button>
@@ -580,14 +624,14 @@ const Home: React.FC<HomeProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                 
                 {/* 4. LA ARENA (25%) */}
-                <section className="col-span-1 bento-card rounded-2xl p-8 flex flex-col justify-between min-h-[250px] group">
+                <section className="blood-ui-card-strong col-span-1 rounded-2xl p-8 flex flex-col justify-between min-h-[250px] group">
                     <div>
                         <h2 onClick={() => onNavigate('arena')} className="font-header text-3xl text-primary tracking-widest section-title">LA ARENA</h2>
                         <p className="text-sm font-sans text-slate-400 mt-4 leading-relaxed">Asistente táctico para dados, gestión de tiempos y actas interactivas en tiempo real.</p>
                     </div>
                     <button 
                         onClick={() => onNavigate('arena')}
-                        className="w-full py-5 bg-primary text-black font-header text-sm tracking-widest btn-interact rounded-xl transform hover:scale-105 transition-all font-black uppercase text-center"
+                        className="w-full py-5 blood-ui-button-primary font-header text-sm tracking-widest btn-interact rounded-xl transform hover:scale-105 transition-all font-black uppercase text-center"
                     >
                         INICIAR PARTIDO
                     </button>
