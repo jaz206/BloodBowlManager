@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import type { ManagedPlayer, ManagedTeam } from '../../../../../types';
 
 type TeamSide = 'home' | 'opponent';
@@ -33,7 +33,7 @@ const MatchTeamRoster: React.FC<MatchTeamRosterProps> = ({ team, side, activeTea
   const isActiveSide = activeTeamId === side;
 
   return (
-    <section className={`rounded-[2rem] border bg-black/25 backdrop-blur-xl p-5 relative overflow-hidden ${accent.panel} ${accent.glow} ${locked ? 'opacity-60' : ''}`}>
+    <section className={`arena-roster-card rounded-[2rem] border bg-black/25 backdrop-blur-xl p-5 relative overflow-hidden ${accent.panel} ${accent.glow} ${locked ? 'opacity-60' : ''}`}>
       {locked && (
         <div className="absolute inset-0 z-10 bg-black/45 backdrop-blur-[1px] flex items-center justify-center">
           <div className="px-4 py-2 rounded-full border border-white/10 bg-black/80 text-[9px] font-black uppercase tracking-[0.35em] text-slate-300">
