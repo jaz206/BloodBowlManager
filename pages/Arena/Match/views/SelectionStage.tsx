@@ -50,7 +50,7 @@ const SelectionStage: React.FC = () => {
     };
 
     return (
-        <div className="max-w-6xl mx-auto py-10 px-4 animate-fade-in">
+        <div className="arena-light max-w-6xl mx-auto py-10 px-4 animate-fade-in">
             <div className="text-center mb-10">
                 <h2 className="text-4xl font-display font-black text-white uppercase italic tracking-tighter mb-2">Preparar <span className="text-premium-gold">Confrontación</span></h2>
                 <p className="text-slate-500 text-sm tracking-wide">Forja el duelo definitivo en la arena de Nuffle.</p>
@@ -243,3 +243,4 @@ const SelectionStage: React.FC = () => {
 };
 
 export default SelectionStage;
+

@@ -30,13 +30,13 @@ const MatchFlowStepper: React.FC<MatchFlowStepperProps> = ({ gameState, matchMod
 
     return (
         <div className="max-w-[1600px] mx-auto px-6 pt-6">
-            <div className="glass-panel bg-black/50 border-white/5 rounded-[2rem] px-5 py-4">
+            <div className="blood-ui-card-strong rounded-[2rem] px-5 py-4 border border-white/10 shadow-[0_18px_50px_rgba(95,69,42,0.14)]">
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-500">Arena Flow</p>
+                        <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-500">Flujo de arena</p>
                         <h3 className="text-xl font-black italic uppercase tracking-tighter text-white">
                             {FLOW_STEPS[activeIndex]?.label || 'Arena'}
-                            <span className="text-primary ml-2">{matchMode === 'friendly' ? 'Amistoso' : 'Competición'}</span>
+                            <span className="text-premium-gold ml-2">{matchMode === 'friendly' ? 'Amistoso' : 'Competición'}</span>
                         </h3>
                         <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mt-1">
                             {FLOW_STEPS[activeIndex]?.description || 'Flujo de partido'}
@@ -52,10 +52,10 @@ const MatchFlowStepper: React.FC<MatchFlowStepperProps> = ({ gameState, matchMod
                                     key={step.key}
                                     className={`min-w-[110px] rounded-2xl border px-3 py-2 transition-all ${
                                         isActive
-                                            ? 'bg-primary text-black border-primary shadow-[0_0_20px_rgba(202,138,4,0.2)]'
+                                            ? 'bg-premium-gold text-black border-premium-gold shadow-[0_0_20px_rgba(202,138,4,0.2)]'
                                             : isDone
-                                                ? 'bg-primary/10 text-primary border-primary/20'
-                                                : 'bg-white/5 text-slate-500 border-white/5'
+                                                ? 'bg-white/60 text-[#7b5f48] border-white/20'
+                                                : 'bg-white/30 text-slate-500 border-white/10'
                                     }`}
                                 >
                                     <p className="text-[9px] font-black uppercase tracking-[0.25em]">{step.label}</p>
