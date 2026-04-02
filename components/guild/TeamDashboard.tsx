@@ -18,6 +18,7 @@ import {
     type PositionStockEntry,
     getPosTag
 } from '../../utils/imageUtils';
+import { mergeTeamWithFallback } from '../../utils/teamData';
 
 declare const QRCode: any;
 
@@ -85,11 +86,6 @@ const AssetCard: React.FC<AssetCardProps> = ({ title, value, limit, price, onBuy
     </div>
 );
 
-const resolveTeamCrestUrl = (team: ManagedTeam): string => {
-    const staticTeam = teamsData.find(t => t.name === team.rosterName);
-    return team.crestImage || staticTeam?.crestImage || staticTeam?.image || getTeamLogoUrl(team.rosterName) || '';
-};
-
 interface TeamDashboardProps {
     team: ManagedTeam;
     onUpdate: (team: ManagedTeam) => void;
@@ -122,7 +118,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
     const [editingName, setEditingName] = useState('');
     const [fireConfirmation, setFireConfirmation] = useState<ManagedPlayer | null>(null);
     const [advancingPlayer, setAdvancingPlayer] = useState<ManagedPlayer | null>(null);
-    const { starPlayers } = useMasterData();
+    const { starPlayers, teams: masterTeams } = useMasterData();
     const [snapshotToRestore, setSnapshotToRestore] = useState<ManagedTeamSnapshot | null>(null);
 
     const qrCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -138,7 +134,18 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
         };
         loadStock();
     }, [team.rosterName]);
-    const baseRoster = useMemo(() => teamsData.find(t => t.name === team.rosterName), [team.rosterName]);
+    const baseRoster = useMemo(() => {
+        const master = masterTeams.find(t => t.name === team.rosterName);
+        const staticRoster = teamsData.find(t => t.name === team.rosterName);
+        return mergeTeamWithFallback(master as any, staticRoster as any);
+    }, [masterTeams, team.rosterName]);
+
+    const resolveTeamCrestUrl = (managedTeam: ManagedTeam): string => {
+        const staticTeam = teamsData.find(t => t.name === managedTeam.rosterName);
+        const masterTeam = masterTeams.find(t => t.name === managedTeam.rosterName);
+        const merged = mergeTeamWithFallback(managedTeam as any, (masterTeam || staticTeam) as any);
+        return merged.crestImage || merged.image || getTeamLogoUrl(managedTeam.rosterName) || '';
+    };
 
     useEffect(() => {
         if (showQr && qrCanvasRef.current && team && typeof QRCode !== 'undefined') {

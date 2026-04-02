@@ -15,11 +15,13 @@ import TeamDetailPage from './TeamDetailPage';
 import SkillBadge from '../../components/shared/SkillBadge';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { getTeamLogoUrl } from '../../utils/imageUtils';
+import { mergeTeamWithFallback } from '../../utils/teamData';
 
 const resolveTeamImage = (team?: Team | null) => {
     if (!team) return '';
     const staticTeam = staticTeams.find(t => t.name === team.name);
-    return (team as Team & { crestImage?: string })?.crestImage || team.image || staticTeam?.crestImage || staticTeam?.image || getTeamLogoUrl(team.name);
+    const merged = mergeTeamWithFallback(team as any, staticTeam as any);
+    return merged.crestImage || merged.image || getTeamLogoUrl(team.name);
 };
 const PopularTeamCard: React.FC<{ team: Team; icon: string; subtitle: string; onClick: () => void }> = ({ team, icon, subtitle, onClick }) => (
     <motion.button
@@ -348,16 +350,7 @@ const Teams: React.FC<{
     const teams = useMemo(() => {
         return fetchedTeams.map(ft => {
             const st = staticTeams.find(s => s.name === ft.name);
-            const merged = {
-                ...(st || {}),
-                ...ft,
-                roster: ft.roster && ft.roster.length > 0 ? ft.roster : st?.roster || []
-            } as Team & { crestImage: string };
-
-            if (!merged.image && st?.image) merged.image = st.image;
-            if (!merged.crestImage && (st as any)?.crestImage) merged.crestImage = (st as any).crestImage;
-
-            return merged as Team;
+            return mergeTeamWithFallback(ft as any, st as any) as Team;
         });
     }, [fetchedTeams]);
 

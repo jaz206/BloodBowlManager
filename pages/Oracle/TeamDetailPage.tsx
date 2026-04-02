@@ -11,6 +11,7 @@ import { getStarPlayerImageUrl } from '../../utils/imageUtils';
 import { useMasterData } from '../../hooks/useMasterData';
 import StatValue from '../../components/oracle/StatValue';
 import { teamsData as staticTeamsData } from '../../data/teams';
+import { mergeTeamWithFallback } from '../../utils/teamData';
 
 interface TeamDetailPageProps {
     team: Team;
@@ -40,21 +41,20 @@ const LEAGUE_MAP: Record<string, string> = {
 
 const TeamDetailPage: React.FC<TeamDetailPageProps> = ({ team, onBack, onRequestTeamCreation }) => {
     const { language } = useLanguage();
-    const { starPlayers, loading: loadingStars } = useMasterData();
+    const { starPlayers, teams: masterTeams, loading: loadingStars } = useMasterData();
     const [isRadarModalOpen, setIsRadarModalOpen] = useState(false);
     const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
     const [isFullscreenImage, setIsFullscreenImage] = useState(false);
     const [activeTab, setActiveTab] = useState<'roster' | 'stars' | 'rules'>('roster');
 
     const staticTeam = staticTeamsData.find(t => t.name === team.name);
-    const heroImage =
-        (team as Team & { crestImage?: string })?.crestImage ||
-        team.image ||
-        staticTeam?.crestImage ||
-        staticTeam?.image ||
-        getTeamLogoUrl(team.name);
+    const masterTeam = masterTeams.find(t => t.name === team.name);
+    const mergedTeam = mergeTeamWithFallback(team as any, (masterTeam || staticTeam) as any);
+    const heroImage = mergedTeam.crestImage || mergedTeam.image || getTeamLogoUrl(team.name);
 
-    const currentSpecialRulesStr = language === 'es' ? (team.specialRules_es || team.specialRules) : (team.specialRules_en || team.specialRules);
+    const currentSpecialRulesStr = language === 'es'
+        ? (mergedTeam.specialRules_es || mergedTeam.specialRules)
+        : (mergedTeam.specialRules_en || mergedTeam.specialRules);
     
     // Parse special rules into a list
     const specialRulesList = useMemo(() => {
@@ -137,9 +137,9 @@ const TeamDetailPage: React.FC<TeamDetailPageProps> = ({ team, onBack, onRequest
                 </div>
                 <div className="flex-1 space-y-6 pt-4 text-center md:text-left">
                     <div className="flex flex-col md:flex-row items-center gap-4">
-                        <span className="px-3 py-1.5 bg-primary text-black font-black text-xs rounded uppercase tracking-tighter shadow-lg shadow-primary/20">Tier {team.tier}</span>
+                <span className="px-3 py-1.5 bg-primary text-black font-black text-xs rounded uppercase tracking-tighter shadow-lg shadow-primary/20">Tier {mergedTeam.tier}</span>
                         <h1 className="text-4xl md:text-7xl font-black text-[#2b1d12] tracking-tighter uppercase italic drop-shadow-[0_10px_30px_rgba(92,68,39,0.16)]">
-                            {team.name}
+                            {mergedTeam.name}
                         </h1>
                     </div>
                     <div className="flex flex-wrap gap-2 justify-center md:justify-start">
@@ -158,13 +158,13 @@ const TeamDetailPage: React.FC<TeamDetailPageProps> = ({ team, onBack, onRequest
                         <div className="flex flex-col border-l-2 border-[#ca8a04] pl-4 bg-[rgba(255,251,241,0.84)] pr-6 py-2 rounded-r-xl shadow-[0_8px_22px_rgba(92,68,39,0.08)]">
                             <span className="text-[10px] text-accent-gold uppercase font-black tracking-widest leading-none mb-1 opacity-70">Estilo</span>
                             <span className="text-[#2b1d12] font-black text-sm">
-                                 {team.tier === 1 ? 'Competitivo' : team.tier === 2 ? 'Equilibrado' : 'Desafío'}
+                                  {mergedTeam.tier === 1 ? 'Competitivo' : mergedTeam.tier === 2 ? 'Equilibrado' : 'Desafío'}
                             </span>
                         </div>
                         <div className="flex flex-col border-l-2 border-[#ca8a04] pl-4 bg-[rgba(255,251,241,0.84)] pr-6 py-2 rounded-r-xl shadow-[0_8px_22px_rgba(92,68,39,0.08)]">
                             <span className="text-[10px] text-accent-gold uppercase font-black tracking-widest leading-none mb-1 opacity-70">Dificultad</span>
                             <span className="text-[#2b1d12] font-black text-sm">
-                                {team.tier === 1 ? 'Media' : team.tier === 2 ? 'Alta' : 'Extrema'}
+                                 {mergedTeam.tier === 1 ? 'Media' : mergedTeam.tier === 2 ? 'Alta' : 'Extrema'}
                             </span>
                         </div>
                     </div>
@@ -265,7 +265,7 @@ const TeamDetailPage: React.FC<TeamDetailPageProps> = ({ team, onBack, onRequest
                         <div className="grid grid-cols-2 gap-4 relative z-10">
                             {[
                                 { label: 'Reroll (RR)', value: team.rerollCost.toLocaleString('es-ES'), highlight: true },
-                                { label: 'Apotecario', value: team.apothecary },
+                                 { label: 'Apotecario', value: mergedTeam.apothecary },
                                 { label: 'Sobornos', value: '100k' },
                                 { label: 'Asistentes', value: '10k' }
                             ].map((cost, idx) => (

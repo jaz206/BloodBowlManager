@@ -9,6 +9,7 @@ import { skillsData as staticSkills } from '../data/skills';
 import { starPlayersData as staticStarsData } from '../data/starPlayers';
 import { inducements as staticInducementsEs } from '../data/inducements';
 import { inducementsData as staticInducementsEn } from '../data/inducements_en';
+import { ensureTeamRecord, type TeamAsset } from '../utils/teamData';
 
 import type { Team, Skill, StarPlayer, Inducement } from '../types';
 
@@ -46,10 +47,17 @@ export const useMasterData = () => {
     const [lastSync, setLastSync] = useState<string | null>(null);
     const [isFromFirestore, setIsFromFirestore] = useState(false);
 
+    const normalizeTeams = useCallback((items: Team[]) => {
+        return items.map((item) => {
+            const fallback = staticTeamsData.find((team) => team.name === item.name) as TeamAsset | undefined;
+            return ensureTeamRecord(item as TeamAsset, fallback || null);
+        });
+    }, []);
+
     // ── Firestore listeners ───────────────────────────────────────────────────
     useEffect(() => {
         if (!db) {
-            setTeams(staticTeamsData);
+            setTeams(normalizeTeams(staticTeamsData));
             setSkills(staticSkills);
             setStarPlayers(staticStarsData);
             setInducements(language === 'es' ? staticInducementsEs : (staticInducementsEn as unknown as Inducement[]));
@@ -71,11 +79,11 @@ export const useMasterData = () => {
             doc(db, MASTER_COL, 'teams'),
             (snap) => {
                 if (snap.exists() && snap.data()?.items?.length > 0) {
-                    setTeams(snap.data().items as Team[]);
+                    setTeams(normalizeTeams(snap.data().items as Team[]));
                     setIsFromFirestore(true);
                     setError(null);
                 } else {
-                    setTeams(staticTeamsData);
+                    setTeams(normalizeTeams(staticTeamsData));
                     setIsFromFirestore(false);
                 }
                 checkDone();
@@ -85,7 +93,7 @@ export const useMasterData = () => {
                 if (err.code === 'permission-denied') {
                     setError(err);
                 }
-                setTeams(staticTeamsData);
+                setTeams(normalizeTeams(staticTeamsData));
                 setIsFromFirestore(false);
                 checkDone();
             }
@@ -227,7 +235,11 @@ export const useMasterData = () => {
                 getDoc(doc(db, MASTER_COL, 'heraldo')),
             ]);
 
-            const teamsToSave = mergeItems(teamsSnap.exists() ? teamsSnap.data().items : [], staticTeamsData, 'name');
+            const teamsToSave = mergeItems(
+                normalizeTeams(teamsSnap.exists() ? teamsSnap.data().items : []),
+                normalizeTeams(staticTeamsData),
+                'name'
+            );
             const skillsToSave = mergeItems(skillsSnap.exists() ? skillsSnap.data().items : [], staticSkills, 'keyEN');
             const starsToSave = mergeItems(starsSnap.exists() ? starsSnap.data().items : [], staticStarsData, 'name');
             const inducEsToSave = mergeItems(inducEsSnap.exists() ? inducEsSnap.data().items : [], staticInducementsEs, 'name');

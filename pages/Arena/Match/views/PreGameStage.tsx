@@ -123,7 +123,7 @@ const CommandCenterStep: React.FC = () => {
         if (oTotal >= hTotal * 2) oppFame = 2; else if (oTotal > hTotal) oppFame = 1;
         setFame({ home: homeFame, opponent: oppFame });
         setFansRoll({ home: hf.toString(), opponent: of.toString() });
-        logEvent('INFO', `Hinchas (S3 1D3) â€” ${liveHomeTeam.name}: +${hf}, ${liveOpponentTeam.name}: +${of}`);
+        logEvent('INFO', `Hinchas (S3 1D3) — ${liveHomeTeam.name}: +${hf}, ${liveOpponentTeam.name}: +${of}`);
         playSound('dice');
     };
 
@@ -137,7 +137,7 @@ const CommandCenterStep: React.FC = () => {
         else winner = Math.random() > 0.5 ? 'home' : 'opponent';
 
         setGameStatus((prev: any) => ({ ...prev, coinTossWinner: winner }));
-        logEvent('INFO', `Sorteo de Moneda (1D6 vs 1D6) â€” ${liveHomeTeam.name}: ${hRoll}, ${liveOpponentTeam.name}: ${oRoll}. Ganador: ${winner === 'home' ? liveHomeTeam.name : liveOpponentTeam.name}`);
+        logEvent('INFO', `Sorteo de Moneda (1D6 vs 1D6) — ${liveHomeTeam.name}: ${hRoll}, ${liveOpponentTeam.name}: ${oRoll}. Ganador: ${winner === 'home' ? liveHomeTeam.name : liveOpponentTeam.name}`);
         playSound('dice');
     };
 
@@ -493,7 +493,7 @@ const DeploymentStep: React.FC = () => {
         }
 
         if ((homeOnField < 11 && homeOnField < homeAvailable) || (oppOnField < 11 && oppOnField < oppAvailable)) {
-            if (!confirm('Uno de los equipos tiene menos de 11 jugadores pudiendo desplegar mas. ?Continuar?')) return;
+                if (!confirm('Uno de los equipos tiene menos de 11 jugadores pudiendo desplegar más. ¿Continuar?')) return;
         }
 
         const homePresetLabel = presetOptions.find(option => option.id === homePreset)?.label || 'Equilibrado';
@@ -1027,9 +1027,9 @@ const PreGameStatusChip: React.FC<{ label: string; value: string; accent?: 'gold
     };
 
     return (
-        <div className={`rounded-2xl border px-4 py-3 ${accentMap[accent]}`}>
+        <div className={`rounded-2xl border px-4 py-3 shadow-[0_10px_24px_rgba(116,80,43,0.08)] ${accentMap[accent]}`}>
             <p className="mb-1 text-[9px] font-display font-black uppercase tracking-[0.25em] opacity-70">{label}</p>
-            <p className="text-sm font-display font-black uppercase italic tracking-tight text-white">{value}</p>
+            <p className="text-sm font-display font-black uppercase italic tracking-tight text-[#2b1d12]">{value}</p>
         </div>
     );
 };
@@ -1049,30 +1049,30 @@ const PreGameSectionFrame: React.FC<{
         <section
             className={`relative overflow-hidden rounded-[2rem] border transition-all duration-300 ${
                 isActive
-                    ? 'border-premium-gold/35 bg-black/55 shadow-[0_0_50px_rgba(245,159,10,0.08)]'
+                    ? 'border-premium-gold/35 bg-[linear-gradient(180deg,rgba(255,250,239,0.98),rgba(235,216,181,0.94))] shadow-[0_20px_50px_rgba(116,80,43,0.14)]'
                     : isUnlocked
-                        ? 'border-white/10 bg-black/40'
-                        : 'border-white/5 bg-black/30 opacity-75'
+                        ? 'border-[rgba(111,87,56,0.14)] bg-[linear-gradient(180deg,rgba(255,249,236,0.94),rgba(239,221,189,0.9))]'
+                        : 'border-[rgba(111,87,56,0.10)] bg-[linear-gradient(180deg,rgba(255,249,236,0.82),rgba(239,221,189,0.78))] opacity-80'
             }`}
         >
-            <div className="border-b border-white/5 px-6 py-5">
+            <div className="border-b border-[rgba(111,87,56,0.12)] px-6 py-5">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                     <div className="space-y-2">
                         <p className="text-[9px] font-display font-black uppercase tracking-[0.35em] text-premium-gold/70">
                             {eyebrow}
                         </p>
-                        <h3 className="text-2xl font-display font-black uppercase italic tracking-tighter text-white">
+                        <h3 className="text-2xl font-display font-black uppercase italic tracking-tighter text-[#2b1d12]">
                             {title}
                         </h3>
-                        <p className="max-w-2xl text-xs text-slate-400">{description}</p>
+                        <p className="max-w-2xl text-xs text-[#6f5738]">{description}</p>
                     </div>
                     <div
                         className={`rounded-full border px-3 py-1 text-[9px] font-display font-black uppercase tracking-[0.28em] ${
                             isActive
-                                ? 'border-premium-gold/30 bg-premium-gold/10 text-premium-gold'
+                                ? 'border-premium-gold/30 bg-premium-gold/15 text-premium-gold'
                                 : isUnlocked
-                                    ? 'border-green-500/20 bg-green-500/10 text-green-400'
-                                    : 'border-white/10 bg-white/5 text-slate-500'
+                                    ? 'border-green-500/20 bg-green-500/10 text-green-700'
+                                    : 'border-[rgba(111,87,56,0.14)] bg-white/35 text-[#8f745c]'
                         }`}
                     >
                         {isActive ? 'Activa' : isUnlocked ? 'Lista' : `Paso ${step}`}
@@ -1081,19 +1081,19 @@ const PreGameSectionFrame: React.FC<{
             </div>
 
             {!isUnlocked && (
-                <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-black/65 backdrop-blur-[2px]">
-                    <div className="rounded-2xl border border-white/10 bg-black/70 px-6 py-4 text-center">
-                        <p className="mb-2 text-[9px] font-display font-black uppercase tracking-[0.3em] text-slate-500">
+                <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-[rgba(255,249,236,0.72)] backdrop-blur-[2px]">
+                    <div className="rounded-2xl border border-[rgba(111,87,56,0.14)] bg-[rgba(255,250,239,0.95)] px-6 py-4 text-center shadow-[0_16px_34px_rgba(116,80,43,0.12)]">
+                        <p className="mb-2 text-[9px] font-display font-black uppercase tracking-[0.3em] text-[#8f745c]">
                             Bloqueado
                         </p>
-                        <p className="text-sm font-display font-black uppercase italic tracking-tight text-white">
+                        <p className="text-sm font-display font-black uppercase italic tracking-tight text-[#2b1d12]">
                             Resuelve el paso anterior
                         </p>
                     </div>
                 </div>
             )}
 
-            <div className="p-6 md:p-8">{children}</div>
+            <div className="p-5 md:p-7">{children}</div>
         </section>
     );
 };
@@ -1149,8 +1149,8 @@ const PreGameStage: React.FC = () => {
 
     if (isDriveReset) {
         return (
-            <div className="max-w-[1600px] mx-auto space-y-8 py-6 animate-fade-in">
-                <div className="rounded-[2rem] border border-white/10 bg-black/45 px-6 py-6 md:px-8">
+            <div className="max-w-[1440px] mx-auto space-y-6 py-4 animate-fade-in">
+                <div className="rounded-[2rem] border border-[rgba(111,87,56,0.14)] bg-[linear-gradient(180deg,rgba(255,250,239,0.96),rgba(235,216,181,0.92))] px-6 py-6 md:px-8 shadow-[0_18px_44px_rgba(116,80,43,0.1)]">
                     <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
                         <div className="space-y-3">
                             <p className="text-[10px] font-display font-black uppercase tracking-[0.45em] text-premium-gold/70">
@@ -1236,17 +1236,17 @@ const PreGameStage: React.FC = () => {
     }
 
     return (
-        <div className="max-w-[1600px] mx-auto space-y-8 py-6 animate-fade-in">
+            <div className="max-w-[1440px] mx-auto space-y-6 py-4 animate-fade-in">
             <div className="rounded-[2rem] border border-white/10 bg-black/45 px-6 py-6 md:px-8">
                 <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
                     <div className="space-y-3">
                         <p className="text-[10px] font-display font-black uppercase tracking-[0.45em] text-premium-gold/70">
                             Sala de Operaciones
                         </p>
-                        <h2 className="text-4xl md:text-5xl font-display font-black text-white italic tracking-tighter uppercase">
+                        <h2 className="text-4xl md:text-5xl font-display font-black text-[#2b1d12] italic tracking-tighter uppercase">
                             Prepartido Integrado
                         </h2>
-                        <p className="max-w-3xl text-sm text-slate-400">
+                        <p className="max-w-3xl text-sm text-[#6f5738]">
                             Todo el arranque del encuentro en una sola mesa: incentivos, clima, decision de recepcion,
                             despliegue y kickoff. Resolvemos cada bloque una vez y dejamos el drive listo para entrar al partido.
                         </p>
@@ -1255,7 +1255,7 @@ const PreGameStage: React.FC = () => {
                         <p className="mb-1 text-[9px] font-display font-black uppercase tracking-[0.35em] text-premium-gold/70">
                             Fase activa
                         </p>
-                        <p className="text-lg font-display font-black uppercase italic tracking-tight text-white">
+                        <p className="text-lg font-display font-black uppercase italic tracking-tight text-[#2b1d12]">
                             {activeTeam}
                         </p>
                     </div>
