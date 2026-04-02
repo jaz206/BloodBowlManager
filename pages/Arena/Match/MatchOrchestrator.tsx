@@ -70,7 +70,7 @@ const MatchOrchestrator: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-premium-gold selection:text-black">
+        <div className="arena-light min-h-screen bg-[#050505] text-white font-sans selection:bg-premium-gold selection:text-black">
             {/* Header / Stats Bar (Opacional, usualmente manejado por los views) */}
             <MatchFlowStepper gameState={gameState} matchMode={matchMode} />
             
