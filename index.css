@@ -567,6 +567,66 @@ h1, h2, h3, h4, .font-display {
     color: #a58a70 !important;
 }
 
+.leagues-light {
+    color: #2b1d12;
+    background:
+        radial-gradient(circle at top, rgba(255, 248, 233, 0.98), rgba(226, 194, 142, 0.86));
+}
+
+.leagues-light .text-white {
+    color: #2b1d12 !important;
+}
+
+.leagues-light .text-slate-300 {
+    color: #5f4a39 !important;
+}
+
+.leagues-light .text-slate-400 {
+    color: #79614c !important;
+}
+
+.leagues-light .text-slate-500 {
+    color: #8f745c !important;
+}
+
+.leagues-light .text-slate-600 {
+    color: #a58a70 !important;
+}
+
+.leagues-light .bg-zinc-900,
+.leagues-light .bg-zinc-900\/20,
+.leagues-light .bg-zinc-900\/40,
+.leagues-light .bg-zinc-900\/60,
+.leagues-light .bg-black\/20,
+.leagues-light .bg-black\/30,
+.leagues-light .bg-black\/40,
+.leagues-light .bg-black\/60,
+.leagues-light .bg-black\/80,
+.leagues-light .bg-black\/90 {
+    background:
+        linear-gradient(180deg, rgba(255, 249, 236, 0.92), rgba(240, 227, 199, 0.86)) !important;
+}
+
+.leagues-light .border-white\/5,
+.leagues-light .border-white\/10,
+.leagues-light .border-white\/20 {
+    border-color: rgba(111, 87, 56, 0.14) !important;
+}
+
+.leagues-light .bg-zinc-800,
+.leagues-light .bg-zinc-800\/80 {
+    background: linear-gradient(180deg, rgba(244, 235, 215, 0.96), rgba(226, 207, 171, 0.92)) !important;
+}
+
+.leagues-light .bg-zinc-700,
+.leagues-light .bg-zinc-700\/80 {
+    background: linear-gradient(180deg, rgba(228, 214, 190, 0.96), rgba(212, 193, 158, 0.92)) !important;
+}
+
+.leagues-light .leagues-modal-overlay {
+    background: rgba(17, 11, 6, 0.82) !important;
+}
+
 .blood-ui-focus-ring {
     box-shadow: 0 0 0 3px rgba(202, 138, 4, 0.14);
 }

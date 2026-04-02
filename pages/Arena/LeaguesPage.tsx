@@ -1149,7 +1149,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                 navigator.clipboard.writeText(`${window.location.origin}?join=${inviteKey}`);
                                                 setConfirmation({
                                                     title: "Enlace Copiado",
-                                                    message: "¡Enlace de invitación copiado al portapapeles!",
+                                        message: "¡Enlace de invitación copiado al portapapeles!",
                                                     onConfirm: () => setConfirmation(null),
                                                     type: 'info'
                                                 });
@@ -1521,7 +1521,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
     };
 
     return (
-        <div className="min-h-screen pb-20">
+        <div className="leagues-light min-h-screen pb-20">
             <AnimatePresence mode="wait">
                 {view === 'list' && (
                     <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -1548,7 +1548,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
             {/* Modal: Unirse */}
             <AnimatePresence>
                 {joinModalState.comp && (
-                    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={() => setJoinModalState({ comp: null, teamToJoin: '' })}>
+                    <div className="leagues-modal-overlay fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={() => setJoinModalState({ comp: null, teamToJoin: '' })}>
                         <motion.div
                             initial={{ opacity: 0, scale: 0.9, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -1611,7 +1611,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
             {/* Modal: Confirmación Personalizado */}
             <AnimatePresence>
                 {confirmation && (
-                    <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] p-4 backdrop-blur-md" onClick={() => setConfirmation(null)}>
+                    <div className="leagues-modal-overlay fixed inset-0 bg-black/90 flex items-center justify-center z-[100] p-4 backdrop-blur-md" onClick={() => setConfirmation(null)}>
                         <motion.div
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
@@ -1678,7 +1678,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
             {/* Modal: Redactar Crónica */}
             <AnimatePresence>
                 {showReportModal && selectedCompetition && (
-                    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={() => setShowReportModal(false)}>
+                    <div className="leagues-modal-overlay fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={() => setShowReportModal(false)}>
                         <motion.div
                             initial={{ opacity: 0, scale: 0.9, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
