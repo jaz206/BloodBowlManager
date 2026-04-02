@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useMatch } from '../context/MatchContext';
 import { teamsData } from '../../../../data/teams';
 import { starPlayersData } from '../../../../data/starPlayers';
@@ -10,9 +10,9 @@ import ShieldCheckIcon from '../../../../components/icons/ShieldCheckIcon';
 import { DiceRollButton } from '../components/MatchUIComponents';
 import { StarPlayer, Team } from '../../../../types';
 
-// ────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Helpers
-// ────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const isEligibleStar = (star: StarPlayer, teamRoster: Team | undefined) => {
     if (!teamRoster) return false;
     const teamRules = (teamRoster.specialRules || teamRoster.specialRules_es || '').split(', ').map((r: string) => r.trim());
@@ -32,9 +32,9 @@ const isEligibleStar = (star: StarPlayer, teamRoster: Team | undefined) => {
     });
 };
 
-// ────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // SubComponent: JourneymenNotification
-// ────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const JourneymenNotification: React.FC = () => {
     const { journeymenNotification, handleConfirmJourneymen } = useMatch();
     if (!journeymenNotification) return null;
@@ -57,9 +57,9 @@ const JourneymenNotification: React.FC = () => {
     );
 };
 
-// ────────────────────────────────────────────────────────────
-// SubComponent: Step 1 — Inducements + Fate + Coin Toss
-// ────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// SubComponent: Step 1 â€” Inducements + Fate + Coin Toss
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const CommandCenterStep: React.FC = () => {
     const {
         liveHomeTeam, liveOpponentTeam, gameStatus, setGameStatus,
@@ -123,7 +123,7 @@ const CommandCenterStep: React.FC = () => {
         if (oTotal >= hTotal * 2) oppFame = 2; else if (oTotal > hTotal) oppFame = 1;
         setFame({ home: homeFame, opponent: oppFame });
         setFansRoll({ home: hf.toString(), opponent: of.toString() });
-        logEvent('INFO', `Hinchas (S3 1D3) — ${liveHomeTeam.name}: +${hf}, ${liveOpponentTeam.name}: +${of}`);
+        logEvent('INFO', `Hinchas (S3 1D3) â€” ${liveHomeTeam.name}: +${hf}, ${liveOpponentTeam.name}: +${of}`);
         playSound('dice');
     };
 
@@ -137,7 +137,7 @@ const CommandCenterStep: React.FC = () => {
         else winner = Math.random() > 0.5 ? 'home' : 'opponent';
 
         setGameStatus((prev: any) => ({ ...prev, coinTossWinner: winner }));
-        logEvent('INFO', `Sorteo de Moneda (1D6 vs 1D6) — ${liveHomeTeam.name}: ${hRoll}, ${liveOpponentTeam.name}: ${oRoll}. Ganador: ${winner === 'home' ? liveHomeTeam.name : liveOpponentTeam.name}`);
+        logEvent('INFO', `Sorteo de Moneda (1D6 vs 1D6) â€” ${liveHomeTeam.name}: ${hRoll}, ${liveOpponentTeam.name}: ${oRoll}. Ganador: ${winner === 'home' ? liveHomeTeam.name : liveOpponentTeam.name}`);
         playSound('dice');
     };
 
@@ -147,7 +147,7 @@ const CommandCenterStep: React.FC = () => {
         <div className='space-y-8 animate-fade-in'>
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
 
-                {/* ── Left: Mercado de Incentivos ── */}
+                {/* â”€â”€ Left: Mercado de Incentivos â”€â”€ */}
                 <div className="xl:col-span-7 space-y-6">
                     <div className="flex items-center gap-4 mb-2">
                         <div className="w-10 h-10 rounded-full bg-green-500/10 border border-green-500/30 flex items-center justify-center">
@@ -251,7 +251,7 @@ const CommandCenterStep: React.FC = () => {
                     )}
                 </div>
 
-                {/* ── Right: Destino y Entorno ── */}
+                {/* â”€â”€ Right: Destino y Entorno â”€â”€ */}
                 <div className="xl:col-span-5 space-y-5">
                     <div className="flex items-center gap-4 mb-2">
                         <div className="w-10 h-10 rounded-full bg-sky-500/10 border border-sky-500/30 flex items-center justify-center">
@@ -458,9 +458,9 @@ const CommandCenterStep: React.FC = () => {
     );
 };
 
-// ────────────────────────────────────────────────────────────
-// SubComponent: Step 2 — Deployment
-// ────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// SubComponent: Step 2 â€” Deployment
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const DeploymentStep: React.FC = () => {
     const {
         liveHomeTeam, liveOpponentTeam, ballCarrierId, logEvent,
@@ -699,7 +699,7 @@ const DeploymentStep: React.FC = () => {
 };
 
 // Step 3 - Kickoff event
-// ────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const KickoffStep: React.FC = () => {
     const {
         gameStatus, setGameStatus, kickoffActionCompleted, setKickoffActionCompleted,
@@ -739,7 +739,7 @@ const KickoffStep: React.FC = () => {
             logEvent('KICKOFF', `Evento de Patada (${roll}): ${event.title}`);
             
             // EFECTOS INMEDIATOS (S3)
-            if (event.title === '�rbitro Intimidado') {
+            if (event.title === 'Árbitro Intimidado') {
                 setLiveHomeTeam(prev => prev ? ({ ...prev, tempBribes: (prev.tempBribes || 0) + 1 }) : null);
                 setLiveOpponentTeam(prev => prev ? ({ ...prev, tempBribes: (prev.tempBribes || 0) + 1 }) : null);
                 logEvent('SUCCESS', 'Ambos equipos reciben un soborno gratuito.');
@@ -757,7 +757,7 @@ const KickoffStep: React.FC = () => {
             }
 
             // Solo se marca como completado si no requiere tiradas adicionales
-            const needsExtra = ['Clima Cambiante', 'Defensa S�lida', 'Anticipaci�n', '�A la Carga! (Blitz)', 'Los Hinchas Animan', 'Entrenador Brillante', 'Indigestion', 'Invasi�n de Campo'].includes(event.title);
+            const needsExtra = ['Clima Cambiante', 'Defensa Sólida', 'Anticipación', '¡A la Carga! (Blitz)', 'Los Hinchas Animan', 'Entrenador Brillante', 'Indigestion', 'Invasión de Campo'].includes(event.title);
             if (!needsExtra) setKickoffActionCompleted(true);
         }
         setManualKickoffRoll('');
@@ -771,7 +771,7 @@ const KickoffStep: React.FC = () => {
         const roll2 = d2 || (Math.floor(Math.random() * 6) + 1);
         
         let msg = '';
-        if (['Los Hinchas Animan', 'Entrenador Brillante', 'Indigestion', 'Invasi�n de Campo'].includes(title)) {
+        if (['Los Hinchas Animan', 'Entrenador Brillante', 'Indigestion', 'Invasión de Campo'].includes(title)) {
             const winner = roll1 > roll2 ? 'home' : roll1 < roll2 ? 'opponent' : 'draw';
             const winnerName = winner === 'home' ? liveHomeTeam.name : liveOpponentTeam.name;
 
@@ -782,7 +782,7 @@ const KickoffStep: React.FC = () => {
             } else if (title === 'Indigestion' && winner !== 'draw') {
                 const loserName = winner === 'home' ? liveOpponentTeam.name : liveHomeTeam.name;
                 msg = `Indigestion: ${loserName} sufre las consecuencias del rancho barato (${roll1} vs ${roll2}).`;
-            } else if (title === 'Invasi�n de Campo' && winner !== 'draw') {
+            } else if (title === 'Invasión de Campo' && winner !== 'draw') {
                 const loserName = winner === 'home' ? liveOpponentTeam.name : liveHomeTeam.name;
                 msg = `Invasion de campo: los hinchas de ${winnerName} saltan al campo. ${loserName} tiene problemas (${roll1} vs ${roll2}).`;
             } else {
@@ -797,8 +797,8 @@ const KickoffStep: React.FC = () => {
         playSound('dice');
     };
 
-    const needsEventDice = ['Defensa S�lida', 'Anticipaci�n', '�A la Carga! (Blitz)', 'Los Hinchas Animan', 'Entrenador Brillante', 'Indigestion', 'Invasi�n de Campo'].includes(gameStatus.kickoffEvent?.title || '');
-    const versusEvent = ['Los Hinchas Animan', 'Entrenador Brillante', 'Indigestion', 'Invasi�n de Campo'].includes(gameStatus.kickoffEvent?.title || '');
+    const needsEventDice = ['Defensa Sólida', 'Anticipación', '¡A la Carga! (Blitz)', 'Los Hinchas Animan', 'Entrenador Brillante', 'Indigestion', 'Invasión de Campo'].includes(gameStatus.kickoffEvent?.title || '');
+    const versusEvent = ['Los Hinchas Animan', 'Entrenador Brillante', 'Indigestion', 'Invasión de Campo'].includes(gameStatus.kickoffEvent?.title || '');
 
     return (
         <div className='max-w-4xl mx-auto space-y-6 py-4'>
@@ -1004,9 +1004,9 @@ const KickoffStep: React.FC = () => {
     );
 };
 
-// ────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Main Component: PreGameStage
-// ────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const preGameTitles = [
     "Levantamiento de Muertos",  // 0 - Journeymen
     "El Centro de Mando",        // 1 - Inducements, Fate, Coin Toss
@@ -1336,5 +1336,6 @@ const PreGameStage: React.FC = () => {
 };
 
 export default PreGameStage;
+
 
 

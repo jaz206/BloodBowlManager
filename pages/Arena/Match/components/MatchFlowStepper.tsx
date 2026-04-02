@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import type { GameState } from '../types/match.types';
 
 const FLOW_STEPS: Array<{
@@ -70,3 +70,4 @@ const MatchFlowStepper: React.FC<MatchFlowStepperProps> = ({ gameState, matchMod
 };
 
 export default MatchFlowStepper;
+
