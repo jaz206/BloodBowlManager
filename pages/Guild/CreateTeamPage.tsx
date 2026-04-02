@@ -374,7 +374,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
         return (
             <div className="flex flex-col items-center justify-center p-20 min-h-[60vh] bg-[#0a0a0a]">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#CA8A04] mb-4"></div>
-                <p className="text-slate-400 font-display animate-pulse uppercase tracking-widest italic">Invocando al Comisario...</p>
+                <p className="text-[#8d7863] font-display animate-pulse uppercase tracking-widest italic">Invocando al Comisario...</p>
             </div>
         );
     }
@@ -499,7 +499,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                             <input 
                                 value={searchQuery} 
                                 onChange={(e) => setSearchQuery(e.target.value)} 
-                                className="w-full blood-ui-light-input w-full rounded-lg py-2 pl-10 pr-4 text-[10px] tracking-widest text-[#2b1d12] focus:ring-1 focus:ring-gold/50 transition-all placeholder:text-[#8d7863] outline-none uppercase font-bold" 
+                                className="w-full blood-ui-light-input rounded-lg py-2 pl-10 pr-4 text-[10px] tracking-widest text-[#2b1d12] focus:ring-1 focus:ring-gold/50 transition-all placeholder:text-[#8d7863] outline-none uppercase font-bold" 
                                 placeholder="RASTREAR RAZA..." 
                                 type="text"
                             />
@@ -720,7 +720,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
     return (
         <div className="h-screen w-full flex flex-col bg-[radial-gradient(circle_at_top,rgba(255,248,233,0.98),rgba(226,194,142,0.86))] text-[#2b1d12] overflow-hidden font-inter select-none">
             {/* Header / Command Center - COMPACT */}
-            <header className="flex-none bg-[rgba(45,33,20,0.95)] backdrop-blur-xl border-b border-[rgba(255,255,255,0.04)] px-6 py-3 z-50">
+            <header className="flex-none bg-[rgba(255,248,233,0.90)] backdrop-blur-xl border-b border-[rgba(111,87,56,0.12)] shadow-[0_12px_28px_rgba(89,59,21,0.08)] px-6 py-3 z-50">
                 <div className="max-w-screen-2xl mx-auto flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <button 
@@ -783,10 +783,10 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                                 <motion.div 
                                     layout 
                                     key={idx} 
-                                    className={`relative bg-[#141414] border rounded-2xl p-4 flex flex-col justify-between transition-all group overflow-hidden ${
+                                    className={`relative blood-ui-light-card border rounded-2xl p-4 flex flex-col justify-between transition-all group overflow-hidden ${
                                         isFull 
                                         ? 'opacity-30 border-white/5' 
-                                        : 'border-[rgba(111,87,56,0.10)] hover:border-gold/30 hover:bg-[rgba(255,251,241,0.72)] shadow-xl'
+                                        : 'border-[rgba(111,87,56,0.10)] hover:border-gold/30 hover:bg-[rgba(255,251,241,0.88)] shadow-xl'
                                     }`}
                                 >
                                     {isFull && <div className="absolute inset-0 bg-[rgba(111,87,56,0.12)] backdrop-grayscale pointer-events-none z-10" />}
@@ -842,7 +842,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                                                 </div>
                                             ))}
                                         </div>
-                                        <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest italic">{count} / {limit}</span>
+                                        <span className="text-[8px] font-black text-[#7b6853] uppercase tracking-widest italic">{count} / {limit}</span>
                                     </div>
                                 </motion.div>
                             );
@@ -863,18 +863,18 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                         </div>
                         <div className="grid grid-cols-2 gap-2 mt-4">
                             <div className="blood-ui-light-card p-2 rounded-lg">
-                                <span className="text-[7px] font-black text-gray-600 uppercase tracking-widest block">Roster</span>
+                                <span className="text-[7px] font-black text-[#7b6853] uppercase tracking-widest block">Roster</span>
                                 <span className={`text-sm font-header font-black italic ${draftedPlayers.length < 11 ? 'text-blood' : 'text-gold'}`}>{draftedPlayers.length} / 16</span>
                             </div>
                             <div className="blood-ui-light-card p-2 rounded-lg">
-                                <span className="text-[7px] font-black text-gray-600 uppercase tracking-widest block">VAE</span>
+                                <span className="text-[7px] font-black text-[#7b6853] uppercase tracking-widest block">VAE</span>
                                 <span className="text-sm font-header font-black italic text-[#2b1d12]">{(totalCost / 1000).toLocaleString()}k</span>
                             </div>
                         </div>
                     </div>
 
                     {/* 2. SQUAD LIST (Scrollable priority) */}
-                    <div className="flex-1 overflow-y-auto p-5 space-y-2 no-scrollbar bg-black/10">
+                    <div className="flex-1 overflow-y-auto p-5 space-y-2 no-scrollbar bg-[rgba(255,248,233,0.18)]">
                          <div className="flex items-center gap-2 mb-2">
                             <span className="text-[8px] font-black text-[#7b6853] uppercase tracking-widest">Contrataciones</span>
                             <div className="h-px flex-1 bg-[rgba(111,87,56,0.12)]"></div>
