@@ -9,7 +9,7 @@ import { skillsData as staticSkills } from '../data/skills';
 import { starPlayersData as staticStarsData } from '../data/starPlayers';
 import { inducements as staticInducementsEs } from '../data/inducements';
 import { inducementsData as staticInducementsEn } from '../data/inducements_en';
-import { ensureTeamRecord, type TeamAsset } from '../utils/teamData';
+import { ensureTeamRecord, normalizeTeamCollection, type TeamAsset } from '../utils/teamData';
 
 import type { Team, Skill, StarPlayer, Inducement } from '../types';
 
@@ -48,10 +48,10 @@ export const useMasterData = () => {
     const [isFromFirestore, setIsFromFirestore] = useState(false);
 
     const normalizeTeams = useCallback((items: Team[]) => {
-        return items.map((item) => {
-            const fallback = staticTeamsData.find((team) => team.name === item.name) as TeamAsset | undefined;
-            return ensureTeamRecord(item as TeamAsset, fallback || null);
-        });
+        return normalizeTeamCollection(
+            items as Partial<TeamAsset>[],
+            staticTeamsData as TeamAsset[]
+        );
     }, []);
 
     // ── Firestore listeners ───────────────────────────────────────────────────
@@ -93,7 +93,7 @@ export const useMasterData = () => {
                 if (err.code === 'permission-denied') {
                     setError(err);
                 }
-                setTeams(normalizeTeams(staticTeamsData));
+                    setTeams(normalizeTeams(staticTeamsData));
                 setIsFromFirestore(false);
                 checkDone();
             }
@@ -235,10 +235,13 @@ export const useMasterData = () => {
                 getDoc(doc(db, MASTER_COL, 'heraldo')),
             ]);
 
-            const teamsToSave = mergeItems(
-                normalizeTeams(teamsSnap.exists() ? teamsSnap.data().items : []),
-                normalizeTeams(staticTeamsData),
-                'name'
+            const teamsToSave = normalizeTeamCollection(
+                mergeItems(
+                    normalizeTeams(teamsSnap.exists() ? teamsSnap.data().items : []),
+                    normalizeTeams(staticTeamsData),
+                    'name'
+                ),
+                staticTeamsData as TeamAsset[]
             );
             const skillsToSave = mergeItems(skillsSnap.exists() ? skillsSnap.data().items : [], staticSkills, 'keyEN');
             const starsToSave = mergeItems(starsSnap.exists() ? starsSnap.data().items : [], staticStarsData, 'name');
@@ -339,7 +342,7 @@ export const useMasterData = () => {
 
             await setDoc(ref, { items: mergedItems, updatedAt: serverTimestamp() }, { merge: true });
 
-            if (docId === 'teams') setTeams(mergedItems as Team[]);
+            if (docId === 'teams') setTeams(normalizeTeams(mergedItems as Team[]));
             if (docId === 'skills') setSkills(mergedItems as Skill[]);
             if (docId === 'star_players') setStarPlayers(mergedItems as StarPlayer[]);
             if (docId === 'inducements_es' || docId === 'inducements_en') setInducements(mergedItems as Inducement[]);
@@ -350,7 +353,7 @@ export const useMasterData = () => {
         items[idx] = { ...items[idx], ...patch };
         await setDoc(ref, { items, updatedAt: serverTimestamp() }, { merge: true });
 
-        if (docId === 'teams') setTeams(items as Team[]);
+        if (docId === 'teams') setTeams(normalizeTeams(items as Team[]));
         if (docId === 'skills') setSkills(items as Skill[]);
         if (docId === 'star_players') setStarPlayers(items as StarPlayer[]);
         if (docId === 'inducements_es' || docId === 'inducements_en') setInducements(items as Inducement[]);
