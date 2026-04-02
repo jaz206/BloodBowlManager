@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import AdminGitHubImagePicker from './AdminGitHubImagePicker';
 import { getStarPlayerImageUrl } from '../../utils/imageUtils';
 
@@ -104,7 +104,7 @@ const AdminStarForm: React.FC<AdminStarFormProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-4">
-                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Precio de Fichaje (GP)</label>
+                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Precio de fichaje (GP)</label>
                     <input
                         type="number"
                         value={editingItem.data.cost || 0}
@@ -117,7 +117,7 @@ const AdminStarForm: React.FC<AdminStarFormProps> = ({
                 </div>
 
                 <div className="space-y-4">
-                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Perfil de Atributos</label>
+                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Perfil de atributos</label>
                     <div className="grid grid-cols-5 gap-3 bg-black/40 p-4 rounded-2xl border border-white/5">
                         {['MV', 'FU', 'AG', 'PA', 'AR'].map(stat => (
                             <div key={stat} className="space-y-1">
@@ -141,7 +141,7 @@ const AdminStarForm: React.FC<AdminStarFormProps> = ({
             </div>
 
             <div className="space-y-4">
-                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Habilidades Base</label>
+                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Habilidades base</label>
                 <div className="flex flex-wrap gap-2 p-6 bg-black/40 border border-white/5 rounded-2xl max-h-48 overflow-y-auto custom-scrollbar">
                     {skills
                         .slice()
@@ -177,7 +177,7 @@ const AdminStarForm: React.FC<AdminStarFormProps> = ({
             </div>
 
             <div className="space-y-4">
-                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Equipos Compatibles</label>
+                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Equipos compatibles</label>
                 <div className="flex flex-wrap gap-2 p-6 bg-black/40 border border-white/5 rounded-2xl">
                     {STAR_FACTIONS.map(faction => {
                         const isSelected = (editingItem.data.playsFor || []).includes(faction);
@@ -207,7 +207,7 @@ const AdminStarForm: React.FC<AdminStarFormProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-4">
-                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Regla Especial ES</label>
+                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Regla especial ES</label>
                     <textarea
                         value={editingItem.data.specialRules_es || ''}
                         onChange={(e) => setEditingItem({
@@ -249,3 +249,4 @@ const AdminStarForm: React.FC<AdminStarFormProps> = ({
 };
 
 export default AdminStarForm;
+

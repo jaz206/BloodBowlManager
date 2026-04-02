@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import AdminGitHubImagePicker from './AdminGitHubImagePicker';
 import { getTeamLogoUrl } from '../../utils/imageUtils';
 
@@ -67,11 +67,11 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
 
     return (
         <>
-            <div className="space-y-6">
-                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Origen de la Imagen</label>
+        <div className="space-y-6">
+            <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Origen de la imagen</label>
                 <AdminGitHubImagePicker
                     title="Explorador de GitHub"
-                    helperText="Haz clic para buscar imagenes en el repositorio"
+                    helperText="Haz clic para buscar imágenes en el repositorio"
                     isExpanded={isImageExplorerExpanded}
                     setIsExpanded={setIsImageExplorerExpanded}
                     search={githubSearch}
@@ -85,7 +85,7 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                 <div className="relative">
                     <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center px-8 opacity-20 pointer-events-none">
                         <div className="h-px w-full bg-white/50"></div>
-                        <span className="mx-4 text-[9px] font-black uppercase tracking-widest bg-zinc-950 px-2 whitespace-nowrap">
+                        <span className="mx-4 text-[9px] font-black uppercase tracking-widest bg-[#f4ead7] px-2 whitespace-nowrap text-[#7b6853]">
                             O introduce URL manual
                         </span>
                         <div className="h-px w-full bg-white/50"></div>
@@ -99,11 +99,11 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                             type="text"
                             value={currentImage}
                             onChange={(e) => updateTeamImage(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-[10px] text-slate-400 font-mono focus:border-premium-gold/50 outline-none transition-all"
+                            className="w-full bg-[#fcf6ea] border border-[#d7c39a] rounded-2xl py-4 px-6 text-[10px] text-[#5f4d39] font-mono focus:border-premium-gold/50 outline-none transition-all"
                             placeholder="URL personalizada..."
                         />
                     </div>
-                    <div className="w-24 h-16 rounded-2xl border border-white/10 bg-black overflow-hidden flex-shrink-0 flex items-center justify-center">
+                    <div className="w-24 h-16 rounded-2xl border border-[#d7c39a] bg-[#f7efe1] overflow-hidden flex-shrink-0 flex items-center justify-center">
                         {currentImage || suggestedImage ? (
                             <img
                                 src={currentImage || suggestedImage}
@@ -124,7 +124,7 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
             </div>
 
             <div className="space-y-6 mt-8">
-                <div className="flex flex-wrap gap-2 p-1.5 bg-black/40 border border-white/5 rounded-2xl w-fit">
+                <div className="flex flex-wrap gap-2 p-1.5 bg-[#f6e9d0] border border-[#dfcaa7] rounded-2xl w-fit">
                     {(['general', 'identidad', 'roster', 'nombres'] as const).map(tab => (
                         <button
                             key={tab}
@@ -132,7 +132,7 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                             onClick={() => setActiveTeamTab(tab)}
                             className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTeamTab === tab
                                 ? 'bg-premium-gold text-black shadow-lg shadow-premium-gold/20'
-                                : 'text-slate-500 hover:text-white hover:bg-white/5'
+                                : 'text-[#7b6853] hover:text-[#2b1d12] hover:bg-white/40'
                                 }`}
                         >
                             {tab}
@@ -142,9 +142,9 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
 
                 {activeTeamTab === 'general' && (
                     <div className="space-y-12 animate-fade-in-up">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-white/[0.02] p-6 rounded-[2rem] border border-white/5">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-[#fcf6ea] p-6 rounded-[2rem] border border-[#e3cfaa]">
                             <div className="space-y-4">
-                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Costo Segunda Tirada</label>
+                                <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Costo segunda tirada</label>
                                 <input
                                     type="number"
                                     value={editingItem.data.rerollCost || 0}
@@ -152,18 +152,18 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                                         ...editingItem,
                                         data: { ...editingItem.data, rerollCost: parseInt(e.target.value) || 0 },
                                     })}
-                                    className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-6 text-white text-sm focus:border-premium-gold/50 outline-none transition-all"
+                                    className="w-full bg-[#fcf6ea] border border-[#d7c39a] rounded-2xl py-4 px-6 text-[#2b1d12] text-sm focus:border-premium-gold/50 outline-none transition-all"
                                 />
                             </div>
                             <div className="space-y-4">
-                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Tier (Nivel)</label>
+                                <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Tier (nivel)</label>
                                 <select
                                     value={editingItem.data.tier || 1}
                                     onChange={(e) => setEditingItem({
                                         ...editingItem,
                                         data: { ...editingItem.data, tier: parseInt(e.target.value) },
                                     })}
-                                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none"
+                                    className="w-full bg-[#fcf6ea] border border-[#d7c39a] rounded-2xl py-4 px-6 text-[#2b1d12] focus:border-premium-gold/50 outline-none"
                                 >
                                     {[1, 2, 3].map(t => <option key={t} value={t}>Tier {t}</option>)}
                                 </select>
@@ -171,8 +171,8 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                         </div>
 
                         <div className="space-y-4">
-                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Ligas y Alianzas</label>
-                            <div className="flex flex-wrap gap-2 p-6 bg-black/40 border border-white/5 rounded-[2rem]">
+                            <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Ligas y alianzas</label>
+                            <div className="flex flex-wrap gap-2 p-6 bg-[#fcf6ea] border border-[#e3cfaa] rounded-[2rem]">
                                 {TEAM_FACTIONS.map(faction => {
                                     const isSelected = (editingItem.data.megaFactions || []).includes(faction);
                                     return (
@@ -202,11 +202,11 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                         </div>
 
                         <div className="space-y-4">
-                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Ratings de Faccion</label>
-                            <div className="grid grid-cols-5 gap-3 bg-black/40 p-6 rounded-2xl border border-white/5">
+                                <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Ratings de facción</label>
+                            <div className="grid grid-cols-5 gap-3 bg-[#fcf6ea] p-6 rounded-2xl border border-[#e3cfaa]">
                                 {TEAM_STATS.map(stat => (
                                     <div key={stat.k} className="space-y-1">
-                                        <span className="block text-[8px] font-bold text-slate-600 uppercase text-center">{stat.l}</span>
+                                        <span className="block text-[8px] font-bold text-[#8a7760] uppercase text-center">{stat.l}</span>
                                         <input
                                             type="number"
                                             value={editingItem.data.ratings?.[stat.k] || 0}
@@ -217,7 +217,7 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                                                     ratings: { ...editingItem.data.ratings, [stat.k]: parseInt(e.target.value) || 0 },
                                                 },
                                             })}
-                                            className="w-full bg-white/5 border border-white/10 rounded-xl py-2 px-1 text-center text-white focus:border-premium-gold/50 outline-none text-[10px]"
+                                            className="w-full bg-[#f8f0e3] border border-[#d7c39a] rounded-xl py-2 px-1 text-center text-[#2b1d12] focus:border-premium-gold/50 outline-none text-[10px]"
                                         />
                                     </div>
                                 ))}
@@ -229,7 +229,7 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                 {activeTeamTab === 'identidad' && (
                     <div className="space-y-12 animate-fade-in-up">
                         <div className="space-y-4">
-                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Biografia y Trasfondo de la Faccion</label>
+                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Biografía y trasfondo de la facción</label>
                             <textarea
                                 value={editingItem.data.description || ''}
                                 onChange={(e) => setEditingItem({
@@ -237,7 +237,7 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                                     data: { ...editingItem.data, description: e.target.value },
                                 })}
                                 className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none h-64 resize-none text-[10px] leading-relaxed transition-all"
-                                placeholder="Describe aqui el trasfondo de esta raza en el mundo de Blood Bowl..."
+                                placeholder="Describe aquí el trasfondo de esta raza en el mundo de Blood Bowl..."
                             />
                         </div>
                     </div>
@@ -246,7 +246,7 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                 {activeTeamTab === 'roster' && (
                     <div className="space-y-6 animate-fade-in-up">
                         <div className="flex justify-between items-center px-1">
-                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Roster de Jugadores</label>
+                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Roster de jugadores</label>
                             <button
                                 type="button"
                                 onClick={() => {
@@ -266,7 +266,7 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                                 }}
                                 className="text-premium-gold hover:text-white transition-colors flex items-center gap-1 text-[9px] font-black uppercase tracking-widest"
                             >
-                                <span className="material-symbols-outlined text-sm">add</span> Anadir Posicion
+                                <span className="material-symbols-outlined text-sm">add</span> Añadir posición
                             </button>
                         </div>
 
@@ -444,3 +444,4 @@ const Field: React.FC<{ label: string; children: React.ReactNode }> = ({ label, 
 );
 
 export default AdminTeamForm;
+
