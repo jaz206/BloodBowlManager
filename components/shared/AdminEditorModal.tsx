@@ -116,7 +116,7 @@ const AdminEditorModal: React.FC<AdminEditorModalProps> = ({
 
                                                     {/* Economics */}
                                                     <div className="space-y-4">
-                                                        <h5 className="text-[10px] font-black text-green-500 uppercase tracking-[0.3em] mb-4">ParÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡metros EconÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³micos</h5>
+                                                        <h5 className="text-[10px] font-black text-green-500 uppercase tracking-[0.3em] mb-4">Parámetros Económicos</h5>
                                                         <div className="space-y-4 bg-black/40 p-6 rounded-2xl border border-white/5">
                                                             {Object.entries(editingItem.data.economics).map(([key, value]) => (
                                                                 <div key={key} className="flex justify-between items-center gap-4">
@@ -141,7 +141,7 @@ const AdminEditorModal: React.FC<AdminEditorModalProps> = ({
 
                                                 {/* Dice */}
                                                 <div className="space-y-4">
-                                                    <h5 className="text-[10px] font-black text-sky-500 uppercase tracking-[0.3em] mb-4">LÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³gica de Dados</h5>
+                                                    <h5 className="text-[10px] font-black text-sky-500 uppercase tracking-[0.3em] mb-4">Lógica de Datos</h5>
                                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-black/40 p-6 rounded-2xl border border-white/5">
                                                         {Object.entries(editingItem.data.dice).map(([key, value]) => (
                                                             <div key={key} className="space-y-2">
