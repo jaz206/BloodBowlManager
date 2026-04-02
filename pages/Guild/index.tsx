@@ -404,15 +404,15 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                             <span className="opacity-50">RESUMEN:</span> {activeSummaryTeam.name}
                         </h2>
                         <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="blood-ui-card-strong rounded-2xl px-10 py-8 group transition-all">
+                            <div className="guild-summary-card rounded-2xl px-10 py-8 group transition-all">
                                 <p className="text-[10px] text-[#7b6853] font-black tracking-[0.3em] uppercase mb-4">Total Partidos</p>
                                 <p className="text-6xl font-header font-black text-[#2b1d12] group-hover:text-gold transition-colors">{activeSummaryTeamData?.total || 0}</p>
                             </div>
-                            <div className="blood-ui-card-strong rounded-2xl px-10 py-8 group transition-all">
+                            <div className="guild-summary-card rounded-2xl px-10 py-8 group transition-all">
                                 <p className="text-[10px] text-[#7b6853] font-black tracking-[0.3em] uppercase mb-4">Victorias</p>
                                 <p className="text-6xl font-header font-black text-gold">{activeSummaryTeamData?.wins || 0}</p>
                             </div>
-                            <div className="blood-ui-card-strong rounded-2xl px-10 py-8 group transition-all">
+                            <div className="guild-summary-card rounded-2xl px-10 py-8 group transition-all">
                                 <p className="text-[10px] text-[#7b6853] font-black tracking-[0.3em] uppercase mb-4">Palmarés</p>
                                 <p className="text-6xl font-header font-black text-[#2b1d12] group-hover:text-gold transition-colors">
                                     {activeSummaryTeam ? (activeSummaryTeam as any).titles || 0 : 0} 
@@ -449,8 +449,8 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                     onClick={() => setActiveSummaryTeamId(team.id!)}
                                     className={`group relative grid grid-cols-1 md:grid-cols-12 items-center gap-6 px-10 py-8 border rounded-[2rem] overflow-hidden transition-all duration-300 ${
                                         isSelected 
-                                        ? 'bg-gradient-to-r from-gold/10 via-white/[0.06] to-white/[0.02] border-gold/40 shadow-2xl shadow-gold/5' 
-                                        : 'bg-gradient-to-r from-white/[0.08] to-white/[0.03] border-[rgba(111,87,56,0.10)] hover:border-[rgba(111,87,56,0.18)]'
+                                        ? 'bg-[rgba(255,251,241,0.88)] border-gold/40 shadow-[0_20px_40px_rgba(89,59,21,0.08)]' 
+                                        : 'bg-[rgba(255,251,241,0.74)] border-[rgba(111,87,56,0.10)] hover:border-[rgba(111,87,56,0.18)] shadow-[0_16px_34px_rgba(89,59,21,0.06)]'
                                     }`}
                                 >
                                     <div className={`absolute inset-y-0 left-0 w-1.5 ${isSelected ? 'bg-gold' : 'bg-[rgba(111,87,56,0.10)] group-hover:bg-gold/20'} transition-colors`} />
@@ -585,14 +585,14 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                     <div className="bg-[#0a0a0a] border border-white/10 rounded-[2.5rem] p-8 max-w-lg w-full shadow-2xl" onClick={e => e.stopPropagation()}>
                         <h3 className="text-2xl font-header font-black text-gold uppercase italic tracking-tighter mb-8 text-center underline decoration-gold/20 underline-offset-8">Archivo del Gremio</h3>
                         <div className="max-h-[50vh] overflow-y-auto space-y-3 custom-scrollbar pr-2">
-                             <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5 cursor-pointer hover:bg-white/10 transition-all mb-4" onClick={(e) => { e.stopPropagation(); handleSelectAllForExport(selectedTeamsForExport.length !== teams.length); }}>
+                             <div className="flex items-center gap-3 p-3 blood-ui-light-card rounded-xl border border-[rgba(111,87,56,0.10)] cursor-pointer hover:bg-[rgba(255,251,241,0.9)] transition-all mb-4" onClick={(e) => { e.stopPropagation(); handleSelectAllForExport(selectedTeamsForExport.length !== teams.length); }}>
                                 <input type="checkbox" checked={teams.length > 0 && selectedTeamsForExport.length === teams.length} readOnly className="h-4 w-4 rounded border-gold/20 text-gold focus:ring-gold bg-black/40" />
                                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Seleccionar Todos</span>
                             </div>
                             {teams.map(t => (
-                                <div key={t.id} className="flex items-center gap-3 bg-black/40 p-4 rounded-xl border border-white/5 hover:border-gold/30 transition-all cursor-pointer" onClick={() => handleExportSelectionChange(t.id!)}>
+                                <div key={t.id} className="flex items-center gap-3 blood-ui-light-card p-4 rounded-xl border border-[rgba(111,87,56,0.10)] hover:border-gold/30 transition-all cursor-pointer" onClick={() => handleExportSelectionChange(t.id!)}>
                                     <input type="checkbox" checked={selectedTeamsForExport.includes(t.id!)} readOnly className="h-4 w-4 rounded border-gold/20 text-gold focus:ring-gold bg-black/40" />
-                                    <span className="text-sm font-header font-bold text-white italic tracking-tighter uppercase">{t.name}</span>
+                                    <span className="text-sm font-header font-bold text-[#2b1d12] italic tracking-tighter uppercase">{t.name}</span>
                                 </div>
                             ))}
                         </div>
@@ -623,3 +623,4 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
 };
 
 export default TeamManager;
+
