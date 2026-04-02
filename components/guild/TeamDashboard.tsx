@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+﻿import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ManagedTeam, ManagedPlayer, Player, Skill, ManagedTeamSnapshot, MatchReport } from '../../types';
 import { ELITE_SKILLS } from '../../types';
@@ -422,6 +422,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
 
     return (
         <div className="blood-ui-shell min-h-screen text-slate-100 font-display">
+            <div className="guild-dossier-light">
             {/* Top Navigation & Header */}
             <header className={`blood-ui-header border-b border-white/10 backdrop-blur-md sticky ${stickyOffset} z-50`}>
                 <div className="max-w-[1400px] mx-auto px-6 py-4 flex flex-col xl:flex-row xl:items-end justify-between gap-5">
@@ -937,7 +938,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                             <h3 className="text-xl font-epilogue font-black text-blood uppercase italic leading-none mb-1">Zona Crítica</h3>
                                             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Acción irreversible de disolución de equipo</p>
                                         </div>
-                                        <button onClick={() => onDeleteRequest(team.id!)} className="px-8 py-4 bg-blood text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:scale-105 transition-all shadow-glow shadow-blood/20">
+                                        <button onClick={() => onDeleteRequest(team.id!)} className="px-8 py-4 bg-blood !text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:scale-105 transition-all shadow-glow shadow-blood/20">
                                             Disolver Equipo
                                         </button>
                                     </div>
@@ -1016,6 +1017,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                     </div>
                 </div>
             </main>
+            </div>
 
             {/* Modals */}
             <AnimatePresence>
@@ -1125,3 +1127,5 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
         </div>
     );
 };
+
+

@@ -443,6 +443,83 @@ h1, h2, h3, h4, .font-display {
     box-shadow: 0 24px 60px rgba(89, 59, 21, 0.18);
 }
 
+.guild-dossier-light {
+    color: #2b1d12;
+}
+
+.guild-dossier-light .blood-ui-header {
+    background:
+        linear-gradient(180deg, rgba(250, 239, 214, 0.92), rgba(240, 224, 189, 0.9)),
+        linear-gradient(90deg, rgba(202, 138, 4, 0.08), rgba(185, 28, 28, 0.03));
+    border-bottom: 1px solid rgba(111, 87, 56, 0.14);
+    box-shadow: 0 18px 45px rgba(103, 67, 29, 0.16);
+}
+
+.guild-dossier-light .blood-ui-card-strong {
+    background:
+        linear-gradient(180deg, rgba(255, 249, 236, 0.9), rgba(240, 227, 198, 0.84));
+    border-color: rgba(111, 87, 56, 0.14);
+    box-shadow:
+        0 24px 58px rgba(89, 59, 21, 0.14),
+        0 0 0 1px rgba(255, 255, 255, 0.24) inset;
+}
+
+.guild-dossier-light .blood-ui-card-soft {
+    background: linear-gradient(180deg, rgba(255, 250, 240, 0.78), rgba(240, 226, 196, 0.84));
+    border-color: rgba(111, 87, 56, 0.12);
+    box-shadow: 0 16px 34px rgba(89, 59, 21, 0.1);
+}
+
+.guild-dossier-light .blood-ui-input {
+    background: linear-gradient(180deg, rgba(244, 245, 249, 0.96), rgba(212, 216, 223, 0.92));
+    border-color: rgba(104, 117, 141, 0.45);
+    color: #2f4059;
+}
+
+.guild-dossier-light .blood-ui-input::placeholder {
+    color: rgba(67, 86, 114, 0.8);
+}
+
+.guild-dossier-light .blood-ui-button-secondary {
+    background: linear-gradient(180deg, rgba(255, 249, 237, 0.9), rgba(240, 227, 199, 0.9));
+    color: #2b1d12;
+    border-color: rgba(202, 138, 4, 0.2);
+}
+
+.guild-dossier-light .blood-ui-button-secondary:hover {
+    background: linear-gradient(180deg, rgba(250, 223, 158, 0.34), rgba(240, 227, 199, 0.94));
+    border-color: rgba(202, 138, 4, 0.34);
+}
+
+.guild-dossier-light .bg-black\/20,
+.guild-dossier-light .bg-black\/30,
+.guild-dossier-light .bg-black\/40,
+.guild-dossier-light .bg-black\/95 {
+    background:
+        linear-gradient(180deg, rgba(255, 249, 236, 0.94), rgba(240, 226, 197, 0.9)) !important;
+    border-color: rgba(111, 87, 56, 0.12) !important;
+}
+
+.guild-dossier-light .text-white {
+    color: #2b1d12 !important;
+}
+
+.guild-dossier-light .text-slate-300 {
+    color: #5f4a39 !important;
+}
+
+.guild-dossier-light .text-slate-400 {
+    color: #79614c !important;
+}
+
+.guild-dossier-light .text-slate-500 {
+    color: #8f745c !important;
+}
+
+.guild-dossier-light .text-slate-600 {
+    color: #a58a70 !important;
+}
+
 .blood-ui-focus-ring {
     box-shadow: 0 0 0 3px rgba(202, 138, 4, 0.14);
 }
