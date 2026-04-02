@@ -57,6 +57,13 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ managedTeams, competitions, onC
     const [isImporting, setIsImporting] = useState(false);
     const importInputRef = React.useRef<HTMLInputElement>(null);
     const [importTarget, setImportTarget] = useState<'stars' | 'teams' | null>(null);
+    const syncButtonLabel = syncProgress === 'syncing'
+        ? 'Sincronizando...'
+        : syncProgress === 'done'
+            ? '¡Completado!'
+            : syncProgress === 'error'
+                ? 'Error'
+                : 'Sincronización inteligente';
 
     const showToast = (text: string, type: 'success' | 'error' = 'success') => {
         setToastMessage({ text, type });
@@ -450,7 +457,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ managedTeams, competitions, onC
                         ) : (
                             <span className="material-symbols-outlined text-sm">sync</span>
                         )}
-                    ? '¡Completado!' : syncProgress === 'error' ? 'Error' : 'Sincronización Inteligente'
+                        <span>{syncButtonLabel}</span>
                     </button>
                 </div>
             </header>
