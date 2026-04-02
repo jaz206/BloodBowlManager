@@ -396,9 +396,9 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
         ].join(' ');
 
         return (
-            <div className="min-h-screen w-full flex flex-col bg-[#0a0a0a] text-white font-inter overflow-x-hidden antialiased selection:bg-gold selection:text-black">
+            <div className="min-h-screen w-full flex flex-col bg-[radial-gradient(circle_at_top,rgba(255,248,233,0.98),rgba(226,194,142,0.86))] text-[#2b1d12] font-inter overflow-x-hidden antialiased selection:bg-gold selection:text-black">
                 {/* 1. COMPACT RACE SELECTOR */}
-                <nav className="w-full bg-black/60 backdrop-blur-xl border-b border-white/5 py-4 px-8 sticky top-16 z-[100]">
+                <nav className="w-full bg-[rgba(45,33,20,0.95)] backdrop-blur-xl border-b border-[rgba(255,255,255,0.04)] py-4 px-8 sticky top-16 z-[100]">
                     <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-8">
                         <div className="flex flex-col shrink-0">
                             <h2 className="text-[9px] font-black text-gold uppercase tracking-[0.4em] mb-0.5">Cátedra de Nuffle</h2>
@@ -607,7 +607,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="md:col-span-2 bg-white/[0.02] border border-white/5 p-6 rounded-2xl space-y-3">
                                 <h3 className="text-[9px] font-black text-gold uppercase tracking-[0.4em]">Resiliencia Histórica</h3>
-                                <p className="text-gray-500 leading-relaxed text-xs italic font-medium">
+                                <p className="text-[#7b6853] leading-relaxed text-xs italic font-medium">
                                     {language === 'es' 
                                         ? "El éxito en los campos de Nuffle no se mide solo en touchdowns, sino en el miedo que inspiras al desplazar la línea. Esta formación prioriza el control territorial y el impacto físico." 
                                         : "Success on Nuffle's fields is measured not just in touchdowns, but in the fear you inspire."}
@@ -623,7 +623,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                     {/* SIDEBAR (4 COLS) */}
                     <aside className="col-span-12 xl:col-span-4 flex flex-col gap-8 sticky top-32 z-10 lg:pl-10">
                         {/* Radar Chart (The Diamond) - Compact */}
-                        <div className="bg-[#0c0c0c] p-8 border border-white/5 rounded-3xl shadow-3xl relative overflow-hidden group">
+                        <div className="bg-[rgba(45,33,20,0.96)] p-8 border border-[rgba(255,255,255,0.05)] rounded-3xl shadow-3xl relative overflow-hidden group">
                             <div className="absolute inset-0 bg-gradient-to-br from-gold/5 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                             <h3 className="text-[9px] font-black text-gold mb-8 uppercase tracking-[0.3em] flex items-center justify-between">
                                 Análisis Atributivo
@@ -658,9 +658,9 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
 
                         {/* Star Players - Compact Grid */}
                         <div className="flex flex-col gap-4">
-                            <h3 className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em] flex items-center gap-4">
+                            <h3 className="text-[10px] font-black text-[#7b6853] uppercase tracking-[0.4em] flex items-center gap-4">
                                 Staff Estelar
-                                <div className="h-px flex-1 bg-white/5"></div>
+                                <div className="h-px flex-1 bg-[rgba(111,87,56,0.12)]"></div>
                             </h3>
                             <div className="grid grid-cols-3 gap-3">
                                 {factionStars.slice(0, 6).map((star, sidx) => (
@@ -676,11 +676,11 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                                                 className="object-cover w-full h-full grayscale group-hover:grayscale-0 transition-opacity opacity-60 group-hover:opacity-100" 
                                             />
                                         </div>
-                                        <p className="text-[7px] font-black text-center text-gray-600 group-hover:text-gold uppercase tracking-tighter truncate">{star.name}</p>
+                                        <p className="text-[7px] font-black text-center text-[#7b6853] group-hover:text-gold uppercase tracking-tighter truncate">{star.name}</p>
                                     </div>
                                 ))}
                                 {factionStars.length === 0 && (
-                                    <div className="col-span-3 py-8 text-center border border-dashed border-white/5 rounded-2xl opacity-20 text-[8px] uppercase font-black tracking-widest text-gray-700">
+                                    <div className="col-span-3 py-8 text-center border border-dashed border-white/5 rounded-2xl opacity-20 text-[8px] uppercase font-black tracking-widest text-[#7b6853]">
                                         Sin Contratos
                                     </div>
                                 )}
@@ -718,9 +718,9 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
 
     // PHASE 2: DRAFT (NUFFLE COMMISSARY)
     return (
-        <div className="h-screen w-full flex flex-col bg-[#0a0a0a] text-gray-200 overflow-hidden font-inter select-none">
+        <div className="h-screen w-full flex flex-col bg-[radial-gradient(circle_at_top,rgba(255,248,233,0.98),rgba(226,194,142,0.86))] text-[#2b1d12] overflow-hidden font-inter select-none">
             {/* Header / Command Center - COMPACT */}
-            <header className="flex-none bg-black/80 backdrop-blur-xl border-b border-white/5 px-6 py-3 z-50">
+            <header className="flex-none bg-[rgba(45,33,20,0.95)] backdrop-blur-xl border-b border-[rgba(255,255,255,0.04)] px-6 py-3 z-50">
                 <div className="max-w-screen-2xl mx-auto flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <button 
@@ -746,12 +746,12 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
             </header>
 
             {/* TEAM NAME HERO - REDUCED SCALE */}
-            <section className="flex-none px-6 py-6 bg-[#111] border-b border-white/5">
+            <section className="flex-none px-6 py-6 bg-[rgba(255,251,241,0.65)] border-b border-[rgba(111,87,56,0.12)]">
                 <div className="max-w-screen-2xl mx-auto">
                     <div className="max-w-xl">
                         <label className="text-[8px] font-black text-gold uppercase tracking-[0.5em] ml-1 mb-2 block opacity-50">Designación de la Franquicia</label>
                         <input 
-                            className="w-full bg-transparent border-none p-0 text-3xl font-header font-black text-white italic placeholder:text-zinc-800 outline-none uppercase tracking-tighter selection:bg-gold selection:text-black" 
+                            className="w-full bg-transparent border-none p-0 text-3xl font-header font-black text-[#2b1d12] italic placeholder:text-[#8d7863] outline-none uppercase tracking-tighter selection:bg-gold selection:text-black" 
                             placeholder="ESCRIBE EL NOMBRE..." 
                             type="text"
                             value={teamName}
@@ -768,8 +768,8 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                 {/* MARKET: Player Recruitment - DENSER GRID */}
                 <section className="flex-1 overflow-y-auto p-8 space-y-6 no-scrollbar">
                     <div className="flex items-center gap-3">
-                        <h2 className="text-[9px] font-black text-white/20 uppercase tracking-[0.5em] italic">Mercado de Jugadores</h2>
-                        <div className="h-px flex-1 bg-white/5"></div>
+                        <h2 className="text-[9px] font-black text-[#7b6853] uppercase tracking-[0.5em] italic">Mercado de Jugadores</h2>
+                        <div className="h-px flex-1 bg-[rgba(111,87,56,0.12)]"></div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4">
@@ -787,15 +787,15 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                                     className={`relative bg-[#141414] border rounded-2xl p-4 flex flex-col justify-between transition-all group overflow-hidden ${
                                         isFull 
                                         ? 'opacity-30 border-white/5' 
-                                        : 'border-white/5 hover:border-gold/30 hover:bg-[#1a1a1a] shadow-xl'
+                                        : 'border-[rgba(111,87,56,0.10)] hover:border-gold/30 hover:bg-[rgba(255,251,241,0.72)] shadow-xl'
                                     }`}
                                 >
-                                    {isFull && <div className="absolute inset-0 bg-black/40 backdrop-grayscale pointer-events-none z-10" />}
+                                    {isFull && <div className="absolute inset-0 bg-black/30 backdrop-grayscale pointer-events-none z-10" />}
                                     
                                     <div className="flex items-start justify-between mb-4">
                                         <div className="flex flex-col gap-1">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-sm font-header font-black text-white uppercase italic tracking-tighter group-hover:text-gold transition-colors truncate max-w-[120px]">{pos.position}</span>
+                                                <span className="text-sm font-header font-black text-[#2b1d12] uppercase italic tracking-tighter group-hover:text-gold transition-colors truncate max-w-[120px]">{pos.position}</span>
                                                 <div className="relative group/skill-tip">
                                                     <span className="material-symbols-outlined text-gray-700 text-[12px] cursor-help hover:text-gold transition-colors font-black">help</span>
                                                     {pos.skillKeys && pos.skillKeys.length > 0 && (
@@ -818,7 +818,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                                             </div>
                                             <div className="flex items-baseline gap-1">
                                                 <span className="text-sm font-header font-black text-gold italic">{pos.cost / 1000}k</span>
-                                                <span className="text-[7px] font-black text-gold/30">MO</span>
+                                                <span className="text-[7px] font-black text-[#7b6853]">MO</span>
                                             </div>
                                         </div>
                                         <button 
@@ -838,8 +838,8 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                                         <div className="flex gap-2">
                                             {['MV', 'FU', 'AG', 'PA', 'AR'].map(s => (
                                                 <div key={s} className="flex flex-col items-center">
-                                                    <span className="text-[6px] font-black text-gray-700 uppercase">{s.replace('MV','MA').replace('FU','ST').replace('AR','AV')}</span>
-                                                    <span className="text-[10px] font-mono font-bold text-gray-500">{(pos.stats as any)[s]}</span>
+                                                    <span className="text-[6px] font-black text-[#7b6853] uppercase">{s.replace('MV','MA').replace('FU','ST').replace('AR','AV')}</span>
+                                                    <span className="text-[10px] font-mono font-bold text-[#2b1d12]">{(pos.stats as any)[s]}</span>
                                                 </div>
                                             ))}
                                         </div>
@@ -854,8 +854,8 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                 {/* SIDEBAR: Command Status - COMPACT WIDTH */}
                 <aside id="squad_list" className="w-[340px] bg-[#111] border-l border-white/5 flex flex-col h-full shadow-inner">
                     {/* 1. Treasury Summary - Top Fixed */}
-                    <div className="p-5 bg-[#111] border-b border-white/5">
-                        <span className="text-[8px] uppercase font-black text-gray-600 tracking-[0.4em] italic mb-1 block">Tesorería Inicial</span>
+                    <div className="p-5 bg-[rgba(255,251,241,0.65)] border-b border-[rgba(111,87,56,0.12)]">
+                        <span className="text-[8px] uppercase font-black text-[#7b6853] tracking-[0.4em] italic mb-1 block">Tesorería Inicial</span>
                         <div className="flex items-baseline gap-1.5">
                             <span className={`text-2xl font-header font-black italic tracking-tighter ${isBudgetNegative ? 'text-blood animate-pulse' : 'text-white'}`}>
                                 {remainingBudget.toLocaleString()}
@@ -878,7 +878,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                     <div className="flex-1 overflow-y-auto p-5 space-y-2 no-scrollbar bg-black/10">
                          <div className="flex items-center gap-2 mb-2">
                             <span className="text-[8px] font-black text-gray-700 uppercase tracking-widest">Contrataciones</span>
-                            <div className="h-px flex-1 bg-white/5"></div>
+                            <div className="h-px flex-1 bg-[rgba(111,87,56,0.12)]"></div>
                         </div>
                         <AnimatePresence>
                             {draftedPlayers.map((p, idx) => (
@@ -923,7 +923,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                                 <div key={staff.name} className="flex items-center justify-between group bg-black/20 p-2 rounded-lg border border-white/5">
                                     <div className="flex items-center gap-2">
                                         <span className="material-symbols-outlined text-gray-700 text-[14px]">{(staff as any).icon}</span>
-                                        <p className="text-[8px] font-black uppercase text-gray-400 italic tracking-widest">{staff.name}</p>
+                                        <p className="text-[8px] font-black uppercase text-[#7b6853] italic tracking-widest">{staff.name}</p>
                                     </div>
                                     <div className="flex items-center gap-2 bg-white/5 rounded p-1">
                                         <button onClick={() => staff.set(Math.max(staff.min || 0, staff.val - 1))} className="w-5 h-5 rounded bg-white/5 hover:bg-white/10 text-[10px] flex items-center justify-center">-</button>
