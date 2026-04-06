@@ -22,6 +22,49 @@ interface AdminPanelProps {
     onOpenLeagues?: () => void;
 }
 
+const ADMIN_STORAGE_MAP: Record<AdminTab, { target: string; mode: string; description: string }> = {
+    general: {
+        target: 'settings_master/home_hero',
+        mode: 'Firestore directo',
+        description: 'Configura la imagen hero principal visible en Inicio.'
+    },
+    heraldo: {
+        target: 'master_data/heraldo',
+        mode: 'Array en Firestore',
+        description: 'Guarda noticias, reglas destacadas y piezas editoriales del Heraldo.'
+    },
+    arena: {
+        target: 'settings_master/arena_config',
+        mode: 'Firestore directo',
+        description: 'Controla la configuración maestra de SPP, economía y dados.'
+    },
+    competitions: {
+        target: 'competitions / leagues',
+        mode: 'Flujo propio',
+        description: 'Laboratorio de competiciones; no usa el editor maestro de contenidos.'
+    },
+    teams: {
+        target: 'master_data/teams',
+        mode: 'Array en Firestore',
+        description: 'Edita facciones, roster, identidad y pools de nombres.'
+    },
+    stars: {
+        target: 'master_data/star_players',
+        mode: 'Array en Firestore',
+        description: 'Edita catálogo, stats, facciones compatibles e imagen de estrellas.'
+    },
+    skills: {
+        target: 'master_data/skills',
+        mode: 'Array en Firestore',
+        description: 'Edita nombres bilingües, descripciones y categoría del Codex.'
+    },
+    inducements: {
+        target: 'master_data/inducements_es|en',
+        mode: 'Array en Firestore',
+        description: 'Guarda incentivos en el documento del idioma activo.'
+    },
+};
+
 const AdminPanel: React.FC<AdminPanelProps> = ({ managedTeams, competitions, onCompetitionCreate, onOpenLeagues }) => {
     const {
         teams,
@@ -75,6 +118,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ managedTeams, competitions, onC
     const [isLoadingGitHub, setIsLoadingGitHub] = useState(false);
     const [githubSearch, setGithubSearch] = useState('');
     const [isImageExplorerExpanded, setIsImageExplorerExpanded] = useState(false);
+    const activeStorageInfo = ADMIN_STORAGE_MAP[activeTab];
 
     // Filtering logic
     const filteredContent = useMemo(() => {
@@ -477,6 +521,35 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ managedTeams, competitions, onC
                         {tab.label}
                     </button>
                 ))}
+            </div>
+
+            <div className="glass-panel border-white/5 bg-black/30 p-5 mb-8">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div className="min-w-0">
+                        <p className="text-[10px] font-black text-premium-gold uppercase tracking-[0.3em] mb-1">
+                            Destino de guardado activo
+                        </p>
+                        <h4 className="text-lg font-display font-black text-white uppercase italic tracking-tight">
+                            {tabs.find(tab => tab.id === activeTab)?.label}
+                        </h4>
+                        <p className="text-[11px] text-slate-400 mt-2 max-w-2xl">
+                            {activeStorageInfo.description}
+                        </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2 md:justify-end">
+                        <span className="px-3 py-1.5 rounded-xl bg-premium-gold/10 border border-premium-gold/20 text-premium-gold text-[10px] font-black uppercase tracking-widest">
+                            {activeStorageInfo.mode}
+                        </span>
+                        <span className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-slate-300 text-[10px] font-mono">
+                            {activeStorageInfo.target}
+                        </span>
+                        {isFromFirestore && (
+                            <span className="px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-widest">
+                                Fuente viva: Firestore
+                            </span>
+                        )}
+                    </div>
+                </div>
             </div>
 
             {/* Content Area */}
