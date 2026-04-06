@@ -41,6 +41,7 @@ const ROSTER_PREFIX_MAP: Record<string, string> = {
 const CREST_PREFIX_MAP: Record<string, string> = {
   "amazonas": "Amazonas",
   "alianza del viejo mundo": "Alianza del Viejo Mundo",
+  "altos elfos": "Altos Elfos",
   "humanos": "Humanos",
   "halflings": "Halflings",
   "gnomos": "Gnomos",

@@ -13,13 +13,19 @@ export type TeamAsset = Team & {
 
 const EMPTY_RECORD = { wins: 0, draws: 0, losses: 0 };
 
+const TEAM_NAME_ALIASES: Record<string, string> = {
+    'Elfos Altos': 'Altos Elfos',
+};
+
+const normalizeTeamName = (name?: string): string => TEAM_NAME_ALIASES[name || ''] || name || '';
+
 export const mergeTeamWithFallback = (
     team: Partial<TeamAsset> | undefined,
     fallback?: TeamAsset | null
 ): TeamAsset => {
     const source = fallback || ({} as TeamAsset);
     const roster = team?.roster?.length ? team.roster : source.roster || [];
-    const resolvedName = team?.name || source.name || '';
+    const resolvedName = normalizeTeamName(team?.name || source.name || '');
     const computedLogo = resolvedName ? getTeamLogoUrl(resolvedName) : '';
     const preferredImage = resolvedName
         ? resolveTeamLogoPreference(resolvedName, team?.image || team?.crestImage)
@@ -63,7 +69,8 @@ export const ensureTeamRecord = (team: Partial<TeamAsset> | undefined, fallback?
 
 export const normalizeTeamCollection = (items: Partial<TeamAsset>[], fallbacks: TeamAsset[] = []): TeamAsset[] => {
     return items.map((item) => {
-        const fallback = fallbacks.find((candidate) => candidate.name === item?.name) || null;
-        return ensureTeamRecord(item, fallback);
+        const normalizedName = normalizeTeamName(item?.name);
+        const fallback = fallbacks.find((candidate) => normalizeTeamName(candidate.name) === normalizedName) || null;
+        return ensureTeamRecord({ ...item, name: normalizedName }, fallback);
     });
 };

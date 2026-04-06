@@ -1269,7 +1269,7 @@ export const teamsData: Team[] = [
         "specialRules_en":  "ClÃ¡sico del Viejo Mundo, GestiÃ³n de Equipo, Copa Dedal Halfling, Nivel 3"
     },
     {
-        "name":  "Elfos Altos",
+        "name":  "Altos Elfos",
         "specialRules":  "Liga de los Reinos Ã‰lficos, GestiÃ³n de Equipo",
         "rerollCost":  50000,
         "tier":  2,
