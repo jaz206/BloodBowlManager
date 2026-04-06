@@ -27,6 +27,24 @@ const toInt = (value: unknown, fallback = 0): number => {
 
 const clampMin = (value: number, min = 0) => value < min ? min : value;
 
+const stripUndefinedDeep = <T>(value: T): T => {
+    if (Array.isArray(value)) {
+        return value
+            .filter((item) => item !== undefined)
+            .map((item) => stripUndefinedDeep(item)) as T;
+    }
+
+    if (value && typeof value === 'object') {
+        return Object.fromEntries(
+            Object.entries(value as Record<string, unknown>)
+                .filter(([, entry]) => entry !== undefined)
+                .map(([key, entry]) => [key, stripUndefinedDeep(entry)])
+        ) as T;
+    }
+
+    return value;
+};
+
 const cleanStatString = (value: unknown, fallback = '-'): string => {
     const cleaned = cleanText(value);
     return cleaned || fallback;
@@ -40,7 +58,7 @@ const sanitizePlayerStats = (stats: Partial<PlayerStats> | undefined): PlayerSta
     AR: cleanStatString(stats?.AR, '-'),
 });
 
-const sanitizePlayer = (player: Partial<Player> | undefined): Player => ({
+const sanitizePlayer = (player: Partial<Player> | undefined): Player => stripUndefinedDeep({
     qty: cleanText(player?.qty) || '0-1',
     position: cleanText(player?.position) || 'Línea',
     cost: clampMin(toInt(player?.cost, 0), 0),
@@ -60,7 +78,7 @@ export const sanitizeTeamForSave = (raw: any): Team & { crestImage?: string } =>
     const crestImage = resolvedImage || undefined;
     const tier = toInt(raw?.tier, 1);
 
-    return {
+    return stripUndefinedDeep({
         name,
         specialRules_es: cleanLongText(raw?.specialRules_es) || cleanLongText(raw?.specialRules) || '',
         specialRules_en: cleanLongText(raw?.specialRules_en) || cleanLongText(raw?.specialRules) || '',
@@ -81,7 +99,7 @@ export const sanitizeTeamForSave = (raw: any): Team & { crestImage?: string } =>
         description: cleanLongText(raw?.description) || undefined,
         megaFactions: cleanStringArray(raw?.megaFactions),
         namePools: cleanStringArray(raw?.namePools),
-    };
+    });
 };
 
 export const sanitizeSkillForSave = (raw: any): Skill => {
@@ -93,7 +111,7 @@ export const sanitizeSkillForSave = (raw: any): Skill => {
 
     const category = cleanText(raw?.category) || 'General';
 
-    return {
+    return stripUndefinedDeep({
         keyEN,
         name_es: name_es || keyEN,
         name_en: name_en || keyEN,
@@ -102,7 +120,7 @@ export const sanitizeSkillForSave = (raw: any): Skill => {
         desc_en: cleanLongText(raw?.desc_en) || cleanLongText(raw?.description) || '',
         name: cleanText(raw?.name) || undefined,
         description: cleanLongText(raw?.description) || undefined,
-    };
+    });
 };
 
 export const sanitizeStarPlayerForSave = (raw: any): StarPlayer => {
@@ -111,7 +129,7 @@ export const sanitizeStarPlayerForSave = (raw: any): StarPlayer => {
 
     const skillKeys = cleanStringArray(raw?.skillKeys?.length ? raw.skillKeys : cleanText(raw?.skills).split(','));
 
-    return {
+    return stripUndefinedDeep({
         name,
         cost: clampMin(toInt(raw?.cost, 0), 0),
         stats: sanitizePlayerStats(raw?.stats),
@@ -131,18 +149,18 @@ export const sanitizeStarPlayerForSave = (raw: any): StarPlayer => {
                 skillKeys: cleanStringArray(item?.skillKeys),
             }))
             : undefined,
-    };
+    });
 };
 
 export const sanitizeInducementForSave = (raw: any) => {
     const name = cleanText(raw?.name);
     if (!name) throw new Error('El incentivo necesita un nombre.');
 
-    return {
+    return stripUndefinedDeep({
         name,
         cost: clampMin(toInt(raw?.cost, 0), 0),
         description: cleanLongText(raw?.description),
-    };
+    });
 };
 
 export const sanitizeHeraldoItemForSave = (raw: any) => {
@@ -153,7 +171,7 @@ export const sanitizeHeraldoItemForSave = (raw: any) => {
         ? cleanText(raw?.type)
         : 'skill';
 
-    return {
+    return stripUndefinedDeep({
         ...raw,
         type,
         title,
@@ -162,7 +180,7 @@ export const sanitizeHeraldoItemForSave = (raw: any) => {
         content: cleanLongText(raw?.content),
         rule: cleanText(raw?.rule),
         active: raw?.active !== false,
-    };
+    });
 };
 
 export const getTeamValidationIssues = (raw: any, options?: { requireRoster?: boolean }): string[] => {
