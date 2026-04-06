@@ -54,7 +54,7 @@ export default async function handler(
     }
 
     const ai = new GoogleGenAI({ apiKey });
-    const prompt = `Actúa como generador de nombres para Blood Bowl. Necesito un nombre original y temático para una franquicia de la facción "${rosterName}". Devuelve solo el nombre final, sin comillas, sin numeraciones y sin texto introductorio.`;
+    const prompt = `ActÃºa como generador de nombres para Blood Bowl. Necesito un nombre original y temÃ¡tico para una franquicia de la facciÃ³n "${rosterName}". Devuelve solo el nombre final, sin comillas, sin numeraciones y sin texto introductorio.`;
 
     const result = await ai.models.generateContent({
       model: 'gemini-2.5-flash',

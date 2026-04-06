@@ -55,7 +55,7 @@ export default async function handler(
     }
 
     const ai = new GoogleGenAI({ apiKey });
-    const prompt = `Diseña un emblema épico para Blood Bowl. Equipo: "${teamName}". Facción: "${rosterName}". Composición centrada, estilo iconográfico limpio, fondo sencillo, formato escudo y lectura clara a tamaño pequeño.`;
+    const prompt = `DiseÃ±a un emblema Ã©pico para Blood Bowl. Equipo: "${teamName}". FacciÃ³n: "${rosterName}". ComposiciÃ³n centrada, estilo iconogrÃ¡fico limpio, fondo sencillo, formato escudo y lectura clara a tamaÃ±o pequeÃ±o.`;
 
     const imageResponse = await ai.models.generateImages({
       model: 'imagen-4.0-generate-001',

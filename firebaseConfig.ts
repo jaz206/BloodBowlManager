@@ -19,11 +19,11 @@ let firebaseError: string | null = null;
 
 try {
     if (!firebaseConfig.apiKey) {
-        throw new Error("La configuraciÛn de Firebase es inv·lida o no est· presente.");
+        throw new Error("La configuraci√≥n de Firebase es inv√°lida o no est√° presente.");
     }
 
-    // Este patrÛn robusto (singleton) previene la reinicializaciÛn en entornos HMR (Hot Module Replacement)
-    // que a veces pueden causar problemas con los listeners de estado de autenticaciÛn.
+    // Este patr√≥n robusto (singleton) previene la reinicializaci√≥n en entornos HMR (Hot Module Replacement)
+    // que a veces pueden causar problemas con los listeners de estado de autenticaci√≥n.
     if (!getApps().length) {
         app = initializeApp(firebaseConfig);
     } else {
@@ -35,7 +35,7 @@ try {
 
 } catch (e: any) {
     console.error("Firebase initialization failed:", e);
-    firebaseError = `Error al inicializar Firebase: ${e.message}. Revisa la configuraciÛn de tus credenciales.`;
+    firebaseError = `Error al inicializar Firebase: ${e.message}. Revisa la configuraci√≥n de tus credenciales.`;
 }
 
 export { app, auth, db, firebaseError };
