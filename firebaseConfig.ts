@@ -1,7 +1,6 @@
 import { initializeApp, FirebaseApp, getApps, getApp } from "firebase/app";
 import { getAuth, Auth } from "firebase/auth";
 import { getFirestore, Firestore } from "firebase/firestore";
-import { getStorage, FirebaseStorage } from "firebase/storage";
 
 // Your web app's Firebase configuration is now hardcoded
 const firebaseConfig = {
@@ -16,16 +15,15 @@ const firebaseConfig = {
 let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
-let storage: FirebaseStorage;
 let firebaseError: string | null = null;
 
 try {
     if (!firebaseConfig.apiKey) {
-        throw new Error("La configuraci√≥n de Firebase es inv√°lida o no est√° presente.");
+        throw new Error("La configuraciÛn de Firebase es inv·lida o no est· presente.");
     }
 
-    // Este patr√≥n robusto (singleton) previene la reinicializaci√≥n en entornos HMR (Hot Module Replacement)
-    // que a veces pueden causar problemas con los listeners de estado de autenticaci√≥n.
+    // Este patrÛn robusto (singleton) previene la reinicializaciÛn en entornos HMR (Hot Module Replacement)
+    // que a veces pueden causar problemas con los listeners de estado de autenticaciÛn.
     if (!getApps().length) {
         app = initializeApp(firebaseConfig);
     } else {
@@ -34,11 +32,10 @@ try {
 
     auth = getAuth(app);
     db = getFirestore(app);
-    storage = getStorage(app);
 
 } catch (e: any) {
     console.error("Firebase initialization failed:", e);
-    firebaseError = `Error al inicializar Firebase: ${e.message}. Revisa la configuraci√≥n de tus credenciales.`;
+    firebaseError = `Error al inicializar Firebase: ${e.message}. Revisa la configuraciÛn de tus credenciales.`;
 }
 
-export { app, auth, db, storage, firebaseError };
+export { app, auth, db, firebaseError };

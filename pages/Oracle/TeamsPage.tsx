@@ -4,8 +4,6 @@ import { teamsData as staticTeams } from '../../data/teams';
 import type { Team, Skill } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
 import { useMasterData } from '../../hooks/useMasterData';
-import { storage } from '../../firebaseConfig';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import SkillModal from '../../components/oracle/SkillModal';
 import ImageModal from '../../components/common/ImageModal';
 import RadarChart from '../../components/oracle/RadarChart';
