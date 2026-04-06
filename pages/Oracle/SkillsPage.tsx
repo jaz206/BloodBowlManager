@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+﻿import React, { useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ELITE_SKILLS, type Skill } from '../../types';
 import { useMasterData } from '../../hooks/useMasterData';
@@ -26,9 +26,8 @@ const OracleTips: Record<string, string> = {
     Mutation: 'Brazo Extra es la mutación más disruptiva, especialmente en portadores de balón.',
     Trait: 'Los rasgos son exclusivos de ciertos perfiles; consulta siempre la plantilla del equipo.',
     Elite: 'Habilidades raras y decisivas que pueden cambiar una partida en una sola activación.',
-    Triquiñuelas: 'Trucos de mesa, juego sucio y recursos oscuros para torcer una entrada en el momento exacto.',
+    ['Triquiñuelas']: 'Trucos de mesa, juego sucio y recursos oscuros para torcer una entrada en el momento exacto.',
 };
-
 const SkillCard: React.FC<{ skill: Skill; onClick: () => void; isSelected: boolean }> = ({ skill, onClick, isSelected }) => {
     const { language } = useLanguage();
     const name = language === 'es' ? (skill.name_es || skill.name_en) : skill.name_en;
@@ -381,3 +380,6 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
 };
 
 export default Skills;
+
+
+

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+﻿import React from 'react';
+import { motion } from 'framer-motion';
 
 const KICKOFF_EVENTS = [
     { roll: '2', name: 'Árbitro Intimidado', desc: 'Cada equipo recibe un Soborno gratuito que debe usarse antes del final del partido.' },
@@ -12,7 +12,7 @@ const KICKOFF_EVENTS = [
     { roll: '9', name: '¡Corre, Muchacho, Corre!', desc: 'Cualquier jugador que no esté en una zona de defensa rival puede moverse una casilla inmediatamente.' },
     { roll: '10', name: '¡A la Carga!', desc: 'El equipo pateador puede realizar un turno adicional inmediato, pero solo con D3+3 jugadores.' },
     { roll: '11', name: 'Disturbios', desc: 'Tira 1D6. Con un 1-3, ambos marcadores de turno retroceden una casilla. Con 4-6, ambos avanzan.' },
-    { roll: '12', name: 'Invasión de Campo', desc: 'Ambos entrenadores tiran 1D6 + Factor de Hinchas. El que saque menos ve cómo sus jugadores quedan aturdidos por la afición rival.' }
+    { roll: '12', name: 'Invasión de Campo', desc: 'Ambos entrenadores tiran 1D6 + Factor de Hinchas. El que saque menos ve cómo sus jugadores quedan aturdidos por la afición rival.' },
 ];
 
 const WEATHER_TABLE = [
@@ -20,7 +20,7 @@ const WEATHER_TABLE = [
     { roll: '3', name: 'Soleado', desc: 'El sol brilla con fuerza. Todas las tiradas de Pase tienen un penalizador de -1 por deslumbramiento.' },
     { roll: '4-10', name: 'Clima Agradable', desc: 'Condiciones perfectas para jugar al Blood Bowl.' },
     { roll: '11', name: 'Lluvia', desc: 'El balón se vuelve resbaladizo. Todas las tiradas para Recoger el balón tienen un penalizador de -1.' },
-    { roll: '12', name: 'Ventisca', desc: 'La visibilidad es mala. Solo se pueden realizar Pases Rápidos o Cortos, y las tiradas de A por ellos fallan con un 1-2.' }
+    { roll: '12', name: 'Ventisca', desc: 'La visibilidad es mala. Solo se pueden realizar Pases Rápidos o Cortos, y las tiradas de A por ellos fallan con un 1-2.' },
 ];
 
 const PRE_MATCH_STEPS = [
@@ -28,52 +28,58 @@ const PRE_MATCH_STEPS = [
         step: 1,
         title: 'Determinar factor de hinchas',
         desc: 'Cada entrenador tira 1D3 y suma los aficionados ocasionales de su hoja de plantilla.',
-        effect: 'Crucial para Invasión de Campo y ganancias finales.'
+        effect: 'Crucial para Invasión de Campo y ganancias finales.',
     },
     {
         step: 2,
         title: 'Determinar el clima',
         desc: 'Ambos entrenadores tiran 2D6 y consultan la tabla de clima.',
-        effect: 'Afecta al movimiento, los pases y el manejo del balón.'
+        effect: 'Afecta al movimiento, los pases y el manejo del balón.',
     },
     {
         step: 3,
         title: 'Conseguir incentivos',
         desc: 'El equipo con menos valor de plantilla recibe presupuesto igual a la diferencia.',
-        effect: 'Úsalo en Jugadores Estrella, Sobornos, Médicos y más.'
+        effect: 'Úsalo en Jugadores Estrella, Sobornos, Médicos y más.',
     },
     {
         step: 4,
         title: 'Rezos a Nuffle',
         desc: 'Si tras los incentivos sigue habiendo diferencia, el equipo inferior tira en la tabla de Rezos.',
-        effect: 'Efectos aleatorios beneficiosos para el underdog.'
+        effect: 'Efectos aleatorios beneficiosos para el underdog.',
     },
     {
         step: 5,
         title: 'Lanzamiento de moneda',
         desc: 'Tirada enfrentada de 1D6. El ganador elige patear o recibir.',
-        effect: 'Define la estrategia de la primera parte.'
-    }
+        effect: 'Define la estrategia de la primera parte.',
+    },
 ];
 
 const POST_MATCH_STEPS = [
     {
         title: 'Determinar MVP',
         icon: 'military_tech',
-        desc: 'Elige un jugador, o tira aleatoriamente, para que reciba 4 PE adicionales.'
+        desc: 'Elige un jugador, o tira aleatoriamente, para que reciba 4 PE adicionales.',
     },
     {
         title: 'Errores costosos',
         icon: 'money_off',
-        desc: 'Si tienes más de 100k en el banco, corres riesgo de perder parte de la tesorería.'
+        desc: 'Si tienes más de 100k en el banco, corres riesgo de perder parte de la tesorería.',
     },
     {
         title: 'Actualizar hinchas',
         icon: 'trending_up',
-        desc: 'Tira 2D6 + factores. Si superas tu Hinchada actual, ganas +1. Si fallas por mucho, pierdes popularidad.'
-    }
+        desc: 'Tira 2D6 + factores. Si superas tu Hinchada actual, ganas +1. Si fallas por mucho, pierdes popularidad.',
+    },
 ];
 
+const sections = [
+    { id: 'pre', label: 'Prepartido', icon: 'sports_score' },
+    { id: 'kick', label: 'Kickoff', icon: 'sports_football' },
+    { id: 'weather', label: 'Clima', icon: 'wb_sunny' },
+    { id: 'post', label: 'Postpartido', icon: 'military_tech' },
+];
 
 const RulesPage: React.FC = () => {
     return (
@@ -214,7 +220,7 @@ const RulesPage: React.FC = () => {
                 <div className="blood-ui-light-card rounded-[2rem] p-6 md:p-8 shadow-[0_18px_45px_rgba(92,68,39,0.12)]">
                     <h3 className="text-[#ca8a04] font-black uppercase italic tracking-widest text-lg mb-4 flex items-center gap-3">
                         <span className="material-symbols-outlined">payments</span>
-                        Gesti?n econ?mica
+                        Gestión económica
                     </h3>
                     <div className="rounded-2xl border border-[rgba(111,87,56,0.12)] bg-[rgba(255,251,241,0.72)] p-6">
                         <p className="blood-ui-light-body text-sm mb-4 font-medium italic">Calcula tus ganancias tras el pitido final:</p>
@@ -222,7 +228,7 @@ const RulesPage: React.FC = () => {
                             (Afluencia / 2) + TDs + 1*
                         </div>
                         <p className="text-[9px] text-[#7b6853] uppercase font-bold tracking-widest">
-                            *Bono si no retuviste el bal?n. Multiplica el total por 10,000 monedas de oro.
+                            *Bono si no retuviste el balón. Multiplica el total por 10,000 monedas de oro.
                         </p>
                     </div>
                 </div>
