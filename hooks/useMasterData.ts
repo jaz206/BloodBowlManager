@@ -16,6 +16,58 @@ import type { Team, Skill, StarPlayer, Inducement } from '../types';
 // ── Firestore collection ID ───────────────────────────────────────────────────
 const MASTER_COL = 'master_data';
 
+const sanitizeMojibakeText = (value: string): string =>
+    value
+        .replace(/â€“|–/g, '-')
+        .replace(/â€”|—/g, '—')
+        .replace(/â€˜|â€™|’/g, "'")
+        .replace(/â€œ|â€�|“|”/g, '"')
+        .replace(/Â/g, '')
+        .replace(/Ã¡/g, 'á')
+        .replace(/Ã©/g, 'é')
+        .replace(/Ã­/g, 'í')
+        .replace(/Ã³/g, 'ó')
+        .replace(/Ãº/g, 'ú')
+        .replace(/Ã±/g, 'ñ')
+        .replace(/Ã/g, 'Á')
+        .replace(/Ã‰/g, 'É')
+        .replace(/Ã/g, 'Í')
+        .replace(/Ã“/g, 'Ó')
+        .replace(/Ãš/g, 'Ú')
+        .replace(/Ã‘/g, 'Ñ');
+
+const deepNormalizeText = <T,>(value: T): T => {
+    if (typeof value === 'string') {
+        return sanitizeMojibakeText(value) as T;
+    }
+    if (Array.isArray(value)) {
+        return value.map(item => deepNormalizeText(item)) as T;
+    }
+    if (value && typeof value === 'object') {
+        return Object.fromEntries(
+            Object.entries(value as Record<string, unknown>).map(([key, item]) => [key, deepNormalizeText(item)])
+        ) as T;
+    }
+    return value;
+};
+
+const normalizeStarPlayerRecord = (star: StarPlayer): StarPlayer => {
+    const normalized = deepNormalizeText(star);
+
+    return {
+        ...normalized,
+        stats: normalized.stats
+            ? {
+                ...normalized.stats,
+                PA: normalized.stats.PA === 'â€“' ? '-' : normalized.stats.PA
+            }
+            : normalized.stats
+    };
+};
+
+const normalizeStarPlayersCollection = (items: StarPlayer[]) =>
+    items.map(normalizeStarPlayerRecord);
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 export type SyncStatus = 'idle' | 'syncing' | 'success' | 'error';
 
@@ -37,7 +89,7 @@ export const useMasterData = () => {
     // ── State ─────────────────────────────────────────────────────────────────
     const [teams, setTeams] = useState<Team[]>(staticTeamsData);
     const [skills, setSkills] = useState<Skill[]>(staticSkills);
-    const [starPlayers, setStarPlayers] = useState<StarPlayer[]>(staticStarsData);
+    const [starPlayers, setStarPlayers] = useState<StarPlayer[]>(normalizeStarPlayersCollection(staticStarsData));
     const [inducements, setInducements] = useState<Inducement[]>(language === 'es' ? staticInducementsEs : (staticInducementsEn as unknown as Inducement[]));
     const [heraldoItems, setHeraldoItems] = useState<any[]>([]);
     const [heroImage, setHeroImage] = useState<string | null>(null);
@@ -59,7 +111,7 @@ export const useMasterData = () => {
         if (!db) {
             setTeams(normalizeTeams(staticTeamsData));
             setSkills(staticSkills);
-            setStarPlayers(staticStarsData);
+            setStarPlayers(normalizeStarPlayersCollection(staticStarsData));
             setInducements(language === 'es' ? staticInducementsEs : (staticInducementsEn as unknown as Inducement[]));
             setLoading(false);
             return;
@@ -118,13 +170,13 @@ export const useMasterData = () => {
             doc(db, MASTER_COL, 'star_players'),
             (snap) => {
                 if (snap.exists() && snap.data()?.items?.length > 0) {
-                    setStarPlayers(snap.data().items as StarPlayer[]);
+                    setStarPlayers(normalizeStarPlayersCollection(snap.data().items as StarPlayer[]));
                 } else {
-                    setStarPlayers(staticStarsData);
+                    setStarPlayers(normalizeStarPlayersCollection(staticStarsData));
                 }
                 checkDone();
             },
-            () => { setStarPlayers(staticStarsData); checkDone(); }
+            () => { setStarPlayers(normalizeStarPlayersCollection(staticStarsData)); checkDone(); }
         );
 
         // Inducements listener — language-aware
@@ -244,7 +296,7 @@ export const useMasterData = () => {
                 staticTeamsData as TeamAsset[]
             );
             const skillsToSave = mergeItems(skillsSnap.exists() ? skillsSnap.data().items : [], staticSkills, 'keyEN');
-            const starsToSave = mergeItems(starsSnap.exists() ? starsSnap.data().items : [], staticStarsData, 'name');
+            const starsToSave = normalizeStarPlayersCollection(mergeItems(starsSnap.exists() ? starsSnap.data().items : [], staticStarsData, 'name'));
             const inducEsToSave = mergeItems(inducEsSnap.exists() ? inducEsSnap.data().items : [], staticInducementsEs, 'name');
             const inducEnToSave = mergeItems(inducEnSnap.exists() ? inducEnSnap.data().items : [], staticInducementsEn, 'name');
 
@@ -282,7 +334,7 @@ export const useMasterData = () => {
      * Finds the item by keyEN (skills) or name (teams/stars/inducements).
      */
     const normalizeMasterKey = (value: string) =>
-        fixMojibake(value)
+        sanitizeMojibakeText(value)
             .normalize('NFD')
             .replace(/[\u0300-\u036f]/g, '')
             .toLowerCase()
@@ -344,7 +396,7 @@ export const useMasterData = () => {
 
             if (docId === 'teams') setTeams(normalizeTeams(mergedItems as Team[]));
             if (docId === 'skills') setSkills(mergedItems as Skill[]);
-            if (docId === 'star_players') setStarPlayers(mergedItems as StarPlayer[]);
+            if (docId === 'star_players') setStarPlayers(normalizeStarPlayersCollection(mergedItems as StarPlayer[]));
             if (docId === 'inducements_es' || docId === 'inducements_en') setInducements(mergedItems as Inducement[]);
             if (docId === 'heraldo') setHeraldoItems(mergedItems);
             return;
@@ -355,7 +407,7 @@ export const useMasterData = () => {
 
         if (docId === 'teams') setTeams(normalizeTeams(items as Team[]));
         if (docId === 'skills') setSkills(items as Skill[]);
-        if (docId === 'star_players') setStarPlayers(items as StarPlayer[]);
+        if (docId === 'star_players') setStarPlayers(normalizeStarPlayersCollection(items as StarPlayer[]));
         if (docId === 'inducements_es' || docId === 'inducements_en') setInducements(items as Inducement[]);
         if (docId === 'heraldo') setHeraldoItems(items);
     }, []);
