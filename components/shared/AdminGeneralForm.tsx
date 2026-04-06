@@ -32,7 +32,7 @@ const AdminGeneralForm: React.FC<AdminGeneralFormProps> = ({
                 </div>
                 <h4 className="text-xl font-display font-black text-white uppercase italic mb-4">Imagen de Cabecera</h4>
                 <p className="text-sm text-slate-400 mb-6 max-w-sm">
-                    Esta es la imagen principal que aparece en el inicio de la aplicacion. Usa una URL directa de alta calidad.
+                    Esta es la imagen principal que aparece en el inicio de la aplicación. Usa una URL directa de alta calidad.
                 </p>
 
                 <div className="relative mb-6 aspect-video rounded-2xl border border-white/10 bg-black/40 overflow-hidden shadow-2xl">
@@ -53,7 +53,7 @@ const AdminGeneralForm: React.FC<AdminGeneralFormProps> = ({
 
             <div className="glass-panel p-8 border-white/5 flex flex-col justify-between">
                 <div>
-                    <h4 className="text-xl font-display font-black text-white uppercase italic mb-6">Estadisticas de Nuffle</h4>
+                    <h4 className="text-xl font-display font-black text-white uppercase italic mb-6">Estadísticas de Nuffle</h4>
                     <div className="grid grid-cols-2 gap-4">
                         {stats.map(stat => (
                             <div key={stat.label} className="bg-black/40 p-4 rounded-xl border border-white/5">
@@ -68,7 +68,7 @@ const AdminGeneralForm: React.FC<AdminGeneralFormProps> = ({
                 </div>
                 <div className="mt-6 pt-6 border-t border-white/5">
                     <p className="text-[10px] text-slate-500 font-bold uppercase leading-relaxed italic">
-                        * Los cambios realizados en el resto de pestaÃ±as se guardan directamente en Firestore y se reflejan instantaneamente para todos los usuarios.
+                        * Los cambios realizados en el resto de pestañas se guardan directamente en Firestore y se reflejan instantáneamente para todos los usuarios.
                     </p>
                 </div>
             </div>
@@ -77,3 +77,4 @@ const AdminGeneralForm: React.FC<AdminGeneralFormProps> = ({
 };
 
 export default AdminGeneralForm;
+

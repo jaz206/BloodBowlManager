@@ -32,7 +32,7 @@ const AdminSkillsForm: React.FC<AdminSkillsFormProps> = ({ editingItem, setEditi
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Descripcion (ES)</label>
+                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Descripción (ES)</label>
                     <textarea
                         value={editingItem.data.desc_es || ''}
                         onChange={(e) => setEditingItem({ ...editingItem, data: { ...editingItem.data, desc_es: e.target.value } })}
@@ -49,7 +49,7 @@ const AdminSkillsForm: React.FC<AdminSkillsFormProps> = ({ editingItem, setEditi
                 </div>
             </div>
             <div className="space-y-4">
-                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Categoria</label>
+                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Categoría</label>
                 <select
                     value={editingItem.data.category || 'General'}
                     onChange={(e) => setEditingItem({ ...editingItem, data: { ...editingItem.data, category: e.target.value } })}
@@ -63,3 +63,4 @@ const AdminSkillsForm: React.FC<AdminSkillsFormProps> = ({ editingItem, setEditi
 };
 
 export default AdminSkillsForm;
+
