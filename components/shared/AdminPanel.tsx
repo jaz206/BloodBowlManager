@@ -11,6 +11,11 @@ import AdminFeedbackOverlays from './AdminFeedbackOverlays';
 import { getStarPlayerImageUrl, getTeamLogoUrl } from '../../utils/imageUtils';
 import AdminCompetitionLab from './AdminCompetitionLab';
 import {
+    getHeraldoValidationIssues,
+    getInducementValidationIssues,
+    getSkillValidationIssues,
+    getStarPlayerValidationIssues,
+    getTeamValidationIssues,
     sanitizeHeraldoItemForSave,
     sanitizeInducementForSave,
     sanitizeSkillForSave,
@@ -126,6 +131,15 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ managedTeams, competitions, onC
     const [githubSearch, setGithubSearch] = useState('');
     const [isImageExplorerExpanded, setIsImageExplorerExpanded] = useState(false);
     const activeStorageInfo = ADMIN_STORAGE_MAP[activeTab];
+    const validationIssues = useMemo(() => {
+        if (!editingItem) return [];
+        if (editingItem.type === 'teams') return getTeamValidationIssues(editingItem.data);
+        if (editingItem.type === 'stars') return getStarPlayerValidationIssues(editingItem.data);
+        if (editingItem.type === 'skills') return getSkillValidationIssues(editingItem.data);
+        if (editingItem.type === 'inducements') return getInducementValidationIssues(editingItem.data);
+        if (editingItem.type === 'heraldo') return getHeraldoValidationIssues(editingItem.data);
+        return [];
+    }, [editingItem]);
 
     // Filtering logic
     const filteredContent = useMemo(() => {
@@ -402,6 +416,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ managedTeams, competitions, onC
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!editingItem) return;
+        if (validationIssues.length > 0) {
+            showToast(`Faltan campos obligatorios: ${validationIssues.join(', ')}`, 'error');
+            return;
+        }
         setIsSaving(true);
         try {
             const { type, data } = editingItem;
@@ -885,6 +903,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ managedTeams, competitions, onC
                 isLoadingGitHub={isLoadingGitHub}
                 githubSearch={githubSearch}
                 setGithubSearch={setGithubSearch}
+                validationIssues={validationIssues}
                 isImageExplorerExpanded={isImageExplorerExpanded}
                 setIsImageExplorerExpanded={setIsImageExplorerExpanded}
                 activeTeamTab={activeTeamTab}

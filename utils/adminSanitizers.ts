@@ -163,3 +163,38 @@ export const sanitizeHeraldoItemForSave = (raw: any) => {
     };
 };
 
+export const getTeamValidationIssues = (raw: any): string[] => {
+    const issues: string[] = [];
+    if (!cleanText(raw?.name)) issues.push('Nombre del equipo');
+    if (!Array.isArray(raw?.roster) || raw.roster.length === 0) issues.push('Roster base con al menos una posición');
+    if ((raw?.roster || []).some((player: any) => !cleanText(player?.position))) issues.push('Todas las posiciones del roster deben tener nombre');
+    return issues;
+};
+
+export const getSkillValidationIssues = (raw: any): string[] => {
+    const issues: string[] = [];
+    if (!cleanText(raw?.name_es)) issues.push('Nombre en español');
+    if (!cleanText(raw?.name_en)) issues.push('Nombre en inglés');
+    if (!cleanText(raw?.keyEN) && !cleanText(raw?.name_en) && !cleanText(raw?.name_es)) issues.push('KeyEN o identificador base');
+    return issues;
+};
+
+export const getStarPlayerValidationIssues = (raw: any): string[] => {
+    const issues: string[] = [];
+    if (!cleanText(raw?.name)) issues.push('Nombre de la estrella');
+    if (!Array.isArray(raw?.playsFor) || raw.playsFor.length === 0) issues.push('Al menos una facción compatible');
+    return issues;
+};
+
+export const getInducementValidationIssues = (raw: any): string[] => {
+    const issues: string[] = [];
+    if (!cleanText(raw?.name)) issues.push('Nombre del incentivo');
+    return issues;
+};
+
+export const getHeraldoValidationIssues = (raw: any): string[] => {
+    const issues: string[] = [];
+    if (!cleanText(raw?.title)) issues.push('Título de la noticia');
+    if (!cleanLongText(raw?.content)) issues.push('Contenido principal');
+    return issues;
+};

@@ -20,6 +20,7 @@ type AdminEditorModalProps = {
     isLoadingGitHub: boolean;
     githubSearch: string;
     setGithubSearch: React.Dispatch<React.SetStateAction<string>>;
+    validationIssues: string[];
     isImageExplorerExpanded: boolean;
     setIsImageExplorerExpanded: React.Dispatch<React.SetStateAction<boolean>>;
     activeTeamTab: 'general' | 'identidad' | 'roster' | 'nombres';
@@ -40,6 +41,7 @@ const AdminEditorModal: React.FC<AdminEditorModalProps> = ({
     isLoadingGitHub,
     githubSearch,
     setGithubSearch,
+    validationIssues,
     isImageExplorerExpanded,
     setIsImageExplorerExpanded,
     activeTeamTab,
@@ -85,6 +87,28 @@ const AdminEditorModal: React.FC<AdminEditorModalProps> = ({
                             <div className="p-10 max-h-[70vh] overflow-y-auto custom-scrollbar bg-black/40">
                                 <form onSubmit={handleSave} className="space-y-8">
                                     <div className="grid grid-cols-1 gap-8">
+                                        {validationIssues.length > 0 && (
+                                            <div className="rounded-3xl border border-amber-500/30 bg-amber-500/10 p-5">
+                                                <div className="flex items-start gap-3">
+                                                    <span className="material-symbols-outlined text-amber-300 mt-0.5">warning</span>
+                                                    <div>
+                                                        <p className="text-[10px] font-black text-amber-300 uppercase tracking-[0.3em] mb-2">
+                                                            Faltan campos obligatorios
+                                                        </p>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {validationIssues.map((issue) => (
+                                                                <span
+                                                                    key={issue}
+                                                                    className="px-3 py-1.5 rounded-xl bg-black/20 border border-amber-500/20 text-amber-100 text-[10px] font-bold"
+                                                                >
+                                                                    {issue}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
 
                                         {/* ARENA CONFIG EDITOR */}
                                         {editingItem.type === 'arena' && (
@@ -265,11 +289,11 @@ const AdminEditorModal: React.FC<AdminEditorModalProps> = ({
                                         </button>
                                         <button
                                             type="submit"
-                                            disabled={isSaving}
-                                            className="px-12 py-4 rounded-2xl bg-premium-gold text-black font-display font-black uppercase tracking-widest text-[10px] hover:shadow-[0_0_30px_rgba(202,138,4,0.4)] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 transition-all flex items-center gap-3"
+                                            disabled={isSaving || validationIssues.length > 0}
+                                            className="px-12 py-4 rounded-2xl bg-premium-gold text-black font-display font-black uppercase tracking-widest text-[10px] hover:shadow-[0_0_30px_rgba(202,138,4,0.4)] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-3"
                                         >
                                             {isSaving && <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin"></span>}
-                                            {isSaving ? 'Guardando...' : 'Confirmar Cambios'}
+                                            {isSaving ? 'Guardando...' : validationIssues.length > 0 ? 'Completa los campos obligatorios' : 'Confirmar Cambios'}
                                         </button>
                                     </div>
                                 </form>
