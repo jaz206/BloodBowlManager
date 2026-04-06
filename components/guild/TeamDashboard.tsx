@@ -13,7 +13,6 @@ import { calculateTeamValue } from '../../utils/teamUtils';
 import {
     getPlayerImageUrl,
     getTeamLogoUrl,
-    getFranchiseCrestUrl,
     fetchTeamImageStock,
     type PositionStock,
     type PositionStockEntry,
@@ -146,7 +145,6 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
         const masterTeam = masterTeams.find(t => t.name === managedTeam.rosterName);
         const merged = mergeTeamWithFallback(managedTeam as any, (masterTeam || staticTeam) as any);
         return (
-            getFranchiseCrestUrl(managedTeam.name) ||
             managedTeam.crestImage ||
             merged.crestImage ||
             merged.image ||
@@ -450,11 +448,8 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                     src={resolveTeamCrestUrl(team)}
                                     onError={(e) => {
                                         const img = e.target as HTMLImageElement;
-                                        const franchiseUrl = getFranchiseCrestUrl(team.name);
                                         const rosterUrl = getTeamLogoUrl(team.rosterName);
-                                        if (franchiseUrl && img.src !== franchiseUrl) {
-                                            img.src = franchiseUrl;
-                                        } else if (img.src !== rosterUrl) {
+                                        if (img.src !== rosterUrl) {
                                             img.src = rosterUrl;
                                         } else {
                                             const originalData = teamsData.find(t => t.name === team.rosterName);
@@ -980,11 +975,8 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                             src={resolveTeamCrestUrl(team)}
                                             onError={(e) => {
                                                 const img = e.target as HTMLImageElement;
-                                                const franchiseUrl = getFranchiseCrestUrl(team.name);
                                                 const rosterUrl = getTeamLogoUrl(team.rosterName);
-                                                if (franchiseUrl && img.src !== franchiseUrl) {
-                                                    img.src = franchiseUrl;
-                                                } else if (img.src !== rosterUrl) {
+                                                if (img.src !== rosterUrl) {
                                                     img.src = rosterUrl;
                                                 } else {
                                                     const originalData = teamsData.find(t => t.name === team.rosterName);

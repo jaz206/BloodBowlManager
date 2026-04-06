@@ -4,7 +4,7 @@ import type { ManagedTeam } from '../../types';
 import TeamCreator from './CreateTeamPage';
 import { TeamDashboard } from '../../components/guild/TeamDashboard';
 import { calculateTeamValue } from '../../utils/teamUtils';
-import { getFranchiseCrestUrl, getTeamLogoUrl } from '../../utils/imageUtils';
+import { getTeamLogoUrl } from '../../utils/imageUtils';
 import { teamsData } from '../../data/teams';
 import { useAuth } from '../../hooks/useAuth';
 import type { Competition } from '../../types';
@@ -43,7 +43,6 @@ const calculateTV = (team: ManagedTeam) => calculateTeamValue(team);
 const resolveGuildTeamCrestUrl = (team: ManagedTeam): string => {
     const staticTeam = teamsData.find(t => t.name === team.rosterName);
     return (
-        getFranchiseCrestUrl(team.name) ||
         team.crestImage ||
         staticTeam?.crestImage ||
         staticTeam?.image ||
@@ -470,11 +469,8 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                                 src={resolveGuildTeamCrestUrl(team)} 
                                                 onError={(e) => {
                                                     const img = e.target as HTMLImageElement;
-                                                    const franchiseUrl = getFranchiseCrestUrl(team.name);
                                                     const rosterUrl = getTeamLogoUrl(team.rosterName);
-                                                    if (franchiseUrl && img.src !== franchiseUrl) {
-                                                        img.src = franchiseUrl;
-                                                    } else if (img.src !== rosterUrl) {
+                                                    if (img.src !== rosterUrl) {
                                                         img.src = rosterUrl;
                                                     } else {
                                                         const originalData = teamsData.find(t => t.name === team.rosterName);

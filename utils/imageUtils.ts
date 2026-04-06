@@ -276,12 +276,6 @@ export const getTeamLogoUrl = (rosterName: string): string => {
   return `${CREST_BASE_URL}${encodeURIComponent(prefix + ".png")}`;
 };
 
-export const getFranchiseCrestUrl = (teamName: string): string => {
-  const normalized = fixMojibake((teamName || '').trim());
-  if (!normalized) return '';
-  return `${CREST_BASE_URL}${encodeURIComponent(`${normalized}.png`)}`;
-};
-
 const STAR_FILE_MAP: Record<string, string> = {
   "Boa Kon'ssstriktr":         "PJ - Boa Kon\u2019ssstriktr.png",
   "Bryce 'The Slice' Cambuel": "PJ - Bryce \u2018The Slice\u2019 Cambuel.png",
