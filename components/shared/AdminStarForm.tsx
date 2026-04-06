@@ -1,6 +1,6 @@
 ﻿import React from 'react';
 import AdminGitHubImagePicker from './AdminGitHubImagePicker';
-import { getStarPlayerImageUrl } from '../../utils/imageUtils';
+import { getStarPlayerImageFilename, getStarPlayerImageUrl } from '../../utils/imageUtils';
 
 type AdminStarFormProps = {
     editingItem: any;
@@ -44,6 +44,7 @@ const AdminStarForm: React.FC<AdminStarFormProps> = ({
 }) => {
     const currentImage = editingItem.data.image || '';
     const suggestedImage = getStarPlayerImageUrl(editingItem.data.name || '');
+    const expectedFilename = getStarPlayerImageFilename(editingItem.data.name || '');
 
     const updateImage = (url: string) => {
         setEditingItem({
@@ -99,6 +100,21 @@ const AdminStarForm: React.FC<AdminStarFormProps> = ({
                             )}
                         </div>
                     </div>
+                </div>
+
+                <div className="rounded-2xl border border-[#e3cfaa] bg-[#fcf6ea] px-5 py-4">
+                    <p className="text-[9px] font-black uppercase tracking-[0.28em] text-gold">Imagen esperada en GitHub</p>
+                    <div className="mt-3 flex flex-wrap items-center gap-3">
+                        <span className="px-3 py-2 rounded-xl bg-[#fffaf1] border border-[#d7c39a] text-[10px] font-mono font-bold text-[#2b1d12]">
+                            {expectedFilename}
+                        </span>
+                        <span className="text-[10px] font-bold text-[#7b6853]">
+                            Carpeta: <span className="font-mono text-[#2b1d12]">Star Players</span>
+                        </span>
+                    </div>
+                    <p className="mt-3 text-[10px] leading-relaxed text-[#7b6853]">
+                        Este es el nombre exacto que la app espera para la imagen oficial del jugador estrella si quieres que el catálogo la resuelva automáticamente.
+                    </p>
                 </div>
             </div>
 

@@ -1,6 +1,6 @@
 ﻿import React from 'react';
 import AdminGitHubImagePicker from './AdminGitHubImagePicker';
-import { getTeamLogoUrl } from '../../utils/imageUtils';
+import { getTeamLogoFilename, getTeamLogoUrl } from '../../utils/imageUtils';
 
 type AdminTeamFormProps = {
     editingItem: any;
@@ -57,6 +57,7 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
 }) => {
     const currentImage = editingItem.data.image || editingItem.data.crestImage || '';
     const suggestedImage = getTeamLogoUrl(editingItem.data.name || '');
+    const expectedFilename = getTeamLogoFilename(editingItem.data.name || '');
 
     const updateTeamImage = (url: string) => {
         setEditingItem({
@@ -120,6 +121,21 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                             <span className="material-symbols-outlined text-white/10">image_not_supported</span>
                         )}
                     </div>
+                </div>
+
+                <div className="rounded-2xl border border-[#e3cfaa] bg-[#fcf6ea] px-5 py-4">
+                    <p className="text-[9px] font-black uppercase tracking-[0.28em] text-gold">Escudo esperado en GitHub</p>
+                    <div className="mt-3 flex flex-wrap items-center gap-3">
+                        <span className="px-3 py-2 rounded-xl bg-[#fffaf1] border border-[#d7c39a] text-[10px] font-mono font-bold text-[#2b1d12]">
+                            {expectedFilename}
+                        </span>
+                        <span className="text-[10px] font-bold text-[#7b6853]">
+                            Carpeta: <span className="font-mono text-[#2b1d12]">Escudos</span>
+                        </span>
+                    </div>
+                    <p className="mt-3 text-[10px] leading-relaxed text-[#7b6853]">
+                        Este es el PNG base que se usará por defecto para la raza. Si luego el jugador cambia el escudo, ese override pasará a ser el visible en su franquicia.
+                    </p>
                 </div>
             </div>
 

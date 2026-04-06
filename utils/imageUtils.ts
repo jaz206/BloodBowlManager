@@ -276,6 +276,11 @@ export const getTeamLogoUrl = (rosterName: string): string => {
   return `${CREST_BASE_URL}${encodeURIComponent(prefix + ".png")}`;
 };
 
+export const getTeamLogoFilename = (rosterName: string): string => {
+  const prefix = CREST_PREFIX_MAP[rosterName] || getTeamPrefix(rosterName);
+  return `${prefix}.png`;
+};
+
 const STAR_FILE_MAP: Record<string, string> = {
   "Boa Kon'ssstriktr":         "PJ - Boa Kon\u2019ssstriktr.png",
   "Bryce 'The Slice' Cambuel": "PJ - Bryce \u2018The Slice\u2019 Cambuel.png",
@@ -322,4 +327,13 @@ export const getStarPlayerImageUrl = (starName: string): string => {
 
   const filename = STAR_FILE_MAP[key] ?? `PJ - ${key}.png`;
   return `${STAR_BASE_URL}${encodeURIComponent(filename)}`;
+};
+
+export const getStarPlayerImageFilename = (starName: string): string => {
+  const key = starName
+    .replace(/[\u2018\u2019\u02BC\u0060]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .trim();
+
+  return STAR_FILE_MAP[key] ?? `PJ - ${key}.png`;
 };
