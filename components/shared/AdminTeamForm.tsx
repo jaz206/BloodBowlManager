@@ -1,6 +1,7 @@
 ﻿import React from 'react';
 import AdminGitHubImagePicker from './AdminGitHubImagePicker';
 import { getTeamLogoFilename, getTeamLogoUrl, resolveTeamLogoPreference } from '../../utils/imageUtils';
+import { PLAYER_NAMES } from '../../pages/Guild/playerNames';
 
 type AdminTeamFormProps = {
     editingItem: any;
