@@ -98,7 +98,7 @@ export const teamsData: Team[] = [
         "name":  "Orcos Negros",
         "specialRules":  "Pelea de Badlands, GestiÃ³n de Equipo, Soborno y CorrupciÃ³n",
         "rerollCost":  50000,
-        "tier":  1,
+        "tier":  3,
         "apothecary":  "SÃ­",
         "image":  "https://raw.githubusercontent.com/jaz206/Bloodbowl-image/main/Escudos/Orcos%20Negros.png",
         "ratings":  {
@@ -252,7 +252,7 @@ export const teamsData: Team[] = [
         "name":  "Enanos del Caos",
         "specialRules":  "Favorito de..., GestiÃ³n de Equipo, Superliga del Borde del Mundo, Pelea de Badlands",
         "rerollCost":  50000,
-        "tier":  2,
+        "tier":  1,
         "apothecary":  "SÃ­",
         "image":  "https://raw.githubusercontent.com/jaz206/Bloodbowl-image/main/Escudos/Enanos%20del%20caos.png",
         "ratings":  {
@@ -366,7 +366,7 @@ export const teamsData: Team[] = [
         "name":  "Renegados del Caos",
         "specialRules":  "Favorito de..., GestiÃ³n de Equipo",
         "rerollCost":  50000,
-        "tier":  3,
+        "tier":  2,
         "apothecary":  "SÃ­",
         "image":  "https://raw.githubusercontent.com/jaz206/Bloodbowl-image/main/Escudos/Renegados%20del%20Caos.png",
         "ratings":  {
@@ -579,7 +579,7 @@ export const teamsData: Team[] = [
         "name":  "Elfos Oscuros",
         "specialRules":  "Liga de los Reinos Ã‰lficos, GestiÃ³n de Equipo",
         "rerollCost":  50000,
-        "tier":  2,
+        "tier":  1,
         "apothecary":  "SÃ­",
         "image":  "https://raw.githubusercontent.com/jaz206/Bloodbowl-image/main/Escudos/Elfos%20Oscuros.png",
         "ratings":  {
@@ -686,7 +686,7 @@ export const teamsData: Team[] = [
         "name":  "Enanos",
         "specialRules":  "ClÃ¡sico del Viejo Mundo, GestiÃ³n de Equipo, Superliga del Borde del Mundo",
         "rerollCost":  50000,
-        "tier":  2,
+        "tier":  1,
         "apothecary":  "SÃ­",
         "image":  "https://raw.githubusercontent.com/jaz206/Bloodbowl-image/main/Escudos/Enanos.png",
         "ratings":  {
@@ -893,7 +893,7 @@ export const teamsData: Team[] = [
         "name":  "Gnomos",
         "specialRules":  "Copa Dedal Halfling, GestiÃ³n de Equipo, Nivel 3",
         "rerollCost":  50000,
-        "tier":  1,
+        "tier":  3,
         "apothecary":  "SÃ­",
         "image":  "https://raw.githubusercontent.com/jaz206/Bloodbowl-image/main/Escudos/Gnomos.png",
         "ratings":  {
@@ -1014,7 +1014,7 @@ export const teamsData: Team[] = [
         "name":  "Goblins",
         "specialRules":  "DesafÃ­o SubterrÃ¡neo, GestiÃ³n de Equipo, Pelea de Badlands, Soborno y CorrupciÃ³n, Nivel 3",
         "rerollCost":  50000,
-        "tier":  2,
+        "tier":  3,
         "apothecary":  "SÃ­",
         "image":  "https://raw.githubusercontent.com/jaz206/Bloodbowl-image/main/Escudos/Goblins.png",
         "ratings":  {
@@ -1272,7 +1272,7 @@ export const teamsData: Team[] = [
         "name":  "Altos Elfos",
         "specialRules":  "Liga de los Reinos Ã‰lficos, GestiÃ³n de Equipo",
         "rerollCost":  50000,
-        "tier":  2,
+        "tier":  1,
         "apothecary":  "SÃ­",
         "image":  "https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0",
         "ratings":  {
@@ -1361,7 +1361,7 @@ export const teamsData: Team[] = [
         "name":  "Humanos",
         "specialRules":  "ClÃ¡sico del Viejo Mundo, GestiÃ³n de Equipo",
         "rerollCost":  50000,
-        "tier":  3,
+        "tier":  2,
         "apothecary":  "SÃ­",
         "image":  "https://i.pinimg.com/736x/c2/63/6b/c2636b8d808236de876bc37716a39f49.jpg",
         "ratings":  {
@@ -1850,7 +1850,7 @@ export const teamsData: Team[] = [
         "name":  "Nurgle",
         "specialRules":  "Favorito de..., GestiÃ³n de Equipo",
         "rerollCost":  50000,
-        "tier":  2,
+        "tier":  3,
         "apothecary":  "SÃ­",
         "image":  "https://i.pinimg.com/736x/d3/c6/1f/d3c61fa5d46fc5872dd609282a34047d.jpg",
         "ratings":  {
@@ -1950,7 +1950,7 @@ export const teamsData: Team[] = [
         "name":  "Ogros",
         "specialRules":  "ClÃ¡sico del Viejo Mundo, GestiÃ³n de Equipo, Pelea de Badlands, Peones Baratos, Nivel 4",
         "rerollCost":  50000,
-        "tier":  4,
+        "tier":  3,
         "apothecary":  "SÃ­",
         "image":  "https://i.pinimg.com/736x/9b/77/bd/9b77bd2d5538a9bfd2be58af2186de82.jpg",
         "ratings":  {
@@ -2030,7 +2030,7 @@ export const teamsData: Team[] = [
         "name":  "Alianza del Viejo Mundo",
         "specialRules":  "ClÃ¡sico del Viejo Mundo, GestiÃ³n de Equipo",
         "rerollCost":  50000,
-        "tier":  1,
+        "tier":  2,
         "apothecary":  "SÃ­",
         "image":  "https://i.pinimg.com/736x/d3/a2/19/d3a219f32e89433aa05b5396f935d334.jpg",
         "ratings":  {
@@ -2669,7 +2669,7 @@ export const teamsData: Team[] = [
         "name":  "Reyes de las Tumbas",
         "specialRules":  "Escaparate Sylvaniano, GestiÃ³n de Equipo",
         "rerollCost":  50000,
-        "tier":  1,
+        "tier":  2,
         "apothecary":  "SÃ­",
         "image":  "https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0",
         "ratings":  {
@@ -2763,7 +2763,7 @@ export const teamsData: Team[] = [
         "name":  "Habitantes del Inframundo",
         "specialRules":  "DesafÃ­o SubterrÃ¡neo, GestiÃ³n de Equipo, Soborno y CorrupciÃ³n",
         "rerollCost":  50000,
-        "tier":  1,
+        "tier":  3,
         "apothecary":  "SÃ­",
         "image":  "https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0",
         "ratings":  {
@@ -2939,7 +2939,7 @@ export const teamsData: Team[] = [
         "name":  "Vampiros",
         "specialRules":  "Escaparate Sylvaniano, GestiÃ³n de Equipo, Lord Vampiro",
         "rerollCost":  50000,
-        "tier":  1,
+        "tier":  2,
         "apothecary":  "SÃ­",
         "image":  "https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0",
         "ratings":  {
@@ -3055,7 +3055,7 @@ export const teamsData: Team[] = [
         "name":  "Elfos Silvanos",
         "specialRules":  "Liga de los Reinos Ã‰lficos, GestiÃ³n de Equipo",
         "rerollCost":  50000,
-        "tier":  2,
+        "tier":  1,
         "apothecary":  "SÃ­",
         "image":  "https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0",
         "ratings":  {
@@ -3163,6 +3163,242 @@ export const teamsData: Team[] = [
                    ],
         "specialRules_es":  "Liga de los Reinos Ã‰lficos, GestiÃ³n de Equipo",
         "specialRules_en":  "Liga de los Reinos Ã‰lficos, GestiÃ³n de Equipo"
+    },
+
+    {
+        "name":  "Bretonianos",
+        "specialRules":  "Equipos de Leyenda, Gesti?n de Equipo",
+        "rerollCost":  70000,
+        "tier":  2,
+        "apothecary":  "S?",
+        "ratings":  {
+                        "fuerza":  68,
+                        "agilidad":  72,
+                        "velocidad":  73,
+                        "armadura":  83,
+                        "pase":  58
+                    },
+        "roster":  [
+                       {
+                           "qty":  "0-16",
+                           "position":  "L?nea Bret?n",
+                           "cost":  40000,
+                           "stats":  { "MV":  6, "FU":  "3", "AG":  "3+", "PA":  "4+", "AR":  "8+" },
+                           "skillKeys":  ["Stand Firm"],
+                           "primary":  "G",
+                           "secondary":  "AS"
+                       },
+                       {
+                           "qty":  "0-4",
+                           "position":  "Yeoman",
+                           "cost":  70000,
+                           "stats":  { "MV":  6, "FU":  "3", "AG":  "3+", "PA":  "5+", "AR":  "9+" },
+                           "skillKeys":  ["Wrestle"],
+                           "primary":  "GS",
+                           "secondary":  "A"
+                       },
+                       {
+                           "qty":  "0-4",
+                           "position":  "Blitzer Bret?n",
+                           "cost":  105000,
+                           "stats":  { "MV":  7, "FU":  "3", "AG":  "3+", "PA":  "3+", "AR":  "9+" },
+                           "skillKeys":  ["Catch", "Dauntless", "Block"],
+                           "primary":  "GAS",
+                           "secondary":  "P"
+                       }
+                   ],
+        "specialRules_es":  "Equipos de Leyenda, Gesti?n de Equipo",
+        "specialRules_en":  "Legend Teams, Team Management"
+    },
+    {
+        "name":  "Nobleza Imperial",
+        "specialRules":  "Cl?sica del Viejo Mundo, Gesti?n de Equipo",
+        "rerollCost":  70000,
+        "tier":  2,
+        "apothecary":  "S?",
+        "ratings":  {
+                        "fuerza":  72,
+                        "agilidad":  67,
+                        "velocidad":  64,
+                        "armadura":  88,
+                        "pase":  60
+                    },
+        "roster":  [
+                       {
+                           "qty":  "0-16",
+                           "position":  "Criado Imperial",
+                           "cost":  45000,
+                           "stats":  { "MV":  6, "FU":  "3", "AG":  "4+", "PA":  "4+", "AR":  "8+" },
+                           "skillKeys":  ["Fend"],
+                           "primary":  "G",
+                           "secondary":  "AS"
+                       },
+                       {
+                           "qty":  "0-4",
+                           "position":  "Lanzador",
+                           "cost":  75000,
+                           "stats":  { "MV":  6, "FU":  "3", "AG":  "3+", "PA":  "3+", "AR":  "8+" },
+                           "skillKeys":  ["Sure Hands", "Pass"],
+                           "primary":  "GP",
+                           "secondary":  "A"
+                       },
+                       {
+                           "qty":  "0-2",
+                           "position":  "Blitzer Noble",
+                           "cost":  105000,
+                           "stats":  { "MV":  7, "FU":  "3", "AG":  "3+", "PA":  "4+", "AR":  "9+" },
+                           "skillKeys":  ["Catch", "Block"],
+                           "primary":  "GAS",
+                           "secondary":  "P"
+                       },
+                       {
+                           "qty":  "0-4",
+                           "position":  "Guardaespaldas",
+                           "cost":  90000,
+                           "stats":  { "MV":  6, "FU":  "3", "AG":  "3+", "PA":  "5+", "AR":  "9+" },
+                           "skillKeys":  ["Stand Firm", "Wrestle"],
+                           "primary":  "GS",
+                           "secondary":  "A"
+                       },
+                       {
+                           "qty":  "0-1",
+                           "position":  "Ogro",
+                           "cost":  140000,
+                           "stats":  { "MV":  5, "FU":  "5", "AG":  "4+", "PA":  "5+", "AR":  "10+" },
+                           "skillKeys":  ["Bone Head", "Loner (4+)", "Mighty Blow (+1)", "Throw Team-mate"],
+                           "primary":  "F",
+                           "secondary":  "AGP"
+                       }
+                   ],
+        "specialRules_es":  "Cl?sica del Viejo Mundo, Gesti?n de Equipo",
+        "specialRules_en":  "Old World Classic, Team Management"
+    },
+    {
+        "name":  "Khorne",
+        "specialRules":  "Favoritos de los Dioses, Gesti?n de Equipo",
+        "rerollCost":  60000,
+        "tier":  2,
+        "apothecary":  "S?",
+        "ratings":  {
+                        "fuerza":  82,
+                        "agilidad":  60,
+                        "velocidad":  68,
+                        "armadura":  88,
+                        "pase":  42
+                    },
+        "roster":  [
+                       {
+                           "qty":  "0-16",
+                           "position":  "L?nea Merodeador",
+                           "cost":  50000,
+                           "stats":  { "MV":  6, "FU":  "3", "AG":  "3+", "PA":  "4+", "AR":  "8+" },
+                           "skillKeys":  ["Frenzy"],
+                           "primary":  "GM",
+                           "secondary":  "AS"
+                       },
+                       {
+                           "qty":  "0-4",
+                           "position":  "Buscador de Sangre",
+                           "cost":  105000,
+                           "stats":  { "MV":  5, "FU":  "4", "AG":  "4+", "PA":  "6+", "AR":  "10+" },
+                           "skillKeys":  ["Frenzy"],
+                           "primary":  "F",
+                           "secondary":  "GM"
+                       },
+                       {
+                           "qty":  "0-2",
+                           "position":  "Khorngor",
+                           "cost":  70000,
+                           "stats":  { "MV":  6, "FU":  "3", "AG":  "3+", "PA":  "4+", "AR":  "9+" },
+                           "skillKeys":  ["Horns", "Frenzy", "Juggernaut"],
+                           "primary":  "GM",
+                           "secondary":  "AS"
+                       },
+                       {
+                           "qty":  "0-1",
+                           "position":  "Engendro de Sangre",
+                           "cost":  160000,
+                           "stats":  { "MV":  5, "FU":  "5", "AG":  "4+", "PA":  "-", "AR":  "10+" },
+                           "skillKeys":  ["Claws", "Frenzy", "Loner (4+)", "Mighty Blow (+1)", "Unchannelled Fury"],
+                           "primary":  "F",
+                           "secondary":  "AGM"
+                       }
+                   ],
+        "specialRules_es":  "Favoritos de los Dioses, Gesti?n de Equipo",
+        "specialRules_en":  "Favoured of the Gods, Team Management"
+    },
+    {
+        "name":  "Snotlings",
+        "specialRules":  "Desaf?o del Inframundo, Gesti?n de Equipo",
+        "rerollCost":  60000,
+        "tier":  3,
+        "apothecary":  "S?",
+        "ratings":  {
+                        "fuerza":  32,
+                        "agilidad":  88,
+                        "velocidad":  73,
+                        "armadura":  54,
+                        "pase":  44
+                    },
+        "roster":  [
+                       {
+                           "qty":  "0-16",
+                           "position":  "L?nea Snotling",
+                           "cost":  15000,
+                           "stats":  { "MV":  5, "FU":  "1", "AG":  "3+", "PA":  "5+", "AR":  "5+" },
+                           "skillKeys":  ["Dodge", "Right Stuff", "Sidestep", "Sneaky Git", "Swarming"],
+                           "primary":  "A",
+                           "secondary":  "G"
+                       },
+                       {
+                           "qty":  "0-2",
+                           "position":  "Fun-Hopper",
+                           "cost":  20000,
+                           "stats":  { "MV":  6, "FU":  "1", "AG":  "3+", "PA":  "5+", "AR":  "5+" },
+                           "skillKeys":  ["Dodge", "Right Stuff", "Sidestep", "Pogo Stick"],
+                           "primary":  "A",
+                           "secondary":  "G"
+                       },
+                       {
+                           "qty":  "0-2",
+                           "position":  "Stilty Runna",
+                           "cost":  20000,
+                           "stats":  { "MV":  6, "FU":  "1", "AG":  "3+", "PA":  "5+", "AR":  "5+" },
+                           "skillKeys":  ["Dodge", "Right Stuff", "Sidestep", "Sprint"],
+                           "primary":  "A",
+                           "secondary":  "G"
+                       },
+                       {
+                           "qty":  "0-2",
+                           "position":  "Fungus Flinga",
+                           "cost":  30000,
+                           "stats":  { "MV":  5, "FU":  "1", "AG":  "3+", "PA":  "4+", "AR":  "5+" },
+                           "skillKeys":  ["Bombardier", "Dodge", "Right Stuff", "Secret Weapon", "Sidestep"],
+                           "primary":  "A",
+                           "secondary":  "GP"
+                       },
+                       {
+                           "qty":  "0-2",
+                           "position":  "Pump Wagon",
+                           "cost":  105000,
+                           "stats":  { "MV":  4, "FU":  "5", "AG":  "5+", "PA":  "-", "AR":  "8+" },
+                           "skillKeys":  ["Dirty Player (+1)", "Loner (4+)", "Mighty Blow (+1)", "No Hands", "Secret Weapon", "Stand Firm"],
+                           "primary":  "F",
+                           "secondary":  "G"
+                       },
+                       {
+                           "qty":  "0-2",
+                           "position":  "Troll Entrenado",
+                           "cost":  115000,
+                           "stats":  { "MV":  4, "FU":  "5", "AG":  "4+", "PA":  "5+", "AR":  "10+" },
+                           "skillKeys":  ["Always Hungry", "Loner (4+)", "Mighty Blow (+1)", "Really Stupid", "Regeneration", "Throw Team-mate", "Projectile Vomit"],
+                           "primary":  "F",
+                           "secondary":  "AGP"
+                       }
+                   ],
+        "specialRules_es":  "Desaf?o del Inframundo, Gesti?n de Equipo",
+        "specialRules_en":  "Underworld Challenge, Team Management"
     }
+
 ];
 
