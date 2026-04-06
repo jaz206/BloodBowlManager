@@ -10,6 +10,13 @@ import { downloadCSV, parseCSV, transformGitHubUrl } from './adminPanelUtils';
 import AdminFeedbackOverlays from './AdminFeedbackOverlays';
 import { getStarPlayerImageUrl, getTeamLogoUrl } from '../../utils/imageUtils';
 import AdminCompetitionLab from './AdminCompetitionLab';
+import {
+    sanitizeHeraldoItemForSave,
+    sanitizeInducementForSave,
+    sanitizeSkillForSave,
+    sanitizeStarPlayerForSave,
+    sanitizeTeamForSave,
+} from '../../utils/adminSanitizers';
 
 type AdminTab = 'general' | 'heraldo' | 'arena' | 'competitions' | 'teams' | 'stars' | 'skills' | 'inducements';
 import { useArenaConfig, ArenaConfig } from '../../hooks/useArenaConfig';
@@ -318,7 +325,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ managedTeams, competitions, onC
             try {
                 let payload: any;
                 if (importTarget === 'stars') {
-                    payload = {
+                    payload = sanitizeStarPlayerForSave({
                         name: row.name.trim(),
                         cost: parseInt(row.cost) || 0,
                         stats: { MV: row.MV, FU: row.FU, AG: row.AG, PA: row.PA, AR: row.AR },
@@ -328,10 +335,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ managedTeams, competitions, onC
                         specialRules_es: row.specialRules_es ?? '',
                         specialRules_en: row.specialRules_en ?? '',
                         image: row.image ?? '',
-                    };
+                    });
                     await updateMasterItem('star_players', payload.name, payload);
                 } else {
-                    payload = {
+                    payload = sanitizeTeamForSave({
                         name: row.name.trim(),
                         tier: parseInt(row.tier) || 1,
                         rerollCost: parseInt(row.rerollCost) || 0,
@@ -343,7 +350,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ managedTeams, competitions, onC
                             pase: parseInt(row.pase) || 0,
                         },
                         ...(row.image ? { image: row.image, crestImage: row.image } : {}),
-                    };
+                    });
                     await updateMasterItem('teams', payload.name, payload);
                 }
             } catch (err: any) {
@@ -404,22 +411,27 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ managedTeams, competitions, onC
             } else if (type === 'arena') {
                 await saveArenaConfig(data);
             } else if (type === 'teams') {
-                await updateMasterItem('teams', data.name, data);
+                const payload = sanitizeTeamForSave(data);
+                await updateMasterItem('teams', payload.name, payload);
             } else if (type === 'stars') {
-                await updateMasterItem('star_players', data.name, data);
+                const payload = sanitizeStarPlayerForSave(data);
+                await updateMasterItem('star_players', payload.name, payload);
             } else if (type === 'skills') {
-                await updateMasterItem('skills', data.keyEN, data);
+                const payload = sanitizeSkillForSave(data);
+                await updateMasterItem('skills', payload.keyEN, payload);
             } else if (type === 'inducements') {
                 const docId = language === 'es' ? 'inducements_es' : 'inducements_en';
-                await updateMasterItem(docId, data.name, data);
+                const payload = sanitizeInducementForSave(data);
+                await updateMasterItem(docId, payload.name, payload);
             } else if (type === 'heraldo') {
+                const payload = sanitizeHeraldoItemForSave(editingItem.data);
                 // Use title as ID for heraldo items for now
-                const isNew = !heraldoItems.find((h: any) => h.title === editingItem.data.title);
+                const isNew = !heraldoItems.find((h: any) => h.title === payload.title);
             
                 if (isNew) {
-                    await addItemToMaster('heraldo', editingItem.data);
+                    await addItemToMaster('heraldo', payload);
                 } else {
-                    await updateMasterItem('heraldo', editingItem.data.title, editingItem.data);
+                    await updateMasterItem('heraldo', payload.title, payload);
                 }
                     showToast('Noticia guardada con éxito en la Base de Datos.')
             }
