@@ -1,18 +1,18 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 // ── Pages ─────────────────────────────────────────────────────────────────────
-import Home from '../../pages/Home/index';
-import OraclePage from '../../pages/Oracle/index';
-import GuildPage from '../../pages/Guild/index';
-import TacticalBoardPage from '../../pages/Guild/TacticalBoardPage';
-import MatchPage from '../../pages/Arena/MatchPage';
-import { Leagues as LeaguesPage } from '../../pages/Arena/LeaguesPage';
+const Home = lazy(() => import('../../pages/Home/index'));
+const OraclePage = lazy(() => import('../../pages/Oracle/index'));
+const GuildPage = lazy(() => import('../../pages/Guild/index'));
+const TacticalBoardPage = lazy(() => import('../../pages/Guild/TacticalBoardPage'));
+const MatchPage = lazy(() => import('../../pages/Arena/MatchPage'));
+const LeaguesPage = lazy(() => import('../../pages/Arena/LeaguesPage').then(module => ({ default: module.Leagues })));
 // ── Components / Common ───────────────────────────────────────────────────────
 import UserProfile from '../common/UserProfile';
 import SyncStatusIndicator from '../common/SyncStatusIndicator';
 // ── Components / Oracle ───────────────────────────────────────────────────────
-import QuickGuide from '../oracle/QuickGuide';
+const QuickGuide = lazy(() => import('../oracle/QuickGuide'));
 // ── Components / Shared ───────────────────────────────────────────────────────
-import AdminPanel from './AdminPanel';
+const AdminPanel = lazy(() => import('./AdminPanel'));
 // ── Icons ─────────────────────────────────────────────────────────────────────
 import BookOpenIcon from '../icons/BookOpenIcon';
 import UsersIcon from '../icons/UsersIcon';
@@ -47,6 +47,15 @@ const GuestWarningBanner = () => {
     </div>
   );
 };
+
+const ViewLoader = () => (
+  <div className="flex flex-col items-center justify-center py-32 text-[#4A3422]">
+    <div className="h-14 w-14 rounded-full border-4 border-[#CA8A04]/20 border-t-[#CA8A04] animate-spin shadow-[0_0_30px_rgba(202,138,4,0.18)]" />
+    <p className="mt-5 text-[10px] font-display font-black uppercase tracking-[0.24em] text-[#7B5C2E]">
+      Cargando sala de mando...
+    </p>
+  </div>
+);
 
 const MainApp: React.FC = () => {
   const { t } = useLanguage();
@@ -603,71 +612,73 @@ const MainApp: React.FC = () => {
               <p className="text-sm font-display uppercase tracking-widest mt-4 animate-pulse text-premium-gold/60">{t('loading.sync')}</p>
             </div>
           ) : (
-            <div className="animate-in fade-in zoom-in-95 duration-500">
-              {activeView === 'home' && (
-                <Home
-                  onNavigate={(v, p) => handleNavigate(v, p)}
-                  onCreateTeam={() => { setRequestedRoster(""); setActiveView('guild'); }}
-                  managedTeams={managedTeams}
-                  competitions={leagues as any}
-                  recentEvents={recentEvents}
-                  heroImage={heroImage}
-                  matchReports={matchReports}
-                />
-              )}
-              {activeView === 'oracle' && (
-                <OraclePage
-                  managedTeams={managedTeams}
-                  initialSearchTerm={oracleSearchTerm}
-                  onRequestTeamCreation={(r) => { setRequestedRoster(r); setActiveView('guild'); }}
-                />
-              )}
-              {activeView === 'guild' && (
-                <GuildPage
-                  teams={managedTeams}
-                  competitions={leagues}
-                  onTeamCreate={handleTeamCreate}
-                  onTeamUpdate={handleTeamUpdate}
-                  onTeamDelete={handleTeamDelete}
-                  requestedRoster={requestedRoster}
-                  onRosterRequestHandled={() => setRequestedRoster(null)}
-                  isGuest={isGuest}
-                  matchReports={matchReports}
-                  initialTeamId={directOpenTeamId}
-                  onInitialTeamHandled={() => setDirectOpenTeamId(null)}
-                />
-              )}
-              {activeView === 'tactical' && <TacticalBoardPage managedTeams={managedTeams} plays={plays} onSavePlay={handlePlaySave} onDeletePlay={handlePlayDelete} />}
-              {activeView === 'arena' && <MatchPage 
-                managedTeams={managedTeams} 
-                matchReports={matchReports} 
-                onTeamUpdate={handleTeamUpdate} 
-                onMatchReportCreate={handleMatchReportCreate}
-                initialHomeTeam={arenaMatchConfig?.homeTeam}
-                initialOpponentTeam={arenaMatchConfig?.opponentTeam}
-                competition={arenaMatchConfig?.competition}
-              />}
-              {activeView === 'leagues' && (
-              <LeaguesPage
-                  managedTeams={managedTeams}
-                  initialCompetitions={leagues}
-                  onCompetitionCreate={handleCompetitionCreate}
-                  onCompetitionUpdate={handleCompetitionUpdate}
-                  onCompetitionDelete={handleCompetitionDelete}
-                  onNavigateToMatch={handleNavigateToMatch}
-                  isGuest={isGuest}
-                />
-              )}
-              {activeView === 'admin' && (
-                <AdminPanel
-                  managedTeams={managedTeams}
-                  competitions={leagues}
-                  onCompetitionCreate={handleCompetitionCreate}
-                  onOpenLeagues={() => setActiveView('leagues')}
-                />
-              )}
-              {activeView === 'guide' && <QuickGuide />}
-            </div>
+            <Suspense fallback={<ViewLoader />}>
+              <div className="animate-in fade-in zoom-in-95 duration-500">
+                {activeView === 'home' && (
+                  <Home
+                    onNavigate={(v, p) => handleNavigate(v, p)}
+                    onCreateTeam={() => { setRequestedRoster(""); setActiveView('guild'); }}
+                    managedTeams={managedTeams}
+                    competitions={leagues as any}
+                    recentEvents={recentEvents}
+                    heroImage={heroImage}
+                    matchReports={matchReports}
+                  />
+                )}
+                {activeView === 'oracle' && (
+                  <OraclePage
+                    managedTeams={managedTeams}
+                    initialSearchTerm={oracleSearchTerm}
+                    onRequestTeamCreation={(r) => { setRequestedRoster(r); setActiveView('guild'); }}
+                  />
+                )}
+                {activeView === 'guild' && (
+                  <GuildPage
+                    teams={managedTeams}
+                    competitions={leagues}
+                    onTeamCreate={handleTeamCreate}
+                    onTeamUpdate={handleTeamUpdate}
+                    onTeamDelete={handleTeamDelete}
+                    requestedRoster={requestedRoster}
+                    onRosterRequestHandled={() => setRequestedRoster(null)}
+                    isGuest={isGuest}
+                    matchReports={matchReports}
+                    initialTeamId={directOpenTeamId}
+                    onInitialTeamHandled={() => setDirectOpenTeamId(null)}
+                  />
+                )}
+                {activeView === 'tactical' && <TacticalBoardPage managedTeams={managedTeams} plays={plays} onSavePlay={handlePlaySave} onDeletePlay={handlePlayDelete} />}
+                {activeView === 'arena' && <MatchPage 
+                  managedTeams={managedTeams} 
+                  matchReports={matchReports} 
+                  onTeamUpdate={handleTeamUpdate} 
+                  onMatchReportCreate={handleMatchReportCreate}
+                  initialHomeTeam={arenaMatchConfig?.homeTeam}
+                  initialOpponentTeam={arenaMatchConfig?.opponentTeam}
+                  competition={arenaMatchConfig?.competition}
+                />}
+                {activeView === 'leagues' && (
+                <LeaguesPage
+                    managedTeams={managedTeams}
+                    initialCompetitions={leagues}
+                    onCompetitionCreate={handleCompetitionCreate}
+                    onCompetitionUpdate={handleCompetitionUpdate}
+                    onCompetitionDelete={handleCompetitionDelete}
+                    onNavigateToMatch={handleNavigateToMatch}
+                    isGuest={isGuest}
+                  />
+                )}
+                {activeView === 'admin' && (
+                  <AdminPanel
+                    managedTeams={managedTeams}
+                    competitions={leagues}
+                    onCompetitionCreate={handleCompetitionCreate}
+                    onOpenLeagues={() => setActiveView('leagues')}
+                  />
+                )}
+                {activeView === 'guide' && <QuickGuide />}
+              </div>
+            </Suspense>
           )}
         </div>
       </main>
