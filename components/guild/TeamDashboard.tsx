@@ -13,6 +13,7 @@ import { calculateTeamValue } from '../../utils/teamUtils';
 import {
     getPlayerImageUrl,
     getTeamLogoUrl,
+    getFranchiseCrestUrl,
     fetchTeamImageStock,
     type PositionStock,
     type PositionStockEntry,
@@ -144,7 +145,14 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
         const staticTeam = teamsData.find(t => t.name === managedTeam.rosterName);
         const masterTeam = masterTeams.find(t => t.name === managedTeam.rosterName);
         const merged = mergeTeamWithFallback(managedTeam as any, (masterTeam || staticTeam) as any);
-        return merged.crestImage || merged.image || getTeamLogoUrl(managedTeam.rosterName) || '';
+        return (
+            getFranchiseCrestUrl(managedTeam.name) ||
+            managedTeam.crestImage ||
+            merged.crestImage ||
+            merged.image ||
+            getTeamLogoUrl(managedTeam.rosterName) ||
+            ''
+        );
     };
 
     useEffect(() => {
@@ -438,16 +446,19 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                             className="w-16 h-16 md:w-20 md:h-20 blood-ui-card-soft rounded-2xl flex items-center justify-center text-background-dark shadow-glow cursor-pointer hover:scale-105 transition-transform overflow-hidden shrink-0 border border-[rgba(202,138,4,0.2)]"
                             onClick={() => crestInputRef.current?.click()}
                         >
-                            <img
-                                src={resolveTeamCrestUrl(team)}
-                                onError={(e) => {
-                                    const img = e.target as HTMLImageElement;
-                                    const githubUrl = getTeamLogoUrl(team.rosterName);
-                                    if (img.src !== githubUrl) {
-                                        img.src = githubUrl;
-                                    } else {
-                                        const originalData = teamsData.find(t => t.name === team.rosterName);
-                                        if (originalData && img.src !== originalData.image) {
+                                <img
+                                    src={resolveTeamCrestUrl(team)}
+                                    onError={(e) => {
+                                        const img = e.target as HTMLImageElement;
+                                        const franchiseUrl = getFranchiseCrestUrl(team.name);
+                                        const rosterUrl = getTeamLogoUrl(team.rosterName);
+                                        if (franchiseUrl && img.src !== franchiseUrl) {
+                                            img.src = franchiseUrl;
+                                        } else if (img.src !== rosterUrl) {
+                                            img.src = rosterUrl;
+                                        } else {
+                                            const originalData = teamsData.find(t => t.name === team.rosterName);
+                                            if (originalData && img.src !== originalData.image) {
                                             img.src = originalData.image;
                                         }
                                     }
@@ -969,9 +980,12 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                             src={resolveTeamCrestUrl(team)}
                                             onError={(e) => {
                                                 const img = e.target as HTMLImageElement;
-                                                const githubUrl = getTeamLogoUrl(team.rosterName);
-                                                if (img.src !== githubUrl) {
-                                                    img.src = githubUrl;
+                                                const franchiseUrl = getFranchiseCrestUrl(team.name);
+                                                const rosterUrl = getTeamLogoUrl(team.rosterName);
+                                                if (franchiseUrl && img.src !== franchiseUrl) {
+                                                    img.src = franchiseUrl;
+                                                } else if (img.src !== rosterUrl) {
+                                                    img.src = rosterUrl;
                                                 } else {
                                                     const originalData = teamsData.find(t => t.name === team.rosterName);
                                                     if (originalData && img.src !== originalData.image) {

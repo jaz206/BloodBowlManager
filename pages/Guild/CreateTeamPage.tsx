@@ -6,7 +6,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../hooks/useAuth';
 import SkillModal from '../../components/oracle/SkillModal';
 import { PLAYER_NAMES } from './playerNames';
-import { fetchTeamImageStock, getPlayerImageUrl, getPosTag, getTeamLogoUrl, getStarPlayerImageUrl, type PositionStock } from '../../utils/imageUtils';
+import { fetchTeamImageStock, getFranchiseCrestUrl, getPlayerImageUrl, getPosTag, getTeamLogoUrl, getStarPlayerImageUrl, type PositionStock } from '../../utils/imageUtils';
 
 interface TeamCreatorProps {
     onTeamCreate: (team: Omit<ManagedTeam, 'id'>) => Promise<void> | void;
@@ -359,7 +359,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
             cheerleaders,
             apothecary,
             players: finalPlayers,
-            crestImage: getTeamLogoUrl(currentFaction.name) || currentFaction.image
+            crestImage: getFranchiseCrestUrl(teamName.trim()) || getTeamLogoUrl(currentFaction.name) || currentFaction.image
         };
         try {
             await onTeamCreate(newTeam);
