@@ -910,6 +910,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ managedTeams, competitions, onC
             <AdminEditorModal
                 editingItem={editingItem}
                 tabs={tabs}
+                activeTab={activeTab}
                 isSaving={isSaving}
                 language={language}
                 skills={skills}
@@ -925,6 +926,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ managedTeams, competitions, onC
                 activeTeamTab={activeTeamTab}
                 setActiveTeamTab={setActiveTeamTab}
                 handleSave={handleSave}
+                filteredContent={filteredContent}
+                onSelectItem={(item) => setEditingItem({ type: activeTab, data: { ...item } })}
                 setEditingItem={setEditingItem}
             />
             <AdminFeedbackOverlays
