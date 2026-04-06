@@ -230,7 +230,7 @@ const StarPlayers: React.FC = () => {
                         onChange={e => setSelectedFaction(e.target.value)}
                         className="blood-ui-light-input w-full rounded-2xl py-4 px-5 text-xs text-[#2b1d12] focus:ring-1 focus:ring-primary focus:border-primary appearance-none transition-all font-bold italic"
                     >
-                        {factions.map(f => <option key={f} value={f} className="bg-slate-900">{f}</option>)}
+                        {factions.map(f => <option key={f} value={f}>{f}</option>)}
                     </select>
                 </div>
                 <div className="flex items-end gap-2">
@@ -321,7 +321,7 @@ const StarPlayers: React.FC = () => {
                                     <h4 className="text-primary font-black uppercase tracking-[0.2em] text-[10px] italic border-l-2 border-primary pl-4">Equipos Compatibles</h4>
                                     <div className="flex flex-wrap gap-2">
                                         {selectedPlayer.playsFor.map(team => (
-                                            <span key={team} className="px-3 py-1.5 bg-border-gold/20 rounded-xl text-[9px] font-bold text-slate-300 border border-border-gold shadow-sm uppercase italic">
+                                            <span key={team} className="px-3 py-1.5 bg-[rgba(202,138,4,0.12)] rounded-xl text-[9px] font-bold text-[#6f5738] border border-[rgba(202,138,4,0.2)] shadow-sm uppercase italic">
                                                 {team}
                                             </span>
                                         ))}
@@ -406,7 +406,7 @@ const StarPlayers: React.FC = () => {
 
             {/* Rules / Engine Citation */}
             <div className="pt-20 border-t border-[rgba(111,87,56,0.12)] flex flex-col items-center gap-6">
-                <div className="flex items-center gap-3 bg-card-dark/50 px-6 py-3 rounded-full border border-border-gold">
+                <div className="flex items-center gap-3 bg-[rgba(255,251,241,0.82)] px-6 py-3 rounded-full border border-[rgba(202,138,4,0.22)] shadow-[0_12px_28px_rgba(92,68,39,0.10)]">
                     <span className="material-symbols-outlined text-primary text-lg">auto_fix</span>
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#7b6853] italic">BB Oracle Core Engine v2.4.0</span>
                 </div>

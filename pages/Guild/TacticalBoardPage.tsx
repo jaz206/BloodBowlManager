@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+﻿import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import type { Play, PlayerPosition, ManagedTeam, ManagedPlayer, BoardToken, DrawingPath } from '../../types';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -302,7 +302,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
   };
 
   return (
-    <div className="flex h-screen w-full flex-col bg-background-dark text-slate-100 overflow-hidden font-display relative">
+    <div className="guild-board-light flex h-screen w-full flex-col bg-background-dark text-slate-100 overflow-hidden font-display relative">
       {/* Toast */}
       <AnimatePresence>
         {toastMessage && (
@@ -343,6 +343,40 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
         )}
       </AnimatePresence>
       <style>{`
+        .guild-board-light {
+          background:
+            radial-gradient(circle at top left, rgba(245, 158, 11, 0.12), transparent 28%),
+            radial-gradient(circle at bottom right, rgba(120, 53, 15, 0.08), transparent 24%),
+            linear-gradient(180deg, #f3e3c1 0%, #ead2a6 100%);
+          color: #2b1d12;
+        }
+        .guild-board-light .bg-background-dark,
+        .guild-board-light footer.bg-background-dark,
+        .guild-board-light section.bg-background-dark {
+          background: rgba(255, 248, 231, 0.66) !important;
+        }
+        .guild-board-light .bg-panel-dark,
+        .guild-board-light .bg-panel-dark\/90,
+        .guild-board-light .bg-panel-dark\/80 {
+          background: rgba(74, 52, 34, 0.88) !important;
+          border-color: rgba(202, 138, 4, 0.18) !important;
+        }
+        .guild-board-light .text-slate-100,
+        .guild-board-light .text-white {
+          color: #fdf6e8 !important;
+        }
+        .guild-board-light .text-slate-400,
+        .guild-board-light .text-slate-500,
+        .guild-board-light .text-slate-600 {
+          color: #bca78a !important;
+        }
+        .guild-board-light .pitch-lines {
+          border-color: rgba(202, 138, 4, 0.28);
+          background: radial-gradient(circle at center, #2f4f2f 0%, #1d2d1d 100%);
+        }
+        .guild-board-light footer {
+          border-top-color: rgba(202, 138, 4, 0.15) !important;
+        }
         .pitch-grid {
           background-image: 
             linear-gradient(to right, rgba(245, 159, 10, 0.1) 1px, transparent 1px),
@@ -702,7 +736,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
         <div className="flex gap-6 items-center">
           <span className="flex items-center gap-2">
             <span className="size-1.5 rounded-full bg-green-500"></span>
-            Nuffle's Link
+            Enlace de Nuffle
           </span>
           <span className="opacity-40">v2.4.0-Alpha</span>
         </div>
@@ -712,3 +746,4 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
 };
 
 export default Plays;
+
