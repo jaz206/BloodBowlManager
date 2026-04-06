@@ -64,6 +64,8 @@ const CREST_PREFIX_MAP: Record<string, string> = {
   "Tomb Kings": "Tomb Kings",
   "Wood Elves": "Wood Elves",
   "Union Elfica": "Union Elfica",
+  "Unión Elfica": "Union Elfica",
+  "Unión Élfica": "Union Elfica",
   "UniÃƒÂ³n Ãƒâ€°lfica": "Union Elfica",
   "UniÃ³n Ã‰lfica": "Union Elfica",
   "Renegados del Caos": "Renegados del Caos",
@@ -309,7 +311,8 @@ export const isOfficialTeamLogoUrl = (url?: string | null): boolean => {
 export const isDeprecatedTeamLogoUrl = (url?: string | null): boolean => {
   const clean = String(url || '').trim();
   if (!clean) return false;
-  return /(^https?:\/\/)?(i\.)?pinimg\.com\//i.test(clean);
+  return /(^https?:\/\/)?(i\.)?pinimg\.com\//i.test(clean) ||
+    /raw\.githubusercontent\.com\/jaz206\/Bloodbowl-image\/main\/(?!Escudos\/)/i.test(clean);
 };
 
 export const resolveTeamLogoPreference = (rosterName: string, url?: string | null): string => {

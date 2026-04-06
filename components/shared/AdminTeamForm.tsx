@@ -1,4 +1,4 @@
-﻿import React from 'react';
+﻿import React, { useMemo, useState } from 'react';
 import AdminGitHubImagePicker from './AdminGitHubImagePicker';
 import { getTeamLogoFilename, getTeamLogoUrl, resolveTeamLogoPreference } from '../../utils/imageUtils';
 import { PLAYER_NAMES } from '../../pages/Guild/playerNames';
@@ -42,6 +42,16 @@ const TEAM_STATS = [
 
 const ROSTER_STATS = ['MV', 'FU', 'AG', 'PA', 'AR'];
 
+
+const normalizeNamePoolKey = (value: string): string =>
+    value
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/Ã/g, 'A')
+        .replace(/Â/g, '')
+        .toUpperCase()
+        .trim();
+
 const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
     editingItem,
     skills,
@@ -56,17 +66,68 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
     githubSearch,
     setGithubSearch,
 }) => {
+    const [pendingName, setPendingName] = useState('');
+    const [pendingSkillSelections, setPendingSkillSelections] = useState<Record<number, string>>({});
     const currentImage = resolveTeamLogoPreference(
         editingItem.data.name || '',
         editingItem.data.image || editingItem.data.crestImage || ''
     );
     const suggestedImage = getTeamLogoUrl(editingItem.data.name || '');
     const expectedFilename = getTeamLogoFilename(editingItem.data.name || '');
+    const defaultNamePool = useMemo(() => {
+        const rawName = editingItem.data.name || '';
+        const normalized = normalizeNamePoolKey(rawName);
+        const direct = PLAYER_NAMES[normalized] || PLAYER_NAMES[rawName.toUpperCase()];
+        if (direct) return direct;
+        const fallbackEntry = Object.entries(PLAYER_NAMES).find(([key]) => normalizeNamePoolKey(key) === normalized);
+        return fallbackEntry?.[1] || [];
+    }, [editingItem.data.name]);
+    const visibleNamePool = editingItem.data.namePools?.length ? editingItem.data.namePools : defaultNamePool;
 
     const updateTeamImage = (url: string) => {
         setEditingItem({
             ...editingItem,
             data: { ...editingItem.data, image: url, crestImage: url },
+        });
+    };
+
+
+    const updateRosterPlayer = (idx: number, patch: Record<string, unknown>) => {
+        const newRoster = [...(editingItem.data.roster || [])];
+        newRoster[idx] = { ...newRoster[idx], ...patch };
+        setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
+    };
+
+    const addInitialSkill = (idx: number) => {
+        const nextSkill = pendingSkillSelections[idx];
+        if (!nextSkill) return;
+        const currentKeys = editingItem.data.roster?.[idx]?.skillKeys || [];
+        if (currentKeys.includes(nextSkill)) return;
+        updateRosterPlayer(idx, { skillKeys: [...currentKeys, nextSkill] });
+        setPendingSkillSelections(prev => ({ ...prev, [idx]: '' }));
+    };
+
+    const removeInitialSkill = (idx: number, skillKey: string) => {
+        const currentKeys = editingItem.data.roster?.[idx]?.skillKeys || [];
+        updateRosterPlayer(idx, { skillKeys: currentKeys.filter((k: string) => k !== skillKey) });
+    };
+
+    const addNameToPool = () => {
+        const clean = pendingName.trim();
+        if (!clean) return;
+        const next = Array.from(new Set([...(visibleNamePool || []), clean]));
+        setEditingItem({
+            ...editingItem,
+            data: { ...editingItem.data, namePools: next },
+        });
+        setPendingName('');
+    };
+
+    const removeNameFromPool = (nameToRemove: string) => {
+        const next = (visibleNamePool || []).filter((name: string) => name !== nameToRemove);
+        setEditingItem({
+            ...editingItem,
+            data: { ...editingItem.data, namePools: next },
         });
     };
 
@@ -300,9 +361,7 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                                                     type="text"
                                                     value={player.position}
                                                     onChange={(e) => {
-                                                        const newRoster = [...editingItem.data.roster];
-                                                        newRoster[idx] = { ...newRoster[idx], position: e.target.value };
-                                                        setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
+                                                        updateRosterPlayer(idx, { position: e.target.value });
                                                     }}
                                                     className="w-full bg-[#fffaf1] border border-[#d7c39a] rounded-xl px-4 py-2 text-xs text-[#2b1d12] outline-none focus:border-premium-gold/30"
                                                 />
@@ -312,9 +371,7 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                                                     type="text"
                                                     value={player.qty}
                                                     onChange={(e) => {
-                                                        const newRoster = [...editingItem.data.roster];
-                                                        newRoster[idx] = { ...newRoster[idx], qty: e.target.value };
-                                                        setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
+                                                        updateRosterPlayer(idx, { qty: e.target.value });
                                                     }}
                                                     className="w-full bg-[#fffaf1] border border-[#d7c39a] rounded-xl px-4 py-2 text-xs text-[#2b1d12] outline-none focus:border-premium-gold/30"
                                                 />
@@ -324,9 +381,7 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                                                     type="number"
                                                     value={player.cost}
                                                     onChange={(e) => {
-                                                        const newRoster = [...editingItem.data.roster];
-                                                        newRoster[idx] = { ...newRoster[idx], cost: parseInt(e.target.value) || 0 };
-                                                        setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
+                                                        updateRosterPlayer(idx, { cost: parseInt(e.target.value) || 0 });
                                                     }}
                                                     className="w-full bg-[#fffaf1] border border-[#d7c39a] rounded-xl px-4 py-2 text-xs text-[#2b1d12] outline-none focus:border-premium-gold/30"
                                                 />
@@ -352,12 +407,10 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                                                     type="text"
                                                     value={player.stats?.[stat] || ''}
                                                     onChange={(e) => {
-                                                        const newRoster = [...editingItem.data.roster];
-                                                        newRoster[idx] = {
-                                                            ...newRoster[idx],
-                                                            stats: { ...newRoster[idx].stats, [stat]: e.target.value },
-                                                        };
-                                                        setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
+                                                        const currentStats = editingItem.data.roster?.[idx]?.stats || {};
+                                                        updateRosterPlayer(idx, {
+                                                            stats: { ...currentStats, [stat]: e.target.value },
+                                                        });
                                                     }}
                                                     className="w-full bg-transparent border-b border-[#d7c39a] text-center text-[#2b1d12] text-xs py-1 focus:border-premium-gold outline-none font-display font-black transition-colors"
                                                 />
@@ -394,31 +447,51 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
 
                                     <div className="space-y-2">
                                         <label className="text-[8px] font-bold text-[#8a7760] uppercase ml-1">Habilidades Iniciales</label>
-                                        <div className="flex flex-wrap gap-1.5 min-h-[40px] p-3 bg-[#fffaf1] rounded-xl border border-[#ead9bb]">
-                                            {skills.map((skill: any) => {
-                                                const isSelected = (player.skillKeys || []).includes(skill.keyEN);
-                                                return (
-                                                    <button
-                                                        key={skill.keyEN}
-                                                        type="button"
-                                                        onClick={() => {
-                                                            const currentKeys = player.skillKeys || [];
-                                                            const nextKeys = isSelected
-                                                                ? currentKeys.filter((k: string) => k !== skill.keyEN)
-                                                                : [...currentKeys, skill.keyEN];
-                                                            const newRoster = [...editingItem.data.roster];
-                                                            newRoster[idx] = { ...newRoster[idx], skillKeys: nextKeys };
-                                                            setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
-                                                        }}
-                                                        className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-tighter border transition-all ${isSelected
-                                                            ? 'bg-premium-gold/20 border-premium-gold/40 text-premium-gold'
-                                                            : 'bg-white border-[#e3cfaa] text-[#8a7760] hover:text-[#2b1d12]'
-                                                            }`}
-                                                    >
-                                                        {language === 'es' ? (skill.name_es || skill.name_en) : skill.name_en}
-                                                    </button>
-                                                );
-                                            })}
+                                        <div className="space-y-3 p-3 bg-[#fffaf1] rounded-xl border border-[#ead9bb]">
+                                            <div className="flex flex-wrap gap-1.5 min-h-[40px]">
+                                                {(player.skillKeys || []).length > 0 ? (
+                                                    (player.skillKeys || []).map((skillKey: string) => {
+                                                        const skill = skills.find((entry: any) => entry.keyEN === skillKey);
+                                                        return (
+                                                            <button
+                                                                key={skillKey}
+                                                                type="button"
+                                                                onClick={() => removeInitialSkill(idx, skillKey)}
+                                                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-tighter border bg-premium-gold/20 border-premium-gold/40 text-premium-gold hover:bg-blood-red/10 hover:border-blood-red/30 hover:text-blood-red transition-all"
+                                                            >
+                                                                {language === 'es' ? (skill?.name_es || skill?.name_en || skillKey) : (skill?.name_en || skill?.name_es || skillKey)}
+                                                                <span className="material-symbols-outlined text-[12px]">close</span>
+                                                            </button>
+                                                        );
+                                                    })
+                                                ) : (
+                                                    <p className="text-[9px] font-bold text-[#8a7760]">Sin habilidades asignadas todav?a.</p>
+                                                )}
+                                            </div>
+                                            <div className="flex flex-col md:flex-row gap-3">
+                                                <select
+                                                    value={pendingSkillSelections[idx] || ''}
+                                                    onChange={(e) => setPendingSkillSelections(prev => ({ ...prev, [idx]: e.target.value }))}
+                                                    className="flex-1 bg-white border border-[#d7c39a] rounded-xl px-4 py-2 text-[10px] font-bold text-[#2b1d12] outline-none focus:border-premium-gold/40"
+                                                >
+                                                    <option value="">A?adir habilidad...</option>
+                                                    {skills
+                                                        .filter((skill: any) => !(player.skillKeys || []).includes(skill.keyEN))
+                                                        .map((skill: any) => (
+                                                            <option key={skill.keyEN} value={skill.keyEN}>
+                                                                {language === 'es' ? (skill.name_es || skill.name_en) : (skill.name_en || skill.name_es)}
+                                                            </option>
+                                                        ))}
+                                                </select>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => addInitialSkill(idx)}
+                                                    disabled={!pendingSkillSelections[idx]}
+                                                    className="px-4 py-2 rounded-xl bg-premium-gold text-black text-[10px] font-black uppercase tracking-widest disabled:opacity-40 disabled:cursor-not-allowed"
+                                                >
+                                                    A?adir
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -431,18 +504,50 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                     <div className="space-y-8 animate-fade-in-up">
                         <div className="space-y-4">
                             <label className="block text-[10px] font-black text-sky-600 uppercase tracking-widest ml-1">Diccionario de nombres temáticos</label>
-                            <textarea
-                                value={(editingItem.data.namePools?.length ? editingItem.data.namePools : (editingItem.data.name ? (PLAYER_NAMES[editingItem.data.name.toUpperCase()] || []) : [])).join(', ')}
-                                onChange={(e) => {
-                                    const names = e.target.value.split(',').map((n: string) => n.trim()).filter(Boolean);
-                                    setEditingItem({
-                                        ...editingItem,
-                                        data: { ...editingItem.data, namePools: names },
-                                    });
-                                }}
-                                className="w-full bg-[#fcf6ea] border border-[#d7c39a] rounded-2xl py-4 px-6 text-[#2b1d12] focus:border-sky-500/50 outline-none h-64 resize-none text-[11px] leading-relaxed transition-all"
-                                placeholder="Morg, Throg, Grashnak... (separados por comas)"
-                            />
+                            <div className="bg-[#fcf6ea] border border-[#d7c39a] rounded-2xl p-4 space-y-4">
+                                <div className="flex flex-col md:flex-row gap-3">
+                                    <input
+                                        type="text"
+                                        value={pendingName}
+                                        onChange={(e) => setPendingName(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                addNameToPool();
+                                            }
+                                        }}
+                                        className="flex-1 bg-[#fffaf1] border border-[#d7c39a] rounded-xl px-4 py-3 text-[11px] text-[#2b1d12] outline-none focus:border-sky-500/50"
+                                        placeholder="A?adir nombre nuevo..."
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={addNameToPool}
+                                        disabled={!pendingName.trim()}
+                                        className="px-4 py-3 rounded-xl bg-premium-gold text-black text-[10px] font-black uppercase tracking-widest disabled:opacity-40 disabled:cursor-not-allowed"
+                                    >
+                                        A?adir nombre
+                                    </button>
+                                </div>
+                                <div className="max-h-64 overflow-y-auto rounded-xl border border-[#ead9bb] bg-[#fffaf1] p-3">
+                                    <div className="flex flex-wrap gap-2">
+                                        {visibleNamePool.length > 0 ? (
+                                            visibleNamePool.map((name: string) => (
+                                                <button
+                                                    key={name}
+                                                    type="button"
+                                                    onClick={() => removeNameFromPool(name)}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#d7c39a] bg-white text-[10px] font-bold text-[#2b1d12] hover:border-blood-red/30 hover:text-blood-red transition-all"
+                                                >
+                                                    <span>{name}</span>
+                                                    <span className="material-symbols-outlined text-[12px]">close</span>
+                                                </button>
+                                            ))
+                                        ) : (
+                                            <p className="text-[10px] font-bold text-[#8a7760]">No hay nombres en este pool todav?a.</p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
                             <p className="text-[9px] text-[#8a7760] uppercase tracking-tight ml-1 font-bold">
                                 {!editingItem.data.namePools?.length
                                     ? 'Mostrando borrador por defecto de las reglas base.'
