@@ -68,6 +68,11 @@ const normalizeStarPlayerRecord = (star: StarPlayer): StarPlayer => {
 const normalizeStarPlayersCollection = (items: StarPlayer[]) =>
     items.map(normalizeStarPlayerRecord);
 
+const normalizeSkillRecord = (skill: Skill): Skill => deepNormalizeText(skill);
+
+const normalizeSkillsCollection = (items: Skill[]) =>
+    items.map(normalizeSkillRecord);
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 export type SyncStatus = 'idle' | 'syncing' | 'success' | 'error';
 
@@ -88,7 +93,7 @@ export const useMasterData = () => {
 
     // ── State ─────────────────────────────────────────────────────────────────
     const [teams, setTeams] = useState<Team[]>(staticTeamsData);
-    const [skills, setSkills] = useState<Skill[]>(staticSkills);
+    const [skills, setSkills] = useState<Skill[]>(normalizeSkillsCollection(staticSkills));
     const [starPlayers, setStarPlayers] = useState<StarPlayer[]>(normalizeStarPlayersCollection(staticStarsData));
     const [inducements, setInducements] = useState<Inducement[]>(language === 'es' ? staticInducementsEs : (staticInducementsEn as unknown as Inducement[]));
     const [heraldoItems, setHeraldoItems] = useState<any[]>([]);
@@ -110,7 +115,7 @@ export const useMasterData = () => {
     useEffect(() => {
         if (!db) {
             setTeams(normalizeTeams(staticTeamsData));
-            setSkills(staticSkills);
+            setSkills(normalizeSkillsCollection(staticSkills));
             setStarPlayers(normalizeStarPlayersCollection(staticStarsData));
             setInducements(language === 'es' ? staticInducementsEs : (staticInducementsEn as unknown as Inducement[]));
             setLoading(false);
@@ -156,13 +161,13 @@ export const useMasterData = () => {
             doc(db, MASTER_COL, 'skills'),
             (snap) => {
                 if (snap.exists() && snap.data()?.items?.length > 0) {
-                    setSkills(snap.data().items as Skill[]);
+                    setSkills(normalizeSkillsCollection(snap.data().items as Skill[]));
                 } else {
-                    setSkills(staticSkills);
+                    setSkills(normalizeSkillsCollection(staticSkills));
                 }
                 checkDone();
             },
-            () => { setSkills(staticSkills); checkDone(); }
+            () => { setSkills(normalizeSkillsCollection(staticSkills)); checkDone(); }
         );
 
         // Star Players listener
@@ -295,7 +300,7 @@ export const useMasterData = () => {
                 ),
                 staticTeamsData as TeamAsset[]
             );
-            const skillsToSave = mergeItems(skillsSnap.exists() ? skillsSnap.data().items : [], staticSkills, 'keyEN');
+            const skillsToSave = normalizeSkillsCollection(mergeItems(skillsSnap.exists() ? skillsSnap.data().items : [], staticSkills, 'keyEN'));
             const starsToSave = normalizeStarPlayersCollection(mergeItems(starsSnap.exists() ? starsSnap.data().items : [], staticStarsData, 'name'));
             const inducEsToSave = mergeItems(inducEsSnap.exists() ? inducEsSnap.data().items : [], staticInducementsEs, 'name');
             const inducEnToSave = mergeItems(inducEnSnap.exists() ? inducEnSnap.data().items : [], staticInducementsEn, 'name');
@@ -395,7 +400,7 @@ export const useMasterData = () => {
             await setDoc(ref, { items: mergedItems, updatedAt: serverTimestamp() }, { merge: true });
 
             if (docId === 'teams') setTeams(normalizeTeams(mergedItems as Team[]));
-            if (docId === 'skills') setSkills(mergedItems as Skill[]);
+            if (docId === 'skills') setSkills(normalizeSkillsCollection(mergedItems as Skill[]));
             if (docId === 'star_players') setStarPlayers(normalizeStarPlayersCollection(mergedItems as StarPlayer[]));
             if (docId === 'inducements_es' || docId === 'inducements_en') setInducements(mergedItems as Inducement[]);
             if (docId === 'heraldo') setHeraldoItems(mergedItems);
@@ -406,7 +411,7 @@ export const useMasterData = () => {
         await setDoc(ref, { items, updatedAt: serverTimestamp() }, { merge: true });
 
         if (docId === 'teams') setTeams(normalizeTeams(items as Team[]));
-        if (docId === 'skills') setSkills(items as Skill[]);
+        if (docId === 'skills') setSkills(normalizeSkillsCollection(items as Skill[]));
         if (docId === 'star_players') setStarPlayers(normalizeStarPlayersCollection(items as StarPlayer[]));
         if (docId === 'inducements_es' || docId === 'inducements_en') setInducements(items as Inducement[]);
         if (docId === 'heraldo') setHeraldoItems(items);
