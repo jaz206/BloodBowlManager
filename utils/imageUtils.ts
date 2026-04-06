@@ -300,6 +300,28 @@ export const getTeamLogoFilename = (rosterName: string): string => {
   return `${prefix}.png`;
 };
 
+export const isOfficialTeamLogoUrl = (url?: string | null): boolean => {
+  const clean = String(url || '').trim();
+  if (!clean) return false;
+  return clean.startsWith(CREST_BASE_URL);
+};
+
+export const isDeprecatedTeamLogoUrl = (url?: string | null): boolean => {
+  const clean = String(url || '').trim();
+  if (!clean) return false;
+  return /(^https?:\/\/)?(i\.)?pinimg\.com\//i.test(clean);
+};
+
+export const resolveTeamLogoPreference = (rosterName: string, url?: string | null): string => {
+  const clean = String(url || '').trim();
+  const official = getTeamLogoUrl(rosterName);
+
+  if (!clean) return official;
+  if (clean.startsWith('data:')) return clean;
+  if (isDeprecatedTeamLogoUrl(clean)) return official;
+  return clean;
+};
+
 const STAR_FILE_MAP: Record<string, string> = {
   "Boa Kon'ssstriktr":         "PJ - Boa Kon\u2019ssstriktr.png",
   "Bryce 'The Slice' Cambuel": "PJ - Bryce \u2018The Slice\u2019 Cambuel.png",

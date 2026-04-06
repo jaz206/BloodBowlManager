@@ -1,4 +1,5 @@
 import type { Player, PlayerStats, Skill, StarPlayer, Team } from '../types';
+import { resolveTeamLogoPreference } from './imageUtils';
 
 const SKILL_CATEGORIES = ['General', 'Strength', 'Agility', 'Passing', 'Mutation', 'Trait', 'Elite'];
 
@@ -54,8 +55,9 @@ export const sanitizeTeamForSave = (raw: any): Team & { crestImage?: string } =>
     const name = cleanText(raw?.name);
     if (!name) throw new Error('El equipo necesita un nombre.');
 
-    const image = cleanText(raw?.image) || cleanText(raw?.crestImage) || undefined;
-    const crestImage = cleanText(raw?.crestImage) || image || undefined;
+    const resolvedImage = resolveTeamLogoPreference(name, cleanText(raw?.crestImage) || cleanText(raw?.image) || undefined);
+    const image = resolvedImage || undefined;
+    const crestImage = resolvedImage || undefined;
     const tier = toInt(raw?.tier, 1);
 
     return {

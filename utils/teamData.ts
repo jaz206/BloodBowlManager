@@ -1,5 +1,5 @@
 import type { Team } from '../types';
-import { getTeamLogoUrl } from './imageUtils';
+import { getTeamLogoUrl, resolveTeamLogoPreference } from './imageUtils';
 
 export type TeamAsset = Team & {
     crestImage?: string;
@@ -21,6 +21,12 @@ export const mergeTeamWithFallback = (
     const roster = team?.roster?.length ? team.roster : source.roster || [];
     const resolvedName = team?.name || source.name || '';
     const computedLogo = resolvedName ? getTeamLogoUrl(resolvedName) : '';
+    const preferredImage = resolvedName
+        ? resolveTeamLogoPreference(resolvedName, team?.image || team?.crestImage)
+        : (team?.image || team?.crestImage || '');
+    const fallbackImage = resolvedName
+        ? resolveTeamLogoPreference(resolvedName, source.image || source.crestImage)
+        : (source.image || source.crestImage || '');
     const resolvedRatings = {
         fuerza: team?.ratings?.fuerza ?? source.ratings?.fuerza ?? 0,
         agilidad: team?.ratings?.agilidad ?? source.ratings?.agilidad ?? 0,
@@ -38,8 +44,8 @@ export const mergeTeamWithFallback = (
         tier: team?.tier ?? source.tier ?? 0,
         apothecary: team?.apothecary || source.apothecary || 'No',
         roster,
-        image: team?.image || source.image || source.crestImage || computedLogo,
-        crestImage: team?.crestImage || source.crestImage || source.image || team?.image || computedLogo,
+        image: preferredImage || fallbackImage || computedLogo,
+        crestImage: preferredImage || fallbackImage || computedLogo,
         ratings: resolvedRatings,
         description: team?.description || source.description || '',
         megaFactions: team?.megaFactions || source.megaFactions || [],

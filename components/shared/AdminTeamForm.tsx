@@ -1,6 +1,6 @@
 ﻿import React from 'react';
 import AdminGitHubImagePicker from './AdminGitHubImagePicker';
-import { getTeamLogoFilename, getTeamLogoUrl } from '../../utils/imageUtils';
+import { getTeamLogoFilename, getTeamLogoUrl, resolveTeamLogoPreference } from '../../utils/imageUtils';
 
 type AdminTeamFormProps = {
     editingItem: any;
@@ -55,7 +55,10 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
     githubSearch,
     setGithubSearch,
 }) => {
-    const currentImage = editingItem.data.image || editingItem.data.crestImage || '';
+    const currentImage = resolveTeamLogoPreference(
+        editingItem.data.name || '',
+        editingItem.data.image || editingItem.data.crestImage || ''
+    );
     const suggestedImage = getTeamLogoUrl(editingItem.data.name || '');
     const expectedFilename = getTeamLogoFilename(editingItem.data.name || '');
 
@@ -460,5 +463,6 @@ const Field: React.FC<{ label: string; children: React.ReactNode }> = ({ label, 
 );
 
 export default AdminTeamForm;
+
 
 
