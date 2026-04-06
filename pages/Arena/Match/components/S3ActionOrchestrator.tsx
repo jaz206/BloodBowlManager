@@ -9,14 +9,14 @@ const ACTIONS: { type: S3ActionType; label: string; icon: string; needsObjective
     { type: 'HANDOFF', label: 'Entrega', icon: 'front_hand', needsObjective: true, color: 'bg-green-600', attribute: 'AG', diceType: '1d6' },
     { type: 'FOUL', label: 'Falta', icon: 'gavel', needsObjective: true, color: 'bg-red-700', attribute: 'FU', diceType: '2d6' },
     { type: 'TOUCHDOWN', label: 'Touchdown', icon: 'sports_score', needsObjective: false, color: 'bg-yellow-500', diceType: '1d6' },
-    { type: 'SECURE_BALL', label: 'Asegurar BalÃ³n', icon: 'inventory_2', needsObjective: false, color: 'bg-emerald-600', diceType: '1d6' },
+    { type: 'SECURE_BALL', label: 'Asegurar Balón', icon: 'inventory_2', needsObjective: false, color: 'bg-emerald-600', diceType: '1d6' },
     { type: 'DODGE', label: 'Esquivar', icon: 'directions_run', needsObjective: false, color: 'bg-indigo-600', attribute: 'AG', diceType: '1d6' },
     { type: 'RUSH', label: 'A por ellos', icon: 'speed', needsObjective: false, color: 'bg-rose-600', diceType: '1d6' },
     { type: 'MOVE', label: 'Mover', icon: 'footprint', needsObjective: false, color: 'bg-blue-600', diceType: '1d6' },
     { type: 'BONE_HEAD', label: 'Cabeza Dura', icon: 'psychology', needsObjective: false, color: 'bg-stone-600', diceType: '1d6' },
 ];
 
-const BLOCK_FACES = ['Calavera', 'Ambos', 'EmpujÃ³n', 'EmpujÃ³n', 'Flecha', 'Zaca!'];
+const BLOCK_FACES = ['Calavera', 'Ambos', 'Empujón', 'Empujón', 'Flecha', 'Zaca!'];
 
 const S3ActionOrchestrator: React.FC = () => {
     const { 
@@ -47,9 +47,9 @@ const S3ActionOrchestrator: React.FC = () => {
         const actionData = ACTIONS.find(a => a.type === action);
         const actor = activeTeam?.players.find(p => p.id === pending.actorId);
 
-        // LÃ³gica S3: Validar PA "-"
+        // Lógica S3: Validar PA "-"
         if (action === 'PASS' && actor?.stats.PA === '-') {
-            logEvent('WARNING', `Â¡ACCIÃ“N BLOQUEADA! ${actor.customName} tiene PA "-" y no puede lanzar pases.`);
+            logEvent('WARNING', `¡ACCIÓN BLOQUEADA! ${actor.customName} tiene PA "-" y no puede lanzar pases.`);
             return;
         }
 
@@ -176,10 +176,10 @@ const S3ActionOrchestrator: React.FC = () => {
                         {mode === 'selecting_action' ? '1' : mode === 'selecting_objective' ? '2' : '3'}
                     </div>
                     <div>
-                        <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">S3: VÃ­nculo de Nuffle</p>
+                        <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">S3: Vínculo de Nuffle</p>
                         <h4 className="text-xs font-black text-white uppercase italic">
-                            {mode === 'selecting_action' && "Confirmar AcciÃ³n"}
-                            {mode === 'selecting_objective' && "Â¿Contra quiÃ©n?"}
+                            {mode === 'selecting_action' && "Confirmar Acción"}
+                            {mode === 'selecting_objective' && "¿Contra quién?"}
                             {mode === 'awaiting_dice' && "Entrada de Resultados"}
                         </h4>
                     </div>

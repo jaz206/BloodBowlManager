@@ -141,7 +141,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
     const finalizeHints = useMemo(() => {
         const hints: string[] = [];
         if (teamName.trim().length < 3) hints.push('elige un nombre de al menos 3 caracteres');
-        if (draftedPlayers.length < 11) hints.push(`faltan ${11 - draftedPlayers.length} jugadores para el mÃ­nimo`);
+        if (draftedPlayers.length < 11) hints.push(`faltan ${11 - draftedPlayers.length} jugadores para el mínimo`);
         if (isBudgetNegative) hints.push('ajusta el presupuesto para no quedar en negativo');
         return hints;
     }, [teamName, draftedPlayers.length, isBudgetNegative]);
@@ -188,7 +188,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
         }
         else if (facLower.includes('nigro') || facLower.includes('necro')) {
             if (posLower.includes('zombie') || posLower.includes('ghoul')) raceKey = 'NO MUERTOS';
-            else raceKey = 'HORROR NECROMÃNTICO';
+            else raceKey = 'HORROR NECROMÁNTICO';
         }
         else if (facLower.includes('vampiro')) {
             if (posLower.includes('thrall') || posLower.includes('esclavo')) raceKey = 'HUMANOS';
@@ -211,12 +211,12 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
         else if (facLower.includes('oscuros')) raceKey = 'ELFOS OSCUROS';
         else if (facLower.includes('silvanos')) raceKey = 'ELFOS SILVANOS';
         else if (facLower.includes('altos elfos')) raceKey = 'ALTOS ELFOS';
-        else if (facLower.includes('elfos') || facLower.includes('union')) raceKey = 'UNIÃ“N Ã‰LFICA';
+        else if (facLower.includes('elfos') || facLower.includes('union')) raceKey = 'UNIÓN ÉLFICA';
         else if (facLower.includes('ogro')) raceKey = 'OGROS';
         else if (facLower.includes('halfling')) raceKey = 'HALFLINGS';
         else if (facLower.includes('goblin')) raceKey = 'GOBLINS';
         else if (facLower.includes('snotling')) raceKey = 'SNOTLINGS';
-        else if (facLower.includes('nÃ³rdico') || facLower.includes('norse')) raceKey = 'NÃ“RDICOS';
+        else if (facLower.includes('nórdico') || facLower.includes('norse')) raceKey = 'NÓRDICOS';
         else if (facLower.includes('slann')) raceKey = 'SLANN';
         else if (facLower.includes('amazonas')) raceKey = 'AMAZONAS';
 
@@ -228,7 +228,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
             else if (posLower.includes('elfo oscuro') || posLower.includes('dark elf')) raceKey = 'ELFOS OSCUROS';
             else if (posLower.includes('elfo silvano') || posLower.includes('wood elf')) raceKey = 'ELFOS SILVANOS';
             else if (posLower.includes('alto elfo') || posLower.includes('high elf')) raceKey = 'ALTOS ELFOS';
-            else if (posLower.includes('elfo') || posLower.includes('elf')) raceKey = 'UNIÃ“N Ã‰LFICA';
+            else if (posLower.includes('elfo') || posLower.includes('elf')) raceKey = 'UNIÓN ÉLFICA';
             else if (posLower.includes('humano') || posLower.includes('human')) raceKey = 'HUMANOS';
             else if (posLower.includes('skaven')) raceKey = 'SKAVENS';
             else if (posLower.includes('ogro') || posLower.includes('ogre')) raceKey = 'OGROS';
@@ -401,8 +401,8 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                 <nav className="w-full bg-[rgba(255,248,233,0.86)] backdrop-blur-xl border-b border-[rgba(111,87,56,0.12)] py-4 px-8 sticky top-16 z-[100] shadow-[0_14px_32px_rgba(89,59,21,0.08)]">
                     <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-8">
                         <div className="flex flex-col shrink-0">
-                            <h2 className="text-[9px] font-black text-gold uppercase tracking-[0.4em] mb-0.5">CÃ¡tedra de Nuffle</h2>
-                            <p className="text-[12px] font-header font-black text-[#2b1d12] italic uppercase tracking-tighter">ElecciÃ³n de Franquicia</p>
+                            <h2 className="text-[9px] font-black text-gold uppercase tracking-[0.4em] mb-0.5">Cátedra de Nuffle</h2>
+                            <p className="text-[12px] font-header font-black text-[#2b1d12] italic uppercase tracking-tighter">Elección de Franquicia</p>
                         </div>
 
                         <div className="relative flex-1 max-w-4xl px-12 group">
@@ -558,7 +558,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                                 <table className="w-full text-left border-collapse">
                                     <thead>
                                         <tr className="border-b border-[rgba(111,87,56,0.10)] text-[8px] text-[#7b6853] uppercase tracking-[0.3em] font-black bg-[rgba(255,251,241,0.6)]">
-                                            <th className="py-3 px-6">PosiciÃ³n</th>
+                                            <th className="py-3 px-6">Posición</th>
                                             <th className="py-3 px-1 text-center">MA</th>
                                             <th className="py-3 px-1 text-center">ST</th>
                                             <th className="py-3 px-1 text-center">AG</th>
@@ -585,7 +585,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                                                                         {localizeSkill(sk)}
                                                                     </button>
                                                                 );
-                                                            }) : <span className="text-[7px] font-black uppercase text-[#7b6853]">Roster BÃ¡sico</span>}
+                                                            }) : <span className="text-[7px] font-black uppercase text-[#7b6853]">Roster Básico</span>}
                                                         </div>
                                                     </div>
                                                 </td>
@@ -606,10 +606,10 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="md:col-span-2 blood-ui-light-card p-6 rounded-2xl space-y-3">
-                                <h3 className="text-[9px] font-black text-gold uppercase tracking-[0.4em]">Resiliencia HistÃ³rica</h3>
+                                <h3 className="text-[9px] font-black text-gold uppercase tracking-[0.4em]">Resiliencia Histórica</h3>
                                 <p className="text-[#4b3a28] leading-relaxed text-xs italic font-medium">
                                     {language === 'es' 
-                                        ? "El Ã©xito en los campos de Nuffle no se mide solo en touchdowns, sino en el miedo que inspiras al desplazar la lÃ­nea. Esta formaciÃ³n prioriza el control territorial y el impacto fÃ­sico." 
+                                        ? "El éxito en los campos de Nuffle no se mide solo en touchdowns, sino en el miedo que inspiras al desplazar la línea. Esta formación prioriza el control territorial y el impacto físico." 
                                         : "Success on Nuffle's fields is measured not just in touchdowns, but in the fear you inspire."}
                                 </p>
                             </div>
@@ -626,7 +626,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                         <div className="blood-ui-card-strong p-8 border border-[rgba(111,87,56,0.10)] rounded-3xl relative overflow-hidden group">
                             <div className="absolute inset-0 bg-gradient-to-br from-gold/5 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                             <h3 className="text-[9px] font-black text-gold mb-8 uppercase tracking-[0.3em] flex items-center justify-between">
-                                AnÃ¡lisis Atributivo
+                                Análisis Atributivo
                             </h3>
                             
                             <div className="relative aspect-square flex items-center justify-center p-4">
@@ -730,7 +730,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                             <span className="material-symbols-outlined text-sm font-black group-hover:-translate-x-0.5 transition-transform">arrow_back</span>
                         </button>
                         <div className="flex flex-col">
-                            <h1 className="text-[9px] font-black text-gold uppercase tracking-[0.4em] leading-none mb-0.5">Mesa de ContrataciÃ³n</h1>
+                            <h1 className="text-[9px] font-black text-gold uppercase tracking-[0.4em] leading-none mb-0.5">Mesa de Contratación</h1>
                             <p className="text-sm font-header font-black text-[#2b1d12] italic uppercase tracking-tighter">{currentFaction.name}</p>
                         </div>
                     </div>
@@ -749,7 +749,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
             <section className="flex-none px-6 py-6 bg-[rgba(255,251,241,0.65)] border-b border-[rgba(111,87,56,0.12)]">
                 <div className="max-w-screen-2xl mx-auto">
                     <div className="max-w-xl">
-                        <label className="text-[8px] font-black text-gold uppercase tracking-[0.5em] ml-1 mb-2 block opacity-50">DesignaciÃ³n de la Franquicia</label>
+                        <label className="text-[8px] font-black text-gold uppercase tracking-[0.5em] ml-1 mb-2 block opacity-50">Designación de la Franquicia</label>
                         <input 
                             className="w-full bg-transparent border-none p-0 text-3xl font-header font-black text-[#2b1d12] italic placeholder:text-[#8d7863] outline-none uppercase tracking-tighter selection:bg-gold selection:text-black" 
                             placeholder="ESCRIBE EL NOMBRE..." 
@@ -854,7 +854,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                 <aside id="squad_list" className="w-[340px] blood-ui-light-card border-l border-[rgba(111,87,56,0.12)] flex flex-col h-full shadow-inner">
                     {/* 1. Treasury Summary - Top Fixed */}
                     <div className="p-5 bg-[rgba(255,251,241,0.65)] border-b border-[rgba(111,87,56,0.12)]">
-                        <span className="text-[8px] uppercase font-black text-[#7b6853] tracking-[0.4em] italic mb-1 block">TesorerÃ­a Inicial</span>
+                        <span className="text-[8px] uppercase font-black text-[#7b6853] tracking-[0.4em] italic mb-1 block">Tesorería Inicial</span>
                         <div className="flex items-baseline gap-1.5">
                             <span className={`text-2xl font-header font-black italic tracking-tighter ${isBudgetNegative ? 'text-blood animate-pulse' : 'text-[#2b1d12]'}`}>
                                 {remainingBudget.toLocaleString()}
@@ -940,7 +940,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                                     : 'text-[#8d7863] bg-white/5 border-white/10 hover:border-gold/30 hover:text-gold'
                                 }`}
                             >
-                                {apothecary ? 'APOTICARIO ADQUIRIDO' : 'APOTICARIO (+50K)'}
+                                {apothecary ? 'APOTECARIO ADQUIRIDO' : 'APOTECARIO (+50K)'}
                             </button>
                         </div>
                     </div>
@@ -960,7 +960,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                             {isSubmitting ? 'Sellando...' : 'Sellar Franquicia'}
                         </button>
                         <p className={`mt-3 text-center text-[9px] font-black uppercase tracking-[0.15em] ${canFinalize ? 'text-emerald-500' : 'text-[#8d7863]'}`}>
-                            {canFinalize ? 'Plantilla lista para fundarse' : finalizeHints.join(' Â· ')}
+                            {canFinalize ? 'Plantilla lista para fundarse' : finalizeHints.join(' · ')}
                         </p>
                         {submitError && (
                             <p className="mt-2 text-center text-[10px] font-black uppercase tracking-[0.12em] text-blood">
