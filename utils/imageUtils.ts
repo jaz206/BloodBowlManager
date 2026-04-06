@@ -39,39 +39,31 @@ const ROSTER_PREFIX_MAP: Record<string, string> = {
 };
 
 const CREST_PREFIX_MAP: Record<string, string> = {
-  "Amazonas": "Amazonas",
-  "Humanos": "Humanos",
-  "Halflings": "Halflings",
-  "Gnomos": "Gnomos",
-  "Goblins": "Goblins",
-  "Enanos": "Enanos",
-  "Nurgle": "Nurgle",
-  "Hombres Lagarto": "Hombres Lagarto",
-  "Lagartos": "Hombres Lagarto",
-  "Nordicos": "Nordicos",
-  "Nórdicos": "Nordicos",
-  "NÃ³rdicos": "Nordicos",
-  "NÃƒÂ³rdicos": "Nordicos",
-  "Orcos": "Orcos",
-  "Orcos Negros": "Orcos Negros",
-  "Vampiros": "Vampiros",
-  "Skaven": "Skaven",
-  "Slaanesh": "Slaanesh",
-  "Khorne": "Khorne",
-  "No Muertos": "No Muertos",
-  "Nigromantes": "Nigromantes",
-  "Ogros": "Ogros",
-  "Tomb Kings": "Tomb Kings",
-  "Wood Elves": "Wood Elves",
-  "Union Elfica": "Union Elfica",
-  "Unión Elfica": "Union Elfica",
-  "Unión Élfica": "Union Elfica",
-  "UniÃƒÂ³n Ãƒâ€°lfica": "Union Elfica",
-  "UniÃ³n Ã‰lfica": "Union Elfica",
-  "Renegados del Caos": "Renegados del Caos",
-  "Enanos del Caos": "Enanos del caos",
-  "Elegidos del Caos": "Elegidos del Caos",
-  "Elfos Oscuros": "Elfos Oscuros"
+  "amazonas": "Amazonas",
+  "alianza del viejo mundo": "Alianza del Viejo Mundo",
+  "humanos": "Humanos",
+  "halflings": "Halflings",
+  "gnomos": "Gnomos",
+  "goblins": "Goblins",
+  "enanos": "Enanos",
+  "enanos del caos": "Enanos del caos",
+  "elegidos del caos": "Elegidos del caos",
+  "renegados del caos": "Renegados del caos",
+  "elfos oscuros": "Elfos oscuros",
+  "elfos silvanos": "Elfos silvanos",
+  "wood elves": "Elfos silvanos",
+  "nurgle": "Nurgle",
+  "hombres lagarto": "Hombres Lagarto",
+  "lagartos": "Hombres Lagarto",
+  "nordicos": "Nordicos",
+  "orcos": "orcos",
+  "orcos negros": "Orcos Negros",
+  "vampiros": "vampiros",
+  "skaven": "SKAVEN",
+  "no muertos": "no muertos",
+  "horror nigromantico": "Horror Nigromántico",
+  "slann (naf)": "Slann (NAF)",
+  "union elfica": "Union Elfica"
 };
 
 const LEGACY_POSITION_FILE_MAP: Record<string, string> = {
@@ -144,6 +136,15 @@ const slugify = (value: string): string =>
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
+
+const normalizeTeamAssetKey = (value: string): string =>
+  fixMojibake(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9()]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 
 export const getTeamPrefix = (rosterName: string): string => {
   let prefix = ROSTER_PREFIX_MAP[rosterName] || fixMojibake(rosterName);
@@ -293,12 +294,12 @@ export const getPlayerImageUrl = (
 };
 
 export const getTeamLogoUrl = (rosterName: string): string => {
-  const prefix = CREST_PREFIX_MAP[rosterName] || getTeamPrefix(rosterName);
+  const prefix = CREST_PREFIX_MAP[normalizeTeamAssetKey(rosterName)] || getTeamPrefix(rosterName);
   return `${CREST_BASE_URL}${encodeURIComponent(prefix + ".png")}`;
 };
 
 export const getTeamLogoFilename = (rosterName: string): string => {
-  const prefix = CREST_PREFIX_MAP[rosterName] || getTeamPrefix(rosterName);
+  const prefix = CREST_PREFIX_MAP[normalizeTeamAssetKey(rosterName)] || getTeamPrefix(rosterName);
   return `${prefix}.png`;
 };
 
@@ -317,10 +318,13 @@ export const isDeprecatedTeamLogoUrl = (url?: string | null): boolean => {
 
 export const resolveTeamLogoPreference = (rosterName: string, url?: string | null): string => {
   const clean = String(url || '').trim();
+  const hasOfficialMapping = Boolean(CREST_PREFIX_MAP[normalizeTeamAssetKey(rosterName)]);
   const official = getTeamLogoUrl(rosterName);
 
-  if (!clean) return official;
+  if (!clean) return hasOfficialMapping ? official : clean;
   if (clean.startsWith('data:')) return clean;
+  if (isOfficialTeamLogoUrl(clean)) return clean;
+  if (hasOfficialMapping) return official;
   if (isDeprecatedTeamLogoUrl(clean)) return official;
   return clean;
 };

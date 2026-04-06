@@ -8,7 +8,7 @@ import AdminGeneralForm from './AdminGeneralForm';
 import AdminEditorModal from './AdminEditorModal';
 import { downloadCSV, parseCSV, transformGitHubUrl } from './adminPanelUtils';
 import AdminFeedbackOverlays from './AdminFeedbackOverlays';
-import { getStarPlayerImageUrl, getTeamLogoUrl } from '../../utils/imageUtils';
+import { getStarPlayerImageUrl, getTeamLogoUrl, resolveTeamLogoPreference } from '../../utils/imageUtils';
 import AdminCompetitionLab from './AdminCompetitionLab';
 import {
     getHeraldoValidationIssues,
@@ -230,7 +230,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ managedTeams, competitions, onC
 
     const getSuggestedImageUrl = (item: any, tab: 'teams' | 'stars') => {
         return tab === 'teams'
-            ? getTeamLogoUrl(item.name)
+            ? resolveTeamLogoPreference(item.name, item.image || item.crestImage) || getTeamLogoUrl(item.name)
             : getStarPlayerImageUrl(item.name);
     };
 
@@ -808,7 +808,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ managedTeams, competitions, onC
                                             {(activeTab === 'teams' || activeTab === 'stars') && (
                                                 <div className="w-12 h-12 rounded-xl bg-black/60 border border-white/10 overflow-hidden flex-shrink-0 shadow-inner">
                                                         <img
-                                                        src={item.image || item.crestImage || getSuggestedImageUrl(item, activeTab as 'teams' | 'stars')}
+                                                        src={getSuggestedImageUrl(item, activeTab as 'teams' | 'stars')}
                                                         alt=""
                                                         onError={(e) => {
                                                             const fallback = getSuggestedImageUrl(item, activeTab as 'teams' | 'stars');
