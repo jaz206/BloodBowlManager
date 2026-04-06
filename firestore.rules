@@ -48,6 +48,32 @@ service cloud.firestore {
       );
     }
 
+    function isPublicCompetition(data) {
+      return !('visibility' in data) || data.visibility != 'Private';
+    }
+
+    function isCompetitionOwnerData(data) {
+      return signedIn()
+        && (
+          data.createdBy == request.auth.uid
+          || data.ownerId == request.auth.uid
+        );
+    }
+
+    function isCompetitionParticipantData(data) {
+      return signedIn()
+        && ('participantIds' in data)
+        && (data.participantIds is list)
+        && request.auth.uid in data.participantIds;
+    }
+
+    function canReadCompetitionData(data) {
+      return isPublicCompetition(data)
+        || isCompetitionOwnerData(data)
+        || isCompetitionParticipantData(data)
+        || isAdmin();
+    }
+
     // Dueño de una competición padre (colección nueva)
     function isCompetitionOwner(compId) {
       return signedIn()
@@ -70,7 +96,7 @@ service cloud.firestore {
     // MASTER DATA & SETTINGS
     // -----------------------------
     match /master_data/{document} {
-      allow read: if true;
+      allow read: if canReadCompetitionData(resource.data);
       allow write: if isAdmin();
     }
 
@@ -107,7 +133,7 @@ service cloud.firestore {
     // COMPETITIONS
     // -----------------------------
     match /competitions/{compId} {
-      allow read: if true;
+      allow read: if canReadCompetitionData(resource.data);
 
       // Acepta createdBy nuevo u ownerId legado, pero siempre ligado al usuario actual
       allow create: if hasValidOwnershipOnCreate();
@@ -118,21 +144,21 @@ service cloud.firestore {
 
       // Subcolecciones: heredan permiso del dueño de la competición padre
       match /{document=**} {
-        allow read: if true;
+        allow read: if canReadCompetitionData(get(/databases/$(database)/documents/competitions/$(compId)).data);
         allow write: if isAdmin() || isCompetitionOwner(compId);
       }
     }
 
     // Compatibilidad con la colección actualmente usada por la app
     match /leagues/{compId} {
-      allow read: if true;
+      allow read: if canReadCompetitionData(resource.data);
 
       allow create: if hasValidOwnershipOnCreate();
       allow update: if (isAdmin() || isDocOwnerOrCreator()) && keepsOwnership();
       allow delete: if isAdmin() || isDocOwnerOrCreator();
 
       match /{document=**} {
-        allow read: if true;
+        allow read: if canReadCompetitionData(get(/databases/$(database)/documents/leagues/$(compId)).data);
         allow write: if isAdmin() || isLeagueOwner(compId);
       }
     }
@@ -141,11 +167,13 @@ service cloud.firestore {
     // LIVE MATCHES
     // -----------------------------
     match /live_matches/{matchId} {
-      allow read: if true;
+      allow read: if isAdmin() || isDocOwnerOrCreator();
 
       allow create: if signedIn()
-        && ('createdBy' in request.resource.data)
-        && request.resource.data.createdBy == request.auth.uid;
+        && (
+          (('createdBy' in request.resource.data) && request.resource.data.createdBy == request.auth.uid)
+          || (('ownerId' in request.resource.data) && request.resource.data.ownerId == request.auth.uid)
+        );
 
       allow update: if (isAdmin() || isDocOwnerOrCreator()) && keepsOwnership();
       allow delete: if isAdmin() || isDocOwnerOrCreator();
@@ -155,11 +183,13 @@ service cloud.firestore {
     // TACTICAL PLAYS
     // -----------------------------
     match /tactical_plays/{playId} {
-      allow read: if true;
+      allow read: if isAdmin() || isDocOwnerOrCreator();
 
       allow create: if signedIn()
-        && ('createdBy' in request.resource.data)
-        && request.resource.data.createdBy == request.auth.uid;
+        && (
+          (('createdBy' in request.resource.data) && request.resource.data.createdBy == request.auth.uid)
+          || (('ownerId' in request.resource.data) && request.resource.data.ownerId == request.auth.uid)
+        );
 
       allow update: if (isAdmin() || isDocOwnerOrCreator()) && keepsOwnership();
       allow delete: if isAdmin() || isDocOwnerOrCreator();
@@ -173,3 +203,4 @@ service cloud.firestore {
     }
   }
 }
+

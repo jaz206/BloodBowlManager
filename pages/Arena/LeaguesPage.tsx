@@ -325,6 +325,8 @@ export const Leagues: React.FC<LeaguesProps> = ({
             teams,
             ownerId: user.id,
             ownerName: user.name,
+            createdBy: user.id,
+            participantIds: [user.id],
             status: 'Open',
             baseTeam: managedTeams.find(t => t.name === ownerTeamToJoin),
             rules: {
@@ -421,6 +423,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
 
         const updatedComp = {
             ...cleanComp,
+            participantIds: Array.from(new Set([...(cleanComp.participantIds || []), user.id])),
             teams: [...cleanComp.teams, { 
                 teamName: targetTeamName, 
                 ownerId: user.id, 

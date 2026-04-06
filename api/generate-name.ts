@@ -1,50 +1,85 @@
-
-// api/generate-name.ts
-
-// Importamos los tipos necesarios para la respuesta
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI } from '@google/genai';
+import { z } from 'zod';
+import { verifyFirebaseIdToken } from './_lib/firebaseAdmin';
+import { assertRateLimit, getClientIp, logApiEvent, setNoStore } from './_lib/security';
+
+const requestSchema = z.object({
+  rosterName: z.string().trim().min(2).max(80),
+});
 
 export default async function handler(
   request: VercelRequest,
   response: VercelResponse,
 ) {
-  // Solo permitimos peticiones POST
+  setNoStore(response);
+
   if (request.method !== 'POST') {
     return response.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  // 1. Obtenemos el nombre de la facción desde la petición del frontend
-  const { rosterName } = request.body;
-  if (!rosterName) {
-    return response.status(400).json({ error: 'rosterName is required' });
+  let requesterUid = 'anonymous';
+  const clientIp = getClientIp(request);
+
+  try {
+    const decodedToken = await verifyFirebaseIdToken(request.headers.authorization);
+    requesterUid = decodedToken.uid;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'UNAUTHORIZED';
+    const status = message.includes('credentials') ? 500 : 401;
+    return response.status(status).json({
+      error: status === 500 ? 'Firebase Admin is not configured.' : 'Unauthorized',
+    });
   }
 
   try {
-    // 2. Usamos la clave de API de forma segura desde las variables de entorno de Vercel
-    const apiKey = process.env.API_KEY;
+    assertRateLimit(`generate-name:${requesterUid}:${clientIp}`, { windowMs: 60_000, max: 10 });
+  } catch {
+    return response.status(429).json({ error: 'Rate limit exceeded. Try again in a moment.' });
+  }
+
+  const parsed = requestSchema.safeParse(request.body);
+  if (!parsed.success) {
+    return response.status(400).json({
+      error: 'Invalid request payload.',
+      details: parsed.error.flatten(),
+    });
+  }
+
+  try {
+    const { rosterName } = parsed.data;
+    const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      throw new Error("API key not configured");
+      throw new Error('GEMINI_API_KEY not configured');
     }
 
     const ai = new GoogleGenAI({ apiKey });
-
-    // 3. Creamos el prompt y llamamos a la IA (igual que antes, pero en el servidor)
-    const prompt = `Por favor, actúa como un generador de nombres para un juego de mesa de fútbol fantástico llamado 'Blood Bowl'. Necesito un nombre para un equipo de la facción '${rosterName}'. El nombre debe ser creativo y temático, pero no debe contener lenguaje ofensivo. Devuelve únicamente el nombre del equipo, sin comillas ni texto introductorio.`;
+    const prompt = `Act�a como generador de nombres para Blood Bowl. Necesito un nombre original y tem�tico para una franquicia de la facci�n "${rosterName}". Devuelve solo el nombre final, sin comillas, sin numeraciones y sin texto introductorio.`;
 
     const result = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: prompt,
+      config: {
+        temperature: 0.8,
+        maxOutputTokens: 40,
+        stopSequences: ['\n'],
+      },
     });
-    
-    const generatedName = result.text.trim().replace(/"/g, '');
 
-    // 4. Devolvemos el nombre generado al frontend
+    const generatedName = (result.text || '').trim().replace(/"/g, '').slice(0, 80);
+    if (!generatedName) {
+      throw new Error('Empty name generated');
+    }
+
+    logApiEvent('ai.generate_name.success', { requesterUid, rosterName, clientIp });
     return response.status(200).json({ name: generatedName });
-
   } catch (error) {
-    console.error("Error calling Gemini API:", error);
-    // Devolvemos un error genérico para no exponer detalles internos
+    console.error('Error calling Gemini API:', error);
+    logApiEvent('ai.generate_name.error', {
+      requesterUid,
+      clientIp,
+      error: error instanceof Error ? error.message : 'UNKNOWN_ERROR',
+    });
     return response.status(500).json({ error: 'Failed to generate name from AI' });
   }
 }

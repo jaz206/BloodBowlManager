@@ -272,6 +272,7 @@ export interface Competition {
   ownerId: string;
   ownerName?: string;
   createdBy?: string;
+  participantIds?: string[];
   joinCode?: string;
   format: 'Liguilla' | 'Torneo';
   status: 'Open' | 'In Progress' | 'Finished';
