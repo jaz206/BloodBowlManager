@@ -1,4 +1,4 @@
-import type { ManagedTeam } from '../types';
+﻿import type { ManagedTeam } from '../types';
 
 const BASE_URL = "https://raw.githubusercontent.com/jaz206/Bloodbowl-image/main/Foto%20plantilla/";
 const CREST_BASE_URL = "https://raw.githubusercontent.com/jaz206/Bloodbowl-image/main/Escudos/";
@@ -24,32 +24,51 @@ const ROSTER_PREFIX_MAP: Record<string, string> = {
   "Nurgle": "Nurgle",
   "No Muertos": "No Muertos",
   "Nigromantes": "Nigromantes",
-  "NÃ³rdicos": "Nordicos",
+  "NÃƒÂ³rdicos": "Nordicos",
   "Nordicos": "Nordicos",
-  "Nórdicos": "Nordicos",
+  "NÃ³rdicos": "Nordicos",
   "Ogros": "Ogros",
   "Skaven": "Skaven",
   "Slaanesh": "Slaanesh",
   "Tomb Kings": "Khemri",
-  "UniÃ³n Ã‰lfica": "Union Elfica",
+  "UniÃƒÂ³n Ãƒâ€°lfica": "Union Elfica",
   "Union Elfica": "Union Elfica",
-  "Unión Élfica": "Union Elfica",
+  "UniÃ³n Ã‰lfica": "Union Elfica",
   "Vampiros": "Vampiros",
   "Wood Elves": "Silvanos"
 };
 
 const CREST_PREFIX_MAP: Record<string, string> = {
   "Amazonas": "Amazonas",
+  "Humanos": "Humanos",
+  "Halflings": "Halflings",
+  "Gnomos": "Gnomos",
+  "Goblins": "Goblins",
+  "Enanos": "Enanos",
+  "Nurgle": "Nurgle",
+  "Hombres Lagarto": "Hombres Lagarto",
+  "Lagartos": "Hombres Lagarto",
+  "Nordicos": "Nordicos",
+  "Nórdicos": "Nordicos",
+  "NÃ³rdicos": "Nordicos",
+  "NÃƒÂ³rdicos": "Nordicos",
   "Orcos": "Orcos",
   "Orcos Negros": "Orcos Negros",
+  "Vampiros": "Vampiros",
+  "Skaven": "Skaven",
+  "Slaanesh": "Slaanesh",
+  "Khorne": "Khorne",
+  "No Muertos": "No Muertos",
+  "Nigromantes": "Nigromantes",
+  "Ogros": "Ogros",
+  "Tomb Kings": "Tomb Kings",
+  "Wood Elves": "Wood Elves",
   "Union Elfica": "Union Elfica",
+  "UniÃƒÂ³n Ãƒâ€°lfica": "Union Elfica",
   "UniÃ³n Ã‰lfica": "Union Elfica",
-  "Unión Élfica": "Union Elfica",
   "Renegados del Caos": "Renegados del Caos",
   "Enanos del Caos": "Enanos del caos",
   "Elegidos del Caos": "Elegidos del Caos",
-  "Enanos": "Enanos",
-  "Goblins": "Goblins",
   "Elfos Oscuros": "Elfos Oscuros"
 };
 
@@ -59,24 +78,24 @@ const LEGACY_POSITION_FILE_MAP: Record<string, string> = {
   "Vampiros Placador": "Vampire Blitzer",
   "Vargheist": "Vargheist",
   "Thrall": "Thrall linea",
+  "LÃƒÂ­nea": "linea",
   "LÃ­nea": "linea",
-  "Línea": "linea",
   "Linea": "linea",
+  "Bloqueador LÃƒÂ­nea": "linea",
   "Bloqueador LÃ­nea": "linea",
-  "Bloqueador Línea": "linea",
+  "Eagle Guerrero LÃƒÂ­nea": "linea",
   "Eagle Guerrero LÃ­nea": "linea",
-  "Eagle Guerrero Línea": "linea",
   "Bestia del Caos": "linea",
+  "Hobgoblin LÃƒÂ­nea": "linea",
   "Hobgoblin LÃ­nea": "linea",
-  "Hobgoblin Línea": "linea",
+  "Skeleton LÃƒÂ­nea": "linea",
   "Skeleton LÃ­nea": "linea",
-  "Skeleton Línea": "linea",
+  "Zombi LÃƒÂ­nea": "linea",
   "Zombi LÃ­nea": "linea",
-  "Zombi Línea": "linea",
   "Lineman": "linea",
   "Bloqueador": "bloqueador",
+  "Enanos Bloqueador LÃƒÂ­nea": "bloqueador",
   "Enanos Bloqueador LÃ­nea": "bloqueador",
-  "Enanos Bloqueador Línea": "bloqueador",
   "Elegido Bloqueador": "bloqueador",
   "Placador Blitzer": "Blitzer",
   "Blitzer Orco": "Blitzer orco",
@@ -103,18 +122,18 @@ const LEGACY_POSITION_FILE_MAP: Record<string, string> = {
 };
 
 const fixMojibake = (value: string): string => value
-  .replace(/Ã¡/g, 'a')
-  .replace(/Ã©/g, 'e')
-  .replace(/Ã­/g, 'i')
-  .replace(/Ã³/g, 'o')
-  .replace(/Ãº/g, 'u')
-  .replace(/Ã±/g, 'n')
-  .replace(/Ã‰/g, 'E')
-  .replace(/Ã"/g, 'O')
-  .replace(/Ã/g, 'A')
-  .replace(/Çð/g, 'i')
-  .replace(/Çün/g, 'on')
-  .replace(/Ç%l/g, 'El');
+  .replace(/ÃƒÂ¡/g, 'a')
+  .replace(/ÃƒÂ©/g, 'e')
+  .replace(/ÃƒÂ­/g, 'i')
+  .replace(/ÃƒÂ³/g, 'o')
+  .replace(/ÃƒÂº/g, 'u')
+  .replace(/ÃƒÂ±/g, 'n')
+  .replace(/Ãƒâ€°/g, 'E')
+  .replace(/Ãƒ"/g, 'O')
+  .replace(/Ãƒ/g, 'A')
+  .replace(/Ã‡Ã°/g, 'i')
+  .replace(/Ã‡Ã¼n/g, 'on')
+  .replace(/Ã‡%l/g, 'El');
 
 const slugify = (value: string): string =>
   fixMojibake(value)
@@ -337,3 +356,4 @@ export const getStarPlayerImageFilename = (starName: string): string => {
 
   return STAR_FILE_MAP[key] ?? `PJ - ${key}.png`;
 };
+
