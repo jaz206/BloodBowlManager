@@ -433,6 +433,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ managedTeams, competitions, onC
         setIsSaving(true);
         try {
             const { type, data } = editingItem;
+            let nextEditingData = data;
 
             if (type === 'hero') {
                 await updateHeroImage(data.url);
@@ -440,19 +441,24 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ managedTeams, competitions, onC
                 await saveArenaConfig(data);
             } else if (type === 'teams') {
                 const payload = sanitizeTeamForSave(data);
+                nextEditingData = payload;
                 await updateMasterItem('teams', payload.name, payload);
             } else if (type === 'stars') {
                 const payload = sanitizeStarPlayerForSave(data);
+                nextEditingData = payload;
                 await updateMasterItem('star_players', payload.name, payload);
             } else if (type === 'skills') {
                 const payload = sanitizeSkillForSave(data);
+                nextEditingData = payload;
                 await updateMasterItem('skills', payload.keyEN, payload);
             } else if (type === 'inducements') {
                 const docId = language === 'es' ? 'inducements_es' : 'inducements_en';
                 const payload = sanitizeInducementForSave(data);
+                nextEditingData = payload;
                 await updateMasterItem(docId, payload.name, payload);
             } else if (type === 'heraldo') {
                 const payload = sanitizeHeraldoItemForSave(editingItem.data);
+                nextEditingData = payload;
                 // Use title as ID for heraldo items for now
                 const isNew = !heraldoItems.find((h: any) => h.title === payload.title);
             
@@ -468,7 +474,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ managedTeams, competitions, onC
             if (type !== 'heraldo') {
                     showToast('Cambios guardados con éxito en la Base de Datos.')
             }
-            setEditingItem(null);
+            setEditingItem((current) => current ? { ...current, data: nextEditingData } : current);
             refresh();
         } catch (error) {
             console.error('Error saving:', error);

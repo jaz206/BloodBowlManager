@@ -141,7 +141,7 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                 </div>
 
                 {activeTeamTab === 'general' && (
-                    <div className="space-y-12 animate-fade-in-up">
+                    <div className="space-y-8 animate-fade-in-up">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-[#fcf6ea] p-6 rounded-[2rem] border border-[#e3cfaa]">
                             <div className="space-y-4">
                                 <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Costo segunda tirada</label>
@@ -191,7 +191,7 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                                             }}
                                             className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${isSelected
                                                 ? 'bg-premium-gold/20 text-premium-gold border-premium-gold/30'
-                                                : 'bg-white/5 text-slate-500 border-white/5 hover:border-white/20'
+                                                : 'bg-white text-[#8a7760] border-[#e3cfaa] hover:border-gold/30 hover:text-[#2b1d12]'
                                                 }`}
                                         >
                                             {faction}
@@ -202,7 +202,7 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                         </div>
 
                         <div className="space-y-4">
-                                <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Ratings de facción</label>
+                            <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Ratings de facción</label>
                             <div className="grid grid-cols-5 gap-3 bg-[#fcf6ea] p-6 rounded-2xl border border-[#e3cfaa]">
                                 {TEAM_STATS.map(stat => (
                                     <div key={stat.k} className="space-y-1">
@@ -227,16 +227,16 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                 )}
 
                 {activeTeamTab === 'identidad' && (
-                    <div className="space-y-12 animate-fade-in-up">
+                    <div className="space-y-8 animate-fade-in-up">
                         <div className="space-y-4">
-                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Biografía y trasfondo de la facción</label>
+                            <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Biografía y trasfondo de la facción</label>
                             <textarea
                                 value={editingItem.data.description || ''}
                                 onChange={(e) => setEditingItem({
                                     ...editingItem,
                                     data: { ...editingItem.data, description: e.target.value },
                                 })}
-                                className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none h-64 resize-none text-[10px] leading-relaxed transition-all"
+                                className="w-full bg-[#fcf6ea] border border-[#d7c39a] rounded-2xl py-4 px-6 text-[#2b1d12] focus:border-premium-gold/50 outline-none h-64 resize-none text-[11px] leading-relaxed transition-all"
                                 placeholder="Describe aquí el trasfondo de esta raza en el mundo de Blood Bowl..."
                             />
                         </div>
@@ -246,7 +246,7 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                 {activeTeamTab === 'roster' && (
                     <div className="space-y-6 animate-fade-in-up">
                         <div className="flex justify-between items-center px-1">
-                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Roster de jugadores</label>
+                            <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest">Roster de jugadores</label>
                             <button
                                 type="button"
                                 onClick={() => {
@@ -270,9 +270,9 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                             </button>
                         </div>
 
-                        <div className="space-y-3 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
+                        <div className="space-y-4">
                             {(editingItem.data.roster || []).map((player: any, idx: number) => (
-                                <div key={idx} className="bg-white/5 border border-white/5 rounded-2xl p-5 space-y-4">
+                                <div key={idx} className="bg-[#fcf6ea] border border-[#e3cfaa] rounded-[1.75rem] p-5 space-y-4">
                                     <div className="flex justify-between gap-4">
                                         <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4">
                                             <Field label="Posicion">
@@ -284,7 +284,7 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                                                         newRoster[idx] = { ...newRoster[idx], position: e.target.value };
                                                         setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
                                                     }}
-                                                    className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-premium-gold/30"
+                                                    className="w-full bg-[#fffaf1] border border-[#d7c39a] rounded-xl px-4 py-2 text-xs text-[#2b1d12] outline-none focus:border-premium-gold/30"
                                                 />
                                             </Field>
                                             <Field label="Cantidad">
@@ -296,7 +296,7 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                                                         newRoster[idx] = { ...newRoster[idx], qty: e.target.value };
                                                         setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
                                                     }}
-                                                    className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-premium-gold/30"
+                                                    className="w-full bg-[#fffaf1] border border-[#d7c39a] rounded-xl px-4 py-2 text-xs text-[#2b1d12] outline-none focus:border-premium-gold/30"
                                                 />
                                             </Field>
                                             <Field label="Costo (MO)">
@@ -308,7 +308,7 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                                                         newRoster[idx] = { ...newRoster[idx], cost: parseInt(e.target.value) || 0 };
                                                         setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
                                                     }}
-                                                    className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-premium-gold/30"
+                                                    className="w-full bg-[#fffaf1] border border-[#d7c39a] rounded-xl px-4 py-2 text-xs text-[#2b1d12] outline-none focus:border-premium-gold/30"
                                                 />
                                             </Field>
                                         </div>
@@ -324,10 +324,10 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                                         </button>
                                     </div>
 
-                                    <div className="grid grid-cols-5 gap-3 bg-black/20 p-3 rounded-xl border border-white/5">
+                                    <div className="grid grid-cols-5 gap-3 bg-[#fffaf1] p-3 rounded-xl border border-[#ead9bb]">
                                         {ROSTER_STATS.map(stat => (
                                             <div key={stat} className="space-y-1">
-                                                <span className="block text-[8px] font-bold text-slate-600 uppercase text-center">{stat}</span>
+                                                <span className="block text-[8px] font-bold text-[#8a7760] uppercase text-center">{stat}</span>
                                                 <input
                                                     type="text"
                                                     value={player.stats?.[stat] || ''}
@@ -339,7 +339,7 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                                                         };
                                                         setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
                                                     }}
-                                                    className="w-full bg-transparent border-b border-white/10 text-center text-white text-xs py-1 focus:border-premium-gold outline-none font-display font-black transition-colors"
+                                                    className="w-full bg-transparent border-b border-[#d7c39a] text-center text-[#2b1d12] text-xs py-1 focus:border-premium-gold outline-none font-display font-black transition-colors"
                                                 />
                                             </div>
                                         ))}
@@ -355,7 +355,7 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                                                     newRoster[idx] = { ...newRoster[idx], primary: e.target.value };
                                                     setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
                                                 }}
-                                                className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-premium-gold/30"
+                                                className="w-full bg-[#fffaf1] border border-[#d7c39a] rounded-xl px-4 py-2 text-xs text-[#2b1d12] outline-none focus:border-premium-gold/30"
                                             />
                                         </Field>
                                         <Field label="Secundarias">
@@ -367,14 +367,14 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                                                     newRoster[idx] = { ...newRoster[idx], secondary: e.target.value };
                                                     setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
                                                 }}
-                                                className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-premium-gold/30"
+                                                className="w-full bg-[#fffaf1] border border-[#d7c39a] rounded-xl px-4 py-2 text-xs text-[#2b1d12] outline-none focus:border-premium-gold/30"
                                             />
                                         </Field>
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-[8px] font-bold text-slate-600 uppercase ml-1">Habilidades Iniciales</label>
-                                        <div className="flex flex-wrap gap-1.5 min-h-[40px] p-3 bg-black/20 rounded-xl border border-white/5">
+                                        <label className="text-[8px] font-bold text-[#8a7760] uppercase ml-1">Habilidades Iniciales</label>
+                                        <div className="flex flex-wrap gap-1.5 min-h-[40px] p-3 bg-[#fffaf1] rounded-xl border border-[#ead9bb]">
                                             {skills.map((skill: any) => {
                                                 const isSelected = (player.skillKeys || []).includes(skill.keyEN);
                                                 return (
@@ -392,7 +392,7 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                                                         }}
                                                         className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-tighter border transition-all ${isSelected
                                                             ? 'bg-premium-gold/20 border-premium-gold/40 text-premium-gold'
-                                                            : 'bg-white/5 border-white/5 text-slate-600 hover:text-white'
+                                                            : 'bg-white border-[#e3cfaa] text-[#8a7760] hover:text-[#2b1d12]'
                                                             }`}
                                                     >
                                                         {language === 'es' ? (skill.name_es || skill.name_en) : skill.name_en}
@@ -408,9 +408,9 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                 )}
 
                 {activeTeamTab === 'nombres' && (
-                    <div className="space-y-12 animate-fade-in-up">
+                    <div className="space-y-8 animate-fade-in-up">
                         <div className="space-y-4">
-                            <label className="block text-[10px] font-black text-sky-500 uppercase tracking-widest ml-1">Diccionario de Nombres Tematicos</label>
+                            <label className="block text-[10px] font-black text-sky-600 uppercase tracking-widest ml-1">Diccionario de nombres temáticos</label>
                             <textarea
                                 value={(editingItem.data.namePools?.length ? editingItem.data.namePools : (editingItem.data.name ? (PLAYER_NAMES[editingItem.data.name.toUpperCase()] || []) : [])).join(', ')}
                                 onChange={(e) => {
@@ -420,13 +420,13 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                                         data: { ...editingItem.data, namePools: names },
                                     });
                                 }}
-                                className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-sky-500/50 outline-none h-64 resize-none text-[10px] leading-relaxed transition-all"
+                                className="w-full bg-[#fcf6ea] border border-[#d7c39a] rounded-2xl py-4 px-6 text-[#2b1d12] focus:border-sky-500/50 outline-none h-64 resize-none text-[11px] leading-relaxed transition-all"
                                 placeholder="Morg, Throg, Grashnak... (separados por comas)"
                             />
-                            <p className="text-[9px] text-slate-500 uppercase tracking-tight ml-1 font-bold">
+                            <p className="text-[9px] text-[#8a7760] uppercase tracking-tight ml-1 font-bold">
                                 {!editingItem.data.namePools?.length
                                     ? 'Mostrando borrador por defecto de las reglas base.'
-                                    : 'Diccionario personalizado guardado en Firestore para esta faccion.'}
+                                    : 'Diccionario personalizado guardado en Firestore para esta facción.'}
                             </p>
                         </div>
                     </div>
@@ -438,7 +438,7 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
 
 const Field: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
     <div className="space-y-1">
-        <label className="text-[8px] font-bold text-slate-600 uppercase ml-1">{label}</label>
+        <label className="text-[8px] font-bold text-[#8a7760] uppercase ml-1">{label}</label>
         {children}
     </div>
 );

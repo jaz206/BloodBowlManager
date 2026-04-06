@@ -53,9 +53,9 @@ const AdminStarForm: React.FC<AdminStarFormProps> = ({
     };
 
     return (
-        <div className="space-y-12 animate-fade-in-slow mt-8">
+        <div className="space-y-10 animate-fade-in-slow mt-8">
             <div className="space-y-6">
-                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Imagen de la Estrella</label>
+                <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Imagen de la estrella</label>
                 <AdminGitHubImagePicker
                     title="Imagen de la Estrella"
                     helperText="Haz clic para configurar imagen"
@@ -70,18 +70,18 @@ const AdminStarForm: React.FC<AdminStarFormProps> = ({
                 />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-4">
-                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">URL de Imagen</label>
+                        <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">URL de imagen</label>
                         <input
                             type="text"
                             value={currentImage}
                             onChange={(e) => updateImage(e.target.value)}
-                            className="w-full bg-black/60 border border-white/10 rounded-2xl py-4 px-6 text-[10px] text-slate-400 font-mono focus:border-premium-gold/50 outline-none transition-all"
+                            className="w-full bg-[#fcf6ea] border border-[#d7c39a] rounded-2xl py-4 px-6 text-[10px] text-[#5f4d39] font-mono focus:border-premium-gold/50 outline-none transition-all"
                             placeholder="Introduce URL o usa el explorador..."
                         />
                     </div>
                     <div className="space-y-4">
-                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Vista previa</label>
-                        <div className="w-full h-28 rounded-2xl border border-white/10 bg-black overflow-hidden flex items-center justify-center">
+                        <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Vista previa</label>
+                        <div className="w-full h-28 rounded-2xl border border-[#d7c39a] bg-[#f7efe1] overflow-hidden flex items-center justify-center">
                             {currentImage || suggestedImage ? (
                                 <img
                                     src={currentImage || suggestedImage}
@@ -104,7 +104,7 @@ const AdminStarForm: React.FC<AdminStarFormProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-4">
-                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Precio de fichaje (GP)</label>
+                    <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Precio de fichaje (GP)</label>
                     <input
                         type="number"
                         value={editingItem.data.cost || 0}
@@ -112,16 +112,16 @@ const AdminStarForm: React.FC<AdminStarFormProps> = ({
                             ...editingItem,
                             data: { ...editingItem.data, cost: parseInt(e.target.value) || 0 },
                         })}
-                        className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-6 text-white text-sm focus:border-premium-gold/50 outline-none transition-all"
+                        className="w-full bg-[#fcf6ea] border border-[#d7c39a] rounded-2xl py-4 px-6 text-[#2b1d12] text-sm focus:border-premium-gold/50 outline-none transition-all"
                     />
                 </div>
 
                 <div className="space-y-4">
-                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Perfil de atributos</label>
-                    <div className="grid grid-cols-5 gap-3 bg-black/40 p-4 rounded-2xl border border-white/5">
+                    <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Perfil de atributos</label>
+                    <div className="grid grid-cols-5 gap-3 bg-[#fcf6ea] p-4 rounded-2xl border border-[#e3cfaa]">
                         {['MV', 'FU', 'AG', 'PA', 'AR'].map(stat => (
                             <div key={stat} className="space-y-1">
-                                <span className="block text-[8px] font-bold text-slate-600 uppercase text-center">{stat}</span>
+                                <span className="block text-[8px] font-bold text-[#8a7760] uppercase text-center">{stat}</span>
                                 <input
                                     type="text"
                                     value={editingItem.data.stats?.[stat] || ''}
@@ -132,7 +132,7 @@ const AdminStarForm: React.FC<AdminStarFormProps> = ({
                                             stats: { ...editingItem.data.stats, [stat]: e.target.value },
                                         },
                                     })}
-                                    className="w-full bg-transparent border-b border-white/10 text-center text-white text-xs py-1 focus:border-premium-gold outline-none font-display font-black transition-colors"
+                                    className="w-full bg-transparent border-b border-[#d7c39a] text-center text-[#2b1d12] text-xs py-1 focus:border-premium-gold outline-none font-display font-black transition-colors"
                                 />
                             </div>
                         ))}
@@ -141,8 +141,8 @@ const AdminStarForm: React.FC<AdminStarFormProps> = ({
             </div>
 
             <div className="space-y-4">
-                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Habilidades base</label>
-                <div className="flex flex-wrap gap-2 p-6 bg-black/40 border border-white/5 rounded-2xl max-h-48 overflow-y-auto custom-scrollbar">
+                <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Habilidades base</label>
+                <div className="flex flex-wrap gap-2 p-6 bg-[#fcf6ea] border border-[#e3cfaa] rounded-2xl max-h-64 overflow-y-auto custom-scrollbar">
                     {skills
                         .slice()
                         .sort((a, b) => {
@@ -166,7 +166,7 @@ const AdminStarForm: React.FC<AdminStarFormProps> = ({
                                     }}
                                     className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${isSelected
                                         ? 'bg-sky-500/20 text-sky-400 border-sky-500/30'
-                                        : 'bg-white/5 text-slate-500 border-white/5 hover:border-white/20'
+                                        : 'bg-white text-[#8a7760] border-[#e3cfaa] hover:border-gold/30 hover:text-[#2b1d12]'
                                         }`}
                                 >
                                     {language === 'es' ? (skill.name_es || skill.name_en) : skill.name_en}
@@ -177,8 +177,8 @@ const AdminStarForm: React.FC<AdminStarFormProps> = ({
             </div>
 
             <div className="space-y-4">
-                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Equipos compatibles</label>
-                <div className="flex flex-wrap gap-2 p-6 bg-black/40 border border-white/5 rounded-2xl">
+                <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Equipos compatibles</label>
+                <div className="flex flex-wrap gap-2 p-6 bg-[#fcf6ea] border border-[#e3cfaa] rounded-2xl">
                     {STAR_FACTIONS.map(faction => {
                         const isSelected = (editingItem.data.playsFor || []).includes(faction);
                         return (
@@ -195,7 +195,7 @@ const AdminStarForm: React.FC<AdminStarFormProps> = ({
                                 }}
                                 className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${isSelected
                                     ? 'bg-premium-gold/20 text-premium-gold border-premium-gold/30'
-                                    : 'bg-white/5 text-slate-500 border-white/5 hover:border-white/20'
+                                    : 'bg-white text-[#8a7760] border-[#e3cfaa] hover:border-gold/30 hover:text-[#2b1d12]'
                                     }`}
                             >
                                 {faction}
@@ -207,41 +207,41 @@ const AdminStarForm: React.FC<AdminStarFormProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-4">
-                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Regla especial ES</label>
+                    <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Regla especial ES</label>
                     <textarea
                         value={editingItem.data.specialRules_es || ''}
                         onChange={(e) => setEditingItem({
                             ...editingItem,
                             data: { ...editingItem.data, specialRules_es: e.target.value },
                         })}
-                        className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none h-24 resize-none text-[10px] leading-relaxed transition-all"
-                        placeholder="Regla especial en espanol..."
+                        className="w-full bg-[#fcf6ea] border border-[#d7c39a] rounded-2xl py-4 px-6 text-[#2b1d12] focus:border-premium-gold/50 outline-none h-24 resize-none text-[11px] leading-relaxed transition-all"
+                        placeholder="Regla especial en español..."
                     />
                 </div>
                 <div className="space-y-4">
-                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Special Rule EN</label>
+                    <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Special Rule EN</label>
                     <textarea
                         value={editingItem.data.specialRules_en || ''}
                         onChange={(e) => setEditingItem({
                             ...editingItem,
                             data: { ...editingItem.data, specialRules_en: e.target.value },
                         })}
-                        className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none h-24 resize-none text-[10px] leading-relaxed transition-all"
+                        className="w-full bg-[#fcf6ea] border border-[#d7c39a] rounded-2xl py-4 px-6 text-[#2b1d12] focus:border-premium-gold/50 outline-none h-24 resize-none text-[11px] leading-relaxed transition-all"
                         placeholder="Special rule in English..."
                     />
                 </div>
             </div>
 
             <div className="space-y-4">
-                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Biografia y Trasfondo</label>
+                <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Biografía y trasfondo</label>
                 <textarea
                     value={editingItem.data.description || ''}
                     onChange={(e) => setEditingItem({
                         ...editingItem,
                         data: { ...editingItem.data, description: e.target.value },
                     })}
-                    className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none h-32 resize-none text-[10px] leading-relaxed transition-all"
-                    placeholder="Describe aqui el trasfondo de la leyenda..."
+                    className="w-full bg-[#fcf6ea] border border-[#d7c39a] rounded-2xl py-4 px-6 text-[#2b1d12] focus:border-premium-gold/50 outline-none h-32 resize-none text-[11px] leading-relaxed transition-all"
+                    placeholder="Describe aquí el trasfondo de la leyenda..."
                 />
             </div>
         </div>
