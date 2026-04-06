@@ -163,10 +163,12 @@ export const sanitizeHeraldoItemForSave = (raw: any) => {
     };
 };
 
-export const getTeamValidationIssues = (raw: any): string[] => {
+export const getTeamValidationIssues = (raw: any, options?: { requireRoster?: boolean }): string[] => {
     const issues: string[] = [];
     if (!cleanText(raw?.name)) issues.push('Nombre del equipo');
-    if (!Array.isArray(raw?.roster) || raw.roster.length === 0) issues.push('Roster base con al menos una posición');
+    if (options?.requireRoster !== false && (!Array.isArray(raw?.roster) || raw.roster.length === 0)) {
+        issues.push('Roster base con al menos una posición');
+    }
     if ((raw?.roster || []).some((player: any) => !cleanText(player?.position))) issues.push('Todas las posiciones del roster deben tener nombre');
     return issues;
 };
@@ -198,3 +200,4 @@ export const getHeraldoValidationIssues = (raw: any): string[] => {
     if (!cleanLongText(raw?.content)) issues.push('Contenido principal');
     return issues;
 };
+

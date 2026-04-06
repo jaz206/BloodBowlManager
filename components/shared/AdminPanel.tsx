@@ -339,7 +339,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ managedTeams, competitions, onC
             try {
                 let payload: any;
                 if (importTarget === 'stars') {
-                    payload = sanitizeStarPlayerForSave({
+                    const rawPayload = {
                         name: row.name.trim(),
                         cost: parseInt(row.cost) || 0,
                         stats: { MV: row.MV, FU: row.FU, AG: row.AG, PA: row.PA, AR: row.AR },
@@ -349,10 +349,15 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ managedTeams, competitions, onC
                         specialRules_es: row.specialRules_es ?? '',
                         specialRules_en: row.specialRules_en ?? '',
                         image: row.image ?? '',
-                    });
+                    };
+                    const rowIssues = getStarPlayerValidationIssues(rawPayload);
+                    if (rowIssues.length > 0) {
+                        throw new Error(`Faltan campos obligatorios: ${rowIssues.join(', ')}`);
+                    }
+                    payload = sanitizeStarPlayerForSave(rawPayload);
                     await updateMasterItem('star_players', payload.name, payload);
                 } else {
-                    payload = sanitizeTeamForSave({
+                    const rawPayload = {
                         name: row.name.trim(),
                         tier: parseInt(row.tier) || 1,
                         rerollCost: parseInt(row.rerollCost) || 0,
@@ -364,7 +369,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ managedTeams, competitions, onC
                             pase: parseInt(row.pase) || 0,
                         },
                         ...(row.image ? { image: row.image, crestImage: row.image } : {}),
-                    });
+                    };
+                    const rowIssues = getTeamValidationIssues(rawPayload, { requireRoster: false });
+                    if (rowIssues.length > 0) {
+                        throw new Error(`Faltan campos obligatorios: ${rowIssues.join(', ')}`);
+                    }
+                    payload = sanitizeTeamForSave(rawPayload);
                     await updateMasterItem('teams', payload.name, payload);
                 }
             } catch (err: any) {
