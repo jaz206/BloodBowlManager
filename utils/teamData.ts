@@ -1,4 +1,4 @@
-import type { Team } from '../types';
+﻿import type { Team } from '../types';
 import { getTeamLogoUrl, resolveTeamLogoPreference } from './imageUtils';
 
 export type TeamAsset = Team & {
@@ -14,13 +14,13 @@ export type TeamAsset = Team & {
 const EMPTY_RECORD = { wins: 0, draws: 0, losses: 0 };
 
 const fixMojibake = (value: string): string => value
-    .replace(/á/g, '�')
-    .replace(/é/g, '�')
-    .replace(/í/g, '�')
-    .replace(/ó/g, '�')
-    .replace(/ú/g, '�')
-    .replace(/É/g, '�')
-    .replace(/�/g, '�')
+    .replace(/Ã¡/g, 'á')
+    .replace(/Ã©/g, 'é')
+    .replace(/Ã­/g, 'í')
+    .replace(/Ã³/g, 'ó')
+    .replace(/Ãº/g, 'ú')
+    .replace(/Ã‰/g, 'É')
+    .replace(/Ã/g, 'Á')
     .replace(/\?\?/g, '')
     .replace(/\?/g, '');
 
@@ -39,6 +39,7 @@ const TEAM_NAME_ALIASES: Record<string, string> = {
     'amazonas': 'Amazons',
     'amazons': 'Amazons',
     'black orcs': 'Black Orcs',
+    'bretonianos': 'Bretonnians',
     'bretonnian': 'Bretonnians',
     'bretonnians': 'Bretonnians',
     'chaos dwarfs': 'Chaos Dwarfs',
@@ -60,8 +61,10 @@ const TEAM_NAME_ALIASES: Record<string, string> = {
     'horror nigromantico': 'Necromantic Horror',
     'humans': 'Humans',
     'humanos': 'Humans',
+    'imperial nobility': 'Imperial Nobility',
     'lizardmen': 'Lizardmen',
     'necromantic horror': 'Necromantic Horror',
+    'nobleza imperial': 'Imperial Nobility',
     'nordicos': 'Norse',
     'no muertos': 'Shambling Undead',
     'norse': 'Norse',
@@ -74,6 +77,8 @@ const TEAM_NAME_ALIASES: Record<string, string> = {
     'renegados del caos': 'Chaos Renegades',
     'reyes de las tumbas': 'Tomb Kings',
     'shambling undead': 'Shambling Undead',
+    'snotling': 'Snotling',
+    'snotlings': 'Snotling',
     'tomb kings': 'Tomb Kings',
     'underworld denizens': 'Underworld Denizens',
     'union elfica': 'Elven Union',
@@ -86,6 +91,7 @@ const normalizeTeamName = (name?: string): string => {
     const fixed = fixMojibake(String(name || '')).trim();
     return TEAM_NAME_ALIASES[normalizeLookupKey(fixed)] || fixed;
 };
+
 export const mergeTeamWithFallback = (
     team: Partial<TeamAsset> | undefined,
     fallback?: TeamAsset | null
@@ -135,10 +141,28 @@ export const ensureTeamRecord = (team: Partial<TeamAsset> | undefined, fallback?
 };
 
 export const normalizeTeamCollection = (items: Partial<TeamAsset>[], fallbacks: TeamAsset[] = []): TeamAsset[] => {
-    return items.map((item) => {
+    const deduped = new Map<string, Partial<TeamAsset>>();
+
+    items.forEach((item) => {
+        const normalizedName = normalizeTeamName(item?.name);
+        const key = normalizeLookupKey(normalizedName);
+        const previous = deduped.get(key) || {};
+        deduped.set(key, {
+            ...previous,
+            ...item,
+            name: normalizedName,
+            image: item?.image ?? previous.image,
+            crestImage: item?.crestImage ?? previous.crestImage,
+            roster: item?.roster?.length ? item.roster : previous.roster,
+            ratings: item?.ratings ? { ...(previous.ratings || {}), ...item.ratings } : previous.ratings,
+            megaFactions: item?.megaFactions?.length ? item.megaFactions : previous.megaFactions,
+            namePools: item?.namePools?.length ? item.namePools : previous.namePools,
+        });
+    });
+
+    return Array.from(deduped.values()).map((item) => {
         const normalizedName = normalizeTeamName(item?.name);
         const fallback = fallbacks.find((candidate) => normalizeTeamName(candidate.name) === normalizedName) || null;
         return ensureTeamRecord({ ...item, name: normalizedName }, fallback);
     });
 };
-
