@@ -13,63 +13,79 @@ export type TeamAsset = Team & {
 
 const EMPTY_RECORD = { wins: 0, draws: 0, losses: 0 };
 
+const fixMojibake = (value: string): string => value
+    .replace(/Ã¡/g, 'á')
+    .replace(/Ã©/g, 'é')
+    .replace(/Ã­/g, 'í')
+    .replace(/Ã³/g, 'ó')
+    .replace(/Ãº/g, 'ú')
+    .replace(/Ã‰/g, 'É')
+    .replace(/Ã/g, 'Á')
+    .replace(/\?\?/g, '')
+    .replace(/\?/g, '');
+
+const normalizeLookupKey = (value?: string): string =>
+    fixMojibake(String(value || ''))
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9()]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
 const TEAM_NAME_ALIASES: Record<string, string> = {
-    'Alianza del Viejo Mundo': 'Old World Alliance',
-    'Altos Elfos': 'High Elves',
-    'Amazonas': 'Amazons',
-    'Bretonnian': 'Bretonnians',
-    'Elegidos del Caos': 'Chosen of Chaos',
-    'Elfos Oscuros': 'Dark Elves',
-    'Elfos Silvanos': 'Wood Elves',
-    'Enanos': 'Dwarfs',
-    'Enanos del Caos': 'Chaos Dwarfs',
-    'Gnomos': 'Gnomes',
-    'Habitantes del Inframundo': 'Underworld Denizens',
-    'Hombres Lagarto': 'Lizardmen',
-    'Horror NigromÃ¡ntico': 'Necromantic Horror',
-    'Horror Nigrom??ntico': 'Necromantic Horror',
-    'Horror Nigrom?ntico': 'Necromantic Horror',
-    'Humanos': 'Humans',
-    'NÃ³rdicos': 'Norse',
-    'N?rdicos': 'Norse',
-    'No Muertos': 'Shambling Undead',
-    'Nordicos': 'Norse',
-    'Ogros': 'Ogres',
-    'Orcos': 'Orcs',
-    'Orcos Negros': 'Black Orcs',
-    'Renegados del Caos': 'Chaos Renegades',
-    'Reyes de las Tumbas': 'Tomb Kings',
-    'UniÃ³n Ã‰lfica': 'Elven Union',
-    'Uni?n ?lfica': 'Elven Union',
-    'Union Elfica': 'Elven Union',
-    'Vampiros': 'Vampires',
-    'Amazons': 'Amazons',
-    'Black Orcs': 'Black Orcs',
-    'Bretonnians': 'Bretonnians',
-    'Chaos Dwarfs': 'Chaos Dwarfs',
-    'Chaos Renegades': 'Chaos Renegades',
-    'Chosen of Chaos': 'Chosen of Chaos',
-    'Dark Elves': 'Dark Elves',
-    'Dwarfs': 'Dwarfs',
-    'Elven Union': 'Elven Union',
-    'Gnomes': 'Gnomes',
-    'High Elves': 'High Elves',
-    'Humans': 'Humans',
-    'Lizardmen': 'Lizardmen',
-    'Necromantic Horror': 'Necromantic Horror',
-    'Norse': 'Norse',
-    'Ogres': 'Ogres',
-    'Old World Alliance': 'Old World Alliance',
-    'Orcs': 'Orcs',
-    'Shambling Undead': 'Shambling Undead',
-    'Tomb Kings': 'Tomb Kings',
-    'Underworld Denizens': 'Underworld Denizens',
-    'Vampires': 'Vampires',
-    'Wood Elves': 'Wood Elves',
+    'alianza del viejo mundo': 'Old World Alliance',
+    'altos elfos': 'High Elves',
+    'amazonas': 'Amazons',
+    'amazons': 'Amazons',
+    'black orcs': 'Black Orcs',
+    'bretonnian': 'Bretonnians',
+    'bretonnians': 'Bretonnians',
+    'chaos dwarfs': 'Chaos Dwarfs',
+    'chaos renegades': 'Chaos Renegades',
+    'chosen of chaos': 'Chosen of Chaos',
+    'dark elves': 'Dark Elves',
+    'dwarfs': 'Dwarfs',
+    'elegidos del caos': 'Chosen of Chaos',
+    'elfos oscuros': 'Dark Elves',
+    'elfos silvanos': 'Wood Elves',
+    'elven union': 'Elven Union',
+    'enanos': 'Dwarfs',
+    'enanos del caos': 'Chaos Dwarfs',
+    'gnomes': 'Gnomes',
+    'gnomos': 'Gnomes',
+    'habitantes del inframundo': 'Underworld Denizens',
+    'high elves': 'High Elves',
+    'hombres lagarto': 'Lizardmen',
+    'horror nigromantico': 'Necromantic Horror',
+    'humans': 'Humans',
+    'humanos': 'Humans',
+    'lizardmen': 'Lizardmen',
+    'necromantic horror': 'Necromantic Horror',
+    'nordicos': 'Norse',
+    'no muertos': 'Shambling Undead',
+    'norse': 'Norse',
+    'ogres': 'Ogres',
+    'ogros': 'Ogres',
+    'old world alliance': 'Old World Alliance',
+    'orcos': 'Orcs',
+    'orcos negros': 'Black Orcs',
+    'orcs': 'Orcs',
+    'renegados del caos': 'Chaos Renegades',
+    'reyes de las tumbas': 'Tomb Kings',
+    'shambling undead': 'Shambling Undead',
+    'tomb kings': 'Tomb Kings',
+    'underworld denizens': 'Underworld Denizens',
+    'union elfica': 'Elven Union',
+    'vampires': 'Vampires',
+    'vampiros': 'Vampires',
+    'wood elves': 'Wood Elves',
 };
 
-const normalizeTeamName = (name?: string): string => TEAM_NAME_ALIASES[name || ''] || name || '';
-
+const normalizeTeamName = (name?: string): string => {
+    const fixed = fixMojibake(String(name || '')).trim();
+    return TEAM_NAME_ALIASES[normalizeLookupKey(fixed)] || fixed;
+};
 export const mergeTeamWithFallback = (
     team: Partial<TeamAsset> | undefined,
     fallback?: TeamAsset | null
@@ -125,3 +141,4 @@ export const normalizeTeamCollection = (items: Partial<TeamAsset>[], fallbacks: 
         return ensureTeamRecord({ ...item, name: normalizedName }, fallback);
     });
 };
+
