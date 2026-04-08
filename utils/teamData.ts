@@ -15,6 +15,9 @@ const EMPTY_RECORD = { wins: 0, draws: 0, losses: 0 };
 
 const TEAM_NAME_ALIASES: Record<string, string> = {
     'Elfos Altos': 'Altos Elfos',
+    'Bretonianos': 'Bretonnian',
+    'Nobleza Imperial': 'Imperial Nobility',
+    'Snotlings': 'Snotling',
 };
 
 const normalizeTeamName = (name?: string): string => TEAM_NAME_ALIASES[name || ''] || name || '';

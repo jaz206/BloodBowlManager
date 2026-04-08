@@ -3166,7 +3166,7 @@ export const teamsData: Team[] = [
     },
 
     {
-        "name":  "Bretonianos",
+        "name":  "Bretonnian",
         "specialRules":  "Equipos de Leyenda, Gesti?n de Equipo",
         "rerollCost":  70000,
         "tier":  2,
@@ -3211,7 +3211,7 @@ export const teamsData: Team[] = [
         "specialRules_en":  "Legend Teams, Team Management"
     },
     {
-        "name":  "Nobleza Imperial",
+        "name":  "Imperial Nobility",
         "specialRules":  "Cl?sica del Viejo Mundo, Gesti?n de Equipo",
         "rerollCost":  70000,
         "tier":  2,
@@ -3328,7 +3328,7 @@ export const teamsData: Team[] = [
         "specialRules_en":  "Favoured of the Gods, Team Management"
     },
     {
-        "name":  "Snotlings",
+        "name":  "Snotling",
         "specialRules":  "Desaf?o del Inframundo, Gesti?n de Equipo",
         "rerollCost":  60000,
         "tier":  3,
