@@ -2,7 +2,7 @@
 
 export const teamsData: Team[] = [
     {
-        "name":  "Amazonas",
+        "name":  "Amazons",
         "specialRules":  "Superliga Lustria, GestiÃ³n de Equipo",
         "rerollCost":  50000,
         "tier":  1,
@@ -95,7 +95,7 @@ export const teamsData: Team[] = [
         "specialRules_en":  "Superliga Lustria, GestiÃ³n de Equipo"
     },
     {
-        "name":  "Orcos Negros",
+        "name":  "Black Orcs",
         "specialRules":  "Pelea de Badlands, GestiÃ³n de Equipo, Soborno y CorrupciÃ³n",
         "rerollCost":  50000,
         "tier":  3,
@@ -175,7 +175,7 @@ export const teamsData: Team[] = [
         "specialRules_en":  "Pelea de Badlands, GestiÃ³n de Equipo, Soborno y CorrupciÃ³n"
     },
     {
-        "name":  "Elegidos del Caos",
+        "name":  "Chosen of Chaos",
         "specialRules":  "Favorito de..., GestiÃ³n de Equipo",
         "rerollCost":  50000,
         "tier":  2,
@@ -249,7 +249,7 @@ export const teamsData: Team[] = [
         "specialRules_en":  "Favorito de..., GestiÃ³n de Equipo"
     },
     {
-        "name":  "Enanos del Caos",
+        "name":  "Chaos Dwarfs",
         "specialRules":  "Favorito de..., GestiÃ³n de Equipo, Superliga del Borde del Mundo, Pelea de Badlands",
         "rerollCost":  50000,
         "tier":  1,
@@ -363,7 +363,7 @@ export const teamsData: Team[] = [
         "specialRules_en":  "Favorito de..., GestiÃ³n de Equipo, Superliga del Borde del Mundo, Pelea de Badlands"
     },
     {
-        "name":  "Renegados del Caos",
+        "name":  "Chaos Renegades",
         "specialRules":  "Favorito de..., GestiÃ³n de Equipo",
         "rerollCost":  50000,
         "tier":  2,
@@ -576,7 +576,7 @@ export const teamsData: Team[] = [
         "specialRules_en":  "Favorito de..., GestiÃ³n de Equipo"
     },
     {
-        "name":  "Elfos Oscuros",
+        "name":  "Dark Elves",
         "specialRules":  "Liga de los Reinos Ã‰lficos, GestiÃ³n de Equipo",
         "rerollCost":  50000,
         "tier":  1,
@@ -683,7 +683,7 @@ export const teamsData: Team[] = [
         "specialRules_en":  "Liga de los Reinos Ã‰lficos, GestiÃ³n de Equipo"
     },
     {
-        "name":  "Enanos",
+        "name":  "Dwarfs",
         "specialRules":  "ClÃ¡sico del Viejo Mundo, GestiÃ³n de Equipo, Superliga del Borde del Mundo",
         "rerollCost":  50000,
         "tier":  1,
@@ -801,7 +801,7 @@ export const teamsData: Team[] = [
         "specialRules_en":  "ClÃ¡sico del Viejo Mundo, GestiÃ³n de Equipo, Superliga del Borde del Mundo"
     },
     {
-        "name":  "UniÃ³n Ã‰lfica",
+        "name":  "Elven Union",
         "specialRules":  "Liga de los Reinos Ã‰lficos, GestiÃ³n de Equipo",
         "rerollCost":  50000,
         "tier":  2,
@@ -890,7 +890,7 @@ export const teamsData: Team[] = [
         "specialRules_en":  "Liga de los Reinos Ã‰lficos, GestiÃ³n de Equipo"
     },
     {
-        "name":  "Gnomos",
+        "name":  "Gnomes",
         "specialRules":  "Copa Dedal Halfling, GestiÃ³n de Equipo, Nivel 3",
         "rerollCost":  50000,
         "tier":  3,
@@ -1269,7 +1269,7 @@ export const teamsData: Team[] = [
         "specialRules_en":  "ClÃ¡sico del Viejo Mundo, GestiÃ³n de Equipo, Copa Dedal Halfling, Nivel 3"
     },
     {
-        "name":  "Altos Elfos",
+        "name":  "High Elves",
         "specialRules":  "Liga de los Reinos Ã‰lficos, GestiÃ³n de Equipo",
         "rerollCost":  50000,
         "tier":  1,
@@ -1358,7 +1358,7 @@ export const teamsData: Team[] = [
         "specialRules_en":  "Liga de los Reinos Ã‰lficos, GestiÃ³n de Equipo"
     },
     {
-        "name":  "Humanos",
+        "name":  "Humans",
         "specialRules":  "ClÃ¡sico del Viejo Mundo, GestiÃ³n de Equipo",
         "rerollCost":  50000,
         "tier":  2,
@@ -1504,7 +1504,7 @@ export const teamsData: Team[] = [
         "specialRules_en":  "ClÃ¡sico del Viejo Mundo, GestiÃ³n de Equipo"
     },
     {
-        "name":  "Hombres Lagarto",
+        "name":  "Lizardmen",
         "specialRules":  "Superliga Lustria, GestiÃ³n de Equipo",
         "rerollCost":  50000,
         "tier":  1,
@@ -1599,7 +1599,7 @@ export const teamsData: Team[] = [
         "specialRules_en":  "Superliga Lustria, GestiÃ³n de Equipo"
     },
     {
-        "name":  "Horror NigromÃ¡ntico",
+        "name":  "Necromantic Horror",
         "specialRules":  "Escaparate Sylvaniano, GestiÃ³n de Equipo, Maestros de la No-Muerte",
         "rerollCost":  50000,
         "tier":  1,
@@ -1711,7 +1711,7 @@ export const teamsData: Team[] = [
         "specialRules_en":  "Escaparate Sylvaniano, GestiÃ³n de Equipo, Maestros de la No-Muerte"
     },
     {
-        "name":  "NÃ³rdicos",
+        "name":  "Norse",
         "specialRules":  "Favorito de..., ClÃ¡sico del Viejo Mundo",
         "rerollCost":  50000,
         "tier":  1,
@@ -1947,7 +1947,7 @@ export const teamsData: Team[] = [
         "specialRules_en":  "Favorito de..., GestiÃ³n de Equipo"
     },
     {
-        "name":  "Ogros",
+        "name":  "Ogres",
         "specialRules":  "ClÃ¡sico del Viejo Mundo, GestiÃ³n de Equipo, Pelea de Badlands, Peones Baratos, Nivel 4",
         "rerollCost":  50000,
         "tier":  3,
@@ -2027,7 +2027,7 @@ export const teamsData: Team[] = [
         "specialRules_en":  "ClÃ¡sico del Viejo Mundo, GestiÃ³n de Equipo, Pelea de Badlands, Peones Baratos, Nivel 4"
     },
     {
-        "name":  "Alianza del Viejo Mundo",
+        "name":  "Old World Alliance",
         "specialRules":  "ClÃ¡sico del Viejo Mundo, GestiÃ³n de Equipo",
         "rerollCost":  50000,
         "tier":  2,
@@ -2218,7 +2218,7 @@ export const teamsData: Team[] = [
         "specialRules_en":  "ClÃ¡sico del Viejo Mundo, GestiÃ³n de Equipo"
     },
     {
-        "name":  "Orcos",
+        "name":  "Orcs",
         "specialRules":  "Pelea de Badlands, GestiÃ³n de Equipo",
         "rerollCost":  50000,
         "tier":  1,
@@ -2353,7 +2353,7 @@ export const teamsData: Team[] = [
         "specialRules_en":  "Pelea de Badlands, GestiÃ³n de Equipo"
     },
     {
-        "name":  "No Muertos",
+        "name":  "Shambling Undead",
         "specialRules":  "Escaparate Sylvaniano, GestiÃ³n de Equipo, Maestros de la No-Muerte",
         "rerollCost":  50000,
         "tier":  1,
@@ -2666,7 +2666,7 @@ export const teamsData: Team[] = [
         "specialRules_en":  "Superliga Lustria, GestiÃ³n de Equipo"
     },
     {
-        "name":  "Reyes de las Tumbas",
+        "name":  "Tomb Kings",
         "specialRules":  "Escaparate Sylvaniano, GestiÃ³n de Equipo",
         "rerollCost":  50000,
         "tier":  2,
@@ -2760,7 +2760,7 @@ export const teamsData: Team[] = [
         "specialRules_en":  "Escaparate Sylvaniano, GestiÃ³n de Equipo"
     },
     {
-        "name":  "Habitantes del Inframundo",
+        "name":  "Underworld Denizens",
         "specialRules":  "DesafÃ­o SubterrÃ¡neo, GestiÃ³n de Equipo, Soborno y CorrupciÃ³n",
         "rerollCost":  50000,
         "tier":  3,
@@ -2936,7 +2936,7 @@ export const teamsData: Team[] = [
         "specialRules_en":  "DesafÃ­o SubterrÃ¡neo, GestiÃ³n de Equipo, Soborno y CorrupciÃ³n"
     },
     {
-        "name":  "Vampiros",
+        "name":  "Vampires",
         "specialRules":  "Escaparate Sylvaniano, GestiÃ³n de Equipo, Lord Vampiro",
         "rerollCost":  50000,
         "tier":  2,
@@ -3052,7 +3052,7 @@ export const teamsData: Team[] = [
         "specialRules_en":  "Escaparate Sylvaniano, GestiÃ³n de Equipo, Lord Vampiro"
     },
     {
-        "name":  "Elfos Silvanos",
+        "name":  "Wood Elves",
         "specialRules":  "Liga de los Reinos Ã‰lficos, GestiÃ³n de Equipo",
         "rerollCost":  50000,
         "tier":  1,
@@ -3166,7 +3166,7 @@ export const teamsData: Team[] = [
     },
 
     {
-        "name":  "Bretonnian",
+        "name":  "Bretonnians",
         "specialRules":  "Equipos de Leyenda, Gesti?n de Equipo",
         "rerollCost":  70000,
         "tier":  2,
