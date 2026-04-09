@@ -73,6 +73,27 @@ const normalizeSkillRecord = (skill: Skill): Skill => deepNormalizeText(skill);
 const normalizeSkillsCollection = (items: Skill[]) =>
     items.map(normalizeSkillRecord);
 
+const stripUndefinedDeep = <T,>(value: T): T => {
+    if (Array.isArray(value)) {
+        return value
+            .filter((item) => item !== undefined)
+            .map((item) => stripUndefinedDeep(item)) as T;
+    }
+
+    if (value && typeof value === 'object') {
+        return Object.fromEntries(
+            Object.entries(value as Record<string, unknown>)
+                .filter(([, entry]) => entry !== undefined)
+                .map(([key, entry]) => [key, stripUndefinedDeep(entry)])
+        ) as T;
+    }
+
+    return value;
+};
+
+const sanitizeCollectionForFirestore = <T,>(items: T[]): T[] =>
+    items.map((item) => stripUndefinedDeep(item));
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 export type SyncStatus = 'idle' | 'syncing' | 'success' | 'error';
 
@@ -292,18 +313,18 @@ export const useMasterData = () => {
                 getDoc(doc(db, MASTER_COL, 'heraldo')),
             ]);
 
-            const teamsToSave = normalizeTeamCollection(
+            const teamsToSave = sanitizeCollectionForFirestore(normalizeTeamCollection(
                 mergeItems(
                     normalizeTeams(teamsSnap.exists() ? teamsSnap.data().items : []),
                     normalizeTeams(staticTeamsData),
                     'name'
                 ),
                 staticTeamsData as TeamAsset[]
-            );
-            const skillsToSave = normalizeSkillsCollection(mergeItems(skillsSnap.exists() ? skillsSnap.data().items : [], staticSkills, 'keyEN'));
-            const starsToSave = normalizeStarPlayersCollection(mergeItems(starsSnap.exists() ? starsSnap.data().items : [], staticStarsData, 'name'));
-            const inducEsToSave = mergeItems(inducEsSnap.exists() ? inducEsSnap.data().items : [], staticInducementsEs, 'name');
-            const inducEnToSave = mergeItems(inducEnSnap.exists() ? inducEnSnap.data().items : [], staticInducementsEn, 'name');
+            ));
+            const skillsToSave = sanitizeCollectionForFirestore(normalizeSkillsCollection(mergeItems(skillsSnap.exists() ? skillsSnap.data().items : [], staticSkills, 'keyEN')));
+            const starsToSave = sanitizeCollectionForFirestore(normalizeStarPlayersCollection(mergeItems(starsSnap.exists() ? starsSnap.data().items : [], staticStarsData, 'name')));
+            const inducEsToSave = sanitizeCollectionForFirestore(mergeItems(inducEsSnap.exists() ? inducEsSnap.data().items : [], staticInducementsEs, 'name'));
+            const inducEnToSave = sanitizeCollectionForFirestore(mergeItems(inducEnSnap.exists() ? inducEnSnap.data().items : [], staticInducementsEn, 'name'));
 
             await Promise.all([
                 setDoc(doc(db, MASTER_COL, 'teams'), { items: teamsToSave, updatedAt: ts }),
@@ -311,7 +332,7 @@ export const useMasterData = () => {
                 setDoc(doc(db, MASTER_COL, 'star_players'), { items: starsToSave, updatedAt: ts }),
                 setDoc(doc(db, MASTER_COL, 'inducements_es'), { items: inducEsToSave, updatedAt: ts }),
                 setDoc(doc(db, MASTER_COL, 'inducements_en'), { items: inducEnToSave, updatedAt: ts }),
-                setDoc(doc(db, MASTER_COL, 'heraldo'), { items: heraldoItems, updatedAt: ts }),
+                setDoc(doc(db, MASTER_COL, 'heraldo'), { items: sanitizeCollectionForFirestore(heraldoItems), updatedAt: ts }),
                 setDoc(doc(db, MASTER_COL, 'meta'), {
                     lastSync: ts,
                     version: new Date().toISOString().split('T')[0],
@@ -397,7 +418,7 @@ export const useMasterData = () => {
                 mergedItems[fallbackIdx] = { ...(mergedItems[fallbackIdx] || fallbackItems[fallbackIdx]), ...patch };
             }
 
-            await setDoc(ref, { items: mergedItems, updatedAt: serverTimestamp() }, { merge: true });
+            await setDoc(ref, { items: sanitizeCollectionForFirestore(mergedItems), updatedAt: serverTimestamp() }, { merge: true });
 
             if (docId === 'teams') setTeams(normalizeTeams(mergedItems as Team[]));
             if (docId === 'skills') setSkills(normalizeSkillsCollection(mergedItems as Skill[]));
@@ -408,7 +429,7 @@ export const useMasterData = () => {
         }
 
         items[idx] = { ...items[idx], ...patch };
-        await setDoc(ref, { items, updatedAt: serverTimestamp() }, { merge: true });
+        await setDoc(ref, { items: sanitizeCollectionForFirestore(items), updatedAt: serverTimestamp() }, { merge: true });
 
         if (docId === 'teams') setTeams(normalizeTeams(items as Team[]));
         if (docId === 'skills') setSkills(normalizeSkillsCollection(items as Skill[]));
@@ -428,7 +449,7 @@ export const useMasterData = () => {
         if (!db) return;
 
         const ref = doc(db, MASTER_COL, docId);
-        await setDoc(ref, { items, updatedAt: serverTimestamp() }, { merge: true });
+        await setDoc(ref, { items: sanitizeCollectionForFirestore(items), updatedAt: serverTimestamp() }, { merge: true });
     }, []);
 
     // ── Hero image helper ─────────────────────────────────────────────────────
@@ -462,7 +483,7 @@ export const useMasterData = () => {
             const snap = await getDoc(ref);
             const items = (snap.exists() ? snap.data().items : []) || [];
             items.push(item);
-            await setDoc(ref, { items, updatedAt: serverTimestamp() }, { merge: true });
+            await setDoc(ref, { items: sanitizeCollectionForFirestore(items), updatedAt: serverTimestamp() }, { merge: true });
         },
         deleteMasterItem: async (docId: 'teams' | 'skills' | 'star_players' | 'heraldo', itemId: string) => {
             if (!db) return;
@@ -470,7 +491,7 @@ export const useMasterData = () => {
             const snap = await getDoc(ref);
             if (!snap.exists()) return;
             const items = (snap.data().items || []).filter((i: any) => (i.keyEN ?? i.name ?? i.title) !== itemId);
-            await setDoc(ref, { items, updatedAt: serverTimestamp() }, { merge: true });
+            await setDoc(ref, { items: sanitizeCollectionForFirestore(items), updatedAt: serverTimestamp() }, { merge: true });
         },
         refresh: () => setLoading(true),
     };
