@@ -10,6 +10,7 @@ import { generateRandomName } from '../../data/randomNames';
 import { PlayerAdvancementModal } from './PlayerAdvancementModal';
 import { useMasterData } from '../../hooks/useMasterData';
 import { calculateTeamValue } from '../../utils/teamUtils';
+import { sanitizeMojibakeText } from '../../utils/textSanitizer';
 import {
     getPlayerImageUrl,
     getTeamLogoUrl,
@@ -112,13 +113,14 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
     stickyOffset = "top-16"
 }) => {
     const [editingPlayer, setEditingPlayer] = useState<ManagedPlayer | null>(null);
+    const [openPlayerMenuId, setOpenPlayerMenuId] = useState<number | null>(null);
     const [showQr, setShowQr] = useState(false);
     const [selectedSkillForModal, setSelectedSkillForModal] = useState<Skill | null>(null);
     const [editingPlayerId, setEditingPlayerId] = useState<number | null>(null);
     const [editingName, setEditingName] = useState('');
     const [fireConfirmation, setFireConfirmation] = useState<ManagedPlayer | null>(null);
     const [advancingPlayer, setAdvancingPlayer] = useState<ManagedPlayer | null>(null);
-    const { starPlayers, teams: masterTeams } = useMasterData();
+    const { starPlayers, teams: masterTeams, skills: masterSkills } = useMasterData();
     const [snapshotToRestore, setSnapshotToRestore] = useState<ManagedTeamSnapshot | null>(null);
 
     const qrCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -139,6 +141,59 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
         const staticRoster = teamsData.find(t => t.name === team.rosterName);
         return mergeTeamWithFallback(master as any, staticRoster as any);
     }, [masterTeams, team.rosterName]);
+
+    const skillCatalog = useMemo(() => (masterSkills?.length ? masterSkills : skillsData), [masterSkills]);
+
+    const normalizeLookupKey = (value?: string) =>
+        sanitizeMojibakeText(String(value || ''))
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, ' ')
+            .trim();
+
+    const resolveSkillRecord = (skillRef: string): Skill | undefined => {
+        const lookup = normalizeLookupKey(skillRef);
+        return skillCatalog.find((skill) => [skill.keyEN, skill.name_es, skill.name_en, skill.name]
+            .some((candidate) => normalizeLookupKey(candidate) === lookup));
+    };
+
+    const resolveSkillLabel = (skillRef: string): string => {
+        const record = resolveSkillRecord(skillRef);
+        return record?.name_es || record?.name_en || sanitizeMojibakeText(skillRef);
+    };
+
+    const findRosterTemplateForPlayer = (player: ManagedPlayer): Player | undefined => {
+        const playerKey = normalizeLookupKey(player.position);
+        return baseRoster?.roster?.find((entry) => {
+            const entryKey = normalizeLookupKey(entry.position);
+            return entryKey === playerKey || entryKey.includes(playerKey) || playerKey.includes(entryKey);
+        });
+    };
+
+    const getPlayerCoreSkillKeys = (player: ManagedPlayer): string[] => {
+        const template = findRosterTemplateForPlayer(player);
+        const current = Array.isArray(player.skillKeys) ? player.skillKeys.filter(Boolean) : [];
+        if (current.length > 0) return current;
+        if (template?.skillKeys?.length) return template.skillKeys;
+        return (player.skills || '')
+            .split(',')
+            .map((skill) => skill.trim())
+            .filter((skill) => skill && !['ninguna', 'none'].includes(skill.toLowerCase()));
+    };
+
+    const getPlayerDisplayedSkills = (player: ManagedPlayer) => {
+        const combined = [...getPlayerCoreSkillKeys(player), ...(player.gainedSkills || [])];
+        const deduped = combined.filter((skill, index) => {
+            const lookup = normalizeLookupKey(skill);
+            return combined.findIndex((candidate) => normalizeLookupKey(candidate) === lookup) === index;
+        });
+        return deduped.map((skill) => ({
+            key: resolveSkillRecord(skill)?.keyEN || skill,
+            label: resolveSkillLabel(skill),
+            isElite: ELITE_SKILLS.includes(resolveSkillRecord(skill)?.keyEN || skill) || ELITE_SKILLS.includes(skill),
+        }));
+    };
 
     const resolveTeamCrestUrl = (managedTeam: ManagedTeam): string => {
         const staticTeam = teamsData.find(t => t.name === managedTeam.rosterName);
@@ -204,8 +259,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
     const hasRegisteredCrest = Boolean(team.crestImage || baseRoster?.crestImage);
 
     const handleSkillClick = (skillName: string) => {
-        const cleanedName = (skillName || '').split('(')[0].trim();
-        const foundSkill = skillsData.find(s => s.name.toLowerCase().startsWith(cleanedName.toLowerCase()));
+        const foundSkill = resolveSkillRecord(skillName);
         if (foundSkill) {
             setSelectedSkillForModal(foundSkill);
         }
@@ -409,6 +463,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
     const handleSavePlayer = (updatedPlayer: ManagedPlayer) => {
         onUpdate({ ...team, players: team.players.map(p => p.id === updatedPlayer.id ? updatedPlayer : p) });
         setEditingPlayer(null);
+        setOpenPlayerMenuId(null);
         setAdvancingPlayer(null);
     };
 
@@ -574,10 +629,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
 
                                 {/* Player Cards */}
                                 {team.players.map(p => {
-                                    const allSkills = [
-                                        ...((p?.skills || '').toLowerCase() !== 'ninguna' ? (p?.skills || '').split(', ').map((s: string) => s.trim()).filter(Boolean) : []),
-                                        ...p.gainedSkills
-                                    ];
+                                    const displayedSkills = getPlayerDisplayedSkills(p);
                                     const nextAdvanceCost = SPP_LEVELS[p.advancements?.length || 0] || 999;
                                     const hasLevelUp = p.spp >= nextAdvanceCost;
                                     const isMNG = p.lastingInjuries?.includes('MNG');
@@ -591,7 +643,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                     return (
                                         <div
                                             key={p.id}
-                                            className={`blood-ui-card-strong border rounded-2xl p-5 backdrop-blur-custom player-row-glow transition-all relative overflow-hidden group/card ${hasLevelUp ? 'border-primary/40 bg-primary/8' : 'border-white/10'} ${isBenched ? 'opacity-80' : ''}`}
+                                            className={`blood-ui-card-strong border rounded-2xl p-5 backdrop-blur-custom player-row-glow transition-all relative group/card ${hasLevelUp ? 'border-primary/40 bg-primary/8' : 'border-white/10'} ${isBenched ? 'opacity-80' : ''}`}
                                         >
                                             {hasLevelUp && (
                                                 <div className="absolute top-0 left-0 w-1 h-full bg-primary shadow-[0_0_15px_rgba(202,138,4,0.6)]"></div>
@@ -660,9 +712,22 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                                                         </span>
                                                                     )}
                                                                     {isBenched && !hasLevelUp && !isMNG && (p.missNextGame || 0) === 0 && (
-                                                                        <span className="px-2 py-1 rounded-full bg-slate-800/80 border border-white/5 text-slate-400 text-[9px] font-black uppercase tracking-widest">
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => togglePlayerBenched(p.id)}
+                                                                            className="px-2 py-1 rounded-full bg-slate-800/80 border border-white/5 text-slate-400 text-[9px] font-black uppercase tracking-widest hover:border-gold/30 hover:text-gold transition-all"
+                                                                        >
                                                                             Reserva
-                                                                        </span>
+                                                                        </button>
+                                                                    )}
+                                                                    {!isBenched && (
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => togglePlayerBenched(p.id)}
+                                                                            className="px-2 py-1 rounded-full bg-green-500/10 border border-green-500/25 text-green-500 text-[9px] font-black uppercase tracking-widest hover:border-gold/30 hover:text-gold transition-all"
+                                                                        >
+                                                                            Titular
+                                                                        </button>
                                                                     )}
                                                                 </div>
                                                             </>
@@ -683,18 +748,22 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                                     </div>
 
                                                     <div className="md:col-span-2 flex flex-wrap gap-1.5">
-                                                        {allSkills.map(skill => {
-                                                            const isElite = ELITE_SKILLS.includes(skill);
+                                                        {displayedSkills.map(skill => {
                                                             return (
                                                                 <button
-                                                                    key={skill}
-                                                                    onClick={() => handleSkillClick(skill)}
-                                                                    className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-tighter transition-all ${isElite ? 'bg-primary/20 border border-primary/30 text-primary' : 'bg-slate-800 text-slate-400 border border-white/5 hover:border-slate-500'}`}
+                                                                    key={skill.key}
+                                                                    onClick={() => handleSkillClick(skill.key)}
+                                                                    className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-tighter transition-all ${skill.isElite ? 'bg-primary/20 border border-primary/30 text-primary' : 'bg-slate-800 text-slate-400 border border-white/5 hover:border-slate-500'}`}
                                                                 >
-                                                                    {skill}{isElite && ' (E)'}
+                                                                    {skill.label}{skill.isElite && ' (E)'}
                                                                 </button>
                                                             );
                                                         })}
+                                                        {displayedSkills.length === 0 && (
+                                                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                                                                Sin habilidades visibles
+                                                            </span>
+                                                        )}
                                                     </div>
 
                                                     <div className="md:col-span-1 flex flex-col gap-1.5">
@@ -721,24 +790,30 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                                             </span>
                                                         </div>
                                                         <div className="relative group/menu">
-                                                            <button className="text-slate-600 hover:text-white transition-colors p-1">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setOpenPlayerMenuId((current) => current === p.id ? null : p.id)}
+                                                                className="text-slate-600 hover:text-white transition-colors p-1"
+                                                            >
                                                                 <span className="material-symbols-outlined">more_vert</span>
                                                             </button>
-                                                            <div className="absolute right-0 top-full mt-2 w-48 bg-black/95 border border-white/10 rounded-xl py-2 shadow-2xl opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all z-20 backdrop-blur-xl">
-                                                                <button onClick={() => setEditingPlayer(p)} className="w-full px-4 py-2 text-left text-[10px] font-black text-slate-400 hover:text-white hover:bg-white/5 uppercase tracking-widest flex items-center gap-2">
+                                                            {openPlayerMenuId === p.id && (
+                                                            <div className="absolute right-0 top-full mt-2 w-48 bg-[rgba(255,251,241,0.98)] border border-[rgba(111,87,56,0.14)] rounded-xl py-2 shadow-2xl z-20 backdrop-blur-xl">
+                                                                <button onClick={() => { setEditingPlayer({ ...p, skillKeys: getPlayerCoreSkillKeys(p) }); setOpenPlayerMenuId(null); }} className="w-full px-4 py-2 text-left text-[10px] font-black text-[#6f5738] hover:text-[#2b1d12] hover:bg-[rgba(202,138,4,0.08)] uppercase tracking-widest flex items-center gap-2">
                                                                     <span className="material-symbols-outlined text-sm">edit</span>
                                                                     Perfil
                                                                 </button>
-                                                                <button onClick={() => togglePlayerBenched(p.id)} className="w-full px-4 py-2 text-left text-[10px] font-black text-slate-400 hover:text-white hover:bg-white/5 uppercase tracking-widest flex items-center gap-2">
+                                                                <button onClick={() => { togglePlayerBenched(p.id); setOpenPlayerMenuId(null); }} className="w-full px-4 py-2 text-left text-[10px] font-black text-[#6f5738] hover:text-[#2b1d12] hover:bg-[rgba(202,138,4,0.08)] uppercase tracking-widest flex items-center gap-2">
                                                                     <span className="material-symbols-outlined text-sm">swap_horiz</span>
-                                                                    {isBenched ? 'Alinear' : 'Banquillo'}
+                                                                    {isBenched ? 'Pasar a titular' : 'Enviar a reserva'}
                                                                 </button>
-                                                                <div className="h-px bg-white/5 my-1"></div>
-                                                                <button onClick={() => setFireConfirmation(p)} className="w-full px-4 py-2 text-left text-[10px] font-black text-blood hover:bg-blood/10 uppercase tracking-widest flex items-center gap-2">
+                                                                <div className="h-px bg-[rgba(111,87,56,0.1)] my-1"></div>
+                                                                <button onClick={() => { setFireConfirmation(p); setOpenPlayerMenuId(null); }} className="w-full px-4 py-2 text-left text-[10px] font-black text-blood hover:bg-blood/10 uppercase tracking-widest flex items-center gap-2">
                                                                     <span className="material-symbols-outlined text-sm">person_remove</span>
                                                                     Despedir
                                                                 </button>
                                                             </div>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1034,7 +1109,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
 
             {/* Modals */}
             <AnimatePresence>
-                {editingPlayer && <PlayerModal player={editingPlayer} allSkills={skillsData} onSave={handleSavePlayer} onClose={() => setEditingPlayer(null)} />}
+                {editingPlayer && <PlayerModal player={editingPlayer} allSkills={skillCatalog} onSave={handleSavePlayer} onClose={() => setEditingPlayer(null)} />}
                 {advancingPlayer && <PlayerAdvancementModal player={advancingPlayer} isOpen={!!advancingPlayer} onAdvance={handleSavePlayer} onClose={() => setAdvancingPlayer(null)} />}
                 {selectedSkillForModal && <SkillModal skill={selectedSkillForModal} onClose={() => setSelectedSkillForModal(null)} />}
 

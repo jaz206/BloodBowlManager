@@ -19,9 +19,9 @@ const SkillSelectorModal: React.FC<SkillSelectorModalProps> = ({ allSkills, sele
         }
         const lowerSearchTerm = searchTerm.toLowerCase();
         return allSkills.filter(skill =>
-            skill.name.toLowerCase().includes(lowerSearchTerm) ||
+            (skill.name_es || skill.name_en || skill.name || '').toLowerCase().includes(lowerSearchTerm) ||
             skill.category.toLowerCase().includes(lowerSearchTerm) ||
-            skill.description.toLowerCase().includes(lowerSearchTerm)
+            (skill.desc_es || skill.desc_en || skill.description || '').toLowerCase().includes(lowerSearchTerm)
         );
     }, [searchTerm, allSkills]);
 
@@ -68,11 +68,14 @@ const SkillSelectorModal: React.FC<SkillSelectorModalProps> = ({ allSkills, sele
                 </div>
                 <div className="p-4 overflow-y-auto space-y-2 custom-scrollbar flex-grow bg-black/20">
                     {filteredSkills.map(skill => {
-                        const isSelected = currentSelection.includes(skill.name);
+                        const displayName = skill.name_es || skill.name_en || skill.name || skill.keyEN;
+                        const description = skill.desc_es || skill.desc_en || skill.description || '';
+                        const selectionKey = skill.keyEN || displayName;
+                        const isSelected = currentSelection.includes(selectionKey);
                         return (
                             <div
-                                key={skill.name}
-                                onClick={() => handleCheckboxChange(skill.name)}
+                                key={selectionKey}
+                                onClick={() => handleCheckboxChange(selectionKey)}
                                 className={`flex items-center group/skill p-4 rounded-xl border transition-premium cursor-pointer ${isSelected ? 'bg-premium-gold/10 border-premium-gold/30' : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10'}`}
                             >
                                 <div className={`h-6 w-6 rounded-lg border-2 flex items-center justify-center transition-premium ${isSelected ? 'bg-premium-gold border-premium-gold' : 'border-slate-600 group-hover/skill:border-slate-400'}`}>
@@ -84,10 +87,10 @@ const SkillSelectorModal: React.FC<SkillSelectorModalProps> = ({ allSkills, sele
                                 </div>
                                 <div className="ml-4 flex-grow">
                                     <div className="flex items-center gap-2">
-                                        <span className={`font-display font-bold uppercase tracking-tight text-base ${isSelected ? 'text-premium-gold' : 'text-slate-200 group-hover/skill:text-white'}`}>{skill.name}</span>
+                                        <span className={`font-display font-bold uppercase tracking-tight text-base ${isSelected ? 'text-premium-gold' : 'text-slate-200 group-hover/skill:text-white'}`}>{displayName}</span>
                                         <span className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest bg-black/30 px-2 py-0.5 rounded-md border border-white/5">{skill.category}</span>
                                     </div>
-                                    <p className="text-[11px] text-slate-400 mt-1 leading-relaxed line-clamp-1 group-hover/skill:line-clamp-none transition-all">{skill.description}</p>
+                                    <p className="text-[11px] text-slate-400 mt-1 leading-relaxed line-clamp-1 group-hover/skill:line-clamp-none transition-all">{description}</p>
                                 </div>
                             </div>
                         );
