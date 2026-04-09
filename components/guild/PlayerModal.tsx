@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+ï»¿import React, { useState, useEffect, useMemo } from 'react';
 import type { ManagedPlayer, Skill } from '../../types';
 import SkillSelectorModal from '../oracle/SkillSelectorModal';
 
@@ -147,7 +147,7 @@ const PlayerModal: React.FC<PlayerModalProps> = ({ player, allSkills, onSave, on
                                         </div>
                                     </div>
                                     <div className="rounded-[1.75rem] border border-[#e3cfaa] bg-[#fffaf1] p-5">
-                                        <span className="block text-[10px] font-black uppercase tracking-[0.28em] text-[#8a7760] mb-4">Progresión</span>
+                                        <span className="block text-[10px] font-black uppercase tracking-[0.28em] text-[#8a7760] mb-4">ProgresiÃ³n</span>
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                                 <label className="block text-[10px] font-bold text-[#8a7760] uppercase tracking-widest">Puntos de estrella</label>
@@ -160,7 +160,7 @@ const PlayerModal: React.FC<PlayerModalProps> = ({ player, allSkills, onSave, on
                                                 />
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="block text-[10px] font-bold text-[#8a7760] uppercase tracking-widest">Partidos de sanción</label>
+                                                <label className="block text-[10px] font-bold text-[#8a7760] uppercase tracking-widest">Partidos de sanciÃ³n</label>
                                                 <input
                                                     type="number"
                                                     name="missNextGame"
@@ -196,7 +196,7 @@ const PlayerModal: React.FC<PlayerModalProps> = ({ player, allSkills, onSave, on
                                         onClick={() => setIsSkillSelectorOpen(true)}
                                         className="w-full bg-white border border-[#d7c39a] text-[#2b1d12] font-display font-bold uppercase tracking-[0.2em] text-[10px] py-4 px-4 rounded-2xl hover:border-premium-gold/40 hover:text-premium-gold transition-all shadow-sm"
                                     >
-                                        Añadir o editar habilidades extra
+                                        AÃ±adir o editar habilidades extra
                                     </button>
                                 </div>
                                 <div className="space-y-2">
@@ -233,3 +233,4 @@ const PlayerModal: React.FC<PlayerModalProps> = ({ player, allSkills, onSave, on
 };
 
 export default PlayerModal;
+

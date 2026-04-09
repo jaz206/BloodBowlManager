@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+ï»¿import React, { useState, useMemo } from 'react';
 import type { Skill } from '../../types';
 
 interface SkillSelectorModalProps {
@@ -58,7 +58,7 @@ const SkillSelectorModal: React.FC<SkillSelectorModalProps> = ({ allSkills, sele
                         </div>
                         <input
                             type="text"
-                            placeholder="Buscar habilidad por nombre o categoría..."
+                            placeholder="Buscar habilidad por nombre o categorÃ­a..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full bg-white border border-[#d7c39a] rounded-2xl py-4 pl-12 pr-4 text-[#2b1d12] font-display font-bold uppercase tracking-wider placeholder-[#a79479] focus:border-premium-gold outline-none transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]"
@@ -102,7 +102,7 @@ const SkillSelectorModal: React.FC<SkillSelectorModalProps> = ({ allSkills, sele
                             Cancelar
                         </button>
                         <button type="button" onClick={handleSave} className="bg-premium-gold text-black font-display font-black uppercase tracking-widest text-xs py-3 px-10 rounded-lg transition-premium hover:scale-105 active:scale-95 shadow-2xl shadow-premium-gold/20">
-                            Confirmar selección
+                            Confirmar selecciÃ³n
                         </button>
                     </div>
                 </div>
@@ -118,3 +118,4 @@ const SkillSelectorModal: React.FC<SkillSelectorModalProps> = ({ allSkills, sele
 };
 
 export default SkillSelectorModal;
+
