@@ -392,7 +392,9 @@ export const resolveTeamLogoPreference = (rosterName: string, url?: string | nul
 
   if (!clean) return hasOfficialMapping ? official : clean;
   if (clean.startsWith('data:')) return clean;
-  if (isOfficialTeamLogoUrl(clean)) return clean;
+  if (isOfficialTeamLogoUrl(clean)) {
+    return hasOfficialMapping ? official : clean;
+  }
   if (hasOfficialMapping) return official;
   if (isDeprecatedTeamLogoUrl(clean)) return official;
   return clean;
