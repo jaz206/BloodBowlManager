@@ -465,7 +465,7 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                                                         );
                                                     })
                                                 ) : (
-                                                    <p className="text-[9px] font-bold text-[#8a7760]">Sin habilidades asignadas todav?a.</p>
+                                                    <p className="text-[9px] font-bold text-[#8a7760]">Sin habilidades asignadas todavía.</p>
                                                 )}
                                             </div>
                                             <div className="flex flex-col md:flex-row gap-3">
@@ -474,7 +474,7 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                                                     onChange={(e) => setPendingSkillSelections(prev => ({ ...prev, [idx]: e.target.value }))}
                                                     className="flex-1 bg-white border border-[#d7c39a] rounded-xl px-4 py-2 text-[10px] font-bold text-[#2b1d12] outline-none focus:border-premium-gold/40"
                                                 >
-                                                    <option value="">A?adir habilidad...</option>
+                                                    <option value="">Añadir habilidad...</option>
                                                     {skills
                                                         .filter((skill: any) => !(player.skillKeys || []).includes(skill.keyEN))
                                                         .map((skill: any) => (
@@ -489,7 +489,7 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                                                     disabled={!pendingSkillSelections[idx]}
                                                     className="px-4 py-2 rounded-xl bg-premium-gold text-black text-[10px] font-black uppercase tracking-widest disabled:opacity-40 disabled:cursor-not-allowed"
                                                 >
-                                                    A?adir
+                                                    Añadir
                                                 </button>
                                             </div>
                                         </div>
@@ -517,7 +517,7 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                                             }
                                         }}
                                         className="flex-1 bg-[#fffaf1] border border-[#d7c39a] rounded-xl px-4 py-3 text-[11px] text-[#2b1d12] outline-none focus:border-sky-500/50"
-                                        placeholder="A?adir nombre nuevo..."
+                                        placeholder="Añadir nombre nuevo..."
                                     />
                                     <button
                                         type="button"
@@ -525,7 +525,7 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                                         disabled={!pendingName.trim()}
                                         className="px-4 py-3 rounded-xl bg-premium-gold text-black text-[10px] font-black uppercase tracking-widest disabled:opacity-40 disabled:cursor-not-allowed"
                                     >
-                                        A?adir nombre
+                                        Añadir nombre
                                     </button>
                                 </div>
                                 <div className="max-h-64 overflow-y-auto rounded-xl border border-[#ead9bb] bg-[#fffaf1] p-3">
@@ -543,7 +543,7 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                                                 </button>
                                             ))
                                         ) : (
-                                            <p className="text-[10px] font-bold text-[#8a7760]">No hay nombres en este pool todav?a.</p>
+                                            <p className="text-[10px] font-bold text-[#8a7760]">No hay nombres en este pool todavía.</p>
                                         )}
                                     </div>
                                 </div>
@@ -569,6 +569,7 @@ const Field: React.FC<{ label: string; children: React.ReactNode }> = ({ label, 
 );
 
 export default AdminTeamForm;
+
 
 
 

@@ -109,7 +109,7 @@ const SecretWeaponPanel: React.FC<{
                     <div key={player.id} className="rounded-2xl border border-white/10 bg-black/25 px-4 py-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                         <div>
                             <p className="text-sm font-display font-black uppercase italic text-white">{player.customName}</p>
-                            <p className="text-[10px] font-display font-black uppercase tracking-[0.24em] text-slate-500">{player.position} · arma secreta</p>
+                            <p className="text-[10px] font-display font-black uppercase tracking-[0.24em] text-slate-500">{player.position} Â· arma secreta</p>
                         </div>
                         <div className="flex flex-wrap gap-2">
                             <button

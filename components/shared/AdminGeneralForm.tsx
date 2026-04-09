@@ -30,9 +30,9 @@ const AdminGeneralForm: React.FC<AdminGeneralFormProps> = ({
                 <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                     <span className="material-symbols-outlined text-8xl">image</span>
                 </div>
-                <h4 className="text-xl font-display font-black text-white uppercase italic mb-4">Imagen de Cabecera</h4>
+                <h4 className="text-xl font-display font-black text-white uppercase italic mb-4">Imagen de cabecera</h4>
                 <p className="text-sm text-slate-400 mb-6 max-w-sm">
-                    Esta es la imagen principal que aparece en el inicio de la aplicaciÛn. Usa una URL directa de alta calidad.
+                    Esta es la imagen principal que aparece en el inicio de la aplicaci√≥n. Usa una URL directa de alta calidad.
                 </p>
 
                 <div className="relative mb-6 aspect-video rounded-2xl border border-white/10 bg-black/40 overflow-hidden shadow-2xl">
@@ -47,13 +47,13 @@ const AdminGeneralForm: React.FC<AdminGeneralFormProps> = ({
                     onClick={() => setEditingItem({ type: 'hero', data: { url: heroImage || '' } })}
                     className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white font-display font-black uppercase tracking-[0.2em] text-[10px] hover:bg-premium-gold hover:text-black hover:border-premium-gold transition-all"
                 >
-                    Editar Imagen Hero
+                    Editar imagen hero
                 </button>
             </div>
 
             <div className="glass-panel p-8 border-white/5 flex flex-col justify-between">
                 <div>
-                    <h4 className="text-xl font-display font-black text-white uppercase italic mb-6">EstadÌsticas de Nuffle</h4>
+                    <h4 className="text-xl font-display font-black text-white uppercase italic mb-6">Estad√≠sticas de Nuffle</h4>
                     <div className="grid grid-cols-2 gap-4">
                         {stats.map(stat => (
                             <div key={stat.label} className="bg-black/40 p-4 rounded-xl border border-white/5">
@@ -68,7 +68,7 @@ const AdminGeneralForm: React.FC<AdminGeneralFormProps> = ({
                 </div>
                 <div className="mt-6 pt-6 border-t border-white/5">
                     <p className="text-[10px] text-slate-500 font-bold uppercase leading-relaxed italic">
-                        * Los cambios realizados en el resto de pestaÒas se guardan directamente en Firestore y se reflejan instant·neamente para todos los usuarios.
+                        * Los cambios realizados en el resto de pesta√±as se guardan directamente en Firestore y se reflejan instant√°neamente para todos los usuarios.
                     </p>
                 </div>
             </div>
@@ -77,4 +77,3 @@ const AdminGeneralForm: React.FC<AdminGeneralFormProps> = ({
 };
 
 export default AdminGeneralForm;
-

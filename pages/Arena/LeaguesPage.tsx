@@ -1384,12 +1384,12 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                                 <div className="bg-zinc-900 border border-white/10 p-4 rounded-[2rem] shadow-2xl relative z-10 space-y-3">
                                                                     <div className="w-full flex justify-between items-center p-3 rounded-2xl bg-black/40 text-slate-400 font-bold">
                                                                         <span className="truncate text-[10px] uppercase tracking-tighter">{match.team1}</span>
-                                                                        <span className="font-black text-sm">{match.score1 ?? ''}</span>
+                                                                        <span className="font-black text-sm">{match.score1 ?? '-'}</span>
                                                                     </div>
                                                                     <div className="h-px bg-white/5 w-full mx-auto"></div>
                                                                     <div className="w-full flex justify-between items-center p-3 rounded-2xl bg-black/40 text-slate-400 font-bold">
                                                                         <span className="truncate text-[10px] uppercase tracking-tighter">{match.team2}</span>
-                                                                        <span className="font-black text-sm">{match.score2 ?? ''}</span>
+                                                                        <span className="font-black text-sm">{match.score2 ?? '-'}</span>
                                                                     </div>
                                                                     {!match.played && (user?.id === selectedCompetition.ownerId || selectedCompetition.teams.some(t => t.ownerId === user?.id && (t.teamName === match.team1 || t.teamName === match.team2))) && (
                                                                         <button

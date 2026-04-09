@@ -8,41 +8,41 @@ type AdminHeraldoFormProps = {
 const AdminHeraldoForm: React.FC<AdminHeraldoFormProps> = ({ editingItem, setEditingItem }) => {
     const typeLabel =
         editingItem.data.type === 'starplayer'
-            ? 'Jugador Estrella'
+            ? 'Jugador estrella'
             : editingItem.data.type === 'team'
-                ? 'Equipo/Franquicia'
-                : 'Regla de Juego';
+                ? 'Equipo / franquicia'
+                : 'Regla de juego';
 
     const titleLabel =
         editingItem.data.type === 'starplayer'
-            ? 'Nombre del Jugador'
+            ? 'Nombre del jugador'
             : editingItem.data.type === 'team'
-                ? 'Nombre del Equipo'
-                : 'Nombre de la Regla';
+                ? 'Nombre del equipo'
+                : 'Nombre de la regla';
 
     const tagPlaceholder =
         editingItem.data.type === 'starplayer' ? 'Leyenda' : editingItem.data.type === 'team' ? 'Franquicia' : 'Destacado';
 
     const categoryPlaceholder =
         editingItem.data.type === 'starplayer'
-            ? 'Perfil de Jugador'
+            ? 'Perfil de jugador'
             : editingItem.data.type === 'team'
-                ? 'CrÛnica del Gremio'
-                : 'SecciÛn de Habilidades';
+                ? 'Cr√≥nica del gremio'
+                : 'Secci√≥n de habilidades';
 
     const contentLabel =
         editingItem.data.type === 'starplayer'
-            ? 'BiografÌa del Jugador'
+            ? 'Biograf√≠a del jugador'
             : editingItem.data.type === 'team'
-                ? 'Ultimos resultados / Historia'
-                : 'Descripcion de la Habilidad o Noticia';
+                ? '√öltimos resultados / Historia'
+                : 'Descripci√≥n de la habilidad o noticia';
 
     const ruleLabel =
         editingItem.data.type === 'starplayer'
-            ? 'Precio y Reglas Especiales'
+            ? 'Precio y reglas especiales'
             : editingItem.data.type === 'team'
-                ? 'Estatus (En racha, Crisis...)'
-                : 'Nota de Reglamento S3';
+                ? 'Estatus (en racha, crisis...)'
+                : 'Nota de reglamento S3';
 
     return (
         <div className="space-y-8">
@@ -54,7 +54,7 @@ const AdminHeraldoForm: React.FC<AdminHeraldoFormProps> = ({ editingItem, setEdi
                     <div>
                         <h4 className="text-sm font-bold text-white uppercase tracking-tight">Plantilla: {typeLabel}</h4>
                         <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mt-1">
-                            Los campos se adaptar·n visualmente en el Heraldo seg˙n tu elecciÛn.
+                            Los campos se adaptar√°n visualmente en el Heraldo seg√∫n tu elecci√≥n.
                         </p>
                     </div>
                 </div>
@@ -62,15 +62,15 @@ const AdminHeraldoForm: React.FC<AdminHeraldoFormProps> = ({ editingItem, setEdi
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                    <label className="block text-[10px] font-black text-premium-gold uppercase tracking-widest ml-1">Tipo de Noticia (Plantilla)</label>
+                    <label className="block text-[10px] font-black text-premium-gold uppercase tracking-widest ml-1">Tipo de noticia (plantilla)</label>
                     <select
                         value={editingItem.data.type || 'skill'}
                         onChange={(e) => setEditingItem({ ...editingItem, data: { ...editingItem.data, type: e.target.value } })}
                         className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none"
                     >
-                        <option value="starplayer">Jugador Estrella (Retrato + Bio)</option>
-                        <option value="team">Equipo/Franquicia (Escudo + CrÛnica)</option>
-                        <option value="skill">Habilidad/Regla (Solo Texto / New Season)</option>
+                        <option value="starplayer">Jugador estrella (retrato + bio)</option>
+                        <option value="team">Equipo / franquicia (escudo + cr√≥nica)</option>
+                        <option value="skill">Habilidad / regla (solo texto / New Season)</option>
                     </select>
                 </div>
                 <div className="space-y-4">
@@ -87,7 +87,7 @@ const AdminHeraldoForm: React.FC<AdminHeraldoFormProps> = ({ editingItem, setEdi
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Etiqueta (Tag)</label>
+                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Etiqueta (tag)</label>
                     <input
                         type="text"
                         value={editingItem.data.tag || ''}
@@ -97,7 +97,7 @@ const AdminHeraldoForm: React.FC<AdminHeraldoFormProps> = ({ editingItem, setEdi
                     />
                 </div>
                 <div className="space-y-4">
-                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">SubtÌtulo / CategorÌa</label>
+                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Subt√≠tulo / categor√≠a</label>
                     <input
                         type="text"
                         value={editingItem.data.category || ''}
@@ -114,7 +114,7 @@ const AdminHeraldoForm: React.FC<AdminHeraldoFormProps> = ({ editingItem, setEdi
                     value={editingItem.data.content || ''}
                     onChange={(e) => setEditingItem({ ...editingItem, data: { ...editingItem.data, content: e.target.value } })}
                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white focus:border-premium-gold/50 outline-none h-32 resize-none text-sm leading-relaxed"
-                    placeholder="Escribe la historia aquÌ..."
+                    placeholder="Escribe la historia aqu√≠..."
                 />
             </div>
 
@@ -133,4 +133,3 @@ const AdminHeraldoForm: React.FC<AdminHeraldoFormProps> = ({ editingItem, setEdi
 };
 
 export default AdminHeraldoForm;
-
