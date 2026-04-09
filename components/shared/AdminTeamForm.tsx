@@ -331,11 +331,11 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                             <button
                                 type="button"
                                 onClick={() => {
-                                    const newPlayer = {
-                                        qty: '0-16',
-                                        position: 'Linea',
-                                        cost: 50000,
-                                        stats: { MV: 6, FU: '3', AG: '3+', PA: '4+', AR: '9+' },
+                                     const newPlayer = {
+                                         qty: '0-16',
+                                         position: 'Lineman',
+                                         cost: 50000,
+                                         stats: { MV: 6, FU: '3', AG: '3+', PA: '4+', AR: '9+' },
                                         skillKeys: [],
                                         primary: 'G',
                                         secondary: 'A, S',

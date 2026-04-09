@@ -143,7 +143,7 @@ export const useMasterData = () => {
             doc(db, MASTER_COL, 'teams'),
             (snap) => {
                 if (snap.exists() && snap.data()?.items?.length > 0) {
-                    setTeams(normalizeTeams(snap.data().items as Team[]));
+                    setTeams(mergeCanonicalTeams(snap.data().items as Team[], staticTeamsData));
                     setIsFromFirestore(true);
                     setError(null);
                 } else {
