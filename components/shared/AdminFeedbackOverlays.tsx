@@ -77,15 +77,19 @@ const AdminFeedbackOverlays: React.FC<AdminFeedbackOverlaysProps> = ({
             )}
 
             {toastMessage && (
-                <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-[500] animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div className={`px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 backdrop-blur-xl border ${toastMessage.type === 'error'
-                        ? 'bg-red-950/80 border-red-500/30'
-                        : 'bg-zinc-900/90 border-white/10'
+                <div className="fixed right-6 bottom-6 z-[500] animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className={`w-[360px] max-w-[calc(100vw-2rem)] px-5 py-4 rounded-[1.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.35)] flex items-start gap-4 backdrop-blur-2xl border ${toastMessage.type === 'error'
+                        ? 'bg-red-950/85 border-red-500/30'
+                        : 'bg-[#1b130d]/92 border-[#CA8A04]/20'
                         }`}>
-                        <span className={`material-symbols-outlined font-bold ${toastMessage.type === 'error' ? 'text-red-400' : 'text-premium-gold'}`}>
-                            {toastMessage.type === 'error' ? 'error' : 'check_circle'}
+                        <span className={`material-symbols-outlined font-bold mt-0.5 ${toastMessage.type === 'error' ? 'text-red-300' : 'text-premium-gold'}`}>
+                            {toastMessage.type === 'error' ? 'error' : 'notifications_active'}
                         </span>
-                        <p className="text-white font-bold text-sm max-w-xs">{toastMessage.text}</p>
+                        <div className="min-w-0">
+                            <p className="text-[10px] uppercase tracking-[0.2em] font-black text-[#D5B06A]">Centro de mando</p>
+                            <p className="text-[#F6EBDD] font-bold text-sm leading-relaxed mt-1">{toastMessage.text}</p>
+                            <p className="text-[10px] uppercase tracking-[0.14em] text-[#B79C7A] mt-2">Guardado tambi?n en la campana superior</p>
+                        </div>
                     </div>
                 </div>
             )}

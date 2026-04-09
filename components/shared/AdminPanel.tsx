@@ -32,6 +32,7 @@ interface AdminPanelProps {
     competitions: Competition[];
     onCompetitionCreate: (comp: Omit<Competition, 'id'>) => void | Promise<void>;
     onOpenLeagues?: () => void;
+    onNotify?: (notification: { title: string; message: string; type: 'success' | 'error' | 'info'; source?: string }) => void;
 }
 
 const ADMIN_STORAGE_MAP: Record<AdminTab, { target: string; mode: string; description: string }> = {
@@ -77,7 +78,7 @@ const ADMIN_STORAGE_MAP: Record<AdminTab, { target: string; mode: string; descri
     },
 };
 
-const AdminPanel: React.FC<AdminPanelProps> = ({ managedTeams, competitions, onCompetitionCreate, onOpenLeagues }) => {
+const AdminPanel: React.FC<AdminPanelProps> = ({ managedTeams, competitions, onCompetitionCreate, onOpenLeagues, onNotify }) => {
     const {
         teams,
         starPlayers,
@@ -120,8 +121,14 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ managedTeams, competitions, onC
                 ? 'Error'
                 : 'Sincronización inteligente';
 
-    const showToast = (text: string, type: 'success' | 'error' = 'success') => {
+    const showToast = (text: string, type: 'success' | 'error' = 'success', title?: string) => {
         setToastMessage({ text, type });
+        onNotify?.({
+            title: title || (type === 'error' ? 'Error de administraci?n' : 'Acci?n completada'),
+            message: text,
+            type,
+            source: `Admin ? ${ADMIN_STORAGE_MAP[activeTab].target}`,
+        });
         setTimeout(() => setToastMessage(null), 4500);
     };
 

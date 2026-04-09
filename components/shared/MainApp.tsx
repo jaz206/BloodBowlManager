@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, lazy, Suspense, useRef } from 'react';
 // ── Pages ─────────────────────────────────────────────────────────────────────
 const Home = lazy(() => import('../../pages/Home/index'));
 const OraclePage = lazy(() => import('../../pages/Oracle/index'));
@@ -33,6 +33,19 @@ import { generateJoinCode } from '../../pages/Arena/competitionUtils';
 
 type View = 'home' | 'oracle' | 'starplayers' | 'guild' | 'tactical' | 'arena' | 'leagues' | 'guide' | 'admin';
 type SyncStatus = 'synced' | 'syncing' | 'error';
+
+type AppNotification = {
+  id: string;
+  title: string;
+  message: string;
+  type: 'success' | 'error' | 'info';
+  createdAt: string;
+  read: boolean;
+  source?: string;
+};
+
+const NOTIFICATIONS_STORAGE_KEY = 'bb-app-notifications';
+
 
 const GuestWarningBanner = () => {
   const { t } = useLanguage();
@@ -156,6 +169,53 @@ const MainApp: React.FC = () => {
   };
 
   const [directOpenTeamId, setDirectOpenTeamId] = useState<string | null>(null);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState<AppNotification[]>(() => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const saved = localStorage.getItem(NOTIFICATIONS_STORAGE_KEY);
+      return saved ? JSON.parse(saved) as AppNotification[] : [];
+    } catch {
+      return [];
+    }
+  });
+  const notificationsRef = useRef<HTMLDivElement | null>(null);
+
+  const pushNotification = (payload: Omit<AppNotification, 'id' | 'createdAt' | 'read'>) => {
+    const next: AppNotification = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      createdAt: new Date().toISOString(),
+      read: false,
+      ...payload,
+    };
+
+    setNotifications(prev => [next, ...prev].slice(0, 40));
+  };
+
+  const markAllNotificationsRead = () => {
+    setNotifications(prev => prev.map(item => ({ ...item, read: true })));
+  };
+
+  const unreadNotifications = useMemo(() => notifications.filter(item => !item.read), [notifications]);
+
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(NOTIFICATIONS_STORAGE_KEY, JSON.stringify(notifications));
+  }, [notifications]);
+
+  useEffect(() => {
+    if (!notificationsOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
+        setNotificationsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [notificationsOpen]);
 
   // Combine sync states
   const displaySyncStatus = masterDataError ? 'error' : syncState;
@@ -585,10 +645,69 @@ const MainApp: React.FC = () => {
 
             {/* Right: User Actions */}
             <div className="flex items-center gap-5">
-              <button className="text-[#CA8A04]/60 hover:text-[#CA8A04] transition-colors relative hidden sm:block">
-                <span className="material-symbols-outlined font-black">notifications</span>
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-600 rounded-full border border-black animate-pulse"></span>
-              </button>
+              <div className="relative hidden sm:block" ref={notificationsRef}>
+                <button
+                  onClick={() => {
+                    setNotificationsOpen(prev => {
+                      const next = !prev;
+                      if (!prev) markAllNotificationsRead();
+                      return next;
+                    });
+                  }}
+                  className="text-[#CA8A04]/60 hover:text-[#CA8A04] transition-colors relative"
+                  aria-label="Notificaciones"
+                >
+                  <span className="material-symbols-outlined font-black">notifications</span>
+                  {unreadNotifications.length > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 bg-red-600 rounded-full border border-black text-[10px] leading-[16px] text-white font-black text-center animate-pulse">
+                      {Math.min(unreadNotifications.length, 9)}
+                    </span>
+                  )}
+                </button>
+
+                {notificationsOpen && (
+                  <div className="absolute right-0 top-12 w-[380px] max-h-[70vh] overflow-hidden rounded-[1.75rem] border border-[#CA8A04]/20 bg-[#1b130d]/95 backdrop-blur-2xl shadow-[0_24px_80px_rgba(0,0,0,0.45)] z-[130]">
+                    <div className="px-5 py-4 border-b border-white/8 flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-[0.24em] font-black text-[#CA8A04]">Hist?rico de mensajes</p>
+                        <h3 className="text-sm font-black italic uppercase text-white tracking-tight">Centro de mando</h3>
+                      </div>
+                      <span className="text-[10px] font-black uppercase tracking-[0.18em] text-[#A8937B]">{notifications.length} registros</span>
+                    </div>
+
+                    <div className="max-h-[58vh] overflow-y-auto px-3 py-3 space-y-2">
+                      {notifications.length === 0 ? (
+                        <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-5 text-sm text-[#CDBEA8]">
+                          A?n no hay mensajes guardados. Las acciones importantes del Admin aparecer?n aqu?.
+                        </div>
+                      ) : notifications.map(item => (
+                        <div
+                          key={item.id}
+                          className={`rounded-2xl border px-4 py-3 ${item.type === 'error'
+                            ? 'border-red-500/20 bg-red-950/20'
+                            : item.type === 'success'
+                              ? 'border-emerald-500/20 bg-emerald-950/10'
+                              : 'border-white/10 bg-white/[0.03]'} ${item.read ? 'opacity-80' : ''}`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <span className={`material-symbols-outlined text-lg mt-0.5 ${item.type === 'error' ? 'text-red-300' : item.type === 'success' ? 'text-emerald-300' : 'text-[#CA8A04]'}`}>
+                              {item.type === 'error' ? 'error' : item.type === 'success' ? 'check_circle' : 'info'}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center justify-between gap-3">
+                                <p className="text-xs font-black uppercase tracking-[0.16em] text-white">{item.title}</p>
+                                <span className="text-[10px] uppercase tracking-[0.12em] text-[#9D8A73] whitespace-nowrap">{new Date(item.createdAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</span>
+                              </div>
+                              <p className="mt-1 text-sm leading-relaxed text-[#E8DBC6]">{item.message}</p>
+                              {item.source && <p className="mt-2 text-[10px] uppercase tracking-[0.14em] text-[#9D8A73]">Origen: {item.source}</p>}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
               
               <button className="text-[#CA8A04]/60 hover:text-[#CA8A04] transition-colors hidden sm:block">
                 <span className="material-symbols-outlined font-black">settings</span>
