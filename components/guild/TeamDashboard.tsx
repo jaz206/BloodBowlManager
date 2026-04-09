@@ -128,6 +128,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
     const [activeTab, setActiveTab] = useState<'roster' | 'recruit' | 'staff' | 'history'>('roster');
     const [zoomedImage, setZoomedImage] = useState<string | null>(null);
     const [imageStock, setImageStock] = useState<PositionStock | null>(null);
+    const [hiddenPlayerImages, setHiddenPlayerImages] = useState<Record<number, boolean>>({});
 
     useEffect(() => {
         const loadStock = async () => {
@@ -141,6 +142,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
         const staticRoster = teamsData.find(t => t.name === team.rosterName);
         return mergeTeamWithFallback(master as any, staticRoster as any);
     }, [masterTeams, team.rosterName]);
+    const canonicalTeamTemplate = useMemo(() => teamsData.find(t => t.name === team.rosterName), [team.rosterName]);
 
     const skillCatalog = useMemo(() => (masterSkills?.length ? masterSkills : skillsData), [masterSkills]);
 
@@ -165,10 +167,20 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
 
     const findRosterTemplateForPlayer = (player: ManagedPlayer): Player | undefined => {
         const playerKey = normalizeLookupKey(player.position);
-        return baseRoster?.roster?.find((entry) => {
+        const rosterPool = [...(baseRoster?.roster || []), ...(canonicalTeamTemplate?.roster || [])];
+        const matchedByName = rosterPool.find((entry) => {
             const entryKey = normalizeLookupKey(entry.position);
             return entryKey === playerKey || entryKey.includes(playerKey) || playerKey.includes(entryKey);
         });
+        if (matchedByName) return matchedByName;
+        return rosterPool.find((entry) =>
+            entry.cost === player.cost &&
+            entry.stats.MV === player.stats.MV &&
+            String(entry.stats.FU) === String(player.stats.FU) &&
+            String(entry.stats.AG) === String(player.stats.AG) &&
+            String(entry.stats.PA) === String(player.stats.PA) &&
+            String(entry.stats.AR) === String(player.stats.AR)
+        );
     };
 
     const getPlayerCoreSkillKeys = (player: ManagedPlayer): string[] => {
@@ -193,6 +205,24 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
             label: resolveSkillLabel(skill),
             isElite: ELITE_SKILLS.includes(resolveSkillRecord(skill)?.keyEN || skill) || ELITE_SKILLS.includes(skill),
         }));
+    };
+
+    const normalizeManagedPlayer = (player: ManagedPlayer): ManagedPlayer => ({
+        ...player,
+        skillKeys: Array.isArray(player.skillKeys) && player.skillKeys.length > 0 ? player.skillKeys.filter(Boolean) : getPlayerCoreSkillKeys(player),
+        gainedSkills: Array.isArray(player.gainedSkills) ? player.gainedSkills.filter(Boolean) : [],
+        lastingInjuries: Array.isArray(player.lastingInjuries) ? player.lastingInjuries.filter(Boolean) : [],
+        missNextGame: player.missNextGame || 0,
+        isBenched: player.isBenched ?? true,
+    });
+
+    const getPlayerVisibleImage = (player: ManagedPlayer) => {
+        if (!player.image || hiddenPlayerImages[player.id]) return '';
+        return player.image;
+    };
+
+    const hideBrokenPlayerImage = (playerId: number) => {
+        setHiddenPlayerImages((current) => ({ ...current, [playerId]: true }));
     };
 
     const resolveTeamCrestUrl = (managedTeam: ManagedTeam): string => {
@@ -461,7 +491,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
     };
 
     const handleSavePlayer = (updatedPlayer: ManagedPlayer) => {
-        onUpdate({ ...team, players: team.players.map(p => p.id === updatedPlayer.id ? updatedPlayer : p) });
+        onUpdate({ ...team, players: team.players.map(p => p.id === updatedPlayer.id ? normalizeManagedPlayer(updatedPlayer) : p) });
         setEditingPlayer(null);
         setOpenPlayerMenuId(null);
         setAdvancingPlayer(null);
@@ -629,6 +659,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
 
                                 {/* Player Cards */}
                                 {team.players.map(p => {
+                                    const playerImage = getPlayerVisibleImage(p);
                                     const displayedSkills = getPlayerDisplayedSkills(p);
                                     const nextAdvanceCost = SPP_LEVELS[p.advancements?.length || 0] || 999;
                                     const hasLevelUp = p.spp >= nextAdvanceCost;
@@ -643,7 +674,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                     return (
                                         <div
                                             key={p.id}
-                                            className={`blood-ui-card-strong border rounded-2xl p-5 backdrop-blur-custom player-row-glow transition-all relative group/card ${hasLevelUp ? 'border-primary/40 bg-primary/8' : 'border-white/10'} ${isBenched ? 'opacity-80' : ''}`}
+                                            className={`blood-ui-card-strong border rounded-2xl p-5 backdrop-blur-custom player-row-glow transition-all relative group/card ${hasLevelUp ? 'border-primary/40 bg-primary/8' : 'border-white/10'} ${isBenched ? 'opacity-80' : ''} ${openPlayerMenuId === p.id ? 'z-30' : 'z-0'}`}
                                         >
                                             {hasLevelUp && (
                                                 <div className="absolute top-0 left-0 w-1 h-full bg-primary shadow-[0_0_15px_rgba(202,138,4,0.6)]"></div>
@@ -656,17 +687,18 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                                             #{p.id.toString().slice(-2)}
                                                         </span>
                                                     </div>
-                                                        {p.image && (
+                                                        {playerImage && (
                                                             <div 
-                                                                onClick={() => setZoomedImage(p.image!)}
+                                                                onClick={() => setZoomedImage(playerImage)}
                                                                 className="w-24 aspect-[4/3] rounded-lg overflow-hidden border-2 border-slate-800 bg-[#efe0bf] cursor-zoom-in hover:scale-105 hover:border-gold/50 transition-all group/img relative"
                                                             >
                                                                 {/* Blurred layer */}
-                                                                <img src={p.image} className="absolute inset-0 w-full h-full object-cover blur-lg opacity-30 scale-125" alt="" />
+                                                                <img src={playerImage} onError={() => hideBrokenPlayerImage(p.id)} className="absolute inset-0 w-full h-full object-cover blur-lg opacity-30 scale-125" alt="" />
                                                                 {/* Main Image layer */}
                                                                 <img 
-                                                                    src={p.image} 
+                                                                    src={playerImage} 
                                                                     alt={p.customName} 
+                                                                    onError={() => hideBrokenPlayerImage(p.id)}
                                                                     className="relative w-full h-full object-contain z-10 transition-all opacity-90 group-hover/img:opacity-100"
                                                                 />
                                                             </div>
@@ -798,8 +830,8 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                                                 <span className="material-symbols-outlined">more_vert</span>
                                                             </button>
                                                             {openPlayerMenuId === p.id && (
-                                                            <div className="absolute right-0 top-full mt-2 w-48 bg-[rgba(255,251,241,0.98)] border border-[rgba(111,87,56,0.14)] rounded-xl py-2 shadow-2xl z-20 backdrop-blur-xl">
-                                                                <button onClick={() => { setEditingPlayer({ ...p, skillKeys: getPlayerCoreSkillKeys(p) }); setOpenPlayerMenuId(null); }} className="w-full px-4 py-2 text-left text-[10px] font-black text-[#6f5738] hover:text-[#2b1d12] hover:bg-[rgba(202,138,4,0.08)] uppercase tracking-widest flex items-center gap-2">
+                                                            <div className="absolute right-0 top-full mt-2 w-48 bg-[rgba(255,251,241,0.98)] border border-[rgba(111,87,56,0.14)] rounded-xl py-2 shadow-2xl z-50 backdrop-blur-xl">
+                                                                <button onClick={() => { setEditingPlayer(normalizeManagedPlayer({ ...p, skillKeys: getPlayerCoreSkillKeys(p) })); setOpenPlayerMenuId(null); }} className="w-full px-4 py-2 text-left text-[10px] font-black text-[#6f5738] hover:text-[#2b1d12] hover:bg-[rgba(202,138,4,0.08)] uppercase tracking-widest flex items-center gap-2">
                                                                     <span className="material-symbols-outlined text-sm">edit</span>
                                                                     Perfil
                                                                 </button>

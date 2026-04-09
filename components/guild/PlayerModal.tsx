@@ -1,4 +1,4 @@
-ï»¿import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import type { ManagedPlayer, Skill } from '../../types';
 import SkillSelectorModal from '../oracle/SkillSelectorModal';
 
@@ -17,12 +17,21 @@ const normalizeLookupKey = (value?: string) =>
         .replace(/[^a-z0-9]+/g, ' ')
         .trim();
 
+const normalizeManagedPlayer = (player: ManagedPlayer): ManagedPlayer => ({
+    ...player,
+    skillKeys: Array.isArray(player.skillKeys) ? player.skillKeys.filter(Boolean) : [],
+    gainedSkills: Array.isArray(player.gainedSkills) ? player.gainedSkills.filter(Boolean) : [],
+    lastingInjuries: Array.isArray(player.lastingInjuries) ? player.lastingInjuries.filter(Boolean) : [],
+    missNextGame: player.missNextGame || 0,
+    isBenched: player.isBenched ?? true,
+});
+
 const PlayerModal: React.FC<PlayerModalProps> = ({ player, allSkills, onSave, onClose }) => {
-    const [editedPlayer, setEditedPlayer] = useState<ManagedPlayer>(player);
+    const [editedPlayer, setEditedPlayer] = useState<ManagedPlayer>(() => normalizeManagedPlayer(player));
     const [isSkillSelectorOpen, setIsSkillSelectorOpen] = useState(false);
 
     useEffect(() => {
-        setEditedPlayer(player);
+        setEditedPlayer(normalizeManagedPlayer(player));
     }, [player]);
 
     const resolvedSkills = useMemo(() => {
@@ -44,21 +53,21 @@ const PlayerModal: React.FC<PlayerModalProps> = ({ player, allSkills, onSave, on
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         if (name === 'spp' || name === 'missNextGame') {
-            setEditedPlayer({ ...editedPlayer, [name]: parseInt(value) || 0 });
+            setEditedPlayer({ ...editedPlayer, [name]: parseInt(value, 10) || 0 });
         } else if (name === 'lastingInjuries') {
-            setEditedPlayer({ ...editedPlayer, [name]: (value || '').split(',').map(s => s.trim()).filter(Boolean) });
+            setEditedPlayer({ ...editedPlayer, [name]: (value || '').split(',').map((s) => s.trim()).filter(Boolean) });
         } else {
             setEditedPlayer({ ...editedPlayer, [name]: value });
         }
     };
 
     const handleSkillsSave = (newSkills: string[]) => {
-        setEditedPlayer({ ...editedPlayer, gainedSkills: newSkills });
+        setEditedPlayer({ ...editedPlayer, gainedSkills: Array.isArray(newSkills) ? newSkills.filter(Boolean) : [] });
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave(editedPlayer);
+        onSave(normalizeManagedPlayer(editedPlayer));
     };
 
     const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -138,7 +147,7 @@ const PlayerModal: React.FC<PlayerModalProps> = ({ player, allSkills, onSave, on
                                         </div>
                                     </div>
                                     <div className="rounded-[1.75rem] border border-[#e3cfaa] bg-[#fffaf1] p-5">
-                                        <span className="block text-[10px] font-black uppercase tracking-[0.28em] text-[#8a7760] mb-4">ProgresiÃ³n</span>
+                                        <span className="block text-[10px] font-black uppercase tracking-[0.28em] text-[#8a7760] mb-4">Progresión</span>
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                                 <label className="block text-[10px] font-bold text-[#8a7760] uppercase tracking-widest">Puntos de estrella</label>
@@ -151,7 +160,7 @@ const PlayerModal: React.FC<PlayerModalProps> = ({ player, allSkills, onSave, on
                                                 />
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="block text-[10px] font-bold text-[#8a7760] uppercase tracking-widest">Partidos de sanciÃ³n</label>
+                                                <label className="block text-[10px] font-bold text-[#8a7760] uppercase tracking-widest">Partidos de sanción</label>
                                                 <input
                                                     type="number"
                                                     name="missNextGame"
@@ -187,14 +196,14 @@ const PlayerModal: React.FC<PlayerModalProps> = ({ player, allSkills, onSave, on
                                         onClick={() => setIsSkillSelectorOpen(true)}
                                         className="w-full bg-white border border-[#d7c39a] text-[#2b1d12] font-display font-bold uppercase tracking-[0.2em] text-[10px] py-4 px-4 rounded-2xl hover:border-premium-gold/40 hover:text-premium-gold transition-all shadow-sm"
                                     >
-                                        AÃ±adir o editar habilidades extra
+                                        Añadir o editar habilidades extra
                                     </button>
                                 </div>
                                 <div className="space-y-2">
                                     <label className="block text-[10px] font-bold text-[#8a7760] uppercase tracking-widest">Lesiones permanentes</label>
                                     <textarea
                                         name="lastingInjuries"
-                                        value={editedPlayer.lastingInjuries.join(', ')}
+                                        value={(editedPlayer.lastingInjuries || []).join(', ')}
                                         onChange={handleChange}
                                         placeholder="Ninguna"
                                         className="w-full bg-[#fffaf1] border border-[#d7c39a] rounded-2xl py-4 px-4 text-[#8f1d1d] font-display font-bold uppercase tracking-wider focus:border-blood-red outline-none transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] min-h-[140px]"
@@ -214,7 +223,7 @@ const PlayerModal: React.FC<PlayerModalProps> = ({ player, allSkills, onSave, on
             {isSkillSelectorOpen && (
                 <SkillSelectorModal
                     allSkills={allSkills}
-                    selectedSkills={editedPlayer.gainedSkills}
+                    selectedSkills={editedPlayer.gainedSkills || []}
                     onSave={handleSkillsSave}
                     onClose={() => setIsSkillSelectorOpen(false)}
                 />

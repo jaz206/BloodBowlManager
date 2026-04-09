@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import type { Skill } from '../../types';
 
@@ -11,14 +10,14 @@ interface SkillSelectorModalProps {
 
 const SkillSelectorModal: React.FC<SkillSelectorModalProps> = ({ allSkills, selectedSkills, onSave, onClose }) => {
     const [searchTerm, setSearchTerm] = useState('');
-    const [currentSelection, setCurrentSelection] = useState<string[]>(selectedSkills);
+    const [currentSelection, setCurrentSelection] = useState<string[]>(selectedSkills || []);
 
     const filteredSkills = useMemo(() => {
         if (!searchTerm) {
             return allSkills;
         }
         const lowerSearchTerm = searchTerm.toLowerCase();
-        return allSkills.filter(skill =>
+        return allSkills.filter((skill) =>
             (skill.name_es || skill.name_en || skill.name || '').toLowerCase().includes(lowerSearchTerm) ||
             skill.category.toLowerCase().includes(lowerSearchTerm) ||
             (skill.desc_es || skill.desc_en || skill.description || '').toLowerCase().includes(lowerSearchTerm)
@@ -26,9 +25,9 @@ const SkillSelectorModal: React.FC<SkillSelectorModalProps> = ({ allSkills, sele
     }, [searchTerm, allSkills]);
 
     const handleCheckboxChange = (skillName: string) => {
-        setCurrentSelection(prev =>
+        setCurrentSelection((prev) =>
             prev.includes(skillName)
-                ? prev.filter(s => s !== skillName)
+                ? prev.filter((s) => s !== skillName)
                 : [...prev, skillName]
         );
     };
@@ -40,34 +39,34 @@ const SkillSelectorModal: React.FC<SkillSelectorModalProps> = ({ allSkills, sele
 
     return (
         <div
-            className="fixed inset-0 bg-black/80 backdrop-blur-xl flex items-center justify-center z-[60] p-4 animate-fade-in-fast"
+            className="fixed inset-0 bg-black/55 backdrop-blur-md flex items-center justify-center z-[260] p-4 animate-fade-in-fast"
             onClick={onClose}
         >
             <div
-                className="glass-panel max-w-2xl w-full transform animate-slide-in-up flex flex-col max-h-[90vh] border-white/10 overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)]"
-                onClick={e => e.stopPropagation()}
+                className="w-full max-w-3xl rounded-[2rem] border border-[rgba(111,87,56,0.14)] bg-[rgba(255,251,241,0.98)] shadow-[0_30px_80px_rgba(0,0,0,0.28)] overflow-hidden transform animate-slide-in-up flex flex-col max-h-[90vh]"
+                onClick={(e) => e.stopPropagation()}
             >
-                <div className="p-6 border-b border-white/5 bg-white/5">
-                    <h2 className="text-2xl font-display font-black text-white italic uppercase tracking-tighter">Seleccionar Habilidades</h2>
+                <div className="p-6 border-b border-[rgba(111,87,56,0.12)] bg-[rgba(255,248,235,0.85)]">
+                    <h2 className="text-2xl font-display font-black text-[#2b1d12] italic uppercase tracking-tighter">Seleccionar habilidades extra</h2>
                 </div>
-                <div className="p-6 flex-shrink-0 bg-black/20">
+                <div className="p-6 flex-shrink-0 bg-[rgba(255,248,235,0.65)]">
                     <div className="relative group">
                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <svg className="h-4 w-4 text-slate-500 group-focus-within:text-premium-gold transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="h-4 w-4 text-[#8a7760] group-focus-within:text-premium-gold transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
                         </div>
                         <input
                             type="text"
-                            placeholder="Buscar habilidad por nombre o categorÃ­a..."
+                            placeholder="Buscar habilidad por nombre o categoría..."
                             value={searchTerm}
-                            onChange={e => setSearchTerm(e.target.value)}
-                            className="w-full bg-black/40 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white font-display font-bold uppercase tracking-wider placeholder-slate-600 focus:border-premium-gold outline-none transition-premium shadow-inner"
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full bg-white border border-[#d7c39a] rounded-2xl py-4 pl-12 pr-4 text-[#2b1d12] font-display font-bold uppercase tracking-wider placeholder-[#a79479] focus:border-premium-gold outline-none transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]"
                         />
                     </div>
                 </div>
-                <div className="p-4 overflow-y-auto space-y-2 custom-scrollbar flex-grow bg-black/20">
-                    {filteredSkills.map(skill => {
+                <div className="p-4 overflow-y-auto space-y-2 custom-scrollbar flex-grow bg-[rgba(255,248,235,0.35)]">
+                    {filteredSkills.map((skill) => {
                         const displayName = skill.name_es || skill.name_en || skill.name || skill.keyEN;
                         const description = skill.desc_es || skill.desc_en || skill.description || '';
                         const selectionKey = skill.keyEN || displayName;
@@ -76,9 +75,9 @@ const SkillSelectorModal: React.FC<SkillSelectorModalProps> = ({ allSkills, sele
                             <div
                                 key={selectionKey}
                                 onClick={() => handleCheckboxChange(selectionKey)}
-                                className={`flex items-center group/skill p-4 rounded-xl border transition-premium cursor-pointer ${isSelected ? 'bg-premium-gold/10 border-premium-gold/30' : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10'}`}
+                                className={`flex items-center group/skill p-4 rounded-xl border transition-all cursor-pointer ${isSelected ? 'bg-premium-gold/10 border-premium-gold/30' : 'bg-white border-[#e3cfaa] hover:border-premium-gold/30 hover:bg-[#fffaf1]'}`}
                             >
-                                <div className={`h-6 w-6 rounded-lg border-2 flex items-center justify-center transition-premium ${isSelected ? 'bg-premium-gold border-premium-gold' : 'border-slate-600 group-hover/skill:border-slate-400'}`}>
+                                <div className={`h-6 w-6 rounded-lg border-2 flex items-center justify-center transition-all ${isSelected ? 'bg-premium-gold border-premium-gold' : 'border-[#b7a382] group-hover/skill:border-premium-gold/50 bg-[#fffaf1]'}`}>
                                     {isSelected && (
                                         <svg className="h-4 w-4 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" />
@@ -87,23 +86,23 @@ const SkillSelectorModal: React.FC<SkillSelectorModalProps> = ({ allSkills, sele
                                 </div>
                                 <div className="ml-4 flex-grow">
                                     <div className="flex items-center gap-2">
-                                        <span className={`font-display font-bold uppercase tracking-tight text-base ${isSelected ? 'text-premium-gold' : 'text-slate-200 group-hover/skill:text-white'}`}>{displayName}</span>
-                                        <span className="text-[10px] font-display font-black text-slate-500 uppercase tracking-widest bg-black/30 px-2 py-0.5 rounded-md border border-white/5">{skill.category}</span>
+                                        <span className={`font-display font-bold uppercase tracking-tight text-base ${isSelected ? 'text-premium-gold' : 'text-[#2b1d12]'}`}>{displayName}</span>
+                                        <span className="text-[10px] font-display font-black text-[#8a7760] uppercase tracking-widest bg-[rgba(255,248,235,0.9)] px-2 py-0.5 rounded-md border border-[#e3cfaa]">{skill.category}</span>
                                     </div>
-                                    <p className="text-[11px] text-slate-400 mt-1 leading-relaxed line-clamp-1 group-hover/skill:line-clamp-none transition-all">{description}</p>
+                                    <p className="text-[11px] text-[#6f5738] mt-1 leading-relaxed line-clamp-1 group-hover/skill:line-clamp-none transition-all">{description}</p>
                                 </div>
                             </div>
                         );
                     })}
                 </div>
-                <div className="p-6 bg-black/40 border-t border-white/5 flex flex-wrap gap-4 justify-between items-center flex-shrink-0">
-                    <span className="text-[10px] font-display font-bold text-slate-500 uppercase tracking-widest italic">{currentSelection.length} habilidades seleccionadas</span>
+                <div className="p-6 bg-[rgba(255,248,235,0.85)] border-t border-[rgba(111,87,56,0.12)] flex flex-wrap gap-4 justify-between items-center flex-shrink-0">
+                    <span className="text-[10px] font-display font-bold text-[#8a7760] uppercase tracking-widest italic">{currentSelection.length} habilidades seleccionadas</span>
                     <div className="flex gap-4">
-                        <button type="button" onClick={onClose} className="px-8 py-3 rounded-lg font-display font-bold uppercase tracking-widest text-xs text-slate-400 hover:text-white hover:bg-white/5 transition-premium">
+                        <button type="button" onClick={onClose} className="px-8 py-3 rounded-lg font-display font-bold uppercase tracking-widest text-xs text-[#8a7760] hover:text-[#2b1d12] hover:bg-white/60 transition-all">
                             Cancelar
                         </button>
                         <button type="button" onClick={handleSave} className="bg-premium-gold text-black font-display font-black uppercase tracking-widest text-xs py-3 px-10 rounded-lg transition-premium hover:scale-105 active:scale-95 shadow-2xl shadow-premium-gold/20">
-                            Confirmar SelecciÃ³n
+                            Confirmar selección
                         </button>
                     </div>
                 </div>
