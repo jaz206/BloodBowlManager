@@ -100,6 +100,8 @@ export const Leagues: React.FC<LeaguesProps> = ({
         }
     }, [initialCompetitions, managedTeams, joinModalState.comp]);
 
+    const isMatchCompleted = (match: Matchup) => Boolean(match.played || (match.score1 != null && match.score2 != null));
+
     const standings = useMemo(() => {
         if (!selectedCompetition || selectedCompetition.format !== 'Liguilla' || !selectedCompetition.schedule) return [];
         return selectedCompetition.teams.map(({ teamName }) => {
@@ -126,8 +128,6 @@ export const Leagues: React.FC<LeaguesProps> = ({
         const finalRoundKey = Math.max(...Object.keys(selectedCompetition.bracket).map(Number)).toString();
         return selectedCompetition.bracket[finalRoundKey]?.[0]?.winner;
     }, [selectedCompetition]);
-
-    const isMatchCompleted = (match: Matchup) => Boolean(match.played || (match.score1 != null && match.score2 != null));
 
     const rebuildBracketProgression = (bracket: Record<string, Matchup[]>, fromRoundIndex: number) => {
         for (let i = fromRoundIndex; i < Object.keys(bracket).length - 1; i++) {
