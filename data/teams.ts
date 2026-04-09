@@ -3,10 +3,10 @@
 export const teamsData: Team[] = [
     {
         "name":  "Amazons",
-        "specialRules":  "Superliga Lustria, GestiÃ³n de Equipo",
-        "rerollCost":  50000,
+        "specialRules":  "None",
+        "rerollCost":  60000,
         "tier":  1,
-        "apothecary":  "SÃ­",
+        "apothecary":  "Yes",
         "image":  "https://raw.githubusercontent.com/jaz206/Bloodbowl-image/main/Escudos/Amazonas.png",
         "ratings":  {
                         "fuerza":  65,
@@ -18,7 +18,7 @@ export const teamsData: Team[] = [
         "roster":  [
                        {
                            "qty":  "0-16",
-                           "position":  "Eagle Guerrero LÃ­nea",
+                           "position":  "Eagle Warrior",
                            "cost":  50000,
                            "stats":  {
                                          "MV":  6,
@@ -29,13 +29,13 @@ export const teamsData: Team[] = [
                                      },
                            "skillKeys":  [
                                              "Dodge"
-                                         ],
+                           ],
                            "primary":  "G",
                            "secondary":  "AS"
                        },
                        {
                            "qty":  "0-2",
-                           "position":  "Python Guerrero Lanzador",
+                           "position":  "Python Warrior",
                            "cost":  80000,
                            "stats":  {
                                          "MV":  6,
@@ -49,19 +49,19 @@ export const teamsData: Team[] = [
                                              "Kick-Off Return",
                                              "Pass",
                                              "Safe Pass"
-                                         ],
+                           ],
                            "primary":  "GP",
                            "secondary":  "AS"
                        },
                        {
-                           "qty":  "0-16",
-                           "position":  "Jaguar Guerrero Bloqueador",
+                           "qty":  "0-2",
+                           "position":  "Jaguar Warrior",
                            "cost":  110000,
                            "stats":  {
                                          "MV":  6,
                                          "FU":  "4",
                                          "AG":  "3+",
-                                         "PA":  "5+",
+                                         "PA":  "4+",
                                          "AR":  "9+"
                                      },
                            "skillKeys":  [
@@ -73,7 +73,7 @@ export const teamsData: Team[] = [
                        },
                        {
                            "qty":  "0-2",
-                           "position":  "Piranha Guerrero Placador",
+                           "position":  "Piranha Warrior",
                            "cost":  90000,
                            "stats":  {
                                          "MV":  7,
@@ -85,14 +85,15 @@ export const teamsData: Team[] = [
                            "skillKeys":  [
                                              "Dodge",
                                              "Hit and Run",
-                                             "Leap"
+                                             "Jump Up"
                                          ],
                            "primary":  "AG",
                            "secondary":  "S"
                        }
                    ],
-        "specialRules_es":  "Superliga Lustria, GestiÃ³n de Equipo",
-        "specialRules_en":  "Superliga Lustria, GestiÃ³n de Equipo"
+        "specialRules_es":  "Ninguna",
+        "specialRules_en":  "None",
+        "description": "League: Lustrian Superleague"
     },
     {
         "name":  "Black Orcs",
