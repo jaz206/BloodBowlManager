@@ -1,5 +1,6 @@
 ﻿import type { Team } from '../types';
 import { getTeamLogoUrl, resolveTeamLogoPreference } from './imageUtils';
+import { deepSanitizeText, sanitizeMojibakeText } from './textSanitizer';
 
 export type TeamAsset = Team & {
     crestImage?: string;
@@ -13,16 +14,7 @@ export type TeamAsset = Team & {
 
 const EMPTY_RECORD = { wins: 0, draws: 0, losses: 0 };
 
-const fixMojibake = (value: string): string => value
-    .replace(/Ã¡/g, 'á')
-    .replace(/Ã©/g, 'é')
-    .replace(/Ã­/g, 'í')
-    .replace(/Ã³/g, 'ó')
-    .replace(/Ãº/g, 'ú')
-    .replace(/Ã‰/g, 'É')
-    .replace(/Ã/g, 'Á')
-    .replace(/\?\?/g, '')
-    .replace(/\?/g, '');
+const fixMojibake = (value: string): string => sanitizeMojibakeText(value);
 
 const normalizeLookupKey = (value?: string): string =>
     fixMojibake(String(value || ''))
@@ -97,38 +89,40 @@ export const mergeTeamWithFallback = (
     fallback?: TeamAsset | null
 ): TeamAsset => {
     const source = fallback || ({} as TeamAsset);
-    const roster = team?.roster?.length ? team.roster : source.roster || [];
-    const resolvedName = normalizeTeamName(team?.name || source.name || '');
+    const sanitizedTeam = deepSanitizeText(team || {} as Partial<TeamAsset>);
+    const sanitizedSource = deepSanitizeText(source);
+    const roster = sanitizedTeam?.roster?.length ? sanitizedTeam.roster : sanitizedSource.roster || [];
+    const resolvedName = normalizeTeamName(sanitizedTeam?.name || sanitizedSource.name || '');
     const computedLogo = resolvedName ? getTeamLogoUrl(resolvedName) : '';
     const preferredImage = resolvedName
-        ? resolveTeamLogoPreference(resolvedName, team?.image || team?.crestImage)
-        : (team?.image || team?.crestImage || '');
+        ? resolveTeamLogoPreference(resolvedName, sanitizedTeam?.image || sanitizedTeam?.crestImage)
+        : (sanitizedTeam?.image || sanitizedTeam?.crestImage || '');
     const fallbackImage = resolvedName
-        ? resolveTeamLogoPreference(resolvedName, source.image || source.crestImage)
-        : (source.image || source.crestImage || '');
+        ? resolveTeamLogoPreference(resolvedName, sanitizedSource.image || sanitizedSource.crestImage)
+        : (sanitizedSource.image || sanitizedSource.crestImage || '');
     const resolvedRatings = {
-        fuerza: team?.ratings?.fuerza ?? source.ratings?.fuerza ?? 0,
-        agilidad: team?.ratings?.agilidad ?? source.ratings?.agilidad ?? 0,
-        velocidad: team?.ratings?.velocidad ?? source.ratings?.velocidad ?? 0,
-        armadura: team?.ratings?.armadura ?? source.ratings?.armadura ?? 0,
-        pase: team?.ratings?.pase ?? source.ratings?.pase ?? 0,
+        fuerza: sanitizedTeam?.ratings?.fuerza ?? sanitizedSource.ratings?.fuerza ?? 0,
+        agilidad: sanitizedTeam?.ratings?.agilidad ?? sanitizedSource.ratings?.agilidad ?? 0,
+        velocidad: sanitizedTeam?.ratings?.velocidad ?? sanitizedSource.ratings?.velocidad ?? 0,
+        armadura: sanitizedTeam?.ratings?.armadura ?? sanitizedSource.ratings?.armadura ?? 0,
+        pase: sanitizedTeam?.ratings?.pase ?? sanitizedSource.ratings?.pase ?? 0,
     };
 
     return {
         name: resolvedName,
-        specialRules_es: team?.specialRules_es || source.specialRules_es || team?.specialRules || source.specialRules || '',
-        specialRules_en: team?.specialRules_en || source.specialRules_en || team?.specialRules || source.specialRules || '',
-        specialRules: team?.specialRules || source.specialRules || team?.specialRules_es || source.specialRules_es || team?.specialRules_en || source.specialRules_en || '',
-        rerollCost: team?.rerollCost ?? source.rerollCost ?? 0,
-        tier: team?.tier ?? source.tier ?? 0,
-        apothecary: team?.apothecary || source.apothecary || 'No',
+        specialRules_es: sanitizedTeam?.specialRules_es || sanitizedSource.specialRules_es || sanitizedTeam?.specialRules || sanitizedSource.specialRules || '',
+        specialRules_en: sanitizedTeam?.specialRules_en || sanitizedSource.specialRules_en || sanitizedTeam?.specialRules || sanitizedSource.specialRules || '',
+        specialRules: sanitizedTeam?.specialRules || sanitizedSource.specialRules || sanitizedTeam?.specialRules_es || sanitizedSource.specialRules_es || sanitizedTeam?.specialRules_en || sanitizedSource.specialRules_en || '',
+        rerollCost: sanitizedTeam?.rerollCost ?? sanitizedSource.rerollCost ?? 0,
+        tier: sanitizedTeam?.tier ?? sanitizedSource.tier ?? 0,
+        apothecary: sanitizedTeam?.apothecary || sanitizedSource.apothecary || 'No',
         roster,
         image: preferredImage || fallbackImage || computedLogo,
         crestImage: preferredImage || fallbackImage || computedLogo,
         ratings: resolvedRatings,
-        description: team?.description || source.description || '',
-        megaFactions: team?.megaFactions || source.megaFactions || [],
-        namePools: team?.namePools || source.namePools || [],
+        description: sanitizedTeam?.description || sanitizedSource.description || '',
+        megaFactions: sanitizedTeam?.megaFactions || sanitizedSource.megaFactions || [],
+        namePools: sanitizedTeam?.namePools || sanitizedSource.namePools || [],
     };
 };
 

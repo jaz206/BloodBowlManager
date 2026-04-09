@@ -10,49 +10,15 @@ import { starPlayersData as staticStarsData } from '../data/starPlayers';
 import { inducements as staticInducementsEs } from '../data/inducements';
 import { inducementsData as staticInducementsEn } from '../data/inducements_en';
 import { ensureTeamRecord, normalizeTeamCollection, type TeamAsset } from '../utils/teamData';
+import { deepSanitizeText, sanitizeMojibakeText } from '../utils/textSanitizer';
 
 import type { Team, Skill, StarPlayer, Inducement } from '../types';
 
 // ── Firestore collection ID ───────────────────────────────────────────────────
 const MASTER_COL = 'master_data';
 
-const sanitizeMojibakeText = (value: string): string =>
-    value
-        .replace(/â€“|–/g, '-')
-        .replace(/â€”|—/g, '—')
-        .replace(/â€˜|â€™|’/g, "'")
-        .replace(/â€œ|â€�|“|”/g, '"')
-        .replace(/Â/g, '')
-        .replace(/Ã¡/g, 'á')
-        .replace(/Ã©/g, 'é')
-        .replace(/Ã­/g, 'í')
-        .replace(/Ã³/g, 'ó')
-        .replace(/Ãº/g, 'ú')
-        .replace(/Ã±/g, 'ñ')
-        .replace(/Ã/g, 'Á')
-        .replace(/Ã‰/g, 'É')
-        .replace(/Ã/g, 'Í')
-        .replace(/Ã“/g, 'Ó')
-        .replace(/Ãš/g, 'Ú')
-        .replace(/Ã‘/g, 'Ñ');
-
-const deepNormalizeText = <T,>(value: T): T => {
-    if (typeof value === 'string') {
-        return sanitizeMojibakeText(value) as T;
-    }
-    if (Array.isArray(value)) {
-        return value.map(item => deepNormalizeText(item)) as T;
-    }
-    if (value && typeof value === 'object') {
-        return Object.fromEntries(
-            Object.entries(value as Record<string, unknown>).map(([key, item]) => [key, deepNormalizeText(item)])
-        ) as T;
-    }
-    return value;
-};
-
 const normalizeStarPlayerRecord = (star: StarPlayer): StarPlayer => {
-    const normalized = deepNormalizeText(star);
+    const normalized = deepSanitizeText(star);
 
     return {
         ...normalized,
@@ -68,7 +34,7 @@ const normalizeStarPlayerRecord = (star: StarPlayer): StarPlayer => {
 const normalizeStarPlayersCollection = (items: StarPlayer[]) =>
     items.map(normalizeStarPlayerRecord);
 
-const normalizeSkillRecord = (skill: Skill): Skill => deepNormalizeText(skill);
+const normalizeSkillRecord = (skill: Skill): Skill => deepSanitizeText(skill);
 
 const normalizeSkillsCollection = (items: Skill[]) =>
     items.map(normalizeSkillRecord);
