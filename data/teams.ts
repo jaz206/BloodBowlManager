@@ -2130,1197 +2130,330 @@ export const teamsData: Team[] = [
         "description": "Leagues: Old World Classic or Badlands Brawl"
     },
     {
-        "name":  "Old World Alliance",
-        "specialRules":  "ClÃ¡sico del Viejo Mundo, GestiÃ³n de Equipo",
-        "rerollCost":  50000,
-        "tier":  2,
-        "apothecary":  "SÃ­",
-        "image":  "https://i.pinimg.com/736x/d3/a2/19/d3a219f32e89433aa05b5396f935d334.jpg",
-        "ratings":  {
-                        "fuerza":  56,
-                        "agilidad":  76,
-                        "velocidad":  69,
-                        "armadura":  89,
-                        "pase":  51
-                    },
-        "roster":  [
-                       {
-                           "qty":  "0-1",
-                           "position":  "Old World Humanos Placador",
-                           "cost":  90000,
-                           "stats":  {
-                                         "MV":  7,
-                                         "FU":  "3",
-                                         "AG":  "3+",
-                                         "PA":  "4+",
-                                         "AR":  "9+"
-                                     },
-                           "skillKeys":  [
-                                             "Animosity (all team-mates)",
-                                             "Tackle"
-                                         ],
-                           "primary":  "GS",
-                           "secondary":  "A"
-                       },
-                       {
-                           "qty":  "0-1",
-                           "position":  "Old World Humanos Receptor",
-                           "cost":  65000,
-                           "stats":  {
-                                         "MV":  8,
-                                         "FU":  "2",
-                                         "AG":  "3+",
-                                         "PA":  "6+",
-                                         "AR":  "8+"
-                                     },
-                           "skillKeys":  [
-                                             "Animosity (all team-mates)",
-                                             "Catch",
-                                             "Dodge"
-                                         ],
-                           "primary":  "AG",
-                           "secondary":  "S"
-                       },
-                       {
-                           "qty":  "0-12",
-                           "position":  "Old World Humanos LÃ­nea",
-                           "cost":  50000,
-                           "stats":  {
-                                         "MV":  6,
-                                         "FU":  "3",
-                                         "AG":  "3+",
-                                         "PA":  "4+",
-                                         "AR":  "9+"
-                                     },
-                           "skillKeys":  [
-
-                                         ],
-                           "primary":  "G",
-                           "secondary":  "AS"
-                       },
-                       {
-                           "qty":  "0-1",
-                           "position":  "Old World Humanos Lanzador",
-                           "cost":  80000,
-                           "stats":  {
-                                         "MV":  6,
-                                         "FU":  "3",
-                                         "AG":  "3+",
-                                         "PA":  "3+",
-                                         "AR":  "9+"
-                                     },
-                           "skillKeys":  [
-                                             "Animosity (all team-mates)",
-                                             "Pass",
-                                             "Sure Hands"
-                                         ],
-                           "primary":  "GP",
-                           "secondary":  "AS"
-                       },
-                       {
-                           "qty":  "0-2",
-                           "position":  "Old World Halflings Hopeful",
-                           "cost":  30000,
-                           "stats":  {
-                                         "MV":  5,
-                                         "FU":  "2",
-                                         "AG":  "3+",
-                                         "PA":  "4+",
-                                         "AR":  "7+"
-                                     },
-                           "skillKeys":  [
-                                             "Animosity (all team-mates)",
-                                             "Dodge",
-                                             "Right Stuff",
-                                             "Stunty"
-                                         ],
-                           "primary":  "A",
-                           "secondary":  "GS"
-                       },
-                       {
-                           "qty":  "0-1",
-                           "position":  "Old World Enanos Placador",
-                           "cost":  80000,
-                           "stats":  {
-                                         "MV":  5,
-                                         "FU":  "3",
-                                         "AG":  "3+",
-                                         "PA":  "4+",
-                                         "AR":  "10+"
-                                     },
-                           "skillKeys":  [
-                                             "Tackle",
-                                             "Loner (3+)",
-                                             "Thick Skull"
-                                         ],
-                           "primary":  "GS",
-                           "secondary":  "A"
-                       },
-                       {
-                           "qty":  "0-2",
-                           "position":  "Old World Enanos Bloqueador",
-                           "cost":  75000,
-                           "stats":  {
-                                         "MV":  4,
-                                         "FU":  "3",
-                                         "AG":  "4+",
-                                         "PA":  "5+",
-                                         "AR":  "10+"
-                                     },
-                           "skillKeys":  [
-                                             "Arm Bar",
-                                             "Brawler",
-                                             "Loner (3+)",
-                                             "Thick Skull"
-                                         ],
-                           "primary":  "GS",
-                           "secondary":  "A"
-                       },
-                       {
-                           "qty":  "0-1",
-                           "position":  "Old World Enanos Corredor",
-                           "cost":  85000,
-                           "stats":  {
-                                         "MV":  6,
-                                         "FU":  "3",
-                                         "AG":  "3+",
-                                         "PA":  "4+",
-                                         "AR":  "9+"
-                                     },
-                           "skillKeys":  [
-                                             "Loner (3+)",
-                                             "Sure Hands",
-                                             "Thick Skull"
-                                         ],
-                           "primary":  "GP",
-                           "secondary":  "AS"
-                       },
-                       {
-                           "qty":  "0-1",
-                           "position":  "Old World Enanos Troll Slayer",
-                           "cost":  95000,
-                           "stats":  {
-                                         "MV":  5,
-                                         "FU":  "3",
-                                         "AG":  "4+",
-                                         "PA":  "-",
-                                         "AR":  "9+"
-                                     },
-                           "skillKeys":  [
-                                             "Tackle",
-                                             "Dauntless",
-                                             "Frenzy",
-                                             "Loner (3+)",
-                                             "Thick Skull"
-                                         ],
-                           "primary":  "GS",
-                           "secondary":  "A"
-                       }
-                   ],
-        "specialRules_es":  "ClÃ¡sico del Viejo Mundo, GestiÃ³n de Equipo",
-        "specialRules_en":  "ClÃ¡sico del Viejo Mundo, GestiÃ³n de Equipo"
+    "name": "Old World Alliance",
+    "specialRules": "None",
+    "rerollCost": 70000,
+    "tier": 1,
+    "apothecary": "Yes",
+    "image": "https://raw.githubusercontent.com/jaz206/Bloodbowl-image/main/Escudos/Old%20World%20Alliance.png",
+    "ratings": {
+        "fuerza": 61,
+        "agilidad": 70,
+        "velocidad": 63,
+        "armadura": 91,
+        "pase": 56
     },
-    {
-        "name": "Orcs",
-        "specialRules": "Brutal Bruisers, Team Captain",
-        "rerollCost": 60000,
-        "tier": 2,
-        "apothecary": "Yes",
-        "image": "https://raw.githubusercontent.com/jaz206/Bloodbowl-image/main/Escudos/Orcs.png",
-        "ratings": {
-            "fuerza": 67,
-            "agilidad": 70,
-            "velocidad": 62,
-            "armadura": 95,
-            "pase": 53
+    "roster": [
+        {
+            "qty": "0-12",
+            "position": "Human Lineman",
+            "cost": 50000,
+            "stats": {
+                "MV": 6,
+                "FU": "3",
+                "AG": "3+",
+                "PA": "4+",
+                "AR": "9+"
+            },
+            "skillKeys": [],
+            "primary": "G",
+            "secondary": "AS"
         },
-        "roster": [
-            {
-                "qty": "0-16",
-                "position": "Orc Lineman",
-                "cost": 50000,
-                "stats": {
-                    "MV": 5,
-                    "FU": "3",
-                    "AG": "3+",
-                    "PA": "4+",
-                    "AR": "10+"
-                },
-                "skillKeys": [],
-                "primary": "FG",
-                "secondary": "AT"
+        {
+            "qty": "0-1",
+            "position": "Human Catcher",
+            "cost": 75000,
+            "stats": {
+                "MV": 8,
+                "FU": "3",
+                "AG": "3+",
+                "PA": "4+",
+                "AR": "8+"
             },
-            {
-                "qty": "0-4",
-                "position": "Goblin",
-                "cost": 40000,
-                "stats": {
-                    "MV": 6,
-                    "FU": "2",
-                    "AG": "3+",
-                    "PA": "3+",
-                    "AR": "8+"
-                },
-                "skillKeys": [
-                    "Stunty",
-                    "Dodge",
-                    "Right Stuff"
-                ],
-                "primary": "AT",
-                "secondary": "FGP"
-            },
-            {
-                "qty": "0-2",
-                "position": "Thrower",
-                "cost": 75000,
-                "stats": {
-                    "MV": 6,
-                    "FU": "3",
-                    "AG": "3+",
-                    "PA": "3+",
-                    "AR": "9+"
-                },
-                "skillKeys": [
-                    "Sure Hands",
-                    "Pass"
-                ],
-                "primary": "GP",
-                "secondary": "ATF"
-            },
-            {
-                "qty": "0-2",
-                "position": "Blitzer",
-                "cost": 85000,
-                "stats": {
-                    "MV": 6,
-                    "FU": "3",
-                    "AG": "3+",
-                    "PA": "4+",
-                    "AR": "10+"
-                },
-                "skillKeys": [
-                    "Break Tackle",
-                    "Block"
-                ],
-                "primary": "FG",
-                "secondary": "AT"
-            },
-            {
-                "qty": "0-2",
-                "position": "Big Un Blocker",
-                "cost": 95000,
-                "stats": {
-                    "MV": 5,
-                    "FU": "4",
-                    "AG": "4+",
-                    "PA": "-",
-                    "AR": "10+"
-                },
-                "skillKeys": [
-                    "Thick Skull",
-                    "Mighty Blow (+1)",
-                    "Provoke",
-                    "Thick Skull"
-                ],
-                "primary": "FG",
-                "secondary": "AT"
-            },
-            {
-                "qty": "0-1",
-                "position": "Troll",
-                "cost": 115000,
-                "stats": {
-                    "MV": 4,
-                    "FU": "5",
-                    "AG": "5+",
-                    "PA": "5+",
-                    "AR": "10+"
-                },
-                "skillKeys": [
-                    "Mighty Blow (+1)",
-                    "Throw Team-mate",
-                    "Projectile Vomit",
-                    "Really Stupid",
-                    "Regeneration",
-                    "Always Hungry",
-                    "Loner (4+)"
-                ],
-                "primary": "F",
-                "secondary": "AGP"
-            }
-        ],
-        "specialRules_es": "Brutos brutales, Capit?n del equipo",
-        "specialRules_en": "Brutal Bruisers, Team Captain",
-        "description": "Leagues: Badlands Brawl"
-    },
-    {
-        "name": "Shambling Undead",
-        "specialRules": "Masters of Undeath",
-        "rerollCost": 70000,
-        "tier": 2,
-        "apothecary": "No",
-        "image": "https://raw.githubusercontent.com/jaz206/Bloodbowl-image/main/Escudos/Shambling%20Undead.png",
-        "ratings": {
-            "fuerza": 74,
-            "agilidad": 62,
-            "velocidad": 60,
-            "armadura": 90,
-            "pase": 35
+            "skillKeys": [
+                "Catch",
+                "Dodge"
+            ],
+            "primary": "AG",
+            "secondary": "SP"
         },
-        "roster": [
-            {
-                "qty": "0-16",
-                "position": "Skeleton Lineman",
-                "cost": 40000,
-                "stats": {
-                    "MV": 5,
-                    "FU": "3",
-                    "AG": "4+",
-                    "PA": "6+",
-                    "AR": "8+"
-                },
-                "skillKeys": [
-                    "Regeneration",
-                    "Thick Skull"
-                ],
-                "primary": "G",
-                "secondary": "AFT"
+        {
+            "qty": "0-1",
+            "position": "Human Thrower",
+            "cost": 75000,
+            "stats": {
+                "MV": 6,
+                "FU": "3",
+                "AG": "3+",
+                "PA": "3+",
+                "AR": "9+"
             },
-            {
-                "qty": "0-16",
-                "position": "Zombie",
-                "cost": 40000,
-                "stats": {
-                    "MV": 4,
-                    "FU": "3",
-                    "AG": "4+",
-                    "PA": "6+",
-                    "AR": "9+"
-                },
-                "skillKeys": [
-                    "Sneaky Git",
-                    "Thick Skull",
-                    "Regeneration"
-                ],
-                "primary": "GT",
-                "secondary": "AF"
-            },
-            {
-                "qty": "0-2",
-                "position": "Ghoul",
-                "cost": 75000,
-                "stats": {
-                    "MV": 7,
-                    "FU": "3",
-                    "AG": "3+",
-                    "PA": "3+",
-                    "AR": "8+"
-                },
-                "skillKeys": [
-                    "Dodge",
-                    "Regeneration"
-                ],
-                "primary": "AG",
-                "secondary": "FPT"
-            },
-            {
-                "qty": "0-2",
-                "position": "Wight Blitzer",
-                "cost": 95000,
-                "stats": {
-                    "MV": 6,
-                    "FU": "3",
-                    "AG": "3+",
-                    "PA": "5+",
-                    "AR": "9+"
-                },
-                "skillKeys": [
-                    "Thick Skull",
-                    "Defensive",
-                    "Block",
-                    "Regeneration"
-                ],
-                "primary": "FG",
-                "secondary": "AT"
-            },
-            {
-                "qty": "0-2",
-                "position": "Mummy",
-                "cost": 125000,
-                "stats": {
-                    "MV": 3,
-                    "FU": "5",
-                    "AG": "5+",
-                    "PA": "6+",
-                    "AR": "10+"
-                },
-                "skillKeys": [
-                    "Mighty Blow (+1)",
-                    "Regeneration"
-                ],
-                "primary": "F",
-                "secondary": "AG"
-            }
-        ],
-        "specialRules_es": "Se?ores de los No Muertos",
-        "specialRules_en": "Masters of Undeath",
-        "description": "Leagues: Sylvanian Selective"
-    },
-    {
-        "name": "Skaven",
-        "specialRules": "None",
-        "rerollCost": 50000,
-        "tier": 2,
-        "apothecary": "Yes",
-        "image": "https://raw.githubusercontent.com/jaz206/Bloodbowl-image/main/Escudos/Skaven.png",
-        "ratings": {
-            "fuerza": 64,
-            "agilidad": 80,
-            "velocidad": 86,
-            "armadura": 84,
-            "pase": 56
+            "skillKeys": [
+                "Sure Hands",
+                "Pass"
+            ],
+            "primary": "GP",
+            "secondary": "AS"
         },
-        "roster": [
-            {
-                "qty": "0-16",
-                "position": "Clanrat Lineman",
-                "cost": 50000,
-                "stats": {
-                    "MV": 7,
-                    "FU": "3",
-                    "AG": "3+",
-                    "PA": "4+",
-                    "AR": "8+"
-                },
-                "skillKeys": [],
-                "primary": "GT",
-                "secondary": "AFM"
+        {
+            "qty": "0-1",
+            "position": "Human Blitzer",
+            "cost": 85000,
+            "stats": {
+                "MV": 7,
+                "FU": "3",
+                "AG": "3+",
+                "PA": "4+",
+                "AR": "9+"
             },
-            {
-                "qty": "0-2",
-                "position": "Thrower",
-                "cost": 80000,
-                "stats": {
-                    "MV": 7,
-                    "FU": "3",
-                    "AG": "3+",
-                    "PA": "2+",
-                    "AR": "8+"
-                },
-                "skillKeys": [
-                    "Sure Hands",
-                    "Pass"
-                ],
-                "primary": "GP",
-                "secondary": "AFMT"
-            },
-            {
-                "qty": "0-2",
-                "position": "Gutter Runner",
-                "cost": 85000,
-                "stats": {
-                    "MV": 9,
-                    "FU": "2",
-                    "AG": "2+",
-                    "PA": "4+",
-                    "AR": "8+"
-                },
-                "skillKeys": [
-                    "Stab",
-                    "Dodge"
-                ],
-                "primary": "AGT",
-                "secondary": "FM"
-            },
-            {
-                "qty": "0-2",
-                "position": "Blitzer",
-                "cost": 90000,
-                "stats": {
-                    "MV": 8,
-                    "FU": "3",
-                    "AG": "3+",
-                    "PA": "4+",
-                    "AR": "9+"
-                },
-                "skillKeys": [
-                    "Block",
-                    "Strip Ball"
-                ],
-                "primary": "FG",
-                "secondary": "AMT"
-            },
-            {
-                "qty": "0-1",
-                "position": "Rat Ogre",
-                "cost": 150000,
-                "stats": {
-                    "MV": 6,
-                    "FU": "5",
-                    "AG": "4+",
-                    "PA": "6+",
-                    "AR": "9+"
-                },
-                "skillKeys": [
-                    "Animal Savagery",
-                    "Prehensile Tail",
-                    "Frenzy",
-                    "Mighty Blow (+1)",
-                    "Loner (4+)"
-                ],
-                "primary": "F",
-                "secondary": "AGM"
-            }
-        ],
-        "specialRules_es": "Ninguna",
-        "specialRules_en": "None",
-        "description": "Leagues: Underworld Challenge"
-    },
-    {
-        "name":  "Slann (NAF)",
-        "specialRules":  "Superliga Lustria, GestiÃ³n de Equipo",
-        "rerollCost":  50000,
-        "tier":  2,
-        "apothecary":  "SÃ­",
-        "image":  "https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0",
-        "ratings":  {
-                        "fuerza":  65,
-                        "agilidad":  75,
-                        "velocidad":  78,
-                        "armadura":  90,
-                        "pase":  50
-                    },
-        "roster":  [
-                       {
-                           "qty":  "0-16",
-                           "position":  "LÃ­nea",
-                           "cost":  60000,
-                           "stats":  {
-                                         "MV":  6,
-                                         "FU":  "3",
-                                         "AG":  "3+",
-                                         "PA":  "4+",
-                                         "AR":  "9+"
-                                     },
-                           "skillKeys":  [
-                                             "Pogo Stick",
-                                             "Very Long Legs"
-                                         ],
-                           "primary":  "G",
-                           "secondary":  "AS"
-                       },
-                       {
-                           "qty":  "0-4",
-                           "position":  "Receptor",
-                           "cost":  80000,
-                           "stats":  {
-                                         "MV":  7,
-                                         "FU":  "2",
-                                         "AG":  "2+",
-                                         "PA":  "4+",
-                                         "AR":  "8+"
-                                     },
-                           "skillKeys":  [
-                                             "Diving Catch",
-                                             "Pogo Stick",
-                                             "Very Long Legs"
-                                         ],
-                           "primary":  "GA",
-                           "secondary":  "SP"
-                       },
-                       {
-                           "qty":  "0-4",
-                           "position":  "Placador",
-                           "cost":  110000,
-                           "stats":  {
-                                         "MV":  7,
-                                         "FU":  "3",
-                                         "AG":  "3+",
-                                         "PA":  "4+",
-                                         "AR":  "9+"
-                                     },
-                           "skillKeys":  [
-                                             "Diving Tackle",
-                                             "Leap",
-                                             "Pogo Stick",
-                                             "Very Long Legs"
-                                         ],
-                           "primary":  "GAS",
-                           "secondary":  "P"
-                       },
-                       {
-                           "qty":  "0-1",
-                           "position":  "Kroxigor",
-                           "cost":  140000,
-                           "stats":  {
-                                         "MV":  6,
-                                         "FU":  "5",
-                                         "AG":  "5+",
-                                         "PA":  "-",
-                                         "AR":  "10+"
-                                     },
-                           "skillKeys":  [
-                                             "Bone Head",
-                                             "Loner (4+)",
-                                             "Mighty Blow (+1)",
-                                             "Prehensile Tail",
-                                             "Thick Skull"
-                                         ],
-                           "primary":  "S",
-                           "secondary":  "GA"
-                       }
-                   ],
-        "specialRules_es":  "Superliga Lustria, GestiÃ³n de Equipo",
-        "specialRules_en":  "Superliga Lustria, GestiÃ³n de Equipo"
-    },
-    {
-        "name": "Tomb Kings",
-        "specialRules": "Masters of Undeath",
-        "rerollCost": 60000,
-        "tier": 2,
-        "apothecary": "No",
-        "image": "https://raw.githubusercontent.com/jaz206/Bloodbowl-image/main/Escudos/Tomb%20Kings.png",
-        "ratings": {
-            "fuerza": 70,
-            "agilidad": 55,
-            "velocidad": 63,
-            "armadura": 88,
-            "pase": 35
+            "skillKeys": [
+                "Defensive",
+                "Block"
+            ],
+            "primary": "GS",
+            "secondary": "A"
         },
-        "roster": [
-            {
-                "qty": "0-16",
-                "position": "Skeleton Lineman",
-                "cost": 40000,
-                "stats": {
-                    "MV": 5,
-                    "FU": "3",
-                    "AG": "4+",
-                    "PA": "6+",
-                    "AR": "8+"
-                },
-                "skillKeys": [
-                    "Thick Skull",
-                    "Regeneration"
-                ],
-                "primary": "G",
-                "secondary": "AFT"
+        {
+            "qty": "0-3",
+            "position": "Dwarf Blocker",
+            "cost": 70000,
+            "stats": {
+                "MV": 4,
+                "FU": "3",
+                "AG": "4+",
+                "PA": "5+",
+                "AR": "10+"
             },
-            {
-                "qty": "0-2",
-                "position": "Throw-Ra",
-                "cost": 65000,
-                "stats": {
-                    "MV": 6,
-                    "FU": "3",
-                    "AG": "4+",
-                    "PA": "3+",
-                    "AR": "9+"
-                },
-                "skillKeys": [
-                    "Thick Skull",
-                    "Sure Hands",
-                    "Pass",
-                    "Regeneration"
-                ],
-                "primary": "GP",
-                "secondary": "AFT"
-            },
-            {
-                "qty": "0-2",
-                "position": "Blitz-Ra",
-                "cost": 85000,
-                "stats": {
-                    "MV": 6,
-                    "FU": "3",
-                    "AG": "4+",
-                    "PA": "5+",
-                    "AR": "9+"
-                },
-                "skillKeys": [
-                    "Thick Skull",
-                    "Block",
-                    "Regeneration"
-                ],
-                "primary": "FG",
-                "secondary": "AT"
-            },
-            {
-                "qty": "0-4",
-                "position": "Tomb Guardian",
-                "cost": 115000,
-                "stats": {
-                    "MV": 4,
-                    "FU": "5",
-                    "AG": "5+",
-                    "PA": "6+",
-                    "AR": "10+"
-                },
-                "skillKeys": [
-                    "Decay",
-                    "Brawler",
-                    "Regeneration"
-                ],
-                "primary": "F",
-                "secondary": "AG"
-            }
-        ],
-        "specialRules_es": "Se?ores de los No Muertos",
-        "specialRules_en": "Masters of Undeath",
-        "description": "Leagues: Sylvanian Selective"
-    },
-    {
-        "name": "Underworld Denizens",
-        "specialRules": "Bribery and Corruption",
-        "rerollCost": 70000,
-        "tier": 1,
-        "apothecary": "Yes",
-        "image": "https://raw.githubusercontent.com/jaz206/Bloodbowl-image/main/Escudos/Underworld%20Denizens.png",
-        "ratings": {
-            "fuerza": 58,
-            "agilidad": 75,
-            "velocidad": 79,
-            "armadura": 78,
-            "pase": 58
+            "skillKeys": [
+                "Thick Skull",
+                "Block",
+                "Defensive"
+            ],
+            "primary": "GS",
+            "secondary": "A"
         },
-        "roster": [
-            {
-                "qty": "0-16",
-                "position": "Underworld Goblin",
-                "cost": 40000,
-                "stats": {
-                    "MV": 6,
-                    "FU": "2",
-                    "AG": "3+",
-                    "PA": "4+",
-                    "AR": "8+"
-                },
-                "skillKeys": [
-                    "Dodge",
-                    "Right Stuff",
-                    "Stunty"
-                ],
-                "primary": "AMT",
-                "secondary": "FGP"
+        {
+            "qty": "0-1",
+            "position": "Dwarf Blitzer",
+            "cost": 100000,
+            "stats": {
+                "MV": 5,
+                "FU": "3",
+                "AG": "4+",
+                "PA": "4+",
+                "AR": "10+"
             },
-            {
-                "qty": "0-8",
-                "position": "Underworld Snotling",
-                "cost": 15000,
-                "stats": {
-                    "MV": 5,
-                    "FU": "1",
-                    "AG": "3+",
-                    "PA": "5+",
-                    "AR": "6+"
-                },
-                "skillKeys": [
-                    "Dodge",
-                    "Right Stuff",
-                    "Side Step",
-                    "Stunty",
-                    "Titchy"
-                ],
-                "primary": "AMT",
-                "secondary": "G"
+            "skillKeys": [
+                "Thick Skull",
+                "Defensive",
+                "Arm Bar",
+                "Block"
+            ],
+            "primary": "GS",
+            "secondary": "P"
+        },
+        {
+            "qty": "0-1",
+            "position": "Dwarf Runner",
+            "cost": 80000,
+            "stats": {
+                "MV": 6,
+                "FU": "3",
+                "AG": "3+",
+                "PA": "4+",
+                "AR": "9+"
             },
-            {
-                "qty": "0-3",
-                "position": "Clanrat",
-                "cost": 50000,
-                "stats": {
-                    "MV": 7,
-                    "FU": "3",
-                    "AG": "3+",
-                    "PA": "4+",
-                    "AR": "8+"
-                },
-                "skillKeys": [
-                    "Animosity (Goblins)"
-                ],
-                "primary": "GMT",
-                "secondary": "AF"
+            "skillKeys": [
+                "Thick Skull",
+                "Sure Hands",
+                "Sprint"
+            ],
+            "primary": "GP",
+            "secondary": "AS"
+        },
+        {
+            "qty": "0-1",
+            "position": "Dwarf Troll Slayer",
+            "cost": 95000,
+            "stats": {
+                "MV": 5,
+                "FU": "3",
+                "AG": "4+",
+                "PA": "5+",
+                "AR": "9+"
             },
-            {
-                "qty": "0-1",
-                "position": "Skaven Thrower",
-                "cost": 80000,
-                "stats": {
-                    "MV": 7,
-                    "FU": "3",
-                    "AG": "3+",
-                    "PA": "2+",
-                    "AR": "8+"
-                },
-                "skillKeys": [
-                    "Animosity (Goblins)",
-                    "Sure Hands",
-                    "Pass"
-                ],
-                "primary": "GMP",
-                "secondary": "AFT"
+            "skillKeys": [
+                "Dauntless",
+                "Thick Skull",
+                "Frenzy",
+                "Block",
+                "Hate (Troll)"
+            ],
+            "primary": "GS",
+            "secondary": "A"
+        },
+        {
+            "qty": "0-3",
+            "position": "Halfling Hopeful",
+            "cost": 30000,
+            "stats": {
+                "MV": 5,
+                "FU": "2",
+                "AG": "3+",
+                "PA": "4+",
+                "AR": "7+"
             },
-            {
-                "qty": "0-1",
-                "position": "Gutter Runner",
-                "cost": 85000,
-                "stats": {
-                    "MV": 9,
-                    "FU": "2",
-                    "AG": "2+",
-                    "PA": "4+",
-                    "AR": "8+"
-                },
-                "skillKeys": [
-                    "Animosity (Goblins)",
-                    "Dodge",
-                    "Stab"
-                ],
-                "primary": "AGMT",
-                "secondary": "F"
+            "skillKeys": [
+                "Right Stuff",
+                "Dodge",
+                "Stunty"
+            ],
+            "primary": "A",
+            "secondary": "GS"
+        },
+        {
+            "qty": "0-1",
+            "position": "Altern Forest Treeman",
+            "cost": 120000,
+            "stats": {
+                "MV": 2,
+                "FU": "6",
+                "AG": "5+",
+                "PA": "5+",
+                "AR": "11+"
             },
-            {
-                "qty": "0-1",
-                "position": "Skaven Blitzer",
-                "cost": 90000,
-                "stats": {
-                    "MV": 8,
-                    "FU": "3",
-                    "AG": "3+",
-                    "PA": "4+",
-                    "AR": "9+"
-                },
-                "skillKeys": [
-                    "Animosity (Goblins)",
-                    "Block",
-                    "Strip Ball"
-                ],
-                "primary": "FGM",
-                "secondary": "AT"
+            "skillKeys": [
+                "Strong Arm",
+                "Thick Skull",
+                "Mighty Blow (+1)",
+                "Take Root",
+                "Throw Team-mate",
+                "Stand Firm",
+                "Timmm-ber!"
+            ],
+            "primary": "S",
+            "secondary": "AGP"
+        },
+        {
+            "qty": "0-1",
+            "position": "Ogre",
+            "cost": 140000,
+            "stats": {
+                "MV": 5,
+                "FU": "5",
+                "AG": "4+",
+                "PA": "5+",
+                "AR": "10+"
             },
-            {
-                "qty": "0-1",
-                "position": "Underworld Troll",
-                "cost": 115000,
-                "stats": {
-                    "MV": 4,
-                    "FU": "5",
-                    "AG": "5+",
-                    "PA": "5+",
-                    "AR": "10+"
-                },
-                "skillKeys": [
-                    "Mighty Blow (+1)",
-                    "Throw Team-mate",
-                    "Projectile Vomit",
-                    "Regeneration",
-                    "Really Stupid",
-                    "Always Hungry"
-                ],
-                "primary": "FM",
-                "secondary": "AGP"
-            },
-            {
-                "qty": "0-1",
-                "position": "Mutant Rat Ogre",
-                "cost": 150000,
-                "stats": {
-                    "MV": 6,
-                    "FU": "5",
-                    "AG": "4+",
-                    "PA": "6+",
-                    "AR": "9+"
-                },
-                "skillKeys": [
-                    "Animal Savagery",
-                    "Prehensile Tail",
-                    "Frenzy",
-                    "Mighty Blow (+1)",
-                    "Loner (4+)"
-                ],
-                "primary": "FM",
-                "secondary": "AG"
-            }
-        ],
-        "specialRules_es": "Soborno y corrupci?n",
-        "specialRules_en": "Bribery and Corruption",
-        "description": "Leagues: Underworld Challenge"
-    },
+            "skillKeys": [
+                "Thick Skull",
+                "Mighty Blow (+1)",
+                "Bone Head",
+                "Throw Team-mate",
+                "Loner (3+)"
+            ],
+            "primary": "S",
+            "secondary": "AG"
+        }
+    ],
+    "specialRules_es": "Ninguna",
+    "specialRules_en": "None",
+    "description": "League: Old World Classic"
+},
     {
-        "name":  "Vampires",
-        "specialRules":  "Escaparate Sylvaniano, GestiÃ³n de Equipo, Lord Vampiro",
-        "rerollCost":  50000,
-        "tier":  2,
-        "apothecary":  "SÃ­",
-        "image":  "https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0",
-        "ratings":  {
-                        "fuerza":  76,
-                        "agilidad":  88,
-                        "velocidad":  74,
-                        "armadura":  88,
-                        "pase":  56
-                    },
-        "roster":  [
-                       {
-                           "qty":  "0-16",
-                           "position":  "Thrall LÃ­nea",
-                           "cost":  40000,
-                           "stats":  {
-                                         "MV":  6,
-                                         "FU":  "3",
-                                         "AG":  "3+",
-                                         "PA":  "4+",
-                                         "AR":  "8+"
-                                     },
-                           "skillKeys":  [
-
-                                         ],
-                           "primary":  "",
-                           "secondary":  "AS"
-                       },
-                       {
-                           "qty":  "0-2",
-                           "position":  "Vampiros Placador",
-                           "cost":  110000,
-                           "stats":  {
-                                         "MV":  6,
-                                         "FU":  "4",
-                                         "AG":  "2+",
-                                         "PA":  "5+",
-                                         "AR":  "9+"
-                                     },
-                           "skillKeys":  [
-                                             "Bloodlust (3+)",
-                                             "Hypnotic Gaze",
-                                             "Juggernaut",
-                                             "Regeneration"
-                                         ],
-                           "primary":  "AGS",
-                           "secondary":  "P"
-                       },
-                       {
-                           "qty":  "0-2",
-                           "position":  "Vampiros Corredor",
-                           "cost":  100000,
-                           "stats":  {
-                                         "MV":  8,
-                                         "FU":  "3",
-                                         "AG":  "2+",
-                                         "PA":  "4+",
-                                         "AR":  "8+"
-                                     },
-                           "skillKeys":  [
-                                             "Bloodlust (2+)",
-                                             "Hypnotic Gaze",
-                                             "Regeneration"
-                                         ],
-                           "primary":  "AG",
-                           "secondary":  "PS"
-                       },
-                       {
-                           "qty":  "0-2",
-                           "position":  "Vampiros Lanzador",
-                           "cost":  110000,
-                           "stats":  {
-                                         "MV":  6,
-                                         "FU":  "4",
-                                         "AG":  "2+",
-                                         "PA":  "2+",
-                                         "AR":  "9+"
-                                     },
-                           "skillKeys":  [
-                                             "Bloodlust (2+)",
-                                             "Hypnotic Gaze",
-                                             "Pass",
-                                             "Regeneration"
-                                         ],
-                           "primary":  "AGP",
-                           "secondary":  "S"
-                       },
-                       {
-                           "qty":  "0-1",
-                           "position":  "Vargheist",
-                           "cost":  150000,
-                           "stats":  {
-                                         "MV":  5,
-                                         "FU":  "5",
-                                         "AG":  "4+",
-                                         "PA":  "-",
-                                         "AR":  "10+"
-                                     },
-                           "skillKeys":  [
-                                             "Bloodlust (3+)",
-                                             "Claws",
-                                             "Frenzy",
-                                             "Loner (4+)",
-                                             "Regeneration"
-                                         ],
-                           "primary":  "S",
-                           "secondary":  "AG"
-                       }
-                   ],
-        "specialRules_es":  "Escaparate Sylvaniano, GestiÃ³n de Equipo, Lord Vampiro",
-        "specialRules_en":  "Escaparate Sylvaniano, GestiÃ³n de Equipo, Lord Vampiro"
+    "name": "Bretonnians",
+    "specialRules": "None",
+    "rerollCost": 60000,
+    "tier": 2,
+    "apothecary": "Yes",
+    "image": "https://raw.githubusercontent.com/jaz206/Bloodbowl-image/main/Escudos/Bretonnians.png",
+    "ratings": {
+        "fuerza": 64,
+        "agilidad": 73,
+        "velocidad": 72,
+        "armadura": 88,
+        "pase": 58
     },
-    {
-        "name":  "Wood Elves",
-        "specialRules":  "Liga de los Reinos Ã‰lficos, GestiÃ³n de Equipo",
-        "rerollCost":  50000,
-        "tier":  1,
-        "apothecary":  "SÃ­",
-        "image":  "https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0",
-        "ratings":  {
-                        "fuerza":  68,
-                        "agilidad":  88,
-                        "velocidad":  77,
-                        "armadura":  86,
-                        "pase":  64
-                    },
-        "roster":  [
-                       {
-                           "qty":  "0-4",
-                           "position":  "Receptor",
-                           "cost":  90000,
-                           "stats":  {
-                                         "MV":  8,
-                                         "FU":  "2",
-                                         "AG":  "2+",
-                                         "PA":  "4+",
-                                         "AR":  "8+"
-                                     },
-                           "skillKeys":  [
-                                             "Catch",
-                                             "Dodge"
-                                         ],
-                           "primary":  "AG",
-                           "secondary":  "PS"
-                       },
-                       {
-                           "qty":  "0-12",
-                           "position":  "Elfos Silvanos LÃ­nea",
-                           "cost":  70000,
-                           "stats":  {
-                                         "MV":  7,
-                                         "FU":  "3",
-                                         "AG":  "2+",
-                                         "PA":  "4+",
-                                         "AR":  "8+"
-                                     },
-                           "skillKeys":  [
-
-                                         ],
-                           "primary":  "",
-                           "secondary":  "S"
-                       },
-                       {
-                           "qty":  "0-2",
-                           "position":  "Lanzador",
-                           "cost":  95000,
-                           "stats":  {
-                                         "MV":  7,
-                                         "FU":  "3",
-                                         "AG":  "2+",
-                                         "PA":  "2+",
-                                         "AR":  "8+"
-                                     },
-                           "skillKeys":  [
-                                             "Pass"
-                                         ],
-                           "primary":  "AGP",
-                           "secondary":  "S"
-                       },
-                       {
-                           "qty":  "0-2",
-                           "position":  "Wardancer",
-                           "cost":  125000,
-                           "stats":  {
-                                         "MV":  8,
-                                         "FU":  "3",
-                                         "AG":  "2+",
-                                         "PA":  "4+",
-                                         "AR":  "8+"
-                                     },
-                           "skillKeys":  [
-                                             "Tackle",
-                                             "Dodge",
-                                             "Leap"
-                                         ],
-                           "primary":  "AG",
-                           "secondary":  "PS"
-                       },
-                       {
-                           "qty":  "0-1",
-                           "position":  "Loren Forest Treeman",
-                           "cost":  120000,
-                           "stats":  {
-                                         "MV":  2,
-                                         "FU":  "6",
-                                         "AG":  "5+",
-                                         "PA":  "5+",
-                                         "AR":  "11+"
-                                     },
-                           "skillKeys":  [
-                                             "Loner (4+)",
-                                             "Mighty Blow (+1)",
-                                             "Stand Firm",
-                                             "Strong Arm",
-                                             "Take Root",
-                                             "Thick Skull",
-                                             "Throw Team-mate"
-                                         ],
-                           "primary":  "S",
-                           "secondary":  "AG"
-                       }
-                   ],
-        "specialRules_es":  "Liga de los Reinos Ã‰lficos, GestiÃ³n de Equipo",
-        "specialRules_en":  "Liga de los Reinos Ã‰lficos, GestiÃ³n de Equipo"
-    },
-
-    {
-        "name":  "Bretonnians",
-        "specialRules":  "Equipos de Leyenda, Gesti?n de Equipo",
-        "rerollCost":  70000,
-        "tier":  2,
-        "apothecary":  "S?",
-        "ratings":  {
-                        "fuerza":  68,
-                        "agilidad":  72,
-                        "velocidad":  73,
-                        "armadura":  83,
-                        "pase":  58
-                    },
-        "roster":  [
-                       {
-                           "qty":  "0-16",
-                           "position":  "L?nea Bret?n",
-                           "cost":  40000,
-                           "stats":  { "MV":  6, "FU":  "3", "AG":  "3+", "PA":  "4+", "AR":  "8+" },
-                           "skillKeys":  ["Stand Firm"],
-                           "primary":  "G",
-                           "secondary":  "AS"
-                       },
-                       {
-                           "qty":  "0-4",
-                           "position":  "Yeoman",
-                           "cost":  70000,
-                           "stats":  { "MV":  6, "FU":  "3", "AG":  "3+", "PA":  "5+", "AR":  "9+" },
-                           "skillKeys":  ["Wrestle"],
-                           "primary":  "GS",
-                           "secondary":  "A"
-                       },
-                       {
-                           "qty":  "0-4",
-                           "position":  "Blitzer Bret?n",
-                           "cost":  105000,
-                           "stats":  { "MV":  7, "FU":  "3", "AG":  "3+", "PA":  "3+", "AR":  "9+" },
-                           "skillKeys":  ["Catch", "Dauntless", "Block"],
-                           "primary":  "GAS",
-                           "secondary":  "P"
-                       }
-                   ],
-        "specialRules_es":  "Equipos de Leyenda, Gesti?n de Equipo",
-        "specialRules_en":  "Legend Teams, Team Management"
-    },
+    "roster": [
+        {
+            "qty": "0-16",
+            "position": "Squire",
+            "cost": 50000,
+            "stats": {
+                "MV": 6,
+                "FU": "3",
+                "AG": "3+",
+                "PA": "4+",
+                "AR": "8+"
+            },
+            "skillKeys": [
+                "Wrestle"
+            ],
+            "primary": "G",
+            "secondary": "AS"
+        },
+        {
+            "qty": "0-2",
+            "position": "Knight Receiver",
+            "cost": 85000,
+            "stats": {
+                "MV": 7,
+                "FU": "3",
+                "AG": "3+",
+                "PA": "4+",
+                "AR": "9+"
+            },
+            "skillKeys": [
+                "Dauntless",
+                "Catch",
+                "Nerves of Steel"
+            ],
+            "primary": "AG",
+            "secondary": "S"
+        },
+        {
+            "qty": "0-2",
+            "position": "Knight Thrower",
+            "cost": 80000,
+            "stats": {
+                "MV": 6,
+                "FU": "3",
+                "AG": "3+",
+                "PA": "3+",
+                "AR": "9+"
+            },
+            "skillKeys": [
+                "Dauntless",
+                "Nerves of Steel",
+                "Pass"
+            ],
+            "primary": "GP",
+            "secondary": "AS"
+        },
+        {
+            "qty": "0-2",
+            "position": "Grail Knight",
+            "cost": 95000,
+            "stats": {
+                "MV": 7,
+                "FU": "3",
+                "AG": "3+",
+                "PA": "4+",
+                "AR": "10+"
+            },
+            "skillKeys": [
+                "Dauntless",
+                "Stand Firm",
+                "Block"
+            ],
+            "primary": "GS",
+            "secondary": "A"
+        }
+    ],
+    "specialRules_es": "Ninguna",
+    "specialRules_en": "None",
+    "description": "League: Old World Classic"
+},
     {
         "name": "Imperial Nobility",
         "specialRules": "None",
@@ -3678,6 +2811,332 @@ export const teamsData: Team[] = [
         "specialRules_es": "Colarse, L?neas prescindibles, Soborno y corrupci?n",
         "specialRules_en": "Swarming, Low Cost Linemen, Bribery and Corruption",
         "description": "Leagues: Underworld Challenge"
-    }
-
+    },
+{
+    "name": "Vampires",
+    "specialRules": "Lords of the Undead",
+    "rerollCost": 60000,
+    "tier": 2,
+    "apothecary": "Yes",
+    "image": "https://raw.githubusercontent.com/jaz206/Bloodbowl-image/main/Escudos/Vampires.png",
+    "ratings": {
+        "fuerza": 76,
+        "agilidad": 88,
+        "velocidad": 74,
+        "armadura": 88,
+        "pase": 57
+    },
+    "roster": [
+        {
+            "qty": "0-16",
+            "position": "Thrall Lineman",
+            "cost": 40000,
+            "stats": {
+                "MV": 6,
+                "FU": "3",
+                "AG": "3+",
+                "PA": "4+",
+                "AR": "8+"
+            },
+            "skillKeys": [],
+            "primary": "G",
+            "secondary": "AS"
+        },
+        {
+            "qty": "0-2",
+            "position": "Vampire Runner",
+            "cost": 100000,
+            "stats": {
+                "MV": 8,
+                "FU": "3",
+                "AG": "2+",
+                "PA": "3+",
+                "AR": "8+"
+            },
+            "skillKeys": [
+                "Bloodlust (2+)",
+                "Hypnotic Gaze",
+                "Regeneration"
+            ],
+            "primary": "AG",
+            "secondary": "SP"
+        },
+        {
+            "qty": "0-2",
+            "position": "Vampire Thrower",
+            "cost": 110000,
+            "stats": {
+                "MV": 6,
+                "FU": "4",
+                "AG": "2+",
+                "PA": "2+",
+                "AR": "9+"
+            },
+            "skillKeys": [
+                "Bloodlust (2+)",
+                "Hypnotic Gaze",
+                "Pass",
+                "Regeneration"
+            ],
+            "primary": "AGP",
+            "secondary": "S"
+        },
+        {
+            "qty": "0-2",
+            "position": "Vampire Blitzer",
+            "cost": 110000,
+            "stats": {
+                "MV": 6,
+                "FU": "4",
+                "AG": "2+",
+                "PA": "4+",
+                "AR": "9+"
+            },
+            "skillKeys": [
+                "Bloodlust (3+)",
+                "Juggernaut",
+                "Hypnotic Gaze",
+                "Regeneration"
+            ],
+            "primary": "AGS",
+            "secondary": ""
+        },
+        {
+            "qty": "0-1",
+            "position": "Vargheist",
+            "cost": 150000,
+            "stats": {
+                "MV": 5,
+                "FU": "5",
+                "AG": "4+",
+                "PA": "6+",
+                "AR": "10+"
+            },
+            "skillKeys": [
+                "Bloodlust (3+)",
+                "Claws",
+                "Frenzy",
+                "Loner (4+)",
+                "Regeneration"
+            ],
+            "primary": "S",
+            "secondary": "AG"
+        }
+    ],
+    "specialRules_es": "Se?ores de los No Muertos",
+    "specialRules_en": "Lords of the Undead",
+    "description": "League: Sylvanian Selective"
+},
+{
+    "name": "Wood Elves",
+    "specialRules": "None",
+    "rerollCost": 50000,
+    "tier": 1,
+    "apothecary": "Yes",
+    "image": "https://raw.githubusercontent.com/jaz206/Bloodbowl-image/main/Escudos/Wood%20Elves.png",
+    "ratings": {
+        "fuerza": 68,
+        "agilidad": 89,
+        "velocidad": 79,
+        "armadura": 84,
+        "pase": 63
+    },
+    "roster": [
+        {
+            "qty": "0-16",
+            "position": "Wood Elf Lineman",
+            "cost": 65000,
+            "stats": {
+                "MV": 7,
+                "FU": "3",
+                "AG": "2+",
+                "PA": "3+",
+                "AR": "8+"
+            },
+            "skillKeys": [],
+            "primary": "AG",
+            "secondary": "S"
+        },
+        {
+            "qty": "0-2",
+            "position": "Thrower",
+            "cost": 85000,
+            "stats": {
+                "MV": 7,
+                "FU": "3",
+                "AG": "2+",
+                "PA": "2+",
+                "AR": "8+"
+            },
+            "skillKeys": [
+                "Safe Pass",
+                "Pass"
+            ],
+            "primary": "AGP",
+            "secondary": "S"
+        },
+        {
+            "qty": "0-2",
+            "position": "Catcher",
+            "cost": 90000,
+            "stats": {
+                "MV": 8,
+                "FU": "2",
+                "AG": "2+",
+                "PA": "3+",
+                "AR": "8+"
+            },
+            "skillKeys": [
+                "Catch",
+                "Dodge",
+                "Sprint"
+            ],
+            "primary": "AG",
+            "secondary": "SP"
+        },
+        {
+            "qty": "0-2",
+            "position": "Wardancer",
+            "cost": 130000,
+            "stats": {
+                "MV": 8,
+                "FU": "3",
+                "AG": "2+",
+                "PA": "3+",
+                "AR": "8+"
+            },
+            "skillKeys": [
+                "Dodge",
+                "Block",
+                "Leap"
+            ],
+            "primary": "AG",
+            "secondary": "SP"
+        },
+        {
+            "qty": "0-1",
+            "position": "Loren Treeman",
+            "cost": 120000,
+            "stats": {
+                "MV": 2,
+                "FU": "6",
+                "AG": "5+",
+                "PA": "5+",
+                "AR": "11+"
+            },
+            "skillKeys": [
+                "Strong Arm",
+                "Thick Skull",
+                "Mighty Blow (+1)",
+                "Take Root",
+                "Throw Team-mate",
+                "Stand Firm",
+                "Loner (4+)"
+            ],
+            "primary": "S",
+            "secondary": "AG"
+        }
+    ],
+    "specialRules_es": "Ninguna",
+    "specialRules_en": "None",
+    "description": "Leagues: Elven Kingdoms League, Forest League"
+},
+{
+    "name": "Slann (NAF)",
+    "specialRules": "NAF Pending Approval",
+    "rerollCost": 50000,
+    "tier": 2,
+    "apothecary": "Yes",
+    "image": "https://raw.githubusercontent.com/jaz206/Bloodbowl-image/main/Escudos/Slann%20(NAF).png",
+    "ratings": {
+        "fuerza": 66,
+        "agilidad": 77,
+        "velocidad": 78,
+        "armadura": 90,
+        "pase": 50
+    },
+    "roster": [
+        {
+            "qty": "0-16",
+            "position": "Slann Lineman",
+            "cost": 60000,
+            "stats": {
+                "MV": 6,
+                "FU": "3",
+                "AG": "3+",
+                "PA": "4+",
+                "AR": "9+"
+            },
+            "skillKeys": [
+                "Very Long Legs",
+                "Pogo Stick"
+            ],
+            "primary": "G",
+            "secondary": "AS"
+        },
+        {
+            "qty": "0-4",
+            "position": "Slann Catcher",
+            "cost": 80000,
+            "stats": {
+                "MV": 7,
+                "FU": "2",
+                "AG": "2+",
+                "PA": "4+",
+                "AR": "8+"
+            },
+            "skillKeys": [
+                "Very Long Legs",
+                "Pogo Stick",
+                "Diving Catch"
+            ],
+            "primary": "AG",
+            "secondary": "SP"
+        },
+        {
+            "qty": "0-2",
+            "position": "Slann Blitzer",
+            "cost": 110000,
+            "stats": {
+                "MV": 7,
+                "FU": "3",
+                "AG": "3+",
+                "PA": "4+",
+                "AR": "9+"
+            },
+            "skillKeys": [
+                "Jump Up",
+                "Defensive",
+                "Very Long Legs",
+                "Pogo Stick"
+            ],
+            "primary": "AGS",
+            "secondary": "P"
+        },
+        {
+            "qty": "0-1",
+            "position": "Kroxigor",
+            "cost": 140000,
+            "stats": {
+                "MV": 6,
+                "FU": "5",
+                "AG": "5+",
+                "PA": "6+",
+                "AR": "10+"
+            },
+            "skillKeys": [
+                "Bone Head",
+                "Prehensile Tail",
+                "Mighty Blow (+1)",
+                "Loner (4+)",
+                "Thick Skull"
+            ],
+            "primary": "S",
+            "secondary": "AG"
+        }
+    ],
+    "specialRules_es": "Pendiente de aprobaci?n por la NAF",
+    "specialRules_en": "NAF Pending Approval",
+    "description": "League: Lustrian Superleague"
+}
 ];
