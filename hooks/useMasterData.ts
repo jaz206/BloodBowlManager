@@ -98,6 +98,26 @@ export const useMasterData = () => {
         );
     }, []);
 
+    const mergeCanonicalTeams = useCallback((firestoreItems: Team[], staticItems: Team[]) => {
+        const normalizedFirestore = normalizeTeams(firestoreItems || []);
+        const normalizedStatic = normalizeTeams(staticItems || []);
+        const existingByName = new Map(normalizedFirestore.map((team) => [team.name, team]));
+
+        const canonicalTeams = normalizedStatic.map((baseTeam) => {
+            const existing = existingByName.get(baseTeam.name);
+            return {
+                ...baseTeam,
+                namePools: existing?.namePools?.length ? existing.namePools : (baseTeam.namePools || []),
+                megaFactions: existing?.megaFactions?.length ? existing.megaFactions : (baseTeam.megaFactions || []),
+            };
+        });
+
+        const canonicalNames = new Set(canonicalTeams.map((team) => team.name));
+        const customTeams = normalizedFirestore.filter((team) => !canonicalNames.has(team.name));
+
+        return [...canonicalTeams, ...customTeams];
+    }, [normalizeTeams]);
+
     // ── Firestore listeners ───────────────────────────────────────────────────
     useEffect(() => {
         if (!db) {
@@ -279,13 +299,9 @@ export const useMasterData = () => {
                 getDoc(doc(db, MASTER_COL, 'heraldo')),
             ]);
 
-            const teamsToSave = sanitizeCollectionForFirestore(normalizeTeamCollection(
-                mergeItems(
-                    normalizeTeams(teamsSnap.exists() ? teamsSnap.data().items : []),
-                    normalizeTeams(staticTeamsData),
-                    'name'
-                ),
-                staticTeamsData as TeamAsset[]
+            const teamsToSave = sanitizeCollectionForFirestore(mergeCanonicalTeams(
+                teamsSnap.exists() ? teamsSnap.data().items : [],
+                staticTeamsData
             ));
             const skillsToSave = sanitizeCollectionForFirestore(normalizeSkillsCollection(mergeItems(skillsSnap.exists() ? skillsSnap.data().items : [], staticSkills, 'keyEN')));
             const starsToSave = sanitizeCollectionForFirestore(normalizeStarPlayersCollection(mergeItems(starsSnap.exists() ? starsSnap.data().items : [], staticStarsData, 'name')));
@@ -302,7 +318,7 @@ export const useMasterData = () => {
                 setDoc(doc(db, MASTER_COL, 'meta'), {
                     lastSync: ts,
                     version: new Date().toISOString().split('T')[0],
-                    strategy: force ? 'overwrite' : 'smart-merge',
+                    strategy: force ? 'overwrite' : 'canonical-teams-smart-merge',
                     source: 'admin-panel',
                     teamsCount: teamsToSave.length,
                     skillsCount: skillsToSave.length,
@@ -318,7 +334,7 @@ export const useMasterData = () => {
             setError(err.message ?? 'Error al sincronizar con Firestore');
             throw err;
         }
-    }, [db]);
+    }, [db, mergeCanonicalTeams, normalizeTeams, heraldoItems]);
 
     // ── Update a single field in a Firestore master doc ───────────────────────
     /**
