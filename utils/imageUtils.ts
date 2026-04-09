@@ -118,7 +118,7 @@ const CREST_PREFIX_MAP: Record<string, string> = {
   "vampiros": "vampiros",
   "vampires": "vampiros",
   "khorne": "Khorne",
-  "skaven": "SKAVEN",
+  "skaven": "skaven",
   "snotlings": "Snotling",
   "snotling": "Snotling",
   "no muertos": "no muertos",
