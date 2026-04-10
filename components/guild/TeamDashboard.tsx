@@ -639,8 +639,8 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                             ))}
                         </div>
 
-                        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-                        <nav className="flex items-center gap-4">
+                        <div className="flex flex-wrap items-end justify-end gap-3">
+                        <nav className="flex items-center gap-3">
                             {[
                                 { id: 'roster', label: 'Plantilla', icon: 'groups' },
                                 { id: 'recruit', label: 'Reclutar', icon: 'person_add' },
@@ -657,17 +657,17 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                             ))}
                         </nav>
 
-                        <div className="flex items-center gap-2">
-                            <button onClick={handleAutoSyncImages} className="blood-ui-button-secondary border border-gold/20 text-gold px-4 py-2 rounded-xl text-[10px] font-black tracking-widest transition-all uppercase flex items-center gap-2 shadow-lg shadow-gold/5" title="Sincronizar fotos desde GitHub">
+                        <div className="flex items-center gap-2 flex-wrap justify-end">
+                            <button onClick={handleAutoSyncImages} className="blood-ui-button-secondary border border-gold/20 text-gold px-3 py-2 rounded-xl text-[10px] font-black tracking-widest transition-all uppercase flex items-center gap-2 shadow-lg shadow-gold/5 whitespace-nowrap shrink-0" title="Sincronizar fotos desde GitHub">
                                 <span className="material-symbols-outlined text-base">image</span>
                                 Sincronizar fotos
                             </button>
-                            <button onClick={onBack} className="blood-ui-button-secondary border border-white/10 text-slate-400 px-4 py-2 rounded-xl text-[10px] font-black tracking-widest transition-all uppercase flex items-center gap-2">
+                            <button onClick={onBack} className="blood-ui-button-secondary border border-white/10 text-slate-400 px-3 py-2 rounded-xl text-[10px] font-black tracking-widest transition-all uppercase flex items-center gap-2 whitespace-nowrap shrink-0">
                                 <span className="material-symbols-outlined text-base">arrow_back</span>
                                 Volver
                             </button>
                             {!isGuest && (
-                                <button onClick={() => onSync ? onSync() : setShowQr(true)} className="blood-ui-button-primary border border-primary/20 text-primary px-4 py-2 rounded-xl text-[10px] font-black tracking-widest transition-all uppercase flex items-center gap-2">
+                                <button onClick={() => onSync ? onSync() : setShowQr(true)} className="blood-ui-button-primary border border-primary/20 text-primary px-3 py-2 rounded-xl text-[10px] font-black tracking-widest transition-all uppercase flex items-center gap-2 whitespace-nowrap shrink-0">
                                     <span className="material-symbols-outlined text-base">{onSync ? 'sync' : 'qr_code'}</span>
                                     {syncLabel}
                                 </button>
