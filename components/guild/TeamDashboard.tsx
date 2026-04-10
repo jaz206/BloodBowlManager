@@ -563,10 +563,10 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
             <div className="guild-dossier-light">
             {/* Top Navigation & Header */}
             <header className={`blood-ui-header border-b border-white/10 backdrop-blur-md sticky ${stickyOffset} z-50`}>
-                <div className="max-w-[1400px] mx-auto px-6 py-4 flex flex-col xl:flex-row xl:items-end justify-between gap-5">
-                    <div className="flex items-start gap-5 md:gap-6">
+                <div className="max-w-[1520px] mx-auto px-6 py-4 flex flex-col xl:flex-row xl:items-end justify-between gap-5">
+                    <div className="flex items-start gap-6 md:gap-8">
                         <div
-                            className="w-20 h-20 md:w-24 md:h-24 blood-ui-card-soft rounded-2xl flex items-center justify-center text-background-dark shadow-glow cursor-pointer hover:scale-105 transition-transform overflow-hidden shrink-0 border border-[rgba(202,138,4,0.2)]"
+                            className="w-24 h-24 md:w-28 md:h-28 blood-ui-card-soft rounded-3xl flex items-center justify-center text-background-dark shadow-glow cursor-pointer hover:scale-105 transition-transform overflow-hidden shrink-0 border border-[rgba(202,138,4,0.2)]"
                             onClick={() => crestInputRef.current?.click()}
                         >
                                 <img
@@ -584,10 +584,10 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                     }
                                 }}
                                 alt={team.name}
-                                className="w-full h-full object-contain p-0.5 scale-[1.05]"
+                                className="w-full h-full object-contain p-0 scale-[1.14]"
                             />
                         </div>
-                        <div className="space-y-3">
+                        <div className="space-y-4 max-w-[760px]">
                             <div className="flex flex-wrap items-center gap-2">
                                 <span className="px-3 py-1.5 rounded-full border border-[rgba(202,138,4,0.22)] bg-[rgba(255,251,241,0.72)] text-[9px] font-black uppercase tracking-[0.28em] text-[#7b6853] italic">
                                     Dossier de franquicia
@@ -600,7 +600,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                 {team.name}
                             </h1>
                             <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">{team.rosterName}</p>
-                            <div className="flex flex-wrap gap-2">
+                            <div className="flex flex-wrap gap-2 max-w-[720px]">
                                 <span className="px-3 py-1.5 rounded-full bg-[rgba(255,251,241,0.84)] border border-[rgba(111,87,56,0.12)] text-[#2b1d12] text-[9px] font-black uppercase tracking-[0.28em]">
                                     VAE {teamValue.toLocaleString('es-ES')}
                                 </span>
@@ -1125,16 +1125,16 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                     </div>
 
                     {/* Sidebar Sidebar */}
-                    <div className="w-full lg:w-80 space-y-6">
-                        <div className="bg-white/5 border border-white/10 rounded-[2rem] p-8 overflow-hidden relative group">
+                    <div className="w-full lg:w-[24rem] space-y-6">
+                        <div className="bg-white/5 border border-white/10 rounded-[2.2rem] p-6 xl:p-8 overflow-hidden relative group">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-primary/10 transition-all"></div>
                             <h3 className="text-sm font-epilogue font-black text-primary uppercase italic tracking-widest mb-6 relative z-10">Escudo Heráldico</h3>
                             <div
-                                className="aspect-square bg-black/40 border-2 border-dashed border-white/10 rounded-2xl flex items-center justify-center cursor-pointer hover:border-primary/40 transition-all overflow-hidden relative z-10 p-3"
+                                className="aspect-square bg-black/40 border-2 border-dashed border-white/10 rounded-[2rem] flex items-center justify-center cursor-pointer hover:border-primary/40 transition-all overflow-hidden relative z-10 p-2"
                                 onClick={() => crestInputRef.current?.click()}
                             >
                                 {resolveTeamCrestUrl(team) ? (
-                                    <div className="w-full h-full rounded-3xl overflow-hidden bg-black/40 border border-white/5 flex items-center justify-center relative group">
+                                    <div className="w-full h-full rounded-[1.75rem] overflow-hidden bg-black/40 border border-white/5 flex items-center justify-center relative group">
                                         <img
                                             src={resolveTeamCrestUrl(team)}
                                             onError={(e) => {
@@ -1150,7 +1150,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                                 }
                                             }}
                                             alt={team.name}
-                                            className="w-full h-full object-contain scale-[1.08] drop-shadow-[0_0_10px_rgba(255,255,255,0.1)] group-hover:scale-[1.16] transition-transform duration-500"
+                                            className="w-full h-full object-contain scale-[1.16] drop-shadow-[0_0_10px_rgba(255,255,255,0.1)] group-hover:scale-[1.22] transition-transform duration-500"
                                         />
                                     </div>
                                 ) : (
