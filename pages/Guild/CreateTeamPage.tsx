@@ -53,8 +53,8 @@ const FACTION_SEARCH_ALIASES: Record<string, string[]> = {
     'Slann (NAF)': ['Slann', 'Slann NAF'],
 };
 
-const getCrestPresentationStyle = (crestScale?: number, crestOffsetY?: number): React.CSSProperties => ({
-    transform: `scale(${crestScale ?? 1.14}) translateY(${crestOffsetY ?? 0}px)`,
+const getSelectorCrestStyle = (distance: number, isActive: boolean): React.CSSProperties => ({
+    transform: `scale(${isActive ? 1.28 : distance === 1 ? 1.08 : 0.96}) translateY(${isActive ? -2 : 0}px)`,
     transformOrigin: 'center center',
 });
 
@@ -491,8 +491,8 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                                                             if (img.src !== tm.image) img.src = tm.image;
                                                         }}
                                                         alt={tm.name}
-                                                        style={getCrestPresentationStyle(tm.crestScale, tm.crestOffsetY)}
-                                                        className="w-full h-full object-contain p-1 transform-gpu"
+                                                        style={getSelectorCrestStyle(distance, isActive)}
+                                                        className="w-full h-full object-contain p-0.5 transform-gpu"
                                                     />
                                                     {isActive && (
                                                         <motion.div layoutId="active-bg" className="absolute inset-0 bg-gold/10 pointer-events-none" />
@@ -524,8 +524,8 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                                                             if (img.src !== tm.image) img.src = tm.image;
                                                         }}
                                                         alt={tm.name}
-                                                        style={getCrestPresentationStyle(tm.crestScale, tm.crestOffsetY)}
-                                                        className="w-full h-full object-contain p-1 transform-gpu"
+                                                        style={getSelectorCrestStyle(distance, isActive)}
+                                                        className="w-full h-full object-contain p-0.5 transform-gpu"
                                                     />
                                                     {isSelected && (
                                                         <motion.div layoutId="active-bg-mobile" className="absolute inset-0 bg-gold/5 pointer-events-none" />
