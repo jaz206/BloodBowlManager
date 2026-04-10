@@ -1,4 +1,4 @@
-﻿import type { Team } from '../types';
+﻿import type { Team, ManagedPlayer, ManagedTeam } from '../types';
 import { getTeamLogoUrl, resolveTeamLogoPreference } from './imageUtils';
 import { deepSanitizeText, sanitizeMojibakeText } from './textSanitizer';
 
@@ -160,3 +160,87 @@ export const normalizeTeamCollection = (items: Partial<TeamAsset>[], fallbacks: 
         return ensureTeamRecord({ ...item, name: normalizedName }, fallback);
     });
 };
+
+
+const ensureArray = <T = any>(value: unknown): T[] => Array.isArray(value) ? value : [];
+
+export const normalizeManagedPlayerRecord = (player: Partial<ManagedPlayer> | undefined): ManagedPlayer => {
+    const raw = deepSanitizeText((player || {}) as Partial<ManagedPlayer>);
+    const stats = raw.stats || { MV: 0, FU: 0, AG: '-', PA: '-', AR: '-' };
+
+    return {
+        id: Number(raw.id ?? Date.now()),
+        qty: raw.qty || '0-1',
+        position: raw.position || '',
+        cost: Number(raw.cost ?? 0),
+        stats: {
+            MV: Number((stats as any).MV ?? 0),
+            FU: String((stats as any).FU ?? '0'),
+            AG: String((stats as any).AG ?? '-'),
+            PA: String((stats as any).PA ?? '-'),
+            AR: String((stats as any).AR ?? '-'),
+        },
+        primary: raw.primary || '',
+        secondary: raw.secondary || '',
+        skillKeys: ensureArray(raw.skillKeys).filter(Boolean),
+        skills: raw.skills || '',
+        customName: raw.customName || raw.position || 'Jugador',
+        spp: Number(raw.spp ?? 0),
+        gainedSkills: ensureArray(raw.gainedSkills).filter(Boolean),
+        lastingInjuries: ensureArray(raw.lastingInjuries).filter(Boolean),
+        status: (raw.status as ManagedPlayer['status']) || 'Reserva',
+        statusDetail: raw.statusDetail,
+        isBenched: raw.isBenched ?? true,
+        missNextGame: Number(raw.missNextGame ?? 0),
+        fieldPosition: raw.fieldPosition,
+        sppActions: raw.sppActions || {},
+        isStarPlayer: !!raw.isStarPlayer,
+        isJourneyman: !!raw.isJourneyman,
+        advancements: ensureArray(raw.advancements),
+        isDistracted: !!raw.isDistracted,
+        hasIndigestion: !!raw.hasIndigestion,
+        isActivated: !!raw.isActivated,
+        image: raw.image,
+    };
+};
+
+export const normalizeManagedTeamRecord = (team: Partial<ManagedTeam> | undefined): ManagedTeam => {
+    const raw = deepSanitizeText((team || {}) as Partial<ManagedTeam>);
+
+    return {
+        id: raw.id,
+        ownerId: raw.ownerId,
+        name: raw.name || 'Franquicia',
+        rosterName: normalizeTeamName(raw.rosterName || raw.name || ''),
+        treasury: Number(raw.treasury ?? 0),
+        rerolls: Number(raw.rerolls ?? 0),
+        dedicatedFans: Number(raw.dedicatedFans ?? 0),
+        cheerleaders: Number(raw.cheerleaders ?? 0),
+        assistantCoaches: Number(raw.assistantCoaches ?? 0),
+        apothecary: !!raw.apothecary,
+        players: ensureArray(raw.players).map((player) => normalizeManagedPlayerRecord(player as Partial<ManagedPlayer>)),
+        crestImage: raw.crestImage,
+        isAutoCalculating: raw.isAutoCalculating ?? false,
+        liveRerolls: Number(raw.liveRerolls ?? raw.rerolls ?? 0),
+        tempBribes: Number(raw.tempBribes ?? 0),
+        tempCheerleaders: Number(raw.tempCheerleaders ?? 0),
+        tempAssistantCoaches: Number(raw.tempAssistantCoaches ?? 0),
+        coachExpelled: !!raw.coachExpelled,
+        apothecaryUsedOnKO: !!raw.apothecaryUsedOnKO,
+        biasedRef: !!raw.biasedRef,
+        wanderingApothecaries: Number(raw.wanderingApothecaries ?? 0),
+        plagueDoctors: Number(raw.plagueDoctors ?? 0),
+        mortuaryAssistants: Number(raw.mortuaryAssistants ?? 0),
+        tempWizard: !!raw.tempWizard,
+        fanAttendance: Number(raw.fanAttendance ?? 0),
+        hasStalled: !!raw.hasStalled,
+        updatedAt: raw.updatedAt,
+        totalTV: Number(raw.totalTV ?? 0),
+        record: raw.record || { wins: 0, draws: 0, losses: 0 },
+        history: ensureArray(raw.history),
+        snapshots: ensureArray(raw.snapshots),
+    };
+};
+
+export const normalizeManagedTeamCollection = (items: Partial<ManagedTeam>[] = []): ManagedTeam[] =>
+    ensureArray(items).map((team) => normalizeManagedTeamRecord(team));

@@ -30,6 +30,7 @@ import LanguageSelector from '../common/LanguageSelector';
 import { useMasterData } from '../../hooks/useMasterData';
 import { getGuestTeams } from '../../utils/testData';
 import { generateJoinCode } from '../../pages/Arena/competitionUtils';
+import { normalizeManagedTeamCollection } from '../../utils/teamData';
 
 type View = 'home' | 'oracle' | 'starplayers' | 'guild' | 'tactical' | 'arena' | 'leagues' | 'guide' | 'admin';
 type SyncStatus = 'synced' | 'syncing' | 'error';
@@ -107,6 +108,52 @@ const MainApp: React.FC = () => {
   const persistLocalCompetitions = (nextCompetitions: League[]) => {
     if (!localCompetitionsKey || typeof window === 'undefined') return;
     localStorage.setItem(localCompetitionsKey, JSON.stringify(nextCompetitions));
+  };
+
+
+  const normalizeCompetitionRecord = (competition: Partial<League> | Partial<Competition> | undefined): League => {
+    const rawTeams = Array.isArray(competition?.teams) ? competition.teams : [];
+    const normalizedTeams = rawTeams
+      .filter(Boolean)
+      .map((team: any) => ({
+        ...team,
+        teamName: team?.teamName || team?.name || 'Equipo',
+        ownerId: team?.ownerId || '',
+        ownerName: team?.ownerName || '',
+        stats: team?.stats || {
+          played: 0,
+          won: 0,
+          drawn: 0,
+          lost: 0,
+          tdFor: 0,
+          tdAgainst: 0,
+          casFor: 0,
+          casAgainst: 0,
+          points: 0,
+        },
+      }));
+
+    return {
+      ...(competition as League),
+      id: competition?.id || '',
+      name: competition?.name || 'Competici?n',
+      ownerId: competition?.ownerId || competition?.createdBy || '',
+      ownerName: competition?.ownerName,
+      createdBy: competition?.createdBy,
+      participantIds: Array.isArray(competition?.participantIds) ? competition!.participantIds : [],
+      joinCode: competition?.joinCode,
+      format: competition?.format || 'Liguilla',
+      status: competition?.status || 'Open',
+      visibility: competition?.visibility,
+      maxTeams: competition?.maxTeams,
+      teams: normalizedTeams,
+      schedule: competition?.schedule || null,
+      bracket: competition?.bracket || null,
+      createdAt: competition?.createdAt,
+      rules: competition?.rules,
+      baseTeam: competition?.baseTeam,
+      reports: Array.isArray(competition?.reports) ? competition!.reports : [],
+    };
   };
 
   const deriveParticipantIds = (competition: Pick<Competition, 'ownerId' | 'createdBy' | 'teams'>): string[] => {
@@ -225,23 +272,23 @@ const MainApp: React.FC = () => {
       if (managedTeams.length === 0) {
         const cached = localStorage.getItem('bb-guest-teams');
         if (cached) {
-          setManagedTeams(JSON.parse(cached));
+          setManagedTeams(normalizeManagedTeamCollection(JSON.parse(cached)));
         } else {
-          setManagedTeams(getGuestTeams());
+          setManagedTeams(normalizeManagedTeamCollection(getGuestTeams()));
         }
       }
       setPlays([]);
       setDataInitiallyLoaded(true);
       setSyncState('synced');
     } else {
-      const cachedCompetitions = readLocalCompetitions();
+      const cachedCompetitions = readLocalCompetitions().map(comp => normalizeCompetitionRecord(comp));
       if (cachedCompetitions.length) {
         setLeagues(prev => mergeCompetitions(prev as League[], cachedCompetitions));
       }
 
       const teamsUnsub = onSnapshot(collection(db, 'users', user.id, 'teams'),
         (snapshot) => {
-          setManagedTeams(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ManagedTeam[]);
+          setManagedTeams(normalizeManagedTeamCollection(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))));
           if (!dataInitiallyLoaded) setDataInitiallyLoaded(true);
           setSyncState('synced');
         },
@@ -306,8 +353,8 @@ const MainApp: React.FC = () => {
     if (!db) return;
     const q = query(collection(db, 'leagues'), orderBy('createdAt', 'desc'), limit(10));
     const leaguesUnsub = onSnapshot(q, (snapshot) => {
-      const remote = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as League[];
-      const local = readLocalCompetitions();
+      const remote = snapshot.docs.map(doc => normalizeCompetitionRecord({ id: doc.id, ...doc.data() }));
+      const local = readLocalCompetitions().map(comp => normalizeCompetitionRecord(comp));
       setLeagues(mergeCompetitions(remote, local));
     });
     return () => leaguesUnsub();

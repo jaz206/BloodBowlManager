@@ -100,7 +100,10 @@ const Home: React.FC<HomeProps> = ({
 
     // Dashboard State
     const myCompetitions = useMemo(() => 
-        competitions.filter(c => c.teams.some(t => t.ownerId === user?.id) && c.status !== 'Finished'),
+        competitions.filter(c => {
+            const teams = Array.isArray(c.teams) ? c.teams : [];
+            return teams.some(t => t.ownerId === user?.id) && c.status !== 'Finished';
+        }),
     [competitions, user]);
 
     const [activeCompId, setActiveCompId] = useState<string | null>(null);
