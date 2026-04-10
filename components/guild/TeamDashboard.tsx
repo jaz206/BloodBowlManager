@@ -563,10 +563,10 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
             <div className="guild-dossier-light">
             {/* Top Navigation & Header */}
             <header className={`blood-ui-header border-b border-white/10 backdrop-blur-md sticky ${stickyOffset} z-50`}>
-                <div className="max-w-[1520px] mx-auto px-6 py-4 flex flex-col xl:flex-row xl:items-end justify-between gap-5">
-                    <div className="flex items-start gap-6 md:gap-8">
+                <div className="max-w-[1480px] mx-auto px-6 py-4 flex flex-col xl:flex-row xl:items-end justify-between gap-5">
+                    <div className="flex flex-1 items-start gap-5 md:gap-6 min-w-0">
                         <div
-                            className="w-24 h-24 md:w-28 md:h-28 blood-ui-card-soft rounded-3xl flex items-center justify-center text-background-dark shadow-glow cursor-pointer hover:scale-105 transition-transform overflow-hidden shrink-0 border border-[rgba(202,138,4,0.2)]"
+                            className="w-28 h-28 md:w-32 md:h-32 blood-ui-card-soft rounded-3xl flex items-center justify-center text-background-dark shadow-glow cursor-pointer hover:scale-105 transition-transform overflow-hidden shrink-0 border border-[rgba(202,138,4,0.2)]"
                             onClick={() => crestInputRef.current?.click()}
                         >
                                 <img
@@ -584,10 +584,10 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                     }
                                 }}
                                 alt={team.name}
-                                className="w-full h-full object-contain p-0 scale-[1.14]"
+                                className="w-full h-full object-contain p-0 scale-[1.18]"
                             />
                         </div>
-                        <div className="space-y-4 max-w-[760px]">
+                        <div className="space-y-3 max-w-[860px] flex-1 min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
                                 <span className="px-3 py-1.5 rounded-full border border-[rgba(202,138,4,0.22)] bg-[rgba(255,251,241,0.72)] text-[9px] font-black uppercase tracking-[0.28em] text-[#7b6853] italic">
                                     Dossier de franquicia
@@ -600,7 +600,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                 {team.name}
                             </h1>
                             <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">{team.rosterName}</p>
-                            <div className="flex flex-wrap gap-2 max-w-[720px]">
+                            <div className="flex flex-wrap gap-2 md:gap-3 max-w-[820px]">
                                 <span className="px-3 py-1.5 rounded-full bg-[rgba(255,251,241,0.84)] border border-[rgba(111,87,56,0.12)] text-[#2b1d12] text-[9px] font-black uppercase tracking-[0.28em]">
                                     VAE {teamValue.toLocaleString('es-ES')}
                                 </span>
@@ -617,8 +617,8 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                         </div>
                     </div>
 
-                    <div className="flex flex-col md:flex-row items-center gap-6">
-                        <nav className="flex items-center gap-6">
+                    <div className="flex flex-col md:flex-row items-center gap-4">
+                        <nav className="flex items-center gap-4">
                             {[
                                 { id: 'roster', label: 'Plantilla', icon: 'groups' },
                                 { id: 'recruit', label: 'Reclutar', icon: 'person_add' },
