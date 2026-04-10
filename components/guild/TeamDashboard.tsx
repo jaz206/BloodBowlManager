@@ -209,7 +209,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
 
     const normalizeManagedPlayer = (player: ManagedPlayer): ManagedPlayer => ({
         ...player,
-        jerseyNumber: Number((player as any).jerseyNumber ?? (player as any).number ?? player.id ?? 0) || undefined,
+        jerseyNumber: Number((player as any).jerseyNumber ?? (player as any).number ?? 0) || undefined,
         skillKeys: Array.isArray(player.skillKeys) && player.skillKeys.length > 0 ? player.skillKeys.filter(Boolean) : getPlayerCoreSkillKeys(player),
         gainedSkills: Array.isArray(player.gainedSkills) ? player.gainedSkills.filter(Boolean) : [],
         lastingInjuries: Array.isArray(player.lastingInjuries) ? player.lastingInjuries.filter(Boolean) : [],
@@ -664,14 +664,14 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                 </div>
 
                                 {/* Player Cards */}
-                                {team.players.map(p => {
+                                {team.players.map((p, index) => {
                                     const playerImage = getPlayerVisibleImage(p);
                                     const displayedSkills = getPlayerDisplayedSkills(p);
                                     const nextAdvanceCost = SPP_LEVELS[p.advancements?.length || 0] || 999;
                                     const hasLevelUp = p.spp >= nextAdvanceCost;
                                     const isMNG = p.lastingInjuries?.includes('MNG');
                                     const isBenched = p.isBenched ?? true;
-                                    const playerNumber = Number(p.jerseyNumber ?? p.id) || p.id;
+                                    const playerNumber = Number(p.jerseyNumber) || (index + 1);
                                     const statusLabel = p.statusDetail
                                         || (hasLevelUp ? 'Pendiente de subida' : '')
                                         || (isMNG ? `Lesionado${(p.missNextGame || 0) > 0 ? ` · MNG x${p.missNextGame}` : ''}` : '')

@@ -19,7 +19,7 @@ const normalizeLookupKey = (value?: string) =>
 
 const normalizeManagedPlayer = (player: ManagedPlayer): ManagedPlayer => ({
     ...player,
-    jerseyNumber: Number((player as any).jerseyNumber ?? (player as any).number ?? player.id ?? 0) || undefined,
+    jerseyNumber: Number((player as any).jerseyNumber ?? (player as any).number ?? 0) || undefined,
     skillKeys: Array.isArray(player.skillKeys) ? player.skillKeys.filter(Boolean) : [],
     gainedSkills: Array.isArray(player.gainedSkills) ? player.gainedSkills.filter(Boolean) : [],
     lastingInjuries: Array.isArray(player.lastingInjuries) ? player.lastingInjuries.filter(Boolean) : [],
@@ -113,7 +113,7 @@ const PlayerModal: React.FC<PlayerModalProps> = ({ player, allSkills, onSave, on
                                     </div>
                                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                         {[
-                                            { label: 'Dorsal', value: editedPlayer.jerseyNumber ?? editedPlayer.id, name: 'jerseyNumber' as const, editable: true },
+                                            { label: 'Dorsal', value: editedPlayer.jerseyNumber ?? '', name: 'jerseyNumber' as const, editable: true },
                                             { label: 'MA', value: editedPlayer.stats.MV },
                                             { label: 'FU', value: editedPlayer.stats.FU },
                                             { label: 'AG', value: editedPlayer.stats.AG },
