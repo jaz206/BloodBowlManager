@@ -209,6 +209,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
 
     const normalizeManagedPlayer = (player: ManagedPlayer): ManagedPlayer => ({
         ...player,
+        jerseyNumber: Number((player as any).jerseyNumber ?? (player as any).number ?? player.id ?? 0) || undefined,
         skillKeys: Array.isArray(player.skillKeys) && player.skillKeys.length > 0 ? player.skillKeys.filter(Boolean) : getPlayerCoreSkillKeys(player),
         gainedSkills: Array.isArray(player.gainedSkills) ? player.gainedSkills.filter(Boolean) : [],
         lastingInjuries: Array.isArray(player.lastingInjuries) ? player.lastingInjuries.filter(Boolean) : [],
@@ -410,10 +411,15 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
             stockEntry?.storage || 'nested',
             selectedFilename
         );
+        const nextJerseyNumber = Math.max(
+            1,
+            ...team.players.map((pl) => Number(pl.jerseyNumber ?? pl.id) || 0)
+        ) + 1;
 
         const newPlayer: ManagedPlayer = {
             ...player,
             id: Date.now(),
+            jerseyNumber: nextJerseyNumber,
             customName: generateRandomName(team.rosterName),
             spp: 0,
             gainedSkills: [],
@@ -665,6 +671,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                     const hasLevelUp = p.spp >= nextAdvanceCost;
                                     const isMNG = p.lastingInjuries?.includes('MNG');
                                     const isBenched = p.isBenched ?? true;
+                                    const playerNumber = Number(p.jerseyNumber ?? p.id) || p.id;
                                     const statusLabel = p.statusDetail
                                         || (hasLevelUp ? 'Pendiente de subida' : '')
                                         || (isMNG ? `Lesionado${(p.missNextGame || 0) > 0 ? ` · MNG x${p.missNextGame}` : ''}` : '')
@@ -682,9 +689,9 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
 
                                             <div className="flex flex-col md:flex-row items-center gap-6">
                                                 <div className="flex-shrink-0 flex items-center gap-4">
-                                                    <div className="w-12 text-center">
+                                                <div className="w-12 text-center">
                                                         <span className={`font-epilogue italic text-2xl font-black ${hasLevelUp ? 'text-primary' : 'text-slate-700 group-hover/card:text-primary transition-colors'}`}>
-                                                            #{p.id.toString().slice(-2)}
+                                                            #{playerNumber}
                                                         </span>
                                                     </div>
                                                         {playerImage && (
@@ -722,6 +729,15 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                                                     {p.customName}
                                                                 </h3>
                                                                 <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest leading-none">{p.position}</p>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => togglePlayerBenched(p.id)}
+                                                                    className={`mt-2 inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${isBenched ? 'bg-slate-800/80 border-white/5 text-slate-400 hover:border-gold/30 hover:text-gold' : 'bg-green-500/10 border-green-500/25 text-green-500 hover:border-gold/30 hover:text-gold'}`}
+                                                                    title={isBenched ? 'Pasar a titular' : 'Enviar a reserva'}
+                                                                >
+                                                                    <span className="material-symbols-outlined text-[11px]">{isBenched ? 'event_seat' : 'sports'}</span>
+                                                                    {isBenched ? 'Reserva' : 'Titular'}
+                                                                </button>
                                                                 <div className="flex flex-wrap gap-1.5 mt-2">
                                                                     {hasLevelUp && (
                                                                         <span className="px-2 py-1 rounded-full bg-primary/15 border border-primary/25 text-primary text-[9px] font-black uppercase tracking-widest">
@@ -742,24 +758,6 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                                                         <span className="px-2 py-1 rounded-full bg-white/5 border border-white/10 text-slate-300 text-[9px] font-black uppercase tracking-widest">
                                                                             {p.lastingInjuries.length} lesión{p.lastingInjuries.length > 1 ? 'es' : ''}
                                                                         </span>
-                                                                    )}
-                                                                    {isBenched && !hasLevelUp && !isMNG && (p.missNextGame || 0) === 0 && (
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => togglePlayerBenched(p.id)}
-                                                                            className="px-2 py-1 rounded-full bg-slate-800/80 border border-white/5 text-slate-400 text-[9px] font-black uppercase tracking-widest hover:border-gold/30 hover:text-gold transition-all"
-                                                                        >
-                                                                            Reserva
-                                                                        </button>
-                                                                    )}
-                                                                    {!isBenched && (
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => togglePlayerBenched(p.id)}
-                                                                            className="px-2 py-1 rounded-full bg-green-500/10 border border-green-500/25 text-green-500 text-[9px] font-black uppercase tracking-widest hover:border-gold/30 hover:text-gold transition-all"
-                                                                        >
-                                                                            Titular
-                                                                        </button>
                                                                     )}
                                                                 </div>
                                                             </>

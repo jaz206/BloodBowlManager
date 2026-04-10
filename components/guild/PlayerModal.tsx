@@ -19,6 +19,7 @@ const normalizeLookupKey = (value?: string) =>
 
 const normalizeManagedPlayer = (player: ManagedPlayer): ManagedPlayer => ({
     ...player,
+    jerseyNumber: Number((player as any).jerseyNumber ?? (player as any).number ?? player.id ?? 0) || undefined,
     skillKeys: Array.isArray(player.skillKeys) ? player.skillKeys.filter(Boolean) : [],
     gainedSkills: Array.isArray(player.gainedSkills) ? player.gainedSkills.filter(Boolean) : [],
     lastingInjuries: Array.isArray(player.lastingInjuries) ? player.lastingInjuries.filter(Boolean) : [],
@@ -52,7 +53,7 @@ const PlayerModal: React.FC<PlayerModalProps> = ({ player, allSkills, onSave, on
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        if (name === 'spp' || name === 'missNextGame') {
+        if (name === 'spp' || name === 'missNextGame' || name === 'jerseyNumber') {
             setEditedPlayer({ ...editedPlayer, [name]: parseInt(value, 10) || 0 });
         } else if (name === 'lastingInjuries') {
             setEditedPlayer({ ...editedPlayer, [name]: (value || '').split(',').map((s) => s.trim()).filter(Boolean) });
@@ -112,6 +113,7 @@ const PlayerModal: React.FC<PlayerModalProps> = ({ player, allSkills, onSave, on
                                     </div>
                                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                         {[
+                                            { label: 'Dorsal', value: editedPlayer.jerseyNumber ?? editedPlayer.id, name: 'jerseyNumber' as const, editable: true },
                                             { label: 'MA', value: editedPlayer.stats.MV },
                                             { label: 'FU', value: editedPlayer.stats.FU },
                                             { label: 'AG', value: editedPlayer.stats.AG },
@@ -121,7 +123,18 @@ const PlayerModal: React.FC<PlayerModalProps> = ({ player, allSkills, onSave, on
                                         ].map((item) => (
                                             <div key={item.label} className="rounded-2xl border border-[#e3cfaa] bg-[#fffaf1] p-4 text-center">
                                                 <span className="block text-[9px] font-black uppercase tracking-[0.22em] text-[#8a7760] mb-1">{item.label}</span>
-                                                <span className="text-xl font-display font-black italic text-[#2b1d12]">{item.value}</span>
+                                                {'name' in item && item.name === 'jerseyNumber' ? (
+                                                    <input
+                                                        type="number"
+                                                        name="jerseyNumber"
+                                                        value={item.value}
+                                                        onChange={handleChange}
+                                                        className="w-full bg-white border border-[#d7c39a] rounded-xl py-2 px-3 text-[#2b1d12] font-display font-black italic focus:border-premium-gold outline-none transition-all text-center"
+                                                        min="0"
+                                                    />
+                                                ) : (
+                                                    <span className="text-xl font-display font-black italic text-[#2b1d12]">{item.value}</span>
+                                                )}
                                             </div>
                                         ))}
                                     </div>
@@ -129,6 +142,10 @@ const PlayerModal: React.FC<PlayerModalProps> = ({ player, allSkills, onSave, on
                                 <div className="space-y-4">
                                     <div className="rounded-[1.75rem] border border-[#e3cfaa] bg-[#fffaf1] p-5">
                                         <span className="block text-[10px] font-black uppercase tracking-[0.28em] text-[#8a7760] mb-4">Rol de plantilla</span>
+                                        <div className={`mb-4 inline-flex items-center gap-2 px-3 py-2 rounded-full border text-[10px] font-black uppercase tracking-[0.22em] ${!(editedPlayer.isBenched ?? true) ? 'bg-green-500/10 border-green-500/30 text-green-700' : 'bg-slate-500/10 border-slate-400/30 text-slate-600'}`}>
+                                            <span className="material-symbols-outlined text-[14px]">{!(editedPlayer.isBenched ?? true) ? 'sports' : 'event_seat'}</span>
+                                            {!(editedPlayer.isBenched ?? true) ? 'Titular actual' : 'Reserva actual'}
+                                        </div>
                                         <div className="grid grid-cols-2 gap-3">
                                             <button
                                                 type="button"
@@ -199,8 +216,8 @@ const PlayerModal: React.FC<PlayerModalProps> = ({ player, allSkills, onSave, on
                                         Añadir o editar habilidades extra
                                     </button>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="block text-[10px] font-bold text-[#8a7760] uppercase tracking-widest">Lesiones permanentes</label>
+                                    <div className="space-y-2">
+                                        <label className="block text-[10px] font-bold text-[#8a7760] uppercase tracking-widest">Lesiones permanentes</label>
                                     <textarea
                                         name="lastingInjuries"
                                         value={(editedPlayer.lastingInjuries || []).join(', ')}

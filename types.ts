@@ -109,6 +109,7 @@ export interface Advancement {
 
 export interface ManagedPlayer extends Player {
   id: number;
+  jerseyNumber?: number;
   customName: string;
   spp: number;
   gainedSkills: string[];
