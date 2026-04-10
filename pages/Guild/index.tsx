@@ -464,7 +464,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
 
                                     {/* Team Name & Crest */}
                                     <div className="col-span-4 flex items-center gap-6 relative z-10">
-                                        <div className="w-24 h-24 bg-[rgba(36,26,17,0.86)] rounded-[1.5rem] border border-[rgba(111,87,56,0.12)] p-3 flex items-center justify-center shrink-0 overflow-hidden relative shadow-xl shadow-black/10 group-hover:border-gold/30 transition-all">
+                                        <div className="w-28 h-28 md:w-32 md:h-32 bg-[rgba(36,26,17,0.86)] rounded-[1.5rem] border border-[rgba(111,87,56,0.12)] p-2 flex items-center justify-center shrink-0 overflow-hidden relative shadow-xl shadow-black/10 group-hover:border-gold/30 transition-all">
                                             <img 
                                                 src={resolveGuildTeamCrestUrl(team)} 
                                                 onError={(e) => {
@@ -480,7 +480,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                                     }
                                                 }}
                                                 alt={team.name} 
-                                                className="w-full h-full object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.05)]" 
+                                                className="w-full h-full object-contain scale-[1.08] drop-shadow-[0_0_10px_rgba(255,255,255,0.05)]" 
                                             />
                                         </div>
                                         <div className="min-w-0">

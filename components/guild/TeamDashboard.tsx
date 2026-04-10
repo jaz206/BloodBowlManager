@@ -566,7 +566,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                 <div className="max-w-[1400px] mx-auto px-6 py-4 flex flex-col xl:flex-row xl:items-end justify-between gap-5">
                     <div className="flex items-start gap-5 md:gap-6">
                         <div
-                            className="w-16 h-16 md:w-20 md:h-20 blood-ui-card-soft rounded-2xl flex items-center justify-center text-background-dark shadow-glow cursor-pointer hover:scale-105 transition-transform overflow-hidden shrink-0 border border-[rgba(202,138,4,0.2)]"
+                            className="w-20 h-20 md:w-24 md:h-24 blood-ui-card-soft rounded-2xl flex items-center justify-center text-background-dark shadow-glow cursor-pointer hover:scale-105 transition-transform overflow-hidden shrink-0 border border-[rgba(202,138,4,0.2)]"
                             onClick={() => crestInputRef.current?.click()}
                         >
                                 <img
@@ -584,7 +584,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                     }
                                 }}
                                 alt={team.name}
-                                className="w-full h-full object-contain p-1"
+                                className="w-full h-full object-contain p-0.5 scale-[1.05]"
                             />
                         </div>
                         <div className="space-y-3">
@@ -1130,11 +1130,11 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-primary/10 transition-all"></div>
                             <h3 className="text-sm font-epilogue font-black text-primary uppercase italic tracking-widest mb-6 relative z-10">Escudo Heráldico</h3>
                             <div
-                                className="aspect-square bg-black/40 border-2 border-dashed border-white/10 rounded-2xl flex items-center justify-center cursor-pointer hover:border-primary/40 transition-all overflow-hidden relative z-10"
+                                className="aspect-square bg-black/40 border-2 border-dashed border-white/10 rounded-2xl flex items-center justify-center cursor-pointer hover:border-primary/40 transition-all overflow-hidden relative z-10 p-3"
                                 onClick={() => crestInputRef.current?.click()}
                             >
                                 {resolveTeamCrestUrl(team) ? (
-                                    <div className="w-24 h-24 rounded-3xl overflow-hidden bg-black/40 border border-white/5 flex items-center justify-center relative group">
+                                    <div className="w-full h-full rounded-3xl overflow-hidden bg-black/40 border border-white/5 flex items-center justify-center relative group">
                                         <img
                                             src={resolveTeamCrestUrl(team)}
                                             onError={(e) => {
@@ -1150,7 +1150,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                                 }
                                             }}
                                             alt={team.name}
-                                            className="w-full h-full object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.1)] group-hover:scale-110 transition-transform duration-500"
+                                            className="w-full h-full object-contain scale-[1.08] drop-shadow-[0_0_10px_rgba(255,255,255,0.1)] group-hover:scale-[1.16] transition-transform duration-500"
                                         />
                                     </div>
                                 ) : (
