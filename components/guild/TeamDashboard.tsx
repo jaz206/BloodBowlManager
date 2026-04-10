@@ -307,7 +307,6 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
         }, { played: 0, wins: 0, draws: 0, losses: 0, tdFor: 0, tdAgainst: 0 });
     }, [team.history]);
     const recordSummary = `${historySummary.wins}-${historySummary.draws}-${historySummary.losses}`;
-    const hasRegisteredCrest = Boolean(team.crestImage || baseRoster?.crestImage);
 
     const handleSkillClick = (skillName: string) => {
         const foundSkill = resolveSkillRecord(skillName);
@@ -627,8 +626,12 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                         <div className="hidden xl:grid grid-cols-4 gap-3">
                             {[
                                 { label: 'VAE', value: teamValue.toLocaleString('es-ES'), tone: 'text-[#2b1d12]' },
+                                { label: 'Tesorería', value: team.treasury.toLocaleString('es-ES'), tone: team.treasury > 100000 ? 'text-blood' : 'text-[#2b1d12]' },
+                                { label: 'Rerolls', value: String(team.rerolls), tone: 'text-[#2b1d12]' },
+                                { label: 'Fans', value: String(team.dedicatedFans), tone: 'text-[#2b1d12]' },
                                 { label: 'Plantilla', value: `${team.players.length}/16`, tone: 'text-[#2b1d12]' },
-                                { label: 'Record', value: recordSummary, tone: 'text-[#2b1d12]' },
+                                { label: 'Récord', value: recordSummary, tone: 'text-[#2b1d12]' },
+                                { label: 'Boticario', value: team.apothecary ? 'Sí' : 'No', tone: team.apothecary ? 'text-[#16a34a]' : 'text-[#2b1d12]' },
                                 { label: 'Tier', value: team.tier, tone: 'text-[#ca8a04]' }
                             ].map((item) => (
                                 <div
@@ -686,36 +689,8 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                 </div>
             </div>
 
-            <main className="max-w-[1400px] mx-auto px-6 py-8">
-                {/* KPIs Section */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                    <div className="blood-ui-card-strong rounded-2xl p-6 backdrop-blur-custom flex flex-col items-center justify-center text-center group hover:border-primary/30 transition-all">
-                        <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">VAE (Valor de Equipo)</p>
-                        <p className="text-primary text-4xl font-black italic font-epilogue tracking-tight group-hover:scale-105 transition-transform">
-                            {teamValue.toLocaleString()}
-                        </p>
-                    </div>
-                    <div className="blood-ui-card-strong rounded-2xl p-6 backdrop-blur-custom flex flex-col items-center justify-center text-center group hover:border-primary/30 transition-all">
-                        <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Tesorería</p>
-                        <div className="flex items-baseline gap-2 group-hover:scale-105 transition-transform">
-                            <p className={`text-4xl font-black italic font-epilogue tracking-tight ${team.treasury > 100000 ? 'text-blood animate-pulse' : 'text-primary'}`}>
-                                {team.treasury.toLocaleString()}
-                            </p>
-                            <span className="text-slate-600 text-[10px] font-black">MO</span>
-                        </div>
-                    </div>
-                    <div className="blood-ui-card-strong rounded-2xl p-6 backdrop-blur-custom flex flex-col items-center justify-center text-center group hover:border-primary/30 transition-all">
-                        <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Segundas Oportunidades</p>
-                        <div className="flex items-center gap-3 group-hover:scale-105 transition-transform">
-                            <span className="material-symbols-outlined text-primary text-3xl">refresh</span>
-                            <p className="text-primary text-4xl font-black italic font-epilogue tracking-tight">{team.rerolls}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="flex flex-col lg:flex-row gap-8">
-                    {/* Main Content Area */}
-                    <div className="flex-1 space-y-6">
+            <main className="max-w-[1480px] mx-auto px-6 py-8">
+                <div className="space-y-6">
                         {activeTab === 'roster' && (
                             <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 <div className="flex items-center justify-between px-4 mb-2">
@@ -737,11 +712,6 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                     const isMNG = p.lastingInjuries?.includes('MNG');
                                     const isBenched = p.isBenched ?? true;
                                     const playerNumber = Number(p.jerseyNumber) || (index + 1);
-                                    const statusLabel = p.statusDetail
-                                        || (hasLevelUp ? 'Pendiente de subida' : '')
-                                        || (isMNG ? `Lesionado${(p.missNextGame || 0) > 0 ? ` · MNG x${p.missNextGame}` : ''}` : '')
-                                        || (p.lastingInjuries?.length ? 'Con lesiones permanentes' : '')
-                                        || (isBenched ? 'Reserva' : 'Activo');
 
                                     return (
                                         <div
@@ -752,58 +722,25 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                                 <div className="absolute top-0 left-0 w-1 h-full bg-primary shadow-[0_0_15px_rgba(202,138,4,0.6)]"></div>
                                             )}
 
-                                            <div className="flex flex-col md:flex-row items-center gap-6">
-                                                <div className="flex-shrink-0 flex items-center gap-4">
-                                                    <div className="w-12 text-center">
-                                                        {editingJerseyId === p.id ? (
-                                                            <input
-                                                                type="number"
-                                                                min="1"
-                                                                value={editingJerseyValue}
-                                                                onChange={(e) => setEditingJerseyValue(e.target.value)}
-                                                                onBlur={handleJerseyUpdate}
-                                                                onKeyDown={(e) => {
-                                                                    if (e.key === 'Enter') {
-                                                                        e.preventDefault();
-                                                                        handleJerseyUpdate();
-                                                                    }
-                                                                    if (e.key === 'Escape') {
-                                                                        setEditingJerseyId(null);
-                                                                        setEditingJerseyValue('');
-                                                                    }
-                                                                }}
-                                                                autoFocus
-                                                                className="blood-ui-input w-12 text-center bg-black/30 border border-primary text-white rounded px-2 py-1 text-sm font-black italic"
-                                                            />
-                                                        ) : (
-                                                            <span
-                                                                className={`cursor-text font-epilogue italic text-2xl font-black ${hasLevelUp ? 'text-primary' : 'text-slate-700 group-hover/card:text-primary transition-colors'}`}
-                                                                onDoubleClick={() => handleJerseyDoubleClick(p, playerNumber)}
-                                                                title="Doble clic para editar dorsal"
-                                                            >
-                                                                #{playerNumber}
-                                                            </span>
-                                                        )}
+                                            <div className="flex flex-col md:flex-row items-center gap-5">
+                                                {playerImage && (
+                                                    <div
+                                                        onClick={() => setZoomedImage(playerImage)}
+                                                        className="w-24 aspect-[4/3] rounded-lg overflow-hidden border-2 border-slate-800 bg-[#efe0bf] cursor-zoom-in hover:scale-105 hover:border-gold/50 transition-all group/img relative shrink-0"
+                                                    >
+                                                        {/* Blurred layer */}
+                                                        <img src={playerImage} onError={() => hideBrokenPlayerImage(p.id)} className="absolute inset-0 w-full h-full object-cover blur-lg opacity-30 scale-125" alt="" />
+                                                        {/* Main Image layer */}
+                                                        <img
+                                                            src={playerImage}
+                                                            alt={p.customName}
+                                                            onError={() => hideBrokenPlayerImage(p.id)}
+                                                            className="relative w-full h-full object-contain z-10 transition-all opacity-90 group-hover/img:opacity-100"
+                                                        />
                                                     </div>
-                                                        {playerImage && (
-                                                            <div 
-                                                                onClick={() => setZoomedImage(playerImage)}
-                                                                className="w-24 aspect-[4/3] rounded-lg overflow-hidden border-2 border-slate-800 bg-[#efe0bf] cursor-zoom-in hover:scale-105 hover:border-gold/50 transition-all group/img relative"
-                                                            >
-                                                                {/* Blurred layer */}
-                                                                <img src={playerImage} onError={() => hideBrokenPlayerImage(p.id)} className="absolute inset-0 w-full h-full object-cover blur-lg opacity-30 scale-125" alt="" />
-                                                                {/* Main Image layer */}
-                                                                <img 
-                                                                    src={playerImage} 
-                                                                    alt={p.customName} 
-                                                                    onError={() => hideBrokenPlayerImage(p.id)}
-                                                                    className="relative w-full h-full object-contain z-10 transition-all opacity-90 group-hover/img:opacity-100"
-                                                                />
-                                                            </div>
-                                                        )}
-                                                    </div>
+                                                )}
 
-                                                <div className="flex-1 grid grid-cols-1 md:grid-cols-[minmax(0,1.75fr)_minmax(0,0.95fr)_minmax(0,1.8fr)_minmax(0,0.9fr)_minmax(0,0.95fr)] gap-6 items-center w-full">
+                                                <div className="flex-1 grid grid-cols-1 md:grid-cols-[minmax(0,2.1fr)_minmax(0,0.95fr)_minmax(0,2.45fr)_minmax(0,0.85fr)_auto] gap-6 items-center w-full">
                                                     <div className="min-w-0">
                                                         {editingPlayerId === p.id ? (
                                                             <input
@@ -816,9 +753,41 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                                             />
                                                         ) : (
                                                             <>
-                                                                <h3 className="font-black font-epilogue italic text-[clamp(0.84rem,1vw,1.08rem)] uppercase tracking-tighter leading-none mb-1 group-hover/card:text-primary transition-colors cursor-pointer whitespace-nowrap max-w-full" onDoubleClick={() => handleNameDoubleClick(p)}>
-                                                                    {p.customName}
-                                                                </h3>
+                                                                <div className="flex items-start gap-3 min-w-0 mb-1">
+                                                                    {editingJerseyId === p.id ? (
+                                                                        <input
+                                                                            type="number"
+                                                                            min="1"
+                                                                            value={editingJerseyValue}
+                                                                            onChange={(e) => setEditingJerseyValue(e.target.value)}
+                                                                            onBlur={handleJerseyUpdate}
+                                                                            onKeyDown={(e) => {
+                                                                                if (e.key === 'Enter') {
+                                                                                    e.preventDefault();
+                                                                                    handleJerseyUpdate();
+                                                                                }
+                                                                                if (e.key === 'Escape') {
+                                                                                    setEditingJerseyId(null);
+                                                                                    setEditingJerseyValue('');
+                                                                                }
+                                                                            }}
+                                                                            autoFocus
+                                                                            className="blood-ui-input w-20 shrink-0 text-center bg-black/30 border border-primary text-white rounded px-2 py-1 text-sm font-black italic"
+                                                                        />
+                                                                    ) : (
+                                                                        <button
+                                                                            type="button"
+                                                                            className={`shrink-0 font-black font-epilogue italic text-[clamp(1rem,1.2vw,1.4rem)] uppercase tracking-tighter leading-none ${hasLevelUp ? 'text-primary' : 'text-slate-700 group-hover/card:text-primary transition-colors'}`}
+                                                                            onDoubleClick={() => handleJerseyDoubleClick(p, playerNumber)}
+                                                                            title="Doble clic para editar dorsal"
+                                                                        >
+                                                                            #{playerNumber}
+                                                                        </button>
+                                                                    )}
+                                                                    <h3 className="font-black font-epilogue italic text-[clamp(1rem,1.2vw,1.4rem)] uppercase tracking-tighter leading-none group-hover/card:text-primary transition-colors cursor-pointer whitespace-nowrap min-w-0" onDoubleClick={() => handleNameDoubleClick(p)}>
+                                                                        {p.customName}
+                                                                    </h3>
+                                                                </div>
                                                                 <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest leading-none whitespace-nowrap max-w-full">{p.position}</p>
                                                                 <div
                                                                     onClick={() => togglePlayerBenched(p.id)}
@@ -904,10 +873,6 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                                     <div className="flex items-center justify-end gap-4 text-right">
                                                         <div>
                                                             <p className="text-2xl font-epilogue italic font-black text-white leading-none">{p.cost / 1000}k</p>
-                                                            <span className={`text-[9px] font-black uppercase tracking-widest flex items-center justify-end gap-1 mt-1 leading-none ${hasLevelUp ? 'text-primary' : isMNG ? 'text-blood' : 'text-green-500'}`}>
-                                                                <span className="material-symbols-outlined text-[12px]">{hasLevelUp ? 'star' : isMNG ? 'cancel' : 'check_circle'}</span>
-                                                                {statusLabel}
-                                                            </span>
                                                         </div>
                                                         <div className="relative group/menu">
                                                             <button
@@ -1154,77 +1119,6 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                             </div>
                         )}
                     </div>
-
-                    {/* Sidebar Sidebar */}
-                    <div className="w-full lg:w-[24rem] space-y-6">
-                        <div className="bg-white/5 border border-white/10 rounded-[2.2rem] p-6 xl:p-8 overflow-hidden relative group">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-primary/10 transition-all"></div>
-                            <h3 className="text-sm font-epilogue font-black text-primary uppercase italic tracking-widest mb-6 relative z-10">Escudo Heráldico</h3>
-                            <div
-                                className="aspect-square bg-black/40 border-2 border-dashed border-white/10 rounded-[2rem] flex items-center justify-center cursor-pointer hover:border-primary/40 transition-all overflow-hidden relative z-10 p-2"
-                                onClick={() => crestInputRef.current?.click()}
-                            >
-                                {resolveTeamCrestUrl(team) ? (
-                                    <div className="w-full h-full rounded-[1.75rem] overflow-hidden bg-black/40 border border-white/5 flex items-center justify-center relative group">
-                                        <img
-                                            src={resolveTeamCrestUrl(team)}
-                                            onError={(e) => {
-                                                const img = e.target as HTMLImageElement;
-                                                const rosterUrl = getTeamLogoUrl(team.rosterName);
-                                                if (img.src !== rosterUrl) {
-                                                    img.src = rosterUrl;
-                                                } else {
-                                                    const originalData = teamsData.find(t => t.name === team.rosterName);
-                                                    if (originalData && img.src !== originalData.image) {
-                                                        img.src = originalData.image;
-                                                    }
-                                                }
-                                            }}
-                                            alt={team.name}
-                                            style={getCrestPresentationStyle(team.crestScale, team.crestOffsetY)}
-                                            className="w-full h-full object-contain p-1 drop-shadow-[0_0_10px_rgba(255,255,255,0.1)] transition-transform duration-500"
-                                        />
-                                    </div>
-                                ) : (
-                                    <div className="text-center">
-                                        <span className="material-symbols-outlined text-4xl text-slate-700 mb-2">upload</span>
-                                        <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest">SVG / PNG</p>
-                                    </div>
-                                )}
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => crestInputRef.current?.click()}
-                                className="mt-4 w-full blood-ui-button-secondary border border-gold/20 text-gold px-4 py-3 rounded-2xl text-[10px] font-black tracking-widest transition-all uppercase flex items-center justify-center gap-2 shadow-lg shadow-gold/5"
-                            >
-                                <span className="material-symbols-outlined text-base">edit</span>
-                                Cambiar escudo
-                            </button>
-                            <p className="mt-3 text-[9px] font-black uppercase tracking-[0.22em] text-slate-500">
-                                {hasRegisteredCrest ? 'Escudo registrado' : 'Escudo pendiente'}
-                            </p>
-                        </div>
-
-                        <div className="blood-ui-card-strong border border-white/10 rounded-[2rem] p-8">
-                            <h3 className="text-sm font-epilogue font-black text-primary uppercase italic tracking-widest mb-6">Resumen de Staff</h3>
-                            <div className="space-y-4">
-                                {[
-                                    { label: 'Rerolls', val: team.rerolls, icon: 'refresh' },
-                                    { label: 'Fans', val: team.dedicatedFans, icon: 'campaign' },
-                                    { label: 'Boticario', val: team.apothecary ? 'Sí' : 'NO', icon: 'emergency' }
-                                ].map(item => (
-                                    <div key={item.label} className="flex items-center justify-between p-3 bg-black/40 rounded-xl border border-white/5">
-                                        <div className="flex items-center gap-3">
-                                            <span className="material-symbols-outlined text-slate-500 text-sm">{item.icon}</span>
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{item.label}</p>
-                                        </div>
-                                        <p className="text-sm font-epilogue font-black text-white">{item.val}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </main>
             </div>
 
