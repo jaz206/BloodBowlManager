@@ -794,7 +794,9 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                                     <div className="flex items-start justify-between mb-4">
                                         <div className="flex flex-col gap-1">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-sm font-header font-black text-[#2b1d12] uppercase italic tracking-tighter group-hover:text-gold transition-colors truncate max-w-[120px]">{pos.position}</span>
+                                                <span className="text-sm font-header font-black text-[#2b1d12] uppercase italic tracking-tighter group-hover:text-gold transition-colors whitespace-normal break-words max-w-[150px] leading-tight">
+                                                    {pos.position}
+                                                </span>
                                                 <div className="relative group/skill-tip">
                                                     <span className="material-symbols-outlined text-[#7b6853] text-[12px] cursor-help hover:text-gold transition-colors font-black">help</span>
                                                     {pos.skillKeys && pos.skillKeys.length > 0 && (
@@ -891,7 +893,9 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                                     <div className="flex items-center gap-3 overflow-hidden">
                                         <span className="text-[8px] font-mono font-black text-gold/20 shrink-0">#{String(idx + 1).padStart(2, '0')}</span>
                                         <div className="flex flex-col">
-                                            <span className="text-[10px] font-header font-black text-[#2b1d12] italic uppercase tracking-tighter truncate leading-none">{p.position}</span>
+                                            <span className="text-[10px] font-header font-black text-[#2b1d12] italic uppercase tracking-tighter whitespace-normal break-words leading-tight max-w-[180px]">
+                                                {p.position}
+                                            </span>
                                             <span className="text-[7px] font-black text-gold/30 uppercase">{(p.cost/1000)}k</span>
                                         </div>
                                     </div>
