@@ -22,6 +22,12 @@ const normalizeJerseyNumber = (value: unknown): number | undefined => {
     if (!Number.isFinite(parsed) || parsed < 1 || parsed > 99) return undefined;
     return Math.trunc(parsed);
 };
+const normalizeManagedPlayerStatus = (status: ManagedPlayer['status'] | undefined, isBenched: boolean): ManagedPlayer['status'] => {
+    if (status && ['KO', 'Lesionado', 'Expulsado', 'Muerto'].includes(status)) {
+        return status;
+    }
+    return isBenched ? 'Reserva' : 'Activo';
+};
 
 const normalizeManagedPlayer = (player: ManagedPlayer): ManagedPlayer => ({
     ...player,
@@ -31,6 +37,7 @@ const normalizeManagedPlayer = (player: ManagedPlayer): ManagedPlayer => ({
     lastingInjuries: Array.isArray(player.lastingInjuries) ? player.lastingInjuries.filter(Boolean) : [],
     missNextGame: player.missNextGame || 0,
     isBenched: player.isBenched ?? true,
+    status: normalizeManagedPlayerStatus(player.status, player.isBenched ?? true),
 });
 
 const PlayerModal: React.FC<PlayerModalProps> = ({ player, allSkills, onSave, onClose }) => {

@@ -168,11 +168,18 @@ const normalizeJerseyNumber = (value: unknown): number | undefined => {
     if (!Number.isFinite(parsed) || parsed < 1 || parsed > 99) return undefined;
     return Math.trunc(parsed);
 };
+const normalizeManagedPlayerStatus = (status: ManagedPlayer['status'] | undefined, isBenched: boolean): ManagedPlayer['status'] => {
+    if (status && ['KO', 'Lesionado', 'Expulsado', 'Muerto'].includes(status)) {
+        return status;
+    }
+    return isBenched ? 'Reserva' : 'Activo';
+};
 
 export const normalizeManagedPlayerRecord = (player: Partial<ManagedPlayer> | undefined): ManagedPlayer => {
     const raw = deepSanitizeText((player || {}) as Partial<ManagedPlayer>);
     const stats = raw.stats || { MV: 0, FU: 0, AG: '-', PA: '-', AR: '-' };
     const jerseyNumber = normalizeJerseyNumber((raw as any).jerseyNumber ?? (raw as any).number);
+    const isBenched = raw.isBenched ?? true;
 
     return {
         id: Number(raw.id ?? Date.now()),
@@ -195,9 +202,9 @@ export const normalizeManagedPlayerRecord = (player: Partial<ManagedPlayer> | un
         spp: Number(raw.spp ?? 0),
         gainedSkills: ensureArray(raw.gainedSkills).filter(Boolean),
         lastingInjuries: ensureArray(raw.lastingInjuries).filter(Boolean),
-        status: (raw.status as ManagedPlayer['status']) || 'Reserva',
+        status: normalizeManagedPlayerStatus(raw.status as ManagedPlayer['status'] | undefined, isBenched),
         statusDetail: raw.statusDetail,
-        isBenched: raw.isBenched ?? true,
+        isBenched,
         missNextGame: Number(raw.missNextGame ?? 0),
         fieldPosition: raw.fieldPosition,
         sppActions: raw.sppActions || {},

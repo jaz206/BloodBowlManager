@@ -35,6 +35,24 @@ import { normalizeManagedTeamCollection, normalizeManagedTeamRecord } from '../.
 type View = 'home' | 'oracle' | 'starplayers' | 'guild' | 'tactical' | 'arena' | 'leagues' | 'guide' | 'admin';
 type SyncStatus = 'synced' | 'syncing' | 'error';
 
+const stripUndefinedDeep = <T,>(value: T): T => {
+  if (Array.isArray(value)) {
+    return value
+      .filter((item) => item !== undefined)
+      .map((item) => stripUndefinedDeep(item)) as T;
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .filter(([, entry]) => entry !== undefined)
+        .map(([key, entry]) => [key, stripUndefinedDeep(entry)])
+    ) as T;
+  }
+
+  return value;
+};
+
 type AppNotification = {
   id: string;
   title: string;
@@ -389,6 +407,7 @@ const MainApp: React.FC = () => {
 
   const handleTeamUpdate = async (updatedTeam: ManagedTeam) => {
     const sanitizedTeam = normalizeManagedTeamRecord(updatedTeam as any);
+    const firestoreSafeTeam = stripUndefinedDeep(sanitizedTeam);
 
     // Si tenemos un partido de competición activo, la actualización debe ir al clon en la liga
     if (arenaMatchConfig?.competition) {
@@ -405,7 +424,7 @@ const MainApp: React.FC = () => {
 
             return {
               ...t,
-              teamState: sanitizedTeam,
+              teamState: firestoreSafeTeam,
               stats: {
                 ...(t.stats || { tdFor: 0, tdAgainst: 0, casFor: 0, casAgainst: 0 }),
                 played, won, drawn, lost, points
@@ -429,7 +448,7 @@ const MainApp: React.FC = () => {
     setSyncState('syncing');
     try {
       const teamRef = doc(db, 'users', user.id, 'teams', sanitizedTeam.id || updatedTeam.id);
-      const { id, ...data } = sanitizedTeam;
+      const { id, ...data } = firestoreSafeTeam as ManagedTeam;
       await updateDoc(teamRef, data);
       setManagedTeams(prev => prev.map(team => team.id === updatedTeam.id ? sanitizedTeam : team));
       setSyncState('synced');
