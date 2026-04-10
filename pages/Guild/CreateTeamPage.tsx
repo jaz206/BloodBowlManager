@@ -7,6 +7,7 @@ import { useAuth } from '../../hooks/useAuth';
 import SkillModal from '../../components/oracle/SkillModal';
 import { PLAYER_NAMES } from './playerNames';
 import { fetchTeamImageStock, getPlayerImageUrl, getPosTag, getTeamLogoUrl, getStarPlayerImageUrl, type PositionStock } from '../../utils/imageUtils';
+import { sanitizeMojibakeText } from '../../utils/textSanitizer';
 
 interface TeamCreatorProps {
     onTeamCreate: (team: Omit<ManagedTeam, 'id'>) => Promise<void> | void;
@@ -14,6 +15,43 @@ interface TeamCreatorProps {
 }
 
 type CreatorStep = 'selection' | 'draft';
+
+const normalizeSearchText = (value: string) =>
+    sanitizeMojibakeText(value)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, ' ')
+        .trim();
+
+const FACTION_SEARCH_ALIASES: Record<string, string[]> = {
+    'Amazons': ['Amazonas'],
+    'Black Orcs': ['Orcos Negros'],
+    'Chosen of Chaos': ['Elegidos del Caos'],
+    'Chaos Dwarfs': ['Enanos del Caos'],
+    'Chaos Renegades': ['Renegados del Caos'],
+    'Dark Elves': ['Elfos Oscuros'],
+    'Dwarfs': ['Enanos'],
+    'Elven Union': ['Union Elfica', 'Unión Élfica', 'Elfos', 'Elfos Reunidos'],
+    'Gnomes': ['Gnomos'],
+    'Goblins': ['Goblins'],
+    'Halflings': ['Halflings'],
+    'High Elves': ['Altos Elfos'],
+    'Humans': ['Humanos'],
+    'Lizardmen': ['Hombres Lagarto'],
+    'Necromantic Horror': ['Horror Nigromantico', 'Horror Nigromántico', 'Necromantic Horror'],
+    'Norse': ['Nórdicos', 'Nordicos'],
+    'Nurgle': ['Nurgle'],
+    'Ogres': ['Ogros'],
+    'Old World Alliance': ['Alianza del Viejo Mundo'],
+    'Bretonnians': ['Bretonianos', 'Bretonnian'],
+    'Imperial Nobility': ['Nobleza Imperial'],
+    'Khorne': ['Khorne'],
+    'Snotling': ['Snotlings'],
+    'Vampires': ['Vampiros'],
+    'Wood Elves': ['Elfos Silvanos', 'Wood Elves'],
+    'Slann (NAF)': ['Slann', 'Slann NAF'],
+};
 
 const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterName }) => {
     const { t, language } = useLanguage();
@@ -42,7 +80,14 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
     const startingTreasury = 1000000;
 
     const filteredFactions = useMemo(() => {
-        return rosterTemplates.filter(rt => rt.name.toLowerCase().includes(searchQuery.toLowerCase()));
+        const normalizedQuery = normalizeSearchText(searchQuery);
+        if (!normalizedQuery) return rosterTemplates;
+
+        return rosterTemplates.filter((rt) => {
+            const aliases = FACTION_SEARCH_ALIASES[rt.name] || [];
+            const haystack = [rt.name, ...aliases].map(normalizeSearchText).join(' ');
+            return haystack.includes(normalizedQuery);
+        });
     }, [rosterTemplates, searchQuery]);
 
     const currentFaction = useMemo(() => {
@@ -418,8 +463,8 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                                     {visibleFactions.map(({ tm, globalIdx, distance, isActive }) => {
                                         const masterIdx = rosterTemplates.findIndex(f => f.name === tm.name);
                                         const sizeClass =
-                                            distance === 0 ? 'w-40 h-40 lg:w-44 lg:h-44' :
-                                            distance === 1 ? 'w-28 h-28 lg:w-32 lg:h-32' :
+                                            distance === 0 ? 'w-44 h-44 lg:w-52 lg:h-52' :
+                                            distance === 1 ? 'w-30 h-30 lg:w-36 lg:h-36' :
                                             'w-24 h-24 lg:w-28 lg:h-28';
                                         const toneClass = isActive
                                             ? 'opacity-100 scale-100'
@@ -441,7 +486,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                                                             if (img.src !== tm.image) img.src = tm.image;
                                                         }}
                                                         alt={tm.name}
-                                                        className="w-full h-full object-contain p-3"
+                                                        className="w-full h-full object-contain p-2"
                                                     />
                                                     {isActive && (
                                                         <motion.div layoutId="active-bg" className="absolute inset-0 bg-gold/10 pointer-events-none" />
