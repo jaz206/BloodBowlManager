@@ -52,6 +52,11 @@ const normalizeNamePoolKey = (value: string): string =>
         .toUpperCase()
         .trim();
 
+const getCrestPresentationStyle = (crestScale?: number, crestOffsetY?: number): React.CSSProperties => ({
+    transform: `scale(${crestScale ?? 1.14}) translateY(${crestOffsetY ?? 0}px)`,
+    transformOrigin: 'center center',
+});
+
 const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
     editingItem,
     skills,
@@ -88,6 +93,13 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
         setEditingItem({
             ...editingItem,
             data: { ...editingItem.data, image: url, crestImage: url },
+        });
+    };
+
+    const updateCrestPresentation = (patch: { crestScale?: number; crestOffsetY?: number }) => {
+        setEditingItem({
+            ...editingItem,
+            data: { ...editingItem.data, ...patch },
         });
     };
 
@@ -180,11 +192,47 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                                         (e.currentTarget as HTMLImageElement).src = fallback;
                                     }
                                 }}
-                                className="w-full h-full object-cover"
+                                style={getCrestPresentationStyle(editingItem.data.crestScale, editingItem.data.crestOffsetY)}
+                                className="w-full h-full object-contain p-0.5 transform-gpu"
                             />
                         ) : (
                             <span className="material-symbols-outlined text-white/10">image_not_supported</span>
                         )}
+                    </div>
+                </div>
+
+                <div className="rounded-2xl border border-[#e3cfaa] bg-[#fcf6ea] px-5 py-4 space-y-4">
+                    <div>
+                        <p className="text-[9px] font-black uppercase tracking-[0.28em] text-gold">Ajuste del escudo</p>
+                        <p className="mt-2 text-[10px] leading-relaxed text-[#7b6853]">
+                            Usa estos controles para acercar el escudo al encuadre del cuadrado y centrarlo mejor.
+                        </p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <label className="space-y-2">
+                            <span className="block text-[9px] font-black text-[#7b6853] uppercase tracking-widest">Escala</span>
+                            <input
+                                type="range"
+                                min="0.85"
+                                max="1.6"
+                                step="0.01"
+                                value={editingItem.data.crestScale ?? 1.14}
+                                onChange={(e) => updateCrestPresentation({ crestScale: parseFloat(e.target.value) })}
+                                className="w-full accent-gold"
+                            />
+                        </label>
+                        <label className="space-y-2">
+                            <span className="block text-[9px] font-black text-[#7b6853] uppercase tracking-widest">Desplazamiento</span>
+                            <input
+                                type="range"
+                                min="-40"
+                                max="40"
+                                step="1"
+                                value={editingItem.data.crestOffsetY ?? 0}
+                                onChange={(e) => updateCrestPresentation({ crestOffsetY: parseInt(e.target.value, 10) })}
+                                className="w-full accent-gold"
+                            />
+                        </label>
                     </div>
                 </div>
 

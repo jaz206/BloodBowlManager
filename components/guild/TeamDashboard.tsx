@@ -1,4 +1,4 @@
-ï»¿import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ManagedTeam, ManagedPlayer, Player, Skill, ManagedTeamSnapshot, MatchReport } from '../../types';
 import { ELITE_SKILLS } from '../../types';
@@ -26,12 +26,12 @@ declare const QRCode: any;
 const LEAGUE_MAP: Record<string, string> = {
     "Superliga Lustria": "Lustrian Superleague",
     "Pelea de Badlands": "Badlands Brawl",
-    "ClÃ¡sico del Viejo Mundo": "Old World Classic",
+    "Clásico del Viejo Mundo": "Old World Classic",
     "Superliga del Borde del Mundo": "Worlds Edge Superleague",
     "Favorito de...": "Favoured of",
     "Copa Halfling Thimble": "Halfling Thimble Cup",
-    "Liga de los Reinos Ã‰lficos": "Elven Kingdoms League",
-    "DesafÃ­o del Inframundo": "Underworld Challenge",
+    "Liga de los Reinos Élficos": "Elven Kingdoms League",
+    "Desafío del Inframundo": "Underworld Challenge",
     "Foco de Sylvana": "Sylvanian Spotlight",
     "Liga de Woodland": "Woodland League",
     "Choque del Caos": "Chaos Clash",
@@ -44,6 +44,11 @@ const LEAGUE_MAP: Record<string, string> = {
 };
 
 const SPP_LEVELS = [6, 16, 31, 51, 76, 126, 176];
+
+const getCrestPresentationStyle = (crestScale?: number, crestOffsetY?: number): React.CSSProperties => ({
+    transform: `scale(${crestScale ?? 1.14}) translateY(${crestOffsetY ?? 0}px)`,
+    transformOrigin: 'center center',
+});
 
 interface AssetCardProps {
     title: string;
@@ -582,10 +587,11 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                             img.src = originalData.image;
                                         }
                                     }
-                                }}
-                                alt={team.name}
-                                className="w-full h-full object-contain p-0 scale-[1.18]"
-                            />
+                                    }}
+                                    alt={team.name}
+                                    style={getCrestPresentationStyle(team.crestScale, team.crestOffsetY)}
+                                    className="w-full h-full object-contain p-0.5 transform-gpu"
+                                />
                         </div>
                         <div className="space-y-3 max-w-[860px] flex-1 min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
@@ -608,7 +614,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                     Roster {team.players.length}/16
                                 </span>
                                 <span className="px-3 py-1.5 rounded-full bg-[rgba(255,251,241,0.84)] border border-[rgba(111,87,56,0.12)] text-[#2b1d12] text-[9px] font-black uppercase tracking-[0.28em]">
-                                    RÃ©cord {recordSummary}
+                                    Récord {recordSummary}
                                 </span>
                                 <span className="px-3 py-1.5 rounded-full bg-[rgba(202,138,4,0.14)] border border-[rgba(202,138,4,0.18)] text-[#ca8a04] text-[9px] font-black uppercase tracking-[0.28em]">
                                     Tier {team.tier}
@@ -690,7 +696,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                         </p>
                     </div>
                     <div className="blood-ui-card-strong rounded-2xl p-6 backdrop-blur-custom flex flex-col items-center justify-center text-center group hover:border-primary/30 transition-all">
-                        <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">TesorerÃ­a</p>
+                        <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Tesorería</p>
                         <div className="flex items-baseline gap-2 group-hover:scale-105 transition-transform">
                             <p className={`text-4xl font-black italic font-epilogue tracking-tight ${team.treasury > 100000 ? 'text-blood animate-pulse' : 'text-primary'}`}>
                                 {team.treasury.toLocaleString()}
@@ -733,7 +739,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                     const playerNumber = Number(p.jerseyNumber) || (index + 1);
                                     const statusLabel = p.statusDetail
                                         || (hasLevelUp ? 'Pendiente de subida' : '')
-                                        || (isMNG ? `Lesionado${(p.missNextGame || 0) > 0 ? ` Â· MNG x${p.missNextGame}` : ''}` : '')
+                                        || (isMNG ? `Lesionado${(p.missNextGame || 0) > 0 ? ` · MNG x${p.missNextGame}` : ''}` : '')
                                         || (p.lastingInjuries?.length ? 'Con lesiones permanentes' : '')
                                         || (isBenched ? 'Reserva' : 'Activo');
 
@@ -840,7 +846,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                                                     )}
                                                                     {(p.lastingInjuries?.length || 0) > 0 && (
                                                                         <span className="px-2 py-1 rounded-full bg-white/5 border border-white/10 text-slate-300 text-[9px] font-black uppercase tracking-widest">
-                                                                            {p.lastingInjuries.length} lesiÃ³n{p.lastingInjuries.length > 1 ? 'es' : ''}
+                                                                            {p.lastingInjuries.length} lesión{p.lastingInjuries.length > 1 ? 'es' : ''}
                                                                         </span>
                                                                     )}
                                                                 </div>
@@ -1009,7 +1015,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
 
                         {activeTab === 'staff' && (
                             <div className="blood-ui-card-strong border border-white/10 rounded-[2rem] p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                <h3 className="text-xl font-epilogue font-black text-primary uppercase tracking-widest mb-8 italic">Staff TÃ©cnico</h3>
+                                <h3 className="text-xl font-epilogue font-black text-primary uppercase tracking-widest mb-8 italic">Staff Técnico</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <AssetCard title="Segundas Oportunidades" value={team.rerolls} limit={8} price={baseRoster?.rerollCost || 60000} onBuy={() => handleBuyAsset('rerolls', baseRoster?.rerollCost || 60000, 8)} onSell={() => handleSellAsset('rerolls', (baseRoster?.rerollCost || 60000) / 2)} icon="refresh" canSell={team.rerolls > 0} />
                                     <AssetCard title="Hinchas Dedicados" value={team.dedicatedFans} limit={6} price={10000} onBuy={() => handleBuyAsset('dedicatedFans', 10000, 6)} onSell={() => handleSellAsset('dedicatedFans', 5000, 1)} icon="campaign" canSell={team.dedicatedFans > 1} />
@@ -1023,10 +1029,10 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                             </div>
                                             <div>
                                                 <h4 className="text-lg font-epilogue font-black uppercase text-white italic leading-none mb-1">Boticario</h4>
-                                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest leading-none">{team.apothecary ? 'En NÃ³mina' : 'No Contratado'}</p>
+                                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest leading-none">{team.apothecary ? 'En Nómina' : 'No Contratado'}</p>
                                             </div>
                                         </div>
-                                        {baseRoster?.apothecary === 'SÃ­' && (
+                                        {baseRoster?.apothecary === 'Sí' && (
                                             <button
                                                 onClick={() => onUpdate({ ...team, apothecary: !team.apothecary, treasury: team.apothecary ? team.treasury + 25000 : team.treasury - 50000 })}
                                                 className={`px-6 py-3 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all ${team.apothecary ? 'bg-white/5 text-blood border border-white/10' : 'bg-primary text-black shadow-lg shadow-primary/20'}`}
@@ -1044,8 +1050,8 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                 <div className="blood-ui-card-strong border border-white/10 rounded-[2rem] p-8">
                                     <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
                                         <div>
-                                            <h3 className="text-xl font-epilogue font-black text-primary uppercase tracking-widest italic">AnÃ¡lisis de Partidos</h3>
-                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Balance real del clon en competiciÃ³n</p>
+                                            <h3 className="text-xl font-epilogue font-black text-primary uppercase tracking-widest italic">Análisis de Partidos</h3>
+                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Balance real del clon en competición</p>
                                         </div>
                                         <span className="px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-widest">
                                             {historySummary.played} jugados
@@ -1069,7 +1075,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                         </div>
                                     ) : (
                                         <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 p-8 text-center">
-                                            <p className="text-slate-400 font-black uppercase tracking-widest italic text-xs">AÃºn no hay partidos registrados para este clon</p>
+                                            <p className="text-slate-400 font-black uppercase tracking-widest italic text-xs">Aún no hay partidos registrados para este clon</p>
                                         </div>
                                     )}
                                 </div>
@@ -1113,7 +1119,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                 )}
 
                                 <div className="blood-ui-card-strong border border-white/10 rounded-[2rem] p-8">
-                                    <h3 className="text-xl font-epilogue font-black text-primary uppercase tracking-widest mb-8 italic">Archivo HistÃ³rico</h3>
+                                    <h3 className="text-xl font-epilogue font-black text-primary uppercase tracking-widest mb-8 italic">Archivo Histórico</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                         {team.snapshots?.map(snapshot => (
                                             <div key={snapshot.id} className="bg-black/40 border border-white/5 rounded-2xl p-6 group hover:border-primary/40 transition-all">
@@ -1137,8 +1143,8 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                 {!hideDelete && onDeleteRequest && (
                                     <div className="bg-blood/5 border border-blood/20 rounded-[2rem] p-8 flex items-center justify-between">
                                         <div>
-                                            <h3 className="text-xl font-epilogue font-black text-blood uppercase italic leading-none mb-1">Zona CrÃ­tica</h3>
-                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">AcciÃ³n irreversible de disoluciÃ³n de equipo</p>
+                                            <h3 className="text-xl font-epilogue font-black text-blood uppercase italic leading-none mb-1">Zona Crítica</h3>
+                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Acción irreversible de disolución de equipo</p>
                                         </div>
                                         <button onClick={() => onDeleteRequest(team.id!)} className="px-8 py-4 bg-blood !text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:scale-105 transition-all shadow-glow shadow-blood/20">
                                             Disolver Equipo
@@ -1153,7 +1159,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                     <div className="w-full lg:w-[24rem] space-y-6">
                         <div className="bg-white/5 border border-white/10 rounded-[2.2rem] p-6 xl:p-8 overflow-hidden relative group">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-primary/10 transition-all"></div>
-                            <h3 className="text-sm font-epilogue font-black text-primary uppercase italic tracking-widest mb-6 relative z-10">Escudo HerÃ¡ldico</h3>
+                            <h3 className="text-sm font-epilogue font-black text-primary uppercase italic tracking-widest mb-6 relative z-10">Escudo Heráldico</h3>
                             <div
                                 className="aspect-square bg-black/40 border-2 border-dashed border-white/10 rounded-[2rem] flex items-center justify-center cursor-pointer hover:border-primary/40 transition-all overflow-hidden relative z-10 p-2"
                                 onClick={() => crestInputRef.current?.click()}
@@ -1175,7 +1181,8 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                                 }
                                             }}
                                             alt={team.name}
-                                            className="w-full h-full object-contain scale-[1.16] drop-shadow-[0_0_10px_rgba(255,255,255,0.1)] group-hover:scale-[1.22] transition-transform duration-500"
+                                            style={getCrestPresentationStyle(team.crestScale, team.crestOffsetY)}
+                                            className="w-full h-full object-contain p-1 drop-shadow-[0_0_10px_rgba(255,255,255,0.1)] transition-transform duration-500"
                                         />
                                     </div>
                                 ) : (
@@ -1204,7 +1211,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                 {[
                                     { label: 'Rerolls', val: team.rerolls, icon: 'refresh' },
                                     { label: 'Fans', val: team.dedicatedFans, icon: 'campaign' },
-                                    { label: 'Boticario', val: team.apothecary ? 'SÃ­' : 'NO', icon: 'emergency' }
+                                    { label: 'Boticario', val: team.apothecary ? 'Sí' : 'NO', icon: 'emergency' }
                                 ].map(item => (
                                     <div key={item.label} className="flex items-center justify-between p-3 bg-black/40 rounded-xl border border-white/5">
                                         <div className="flex items-center gap-3">
@@ -1231,10 +1238,10 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                     <div className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-md flex items-center justify-center p-4">
                         <div className="bg-white/5 border border-primary/20 p-8 rounded-[2.5rem] max-w-sm text-center shadow-4xl backdrop-blur-xl">
                             <span className="material-symbols-outlined text-5xl text-primary animate-pulse mb-6">history</span>
-                            <h3 className="text-2xl font-epilogue font-black text-white uppercase italic tracking-tighter">AlteraciÃ³n Temporal</h3>
-                            <p className="text-xs text-slate-400 mt-4 leading-relaxed font-bold">Se perderÃ¡ el progreso actual. Â¿Permitir que Nuffle reescriba la historia?</p>
+                            <h3 className="text-2xl font-epilogue font-black text-white uppercase italic tracking-tighter">Alteración Temporal</h3>
+                            <p className="text-xs text-slate-400 mt-4 leading-relaxed font-bold">Se perderá el progreso actual. ¿Permitir que Nuffle reescriba la historia?</p>
                             <div className="mt-10 flex flex-col gap-3">
-                                <button onClick={handleRestoreSnapshot} className="w-full bg-primary text-black font-black uppercase py-4 rounded-2xl tracking-widest shadow-xl hover:scale-[1.02] transition-all">Confirmar RestauraciÃ³n</button>
+                                <button onClick={handleRestoreSnapshot} className="w-full bg-primary text-black font-black uppercase py-4 rounded-2xl tracking-widest shadow-xl hover:scale-[1.02] transition-all">Confirmar Restauración</button>
                                 <button onClick={() => setSnapshotToRestore(null)} className="w-full text-slate-500 font-black uppercase text-[10px] py-2">Mantener Presente</button>
                             </div>
                         </div>
@@ -1246,7 +1253,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                         <div className="bg-white/5 border border-blood/20 p-8 rounded-[2.5rem] max-w-sm text-center shadow-4xl backdrop-blur-xl">
                             <span className="material-symbols-outlined text-5xl text-blood mb-6">person_off</span>
                             <h3 className="text-2xl font-epilogue font-black text-white uppercase italic tracking-tighter">Cese de Contrato</h3>
-                            <p className="text-xs text-slate-400 mt-4 leading-relaxed font-bold">Â¿Seguro que quieres rescindir el contrato de <span className="text-white">{fireConfirmation.customName}</span>?</p>
+                            <p className="text-xs text-slate-400 mt-4 leading-relaxed font-bold">¿Seguro que quieres rescindir el contrato de <span className="text-white">{fireConfirmation.customName}</span>?</p>
                             <div className="mt-10 flex flex-col gap-3">
                                 <button onClick={confirmFirePlayer} className="w-full bg-blood text-white font-black uppercase py-4 rounded-2xl tracking-widest shadow-xl hover:scale-[1.02] transition-all">Cortar Contrato</button>
                                 <button onClick={() => setFireConfirmation(null)} className="w-full text-slate-500 font-black uppercase text-[10px] py-2">Mantener en Plantilla</button>
@@ -1261,7 +1268,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                             <button onClick={() => setShowQr(false)} className="absolute top-8 right-8 text-slate-600 hover:text-white transition-colors">
                                 <span className="material-symbols-outlined">close</span>
                             </button>
-                            <h3 className="text-3xl font-epilogue font-black text-primary mb-8 text-center uppercase italic tracking-tighter">SincronizaciÃ³n Nuffle</h3>
+                            <h3 className="text-3xl font-epilogue font-black text-primary mb-8 text-center uppercase italic tracking-tighter">Sincronización Nuffle</h3>
                             <div className="bg-white p-6 rounded-[2.5rem] shadow-2xl mx-auto"><canvas ref={qrCanvasRef}></canvas></div>
                             <p className="text-[10px] text-slate-500 mt-8 text-center font-black uppercase tracking-[0.2em] max-w-[240px] mx-auto">Escanea desde otro dispositivo para transferir la franquicia</p>
                         </div>
@@ -1329,5 +1336,6 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
         </div>
     );
 };
+
 
 

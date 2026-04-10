@@ -25,7 +25,13 @@ const toInt = (value: unknown, fallback = 0): number => {
     return Number.isFinite(parsed) ? parsed : fallback;
 };
 
+const toFloat = (value: unknown, fallback = 0): number => {
+    const parsed = typeof value === 'number' ? value : parseFloat(String(value ?? ''));
+    return Number.isFinite(parsed) ? parsed : fallback;
+};
+
 const clampMin = (value: number, min = 0) => value < min ? min : value;
+const clampRange = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
 const stripUndefinedDeep = <T>(value: T): T => {
     if (Array.isArray(value)) {
@@ -89,6 +95,8 @@ export const sanitizeTeamForSave = (raw: any): Team & { crestImage?: string } =>
         roster: (Array.isArray(raw?.roster) ? raw.roster : []).map(sanitizePlayer),
         image,
         crestImage,
+        crestScale: clampRange(toFloat(raw?.crestScale, 1.14), 0.8, 1.6),
+        crestOffsetY: clampRange(toFloat(raw?.crestOffsetY, 0), -40, 40),
         ratings: {
             fuerza: clampMin(toInt(raw?.ratings?.fuerza, 0), 0),
             agilidad: clampMin(toInt(raw?.ratings?.agilidad, 0), 0),

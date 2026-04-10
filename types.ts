@@ -76,6 +76,8 @@ export interface Team {
   apothecary: string;
   roster: Player[];
   image?: string;
+  crestScale?: number;
+  crestOffsetY?: number;
   /** @deprecated Use specialRules_es/en */
   specialRules?: string;
   ratings: {
@@ -150,6 +152,8 @@ export interface ManagedTeam {
   apothecary: boolean;
   players: ManagedPlayer[];
   crestImage?: string;
+  crestScale?: number;
+  crestOffsetY?: number;
   isAutoCalculating?: boolean;
 
   // For Live Match

@@ -53,6 +53,11 @@ const FACTION_SEARCH_ALIASES: Record<string, string[]> = {
     'Slann (NAF)': ['Slann', 'Slann NAF'],
 };
 
+const getCrestPresentationStyle = (crestScale?: number, crestOffsetY?: number): React.CSSProperties => ({
+    transform: `scale(${crestScale ?? 1.14}) translateY(${crestOffsetY ?? 0}px)`,
+    transformOrigin: 'center center',
+});
+
 const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterName }) => {
     const { t, language } = useLanguage();
     const { user } = useAuth();
@@ -443,7 +448,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
         return (
             <div className="guild-creation-light min-h-screen w-full flex flex-col bg-[radial-gradient(circle_at_top,rgba(255,248,233,0.98),rgba(226,194,142,0.86))] text-[#2b1d12] font-inter overflow-x-hidden antialiased selection:bg-gold selection:text-black">
                 {/* 1. COMPACT RACE SELECTOR */}
-                <nav className="w-full bg-[rgba(255,248,233,0.86)] backdrop-blur-xl border-b border-[rgba(111,87,56,0.12)] py-4 px-8 sticky top-16 z-[100] shadow-[0_14px_32px_rgba(89,59,21,0.08)]">
+                <nav className="w-full bg-[rgba(255,248,233,0.86)] backdrop-blur-xl border-b border-[rgba(111,87,56,0.12)] py-4 px-8 sticky top-0 z-[40] shadow-[0_14px_32px_rgba(89,59,21,0.08)]">
                     <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-8">
                         <div className="flex flex-col shrink-0">
                             <h2 className="text-[9px] font-black text-gold uppercase tracking-[0.4em] mb-0.5">Cátedra de Nuffle</h2>
@@ -486,7 +491,8 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                                                             if (img.src !== tm.image) img.src = tm.image;
                                                         }}
                                                         alt={tm.name}
-                                                        className="w-full h-full object-contain p-2"
+                                                        style={getCrestPresentationStyle(tm.crestScale, tm.crestOffsetY)}
+                                                        className="w-full h-full object-contain p-1 transform-gpu"
                                                     />
                                                     {isActive && (
                                                         <motion.div layoutId="active-bg" className="absolute inset-0 bg-gold/10 pointer-events-none" />
@@ -518,7 +524,8 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                                                             if (img.src !== tm.image) img.src = tm.image;
                                                         }}
                                                         alt={tm.name}
-                                                        className="w-full h-full object-contain p-2"
+                                                        style={getCrestPresentationStyle(tm.crestScale, tm.crestOffsetY)}
+                                                        className="w-full h-full object-contain p-1 transform-gpu"
                                                     />
                                                     {isSelected && (
                                                         <motion.div layoutId="active-bg-mobile" className="absolute inset-0 bg-gold/5 pointer-events-none" />
