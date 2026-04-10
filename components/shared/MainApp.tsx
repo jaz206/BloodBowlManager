@@ -30,7 +30,7 @@ import LanguageSelector from '../common/LanguageSelector';
 import { useMasterData } from '../../hooks/useMasterData';
 import { getGuestTeams } from '../../utils/testData';
 import { generateJoinCode } from '../../pages/Arena/competitionUtils';
-import { normalizeManagedTeamCollection } from '../../utils/teamData';
+import { normalizeManagedTeamCollection, normalizeManagedTeamRecord } from '../../utils/teamData';
 
 type View = 'home' | 'oracle' | 'starplayers' | 'guild' | 'tactical' | 'arena' | 'leagues' | 'guide' | 'admin';
 type SyncStatus = 'synced' | 'syncing' | 'error';
@@ -388,22 +388,24 @@ const MainApp: React.FC = () => {
   };
 
   const handleTeamUpdate = async (updatedTeam: ManagedTeam) => {
+    const sanitizedTeam = normalizeManagedTeamRecord(updatedTeam as any);
+
     // Si tenemos un partido de competición activo, la actualización debe ir al clon en la liga
     if (arenaMatchConfig?.competition) {
       const comp = leagues.find(l => l.id === arenaMatchConfig.competition.id) as Competition;
       if (comp) {
         const updatedTeams = comp.teams.map(t => {
-          if (t.teamName === updatedTeam.name && t.ownerId === user?.id) {
+          if (t.teamName === sanitizedTeam.name && t.ownerId === user?.id) {
             // Actualizar el clon y sus estadísticas
-            const won = updatedTeam.record?.wins || 0;
-            const drawn = updatedTeam.record?.draws || 0;
-            const lost = updatedTeam.record?.losses || 0;
+            const won = sanitizedTeam.record?.wins || 0;
+            const drawn = sanitizedTeam.record?.draws || 0;
+            const lost = sanitizedTeam.record?.losses || 0;
             const played = won + drawn + lost;
             const points = (won * 3) + drawn;
 
-            return { 
-              ...t, 
-              teamState: updatedTeam,
+            return {
+              ...t,
+              teamState: sanitizedTeam,
               stats: {
                 ...(t.stats || { tdFor: 0, tdAgainst: 0, casFor: 0, casAgainst: 0 }),
                 played, won, drawn, lost, points
@@ -413,13 +415,11 @@ const MainApp: React.FC = () => {
           return t;
         });
 
-        // Caso especial: si es el equipo del propietario (host), también puede ser teamState o baseTeam
-        const isOwner = comp.ownerId === user?.id && comp.baseTeam?.name === updatedTeam.name;
-        const finalComp = { 
-          ...comp, 
+        const finalComp = {
+          ...comp,
           teams: updatedTeams
         };
-        
+
         handleCompetitionUpdate(finalComp as Competition);
         return;
       }
@@ -428,9 +428,10 @@ const MainApp: React.FC = () => {
     if (!user || isGuest || !db || !updatedTeam.id) return;
     setSyncState('syncing');
     try {
-      const teamRef = doc(db, 'users', user.id, 'teams', updatedTeam.id);
-      const { id, ...data } = updatedTeam;
+      const teamRef = doc(db, 'users', user.id, 'teams', sanitizedTeam.id || updatedTeam.id);
+      const { id, ...data } = sanitizedTeam;
       await updateDoc(teamRef, data);
+      setManagedTeams(prev => prev.map(team => team.id === updatedTeam.id ? sanitizedTeam : team));
       setSyncState('synced');
     } catch (error) {
       console.error("Error updating team:", error);

@@ -17,9 +17,15 @@ const normalizeLookupKey = (value?: string) =>
         .replace(/[^a-z0-9]+/g, ' ')
         .trim();
 
+const normalizeJerseyNumber = (value: unknown): number | undefined => {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed) || parsed < 1 || parsed > 99) return undefined;
+    return Math.trunc(parsed);
+};
+
 const normalizeManagedPlayer = (player: ManagedPlayer): ManagedPlayer => ({
     ...player,
-    jerseyNumber: Number((player as any).jerseyNumber ?? (player as any).number ?? 0) || undefined,
+    jerseyNumber: normalizeJerseyNumber((player as any).jerseyNumber ?? (player as any).number),
     skillKeys: Array.isArray(player.skillKeys) ? player.skillKeys.filter(Boolean) : [],
     gainedSkills: Array.isArray(player.gainedSkills) ? player.gainedSkills.filter(Boolean) : [],
     lastingInjuries: Array.isArray(player.lastingInjuries) ? player.lastingInjuries.filter(Boolean) : [],
@@ -142,7 +148,11 @@ const PlayerModal: React.FC<PlayerModalProps> = ({ player, allSkills, onSave, on
                                 <div className="space-y-4">
                                     <div className="rounded-[1.75rem] border border-[#e3cfaa] bg-[#fffaf1] p-5">
                                         <span className="block text-[10px] font-black uppercase tracking-[0.28em] text-[#8a7760] mb-4">Rol de plantilla</span>
-                                        <div className={`mb-4 inline-flex items-center gap-2 px-3 py-2 rounded-full border text-[10px] font-black uppercase tracking-[0.22em] ${!(editedPlayer.isBenched ?? true) ? 'bg-green-500/10 border-green-500/30 text-green-700' : 'bg-slate-500/10 border-slate-400/30 text-slate-600'}`}>
+                                        <div
+                                            onClick={() => setEditedPlayer({ ...editedPlayer, isBenched: !(editedPlayer.isBenched ?? true) })}
+                                            className={`mb-4 inline-flex items-center gap-2 px-3 py-2 rounded-full border text-[10px] font-black uppercase tracking-[0.22em] cursor-pointer select-none ${!(editedPlayer.isBenched ?? true) ? 'bg-green-500/10 border-green-500/30 text-green-700' : 'bg-slate-500/10 border-slate-400/30 text-slate-600'}`}
+                                            title={!(editedPlayer.isBenched ?? true) ? 'Click para pasar a reserva' : 'Click para pasar a titular'}
+                                        >
                                             <span className="material-symbols-outlined text-[14px]">{!(editedPlayer.isBenched ?? true) ? 'sports' : 'event_seat'}</span>
                                             {!(editedPlayer.isBenched ?? true) ? 'Titular actual' : 'Reserva actual'}
                                         </div>

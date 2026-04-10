@@ -163,11 +163,16 @@ export const normalizeTeamCollection = (items: Partial<TeamAsset>[], fallbacks: 
 
 
 const ensureArray = <T = any>(value: unknown): T[] => Array.isArray(value) ? value : [];
+const normalizeJerseyNumber = (value: unknown): number | undefined => {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed) || parsed < 1 || parsed > 99) return undefined;
+    return Math.trunc(parsed);
+};
 
 export const normalizeManagedPlayerRecord = (player: Partial<ManagedPlayer> | undefined): ManagedPlayer => {
     const raw = deepSanitizeText((player || {}) as Partial<ManagedPlayer>);
     const stats = raw.stats || { MV: 0, FU: 0, AG: '-', PA: '-', AR: '-' };
-    const jerseyNumber = Number((raw as any).jerseyNumber ?? (raw as any).number ?? 0) || undefined;
+    const jerseyNumber = normalizeJerseyNumber((raw as any).jerseyNumber ?? (raw as any).number);
 
     return {
         id: Number(raw.id ?? Date.now()),

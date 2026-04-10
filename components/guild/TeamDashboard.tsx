@@ -118,6 +118,8 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
     const [selectedSkillForModal, setSelectedSkillForModal] = useState<Skill | null>(null);
     const [editingPlayerId, setEditingPlayerId] = useState<number | null>(null);
     const [editingName, setEditingName] = useState('');
+    const [editingJerseyId, setEditingJerseyId] = useState<number | null>(null);
+    const [editingJerseyValue, setEditingJerseyValue] = useState('');
     const [fireConfirmation, setFireConfirmation] = useState<ManagedPlayer | null>(null);
     const [advancingPlayer, setAdvancingPlayer] = useState<ManagedPlayer | null>(null);
     const { starPlayers, teams: masterTeams, skills: masterSkills } = useMasterData();
@@ -153,6 +155,12 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
             .toLowerCase()
             .replace(/[^a-z0-9]+/g, ' ')
             .trim();
+
+    const normalizeJerseyNumber = (value: unknown): number | undefined => {
+        const parsed = Number(value);
+        if (!Number.isFinite(parsed) || parsed < 1 || parsed > 99) return undefined;
+        return Math.trunc(parsed);
+    };
 
     const resolveSkillRecord = (skillRef: string): Skill | undefined => {
         const lookup = normalizeLookupKey(skillRef);
@@ -209,7 +217,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
 
     const normalizeManagedPlayer = (player: ManagedPlayer): ManagedPlayer => ({
         ...player,
-        jerseyNumber: Number((player as any).jerseyNumber ?? (player as any).number ?? 0) || undefined,
+        jerseyNumber: normalizeJerseyNumber((player as any).jerseyNumber ?? (player as any).number),
         skillKeys: Array.isArray(player.skillKeys) && player.skillKeys.length > 0 ? player.skillKeys.filter(Boolean) : getPlayerCoreSkillKeys(player),
         gainedSkills: Array.isArray(player.gainedSkills) ? player.gainedSkills.filter(Boolean) : [],
         lastingInjuries: Array.isArray(player.lastingInjuries) ? player.lastingInjuries.filter(Boolean) : [],
@@ -315,6 +323,25 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
         setEditingPlayerId(null);
     };
 
+    const handleJerseyDoubleClick = (player: ManagedPlayer, fallbackNumber: number) => {
+        setEditingJerseyId(player.id);
+        setEditingJerseyValue(String(player.jerseyNumber || fallbackNumber || ''));
+    };
+
+    const handleJerseyUpdate = () => {
+        if (editingJerseyId === null) return;
+        const parsed = parseInt(editingJerseyValue, 10);
+        onUpdate({
+            ...team,
+            players: team.players.map(p => p.id === editingJerseyId ? {
+                ...p,
+                jerseyNumber: Number.isFinite(parsed) && parsed > 0 ? parsed : undefined,
+            } : p),
+        });
+        setEditingJerseyId(null);
+        setEditingJerseyValue('');
+    };
+
     const handleCrestUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
@@ -413,7 +440,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
         );
         const nextJerseyNumber = Math.max(
             1,
-            ...team.players.map((pl) => Number(pl.jerseyNumber ?? pl.id) || 0)
+            ...team.players.map((pl, idx) => Number(pl.jerseyNumber) || (idx + 1))
         ) + 1;
 
         const newPlayer: ManagedPlayer = {
@@ -689,10 +716,36 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
 
                                             <div className="flex flex-col md:flex-row items-center gap-6">
                                                 <div className="flex-shrink-0 flex items-center gap-4">
-                                                <div className="w-12 text-center">
-                                                        <span className={`font-epilogue italic text-2xl font-black ${hasLevelUp ? 'text-primary' : 'text-slate-700 group-hover/card:text-primary transition-colors'}`}>
-                                                            #{playerNumber}
-                                                        </span>
+                                                    <div className="w-12 text-center">
+                                                        {editingJerseyId === p.id ? (
+                                                            <input
+                                                                type="number"
+                                                                min="1"
+                                                                value={editingJerseyValue}
+                                                                onChange={(e) => setEditingJerseyValue(e.target.value)}
+                                                                onBlur={handleJerseyUpdate}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === 'Enter') {
+                                                                        e.preventDefault();
+                                                                        handleJerseyUpdate();
+                                                                    }
+                                                                    if (e.key === 'Escape') {
+                                                                        setEditingJerseyId(null);
+                                                                        setEditingJerseyValue('');
+                                                                    }
+                                                                }}
+                                                                autoFocus
+                                                                className="blood-ui-input w-12 text-center bg-black/30 border border-primary text-white rounded px-2 py-1 text-sm font-black italic"
+                                                            />
+                                                        ) : (
+                                                            <span
+                                                                className={`cursor-text font-epilogue italic text-2xl font-black ${hasLevelUp ? 'text-primary' : 'text-slate-700 group-hover/card:text-primary transition-colors'}`}
+                                                                onDoubleClick={() => handleJerseyDoubleClick(p, playerNumber)}
+                                                                title="Doble clic para editar dorsal"
+                                                            >
+                                                                #{playerNumber}
+                                                            </span>
+                                                        )}
                                                     </div>
                                                         {playerImage && (
                                                             <div 
@@ -729,15 +782,14 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                                                     {p.customName}
                                                                 </h3>
                                                                 <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest leading-none">{p.position}</p>
-                                                                <button
-                                                                    type="button"
+                                                                <div
                                                                     onClick={() => togglePlayerBenched(p.id)}
-                                                                    className={`mt-2 inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${isBenched ? 'bg-slate-800/80 border-white/5 text-slate-400 hover:border-gold/30 hover:text-gold' : 'bg-green-500/10 border-green-500/25 text-green-500 hover:border-gold/30 hover:text-gold'}`}
+                                                                    className={`mt-2 inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all cursor-pointer select-none ${isBenched ? 'bg-slate-800/80 border-white/5 text-slate-400 hover:border-gold/30 hover:text-gold' : 'bg-green-500/10 border-green-500/25 text-green-500 hover:border-gold/30 hover:text-gold'}`}
                                                                     title={isBenched ? 'Pasar a titular' : 'Enviar a reserva'}
                                                                 >
                                                                     <span className="material-symbols-outlined text-[11px]">{isBenched ? 'event_seat' : 'sports'}</span>
                                                                     {isBenched ? 'Reserva' : 'Titular'}
-                                                                </button>
+                                                                </div>
                                                                 <div className="flex flex-wrap gap-1.5 mt-2">
                                                                     {hasLevelUp && (
                                                                         <span className="px-2 py-1 rounded-full bg-primary/15 border border-primary/25 text-primary text-[9px] font-black uppercase tracking-widest">
