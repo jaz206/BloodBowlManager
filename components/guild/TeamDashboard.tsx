@@ -639,24 +639,6 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                             ))}
                         </div>
 
-                        <div className="flex flex-wrap items-end justify-end gap-3">
-                        <nav className="flex items-center gap-3">
-                            {[
-                                { id: 'roster', label: 'Plantilla', icon: 'groups' },
-                                { id: 'recruit', label: 'Reclutar', icon: 'person_add' },
-                                { id: 'staff', label: 'Staff', icon: 'support_agent' },
-                                { id: 'history', label: 'Historia', icon: 'history_edu' }
-                            ].map(tab => (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => setActiveTab(tab.id as any)}
-                                    className={`text-xs font-black uppercase tracking-widest transition-all pb-1 border-b-2 ${activeTab === tab.id ? 'text-primary border-primary' : 'text-slate-500 border-transparent hover:text-slate-300'}`}
-                                >
-                                    {tab.label}
-                                </button>
-                            ))}
-                        </nav>
-
                         <div className="flex items-center gap-2 flex-wrap justify-end">
                             <button onClick={handleAutoSyncImages} className="blood-ui-button-secondary border border-gold/20 text-gold px-3 py-2 rounded-xl text-[10px] font-black tracking-widest transition-all uppercase flex items-center gap-2 shadow-lg shadow-gold/5 whitespace-nowrap shrink-0" title="Sincronizar fotos desde GitHub">
                                 <span className="material-symbols-outlined text-base">image</span>
@@ -677,6 +659,27 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                     </div>
                 </div>
             </header>
+
+            <div className="max-w-[1480px] mx-auto px-6 pt-5">
+                <div className="blood-ui-card-strong border border-white/10 rounded-[1.8rem] px-4 py-3 flex items-center justify-center xl:justify-end">
+                    <nav className="flex flex-wrap items-center gap-2 md:gap-3">
+                        {[
+                            { id: 'roster', label: 'Plantilla', icon: 'groups' },
+                            { id: 'recruit', label: 'Reclutar', icon: 'person_add' },
+                            { id: 'staff', label: 'Staff', icon: 'support_agent' },
+                            { id: 'history', label: 'Historia', icon: 'history_edu' }
+                        ].map(tab => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id as any)}
+                                className={`text-xs font-black uppercase tracking-widest transition-all px-4 py-2 rounded-xl border ${activeTab === tab.id ? 'text-primary border-primary bg-[rgba(202,138,4,0.08)]' : 'text-slate-500 border-transparent hover:text-slate-300 hover:bg-white/5'}`}
+                            >
+                                {tab.label}
+                            </button>
+                        ))}
+                    </nav>
+                </div>
+            </div>
 
             <main className="max-w-[1400px] mx-auto px-6 py-8">
                 {/* KPIs Section */}
