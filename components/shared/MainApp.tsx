@@ -113,6 +113,17 @@ const MainApp: React.FC = () => {
     matchup: any;
   } | null>(null);
   const localCompetitionsKey = user ? `bb-local-competitions-${user.id}` : null;
+  const [viewResetKeys, setViewResetKeys] = useState<Record<View, number>>({
+    home: 0,
+    oracle: 0,
+    starplayers: 0,
+    guild: 0,
+    tactical: 0,
+    arena: 0,
+    leagues: 0,
+    guide: 0,
+    admin: 0,
+  });
 
   const readLocalCompetitions = (): League[] => {
     if (!localCompetitionsKey || typeof window === 'undefined') return [];
@@ -458,6 +469,35 @@ const MainApp: React.FC = () => {
     }
   };
 
+  const handleTopNavClick = (view: View) => {
+    if (view === 'home') {
+      setOracleSearchTerm('');
+      setRequestedRoster(null);
+      setDirectOpenTeamId(null);
+      setArenaMatchConfig(null);
+    }
+
+    if (view === 'oracle') {
+      setOracleSearchTerm('');
+    }
+
+    if (view === 'guild') {
+      setRequestedRoster(null);
+      setDirectOpenTeamId(null);
+      setArenaMatchConfig(null);
+    }
+
+    if (view === 'leagues' || view === 'arena') {
+      setArenaMatchConfig(null);
+    }
+
+    setViewResetKeys(prev => ({
+      ...prev,
+      [view]: prev[view] + 1,
+    }));
+    setActiveView(view);
+  };
+
   const handleTeamDelete = async (teamId: string) => {
     if (!user || isGuest || !db) return;
     setSyncState('syncing');
@@ -647,7 +687,7 @@ const MainApp: React.FC = () => {
       const isActive = activeView === view;
     return (
         <button
-          onClick={() => setActiveView(view)}
+          onClick={() => handleTopNavClick(view)}
           data-active={isActive}
           className="blood-ui-nav-button group flex items-center gap-3 px-4 h-full"
         >
@@ -677,7 +717,7 @@ const MainApp: React.FC = () => {
             {/* Left: Logo & Admin */}
             <div className="flex items-center gap-6">
               <div 
-                onClick={() => setActiveView('home')}
+                onClick={() => handleTopNavClick('home')}
                 className="flex items-center gap-3 cursor-pointer group/logo"
               >
                 <span className="material-symbols-outlined text-[#CA8A04] text-2xl font-black transform group-hover/logo:rotate-12 transition-transform">sports_football</span>
@@ -689,7 +729,7 @@ const MainApp: React.FC = () => {
 
               {isAdmin && (
                 <button
-                  onClick={() => setActiveView('admin')}
+                  onClick={() => handleTopNavClick('admin')}
                   className={`blood-ui-chip blood-ui-chip--gold px-3 py-1.5 transition-all ${activeView === 'admin'
                     ? 'shadow-[0_0_0_1px_rgba(255,255,255,0.14)_inset]'
                     : 'hover:shadow-[0_0_20px_rgba(202,138,4,0.15)]'
@@ -802,6 +842,7 @@ const MainApp: React.FC = () => {
               <div className="animate-in fade-in zoom-in-95 duration-500">
                 {activeView === 'home' && (
                   <Home
+                    key={`home-${viewResetKeys.home}`}
                     onNavigate={(v, p) => handleNavigate(v, p)}
                     onCreateTeam={() => { setRequestedRoster(""); setActiveView('guild'); }}
                     managedTeams={managedTeams}
@@ -813,6 +854,7 @@ const MainApp: React.FC = () => {
                 )}
                 {activeView === 'oracle' && (
                   <OraclePage
+                    key={`oracle-${viewResetKeys.oracle}`}
                     managedTeams={managedTeams}
                     initialSearchTerm={oracleSearchTerm}
                     onRequestTeamCreation={(r) => { setRequestedRoster(r); setActiveView('guild'); }}
@@ -820,6 +862,7 @@ const MainApp: React.FC = () => {
                 )}
                 {activeView === 'guild' && (
                   <GuildPage
+                    key={`guild-${viewResetKeys.guild}`}
                     teams={managedTeams}
                     competitions={leagues}
                     onTeamCreate={handleTeamCreate}
@@ -833,8 +876,9 @@ const MainApp: React.FC = () => {
                     onInitialTeamHandled={() => setDirectOpenTeamId(null)}
                   />
                 )}
-                {activeView === 'tactical' && <TacticalBoardPage managedTeams={managedTeams} plays={plays} onSavePlay={handlePlaySave} onDeletePlay={handlePlayDelete} />}
+                {activeView === 'tactical' && <TacticalBoardPage key={`tactical-${viewResetKeys.tactical}`} managedTeams={managedTeams} plays={plays} onSavePlay={handlePlaySave} onDeletePlay={handlePlayDelete} />}
                 {activeView === 'arena' && <MatchPage 
+                  key={`arena-${viewResetKeys.arena}`}
                   managedTeams={managedTeams} 
                   matchReports={matchReports} 
                   onTeamUpdate={handleTeamUpdate} 
@@ -845,6 +889,7 @@ const MainApp: React.FC = () => {
                 />}
                 {activeView === 'leagues' && (
                 <LeaguesPage
+                    key={`leagues-${viewResetKeys.leagues}`}
                     managedTeams={managedTeams}
                     initialCompetitions={leagues}
                     onCompetitionCreate={handleCompetitionCreate}
@@ -856,13 +901,14 @@ const MainApp: React.FC = () => {
                 )}
                 {activeView === 'admin' && (
                   <AdminPanel
+                    key={`admin-${viewResetKeys.admin}`}
                     managedTeams={managedTeams}
                     competitions={leagues}
                     onCompetitionCreate={handleCompetitionCreate}
                     onOpenLeagues={() => setActiveView('leagues')}
                   />
                 )}
-                {activeView === 'guide' && <QuickGuide />}
+                {activeView === 'guide' && <QuickGuide key={`guide-${viewResetKeys.guide}`} />}
               </div>
             </Suspense>
           )}
