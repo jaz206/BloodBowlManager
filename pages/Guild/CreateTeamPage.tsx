@@ -524,7 +524,7 @@ const TeamCreator: React.FC<TeamCreatorProps> = ({ onTeamCreate, initialRosterNa
                                                             if (img.src !== tm.image) img.src = tm.image;
                                                         }}
                                                         alt={tm.name}
-                                                        style={getSelectorCrestStyle(distance, isActive)}
+                                                        style={getSelectorCrestStyle(isSelected ? 0 : 1, isSelected)}
                                                         className="w-full h-full object-contain p-0.5 transform-gpu"
                                                     />
                                                     {isSelected && (
