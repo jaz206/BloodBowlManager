@@ -655,7 +655,6 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                 </button>
                             )}
                         </div>
-                        </div>
                     </div>
                 </div>
             </header>
