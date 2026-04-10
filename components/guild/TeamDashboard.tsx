@@ -816,10 +816,10 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                                             />
                                                         ) : (
                                                             <>
-                                                                <h3 className="font-black font-epilogue italic text-lg uppercase tracking-tighter leading-none mb-1 group-hover/card:text-primary transition-colors cursor-pointer" onDoubleClick={() => handleNameDoubleClick(p)}>
+                                                                <h3 className="font-black font-epilogue italic text-[clamp(0.95rem,1.05vw,1.1rem)] uppercase tracking-tighter leading-none mb-1 group-hover/card:text-primary transition-colors cursor-pointer whitespace-nowrap truncate max-w-full" onDoubleClick={() => handleNameDoubleClick(p)}>
                                                                     {p.customName}
                                                                 </h3>
-                                                                <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest leading-none">{p.position}</p>
+                                                                <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest leading-none whitespace-nowrap truncate max-w-full">{p.position}</p>
                                                                 <div
                                                                     onClick={() => togglePlayerBenched(p.id)}
                                                                     className={`mt-2 inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all cursor-pointer select-none ${isBenched ? 'bg-slate-800/80 border-white/5 text-slate-400 hover:border-gold/30 hover:text-gold' : 'bg-green-500/10 border-green-500/25 text-green-500 hover:border-gold/30 hover:text-gold'}`}
@@ -1336,6 +1336,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
         </div>
     );
 };
+
 
 
 
