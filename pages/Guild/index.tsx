@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import type { ManagedTeam } from '../../types';
 import TeamCreator from './CreateTeamPage';
@@ -436,12 +436,11 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
 
                 {/* Team List Table */}
                 <section className="space-y-4">
-                    <div className="hidden md:grid grid-cols-12 px-10 py-4 text-[9px] font-black text-[#7b6853] uppercase tracking-[0.3em]">
-                        <div className="col-span-4">Equipo / Nombre</div>
-                        <div className="col-span-2 text-center">Raza</div>
-                        <div className="col-span-2 text-center">VAE</div>
-                        <div className="col-span-2 text-center">Récord (V-E-D)</div>
-                        <div className="col-span-2 text-right">Acción</div>
+                    <div className="hidden md:grid grid-cols-1 md:grid-cols-[minmax(0,1.6fr)_minmax(90px,0.6fr)_minmax(130px,0.8fr)_minmax(180px,0.95fr)] px-10 py-4 text-[9px] font-black text-[#7b6853] uppercase tracking-[0.3em]">
+                        <div className="text-left">Equipo / Nombre</div>
+                        <div className="text-center">VAE</div>
+                        <div className="text-center">Récord (V-E-D)</div>
+                        <div className="text-right">Acción</div>
                     </div>
 
                     <div className="space-y-3">
@@ -458,7 +457,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                 <div 
                                     key={team.id}
                                     onClick={() => setActiveSummaryTeamId(team.id!)}
-                                    className={`group relative grid grid-cols-1 md:grid-cols-12 items-center gap-6 px-10 py-8 border rounded-[2rem] overflow-hidden transition-all duration-300 ${
+                                    className={`group relative grid grid-cols-1 md:grid-cols-[minmax(0,1.6fr)_minmax(90px,0.6fr)_minmax(130px,0.8fr)_minmax(180px,0.95fr)] items-center gap-6 px-10 py-8 border rounded-[2rem] overflow-hidden transition-all duration-300 ${
                                         isSelected 
                                         ? 'bg-[rgba(255,251,241,0.88)] border-gold/40 shadow-[0_20px_40px_rgba(89,59,21,0.08)]' 
                                         : 'bg-[rgba(255,251,241,0.74)] border-[rgba(111,87,56,0.10)] hover:border-[rgba(111,87,56,0.18)] shadow-[0_16px_34px_rgba(89,59,21,0.06)]'
@@ -468,7 +467,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                     <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_right,rgba(202,138,4,0.12),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.08),transparent_28%)]" />
 
                                     {/* Team Name & Crest */}
-                                    <div className="col-span-4 flex items-start md:items-center gap-5 relative z-10">
+                                    <div className="flex items-start md:items-center gap-5 relative z-10 min-w-0">
                                                 <div className="w-40 h-40 md:w-48 md:h-48 bg-[rgba(36,26,17,0.86)] rounded-[1.75rem] border border-[rgba(111,87,56,0.12)] p-1 flex items-center justify-center shrink-0 overflow-hidden relative shadow-xl shadow-black/10 group-hover:border-gold/30 transition-all">
                                             <img 
                                                 src={resolveGuildTeamCrestUrl(team)} 
@@ -489,7 +488,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                                 className="w-full h-full object-contain drop-shadow-[0_0_12px_rgba(255,255,255,0.06)] transform-gpu" 
                                             />
                                         </div>
-                                                <div className="min-w-0 flex-1 pr-2">
+                                            <div className="min-w-0 flex-1 pr-2">
                                                 <div className="flex items-start gap-2 mb-2">
                                                 {isEditing ? (
                                                     <input 
@@ -505,7 +504,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                                     <>
                                                         <h3 
                                                             onClick={(e) => { e.stopPropagation(); setOpenTeamId(team.id!); }}
-                                                            className="font-header font-black text-[clamp(1.7rem,2vw,2.35rem)] text-[#2b1d12] italic tracking-tighter uppercase group-hover:text-gold transition-colors cursor-pointer whitespace-normal break-words leading-[0.9] max-w-none"
+                                                            className="font-header font-black text-[clamp(1.4rem,1.5vw,1.95rem)] text-[#2b1d12] italic tracking-tighter uppercase group-hover:text-gold transition-colors cursor-pointer whitespace-nowrap overflow-visible leading-[0.92] max-w-full"
                                                         >
                                                             {team.name}
                                                         </h3>
@@ -524,24 +523,23 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                                 {hasLevelUps && <span className="bg-gold text-black text-[8px] font-black px-2 py-0.5 rounded-sm tracking-widest uppercase italic">PTE. MEJORA</span>}
                                                 {hasInjuries && <span className="bg-blood text-white text-[8px] font-black px-2 py-0.5 rounded-sm tracking-widest uppercase italic">LESIONADOS</span>}
                                             </div>
+                                            <div className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[rgba(255,251,241,0.72)] border border-[rgba(111,87,56,0.10)] text-[9px] font-black uppercase tracking-[0.28em] text-[#7b6853]">
+                                                <span>Raza</span>
+                                                <span className="text-[#2b1d12] tracking-[0.16em]">{team.rosterName}</span>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    {/* Race */}
-                                    <div className="col-span-2 text-center relative z-10">
-                                        <span className="text-[9px] text-[#7b6853] font-black uppercase tracking-[0.35em] block mb-1">Raza</span>
-                                        <span className="text-[10px] text-[#2b1d12] font-black uppercase tracking-[0.16em]">{team.rosterName}</span>
-                                    </div>
 
                                     {/* VAE */}
-                                    <div className="col-span-2 text-center relative z-10">
+                                    <div className="text-center relative z-10">
                                         <span className="text-[9px] text-[#7b6853] font-black uppercase tracking-[0.35em] block mb-1">VAE</span>
                                         <span className="font-header text-3xl font-black text-gold italic leading-none">{tv.toLocaleString()}</span>
                                         <span className="text-[8px] text-[#7b6853] block font-black tracking-widest mt-1">MO</span>
                                     </div>
 
                                     {/* Record */}
-                                    <div className="col-span-2 text-center relative z-10">
+                                    <div className="text-center relative z-10">
                                         <span className="text-[9px] text-[#7b6853] font-black uppercase tracking-[0.35em] block mb-1">Récord</span>
                                         <div className="inline-flex items-center gap-2 bg-[rgba(255,251,241,0.72)] px-4 py-2.5 rounded-2xl border border-[rgba(111,87,56,0.10)] group-hover:border-gold/20 transition-colors">
                                             <span className="text-[11px] font-black text-[#2b1d12]">{record.wins}</span>
@@ -553,7 +551,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                     </div>
 
                                     {/* Action */}
-                                    <div className="col-span-2 flex items-center justify-end gap-3 relative z-10">
+                                    <div className="flex items-center justify-end gap-3 relative z-10">
                                         <button 
                                             onClick={(e) => { e.stopPropagation(); setOpenTeamId(team.id!); }}
                                             className="px-6 py-3 rounded-xl bg-gold text-black font-header font-black text-[10px] uppercase tracking-widest shadow-xl shadow-gold/10 hover:shadow-gold/20 hover:scale-105 active:scale-95 transition-all"
@@ -635,4 +633,9 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
 };
 
 export default TeamManager;
+
+
+
+
+
 
