@@ -799,6 +799,63 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ managedTeams, competitions, onC
                                 </div>
                             )}
 
+                            {activeTab === 'teams' && (
+                                <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_1fr] gap-4">
+                                    <div className="glass-panel p-6 border-premium-gold/20 bg-[linear-gradient(135deg,rgba(245,158,11,0.08),rgba(255,255,255,0.03))]">
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div className="space-y-2">
+                                                <p className="text-[10px] font-display font-black text-premium-gold uppercase tracking-[0.3em]">Medidas de escudo</p>
+                                                <h4 className="text-xl font-display font-black text-white uppercase italic tracking-tight">Formato recomendado para que encuadre perfecto</h4>
+                                                <p className="text-sm text-slate-300 leading-relaxed max-w-3xl">
+                                                    La tarjeta del Gremio ahora enseña el escudo a un tamaño visible de <span className="text-white font-black">160 x 160 px</span> en escritorio
+                                                    y <span className="text-white font-black">128 x 128 px</span> en móvil. Para que se vea limpio, centrado y sin cortes, conviene subirlo en formato cuadrado con margen interior.
+                                                </p>
+                                            </div>
+                                            <div className="hidden md:flex w-28 h-28 rounded-[1.5rem] border border-premium-gold/20 bg-black/30 items-center justify-center shadow-inner">
+                                                <div className="w-20 h-20 rounded-[1.1rem] border border-dashed border-premium-gold/35 flex items-center justify-center text-premium-gold/70 text-[10px] font-black uppercase tracking-[0.25em]">
+                                                    1:1
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-6">
+                                            <div className="rounded-2xl bg-black/25 border border-white/10 p-4">
+                                                <p className="text-[10px] font-display font-black text-slate-400 uppercase tracking-[0.25em]">Archivo ideal</p>
+                                                <p className="text-lg font-display font-black text-white italic mt-2">1024 x 1024 px</p>
+                                                <p className="text-[11px] text-slate-400 mt-2 leading-relaxed">PNG con transparencia o WebP sin fondo.</p>
+                                            </div>
+                                            <div className="rounded-2xl bg-black/25 border border-white/10 p-4">
+                                                <p className="text-[10px] font-display font-black text-slate-400 uppercase tracking-[0.25em]">Zona segura</p>
+                                                <p className="text-lg font-display font-black text-white italic mt-2">820 x 820 px</p>
+                                                <p className="text-[11px] text-slate-400 mt-2 leading-relaxed">Deja un margen exterior cercano al 10% para que el blasón no toque el borde.</p>
+                                            </div>
+                                            <div className="rounded-2xl bg-black/25 border border-white/10 p-4">
+                                                <p className="text-[10px] font-display font-black text-slate-400 uppercase tracking-[0.25em]">Composición</p>
+                                                <p className="text-lg font-display font-black text-white italic mt-2">Emblema centrado</p>
+                                                <p className="text-[11px] text-slate-400 mt-2 leading-relaxed">Evita marcos muy pegados y textos en el filo para que no se pierdan al escalar.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="glass-panel p-6 border-white/10 bg-black/40">
+                                        <p className="text-[10px] font-display font-black text-slate-400 uppercase tracking-[0.25em]">Vista previa del Gremio</p>
+                                        <div className="mt-4 rounded-[2rem] border border-white/10 bg-[rgba(255,251,241,0.92)] p-5">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-24 h-24 rounded-[1.35rem] bg-[rgba(36,26,17,0.92)] border border-[rgba(111,87,56,0.16)] flex items-center justify-center overflow-hidden">
+                                                    <span className="text-[10px] font-display font-black text-[#f5c86b] uppercase tracking-[0.25em]">Escudo</span>
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="font-display font-black text-[#2b1d12] uppercase italic text-lg whitespace-normal break-words leading-[0.95]">
+                                                        Nombre completo de franquicia sin cortes
+                                                    </p>
+                                                    <p className="mt-2 text-[10px] font-black text-[#7b6853] uppercase tracking-[0.2em]">Ejemplo de lectura final en tarjeta</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             {/* List Container */}
                             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 custom-scrollbar max-h-[70vh] overflow-y-auto pr-2">
                                 {filteredContent.map((item: any) => (
@@ -811,7 +868,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ managedTeams, competitions, onC
                                     >
                                         <div className="flex items-center gap-4 min-w-0">
                                             {(activeTab === 'teams' || activeTab === 'stars') && (
-                                                <div className="w-12 h-12 rounded-xl bg-black/60 border border-white/10 overflow-hidden flex-shrink-0 shadow-inner">
+                                                <div className="w-14 h-14 rounded-xl bg-black/60 border border-white/10 overflow-hidden flex-shrink-0 shadow-inner">
                                                         <img
                                                         src={getSuggestedImageUrl(item, activeTab as 'teams' | 'stars')}
                                                         alt=""
@@ -841,12 +898,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ managedTeams, competitions, onC
                                                 </div>
                                             )}
                                             <div className="min-w-0">
-                                                <h5 className="font-display font-black text-white uppercase tracking-wider text-sm truncate group-hover:text-premium-gold transition-colors italic">
+                                                <h5 className="font-display font-black text-white uppercase tracking-wider text-sm whitespace-normal break-words leading-tight group-hover:text-premium-gold transition-colors italic">
                                                     {activeTab === 'skills'
                                                         ? (language === 'es' ? (item.name_es || item.name_en) : item.name_en)
                                                         : item.title || item.name}
                                                 </h5>
-                                                <p className="text-[10px] text-slate-500 font-bold uppercase truncate tracking-tighter">
+                                                <p className="text-[10px] text-slate-500 font-bold uppercase whitespace-normal break-words tracking-tighter">
                                                     {activeTab === 'skills' ? item.category : activeTab === 'heraldo' ? item.category : (item.cost ? `${(item.cost / 1000)}k MO` : item.tier ? `Tier ${item.tier}` : 'Consistente')}
                                                 </p>
                                             </div>

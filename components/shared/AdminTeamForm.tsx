@@ -234,6 +234,20 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                             />
                         </label>
                     </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div className="rounded-2xl border border-[#d7c39a] bg-[#fffaf1] px-4 py-3">
+                            <p className="text-[8px] font-black uppercase tracking-[0.28em] text-[#7b6853]">Escala ideal</p>
+                            <p className="mt-1 text-sm font-black italic text-[#2b1d12] font-epilogue">1.12 - 1.18</p>
+                        </div>
+                        <div className="rounded-2xl border border-[#d7c39a] bg-[#fffaf1] px-4 py-3">
+                            <p className="text-[8px] font-black uppercase tracking-[0.28em] text-[#7b6853]">Desplazamiento ideal</p>
+                            <p className="mt-1 text-sm font-black italic text-[#2b1d12] font-epilogue">-4 a +4 px</p>
+                        </div>
+                        <div className="rounded-2xl border border-[#d7c39a] bg-[#fffaf1] px-4 py-3">
+                            <p className="text-[8px] font-black uppercase tracking-[0.28em] text-[#7b6853]">Encuadre recomendado</p>
+                            <p className="mt-1 text-[10px] leading-relaxed text-[#5f4d39]">PNG cuadrado, logo centrado y sin mucho margen vacio arriba o abajo.</p>
+                        </div>
+                    </div>
                 </div>
 
                 <div className="rounded-2xl border border-[#e3cfaa] bg-[#fcf6ea] px-5 py-4">

@@ -51,6 +51,11 @@ const resolveGuildTeamCrestUrl = (team: ManagedTeam): string => {
     );
 };
 
+const getGuildListCrestStyle = (team: ManagedTeam): React.CSSProperties => ({
+    transform: `scale(${team.crestScale ?? 1.18}) translateY(${team.crestOffsetY ?? 0}px)`,
+    transformOrigin: 'center center',
+});
+
 interface TeamManagerProps {
     teams: ManagedTeam[];
     onTeamCreate: (team: Omit<ManagedTeam, 'id'>, index?: number) => void;
@@ -463,8 +468,8 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                     <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_right,rgba(202,138,4,0.12),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.08),transparent_28%)]" />
 
                                     {/* Team Name & Crest */}
-                                    <div className="col-span-4 flex items-center gap-6 relative z-10">
-                                        <div className="w-28 h-28 md:w-32 md:h-32 bg-[rgba(36,26,17,0.86)] rounded-[1.5rem] border border-[rgba(111,87,56,0.12)] p-2 flex items-center justify-center shrink-0 overflow-hidden relative shadow-xl shadow-black/10 group-hover:border-gold/30 transition-all">
+                                    <div className="col-span-4 flex items-start md:items-center gap-5 relative z-10">
+                                                <div className="w-40 h-40 md:w-48 md:h-48 bg-[rgba(36,26,17,0.86)] rounded-[1.75rem] border border-[rgba(111,87,56,0.12)] p-1 flex items-center justify-center shrink-0 overflow-hidden relative shadow-xl shadow-black/10 group-hover:border-gold/30 transition-all">
                                             <img 
                                                 src={resolveGuildTeamCrestUrl(team)} 
                                                 onError={(e) => {
@@ -480,11 +485,12 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                                     }
                                                 }}
                                                 alt={team.name} 
-                                                className="w-full h-full object-contain scale-[1.08] drop-shadow-[0_0_10px_rgba(255,255,255,0.05)]" 
+                                                style={getGuildListCrestStyle(team)}
+                                                className="w-full h-full object-contain drop-shadow-[0_0_12px_rgba(255,255,255,0.06)] transform-gpu" 
                                             />
                                         </div>
-                                        <div className="min-w-0">
-                                                <div className="flex items-center gap-2 mb-2">
+                                                <div className="min-w-0 flex-1 pr-2">
+                                                <div className="flex items-start gap-2 mb-2">
                                                 {isEditing ? (
                                                     <input 
                                                         autoFocus
@@ -499,13 +505,13 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                                     <>
                                                         <h3 
                                                             onClick={(e) => { e.stopPropagation(); setOpenTeamId(team.id!); }}
-                                                            className="font-header font-black text-2xl text-[#2b1d12] truncate italic tracking-tighter uppercase group-hover:text-gold transition-colors cursor-pointer"
+                                                            className="font-header font-black text-[clamp(1.7rem,2vw,2.35rem)] text-[#2b1d12] italic tracking-tighter uppercase group-hover:text-gold transition-colors cursor-pointer whitespace-normal break-words leading-[0.9] max-w-none"
                                                         >
                                                             {team.name}
                                                         </h3>
                                                         <button 
                                                             onClick={(e) => { e.stopPropagation(); setEditingTeamId(team.id!); setNewName(team.name); }}
-                                                            className="opacity-0 group-hover:opacity-100 text-gold/55 hover:text-gold transition-all ml-1"
+                                                            className="opacity-0 group-hover:opacity-100 text-gold/55 hover:text-gold transition-all ml-1 mt-1 shrink-0"
                                                         >
                                                             <span className="material-symbols-outlined text-sm">edit</span>
                                                         </button>
