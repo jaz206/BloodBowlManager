@@ -343,8 +343,8 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                     <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_right,rgba(202,138,4,0.12),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.08),transparent_28%)]" />
 
                     <div className="relative z-10 flex flex-col gap-5 min-w-0">
-                        <div className="flex items-start gap-5 min-w-0">
-                            <div className="w-32 h-32 md:w-40 md:h-40 bg-[rgba(36,26,17,0.86)] rounded-[1.75rem] border border-[rgba(111,87,56,0.12)] p-1.5 flex items-center justify-center shrink-0 overflow-hidden relative shadow-xl shadow-black/10 group-hover:border-gold/30 transition-all">
+                        <div className="flex items-start gap-4 min-w-0">
+                            <div className="w-28 h-28 md:w-32 md:h-32 bg-[rgba(36,26,17,0.86)] rounded-[1.75rem] border border-[rgba(111,87,56,0.12)] p-1.5 flex items-center justify-center shrink-0 overflow-hidden relative shadow-xl shadow-black/10 group-hover:border-gold/30 transition-all">
                                 <img
                                     src={resolveGuildTeamCrestUrl(team)}
                                     onError={(e) => {
@@ -370,7 +370,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                     {isEditing ? (
                                         <input
                                             autoFocus
-                                            className="bg-black/60 border-b-2 border-gold text-white px-0 py-1 rounded-none text-2xl font-header italic outline-none w-full"
+                                            className="bg-black/60 border-b-2 border-gold text-white px-0 py-1 rounded-none text-xl md:text-2xl font-header italic outline-none w-full"
                                             value={newName}
                                             onChange={(e) => setNewName(e.target.value)}
                                             onBlur={() => handleRenameSubmit(team)}
@@ -381,7 +381,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                         <>
                                             <h3
                                                 onClick={(e) => { e.stopPropagation(); setOpenTeamId(team.id!); }}
-                                                className="font-header font-black text-[clamp(1.35rem,1.35vw,1.75rem)] text-[#2b1d12] italic tracking-tighter uppercase group-hover:text-gold transition-colors cursor-pointer whitespace-nowrap overflow-hidden text-ellipsis leading-[0.92] max-w-full"
+                                                className="font-header font-black text-[clamp(1.05rem,1.15vw,1.45rem)] text-[#2b1d12] italic tracking-tighter uppercase group-hover:text-gold transition-colors cursor-pointer whitespace-normal break-words leading-[0.95] max-w-full"
                                             >
                                                 {team.name}
                                             </h3>
@@ -404,17 +404,13 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            <div className="rounded-[1.4rem] bg-[rgba(255,251,241,0.72)] border border-[rgba(111,87,56,0.10)] px-4 py-4">
-                                <p className="text-[9px] font-black uppercase tracking-[0.26em] text-[#8d7863] italic mb-2">Raza</p>
-                                <p className="text-sm font-black text-[#2b1d12] uppercase tracking-[0.16em]">{team.rosterName}</p>
-                            </div>
-                            <div className="rounded-[1.4rem] bg-[rgba(255,251,241,0.72)] border border-[rgba(111,87,56,0.10)] px-4 py-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div className="rounded-[1.4rem] bg-[rgba(255,251,241,0.72)] border border-[rgba(111,87,56,0.10)] px-4 py-4 min-w-0">
                                 <p className="text-[9px] font-black uppercase tracking-[0.26em] text-[#8d7863] italic mb-2">VAE</p>
                                 <p className="font-epilogue text-2xl font-black italic tracking-tight text-gold">{tv.toLocaleString()}</p>
                                 <p className="text-[8px] text-[#7b6853] block font-black tracking-widest mt-1">MO</p>
                             </div>
-                            <div className="rounded-[1.4rem] bg-[rgba(255,251,241,0.72)] border border-[rgba(111,87,56,0.10)] px-4 py-4">
+                            <div className="rounded-[1.4rem] bg-[rgba(255,251,241,0.72)] border border-[rgba(111,87,56,0.10)] px-4 py-4 min-w-0">
                                 <p className="text-[9px] font-black uppercase tracking-[0.26em] text-[#8d7863] italic mb-2">Récord</p>
                                 <div className="inline-flex items-center gap-2 bg-[rgba(255,251,241,0.72)] px-3 py-2 rounded-2xl border border-[rgba(111,87,56,0.10)]">
                                     <span className="text-[11px] font-black text-[#2b1d12]">{record.wins}</span>
@@ -424,10 +420,14 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                     <span className="text-[11px] font-black text-[#2b1d12]">{record.losses}</span>
                                 </div>
                             </div>
-                            <div className="rounded-[1.4rem] bg-[rgba(255,251,241,0.72)] border border-[rgba(111,87,56,0.10)] px-4 py-4">
-                                <p className="text-[9px] font-black uppercase tracking-[0.26em] text-[#8d7863] italic mb-2">Estado</p>
-                                <p className="text-sm font-black uppercase tracking-[0.16em] text-[#2b1d12]">{team.apothecary ? 'Con boticario' : 'Sin boticario'}</p>
-                                <p className="text-[8px] text-[#7b6853] font-black tracking-widest mt-1">{team.players.length}/16 JUGADORES</p>
+                            <div className="rounded-[1.4rem] bg-[rgba(255,251,241,0.72)] border border-[rgba(111,87,56,0.10)] px-4 py-4 min-w-0">
+                                <p className="text-[9px] font-black uppercase tracking-[0.26em] text-[#8d7863] italic mb-2">Plantilla</p>
+                                <p className="text-sm font-black uppercase tracking-[0.16em] text-[#2b1d12]">{team.players.length}/16 Jugadores</p>
+                                <div className="mt-2 inline-flex items-center gap-2 px-2.5 py-1.5 rounded-full bg-[rgba(255,251,241,0.84)] border border-[rgba(111,87,56,0.10)]">
+                                    <span className={`text-[8px] font-black uppercase tracking-widest ${team.apothecary ? 'text-[#16a34a]' : 'text-[#7b6853]'}`}>
+                                        {team.apothecary ? 'Boticario' : 'Sin boticario'}
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
