@@ -1,6 +1,6 @@
 ﻿
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import type { ManagedTeam } from '../../types';
+import type { ManagedPlayer, ManagedTeam } from '../../types';
 import TeamCreator from './CreateTeamPage';
 import { TeamDashboard } from '../../components/guild/TeamDashboard';
 import { calculateTeamValue } from '../../utils/teamUtils';
@@ -39,6 +39,103 @@ const sanitizeTeamForExport = (team: ManagedTeam): Omit<ManagedTeam, 'id'> => {
 };
 
 const calculateTV = (team: ManagedTeam) => calculateTeamValue(team);
+
+const normalizeSearchValue = (value: string) =>
+    value
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+
+const getNextSppThreshold = (player: ManagedPlayer) => {
+    const advancementCount = player.advancements?.length || 0;
+    return SPP_LEVELS[advancementCount + 1] ?? null;
+};
+
+const canPlayerLevelUp = (player: ManagedPlayer) => {
+    const nextThreshold = getNextSppThreshold(player);
+    return nextThreshold !== null && player.spp >= nextThreshold;
+};
+
+const isPlayerUnavailableForNextMatch = (player: ManagedPlayer) => {
+    if ((player.missNextGame || 0) > 0) return true;
+    if (player.lastingInjuries?.some((injury) => injury.toUpperCase().includes('MNG'))) return true;
+    return ['Muerto', 'Expulsado'].includes(player.status);
+};
+
+const calculatePlayerImprovementValue = (player: ManagedPlayer) => {
+    if (player.advancements && player.advancements.length > 0) {
+        return player.advancements.reduce((advSum, adv) => {
+            let baseValue = 0;
+            switch (adv.type) {
+                case 'RandomPrimary': baseValue = 10000; break;
+                case 'ChosenPrimary': baseValue = 20000; break;
+                case 'RandomSecondary': baseValue = 20000; break;
+                case 'ChosenSecondary': baseValue = 40000; break;
+                case 'Characteristic':
+                    if (adv.characteristicName === 'FU') baseValue = 60000;
+                    else if (adv.characteristicName === 'AG') baseValue = 30000;
+                    else if (adv.characteristicName === 'PA' || adv.characteristicName === 'MV') baseValue = 20000;
+                    else baseValue = 10000;
+                    break;
+            }
+            return advSum + baseValue;
+        }, 0);
+    }
+
+    return (player.gainedSkills || []).reduce((sum, skillName) => {
+        const isSecondary = skillName?.toLowerCase().includes('secundaria');
+        return sum + (isSecondary ? 40000 : 20000);
+    }, 0);
+};
+
+const calculateManagedPlayerValue = (player: ManagedPlayer) => player.cost + calculatePlayerImprovementValue(player);
+
+const calculateRealTV = (team: ManagedTeam) => {
+    const baseTV = calculateTV(team);
+    const unavailableValue = team.players
+        .filter(isPlayerUnavailableForNextMatch)
+        .reduce((sum, player) => sum + calculateManagedPlayerValue(player), 0);
+
+    return Math.max(0, baseTV - unavailableValue);
+};
+
+const getRosterAliases = (rosterName: string) => {
+    const normalized = normalizeSearchValue(rosterName);
+    const aliases: Record<string, string[]> = {
+        "amazons": ['amazonas'],
+        "black orcs": ['orcos negros'],
+        "chosen of chaos": ['elegidos del caos'],
+        "chaos dwarfs": ['enanos del caos', 'caos enano'],
+        "chaos renegades": ['renegados del caos'],
+        "dark elves": ['elfos oscuros'],
+        "dwarfs": ['enanos'],
+        "elven union": ['union elfica', 'union elfica'],
+        "gnomes": ['gnomos'],
+        "goblins": ['goblins'],
+        "halflings": ['halflings'],
+        "high elves": ['altos elfos', 'elfos altos'],
+        "humans": ['humanos'],
+        "imperial nobility": ['nobleza imperial'],
+        "khorne": ['khorne'],
+        "lizardmen": ['hombres lagarto', 'lagartos'],
+        "necromantic horror": ['horror nigromantico', 'no muertos nigromanticos'],
+        "norse": ['nordicos', 'nordicos'],
+        "nurgle": ['nurgle'],
+        "ogres": ['ogros'],
+        "old world alliance": ['alianza del viejo mundo'],
+        "orcs": ['orcos'],
+        "shambling undead": ['no muertos'],
+        "skaven": ['skaven'],
+        "snotling": ['snotling', 'snotlings'],
+        "tomb kings": ['reyes de la tumba', 'reyes de las tumbas'],
+        "underworld denizens": ['habitantes del inframundo'],
+        "vampires": ['vampiros'],
+        "wood elves": ['elfos silvanos'],
+        "bretonnians": ['bretonianos'],
+    };
+
+    return aliases[normalized] || [];
+};
 
 const resolveGuildTeamCrestUrl = (team: ManagedTeam): string => {
     const staticTeam = teamsData.find(t => t.name === team.rosterName);
@@ -89,6 +186,12 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
     const [confirmation, setConfirmation] = useState<{ title: string; message: string; onConfirm: () => void; type?: 'danger' | 'info' } | null>(null);
     const [toastMessage, setToastMessage] = useState<string | null>(null);
     const [teamViewMode, setTeamViewMode] = useState<'list' | 'grid'>('list');
+    const [sortMode, setSortMode] = useState<'tv' | 'treasury' | 'name'>('tv');
+    const [statusFilters, setStatusFilters] = useState({
+        levelUps: false,
+        injuries: false,
+        incomplete: false,
+    });
 
     // Calculate records for all teams based on matchReports and team.history
     const teamRecords = useMemo(() => {
@@ -138,6 +241,36 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
     const activeSummaryTeam = useMemo(() => {
         return teams.find(t => t.id === activeSummaryTeamId) || teams[0] || null;
     }, [activeSummaryTeamId, teams]);
+
+    const teamInsights = useMemo(() => {
+        return Object.fromEntries(
+            teams.map((team) => {
+                const record = teamRecords[team.id || team.name] || { wins: 0, draws: 0, losses: 0, total: 0 };
+                const pendingLevelUps = team.players.filter(canPlayerLevelUp).length;
+                const unavailablePlayers = team.players.filter(isPlayerUnavailableForNextMatch);
+                const availablePlayers = team.players.length - unavailablePlayers.length;
+                const realTV = calculateRealTV(team);
+                const baseTV = calculateTV(team);
+                const rosterIsIncomplete = availablePlayers < 11;
+
+                return [
+                    team.id || team.name,
+                    {
+                        record,
+                        pendingLevelUps,
+                        unavailableCount: unavailablePlayers.length,
+                        availablePlayers,
+                        rosterCount: team.players.length,
+                        rosterIsIncomplete,
+                        realTV,
+                        baseTV,
+                        tvReduced: realTV < baseTV,
+                        treasury: team.treasury || 0,
+                    },
+                ];
+            })
+        );
+    }, [teams, teamRecords]);
 
     const openTeam = useMemo(() => {
         return teams.find(t => t.id === openTeamId) || null;
@@ -322,11 +455,15 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
     const renderTeamCard = (team: ManagedTeam) => {
         const isSelected = activeSummaryTeamId === team.id;
         const isEditing = editingTeamId === team.id;
-        const tv = calculateTV(team);
-        const hasLevelUps = team.players.some(p => p.spp >= (SPP_LEVELS[p.advancements?.length || 0] || 999));
-        const hasInjuries = team.players.some(p => p.lastingInjuries?.some(i => i.includes('MNG')) || p.missNextGame);
-        const record = teamRecords[team.id || team.name] || { wins: 0, draws: 0, losses: 0 };
-        const rosterLabel = team.rosterName.split(' ').slice(0, 2).join(' ');
+        const insight = teamInsights[team.id || team.name];
+        const tv = insight?.realTV ?? calculateTV(team);
+        const baseTV = insight?.baseTV ?? tv;
+        const hasLevelUps = (insight?.pendingLevelUps || 0) > 0;
+        const hasInjuries = (insight?.unavailableCount || 0) > 0;
+        const record = insight?.record || teamRecords[team.id || team.name] || { wins: 0, draws: 0, losses: 0 };
+        const rosterLabel = team.rosterName;
+        const rosterStatus = `${insight?.rosterCount ?? team.players.length}/16`;
+        const isIncomplete = !!insight?.rosterIsIncomplete;
 
         if (teamViewMode === 'grid') {
             return (
@@ -381,7 +518,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                         <>
                                             <h3
                                                 onClick={(e) => { e.stopPropagation(); setOpenTeamId(team.id!); }}
-                                                className="font-header font-black text-[clamp(1rem,1.05vw,1.45rem)] text-[#2b1d12] italic tracking-tighter uppercase group-hover:text-gold transition-colors cursor-pointer whitespace-normal break-words leading-[0.95] max-w-full"
+                                                className="font-header font-black text-[clamp(1rem,1.05vw,1.45rem)] text-[#2b1d12] italic tracking-tighter uppercase group-hover:text-gold transition-colors cursor-pointer whitespace-nowrap leading-none max-w-full"
                                             >
                                                 {team.name}
                                             </h3>
@@ -395,26 +532,45 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                     )}
                                 </div>
 
-                        <div className="flex items-center gap-2 mt-2 flex-wrap">
-                            <span className="text-[10px] font-mono tracking-tighter text-[#7b6853] uppercase">#FR-{team.id?.slice(0, 4)}</span>
-                            <span className="text-[9px] font-black px-2.5 py-1 rounded-full bg-[rgba(255,251,241,0.72)] border border-[rgba(111,87,56,0.10)] text-[#7b6853] uppercase tracking-widest">{rosterLabel}</span>
-                            <span className={`text-[8px] font-black px-2.5 py-1 rounded-full border uppercase tracking-widest ${team.apothecary ? 'bg-[rgba(22,163,74,0.12)] border-[rgba(22,163,74,0.18)] text-[#16a34a]' : 'bg-[rgba(255,251,241,0.72)] border-[rgba(111,87,56,0.10)] text-[#7b6853]'}`}>
-                                {team.apothecary ? 'Boticario' : 'Sin boticario'}
-                            </span>
-                            {hasLevelUps && <span className="bg-gold text-black text-[8px] font-black px-2 py-0.5 rounded-sm tracking-widest uppercase italic">PTE. MEJORA</span>}
-                            {hasInjuries && <span className="bg-blood text-white text-[8px] font-black px-2 py-0.5 rounded-sm tracking-widest uppercase italic">LESIONADOS</span>}
+                                <p className="text-[11px] font-black uppercase tracking-[0.26em] text-[#8d7863] italic">{rosterLabel}</p>
+                                <div className="flex items-center gap-2 mt-3 flex-wrap">
+                                    <span className="text-[10px] font-mono tracking-tighter text-[#7b6853] uppercase">#FR-{team.id?.slice(0, 4)}</span>
+                                    <span className={`text-[8px] font-black px-2.5 py-1 rounded-full border uppercase tracking-widest ${isIncomplete ? 'bg-[rgba(220,38,38,0.08)] border-[rgba(220,38,38,0.16)] text-[#b91c1c]' : 'bg-[rgba(255,251,241,0.72)] border-[rgba(111,87,56,0.10)] text-[#7b6853]'}`}>
+                                        Plantilla {rosterStatus}
+                                    </span>
+                                    <span className={`text-[8px] font-black px-2.5 py-1 rounded-full border uppercase tracking-widest ${team.apothecary ? 'bg-[rgba(22,163,74,0.12)] border-[rgba(22,163,74,0.18)] text-[#16a34a]' : 'bg-[rgba(255,251,241,0.72)] border-[rgba(111,87,56,0.10)] text-[#7b6853]'}`}>
+                                        {team.apothecary ? 'Boticario' : 'Sin boticario'}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2 mt-3 flex-wrap min-h-[24px]">
+                                    {hasLevelUps && <span className="bg-[rgba(202,138,4,0.16)] text-[#8a5b05] text-[8px] font-black px-2 py-1 rounded-full tracking-widest uppercase italic">STAR {insight?.pendingLevelUps}</span>}
+                                    {hasInjuries && <span className="bg-[rgba(220,38,38,0.12)] text-[#b91c1c] text-[8px] font-black px-2 py-1 rounded-full tracking-widest uppercase italic">MNG {insight?.unavailableCount}</span>}
+                                    {isIncomplete && <span className="bg-[rgba(245,158,11,0.14)] text-[#a16207] text-[8px] font-black px-2 py-1 rounded-full tracking-widest uppercase italic">Aviso &lt; 11</span>}
+                                    {!hasLevelUps && !hasInjuries && !isIncomplete && (
+                                        <span className="text-[8px] font-black px-2 py-1 rounded-full tracking-widest uppercase italic bg-[rgba(22,163,74,0.10)] text-[#15803d] border border-[rgba(22,163,74,0.14)]">
+                                            Listo para el partido
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div className="rounded-[1.4rem] bg-[rgba(255,251,241,0.72)] border border-[rgba(111,87,56,0.10)] px-4 py-4 min-w-0 min-h-[116px] flex flex-col justify-between">
-                                <p className="text-[9px] font-black uppercase tracking-[0.26em] text-[#8d7863] italic mb-2">VAE</p>
+                                <div className="flex items-center gap-2">
+                                    <p className="text-[9px] font-black uppercase tracking-[0.26em] text-[#8d7863] italic mb-2">TV real</p>
+                                    {tv < baseTV && <span className="material-symbols-outlined text-[14px] text-[#b91c1c]">healing</span>}
+                                </div>
                                 <p className="font-epilogue text-2xl lg:text-[1.9rem] font-black italic tracking-tight text-gold leading-none">{tv.toLocaleString()}</p>
                                 <p className="text-[8px] text-[#7b6853] block font-black tracking-widest mt-1">MO</p>
                             </div>
                             <div className="rounded-[1.4rem] bg-[rgba(255,251,241,0.72)] border border-[rgba(111,87,56,0.10)] px-4 py-4 min-w-0 min-h-[116px] flex flex-col justify-between">
-                                <p className="text-[9px] font-black uppercase tracking-[0.26em] text-[#8d7863] italic mb-2">Récord</p>
+                                <p className="text-[9px] font-black uppercase tracking-[0.26em] text-[#8d7863] italic mb-2">Tesoreria</p>
+                                <p className="font-epilogue text-2xl lg:text-[1.9rem] font-black italic tracking-tight text-[#2b1d12] leading-none">{(insight?.treasury || 0).toLocaleString()}</p>
+                                <p className="text-[8px] text-[#7b6853] block font-black tracking-widest mt-1">MO</p>
+                            </div>
+                            <div className="rounded-[1.4rem] bg-[rgba(255,251,241,0.72)] border border-[rgba(111,87,56,0.10)] px-4 py-4 min-w-0 min-h-[116px] flex flex-col justify-between">
+                                <p className="text-[9px] font-black uppercase tracking-[0.26em] text-[#8d7863] italic mb-2">Estado</p>
                                 <div className="inline-flex items-center gap-2 bg-[rgba(255,251,241,0.72)] px-3 py-2 rounded-2xl border border-[rgba(111,87,56,0.10)] w-fit">
                                     <span className="text-[11px] font-black text-[#2b1d12]">{record.wins}</span>
                                     <span className="text-[#7b6853]">•</span>
@@ -422,11 +578,9 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                     <span className="text-[#7b6853]">•</span>
                                     <span className="text-[11px] font-black text-[#2b1d12]">{record.losses}</span>
                                 </div>
-                            </div>
-                            <div className="rounded-[1.4rem] bg-[rgba(255,251,241,0.72)] border border-[rgba(111,87,56,0.10)] px-4 py-4 min-w-0 min-h-[116px] flex flex-col justify-between">
-                                <p className="text-[9px] font-black uppercase tracking-[0.26em] text-[#8d7863] italic mb-2">Plantilla</p>
-                                <p className="text-lg lg:text-xl font-black uppercase tracking-[0.16em] text-[#2b1d12] leading-none">{team.players.length}/16</p>
-                                <p className="text-[8px] text-[#7b6853] font-black tracking-widest uppercase mt-1">Jugadores</p>
+                                <p className={`text-[8px] font-black tracking-widest uppercase mt-2 ${isIncomplete ? 'text-[#b91c1c]' : 'text-[#7b6853]'}`}>
+                                    Plantilla {rosterStatus}
+                                </p>
                             </div>
                         </div>
 
@@ -453,7 +607,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
             <div
                 key={team.id}
                 onClick={() => setActiveSummaryTeamId(team.id!)}
-                className={`group relative grid grid-cols-1 md:grid-cols-[minmax(0,2.55fr)_minmax(80px,0.42fr)_minmax(120px,0.58fr)_minmax(165px,0.7fr)] items-center gap-6 px-10 py-8 border rounded-[2rem] overflow-hidden transition-all duration-300 ${
+                className={`group relative grid grid-cols-1 md:grid-cols-[minmax(0,3.15fr)_minmax(110px,0.54fr)_minmax(165px,0.66fr)_minmax(165px,0.7fr)] items-center gap-6 px-10 py-8 border rounded-[2rem] overflow-hidden transition-all duration-300 ${
                     isSelected
                         ? 'bg-[rgba(255,251,241,0.88)] border-gold/40 shadow-[0_20px_40px_rgba(89,59,21,0.08)]'
                         : 'bg-[rgba(255,251,241,0.74)] border-[rgba(111,87,56,0.10)] hover:border-[rgba(111,87,56,0.18)] shadow-[0_16px_34px_rgba(89,59,21,0.06)]'
@@ -483,8 +637,8 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                             className="w-full h-full object-contain drop-shadow-[0_0_12px_rgba(255,255,255,0.06)] transform-gpu"
                         />
                     </div>
-                    <div className="min-w-0 flex-1 pr-2">
-                        <div className="flex items-start gap-2 mb-2">
+                    <div className="min-w-0 flex-1 pr-6">
+                        <div className="flex items-start gap-2 mb-1 min-w-0">
                             {isEditing ? (
                                 <input
                                     autoFocus
@@ -499,7 +653,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                 <>
                                     <h3
                                         onClick={(e) => { e.stopPropagation(); setOpenTeamId(team.id!); }}
-                                        className="font-header font-black text-[clamp(1.05rem,1.15vw,1.55rem)] text-[#2b1d12] italic tracking-tighter uppercase group-hover:text-gold transition-colors cursor-pointer whitespace-nowrap leading-[0.92] max-w-full"
+                                        className="font-header font-black text-[clamp(0.98rem,1.1vw,1.6rem)] text-[#2b1d12] italic tracking-tighter uppercase group-hover:text-gold transition-colors cursor-pointer whitespace-nowrap leading-none max-w-full"
                                     >
                                         {team.name}
                                     </h3>
@@ -512,29 +666,47 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                 </>
                             )}
                         </div>
-                        <div className="flex items-center gap-2 mt-2 flex-wrap">
+                        <p className="text-[11px] font-black uppercase tracking-[0.26em] text-[#8d7863] italic">{rosterLabel}</p>
+                        <div className="flex items-center gap-2 mt-3 flex-wrap">
                             <span className="text-[10px] font-mono tracking-tighter text-[#7b6853] uppercase">#FR-{team.id?.slice(0, 4)}</span>
-                            <span className="text-[9px] font-black px-2.5 py-1 rounded-full bg-[rgba(255,251,241,0.72)] border border-[rgba(111,87,56,0.10)] text-[#7b6853] uppercase tracking-widest">Raza {rosterLabel}</span>
-                            {hasLevelUps && <span className="bg-gold text-black text-[8px] font-black px-2 py-0.5 rounded-sm tracking-widest uppercase italic">PTE. MEJORA</span>}
-                            {hasInjuries && <span className="bg-blood text-white text-[8px] font-black px-2 py-0.5 rounded-sm tracking-widest uppercase italic">LESIONADOS</span>}
+                            {hasLevelUps && <span className="bg-[rgba(202,138,4,0.16)] text-[#8a5b05] text-[8px] font-black px-2 py-0.5 rounded-sm tracking-widest uppercase italic">STAR {insight?.pendingLevelUps}</span>}
+                            {hasInjuries && <span className="bg-[rgba(220,38,38,0.12)] text-[#b91c1c] text-[8px] font-black px-2 py-0.5 rounded-sm tracking-widest uppercase italic">MNG {insight?.unavailableCount}</span>}
+                            {isIncomplete && <span className="bg-[rgba(245,158,11,0.14)] text-[#a16207] text-[8px] font-black px-2 py-0.5 rounded-sm tracking-widest uppercase italic">Aviso &lt; 11</span>}
+                            {!hasLevelUps && !hasInjuries && !isIncomplete && (
+                                <span className="text-[8px] font-black px-2 py-0.5 rounded-sm tracking-widest uppercase italic bg-[rgba(22,163,74,0.10)] text-[#15803d] border border-[rgba(22,163,74,0.14)]">
+                                    Listo para el partido
+                                </span>
+                            )}
                         </div>
                     </div>
                 </div>
 
                 <div className="text-center relative z-10">
-                    <span className="text-[9px] text-[#7b6853] font-black uppercase tracking-[0.35em] block mb-1">VAE</span>
-                    <span className="font-header text-3xl font-black text-gold italic leading-none">{tv.toLocaleString()}</span>
+                    <span className="text-[9px] text-[#7b6853] font-black uppercase tracking-[0.35em] block mb-1">TV real</span>
+                    <div className="inline-flex items-center justify-center gap-2">
+                        <span className="font-header text-3xl font-black text-gold italic leading-none">{tv.toLocaleString()}</span>
+                        {tv < baseTV && <span className="material-symbols-outlined text-[16px] text-[#b91c1c]">healing</span>}
+                    </div>
                     <span className="text-[8px] text-[#7b6853] block font-black tracking-widest mt-1">MO</span>
                 </div>
 
                 <div className="text-center relative z-10">
-                    <span className="text-[9px] text-[#7b6853] font-black uppercase tracking-[0.35em] block mb-1">Récord</span>
-                    <div className="inline-flex items-center gap-2 bg-[rgba(255,251,241,0.72)] px-4 py-2.5 rounded-2xl border border-[rgba(111,87,56,0.10)] group-hover:border-gold/20 transition-colors">
-                        <span className="text-[11px] font-black text-[#2b1d12]">{record.wins}</span>
-                        <span className="text-[#7b6853]">•</span>
-                        <span className="text-[11px] font-black text-[#2b1d12]">{record.draws}</span>
-                        <span className="text-[#7b6853]">•</span>
-                        <span className="text-[11px] font-black text-[#2b1d12]">{record.losses}</span>
+                    <span className="text-[9px] text-[#7b6853] font-black uppercase tracking-[0.35em] block mb-1">Plantilla / Tesoreria</span>
+                    <div className="space-y-2">
+                        <div className={`text-[11px] font-black uppercase tracking-[0.16em] ${isIncomplete ? 'text-[#b91c1c]' : 'text-[#2b1d12]'}`}>
+                            {rosterStatus}
+                        </div>
+                        <div className="text-xl font-header font-black italic text-[#2b1d12] leading-none">
+                            {(insight?.treasury || 0).toLocaleString()}
+                            <span className="text-[9px] text-[#7b6853] font-black tracking-widest ml-1 not-italic">MO</span>
+                        </div>
+                        <div className="inline-flex items-center gap-2 bg-[rgba(255,251,241,0.72)] px-4 py-2.5 rounded-2xl border border-[rgba(111,87,56,0.10)] group-hover:border-gold/20 transition-colors">
+                            <span className="text-[11px] font-black text-[#2b1d12]">{record.wins}</span>
+                            <span className="text-[#7b6853]">•</span>
+                            <span className="text-[11px] font-black text-[#2b1d12]">{record.draws}</span>
+                            <span className="text-[#7b6853]">•</span>
+                            <span className="text-[11px] font-black text-[#2b1d12]">{record.losses}</span>
+                        </div>
                     </div>
                 </div>
 
@@ -583,10 +755,45 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
         );
     }
 
-    const filteredTeams = teams.filter(t => 
-        t.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        t.rosterName.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filterCounts = useMemo(() => ({
+        levelUps: teams.filter((team) => (teamInsights[team.id || team.name]?.pendingLevelUps || 0) > 0).length,
+        injuries: teams.filter((team) => (teamInsights[team.id || team.name]?.unavailableCount || 0) > 0).length,
+        incomplete: teams.filter((team) => !!teamInsights[team.id || team.name]?.rosterIsIncomplete).length,
+    }), [teams, teamInsights]);
+
+    const filteredTeams = useMemo(() => {
+        const query = normalizeSearchValue(searchTerm.trim());
+
+        return [...teams]
+            .filter((team) => {
+                const searchHaystack = [
+                    team.name,
+                    team.rosterName,
+                    ...getRosterAliases(team.rosterName),
+                ]
+                    .map((value) => normalizeSearchValue(value))
+                    .join(' ');
+
+                if (query && !searchHaystack.includes(query)) return false;
+
+                const insight = teamInsights[team.id || team.name];
+                if (!insight) return false;
+                if (statusFilters.levelUps && insight.pendingLevelUps === 0) return false;
+                if (statusFilters.injuries && insight.unavailableCount === 0) return false;
+                if (statusFilters.incomplete && !insight.rosterIsIncomplete) return false;
+
+                return true;
+            })
+            .sort((a, b) => {
+                const insightA = teamInsights[a.id || a.name];
+                const insightB = teamInsights[b.id || b.name];
+                if (!insightA || !insightB) return 0;
+
+                if (sortMode === 'treasury') return insightB.treasury - insightA.treasury;
+                if (sortMode === 'name') return a.name.localeCompare(b.name, 'es', { sensitivity: 'base' });
+                return insightB.realTV - insightA.realTV;
+            });
+    }, [teams, teamInsights, searchTerm, statusFilters, sortMode]);
 
     return (
         <div className="blood-ui-shell min-h-screen text-gray-200 font-inter">
@@ -674,42 +881,83 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
 
                 {/* Team List Table */}
                 <section className="space-y-4">
-                    <div className="flex items-center justify-between gap-4 px-2">
-                        <div className="text-[9px] font-black text-[#7b6853] uppercase tracking-[0.3em]">
-                            Mostrando {filteredTeams.length} franquicias
+                    <div className="flex flex-col gap-4 px-2">
+                        <div className="flex flex-wrap items-center justify-between gap-4">
+                            <div className="text-[9px] font-black text-[#7b6853] uppercase tracking-[0.3em]">
+                                Mostrando {filteredTeams.length} franquicias
+                            </div>
+                            <div className="flex flex-wrap items-center gap-3">
+                                <div className="inline-flex rounded-2xl border border-[rgba(111,87,56,0.12)] bg-[rgba(255,251,241,0.72)] p-1 shadow-[0_10px_24px_rgba(89,59,21,0.04)]">
+                                    <button
+                                        onClick={() => setTeamViewMode('list')}
+                                        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
+                                            teamViewMode === 'list'
+                                                ? 'bg-gold text-black shadow-lg shadow-gold/10'
+                                                : 'text-[#7b6853] hover:text-[#2b1d12]'
+                                        }`}
+                                    >
+                                        <span className="material-symbols-outlined text-sm">view_list</span>
+                                        Lista
+                                    </button>
+                                    <button
+                                        onClick={() => setTeamViewMode('grid')}
+                                        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
+                                            teamViewMode === 'grid'
+                                                ? 'bg-gold text-black shadow-lg shadow-gold/10'
+                                                : 'text-[#7b6853] hover:text-[#2b1d12]'
+                                        }`}
+                                    >
+                                        <span className="material-symbols-outlined text-sm">grid_view</span>
+                                        Cuadrícula
+                                    </button>
+                                </div>
+                                <select
+                                    value={sortMode}
+                                    onChange={(e) => setSortMode(e.target.value as 'tv' | 'treasury' | 'name')}
+                                    className="blood-ui-input rounded-xl px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-[#2b1d12]"
+                                >
+                                    <option value="tv">Orden: TV real</option>
+                                    <option value="treasury">Orden: Tesoreria</option>
+                                    <option value="name">Orden: Nombre</option>
+                                </select>
+                            </div>
                         </div>
-                        <div className="inline-flex rounded-2xl border border-[rgba(111,87,56,0.12)] bg-[rgba(255,251,241,0.72)] p-1 shadow-[0_10px_24px_rgba(89,59,21,0.04)]">
-                            <button
-                                onClick={() => setTeamViewMode('list')}
-                                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
-                                    teamViewMode === 'list'
-                                        ? 'bg-gold text-black shadow-lg shadow-gold/10'
-                                        : 'text-[#7b6853] hover:text-[#2b1d12]'
-                                }`}
-                            >
-                                <span className="material-symbols-outlined text-sm">view_list</span>
-                                Lista
-                            </button>
-                            <button
-                                onClick={() => setTeamViewMode('grid')}
-                                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
-                                    teamViewMode === 'grid'
-                                        ? 'bg-gold text-black shadow-lg shadow-gold/10'
-                                        : 'text-[#7b6853] hover:text-[#2b1d12]'
-                                }`}
-                            >
-                                <span className="material-symbols-outlined text-sm">grid_view</span>
-                                Cuadrícula
-                            </button>
+
+                        <div className="flex flex-wrap items-center gap-2">
+                            {[
+                                { key: 'levelUps', label: 'Con subidas', count: filterCounts.levelUps },
+                                { key: 'injuries', label: 'Con bajas', count: filterCounts.injuries },
+                                { key: 'incomplete', label: 'Incompleta', count: filterCounts.incomplete },
+                            ].map((filter) => {
+                                const active = statusFilters[filter.key as keyof typeof statusFilters];
+                                return (
+                                    <button
+                                        key={filter.key}
+                                        onClick={() =>
+                                            setStatusFilters((prev) => ({
+                                                ...prev,
+                                                [filter.key]: !prev[filter.key as keyof typeof prev],
+                                            }))
+                                        }
+                                        className={`px-4 py-2 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all ${
+                                            active
+                                                ? 'bg-gold text-black border-gold shadow-lg shadow-gold/10'
+                                                : 'bg-[rgba(255,251,241,0.72)] text-[#7b6853] border-[rgba(111,87,56,0.12)] hover:text-[#2b1d12]'
+                                        }`}
+                                    >
+                                        {filter.label} ({filter.count})
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
 
                     {teamViewMode === 'list' ? (
                         <>
-                            <div className="hidden md:grid grid-cols-1 md:grid-cols-[minmax(0,2.55fr)_minmax(80px,0.42fr)_minmax(120px,0.58fr)_minmax(165px,0.7fr)] px-10 py-4 text-[9px] font-black text-[#7b6853] uppercase tracking-[0.3em]">
+                            <div className="hidden md:grid grid-cols-1 md:grid-cols-[minmax(0,3.15fr)_minmax(110px,0.54fr)_minmax(165px,0.66fr)_minmax(165px,0.7fr)] px-10 py-4 text-[9px] font-black text-[#7b6853] uppercase tracking-[0.3em]">
                                 <div className="text-left">Equipo / Nombre</div>
-                                <div className="text-center">VAE</div>
-                                <div className="text-center">Récord (V-E-D)</div>
+                                <div className="text-center">TV real</div>
+                                <div className="text-center">Plantilla / Tesoreria / Record</div>
                                 <div className="text-right">Acción</div>
                             </div>
 
