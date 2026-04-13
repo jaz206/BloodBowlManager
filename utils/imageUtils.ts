@@ -19,39 +19,42 @@ const ROSTER_PREFIX_MAP: Record<string, string> = {
   "Chaos Dwarfs": "Enanos del caos",
   "Renegados del Caos": "Renegados",
   "Chaos Renegades": "Renegados",
+  "Elfos Altos": "Elfos Altos",
   "Elfos Oscuros": "Elfos Oscuros",
   "Dark Elves": "Elfos Oscuros",
+  "Elfos Silvanos": "Elfos Silvanos",
+  "Wood Elves": "Elfos Silvanos",
   "Enanos": "Enanos",
   "Dwarfs": "Enanos",
   "Gnomos": "Gnomos",
   "Gnomes": "Gnomos",
   "Goblins": "Goblins",
   "Halflings": "Halflings",
+  "Humano": "Humano",
   "Humanos": "Humano",
   "Humans": "Humano",
   "Khorne": "Khorne",
-  "Lagartos": "Lagartos",
-  "Hombres Lagarto": "Lagartos",
-  "Lizardmen": "Lagartos",
+  "Lagartos": "Hombres Lagarto",
+  "Hombres Lagarto": "Hombres Lagarto",
+  "Lizardmen": "Hombres Lagarto",
   "Nurgle": "Nurgle",
   "No Muertos": "No Muertos",
   "Shambling Undead": "No Muertos",
-  "Nigromantes": "Nigromantes",
-  "Horror Nigromántico": "Nigromantes",
-  "Horror Nigrom?ntico": "Nigromantes",
-  "Necromantic Horror": "Nigromantes",
-  "Nórdicos": "Nordicos",
-  "N????rdicos": "Nordicos",
-  "Nordicos": "Nordicos",
-  "N??rdicos": "Nordicos",
-  "N?rdicos": "Nordicos",
-  "Norse": "Nordicos",
+  "Horror Nigromántico": "Horror Nigromántico",
+  "Horror Nigrom?ntico": "Horror Nigromántico",
+  "Necromantic Horror": "Horror Nigromántico",
+  "Nórdicos": "Nórdicos",
+  "N????rdicos": "Nórdicos",
+  "Nordicos": "Nórdicos",
+  "N??rdicos": "Nórdicos",
+  "N?rdicos": "Nórdicos",
+  "Norse": "Nórdicos",
   "Ogros": "Ogros",
   "Ogres": "Ogros",
   "Skaven": "Skaven",
   "Slaanesh": "Slaanesh",
-  "Tomb Kings": "Khemri",
-  "Reyes de las Tumbas": "Khemri",
+  "Tomb Kings": "Reyes de las Tumbas",
+  "Reyes de las Tumbas": "Reyes de las Tumbas",
   "Unión Élfica": "Union Elfica",
   "Uni????n ?????lfica": "Union Elfica",
   "Union Elfica": "Union Elfica",
@@ -60,8 +63,6 @@ const ROSTER_PREFIX_MAP: Record<string, string> = {
   "Elven Union": "Union Elfica",
   "Vampiros": "Vampiros",
   "Vampires": "Vampiros",
-  "Wood Elves": "Silvanos",
-  "Elfos Silvanos": "Silvanos",
   "Alianza del Viejo Mundo": "Old World Alliance",
   "Old World Alliance": "Old World Alliance",
   "Bretonnian": "Bretonnian",
@@ -69,10 +70,20 @@ const ROSTER_PREFIX_MAP: Record<string, string> = {
   "Imperial Nobility": "Imperial Nobility",
   "Snotling": "Snotling",
   "Snotlings": "Snotling",
-  "Habitantes del Inframundo": "Inframundo",
-  "Underworld Denizens": "Inframundo",
-  "Altos Elfos": "Altos Elfos",
-  "High Elves": "Altos Elfos",
+  "Habitantes del Inframundo": "Habitantes del Inframundo",
+  "Underworld Denizens": "Habitantes del Inframundo",
+  "Altos Elfos": "Elfos Altos",
+  "High Elves": "Elfos Altos",
+};
+
+const ROSTER_FOLDER_ALIASES: Record<string, string[]> = {
+  "Elfos Altos": ["Altos Elfos"],
+  "Elfos Silvanos": ["Wood Elves"],
+  "Horror Nigromántico": ["Horror NigromÃ¡ntico"],
+  "Nórdicos": ["Nordicos"],
+  "Union Elfica": ["Unión �0lfica"],
+  "Habitantes del Inframundo": ["Underworld Denizens"],
+  "Reyes de las Tumbas": ["Tomb Kings"],
 };
 
 const CREST_PREFIX_MAP: Record<string, string> = {
@@ -216,20 +227,203 @@ const normalizeTeamAssetKey = (value: string): string =>
     .trim();
 
 const POSITION_FOLDER_MAP: Record<string, Record<string, string>> = {
-  "enanos": {
+  amazonas: {
+    "eagle warrior": "eagle-guerrero-linea",
+    "python warrior": "python-guerrero-lanzador",
+    "jaguar warrior": "jaguar-guerrero-bloqueador",
+    "piranha warrior": "piranha-guerrero-placador",
+  },
+  "alianza del viejo mundo": {
+    "human lineman": "old-world-humanos-linea",
+    "human thrower": "old-world-humanos-lanzador",
+    "human blitzer": "old-world-humanos-placador",
+    "human catcher": "old-world-humanos-receptor",
+    "dwarf blocker": "old-world-enanos-bloqueador",
+    "dwarf runner": "old-world-enanos-corredor",
+    "dwarf blitzer": "old-world-enanos-placador",
+    "dwarf slayer": "old-world-enanos-troll-slayer",
+    "halfling hopeful": "old-world-halflings-hopeful",
+  },
+  "elfos altos": {
+    "high elf lineman": "linea",
+    "high elf catcher": "receptor",
+    "high elf thrower": "lanzador",
+    "high elf blitzer": "placador",
+    "lineman": "linea",
+    "catcher": "receptor",
+    "thrower": "lanzador",
+    "blitzer": "placador",
+  },
+  "elfos oscuros": {
+    "dark elf lineman": "elfos-oscuros-linea",
+    "runner": "corredor",
+    "assassin": "assassin",
+    "blitzer": "placador",
+    "witch elf": "witch-elf",
+  },
+  "elfos silvanos": {
+    "wood elf lineman": "elfos-silvanos-linea",
+    "thrower": "lanzador",
+    "catcher": "receptor",
+    "wardancer": "wardancer",
+    "loren treeman": "loren-forest-treeman",
+  },
+  enanos: {
     "dwarf blocker": "enanos-bloqueador-linea",
     "runner": "corredor",
     "blitzer": "placador",
     "troll slayer": "troll-slayer",
     "deathroller": "deathroller",
   },
-  "orcos": {
+  "enanos del caos": {
+    "hobgoblin": "hobgoblin-linea",
+    "hobgoblin sneaky stabba": "hobgoblin-sneaky-stabba",
+    "chaos dwarf blocker": "enanos-del-caos-bloqueador",
+    "flamesmith": "enanos-del-caos-bloqueador",
+    "bull centaur blitzer": "bull-centaur-placador",
+    "minotaur": "renegade-minotauro",
+  },
+  gnomos: {
+    "gnome lineman": "gnomos-linea",
+    "woodland fox": "woodland-fox",
+    "illusionist": "gnomos-illusionist",
+    "beastmaster": "gnomos-beastmaster",
+    "altern forest treeman": "altern-forest-treeman",
+  },
+  goblins: {
+    "goblin lineman": "goblins-linea",
+    "looney": "looney",
+    "bomma": "bomma",
+    "hooligan": "hooligan",
+    "doom diver": "doom-diver",
+    "fanatic": "fanatic",
+    "pogoer": "pogoer",
+    "trained troll": "trained-troll",
+  },
+  "habitantes del inframundo": {
+    "underworld goblin lineman": "underworld-goblins-linea",
+    "gutter runner": "gutter-corredor",
+    "skaven clanrat": "skaven-clanrat-linea",
+    "skaven thrower": "skaven-lanzador",
+    "skaven blitzer": "skaven-placador",
+    "underworld snotling": "underworld-snotlings",
+    "underworld troll": "underworld-troll",
+    "mutant rat ogre": "mutant-rat-ogros",
+  },
+  halflings: {
+    "halfling lineman": "halflings-hopeful-linea",
+    "halfling hefty": "halflings-hefty",
+    "halfling catcher": "halflings-receptor",
+    "altern forest treeman": "altern-forest-treeman",
+  },
+  "hombres lagarto": {
+    "skink lineman": "skink-corredor-linea",
+    "chameleon skink": "chameleon-skink",
+    "saurus": "saurus-bloqueador",
+    "kroxigor": "kroxigor",
+  },
+  "horror nigromantico": {
+    "zombie": "zombie-linea",
+    "ghoul": "ghoul-corredor",
+    "wraith": "espectro",
+    "flesh golem": "flesh-golem-de-carne",
+    "werewolf": "werewolf",
+  },
+  humano: {
+    "human lineman": "humanos-linea",
+    "halfling": "halflings-hopeful",
+    "catcher": "receptor",
+    "thrower": "lanzador",
+    "blitzer": "placador-blitzer",
+    "ogre": "ogros",
+  },
+  "no muertos": {
+    "zombie": "zombie-linea",
+    "skeleton": "esqueleto-linea",
+    "ghoul": "ghoul-corredor",
+    "mummy": "momia",
+    "wight": "tumulo-placador",
+    "wraith": "tumulo-placador",
+  },
+  nordicos: {
+    "norse raider lineman": "nordicos-raider-linea",
+    "beer boar": "beer-boar",
+    "berserker": "nordicos-berserker",
+    "valkyrie": "valkyrie",
+    "ulfwerener": "ulfwerener",
+    "yeti": "yhetee",
+  },
+  nurgle: {
+    "rotter lineman": "rotter-linea",
+    "pestigor": "pestigor",
+    "bloater": "bloater",
+    "rotspawn": "rotspawn",
+  },
+  ogros: {
+    "gnoblar lineman": "gnoblar-linea",
+    "ogre": "ogros-bloqueador",
+    "runt punter": "ogros-runt-punter",
+  },
+  orcos: {
     "orc lineman": "orcos-linea",
     "thrower": "lanzador",
     "blitzer": "blitzer-orco",
     "big un": "fortachon-bloqueador",
     "troll": "untrained-troll",
     "goblin": "goblins",
+  },
+  "orcos negros": {
+    "black orc": "orcos-negros",
+    "goblin bruiser": "goblins-bruiser-linea",
+    "trained troll": "trained-troll",
+  },
+  renegados: {
+    "renegade human lineman": "renegade-humanos-linea",
+    "renegade human thrower": "renegade-humanos-lanzador",
+    "renegade goblin": "renegade-goblins",
+    "renegade orc": "renegade-orcos",
+    "renegade skaven": "renegade-skaven",
+    "renegade dark elf": "renegade-elfos-oscuros",
+    "renegade troll": "renegade-troll",
+    "renegade ogre": "renegade-ogros",
+    "renegade minotaur": "renegade-minotauro",
+    "renegade rat ogre": "renegade-rat-ogros",
+  },
+  "reyes de las tumbas": {
+    "skeleton": "esqueleto-linea",
+    "anointed thrower": "anointed-lanzador",
+    "anointed blitzer": "anointed-placador",
+    "tomb guardian": "tomb-guardian",
+  },
+  skaven: {
+    "skaven clanrat": "skaven-clanrat-linea",
+    "gutter runner": "gutter-corredor",
+    "skaven thrower": "lanzador",
+    "skaven blitzer": "placador",
+    "rat ogre": "rat-ogros",
+  },
+  "slann (naf)": {
+    "slann lineman": "linea",
+    "slann catcher": "receptor",
+    "slann blitzer": "placador",
+    "kroxigor": "kroxigor",
+  },
+  "union elfica": {
+    "elven union lineman": "la-nea",
+    "elven union thrower": "lanzador",
+    "elven union catcher": "receptor",
+    "elven union blitzer": "placador",
+    "lineman": "la-nea",
+    "thrower": "lanzador",
+    "catcher": "receptor",
+    "blitzer": "placador",
+  },
+  "vampiros": {
+    "thrall lineman": "thrall-linea",
+    "vampire runner": "vampiros-corredor",
+    "vampire thrower": "vampiros-lanzador",
+    "vampire blitzer": "vampiros-placador",
+    "vargheist": "vargheist",
   },
 };
 
@@ -241,6 +435,74 @@ const normalizePositionAssetKey = (value: string): string =>
     .replace(/[^a-z0-9]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+
+const normalizeFolderTag = (value: string): string =>
+  slugify(value || '');
+
+const POSITION_FOLDER_ALIASES: Record<string, Record<string, string>> = {
+  "elfos altos": {
+    "la-nea": "linea",
+  },
+  "elfos oscuros": {
+    "elfos-oscuros-la-nea": "elfos-oscuros-linea",
+  },
+  "elfos silvanos": {
+    "elfos-silvanos-la-nea": "elfos-silvanos-linea",
+  },
+  "enanos del caos": {
+    "hobgoblin-la-nea": "hobgoblin-linea",
+  },
+  "gnomos": {
+    "gnomos-la-nea": "gnomos-linea",
+  },
+  "goblins": {
+    "goblins-la-nea": "goblins-linea",
+  },
+  "habitantes del inframundo": {
+    "underworld-goblins-la-nea": "underworld-goblins-linea",
+  },
+  "hombres lagarto": {
+    "skink-corredor-la-nea": "skink-corredor-linea",
+  },
+  "horror nigromantico": {
+    "zombie-la-nea": "zombie-linea",
+  },
+  humano: {
+    "humanos-la-nea": "humanos-linea",
+  },
+  "no muertos": {
+    "zombie-la-nea": "zombie-linea",
+    "esqueleto-la-nea": "esqueleto-linea",
+    "ta-mulo-placador": "tumulo-placador",
+  },
+  nordicos: {
+    "na-rdicos-berserker": "nordicos-berserker",
+    "na-rdicos-raider-la-nea": "nordicos-raider-linea",
+  },
+  "orcos negros": {
+    "goblins-bruiser-la-nea": "goblins-bruiser-linea",
+  },
+  "reyes de las tumbas": {
+    "esqueleto-la-nea": "esqueleto-linea",
+  },
+  "union elfica": {
+    "linea": "la-nea",
+  },
+};
+
+const getRosterFolderCandidates = (rosterName: string): string[] => {
+  const primary = getTeamPrefix(rosterName);
+  const aliasKey = normalizeTeamAssetKey(primary);
+  const aliases = ROSTER_FOLDER_ALIASES[primary] || ROSTER_FOLDER_ALIASES[aliasKey] || [];
+  return Array.from(new Set([primary, ...aliases].filter(Boolean)));
+};
+
+const resolveCanonicalPositionFolderTag = (rosterName: string, folderName: string): string => {
+  const rosterKey = normalizePositionAssetKey(getTeamPrefix(rosterName));
+  const folderKey = normalizeFolderTag(folderName);
+  const canonicalFolder = POSITION_FOLDER_ALIASES[rosterKey]?.[folderKey] || folderName;
+  return slugify(canonicalFolder);
+};
 
 export const getTeamPrefix = (rosterName: string): string => {
   let prefix = ROSTER_PREFIX_MAP[rosterName] || fixMojibake(rosterName);
@@ -300,44 +562,47 @@ const getLegacyPosTag = (position: string): string => {
 };
 
 export const fetchTeamImageStock = async (rosterName: string): Promise<PositionStock> => {
-  const teamFolder = getTeamPrefix(rosterName);
+  const stock: PositionStock = {};
+  const teamFolders = getRosterFolderCandidates(rosterName);
 
   try {
-    const response = await fetch(`https://api.github.com/repos/jaz206/Bloodbowl-image/contents/Foto%20plantilla/${encodeURIComponent(teamFolder)}`);
-    if (!response.ok) return {};
+    await Promise.all(teamFolders.map(async (teamFolder) => {
+      const response = await fetch(`https://api.github.com/repos/jaz206/Bloodbowl-image/contents/Foto%20plantilla/${encodeURIComponent(teamFolder)}`);
+      if (!response.ok) return;
 
-    const entries = await response.json();
-    const stock: PositionStock = {};
-    const hasNestedFolders = entries.some((entry: any) => entry.type === 'dir');
+      const entries = await response.json();
+      const hasNestedFolders = entries.some((entry: any) => entry.type === 'dir');
 
-    if (hasNestedFolders) {
-      await Promise.all(entries.map(async (entry: any) => {
-        if (entry.type !== 'dir') return;
+      if (hasNestedFolders) {
+        await Promise.all(entries.map(async (entry: any) => {
+          if (entry.type !== 'dir') return;
 
-        const folderResponse = await fetch(entry.url);
-        if (!folderResponse.ok) return;
+          const folderResponse = await fetch(entry.url);
+          if (!folderResponse.ok) return;
 
-        const folderEntries = await folderResponse.json();
-        folderEntries.forEach((file: any) => {
-          if (file.type !== 'file' || !file.name.endsWith('.png')) return;
-          const match = file.name.match(/(\d+)\.png$/i);
-          if (!match) return;
-          addStockNumber(stock, slugify(entry.name), parseInt(match[1], 10), 'nested', file.name);
-        });
-      }));
+          const folderEntries = await folderResponse.json();
+          folderEntries.forEach((file: any) => {
+            if (file.type !== 'file' || !file.name.endsWith('.png')) return;
+            const match = file.name.match(/(\d+)\.png$/i);
+            if (!match) return;
+            const canonicalTag = resolveCanonicalPositionFolderTag(rosterName, entry.name);
+            addStockNumber(stock, canonicalTag, parseInt(match[1], 10), 'nested', file.name);
+          });
+        }));
 
-      return stock;
-    }
+        return;
+      }
 
-    entries.forEach((entry: any) => {
-      if (entry.type !== 'file' || !entry.name.endsWith('.png')) return;
-      const decodedName = decodeURIComponent(entry.name);
-      const numberMatch = decodedName.match(/(\d+)\.png$/i);
-      if (!numberMatch) return;
+      entries.forEach((entry: any) => {
+        if (entry.type !== 'file' || !entry.name.endsWith('.png')) return;
+        const decodedName = decodeURIComponent(entry.name);
+        const numberMatch = decodedName.match(/(\d+)\.png$/i);
+        if (!numberMatch) return;
 
-      const label = decodedName.replace(/\s+\d+\.png$/i, '');
-      addStockNumber(stock, getPosTag(label), parseInt(numberMatch[1], 10), 'legacy', decodedName);
-    });
+        const label = decodedName.replace(/\s+\d+\.png$/i, '');
+        addStockNumber(stock, getPosTag(label), parseInt(numberMatch[1], 10), 'legacy', decodedName);
+      });
+    }));
 
     return stock;
   } catch {

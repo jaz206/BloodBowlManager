@@ -6,6 +6,7 @@ Blood Bowl Manager es una aplicacion React + Vite para gestionar equipos, compet
 - [CEREBRO_APP.md](CEREBRO_APP.md): mapa tecnico principal de la aplicacion, enlaces entre modulos, estilo CSS/UIX y flujo de datos.
 - [BIBLIOTECA_BLOOD_BOWL.md](BIBLIOTECA_BLOOD_BOWL.md): base de conocimiento para manuales, equipos, reglas y decisiones de dominio.
 - [FUNCIONALIDAD_SECCIONES.md](FUNCIONALIDAD_SECCIONES.md): objetivo y funcionamiento de cada seccion.
+- [PHOTO_FOLDER_MAP.md](PHOTO_FOLDER_MAP.md): mapa canónico de carpetas de fotos, alias legacy y rutas de plantilla.
 
 ## Que hace ahora
 - Gestion de equipos, estrellas, habilidades, incentivos, heraldo y competiciones desde el panel de admin.
