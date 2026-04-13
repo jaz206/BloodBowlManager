@@ -13,6 +13,7 @@ import { calculateTeamValue } from '../../utils/teamUtils';
 import { sanitizeMojibakeText } from '../../utils/textSanitizer';
 import {
     getPlayerImageUrl,
+    getRandomImageNumber,
     getTeamLogoUrl,
     fetchTeamImageStock,
     type PositionStock,
@@ -238,8 +239,9 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
     });
 
     const getPlayerVisibleImage = (player: ManagedPlayer) => {
-        if (!player.image || hiddenPlayerImages[player.id]) return '';
-        return player.image;
+        const resolvedImage = resolvedPlayerImageMap[player.id] || player.image || '';
+        if (!resolvedImage || hiddenPlayerImages[player.id]) return '';
+        return resolvedImage;
     };
 
     const hideBrokenPlayerImage = (playerId: number) => {
@@ -427,28 +429,124 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
         return false;
     };
 
+    const getAssetKeysForStock = (stockEntry: PositionStockEntry | null): string[] => {
+        if (!stockEntry) return [];
+        if (stockEntry.files.length > 0) return stockEntry.files;
+        return stockEntry.numbers.map((value) => String(value));
+    };
+
+    const getCurrentAssetKey = (player: ManagedPlayer, stockEntry: PositionStockEntry | null): string | null => {
+        if (!stockEntry || !player.image) return null;
+        const availableFiles = stockEntry.files || [];
+        if (!isValidNestedImage(player.image, player.position, availableFiles) && !isValidLegacyImage(player.image, player.position, availableFiles)) {
+            return null;
+        }
+
+        const { filename } = getExistingImageParts(player.image);
+        if (stockEntry.files.length > 0) return filename || null;
+
+        const match = filename.match(/(\d+)\.png$/i);
+        return match ? String(parseInt(match[1], 10)) : null;
+    };
+
+    const buildPlayerImageFromAssetKey = (position: string, stockEntry: PositionStockEntry | null, assetKey: string | null | undefined): string => {
+        if (!stockEntry || !assetKey) return '';
+
+        const fromFiles = stockEntry.files.length > 0;
+        const resolvedNumber = fromFiles
+            ? stockEntry.numbers[Math.max(0, stockEntry.files.indexOf(assetKey))]
+            : parseInt(assetKey, 10);
+
+        return getPlayerImageUrl(
+            team.rosterName,
+            position,
+            Number.isFinite(resolvedNumber) ? resolvedNumber : 1,
+            stockEntry.storage || 'nested',
+            fromFiles ? assetKey : undefined
+        );
+    };
+
+    const buildUniquePlayerImages = (players: ManagedPlayer[], stockSource: PositionStock | null) => {
+        const imageMap: Record<number, string> = {};
+
+        const playersByPosition = players.reduce<Record<string, ManagedPlayer[]>>((acc, player) => {
+            const key = getPosTag(player.position).toLowerCase();
+            if (!acc[key]) acc[key] = [];
+            acc[key].push(player);
+            return acc;
+        }, {});
+
+        Object.values(playersByPosition).forEach((group) => {
+            const position = group[0]?.position;
+            const stockEntry = position ? (stockSource?.[getPosTag(position).toLowerCase()] || null) : null;
+            if (!stockEntry) {
+                group.forEach((player) => {
+                    imageMap[player.id] = player.image || '';
+                });
+                return;
+            }
+
+            const assetKeys = getAssetKeysForStock(stockEntry);
+            const usedKeys = new Set<string>();
+            const sortedGroup = [...group].sort((a, b) => {
+                const jerseyA = Number(a.jerseyNumber ?? Number.MAX_SAFE_INTEGER);
+                const jerseyB = Number(b.jerseyNumber ?? Number.MAX_SAFE_INTEGER);
+                if (jerseyA !== jerseyB) return jerseyA - jerseyB;
+                return a.id - b.id;
+            });
+
+            const pendingPlayers: ManagedPlayer[] = [];
+
+            sortedGroup.forEach((player) => {
+                const currentKey = getCurrentAssetKey(player, stockEntry);
+                if (currentKey && !usedKeys.has(currentKey)) {
+                    usedKeys.add(currentKey);
+                    imageMap[player.id] = buildPlayerImageFromAssetKey(player.position, stockEntry, currentKey);
+                } else {
+                    pendingPlayers.push(player);
+                }
+            });
+
+            let fallbackIndex = 0;
+            pendingPlayers.forEach((player) => {
+                const unusedKey = assetKeys.find((key) => !usedKeys.has(key));
+                const chosenKey = unusedKey || assetKeys[fallbackIndex % Math.max(assetKeys.length, 1)] || getCurrentAssetKey(player, stockEntry);
+                if (chosenKey) {
+                    usedKeys.add(chosenKey);
+                    imageMap[player.id] = buildPlayerImageFromAssetKey(player.position, stockEntry, chosenKey);
+                } else {
+                    imageMap[player.id] = player.image || '';
+                }
+                fallbackIndex += 1;
+            });
+        });
+
+        return imageMap;
+    };
+
+    const resolvedPlayerImageMap = useMemo(() => buildUniquePlayerImages(team.players, imageStock), [team.players, imageStock, team.rosterName]);
+
     const handleHirePlayer = (player: Player) => {
         const limit = parseInt((player?.qty || '0-16').split('-')[1]);
         if (team.players.filter(p => p.position === player.position).length >= limit) return;
         if (team.players.length >= 16) return;
         if (team.treasury < player.cost && !team.isAutoCalculating) return;
 
-        // Use stock if available, else fallback to 15
         const stockEntry = getImageStockEntry(player.position);
-        const availableNumbers = stockEntry?.numbers || Array.from({ length: 15 }, (_, i) => i + 1);
-        const availableFiles = stockEntry?.files || [];
-        const imgNumber = availableNumbers[Math.floor(Math.random() * availableNumbers.length)];
-        const selectedFilename = availableFiles.length > 0
-            ? availableFiles[Math.floor(Math.random() * availableFiles.length)]
-            : undefined;
-        
-        const playerImageUrl = getPlayerImageUrl(
-            team.rosterName,
-            player.position,
-            imgNumber,
-            stockEntry?.storage || 'nested',
-            selectedFilename
+        const assetKeys = getAssetKeysForStock(stockEntry);
+        const samePositionPlayers = team.players.filter((p) => p.position === player.position);
+        const usedKeys = new Set(
+            samePositionPlayers
+                .map((p) => getCurrentAssetKey({ ...p, image: resolvedPlayerImageMap[p.id] || p.image } as ManagedPlayer, stockEntry))
+                .filter(Boolean) as string[]
         );
+        const chosenKey =
+            assetKeys.find((key) => !usedKeys.has(key)) ||
+            assetKeys[Math.floor(Math.random() * Math.max(assetKeys.length, 1))];
+        const playerImageUrl = chosenKey
+            ? buildPlayerImageFromAssetKey(player.position, stockEntry, chosenKey)
+            : getPlayerImageUrl(team.rosterName, player.position, getRandomImageNumber(team, player.position), stockEntry?.storage || 'nested');
+
         const nextJerseyNumber = Math.max(
             1,
             ...team.players.map((pl, idx) => Number(pl.jerseyNumber) || (idx + 1))
@@ -475,35 +573,11 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
 
     const handleAutoSyncImages = async () => {
         const stock = imageStock || await fetchTeamImageStock(team.rosterName);
-        const updatedPlayers = team.players.map(p => {
-            const posTag = getPosTag(p.position).toLowerCase();
-            const stockEntry = stock[posTag] || null;
-            const availableNumbers = stockEntry?.numbers || Array.from({ length: 15 }, (_, i) => i + 1);
-            const availableFiles = stockEntry?.files || [];
-
-            if (stockEntry && (
-                isValidNestedImage(p.image, p.position, availableFiles) ||
-                isValidLegacyImage(p.image, p.position, availableFiles)
-            )) {
-                return p;
-            }
-
-            const imgNum = availableNumbers[Math.floor(Math.random() * availableNumbers.length)];
-            const selectedFilename = availableFiles.length > 0
-                ? availableFiles[Math.floor(Math.random() * availableFiles.length)]
-                : undefined;
-
-            return {
-                ...p,
-                image: getPlayerImageUrl(
-                    team.rosterName,
-                    p.position,
-                    imgNum,
-                    stockEntry?.storage || 'nested',
-                    selectedFilename
-                )
-            };
-        });
+        const uniqueMap = buildUniquePlayerImages(team.players, stock);
+        const updatedPlayers = team.players.map((player) => ({
+            ...player,
+            image: uniqueMap[player.id] || player.image,
+        }));
 
         onUpdate({
             ...team,
