@@ -728,33 +728,6 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
         );
     };
 
-    if (openTeam) {
-        return (
-            <div className="animate-in fade-in duration-500">
-                <TeamDashboard
-                    team={openTeam}
-                    onUpdate={onTeamUpdate}
-                    onDeleteRequest={() => requestTeamDeletion(openTeam)}
-                    onBack={() => setOpenTeamId(null)}
-                    isGuest={isGuest}
-                    matchReports={matchReports}
-                />
-            </div>
-        );
-    }
-
-    if (isCreating) {
-        return (
-            <div className="p-6 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                <button onClick={() => setIsCreating(false)} className="flex items-center gap-2 text-gold font-black uppercase tracking-widest text-[10px] hover:underline group italic">
-                    <span className="material-symbols-outlined font-bold group-hover:-translate-x-1 transition-transform">arrow_back</span>
-                    Cancelar Fundación
-                </button>
-                <TeamCreator onTeamCreate={handleTeamCreate} initialRosterName={initialRosterForCreation} />
-            </div>
-        );
-    }
-
     const filterCounts = useMemo(() => ({
         levelUps: teams.filter((team) => (teamInsights[team.id || team.name]?.pendingLevelUps || 0) > 0).length,
         injuries: teams.filter((team) => (teamInsights[team.id || team.name]?.unavailableCount || 0) > 0).length,
@@ -794,6 +767,33 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                 return insightB.realTV - insightA.realTV;
             });
     }, [teams, teamInsights, searchTerm, statusFilters, sortMode]);
+
+    if (openTeam) {
+        return (
+            <div className="animate-in fade-in duration-500">
+                <TeamDashboard
+                    team={openTeam}
+                    onUpdate={onTeamUpdate}
+                    onDeleteRequest={() => requestTeamDeletion(openTeam)}
+                    onBack={() => setOpenTeamId(null)}
+                    isGuest={isGuest}
+                    matchReports={matchReports}
+                />
+            </div>
+        );
+    }
+
+    if (isCreating) {
+        return (
+            <div className="p-6 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <button onClick={() => setIsCreating(false)} className="flex items-center gap-2 text-gold font-black uppercase tracking-widest text-[10px] hover:underline group italic">
+                    <span className="material-symbols-outlined font-bold group-hover:-translate-x-1 transition-transform">arrow_back</span>
+                    Cancelar Fundación
+                </button>
+                <TeamCreator onTeamCreate={handleTeamCreate} initialRosterName={initialRosterForCreation} />
+            </div>
+        );
+    }
 
     return (
         <div className="blood-ui-shell min-h-screen text-gray-200 font-inter">
