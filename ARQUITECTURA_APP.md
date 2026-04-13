@@ -2,6 +2,8 @@
 
 Documento de referencia del estado actual de Blood Bowl Manager.
 
+> Para el mapa tecnico completo tipo "cerebro" de la aplicacion, consulta [CEREBRO_APP.md](CEREBRO_APP.md).
+
 ## Stack
 - React 19
 - Vite
