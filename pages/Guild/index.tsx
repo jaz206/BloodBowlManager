@@ -88,6 +88,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
     const [initialRosterForCreation, setInitialRosterForCreation] = useState<string | null>(requestedRoster ?? null);
     const [confirmation, setConfirmation] = useState<{ title: string; message: string; onConfirm: () => void; type?: 'danger' | 'info' } | null>(null);
     const [toastMessage, setToastMessage] = useState<string | null>(null);
+    const [teamViewMode, setTeamViewMode] = useState<'list' | 'grid'>('list');
 
     // Calculate records for all teams based on matchReports and team.history
     const teamRecords = useMemo(() => {
@@ -318,6 +319,244 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
         });
     };
 
+    const renderTeamCard = (team: ManagedTeam) => {
+        const isSelected = activeSummaryTeamId === team.id;
+        const isEditing = editingTeamId === team.id;
+        const tv = calculateTV(team);
+        const hasLevelUps = team.players.some(p => p.spp >= (SPP_LEVELS[p.advancements?.length || 0] || 999));
+        const hasInjuries = team.players.some(p => p.lastingInjuries?.some(i => i.includes('MNG')) || p.missNextGame);
+        const record = teamRecords[team.id || team.name] || { wins: 0, draws: 0, losses: 0 };
+        const rosterLabel = team.rosterName.split(' ').slice(0, 2).join(' ');
+
+        if (teamViewMode === 'grid') {
+            return (
+                <div
+                    key={team.id}
+                    onClick={() => setActiveSummaryTeamId(team.id!)}
+                    className={`group relative rounded-[2rem] border overflow-hidden transition-all duration-300 p-6 md:p-7 ${
+                        isSelected
+                            ? 'bg-[rgba(255,251,241,0.9)] border-gold/40 shadow-[0_20px_40px_rgba(89,59,21,0.08)]'
+                            : 'bg-[rgba(255,251,241,0.76)] border-[rgba(111,87,56,0.10)] hover:border-[rgba(111,87,56,0.18)] shadow-[0_16px_34px_rgba(89,59,21,0.06)]'
+                    }`}
+                >
+                    <div className={`absolute inset-y-0 left-0 w-1.5 ${isSelected ? 'bg-gold' : 'bg-[rgba(111,87,56,0.10)] group-hover:bg-gold/20'} transition-colors`} />
+                    <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_right,rgba(202,138,4,0.12),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.08),transparent_28%)]" />
+
+                    <div className="relative z-10 flex flex-col gap-5 min-w-0">
+                        <div className="flex items-start gap-5 min-w-0">
+                            <div className="w-32 h-32 md:w-40 md:h-40 bg-[rgba(36,26,17,0.86)] rounded-[1.75rem] border border-[rgba(111,87,56,0.12)] p-1.5 flex items-center justify-center shrink-0 overflow-hidden relative shadow-xl shadow-black/10 group-hover:border-gold/30 transition-all">
+                                <img
+                                    src={resolveGuildTeamCrestUrl(team)}
+                                    onError={(e) => {
+                                        const img = e.target as HTMLImageElement;
+                                        const rosterUrl = getTeamLogoUrl(team.rosterName);
+                                        if (img.src !== rosterUrl) {
+                                            img.src = rosterUrl;
+                                        } else {
+                                            const originalData = teamsData.find(t => t.name === team.rosterName);
+                                            if (originalData && img.src !== originalData.image) {
+                                                img.src = originalData.image;
+                                            }
+                                        }
+                                    }}
+                                    alt={team.name}
+                                    style={getGuildListCrestStyle(team)}
+                                    className="w-full h-full object-contain drop-shadow-[0_0_12px_rgba(255,255,255,0.06)] transform-gpu"
+                                />
+                            </div>
+
+                            <div className="min-w-0 flex-1">
+                                <div className="flex items-start gap-2 mb-2 min-w-0">
+                                    {isEditing ? (
+                                        <input
+                                            autoFocus
+                                            className="bg-black/60 border-b-2 border-gold text-white px-0 py-1 rounded-none text-2xl font-header italic outline-none w-full"
+                                            value={newName}
+                                            onChange={(e) => setNewName(e.target.value)}
+                                            onBlur={() => handleRenameSubmit(team)}
+                                            onKeyDown={(e) => e.key === 'Enter' && handleRenameSubmit(team)}
+                                            onClick={(e) => e.stopPropagation()}
+                                        />
+                                    ) : (
+                                        <>
+                                            <h3
+                                                onClick={(e) => { e.stopPropagation(); setOpenTeamId(team.id!); }}
+                                                className="font-header font-black text-[clamp(1.35rem,1.35vw,1.75rem)] text-[#2b1d12] italic tracking-tighter uppercase group-hover:text-gold transition-colors cursor-pointer whitespace-nowrap overflow-hidden text-ellipsis leading-[0.92] max-w-full"
+                                            >
+                                                {team.name}
+                                            </h3>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); setEditingTeamId(team.id!); setNewName(team.name); }}
+                                                className="opacity-0 group-hover:opacity-100 text-gold/55 hover:text-gold transition-all ml-1 mt-1 shrink-0"
+                                            >
+                                                <span className="material-symbols-outlined text-sm">edit</span>
+                                            </button>
+                                        </>
+                                    )}
+                                </div>
+
+                                <div className="flex items-center gap-2 mt-2 flex-wrap">
+                                    <span className="text-[10px] font-mono tracking-tighter text-[#7b6853] uppercase">#FR-{team.id?.slice(0, 4)}</span>
+                                    <span className="text-[9px] font-black px-2.5 py-1 rounded-full bg-[rgba(255,251,241,0.72)] border border-[rgba(111,87,56,0.10)] text-[#7b6853] uppercase tracking-widest">{rosterLabel}</span>
+                                    {hasLevelUps && <span className="bg-gold text-black text-[8px] font-black px-2 py-0.5 rounded-sm tracking-widest uppercase italic">PTE. MEJORA</span>}
+                                    {hasInjuries && <span className="bg-blood text-white text-[8px] font-black px-2 py-0.5 rounded-sm tracking-widest uppercase italic">LESIONADOS</span>}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div className="rounded-[1.4rem] bg-[rgba(255,251,241,0.72)] border border-[rgba(111,87,56,0.10)] px-4 py-4">
+                                <p className="text-[9px] font-black uppercase tracking-[0.26em] text-[#8d7863] italic mb-2">Raza</p>
+                                <p className="text-sm font-black text-[#2b1d12] uppercase tracking-[0.16em]">{team.rosterName}</p>
+                            </div>
+                            <div className="rounded-[1.4rem] bg-[rgba(255,251,241,0.72)] border border-[rgba(111,87,56,0.10)] px-4 py-4">
+                                <p className="text-[9px] font-black uppercase tracking-[0.26em] text-[#8d7863] italic mb-2">VAE</p>
+                                <p className="font-epilogue text-2xl font-black italic tracking-tight text-gold">{tv.toLocaleString()}</p>
+                                <p className="text-[8px] text-[#7b6853] block font-black tracking-widest mt-1">MO</p>
+                            </div>
+                            <div className="rounded-[1.4rem] bg-[rgba(255,251,241,0.72)] border border-[rgba(111,87,56,0.10)] px-4 py-4">
+                                <p className="text-[9px] font-black uppercase tracking-[0.26em] text-[#8d7863] italic mb-2">Récord</p>
+                                <div className="inline-flex items-center gap-2 bg-[rgba(255,251,241,0.72)] px-3 py-2 rounded-2xl border border-[rgba(111,87,56,0.10)]">
+                                    <span className="text-[11px] font-black text-[#2b1d12]">{record.wins}</span>
+                                    <span className="text-[#7b6853]">•</span>
+                                    <span className="text-[11px] font-black text-[#2b1d12]">{record.draws}</span>
+                                    <span className="text-[#7b6853]">•</span>
+                                    <span className="text-[11px] font-black text-[#2b1d12]">{record.losses}</span>
+                                </div>
+                            </div>
+                            <div className="rounded-[1.4rem] bg-[rgba(255,251,241,0.72)] border border-[rgba(111,87,56,0.10)] px-4 py-4">
+                                <p className="text-[9px] font-black uppercase tracking-[0.26em] text-[#8d7863] italic mb-2">Estado</p>
+                                <p className="text-sm font-black uppercase tracking-[0.16em] text-[#2b1d12]">{team.apothecary ? 'Con boticario' : 'Sin boticario'}</p>
+                                <p className="text-[8px] text-[#7b6853] font-black tracking-widest mt-1">{team.players.length}/16 JUGADORES</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-end gap-3 relative z-10 pt-1">
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setOpenTeamId(team.id!); }}
+                                className="px-6 py-3 rounded-xl bg-gold text-black font-header font-black text-[10px] uppercase tracking-widest shadow-xl shadow-gold/10 hover:shadow-gold/20 hover:scale-105 active:scale-95 transition-all"
+                            >
+                                Abrir dossier
+                            </button>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); requestTeamDeletion(team); }}
+                                className="w-12 h-12 rounded-xl border border-[rgba(111,87,56,0.12)] bg-[rgba(255,251,241,0.72)] text-[#7b6853] hover:bg-blood hover:text-white hover:border-blood transition-all flex items-center justify-center group/del"
+                            >
+                                <span className="material-symbols-outlined text-lg">delete</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        return (
+            <div
+                key={team.id}
+                onClick={() => setActiveSummaryTeamId(team.id!)}
+                className={`group relative grid grid-cols-1 md:grid-cols-[minmax(0,1.7fr)_minmax(90px,0.6fr)_minmax(130px,0.8fr)_minmax(180px,0.95fr)] items-center gap-6 px-10 py-8 border rounded-[2rem] overflow-hidden transition-all duration-300 ${
+                    isSelected
+                        ? 'bg-[rgba(255,251,241,0.88)] border-gold/40 shadow-[0_20px_40px_rgba(89,59,21,0.08)]'
+                        : 'bg-[rgba(255,251,241,0.74)] border-[rgba(111,87,56,0.10)] hover:border-[rgba(111,87,56,0.18)] shadow-[0_16px_34px_rgba(89,59,21,0.06)]'
+                }`}
+            >
+                <div className={`absolute inset-y-0 left-0 w-1.5 ${isSelected ? 'bg-gold' : 'bg-[rgba(111,87,56,0.10)] group-hover:bg-gold/20'} transition-colors`} />
+                <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_right,rgba(202,138,4,0.12),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.08),transparent_28%)]" />
+
+                <div className="flex items-start md:items-center gap-5 relative z-10 min-w-0">
+                    <div className="w-40 h-40 md:w-48 md:h-48 bg-[rgba(36,26,17,0.86)] rounded-[1.75rem] border border-[rgba(111,87,56,0.12)] p-1 flex items-center justify-center shrink-0 overflow-hidden relative shadow-xl shadow-black/10 group-hover:border-gold/30 transition-all">
+                        <img
+                            src={resolveGuildTeamCrestUrl(team)}
+                            onError={(e) => {
+                                const img = e.target as HTMLImageElement;
+                                const rosterUrl = getTeamLogoUrl(team.rosterName);
+                                if (img.src !== rosterUrl) {
+                                    img.src = rosterUrl;
+                                } else {
+                                    const originalData = teamsData.find(t => t.name === team.rosterName);
+                                    if (originalData && img.src !== originalData.image) {
+                                        img.src = originalData.image;
+                                    }
+                                }
+                            }}
+                            alt={team.name}
+                            style={getGuildListCrestStyle(team)}
+                            className="w-full h-full object-contain drop-shadow-[0_0_12px_rgba(255,255,255,0.06)] transform-gpu"
+                        />
+                    </div>
+                    <div className="min-w-0 flex-1 pr-2">
+                        <div className="flex items-start gap-2 mb-2">
+                            {isEditing ? (
+                                <input
+                                    autoFocus
+                                    className="bg-black/60 border-b-2 border-gold text-white px-0 py-1 rounded-none text-2xl font-header italic outline-none w-full"
+                                    value={newName}
+                                    onChange={(e) => setNewName(e.target.value)}
+                                    onBlur={() => handleRenameSubmit(team)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleRenameSubmit(team)}
+                                    onClick={(e) => e.stopPropagation()}
+                                />
+                            ) : (
+                                <>
+                                    <h3
+                                        onClick={(e) => { e.stopPropagation(); setOpenTeamId(team.id!); }}
+                                        className="font-header font-black text-[clamp(1.4rem,1.5vw,1.95rem)] text-[#2b1d12] italic tracking-tighter uppercase group-hover:text-gold transition-colors cursor-pointer whitespace-nowrap overflow-hidden text-ellipsis leading-[0.92] max-w-full"
+                                    >
+                                        {team.name}
+                                    </h3>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setEditingTeamId(team.id!); setNewName(team.name); }}
+                                        className="opacity-0 group-hover:opacity-100 text-gold/55 hover:text-gold transition-all ml-1 mt-1 shrink-0"
+                                    >
+                                        <span className="material-symbols-outlined text-sm">edit</span>
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                        <div className="flex items-center gap-2 mt-2 flex-wrap">
+                            <span className="text-[10px] font-mono tracking-tighter text-[#7b6853] uppercase">#FR-{team.id?.slice(0, 4)}</span>
+                            <span className="text-[9px] font-black px-2.5 py-1 rounded-full bg-[rgba(255,251,241,0.72)] border border-[rgba(111,87,56,0.10)] text-[#7b6853] uppercase tracking-widest">{rosterLabel}</span>
+                            {hasLevelUps && <span className="bg-gold text-black text-[8px] font-black px-2 py-0.5 rounded-sm tracking-widest uppercase italic">PTE. MEJORA</span>}
+                            {hasInjuries && <span className="bg-blood text-white text-[8px] font-black px-2 py-0.5 rounded-sm tracking-widest uppercase italic">LESIONADOS</span>}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="text-center relative z-10">
+                    <span className="text-[9px] text-[#7b6853] font-black uppercase tracking-[0.35em] block mb-1">VAE</span>
+                    <span className="font-header text-3xl font-black text-gold italic leading-none">{tv.toLocaleString()}</span>
+                    <span className="text-[8px] text-[#7b6853] block font-black tracking-widest mt-1">MO</span>
+                </div>
+
+                <div className="text-center relative z-10">
+                    <span className="text-[9px] text-[#7b6853] font-black uppercase tracking-[0.35em] block mb-1">Récord</span>
+                    <div className="inline-flex items-center gap-2 bg-[rgba(255,251,241,0.72)] px-4 py-2.5 rounded-2xl border border-[rgba(111,87,56,0.10)] group-hover:border-gold/20 transition-colors">
+                        <span className="text-[11px] font-black text-[#2b1d12]">{record.wins}</span>
+                        <span className="text-[#7b6853]">•</span>
+                        <span className="text-[11px] font-black text-[#2b1d12]">{record.draws}</span>
+                        <span className="text-[#7b6853]">•</span>
+                        <span className="text-[11px] font-black text-[#2b1d12]">{record.losses}</span>
+                    </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-3 relative z-10">
+                    <button
+                        onClick={(e) => { e.stopPropagation(); setOpenTeamId(team.id!); }}
+                        className="px-6 py-3 rounded-xl bg-gold text-black font-header font-black text-[10px] uppercase tracking-widest shadow-xl shadow-gold/10 hover:shadow-gold/20 hover:scale-105 active:scale-95 transition-all"
+                    >
+                        Abrir dossier
+                    </button>
+                    <button
+                        onClick={(e) => { e.stopPropagation(); requestTeamDeletion(team); }}
+                        className="w-12 h-12 rounded-xl border border-[rgba(111,87,56,0.12)] bg-[rgba(255,251,241,0.72)] text-[#7b6853] hover:bg-blood hover:text-white hover:border-blood transition-all flex items-center justify-center group/del"
+                    >
+                        <span className="material-symbols-outlined text-lg">delete</span>
+                    </button>
+                </div>
+            </div>
+        );
+    };
+
     if (openTeam) {
         return (
             <div className="animate-in fade-in duration-500">
@@ -436,147 +675,70 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
 
                 {/* Team List Table */}
                 <section className="space-y-4">
-                    <div className="hidden md:grid grid-cols-1 md:grid-cols-[minmax(0,1.6fr)_minmax(90px,0.6fr)_minmax(130px,0.8fr)_minmax(180px,0.95fr)] px-10 py-4 text-[9px] font-black text-[#7b6853] uppercase tracking-[0.3em]">
-                        <div className="text-left">Equipo / Nombre</div>
-                        <div className="text-center">VAE</div>
-                        <div className="text-center">Récord (V-E-D)</div>
-                        <div className="text-right">Acción</div>
+                    <div className="flex items-center justify-between gap-4 px-2">
+                        <div className="text-[9px] font-black text-[#7b6853] uppercase tracking-[0.3em]">
+                            Mostrando {filteredTeams.length} franquicias
+                        </div>
+                        <div className="inline-flex rounded-2xl border border-[rgba(111,87,56,0.12)] bg-[rgba(255,251,241,0.72)] p-1 shadow-[0_10px_24px_rgba(89,59,21,0.04)]">
+                            <button
+                                onClick={() => setTeamViewMode('list')}
+                                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
+                                    teamViewMode === 'list'
+                                        ? 'bg-gold text-black shadow-lg shadow-gold/10'
+                                        : 'text-[#7b6853] hover:text-[#2b1d12]'
+                                }`}
+                            >
+                                <span className="material-symbols-outlined text-sm">view_list</span>
+                                Lista
+                            </button>
+                            <button
+                                onClick={() => setTeamViewMode('grid')}
+                                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
+                                    teamViewMode === 'grid'
+                                        ? 'bg-gold text-black shadow-lg shadow-gold/10'
+                                        : 'text-[#7b6853] hover:text-[#2b1d12]'
+                                }`}
+                            >
+                                <span className="material-symbols-outlined text-sm">grid_view</span>
+                                Cuadrícula
+                            </button>
+                        </div>
                     </div>
 
-                    <div className="space-y-3">
-                        {filteredTeams.map(team => {
-                            const isSelected = activeSummaryTeamId === team.id;
-                            const isEditing = editingTeamId === team.id;
-                            const tv = calculateTV(team);
-                            const hasLevelUps = team.players.some(p => p.spp >= (SPP_LEVELS[p.advancements?.length || 0] || 999));
-                            const hasInjuries = team.players.some(p => p.lastingInjuries?.some(i => i.includes('MNG')) || p.missNextGame);
-                            const record = teamRecords[team.id || team.name] || { wins: 0, draws: 0, losses: 0 };
-                            const rosterLabel = team.rosterName.split(' ').slice(0, 2).join(' ');
-
-                            return (
-                                <div 
-                                    key={team.id}
-                                    onClick={() => setActiveSummaryTeamId(team.id!)}
-                                    className={`group relative grid grid-cols-1 md:grid-cols-[minmax(0,1.6fr)_minmax(90px,0.6fr)_minmax(130px,0.8fr)_minmax(180px,0.95fr)] items-center gap-6 px-10 py-8 border rounded-[2rem] overflow-hidden transition-all duration-300 ${
-                                        isSelected 
-                                        ? 'bg-[rgba(255,251,241,0.88)] border-gold/40 shadow-[0_20px_40px_rgba(89,59,21,0.08)]' 
-                                        : 'bg-[rgba(255,251,241,0.74)] border-[rgba(111,87,56,0.10)] hover:border-[rgba(111,87,56,0.18)] shadow-[0_16px_34px_rgba(89,59,21,0.06)]'
-                                    }`}
-                                >
-                                    <div className={`absolute inset-y-0 left-0 w-1.5 ${isSelected ? 'bg-gold' : 'bg-[rgba(111,87,56,0.10)] group-hover:bg-gold/20'} transition-colors`} />
-                                    <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_right,rgba(202,138,4,0.12),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.08),transparent_28%)]" />
-
-                                    {/* Team Name & Crest */}
-                                    <div className="flex items-start md:items-center gap-5 relative z-10 min-w-0">
-                                                <div className="w-40 h-40 md:w-48 md:h-48 bg-[rgba(36,26,17,0.86)] rounded-[1.75rem] border border-[rgba(111,87,56,0.12)] p-1 flex items-center justify-center shrink-0 overflow-hidden relative shadow-xl shadow-black/10 group-hover:border-gold/30 transition-all">
-                                            <img 
-                                                src={resolveGuildTeamCrestUrl(team)} 
-                                                onError={(e) => {
-                                                    const img = e.target as HTMLImageElement;
-                                                    const rosterUrl = getTeamLogoUrl(team.rosterName);
-                                                    if (img.src !== rosterUrl) {
-                                                        img.src = rosterUrl;
-                                                    } else {
-                                                        const originalData = teamsData.find(t => t.name === team.rosterName);
-                                                        if (originalData && img.src !== originalData.image) {
-                                                            img.src = originalData.image;
-                                                        }
-                                                    }
-                                                }}
-                                                alt={team.name} 
-                                                style={getGuildListCrestStyle(team)}
-                                                className="w-full h-full object-contain drop-shadow-[0_0_12px_rgba(255,255,255,0.06)] transform-gpu" 
-                                            />
-                                        </div>
-                                            <div className="min-w-0 flex-1 pr-2">
-                                                <div className="flex items-start gap-2 mb-2">
-                                                {isEditing ? (
-                                                    <input 
-                                                        autoFocus
-                                                        className="bg-black/60 border-b-2 border-gold text-white px-0 py-1 rounded-none text-2xl font-header italic outline-none w-full"
-                                                        value={newName}
-                                                        onChange={(e) => setNewName(e.target.value)}
-                                                        onBlur={() => handleRenameSubmit(team)}
-                                                        onKeyDown={(e) => e.key === 'Enter' && handleRenameSubmit(team)}
-                                                        onClick={(e) => e.stopPropagation()}
-                                                    />
-                                                ) : (
-                                                    <>
-                                                        <h3 
-                                                            onClick={(e) => { e.stopPropagation(); setOpenTeamId(team.id!); }}
-                                                            className="font-header font-black text-[clamp(1.4rem,1.5vw,1.95rem)] text-[#2b1d12] italic tracking-tighter uppercase group-hover:text-gold transition-colors cursor-pointer whitespace-nowrap overflow-visible leading-[0.92] max-w-full"
-                                                        >
-                                                            {team.name}
-                                                        </h3>
-                                                        <button 
-                                                            onClick={(e) => { e.stopPropagation(); setEditingTeamId(team.id!); setNewName(team.name); }}
-                                                            className="opacity-0 group-hover:opacity-100 text-gold/55 hover:text-gold transition-all ml-1 mt-1 shrink-0"
-                                                        >
-                                                            <span className="material-symbols-outlined text-sm">edit</span>
-                                                        </button>
-                                                    </>
-                                                )}
-                                            </div>
-                                            <div className="flex items-center gap-2 mt-2 flex-wrap">
-                                                <span className="text-[10px] font-mono tracking-tighter text-[#7b6853] uppercase">#FR-{team.id?.slice(0, 4)}</span>
-                                                <span className="text-[9px] font-black px-2.5 py-1 rounded-full bg-[rgba(255,251,241,0.72)] border border-[rgba(111,87,56,0.10)] text-[#7b6853] uppercase tracking-widest">{rosterLabel}</span>
-                                                {hasLevelUps && <span className="bg-gold text-black text-[8px] font-black px-2 py-0.5 rounded-sm tracking-widest uppercase italic">PTE. MEJORA</span>}
-                                                {hasInjuries && <span className="bg-blood text-white text-[8px] font-black px-2 py-0.5 rounded-sm tracking-widest uppercase italic">LESIONADOS</span>}
-                                            </div>
-                                            <div className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[rgba(255,251,241,0.72)] border border-[rgba(111,87,56,0.10)] text-[9px] font-black uppercase tracking-[0.28em] text-[#7b6853]">
-                                                <span>Raza</span>
-                                                <span className="text-[#2b1d12] tracking-[0.16em]">{team.rosterName}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-
-                                    {/* VAE */}
-                                    <div className="text-center relative z-10">
-                                        <span className="text-[9px] text-[#7b6853] font-black uppercase tracking-[0.35em] block mb-1">VAE</span>
-                                        <span className="font-header text-3xl font-black text-gold italic leading-none">{tv.toLocaleString()}</span>
-                                        <span className="text-[8px] text-[#7b6853] block font-black tracking-widest mt-1">MO</span>
-                                    </div>
-
-                                    {/* Record */}
-                                    <div className="text-center relative z-10">
-                                        <span className="text-[9px] text-[#7b6853] font-black uppercase tracking-[0.35em] block mb-1">Récord</span>
-                                        <div className="inline-flex items-center gap-2 bg-[rgba(255,251,241,0.72)] px-4 py-2.5 rounded-2xl border border-[rgba(111,87,56,0.10)] group-hover:border-gold/20 transition-colors">
-                                            <span className="text-[11px] font-black text-[#2b1d12]">{record.wins}</span>
-                                            <span className="text-[#7b6853]">•</span>
-                                            <span className="text-[11px] font-black text-[#2b1d12]">{record.draws}</span>
-                                            <span className="text-[#7b6853]">•</span>
-                                            <span className="text-[11px] font-black text-[#2b1d12]">{record.losses}</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Action */}
-                                    <div className="flex items-center justify-end gap-3 relative z-10">
-                                        <button 
-                                            onClick={(e) => { e.stopPropagation(); setOpenTeamId(team.id!); }}
-                                            className="px-6 py-3 rounded-xl bg-gold text-black font-header font-black text-[10px] uppercase tracking-widest shadow-xl shadow-gold/10 hover:shadow-gold/20 hover:scale-105 active:scale-95 transition-all"
-                                        >
-                                            Abrir dossier
-                                        </button>
-                                        <button 
-                                            onClick={(e) => { e.stopPropagation(); requestTeamDeletion(team); }}
-                                            className="w-12 h-12 rounded-xl border border-[rgba(111,87,56,0.12)] bg-[rgba(255,251,241,0.72)] text-[#7b6853] hover:bg-blood hover:text-white hover:border-blood transition-all flex items-center justify-center group/del"
-                                        >
-                                            <span className="material-symbols-outlined text-lg">delete</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                        
-                        {filteredTeams.length === 0 && (
-                            <div className="py-32 text-center bg-[rgba(255,251,241,0.5)] border border-dashed border-[rgba(111,87,56,0.12)] rounded-3xl">
-                                <span className="material-symbols-outlined text-6xl text-[#7b6853]/20 mb-6">stadia_controller</span>
-                                <h3 className="text-sm font-header font-black text-[#7b6853] uppercase italic tracking-widest mb-4">No se encontraron franquicias activas</h3>
-                                <button onClick={() => setIsCreating(true)} className="px-8 py-3 rounded-xl bg-gold text-black border border-gold/20 text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all">Fundar Primer Equipo</button>
+                    {teamViewMode === 'list' ? (
+                        <>
+                            <div className="hidden md:grid grid-cols-1 md:grid-cols-[minmax(0,1.7fr)_minmax(90px,0.6fr)_minmax(130px,0.8fr)_minmax(180px,0.95fr)] px-10 py-4 text-[9px] font-black text-[#7b6853] uppercase tracking-[0.3em]">
+                                <div className="text-left">Equipo / Nombre</div>
+                                <div className="text-center">VAE</div>
+                                <div className="text-center">Récord (V-E-D)</div>
+                                <div className="text-right">Acción</div>
                             </div>
-                        )}
-                    </div>
+
+                            <div className="space-y-3">
+                                {filteredTeams.map(renderTeamCard)}
+
+                                {filteredTeams.length === 0 && (
+                                    <div className="py-32 text-center bg-[rgba(255,251,241,0.5)] border border-dashed border-[rgba(111,87,56,0.12)] rounded-3xl">
+                                        <span className="material-symbols-outlined text-6xl text-[#7b6853]/20 mb-6">stadia_controller</span>
+                                        <h3 className="text-sm font-header font-black text-[#7b6853] uppercase italic tracking-widest mb-4">No se encontraron franquicias activas</h3>
+                                        <button onClick={() => setIsCreating(true)} className="px-8 py-3 rounded-xl bg-gold text-black border border-gold/20 text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all">Fundar Primer Equipo</button>
+                                    </div>
+                                )}
+                            </div>
+                        </>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                            {filteredTeams.map(renderTeamCard)}
+
+                            {filteredTeams.length === 0 && (
+                                <div className="md:col-span-2 xl:col-span-3 py-32 text-center bg-[rgba(255,251,241,0.5)] border border-dashed border-[rgba(111,87,56,0.12)] rounded-3xl">
+                                    <span className="material-symbols-outlined text-6xl text-[#7b6853]/20 mb-6">stadia_controller</span>
+                                    <h3 className="text-sm font-header font-black text-[#7b6853] uppercase italic tracking-widest mb-4">No se encontraron franquicias activas</h3>
+                                    <button onClick={() => setIsCreating(true)} className="px-8 py-3 rounded-xl bg-gold text-black border border-gold/20 text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all">Fundar Primer Equipo</button>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </section>
             </main>
 
