@@ -1,4 +1,4 @@
-ï»¿
+
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import type { ManagedTeam } from '../../types';
 import TeamCreator from './CreateTeamPage';
@@ -174,7 +174,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
         try {
             await onTeamCreate(teamData);
             setIsCreating(false);
-            showToast('Â¡Franquicia fundada con Ã©xito!');
+            showToast('¡Franquicia fundada con éxito!');
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Error al fundar la franquicia.';
             showToast(message);
@@ -208,7 +208,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                 const importedTeams = JSON.parse(text);
 
                 if (!Array.isArray(importedTeams) || (importedTeams.length > 0 && (!importedTeams[0].name || !importedTeams[0].rosterName))) {
-                    throw new Error("El archivo no parece contener una lista de equipos vÃ¡lida.");
+                    throw new Error("El archivo no parece contener una lista de equipos válida.");
                 }
 
                 const existingTeamNames = new Set(teams.map(t => t.name.toLowerCase()));
@@ -226,9 +226,9 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                 }
 
                 let importResult = '';
-                if (newTeamsCount > 0) importResult += `${newTeamsCount} equipos importados con Ã©xito.`;
+                if (newTeamsCount > 0) importResult += `${newTeamsCount} equipos importados con éxito.`;
                 if (skippedTeams.length > 0) importResult += `${skippedTeams.length} duplicados omitidos.`;
-                if (!importResult) importResult = 'No se importaron nuevos equipos. Archivo vacÃ­o o duplicados.';
+                if (!importResult) importResult = 'No se importaron nuevos equipos. Archivo vacío o duplicados.';
                 showToast(importResult.trim());
 
 
@@ -298,8 +298,8 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
 
         if (activeComp) {
             setConfirmation({
-                title: 'Equipo en CompeticiÃ³n',
-                message: `No puedes disolver a los "${team.name}" porque estÃ¡n disputando la competiciÃ³n "${activeComp.name}". Retira al equipo de la competiciÃ³n o finalÃ­zala antes de borrarlo.`,
+                title: 'Equipo en Competición',
+                message: `No puedes disolver a los "${team.name}" porque están disputando la competición "${activeComp.name}". Retira al equipo de la competición o finalízala antes de borrarlo.`,
                 type: 'info',
                 onConfirm: () => setConfirmation(null)
             });
@@ -307,8 +307,8 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
         }
 
         setConfirmation({
-            title: 'Â¿Abandonar Franquicia?',
-            message: `Vas a retirar permanentemente a los "${team.name}" del Gremio. Todo su progreso se perderÃ¡.`,
+            title: '¿Abandonar Franquicia?',
+            message: `Vas a retirar permanentemente a los "${team.name}" del Gremio. Todo su progreso se perderá.`,
             type: 'danger',
             onConfirm: () => {
                 if (openTeamId === team.id) {
@@ -343,8 +343,8 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                     <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_right,rgba(202,138,4,0.12),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.08),transparent_28%)]" />
 
                     <div className="relative z-10 flex flex-col gap-5 min-w-0">
-                        <div className="flex items-start gap-4 min-w-0">
-                            <div className="w-28 h-28 md:w-32 md:h-32 bg-[rgba(36,26,17,0.86)] rounded-[1.75rem] border border-[rgba(111,87,56,0.12)] p-1.5 flex items-center justify-center shrink-0 overflow-hidden relative shadow-xl shadow-black/10 group-hover:border-gold/30 transition-all">
+                        <div className="flex items-start gap-5 min-w-0">
+                            <div className="w-32 h-32 md:w-40 md:h-40 bg-[rgba(36,26,17,0.86)] rounded-[1.75rem] border border-[rgba(111,87,56,0.12)] p-2 flex items-center justify-center shrink-0 overflow-hidden relative shadow-xl shadow-black/10 group-hover:border-gold/30 transition-all">
                                 <img
                                     src={resolveGuildTeamCrestUrl(team)}
                                     onError={(e) => {
@@ -381,7 +381,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                         <>
                                             <h3
                                                 onClick={(e) => { e.stopPropagation(); setOpenTeamId(team.id!); }}
-                                                className="font-header font-black text-[clamp(1.05rem,1.15vw,1.45rem)] text-[#2b1d12] italic tracking-tighter uppercase group-hover:text-gold transition-colors cursor-pointer whitespace-normal break-words leading-[0.95] max-w-full"
+                                                className="font-header font-black text-[clamp(1rem,1.05vw,1.45rem)] text-[#2b1d12] italic tracking-tighter uppercase group-hover:text-gold transition-colors cursor-pointer whitespace-nowrap leading-[0.95] max-w-full"
                                             >
                                                 {team.name}
                                             </h3>
@@ -395,39 +395,38 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                     )}
                                 </div>
 
-                                <div className="flex items-center gap-2 mt-2 flex-wrap">
-                                    <span className="text-[10px] font-mono tracking-tighter text-[#7b6853] uppercase">#FR-{team.id?.slice(0, 4)}</span>
-                                    <span className="text-[9px] font-black px-2.5 py-1 rounded-full bg-[rgba(255,251,241,0.72)] border border-[rgba(111,87,56,0.10)] text-[#7b6853] uppercase tracking-widest">{rosterLabel}</span>
-                                    {hasLevelUps && <span className="bg-gold text-black text-[8px] font-black px-2 py-0.5 rounded-sm tracking-widest uppercase italic">PTE. MEJORA</span>}
-                                    {hasInjuries && <span className="bg-blood text-white text-[8px] font-black px-2 py-0.5 rounded-sm tracking-widest uppercase italic">LESIONADOS</span>}
-                                </div>
-                            </div>
+                        <div className="flex items-center gap-2 mt-2 flex-wrap">
+                            <span className="text-[10px] font-mono tracking-tighter text-[#7b6853] uppercase">#FR-{team.id?.slice(0, 4)}</span>
+                            <span className="text-[9px] font-black px-2.5 py-1 rounded-full bg-[rgba(255,251,241,0.72)] border border-[rgba(111,87,56,0.10)] text-[#7b6853] uppercase tracking-widest">{rosterLabel}</span>
+                            <span className={`text-[8px] font-black px-2.5 py-1 rounded-full border uppercase tracking-widest ${team.apothecary ? 'bg-[rgba(22,163,74,0.12)] border-[rgba(22,163,74,0.18)] text-[#16a34a]' : 'bg-[rgba(255,251,241,0.72)] border-[rgba(111,87,56,0.10)] text-[#7b6853]'}`}>
+                                {team.apothecary ? 'Boticario' : 'Sin boticario'}
+                            </span>
+                            {hasLevelUps && <span className="bg-gold text-black text-[8px] font-black px-2 py-0.5 rounded-sm tracking-widest uppercase italic">PTE. MEJORA</span>}
+                            {hasInjuries && <span className="bg-blood text-white text-[8px] font-black px-2 py-0.5 rounded-sm tracking-widest uppercase italic">LESIONADOS</span>}
                         </div>
+                    </div>
+                </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            <div className="rounded-[1.4rem] bg-[rgba(255,251,241,0.72)] border border-[rgba(111,87,56,0.10)] px-4 py-4 min-w-0">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div className="rounded-[1.4rem] bg-[rgba(255,251,241,0.72)] border border-[rgba(111,87,56,0.10)] px-4 py-4 min-w-0 min-h-[116px] flex flex-col justify-between">
                                 <p className="text-[9px] font-black uppercase tracking-[0.26em] text-[#8d7863] italic mb-2">VAE</p>
-                                <p className="font-epilogue text-2xl font-black italic tracking-tight text-gold">{tv.toLocaleString()}</p>
+                                <p className="font-epilogue text-2xl lg:text-[1.9rem] font-black italic tracking-tight text-gold leading-none">{tv.toLocaleString()}</p>
                                 <p className="text-[8px] text-[#7b6853] block font-black tracking-widest mt-1">MO</p>
                             </div>
-                            <div className="rounded-[1.4rem] bg-[rgba(255,251,241,0.72)] border border-[rgba(111,87,56,0.10)] px-4 py-4 min-w-0">
-                                <p className="text-[9px] font-black uppercase tracking-[0.26em] text-[#8d7863] italic mb-2">RÃ©cord</p>
-                                <div className="inline-flex items-center gap-2 bg-[rgba(255,251,241,0.72)] px-3 py-2 rounded-2xl border border-[rgba(111,87,56,0.10)]">
+                            <div className="rounded-[1.4rem] bg-[rgba(255,251,241,0.72)] border border-[rgba(111,87,56,0.10)] px-4 py-4 min-w-0 min-h-[116px] flex flex-col justify-between">
+                                <p className="text-[9px] font-black uppercase tracking-[0.26em] text-[#8d7863] italic mb-2">Récord</p>
+                                <div className="inline-flex items-center gap-2 bg-[rgba(255,251,241,0.72)] px-3 py-2 rounded-2xl border border-[rgba(111,87,56,0.10)] w-fit">
                                     <span className="text-[11px] font-black text-[#2b1d12]">{record.wins}</span>
-                                    <span className="text-[#7b6853]">â€¢</span>
+                                    <span className="text-[#7b6853]">•</span>
                                     <span className="text-[11px] font-black text-[#2b1d12]">{record.draws}</span>
-                                    <span className="text-[#7b6853]">â€¢</span>
+                                    <span className="text-[#7b6853]">•</span>
                                     <span className="text-[11px] font-black text-[#2b1d12]">{record.losses}</span>
                                 </div>
                             </div>
-                            <div className="rounded-[1.4rem] bg-[rgba(255,251,241,0.72)] border border-[rgba(111,87,56,0.10)] px-4 py-4 min-w-0">
+                            <div className="rounded-[1.4rem] bg-[rgba(255,251,241,0.72)] border border-[rgba(111,87,56,0.10)] px-4 py-4 min-w-0 min-h-[116px] flex flex-col justify-between">
                                 <p className="text-[9px] font-black uppercase tracking-[0.26em] text-[#8d7863] italic mb-2">Plantilla</p>
-                                <p className="text-sm font-black uppercase tracking-[0.16em] text-[#2b1d12]">{team.players.length}/16 Jugadores</p>
-                                <div className="mt-2 inline-flex items-center gap-2 px-2.5 py-1.5 rounded-full bg-[rgba(255,251,241,0.84)] border border-[rgba(111,87,56,0.10)]">
-                                    <span className={`text-[8px] font-black uppercase tracking-widest ${team.apothecary ? 'text-[#16a34a]' : 'text-[#7b6853]'}`}>
-                                        {team.apothecary ? 'Boticario' : 'Sin boticario'}
-                                    </span>
-                                </div>
+                                <p className="text-lg lg:text-xl font-black uppercase tracking-[0.16em] text-[#2b1d12] leading-none">{team.players.length}/16</p>
+                                <p className="text-[8px] text-[#7b6853] font-black tracking-widest uppercase mt-1">Jugadores</p>
                             </div>
                         </div>
 
@@ -529,12 +528,12 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                 </div>
 
                 <div className="text-center relative z-10">
-                    <span className="text-[9px] text-[#7b6853] font-black uppercase tracking-[0.35em] block mb-1">RÃ©cord</span>
+                    <span className="text-[9px] text-[#7b6853] font-black uppercase tracking-[0.35em] block mb-1">Récord</span>
                     <div className="inline-flex items-center gap-2 bg-[rgba(255,251,241,0.72)] px-4 py-2.5 rounded-2xl border border-[rgba(111,87,56,0.10)] group-hover:border-gold/20 transition-colors">
                         <span className="text-[11px] font-black text-[#2b1d12]">{record.wins}</span>
-                        <span className="text-[#7b6853]">â€¢</span>
+                        <span className="text-[#7b6853]">•</span>
                         <span className="text-[11px] font-black text-[#2b1d12]">{record.draws}</span>
-                        <span className="text-[#7b6853]">â€¢</span>
+                        <span className="text-[#7b6853]">•</span>
                         <span className="text-[11px] font-black text-[#2b1d12]">{record.losses}</span>
                     </div>
                 </div>
@@ -577,7 +576,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
             <div className="p-6 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
                 <button onClick={() => setIsCreating(false)} className="flex items-center gap-2 text-gold font-black uppercase tracking-widest text-[10px] hover:underline group italic">
                     <span className="material-symbols-outlined font-bold group-hover:-translate-x-1 transition-transform">arrow_back</span>
-                    Cancelar FundaciÃ³n
+                    Cancelar Fundación
                 </button>
                 <TeamCreator onTeamCreate={handleTeamCreate} initialRosterName={initialRosterForCreation} />
             </div>
@@ -663,10 +662,10 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                 <p className="text-6xl font-header font-black text-gold">{activeSummaryTeamData?.wins || 0}</p>
                             </div>
                             <div className="guild-summary-card rounded-2xl px-10 py-8 group transition-all">
-                                <p className="text-[10px] text-[#7b6853] font-black tracking-[0.3em] uppercase mb-4">PalmarÃ©s</p>
+                                <p className="text-[10px] text-[#7b6853] font-black tracking-[0.3em] uppercase mb-4">Palmarés</p>
                                 <p className="text-6xl font-header font-black text-[#2b1d12] group-hover:text-gold transition-colors">
                                     {activeSummaryTeam ? (activeSummaryTeam as any).titles || 0 : 0} 
-                                    <span className="text-xs font-black text-[#7b6853] uppercase ml-4 tracking-widest italic">TÃ­tulo</span>
+                                    <span className="text-xs font-black text-[#7b6853] uppercase ml-4 tracking-widest italic">Título</span>
                                 </p>
                             </div>
                         </section>
@@ -700,7 +699,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                 }`}
                             >
                                 <span className="material-symbols-outlined text-sm">grid_view</span>
-                                CuadrÃ­cula
+                                Cuadrícula
                             </button>
                         </div>
                     </div>
@@ -710,8 +709,8 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                             <div className="hidden md:grid grid-cols-1 md:grid-cols-[minmax(0,1.7fr)_minmax(90px,0.6fr)_minmax(130px,0.8fr)_minmax(180px,0.95fr)] px-10 py-4 text-[9px] font-black text-[#7b6853] uppercase tracking-[0.3em]">
                                 <div className="text-left">Equipo / Nombre</div>
                                 <div className="text-center">VAE</div>
-                                <div className="text-center">RÃ©cord (V-E-D)</div>
-                                <div className="text-right">AcciÃ³n</div>
+                                <div className="text-center">Récord (V-E-D)</div>
+                                <div className="text-right">Acción</div>
                             </div>
 
                             <div className="space-y-3">
@@ -727,11 +726,11 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                             </div>
                         </>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-5">
                             {filteredTeams.map(renderTeamCard)}
 
                             {filteredTeams.length === 0 && (
-                                <div className="md:col-span-2 xl:col-span-3 py-32 text-center bg-[rgba(255,251,241,0.5)] border border-dashed border-[rgba(111,87,56,0.12)] rounded-3xl">
+                                <div className="md:col-span-2 xl:col-span-2 py-32 text-center bg-[rgba(255,251,241,0.5)] border border-dashed border-[rgba(111,87,56,0.12)] rounded-3xl">
                                     <span className="material-symbols-outlined text-6xl text-[#7b6853]/20 mb-6">stadia_controller</span>
                                     <h3 className="text-sm font-header font-black text-[#7b6853] uppercase italic tracking-widest mb-4">No se encontraron franquicias activas</h3>
                                     <button onClick={() => setIsCreating(true)} className="px-8 py-3 rounded-xl bg-gold text-black border border-gold/20 text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all">Fundar Primer Equipo</button>
@@ -743,7 +742,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
             </main>
 
             <footer className="max-w-7xl mx-auto px-6 py-20 border-t border-white/5 text-center mt-20">
-                <p className="text-gray-600 text-[10px] uppercase tracking-[0.6em] font-black">Â© 2499 BLOOD BOWL MANAGEMENT SYSTEM â€” EL GREMIO DE REIKLAND</p>
+                <p className="text-gray-600 text-[10px] uppercase tracking-[0.6em] font-black">© 2499 BLOOD BOWL MANAGEMENT SYSTEM — EL GREMIO DE REIKLAND</p>
                 <div className="mt-6 flex justify-center gap-6">
                     <button onClick={handleImportClick} className="text-[9px] font-black text-gray-500 hover:text-gold uppercase tracking-widest transition-all">Importar JSON</button>
                     <button onClick={() => setIsExportModalOpen(true)} className="text-[9px] font-black text-gray-500 hover:text-gold uppercase tracking-widest transition-all">Exportar Datos</button>
@@ -795,6 +794,8 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
 };
 
 export default TeamManager;
+
+
 
 
 
