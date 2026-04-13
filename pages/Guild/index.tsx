@@ -453,7 +453,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
             <div
                 key={team.id}
                 onClick={() => setActiveSummaryTeamId(team.id!)}
-                className={`group relative grid grid-cols-1 md:grid-cols-[minmax(0,1.7fr)_minmax(90px,0.6fr)_minmax(130px,0.8fr)_minmax(180px,0.95fr)] items-center gap-6 px-10 py-8 border rounded-[2rem] overflow-hidden transition-all duration-300 ${
+                className={`group relative grid grid-cols-1 md:grid-cols-[minmax(0,2.15fr)_minmax(90px,0.5fr)_minmax(130px,0.68fr)_minmax(180px,0.8fr)] items-center gap-6 px-10 py-8 border rounded-[2rem] overflow-hidden transition-all duration-300 ${
                     isSelected
                         ? 'bg-[rgba(255,251,241,0.88)] border-gold/40 shadow-[0_20px_40px_rgba(89,59,21,0.08)]'
                         : 'bg-[rgba(255,251,241,0.74)] border-[rgba(111,87,56,0.10)] hover:border-[rgba(111,87,56,0.18)] shadow-[0_16px_34px_rgba(89,59,21,0.06)]'
@@ -499,7 +499,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                 <>
                                     <h3
                                         onClick={(e) => { e.stopPropagation(); setOpenTeamId(team.id!); }}
-                                        className="font-header font-black text-[clamp(1.4rem,1.5vw,1.95rem)] text-[#2b1d12] italic tracking-tighter uppercase group-hover:text-gold transition-colors cursor-pointer whitespace-nowrap overflow-hidden text-ellipsis leading-[0.92] max-w-full"
+                                        className="font-header font-black text-[clamp(1.25rem,1.35vw,1.8rem)] text-[#2b1d12] italic tracking-tighter uppercase group-hover:text-gold transition-colors cursor-pointer whitespace-nowrap leading-[0.92] max-w-full"
                                     >
                                         {team.name}
                                     </h3>
@@ -514,7 +514,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                         </div>
                         <div className="flex items-center gap-2 mt-2 flex-wrap">
                             <span className="text-[10px] font-mono tracking-tighter text-[#7b6853] uppercase">#FR-{team.id?.slice(0, 4)}</span>
-                            <span className="text-[9px] font-black px-2.5 py-1 rounded-full bg-[rgba(255,251,241,0.72)] border border-[rgba(111,87,56,0.10)] text-[#7b6853] uppercase tracking-widest">{rosterLabel}</span>
+                            <span className="text-[9px] font-black px-2.5 py-1 rounded-full bg-[rgba(255,251,241,0.72)] border border-[rgba(111,87,56,0.10)] text-[#7b6853] uppercase tracking-widest">Raza {rosterLabel}</span>
                             {hasLevelUps && <span className="bg-gold text-black text-[8px] font-black px-2 py-0.5 rounded-sm tracking-widest uppercase italic">PTE. MEJORA</span>}
                             {hasInjuries && <span className="bg-blood text-white text-[8px] font-black px-2 py-0.5 rounded-sm tracking-widest uppercase italic">LESIONADOS</span>}
                         </div>
@@ -706,7 +706,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
 
                     {teamViewMode === 'list' ? (
                         <>
-                            <div className="hidden md:grid grid-cols-1 md:grid-cols-[minmax(0,1.7fr)_minmax(90px,0.6fr)_minmax(130px,0.8fr)_minmax(180px,0.95fr)] px-10 py-4 text-[9px] font-black text-[#7b6853] uppercase tracking-[0.3em]">
+                            <div className="hidden md:grid grid-cols-1 md:grid-cols-[minmax(0,2.15fr)_minmax(90px,0.5fr)_minmax(130px,0.68fr)_minmax(180px,0.8fr)] px-10 py-4 text-[9px] font-black text-[#7b6853] uppercase tracking-[0.3em]">
                                 <div className="text-left">Equipo / Nombre</div>
                                 <div className="text-center">VAE</div>
                                 <div className="text-center">Récord (V-E-D)</div>
