@@ -573,3 +573,6 @@ Cuando añadamos:
 
 debería actualizarse este mapa para que siga representando la app real y no una foto antigua del proyecto.
 
+### Complemento recomendado
+
+- [BIBLIOTECA_BLOOD_BOWL.md](BIBLIOTECA_BLOOD_BOWL.md): base de conocimiento de manuales, equipos, reglas y decisiones de dominio.
