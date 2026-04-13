@@ -215,11 +215,45 @@ const normalizeTeamAssetKey = (value: string): string =>
     .replace(/\s+/g, ' ')
     .trim();
 
+const POSITION_FOLDER_MAP: Record<string, Record<string, string>> = {
+  "enanos": {
+    "dwarf blocker": "enanos-bloqueador-linea",
+    "runner": "corredor",
+    "blitzer": "placador",
+    "troll slayer": "troll-slayer",
+    "deathroller": "deathroller",
+  },
+  "orcos": {
+    "orc lineman": "orcos-linea",
+    "thrower": "lanzador",
+    "blitzer": "blitzer-orco",
+    "big un": "fortachon-bloqueador",
+    "troll": "untrained-troll",
+    "goblin": "goblins",
+  },
+};
+
+const normalizePositionAssetKey = (value: string): string =>
+  fixMojibake(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
 export const getTeamPrefix = (rosterName: string): string => {
   let prefix = ROSTER_PREFIX_MAP[rosterName] || fixMojibake(rosterName);
   if (prefix === "Orcos Negros") prefix = "Orcos negros";
   if (prefix === "Humanos") prefix = "Humano";
   return prefix;
+};
+
+export const getRosterPositionTag = (rosterName: string, position: string): string => {
+  const rosterKey = normalizePositionAssetKey(getTeamPrefix(rosterName));
+  const positionKey = normalizePositionAssetKey(position);
+  const mapped = POSITION_FOLDER_MAP[rosterKey]?.[positionKey];
+  return slugify(mapped || position || 'jugador');
 };
 
 export interface PositionStockEntry {
@@ -288,7 +322,7 @@ export const fetchTeamImageStock = async (rosterName: string): Promise<PositionS
           if (file.type !== 'file' || !file.name.endsWith('.png')) return;
           const match = file.name.match(/(\d+)\.png$/i);
           if (!match) return;
-          addStockNumber(stock, entry.name.toLowerCase(), parseInt(match[1], 10), 'nested', file.name);
+          addStockNumber(stock, slugify(entry.name), parseInt(match[1], 10), 'nested', file.name);
         });
       }));
 
@@ -356,7 +390,7 @@ export const getPlayerImageUrl = (
   }
 
   const teamPrefix = getTeamPrefix(rosterName);
-  const positionFolder = getPosTag(position);
+  const positionFolder = getRosterPositionTag(rosterName, position);
   const resolvedFilename = filename || `${number < 10 ? `0${number}` : `${number}`}.png`;
 
   return `${BASE_URL}${encodeURIComponent(teamPrefix)}/${encodeURIComponent(positionFolder)}/${encodeURIComponent(resolvedFilename)}`;

@@ -18,7 +18,7 @@ import {
     fetchTeamImageStock,
     type PositionStock,
     type PositionStockEntry,
-    getPosTag
+    getRosterPositionTag
 } from '../../utils/imageUtils';
 import { mergeTeamWithFallback } from '../../utils/teamData';
 
@@ -399,7 +399,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
     };
 
     const getImageStockEntry = (position: string): PositionStockEntry | null => {
-        const posTag = getPosTag(position).toLowerCase();
+        const posTag = getRosterPositionTag(team.rosterName, position).toLowerCase();
         return imageStock?.[posTag] || null;
     };
 
@@ -416,7 +416,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
     const isValidNestedImage = (url: string | undefined, position: string, filenames: string[]): boolean => {
         if (!url) return false;
         const { folder, filename } = getExistingImageParts(url);
-        if (folder !== getPosTag(position).toLowerCase()) return false;
+        if (folder !== getRosterPositionTag(team.rosterName, position).toLowerCase()) return false;
         return filenames.includes(filename);
     };
 
@@ -470,7 +470,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
         const imageMap: Record<number, string> = {};
 
         const playersByPosition = players.reduce<Record<string, ManagedPlayer[]>>((acc, player) => {
-            const key = getPosTag(player.position).toLowerCase();
+            const key = getRosterPositionTag(team.rosterName, player.position).toLowerCase();
             if (!acc[key]) acc[key] = [];
             acc[key].push(player);
             return acc;
@@ -478,7 +478,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
 
         Object.values(playersByPosition).forEach((group) => {
             const position = group[0]?.position;
-            const stockEntry = position ? (stockSource?.[getPosTag(position).toLowerCase()] || null) : null;
+            const stockEntry = position ? (stockSource?.[getRosterPositionTag(team.rosterName, position).toLowerCase()] || null) : null;
             if (!stockEntry) {
                 group.forEach((player) => {
                     imageMap[player.id] = player.image || '';
