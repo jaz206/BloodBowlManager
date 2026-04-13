@@ -136,7 +136,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
     const [activeTab, setActiveTab] = useState<'roster' | 'recruit' | 'staff' | 'history'>('roster');
     const [zoomedImage, setZoomedImage] = useState<string | null>(null);
     const [imageStock, setImageStock] = useState<PositionStock | null>(null);
-    const [hiddenPlayerImages, setHiddenPlayerImages] = useState<Record<number, boolean>>({});
+    const [failedPlayerImages, setFailedPlayerImages] = useState<Record<number, string[]>>({});
 
     useEffect(() => {
         const loadStock = async () => {
@@ -145,6 +145,10 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
         };
         loadStock();
     }, [team.rosterName]);
+
+    useEffect(() => {
+        setFailedPlayerImages({});
+    }, [team.rosterName, team.players, imageStock]);
     const baseRoster = useMemo(() => {
         const master = masterTeams.find(t => t.name === team.rosterName);
         const staticRoster = teamsData.find(t => t.name === team.rosterName);
@@ -240,12 +244,31 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
 
     const getPlayerVisibleImage = (player: ManagedPlayer) => {
         const resolvedImage = resolvedPlayerImageMap[player.id] || player.image || '';
-        if (!resolvedImage || hiddenPlayerImages[player.id]) return '';
-        return resolvedImage;
+        const failedUrls = failedPlayerImages[player.id] || [];
+
+        if (!resolvedImage) return '';
+        if (!failedUrls.includes(resolvedImage)) return resolvedImage;
+
+        const stockEntry = getImageStockEntry(player.position);
+        if (!stockEntry) return '';
+
+        const assetKeys = getAssetKeysForStock(stockEntry);
+        for (const assetKey of assetKeys) {
+            const candidate = buildPlayerImageFromAssetKey(player.position, stockEntry, assetKey);
+            if (candidate && !failedUrls.includes(candidate)) {
+                return candidate;
+            }
+        }
+
+        return '';
     };
 
-    const hideBrokenPlayerImage = (playerId: number) => {
-        setHiddenPlayerImages((current) => ({ ...current, [playerId]: true }));
+    const hideBrokenPlayerImage = (playerId: number, imageUrl: string) => {
+        setFailedPlayerImages((current) => {
+            const existing = current[playerId] || [];
+            if (existing.includes(imageUrl)) return current;
+            return { ...current, [playerId]: [...existing, imageUrl] };
+        });
     };
 
     const resolveTeamCrestUrl = (managedTeam: ManagedTeam): string => {
@@ -803,12 +826,12 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                                         className="w-24 aspect-[4/3] rounded-lg overflow-hidden border-2 border-slate-800 bg-[#efe0bf] cursor-zoom-in hover:scale-105 hover:border-gold/50 transition-all group/img relative shrink-0"
                                                     >
                                                         {/* Blurred layer */}
-                                                        <img src={playerImage} onError={() => hideBrokenPlayerImage(p.id)} className="absolute inset-0 w-full h-full object-cover blur-lg opacity-30 scale-125" alt="" />
+                                                        <img src={playerImage} onError={() => hideBrokenPlayerImage(p.id, playerImage)} className="absolute inset-0 w-full h-full object-cover blur-lg opacity-30 scale-125" alt="" />
                                                         {/* Main Image layer */}
                                                         <img
                                                             src={playerImage}
                                                             alt={p.customName}
-                                                            onError={() => hideBrokenPlayerImage(p.id)}
+                                                            onError={() => hideBrokenPlayerImage(p.id, playerImage)}
                                                             className="relative w-full h-full object-contain z-10 transition-all opacity-90 group-hover/img:opacity-100"
                                                         />
                                                     </div>
