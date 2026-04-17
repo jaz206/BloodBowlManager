@@ -98,6 +98,7 @@ interface TeamDashboardProps {
     onUpdate: (team: ManagedTeam) => void;
     onDeleteRequest?: (teamId: string) => void;
     onBack: () => void;
+    onOpenTacticalBoard?: (teamId: string) => void;
     isGuest: boolean;
     matchReports?: MatchReport[];
     hideDelete?: boolean;
@@ -111,6 +112,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
     onUpdate, 
     onDeleteRequest, 
     onBack, 
+    onOpenTacticalBoard,
     isGuest, 
     matchReports = [],
     hideDelete = false,
@@ -782,6 +784,13 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                 {tab.label}
                             </button>
                         ))}
+                        <button
+                            type="button"
+                            onClick={() => onOpenTacticalBoard?.(team.id!)}
+                            className="text-xs font-black uppercase tracking-widest transition-all px-4 py-2 rounded-xl border border-transparent text-slate-500 hover:text-slate-300 hover:bg-white/5"
+                        >
+                            Pizarra
+                        </button>
                     </nav>
                 </div>
             </div>

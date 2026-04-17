@@ -164,10 +164,11 @@ interface TeamManagerProps {
     matchReports: any[];
     initialTeamId?: string | null;
     onInitialTeamHandled?: () => void;
+    onOpenTacticalBoard?: (teamId: string) => void;
     competitions?: Competition[];
 }
 
-const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUpdate, onTeamDelete, requestedRoster, onRosterRequestHandled = () => { }, isGuest, matchReports, initialTeamId, onInitialTeamHandled = () => {}, competitions }) => {
+const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUpdate, onTeamDelete, requestedRoster, onRosterRequestHandled = () => { }, isGuest, matchReports, initialTeamId, onInitialTeamHandled = () => {}, onOpenTacticalBoard, competitions }) => {
     const { user } = useAuth();
     // State for which team is shown in the top summary bar
     const [activeSummaryTeamId, setActiveSummaryTeamId] = useState<string | null>(null);
@@ -776,6 +777,7 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                     onUpdate={onTeamUpdate}
                     onDeleteRequest={() => requestTeamDeletion(openTeam)}
                     onBack={() => setOpenTeamId(null)}
+                    onOpenTacticalBoard={onOpenTacticalBoard}
                     isGuest={isGuest}
                     matchReports={matchReports}
                 />

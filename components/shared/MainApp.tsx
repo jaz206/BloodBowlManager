@@ -112,6 +112,7 @@ const MainApp: React.FC = () => {
     competition: Competition;
     matchup: any;
   } | null>(null);
+  const [directOpenTacticalTeamId, setDirectOpenTacticalTeamId] = useState<string | null>(null);
   const localCompetitionsKey = user ? `bb-local-competitions-${user.id}` : null;
   const [viewResetKeys, setViewResetKeys] = useState<Record<View, number>>({
     home: 0,
@@ -218,6 +219,11 @@ const MainApp: React.FC = () => {
     if (view === 'guild' && payload) {
       setRequestedRoster(null); // Clear roster request if selecting existing team
       // Use a temporary state or pass directly if payload is teamId
+    }
+    if (view === 'tactical') {
+      setDirectOpenTacticalTeamId(payload || null);
+    } else {
+      setDirectOpenTacticalTeamId(null);
     }
     setActiveView(view);
     if (payload && view === 'guild') {
@@ -874,9 +880,10 @@ const MainApp: React.FC = () => {
                     matchReports={matchReports}
                     initialTeamId={directOpenTeamId}
                     onInitialTeamHandled={() => setDirectOpenTeamId(null)}
+                    onOpenTacticalBoard={(teamId) => handleNavigate('tactical', teamId)}
                   />
                 )}
-                {activeView === 'tactical' && <TacticalBoardPage key={`tactical-${viewResetKeys.tactical}`} managedTeams={managedTeams} plays={plays} onSavePlay={handlePlaySave} onDeletePlay={handlePlayDelete} />}
+                {activeView === 'tactical' && <TacticalBoardPage key={`tactical-${viewResetKeys.tactical}`} managedTeams={managedTeams} plays={plays} onSavePlay={handlePlaySave} onDeletePlay={handlePlayDelete} initialTeamId={directOpenTacticalTeamId} onInitialTeamHandled={() => setDirectOpenTacticalTeamId(null)} />}
                 {activeView === 'arena' && <MatchPage 
                   key={`arena-${viewResetKeys.arena}`}
                   managedTeams={managedTeams} 

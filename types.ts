@@ -198,6 +198,7 @@ export interface Play {
   name: string;
   description?: string;
   style?: string;
+  teamId?: string;
   rosterName: string;
   tokens: BoardToken[];
   paths?: DrawingPath[];
