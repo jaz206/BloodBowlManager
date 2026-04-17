@@ -57,6 +57,104 @@ const PITCH_INFO = {
   rightWideMinRow: 11,
 };
 
+const ROLE_PRIORITY: PlayerPosition[] = ['Línea', 'Blitzer', 'Lanzador', 'Corredor', 'Receptor'];
+const ROLE_FORMATION_SLOTS: Record<PlayerPosition, { x: number; y: number }[]> = {
+  Línea: [
+    { x: 13, y: 7 },
+    { x: 13, y: 6 },
+    { x: 13, y: 8 },
+    { x: 12, y: 5 },
+    { x: 12, y: 9 },
+    { x: 11, y: 4 },
+    { x: 11, y: 10 },
+  ],
+  Blitzer: [
+    { x: 12, y: 7 },
+    { x: 11, y: 6 },
+    { x: 11, y: 8 },
+    { x: 10, y: 5 },
+    { x: 10, y: 9 },
+  ],
+  Lanzador: [
+    { x: 10, y: 7 },
+    { x: 9, y: 7 },
+    { x: 9, y: 6 },
+  ],
+  Corredor: [
+    { x: 9, y: 8 },
+    { x: 9, y: 7 },
+    { x: 8, y: 7 },
+  ],
+  Receptor: [
+    { x: 8, y: 4 },
+    { x: 8, y: 10 },
+    { x: 7, y: 3 },
+    { x: 7, y: 11 },
+  ],
+  BigGuy: [{ x: 12, y: 7 }],
+};
+
+const FALLBACK_FORMATION_SLOTS = [
+  { x: 13, y: 7 },
+  { x: 13, y: 6 },
+  { x: 13, y: 8 },
+  { x: 12, y: 5 },
+  { x: 12, y: 9 },
+  { x: 11, y: 4 },
+  { x: 11, y: 10 },
+  { x: 10, y: 7 },
+  { x: 9, y: 6 },
+  { x: 9, y: 8 },
+  { x: 8, y: 7 },
+];
+
+const normalizePositionType = (position: string): PlayerPosition => {
+  const lowerPos = position.toLowerCase();
+  if (lowerPos.includes('blitzer') || lowerPos.includes('wardancer') || lowerPos.includes('witch') || lowerPos.includes('assassin') || lowerPos.includes('slayer')) return 'Blitzer';
+  if (lowerPos.includes('thrower') || lowerPos.includes('lanzador')) return 'Lanzador';
+  if (lowerPos.includes('runner') || lowerPos.includes('corredor')) return 'Corredor';
+  if (lowerPos.includes('catcher') || lowerPos.includes('receptor')) return 'Receptor';
+  return 'Línea';
+};
+
+const getLoadPriority = (player: ManagedPlayer) => {
+  const normalized = player.position.toLowerCase();
+  if (player.status === 'Activo' || !player.isBenched) return 0;
+  if (normalized.includes('línea') || normalized.includes('linea')) return 1;
+  if (normalized.includes('blitzer') || normalized.includes('lanzador')) return 2;
+  if (normalized.includes('corredor') || normalized.includes('receptor')) return 3;
+  return 4;
+};
+
+const getRoleSlot = (position: PlayerPosition, index: number) => {
+  const slots = ROLE_FORMATION_SLOTS[position] || FALLBACK_FORMATION_SLOTS;
+  return slots[index % slots.length];
+};
+
+const buildTeamLoadFormation = (players: ManagedPlayer[]): BoardToken[] => {
+  const ordered = [...players]
+    .sort((a, b) => getLoadPriority(a) - getLoadPriority(b))
+    .slice(0, MAX_TOKENS);
+
+  const roleCounters: Record<string, number> = {};
+
+  return ordered.map((player, index) => {
+    const role = normalizePositionType(player.position);
+    const slotIndex = roleCounters[role] ?? 0;
+    roleCounters[role] = slotIndex + 1;
+    const slot = getRoleSlot(role, slotIndex) || FALLBACK_FORMATION_SLOTS[index % FALLBACK_FORMATION_SLOTS.length];
+
+    return {
+      id: player.id,
+      position: role,
+      x: slot.x,
+      y: slot.y,
+      playerData: player,
+      teamSide: 'home' as const,
+    };
+  });
+};
+
 const buildFormationStatus = (tokens: BoardToken[]) => {
   const onLoS = tokens.filter(token => token.x === PITCH_INFO.losColumn && token.y >= 4 && token.y <= 10).length;
   const onLeftWide = tokens.filter(token => token.x >= PITCH_INFO.homeHalfStart && token.y >= 0 && token.y <= PITCH_INFO.leftWideMaxRow).length;
@@ -298,15 +396,9 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     const team = managedTeams.find(t => t.id === teamId);
     if (team) {
       setSelectedTeamId(teamId);
-      const newTokens: BoardToken[] = team.players.slice(0, 11).map((player, index) => ({
-        id: player.id,
-        position: mapPositionToType(player.position),
-        x: index < 3 ? 12 : (index < 7 ? 10 : 8),
-        y: 4 + (index % 7),
-        playerData: player,
-        teamSide: 'home'
-      }));
+      const newTokens = buildTeamLoadFormation(team.players);
       pushHistory(newTokens);
+      showToast(`Plantilla ${team.name} alineada.`);
     }
   };
 
@@ -420,9 +512,10 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
         }
         .pitch-grid {
           background-image: 
-            linear-gradient(to right, rgba(245, 159, 10, 0.1) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(245, 159, 10, 0.1) 1px, transparent 1px);
+            linear-gradient(to right, rgba(245, 159, 10, 0.18) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(245, 159, 10, 0.18) 1px, transparent 1px);
           background-size: 40px 40px;
+          opacity: 0.34;
         }
         .pitch-lines {
           border: 2px solid rgba(245, 159, 10, 0.3);
