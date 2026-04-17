@@ -7,6 +7,7 @@ const GRID_COLS = 26;
 const GRID_ROWS = 15;
 
 type ActiveTool = 'move' | 'pass' | 'defense' | null;
+type TacticStyle = 'Defensivo' | 'Ofensivo';
 
 const FORMATION_PRESETS: Record<string, { position: string; x: number; y: number }[]> = {
   'Defensa Estándar': [
@@ -47,6 +48,25 @@ interface PlaysProps {
   onDeletePlay: (playId: string) => void;
 }
 
+const TACTIC_STYLES: TacticStyle[] = ['Defensivo', 'Ofensivo'];
+
+const PITCH_INFO = {
+  losColumn: 13,
+  homeHalfStart: 13,
+  leftWideMaxRow: 3,
+  rightWideMinRow: 11,
+};
+
+const buildFormationStatus = (tokens: BoardToken[]) => {
+  const onLoS = tokens.filter(token => token.x === PITCH_INFO.losColumn && token.y >= 4 && token.y <= 10).length;
+  const onLeftWide = tokens.filter(token => token.x >= PITCH_INFO.homeHalfStart && token.y >= 0 && token.y <= PITCH_INFO.leftWideMaxRow).length;
+  const onRightWide = tokens.filter(token => token.x >= PITCH_INFO.homeHalfStart && token.y >= PITCH_INFO.rightWideMinRow && token.y < GRID_ROWS).length;
+  const totalOnField = tokens.length;
+  const inOwnHalf = tokens.filter(token => token.x >= PITCH_INFO.homeHalfStart).length;
+  const isLegal = onLoS >= 3 && onLeftWide <= 2 && onRightWide <= 2 && totalOnField <= 11 && inOwnHalf === totalOnField;
+  return { onLoS, onLeftWide, onRightWide, totalOnField, inOwnHalf, isLegal };
+};
+
 const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDeletePlay }) => {
   const [tokens, setTokens] = useState<BoardToken[]>([]);
   const [drawnPaths, setDrawnPaths] = useState<DrawingPath[]>([]);
@@ -55,6 +75,8 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
   const [playName, setPlayName] = useState('');
   const [selectedPlayId, setSelectedPlayId] = useState<string | undefined>(plays.length > 0 ? plays[0].id : undefined);
   const [selectedTeamId, setSelectedTeamId] = useState<string>('');
+  const [selectedStyle, setSelectedStyle] = useState<TacticStyle>('Defensivo');
+  const [styleMenuExpanded, setStyleMenuExpanded] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<ManagedPlayer | null>(null);
   const [zoom, setZoom] = useState(1);
   const [activeTool, setActiveTool] = useState<ActiveTool>(null);
@@ -99,7 +121,9 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
   };
 
   const fieldRef = useRef<HTMLDivElement>(null);
+  const styleMenuRef = useRef<HTMLDivElement>(null);
   const draggedTokenRef = useRef<{ id: number } | null>(null);
+  const formationStatus = useMemo(() => buildFormationStatus(tokens), [tokens]);
 
   // Sync selection
   useEffect(() => {
@@ -109,6 +133,19 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
       setSelectedPlayId(undefined);
     }
   }, [plays, selectedPlayId]);
+
+  useEffect(() => {
+    if (!styleMenuExpanded) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (styleMenuRef.current && !styleMenuRef.current.contains(event.target as Node)) {
+        setStyleMenuExpanded(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [styleMenuExpanded]);
 
   const handleDragMove = useCallback((e: MouseEvent | TouchEvent) => {
     if (!fieldRef.current) return;
@@ -232,12 +269,14 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     const newPlay: Play = {
       id: existingPlay?.id,
       name: playName.trim(),
+      style: selectedStyle,
       rosterName: managedTeams.find(t => t.id === selectedTeamId)?.rosterName || 'Táctica',
       tokens: tokens.map(({ playerData, ...token }) => token),
       paths: drawnPaths
     };
     onSavePlay(newPlay);
     setPlayName('');
+    setStyleMenuExpanded(false);
     showToast('Jugada guardada correctamente.');
   };
 
@@ -249,6 +288,8 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
       setHistory([{ tokens: playToLoad.tokens, paths: playToLoad.paths || [] }]);
       setHistoryIndex(0);
       setPlayName(playToLoad.name);
+      setSelectedStyle((playToLoad.style as TacticStyle) || 'Defensivo');
+      setStyleMenuExpanded(false);
       setSelectedPlayId(id);
     }
   };
@@ -414,6 +455,40 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
               className={`bg-transparent border-none outline-none text-sm font-semibold placeholder:text-slate-600 w-48 ${saveError ? 'text-red-400' : 'text-slate-300'
                 }`}
             />
+            <div ref={styleMenuRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setStyleMenuExpanded(prev => !prev)}
+                className="flex items-center gap-2 rounded-full bg-primary/10 border border-primary/20 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary/15 transition-colors"
+              >
+                <span className="material-symbols-outlined text-xs">tune</span>
+                {selectedStyle}
+              </button>
+              <AnimatePresence>
+                {styleMenuExpanded && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    className="absolute right-0 top-full mt-2 w-40 rounded-2xl border border-primary/15 bg-panel-dark p-1 shadow-2xl z-50"
+                  >
+                    {TACTIC_STYLES.map(style => (
+                      <button
+                        key={style}
+                        type="button"
+                        onClick={() => {
+                          setSelectedStyle(style);
+                          setStyleMenuExpanded(false);
+                        }}
+                        className={`w-full rounded-xl px-3 py-2 text-left text-[10px] font-black uppercase tracking-widest transition-colors ${selectedStyle === style ? 'bg-primary text-black' : 'text-slate-300 hover:bg-white/5'}`}
+                      >
+                        {style}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
             {saveError && <span className="text-[9px] text-red-400 font-bold italic">{saveError}</span>}
           </div>
         </div>
@@ -428,7 +503,10 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
             <div className="absolute right-0 top-full mt-2 w-64 bg-panel-dark border border-primary/20 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 p-2 overflow-hidden">
               {plays.length > 0 ? plays.map(p => (
                 <div key={p.id} className="flex items-center justify-between group/item p-2 hover:bg-white/5 rounded-lg transition-colors cursor-pointer" onClick={() => handleLoadPlay(p.id!)}>
-                  <span className="text-xs font-bold text-slate-300 truncate pr-2">{p.name}</span>
+                  <div className="flex min-w-0 flex-col pr-2">
+                    <span className="text-xs font-bold text-slate-300 truncate">{p.name}</span>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">{p.style || 'Defensivo'}</span>
+                  </div>
                   <button className="opacity-0 group-hover/item:opacity-100 text-red-500 hover:text-red-400 p-1" onClick={(e) => { e.stopPropagation(); handleDeletePlay(p.id!); }}>
                     <span className="material-symbols-outlined text-sm">delete</span>
                   </button>
@@ -566,6 +644,13 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
         <section className="flex-1 bg-background-dark relative flex items-center justify-center p-10 overflow-auto scrollbar-hide">
           {/* Zoom & View Controls Overlay */}
           <div className="absolute top-8 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-panel-dark/80 backdrop-blur-xl p-2 rounded-2xl border border-primary/20 shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-40">
+            <div className={`flex items-center gap-2 rounded-xl px-3 py-2 border ${formationStatus.isLegal ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300' : 'border-red-500/20 bg-red-500/10 text-red-300'}`}>
+              <span className="material-symbols-outlined text-sm">{formationStatus.isLegal ? 'verified' : 'warning'}</span>
+              <div className="flex flex-col leading-none">
+                <span className="text-[9px] font-black uppercase tracking-widest">{formationStatus.isLegal ? 'Legal' : 'Ilegal'}</span>
+                <span className="text-[9px] font-bold opacity-80">{formationStatus.totalOnField}/11</span>
+              </div>
+            </div>
             <div className="flex items-center bg-black/40 rounded-xl p-1">
               <button
                 onClick={() => setZoom(prev => Math.min(prev + 0.1, 1.5))}
