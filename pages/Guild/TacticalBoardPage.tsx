@@ -221,6 +221,8 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
   const [selectedPlayer, setSelectedPlayer] = useState<ManagedPlayer | null>(null);
   const [selectedTokenId, setSelectedTokenId] = useState<number | null>(null);
   const [zoom, setZoom] = useState(1);
+  const [showGrid, setShowGrid] = useState(true);
+  const [showDefenseZones, setShowDefenseZones] = useState(false);
   const [activeTool, setActiveTool] = useState<ActiveTool>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentPathPoints, setCurrentPathPoints] = useState<{ x: number, y: number }[]>([]);
@@ -265,6 +267,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
   const fieldRef = useRef<HTMLDivElement>(null);
   const styleMenuRef = useRef<HTMLDivElement>(null);
   const draggedTokenRef = useRef<{ id: number } | null>(null);
+  const draggedBenchPlayerRef = useRef<ManagedPlayer | null>(null);
   const formationStatus = useMemo(() => buildFormationStatus(tokens), [tokens]);
   const currentTeam = useMemo(
     () => managedTeams.find((team) => team.id === selectedTeamId) || null,
@@ -290,6 +293,29 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
         return a.customName.localeCompare(b.customName);
       });
   }, [currentTeam, tokensOnFieldPlayerIds]);
+  const occupiedSlots = useMemo(
+    () => new Set(tokens.map((token) => `${token.x}-${token.y}`)),
+    [tokens]
+  );
+  const tackleZoneCounts = useMemo(() => {
+    const zoneMap = new Map<string, number>();
+
+    tokens.forEach((token) => {
+      if (token.isDown) return;
+      for (let dx = -1; dx <= 1; dx += 1) {
+        for (let dy = -1; dy <= 1; dy += 1) {
+          if (dx === 0 && dy === 0) continue;
+          const x = token.x + dx;
+          const y = token.y + dy;
+          if (x < 0 || x >= GRID_COLS || y < 0 || y >= GRID_ROWS) continue;
+          const key = `${x}-${y}`;
+          zoneMap.set(key, (zoneMap.get(key) || 0) + 1);
+        }
+      }
+    });
+
+    return zoneMap;
+  }, [tokens]);
 
   // Sync selection
   useEffect(() => {
@@ -570,15 +596,20 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     draggedTokenRef.current = { id };
   };
 
-  const handleAddBenchPlayer = (player: ManagedPlayer) => {
+  const placeBenchPlayer = (player: ManagedPlayer, slotOverride?: { x: number; y: number } | null) => {
     if (tokens.length >= MAX_TOKENS) {
       showToast('Ya tienes 11 jugadores en el campo.');
       return;
     }
 
-    const slot = getNextOpenSlot(tokens);
+    const slot = slotOverride || getNextOpenSlot(tokens);
     if (!slot) {
       showToast('No queda hueco libre en la rejilla.');
+      return;
+    }
+
+    if (occupiedSlots.has(`${slot.x}-${slot.y}`)) {
+      showToast('Esa casilla ya está ocupada.');
       return;
     }
 
@@ -598,12 +629,41 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     setSelectedTokenId(newToken.id);
   };
 
+  const handleAddBenchPlayer = (player: ManagedPlayer) => {
+    placeBenchPlayer(player);
+  };
+
   const handleRemoveTokenFromField = () => {
     if (selectedTokenId === null) return;
     const nextTokens = tokens.filter((token) => token.id !== selectedTokenId);
     pushHistory(nextTokens);
     setSelectedPlayer(null);
     setSelectedTokenId(null);
+  };
+
+  const handleBenchDragStart = (player: ManagedPlayer) => {
+    draggedBenchPlayerRef.current = player;
+  };
+
+  const handleBenchDragEnd = () => {
+    draggedBenchPlayerRef.current = null;
+  };
+
+  const handleFieldDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    if (!draggedBenchPlayerRef.current) return;
+    event.preventDefault();
+  };
+
+  const handleFieldDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    if (!fieldRef.current || !draggedBenchPlayerRef.current) return;
+
+    event.preventDefault();
+    const fieldRect = fieldRef.current.getBoundingClientRect();
+    const gridX = Math.max(0, Math.min(GRID_COLS - 1, Math.floor((event.clientX - fieldRect.left) / (GRID_CELL_SIZE * zoom))));
+    const gridY = Math.max(0, Math.min(GRID_ROWS - 1, Math.floor((event.clientY - fieldRect.top) / (GRID_CELL_SIZE * zoom))));
+
+    placeBenchPlayer(draggedBenchPlayerRef.current, { x: gridX, y: gridY });
+    draggedBenchPlayerRef.current = null;
   };
 
   return (
@@ -852,6 +912,9 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                     <button
                       key={player.id}
                       onClick={() => handleAddBenchPlayer(player)}
+                      draggable
+                      onDragStart={() => handleBenchDragStart(player)}
+                      onDragEnd={handleBenchDragEnd}
                       disabled={tokens.length >= MAX_TOKENS}
                       className="w-full rounded-2xl border border-[rgba(111,87,56,0.12)] bg-[rgba(255,251,241,0.96)] px-3 py-3 text-left shadow-[0_8px_20px_rgba(89,59,21,0.04)] transition hover:border-[rgba(202,138,4,0.28)] hover:bg-[rgba(202,138,4,0.06)] disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -869,7 +932,12 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                             {player.position}
                           </div>
                         </div>
-                        <span className="material-symbols-outlined text-base text-[#ca8a04]">add_circle</span>
+                        <div className="flex flex-col items-end gap-1">
+                          <span className="material-symbols-outlined text-base text-[#ca8a04]">add_circle</span>
+                          <span className="text-[8px] font-black uppercase tracking-[0.14em] text-[#8f745c]">
+                            Arrastra
+                          </span>
+                        </div>
                       </div>
                     </button>
                   ))
@@ -1025,9 +1093,19 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
               <span className="material-symbols-outlined text-sm">redo</span>
             </button>
             <div className="w-px h-6 bg-[rgba(111,87,56,0.14)]"></div>
-            <button className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-red-500/10 text-red-500/70 hover:text-red-600 transition-all">
+            <button
+              onClick={() => setShowGrid((prev) => !prev)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${showGrid ? 'bg-[rgba(202,138,4,0.12)] text-[#ca8a04]' : 'hover:bg-red-500/10 text-red-500/70 hover:text-red-600'}`}
+            >
               <span className="material-symbols-outlined text-sm">grid_view</span>
               <span className="text-[10px] font-black uppercase tracking-widest">Rejilla</span>
+            </button>
+            <button
+              onClick={() => setShowDefenseZones((prev) => !prev)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${showDefenseZones ? 'bg-[rgba(202,138,4,0.12)] text-[#ca8a04]' : 'text-[#8f745c] hover:bg-[rgba(202,138,4,0.10)] hover:text-[#2b1d12]'}`}
+            >
+              <span className="material-symbols-outlined text-sm">shield</span>
+              <span className="text-[10px] font-black uppercase tracking-widest">Zonas</span>
             </button>
           </div>
 
@@ -1036,6 +1114,8 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
             ref={fieldRef}
             onMouseDown={handleFieldMouseDown}
             onTouchStart={handleFieldMouseDown}
+            onDragOver={handleFieldDragOver}
+            onDrop={handleFieldDrop}
             className="pitch-lines shadow-[0_0_100px_rgba(0,0,0,0.8)] relative"
             style={{
               width: `${GRID_COLS * GRID_CELL_SIZE}px`,
@@ -1081,7 +1161,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
             </svg>
 
             {/* Texture/Grid Layer */}
-            <div className="absolute inset-0 pitch-grid opacity-30 pointer-events-none"></div>
+            {showGrid && <div className="absolute inset-0 pitch-grid opacity-30 pointer-events-none"></div>}
 
             {/* Pitch Markings */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -1096,6 +1176,31 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
               <div className="absolute top-[160px] w-full h-[1px] bg-primary/15 border-t border-dashed border-primary/25"></div>
               <div className="absolute bottom-[160px] w-full h-[1px] bg-primary/15 border-t border-dashed border-primary/25"></div>
             </div>
+
+            {showDefenseZones && (
+              <div className="absolute inset-0 pointer-events-none z-10">
+                {Array.from(tackleZoneCounts.entries()).map(([key, count]) => {
+                  const [x, y] = key.split('-').map(Number);
+                  return (
+                    <div
+                      key={key}
+                      className="absolute"
+                      style={{
+                        left: `${x * GRID_CELL_SIZE}px`,
+                        top: `${y * GRID_CELL_SIZE}px`,
+                        width: `${GRID_CELL_SIZE}px`,
+                        height: `${GRID_CELL_SIZE}px`,
+                      }}
+                    >
+                      <div className="absolute inset-[2px] rounded-md border border-[rgba(239,68,68,0.18)] bg-[rgba(239,68,68,0.08)]" />
+                      <span className="absolute right-1 top-1 rounded-full bg-[rgba(43,29,18,0.78)] px-1.5 py-[1px] text-[8px] font-black text-[#fff7eb] shadow-[0_4px_10px_rgba(30,19,8,0.22)]">
+                        -{count}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
             {/* Placed Tokens */}
             <AnimatePresence>
