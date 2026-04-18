@@ -6,7 +6,7 @@ const MAX_TOKENS = 11;
 const GRID_COLS = 26;
 const GRID_ROWS = 15;
 const GRID_CELL_SIZE = 40;
-const TOKEN_SIZE = 28;
+const TOKEN_SIZE = 30;
 
 type ActiveTool = 'move' | 'pass' | 'defense' | null;
 type TacticStyle = 'Defensivo' | 'Ofensivo';
@@ -1102,6 +1102,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
               {tokens.map((token) => {
                 const config = positionConfig[token.position] || positionConfig.Línea;
                 const tokenInset = (GRID_CELL_SIZE - TOKEN_SIZE) / 2;
+                const tokenImage = token.playerData?.image?.trim();
                 const tokenLabel = token.playerData?.jerseyNumber
                   ? String(token.playerData.jerseyNumber)
                   : config.label;
@@ -1123,7 +1124,24 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                       top: `${token.y * GRID_CELL_SIZE + tokenInset}px`,
                     }}
                   >
-                    <span className="text-[9px] font-black text-[#2b1d12] italic">{tokenLabel}</span>
+                    {tokenImage ? (
+                      <>
+                        <div className="absolute inset-[1px] overflow-hidden rounded-full">
+                          <img
+                            src={tokenImage}
+                            alt={token.playerData?.customName || token.position}
+                            className="h-full w-full object-cover"
+                            draggable={false}
+                          />
+                          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,250,240,0.00),rgba(43,29,18,0.12))]" />
+                        </div>
+                        <span className="absolute -bottom-1 -right-1 min-w-[18px] rounded-full bg-[#2b1d12] px-1 py-[1px] text-[8px] font-black text-[#fff7eb] shadow-[0_4px_10px_rgba(30,19,8,0.32)]">
+                          {tokenLabel}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-[9px] font-black text-[#2b1d12] italic">{tokenLabel}</span>
+                    )}
                   </motion.div>
                 );
               })}
