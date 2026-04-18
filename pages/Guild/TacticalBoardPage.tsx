@@ -6,7 +6,7 @@ const MAX_TOKENS = 11;
 const GRID_COLS = 26;
 const GRID_ROWS = 15;
 const GRID_CELL_SIZE = 40;
-const TOKEN_SIZE = 30;
+const TOKEN_SIZE = 28;
 
 type ActiveTool = 'move' | 'pass' | 'defense' | null;
 type TacticStyle = 'Defensivo' | 'Ofensivo';
@@ -293,6 +293,24 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
         return a.customName.localeCompare(b.customName);
       });
   }, [currentTeam, tokensOnFieldPlayerIds]);
+  const fieldPlayers = useMemo(() => {
+    if (!currentTeam) return [];
+    return tokens
+      .map((token) => {
+        const playerId = token.playerData?.id ?? (token.playerRef ? Number(token.playerRef) : null);
+        if (!playerId) return null;
+        const matchingPlayer = currentTeam.players.find((player) => player.id === playerId);
+        if (!matchingPlayer) return null;
+        return { token, player: matchingPlayer };
+      })
+      .filter((entry): entry is { token: BoardToken; player: ManagedPlayer } => Boolean(entry))
+      .sort((a, b) => {
+        const jerseyA = a.player.jerseyNumber ?? Number.MAX_SAFE_INTEGER;
+        const jerseyB = b.player.jerseyNumber ?? Number.MAX_SAFE_INTEGER;
+        if (jerseyA !== jerseyB) return jerseyA - jerseyB;
+        return a.player.customName.localeCompare(b.player.customName);
+      });
+  }, [currentTeam, tokens]);
   const occupiedSlots = useMemo(
     () => new Set(tokens.map((token) => `${token.x}-${token.y}`)),
     [tokens]
@@ -906,44 +924,94 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
             </div>
 
             {currentTeam ? (
-              <div className="space-y-3">
-                {benchPlayers.length > 0 ? (
-                  benchPlayers.map((player) => (
-                    <button
-                      key={player.id}
-                      onClick={() => handleAddBenchPlayer(player)}
-                      draggable
-                      onDragStart={() => handleBenchDragStart(player)}
-                      onDragEnd={handleBenchDragEnd}
-                      disabled={tokens.length >= MAX_TOKENS}
-                      className="w-full rounded-2xl border border-[rgba(111,87,56,0.12)] bg-[rgba(255,251,241,0.96)] px-3 py-3 text-left shadow-[0_8px_20px_rgba(89,59,21,0.04)] transition hover:border-[rgba(202,138,4,0.28)] hover:bg-[rgba(202,138,4,0.06)] disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="rounded-full bg-[rgba(43,29,18,0.08)] px-2 py-0.5 text-[9px] font-black text-[#2b1d12]">
-                              #{player.jerseyNumber ?? '--'}
-                            </span>
-                            <span className="truncate text-[12px] font-black uppercase italic text-[#2b1d12]">
-                              {player.customName}
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-2xl border border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.96)] px-3 py-3">
+                    <div className="text-[8px] font-black uppercase tracking-[0.16em] text-[#8f745c]">En el campo</div>
+                    <div className="mt-1 text-[18px] font-black italic text-[#2b1d12]">{fieldPlayers.length}</div>
+                  </div>
+                  <div className="rounded-2xl border border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.96)] px-3 py-3">
+                    <div className="text-[8px] font-black uppercase tracking-[0.16em] text-[#8f745c]">Banquillo</div>
+                    <div className="mt-1 text-[18px] font-black italic text-[#ca8a04]">{benchPlayers.length}</div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="text-[9px] font-black uppercase tracking-[0.18em] text-[#8f745c]">Banquillo real</div>
+                  {benchPlayers.length > 0 ? (
+                    benchPlayers.map((player) => (
+                      <button
+                        key={player.id}
+                        onClick={() => handleAddBenchPlayer(player)}
+                        draggable
+                        onDragStart={() => handleBenchDragStart(player)}
+                        onDragEnd={handleBenchDragEnd}
+                        disabled={tokens.length >= MAX_TOKENS}
+                        className="w-full rounded-2xl border border-[rgba(111,87,56,0.12)] bg-[rgba(255,251,241,0.96)] px-3 py-3 text-left shadow-[0_8px_20px_rgba(89,59,21,0.04)] transition hover:border-[rgba(202,138,4,0.28)] hover:bg-[rgba(202,138,4,0.06)] disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="rounded-full bg-[rgba(43,29,18,0.08)] px-2 py-0.5 text-[9px] font-black text-[#2b1d12]">
+                                #{player.jerseyNumber ?? '--'}
+                              </span>
+                              <span className="truncate text-[12px] font-black uppercase italic text-[#2b1d12]">
+                                {player.customName}
+                              </span>
+                            </div>
+                            <div className="mt-1 text-[9px] font-bold uppercase tracking-[0.14em] text-[#8f745c]">
+                              {player.position}
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end gap-1">
+                            <span className="material-symbols-outlined text-base text-[#ca8a04]">add_circle</span>
+                            <span className="text-[8px] font-black uppercase tracking-[0.14em] text-[#8f745c]">
+                              Arrastra
                             </span>
                           </div>
-                          <div className="mt-1 text-[9px] font-bold uppercase tracking-[0.14em] text-[#8f745c]">
-                            {player.position}
+                        </div>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="rounded-2xl border border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.92)] px-4 py-5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#8f745c]">
+                      Todo el roster está en el campo
+                    </div>
+                  )}
+                </div>
+
+                {fieldPlayers.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="text-[9px] font-black uppercase tracking-[0.18em] text-[#8f745c]">En juego</div>
+                    <div className="space-y-2">
+                      {fieldPlayers.map(({ token, player }) => (
+                        <button
+                          key={player.id}
+                          onClick={() => handleTokenClick(token.id)}
+                          className={`w-full rounded-2xl border px-3 py-2 text-left transition ${
+                            selectedTokenId === token.id
+                              ? 'border-[rgba(202,138,4,0.30)] bg-[rgba(202,138,4,0.08)]'
+                              : 'border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.94)] hover:bg-[rgba(202,138,4,0.05)]'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="rounded-full bg-[rgba(43,29,18,0.08)] px-2 py-0.5 text-[9px] font-black text-[#2b1d12]">
+                                  #{player.jerseyNumber ?? '--'}
+                                </span>
+                                <span className="truncate text-[11px] font-black uppercase italic text-[#2b1d12]">
+                                  {player.customName}
+                                </span>
+                              </div>
+                              <div className="mt-1 text-[8px] font-bold uppercase tracking-[0.14em] text-[#8f745c]">
+                                Casilla {token.x + 1}-{token.y + 1}
+                              </div>
+                            </div>
+                            <span className="material-symbols-outlined text-sm text-[#8f745c]">north_east</span>
                           </div>
-                        </div>
-                        <div className="flex flex-col items-end gap-1">
-                          <span className="material-symbols-outlined text-base text-[#ca8a04]">add_circle</span>
-                          <span className="text-[8px] font-black uppercase tracking-[0.14em] text-[#8f745c]">
-                            Arrastra
-                          </span>
-                        </div>
-                      </div>
-                    </button>
-                  ))
-                ) : (
-                  <div className="rounded-2xl border border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.92)] px-4 py-5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#8f745c]">
-                    Todos en el campo
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -1192,8 +1260,8 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                         height: `${GRID_CELL_SIZE}px`,
                       }}
                     >
-                      <div className="absolute inset-[2px] rounded-md border border-[rgba(239,68,68,0.18)] bg-[rgba(239,68,68,0.08)]" />
-                      <span className="absolute right-1 top-1 rounded-full bg-[rgba(43,29,18,0.78)] px-1.5 py-[1px] text-[8px] font-black text-[#fff7eb] shadow-[0_4px_10px_rgba(30,19,8,0.22)]">
+                      <div className="absolute inset-[3px] rounded-lg border border-[rgba(239,68,68,0.30)] bg-[rgba(239,68,68,0.12)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]" />
+                      <span className="absolute right-1 top-1 rounded-full bg-[rgba(43,29,18,0.84)] px-1.5 py-[1px] text-[8px] font-black text-[#fff7eb] shadow-[0_4px_10px_rgba(30,19,8,0.22)]">
                         -{count}
                       </span>
                     </div>
@@ -1206,7 +1274,6 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
             <AnimatePresence>
               {tokens.map((token) => {
                 const config = positionConfig[token.position] || positionConfig.Línea;
-                const tokenInset = (GRID_CELL_SIZE - TOKEN_SIZE) / 2;
                 const tokenImage = token.playerData?.image?.trim();
                 const tokenLabel = token.playerData?.jerseyNumber
                   ? String(token.playerData.jerseyNumber)
@@ -1219,34 +1286,44 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                     initial={{ opacity: 0, scale: 0 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0 }}
-                    onMouseDown={(e) => { e.stopPropagation(); handleTokenClick(token.id); }}
-                    onTouchStart={(e) => { e.stopPropagation(); handleTokenClick(token.id); }}
-                    className={`absolute rounded-full border-[3px] ${config.border} ${isSelected ? 'bg-[rgba(255,243,214,0.98)] ring-4 ring-[rgba(245,159,10,0.22)]' : 'bg-[rgba(255,250,240,0.98)] ring-2 ring-[rgba(43,29,18,0.18)]'} flex items-center justify-center shadow-[0_10px_18px_rgba(30,19,8,0.28)] cursor-grab active:cursor-grabbing z-30 transition-shadow active:shadow-[0_0_0_4px_rgba(245,159,10,0.22)]`}
+                    className="absolute z-30 flex items-center justify-center"
                     style={{
-                      width: `${TOKEN_SIZE}px`,
-                      height: `${TOKEN_SIZE}px`,
-                      left: `${token.x * GRID_CELL_SIZE + tokenInset}px`,
-                      top: `${token.y * GRID_CELL_SIZE + tokenInset}px`,
+                      width: `${GRID_CELL_SIZE}px`,
+                      height: `${GRID_CELL_SIZE}px`,
+                      left: `${token.x * GRID_CELL_SIZE}px`,
+                      top: `${token.y * GRID_CELL_SIZE}px`,
                     }}
                   >
-                    {tokenImage ? (
-                      <>
-                        <div className="absolute inset-[1px] overflow-hidden rounded-full">
-                          <img
-                            src={tokenImage}
-                            alt={token.playerData?.customName || token.position}
-                            className="h-full w-full object-cover"
-                            draggable={false}
-                          />
-                          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,250,240,0.00),rgba(43,29,18,0.12))]" />
-                        </div>
-                        <span className="absolute -bottom-1 -right-1 min-w-[18px] rounded-full bg-[#2b1d12] px-1 py-[1px] text-[8px] font-black text-[#fff7eb] shadow-[0_4px_10px_rgba(30,19,8,0.32)]">
-                          {tokenLabel}
-                        </span>
-                      </>
-                    ) : (
-                      <span className="text-[9px] font-black text-[#2b1d12] italic">{tokenLabel}</span>
-                    )}
+                    <div className="absolute inset-[4px] rounded-lg border border-[rgba(255,255,255,0.12)] bg-[rgba(255,250,240,0.03)]" />
+                    <motion.button
+                      whileTap={{ scale: 0.96 }}
+                      onMouseDown={(e) => { e.stopPropagation(); handleTokenClick(token.id); }}
+                      onTouchStart={(e) => { e.stopPropagation(); handleTokenClick(token.id); }}
+                      className={`relative rounded-full border-[3px] ${config.border} ${isSelected ? 'bg-[rgba(255,243,214,0.98)] ring-4 ring-[rgba(245,159,10,0.26)]' : 'bg-[rgba(255,250,240,0.98)] ring-[3px] ring-[rgba(43,29,18,0.24)]'} flex items-center justify-center shadow-[0_12px_22px_rgba(30,19,8,0.34)] cursor-grab active:cursor-grabbing transition-shadow active:shadow-[0_0_0_4px_rgba(245,159,10,0.22)]`}
+                      style={{
+                        width: `${TOKEN_SIZE}px`,
+                        height: `${TOKEN_SIZE}px`,
+                      }}
+                    >
+                      {tokenImage ? (
+                        <>
+                          <div className="absolute inset-[1px] overflow-hidden rounded-full">
+                            <img
+                              src={tokenImage}
+                              alt={token.playerData?.customName || token.position}
+                              className="h-full w-full object-cover"
+                              draggable={false}
+                            />
+                            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,250,240,0.02),rgba(43,29,18,0.14))]" />
+                          </div>
+                          <span className="absolute -bottom-1 -right-1 min-w-[18px] rounded-full bg-[#2b1d12] px-1 py-[1px] text-[8px] font-black text-[#fff7eb] shadow-[0_4px_10px_rgba(30,19,8,0.32)]">
+                            {tokenLabel}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-[9px] font-black text-[#2b1d12] italic">{tokenLabel}</span>
+                      )}
+                    </motion.button>
                   </motion.div>
                 );
               })}
