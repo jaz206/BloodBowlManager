@@ -220,6 +220,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
   const [styleMenuExpanded, setStyleMenuExpanded] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<ManagedPlayer | null>(null);
   const [selectedTokenId, setSelectedTokenId] = useState<number | null>(null);
+  const [currentPlacementSide, setCurrentPlacementSide] = useState<'home' | 'away'>('home');
   const [zoom, setZoom] = useState(1);
   const [showGrid, setShowGrid] = useState(true);
   const [showDefenseZones, setShowDefenseZones] = useState(false);
@@ -314,6 +315,10 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
   const occupiedSlots = useMemo(
     () => new Set(tokens.map((token) => `${token.x}-${token.y}`)),
     [tokens]
+  );
+  const selectedToken = useMemo(
+    () => tokens.find((token) => token.id === selectedTokenId) || null,
+    [tokens, selectedTokenId]
   );
   const tackleZoneCounts = useMemo(() => {
     const zoneMap = new Map<string, number>();
@@ -460,10 +465,28 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
         x: 4,
         y: Math.floor(GRID_ROWS / 2),
         position,
-        teamSide: 'home' as const
+        teamSide: currentPlacementSide,
       }];
       pushHistory(newTokens);
     }
+  };
+
+  const handleToggleSelectedTokenDown = () => {
+    if (selectedTokenId === null) return;
+    const nextTokens = tokens.map((token) =>
+      token.id === selectedTokenId ? { ...token, isDown: !token.isDown } : token
+    );
+    pushHistory(nextTokens);
+  };
+
+  const handleToggleSelectedTokenSide = () => {
+    if (selectedTokenId === null) return;
+    const nextTokens = tokens.map((token) =>
+      token.id === selectedTokenId
+        ? { ...token, teamSide: token.teamSide === 'home' ? 'away' : 'home' }
+        : token
+    );
+    pushHistory(nextTokens);
   };
 
   const handleClearField = () => {
@@ -1014,6 +1037,41 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                     </div>
                   </div>
                 )}
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="text-[9px] font-black uppercase tracking-[0.18em] text-[#8f745c]">Rival genérico</div>
+                    <div className="flex items-center gap-1 rounded-full border border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.96)] p-1">
+                      <button
+                        onClick={() => setCurrentPlacementSide('home')}
+                        className={`rounded-full px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.16em] transition ${currentPlacementSide === 'home' ? 'bg-[rgba(16,185,129,0.14)] text-emerald-700' : 'text-[#8f745c]'}`}
+                      >
+                        Local
+                      </button>
+                      <button
+                        onClick={() => setCurrentPlacementSide('away')}
+                        className={`rounded-full px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.16em] transition ${currentPlacementSide === 'away' ? 'bg-[rgba(239,68,68,0.12)] text-red-700' : 'text-[#8f745c]'}`}
+                      >
+                        Rival
+                      </button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(Object.keys(positionConfig) as Array<keyof typeof positionConfig>).slice(0, 4).map((pos) => (
+                      <button
+                        key={`generic-${pos}`}
+                        onClick={() => handleAddToken(pos as PlayerPosition)}
+                        disabled={tokens.length >= MAX_TOKENS}
+                        className="rounded-2xl border border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.96)] px-3 py-3 text-center transition hover:border-[rgba(202,138,4,0.24)] hover:bg-[rgba(202,138,4,0.06)] disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <div className="mx-auto mb-2 flex size-10 items-center justify-center rounded-full border-2 border-[rgba(111,87,56,0.22)] bg-[rgba(255,250,240,0.98)]">
+                          <span className="material-symbols-outlined text-base text-[#8f745c]">{positionConfig[pos].icon}</span>
+                        </div>
+                        <div className="text-[8px] font-black uppercase tracking-[0.14em] text-[#2b1d12]">{pos}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-4">
@@ -1092,12 +1150,36 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                     {selectedPlayer.skills}
                   </div>
                   {selectedTokenId !== null && (
-                    <button
-                      onClick={handleRemoveTokenFromField}
-                      className="mt-3 w-full rounded-xl border border-[rgba(220,38,38,0.15)] bg-[rgba(220,38,38,0.06)] px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-red-600 transition hover:bg-[rgba(220,38,38,0.10)]"
-                    >
-                      Mandar al banquillo
-                    </button>
+                    <>
+                      <div className="mt-3 grid grid-cols-2 gap-2">
+                        <button
+                          onClick={handleToggleSelectedTokenDown}
+                          className={`rounded-xl border px-3 py-2 text-[9px] font-black uppercase tracking-[0.16em] transition ${
+                            selectedToken?.isDown
+                              ? 'border-[rgba(239,68,68,0.18)] bg-[rgba(239,68,68,0.08)] text-red-700'
+                              : 'border-[rgba(16,185,129,0.18)] bg-[rgba(16,185,129,0.08)] text-emerald-700'
+                          }`}
+                        >
+                          {selectedToken?.isDown ? 'Derribado' : 'De pie'}
+                        </button>
+                        <button
+                          onClick={handleToggleSelectedTokenSide}
+                          className={`rounded-xl border px-3 py-2 text-[9px] font-black uppercase tracking-[0.16em] transition ${
+                            selectedToken?.teamSide === 'away'
+                              ? 'border-[rgba(239,68,68,0.18)] bg-[rgba(239,68,68,0.08)] text-red-700'
+                              : 'border-[rgba(16,185,129,0.18)] bg-[rgba(16,185,129,0.08)] text-emerald-700'
+                          }`}
+                        >
+                          {selectedToken?.teamSide === 'away' ? 'Rival' : 'Local'}
+                        </button>
+                      </div>
+                      <button
+                        onClick={handleRemoveTokenFromField}
+                        className="mt-3 w-full rounded-xl border border-[rgba(220,38,38,0.15)] bg-[rgba(220,38,38,0.06)] px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-red-600 transition hover:bg-[rgba(220,38,38,0.10)]"
+                      >
+                        {selectedToken?.playerData ? 'Mandar al banquillo' : 'Quitar del campo'}
+                      </button>
+                    </>
                   )}
                 </motion.div>
               )}
@@ -1279,6 +1361,9 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                   ? String(token.playerData.jerseyNumber)
                   : config.label;
                 const isSelected = token.id === selectedTokenId;
+                const sideRingClass = token.teamSide === 'away'
+                  ? 'ring-[3px] ring-[rgba(220,38,38,0.28)]'
+                  : 'ring-[3px] ring-[rgba(16,185,129,0.24)]';
                 return (
                   <motion.div
                     key={token.id}
@@ -1299,10 +1384,11 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                       whileTap={{ scale: 0.96 }}
                       onMouseDown={(e) => { e.stopPropagation(); handleTokenClick(token.id); }}
                       onTouchStart={(e) => { e.stopPropagation(); handleTokenClick(token.id); }}
-                      className={`relative rounded-full border-[3px] ${config.border} ${isSelected ? 'bg-[rgba(255,243,214,0.98)] ring-4 ring-[rgba(245,159,10,0.26)]' : 'bg-[rgba(255,250,240,0.98)] ring-[3px] ring-[rgba(43,29,18,0.24)]'} flex items-center justify-center shadow-[0_12px_22px_rgba(30,19,8,0.34)] cursor-grab active:cursor-grabbing transition-shadow active:shadow-[0_0_0_4px_rgba(245,159,10,0.22)]`}
+                      className={`relative rounded-full border-[3px] ${config.border} ${isSelected ? 'bg-[rgba(255,243,214,0.98)] ring-4 ring-[rgba(245,159,10,0.26)]' : `bg-[rgba(255,250,240,0.98)] ${sideRingClass}`} flex items-center justify-center shadow-[0_12px_22px_rgba(30,19,8,0.34)] cursor-grab active:cursor-grabbing transition-shadow active:shadow-[0_0_0_4px_rgba(245,159,10,0.22)] ${token.isDown ? 'opacity-70' : ''}`}
                       style={{
                         width: `${TOKEN_SIZE}px`,
                         height: `${TOKEN_SIZE}px`,
+                        transform: token.isDown ? 'rotate(-14deg) scale(0.92)' : 'none',
                       }}
                     >
                       {tokenImage ? (
@@ -1319,9 +1405,21 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                           <span className="absolute -bottom-1 -right-1 min-w-[18px] rounded-full bg-[#2b1d12] px-1 py-[1px] text-[8px] font-black text-[#fff7eb] shadow-[0_4px_10px_rgba(30,19,8,0.32)]">
                             {tokenLabel}
                           </span>
+                          {token.isDown && (
+                            <span className="absolute inset-0 flex items-center justify-center rounded-full bg-[rgba(43,29,18,0.28)] text-[8px] font-black uppercase tracking-[0.14em] text-[#fff7eb]">
+                              KO
+                            </span>
+                          )}
                         </>
                       ) : (
-                        <span className="text-[9px] font-black text-[#2b1d12] italic">{tokenLabel}</span>
+                        <>
+                          <span className="text-[9px] font-black text-[#2b1d12] italic">{tokenLabel}</span>
+                          {token.isDown && (
+                            <span className="absolute inset-0 flex items-center justify-center rounded-full bg-[rgba(43,29,18,0.20)] text-[8px] font-black uppercase tracking-[0.14em] text-[#2b1d12]">
+                              KO
+                            </span>
+                          )}
+                        </>
                       )}
                     </motion.button>
                   </motion.div>
