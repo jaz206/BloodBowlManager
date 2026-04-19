@@ -320,11 +320,13 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     () => tokens.find((token) => token.id === selectedTokenId) || null,
     [tokens, selectedTokenId]
   );
-  const tackleZoneCounts = useMemo(() => {
-    const zoneMap = new Map<string, number>();
+  const tackleZonesBySide = useMemo(() => {
+    const home = new Map<string, number>();
+    const away = new Map<string, number>();
 
     tokens.forEach((token) => {
       if (token.isDown) return;
+      const zoneMap = token.teamSide === 'away' ? away : home;
       for (let dx = -1; dx <= 1; dx += 1) {
         for (let dy = -1; dy <= 1; dy += 1) {
           if (dx === 0 && dy === 0) continue;
@@ -337,8 +339,32 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
       }
     });
 
-    return zoneMap;
+    return { home, away };
   }, [tokens]);
+  const selectedPerspectiveSide = selectedToken?.teamSide ?? currentPlacementSide;
+  const enemyTackleZoneCounts = selectedPerspectiveSide === 'home' ? tackleZonesBySide.away : tackleZonesBySide.home;
+  const alliedTackleZoneCounts = selectedPerspectiveSide === 'home' ? tackleZonesBySide.home : tackleZonesBySide.away;
+  const activeMoveModifiers = useMemo(() => {
+    if (activeTool !== 'move' || !selectedToken || selectedToken.isDown) return [];
+    const modifiers: Array<{ x: number; y: number; count: number }> = [];
+
+    for (let dx = -1; dx <= 1; dx += 1) {
+      for (let dy = -1; dy <= 1; dy += 1) {
+        if (dx === 0 && dy === 0) continue;
+        const x = selectedToken.x + dx;
+        const y = selectedToken.y + dy;
+        if (x < 0 || x >= GRID_COLS || y < 0 || y >= GRID_ROWS) continue;
+        const count = enemyTackleZoneCounts.get(`${x}-${y}`) || 0;
+        if (count > 0) modifiers.push({ x, y, count });
+      }
+    }
+
+    return modifiers;
+  }, [activeTool, selectedToken, enemyTackleZoneCounts]);
+  const activePassModifier = useMemo(() => {
+    if (activeTool !== 'pass' || !selectedToken) return null;
+    return enemyTackleZoneCounts.get(`${selectedToken.x}-${selectedToken.y}`) || 0;
+  }, [activeTool, selectedToken, enemyTackleZoneCounts]);
 
   // Sync selection
   useEffect(() => {
@@ -1329,8 +1355,20 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
 
             {showDefenseZones && (
               <div className="absolute inset-0 pointer-events-none z-10">
-                {Array.from(tackleZoneCounts.entries()).map(([key, count]) => {
+                {Array.from(
+                  selectedTokenId !== null ? enemyTackleZoneCounts.entries() : new Set([
+                    ...tackleZonesBySide.home.keys(),
+                    ...tackleZonesBySide.away.keys(),
+                  ].map((key) => key))
+                ).map((entry) => {
+                  const [key, count] = Array.isArray(entry)
+                    ? entry
+                    : [entry, 0];
                   const [x, y] = key.split('-').map(Number);
+                  const homeCount = tackleZonesBySide.home.get(key) || 0;
+                  const awayCount = tackleZonesBySide.away.get(key) || 0;
+                  const displayCount = selectedTokenId !== null ? (count as number) : Math.max(homeCount, awayCount);
+                  if (displayCount <= 0) return null;
                   return (
                     <div
                       key={key}
@@ -1342,13 +1380,65 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                         height: `${GRID_CELL_SIZE}px`,
                       }}
                     >
-                      <div className="absolute inset-[3px] rounded-lg border border-[rgba(239,68,68,0.30)] bg-[rgba(239,68,68,0.12)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]" />
-                      <span className="absolute right-1 top-1 rounded-full bg-[rgba(43,29,18,0.84)] px-1.5 py-[1px] text-[8px] font-black text-[#fff7eb] shadow-[0_4px_10px_rgba(30,19,8,0.22)]">
-                        -{count}
-                      </span>
+                      <div
+                        className="absolute inset-[3px] rounded-lg shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]"
+                        style={{
+                          border: selectedTokenId !== null
+                            ? '1px solid rgba(239,68,68,0.30)'
+                            : '1px solid rgba(111,87,56,0.16)',
+                          background:
+                            selectedTokenId !== null
+                              ? 'rgba(239,68,68,0.12)'
+                              : homeCount > 0 && awayCount > 0
+                                ? 'linear-gradient(135deg, rgba(16,185,129,0.12) 0%, rgba(16,185,129,0.12) 50%, rgba(239,68,68,0.12) 50%, rgba(239,68,68,0.12) 100%)'
+                                : homeCount > 0
+                                  ? 'rgba(16,185,129,0.10)'
+                                  : 'rgba(239,68,68,0.10)',
+                        }}
+                      />
+                      {selectedTokenId !== null ? (
+                        <span className="absolute right-1 top-1 rounded-full bg-[rgba(43,29,18,0.84)] px-1.5 py-[1px] text-[8px] font-black text-[#fff7eb] shadow-[0_4px_10px_rgba(30,19,8,0.22)]">
+                          -{count}
+                        </span>
+                      ) : (
+                        <div className="absolute inset-x-1 top-1 flex items-center justify-between gap-1">
+                          {homeCount > 0 ? (
+                            <span className="rounded-full bg-[rgba(16,185,129,0.84)] px-1.5 py-[1px] text-[8px] font-black text-[#fff7eb] shadow-[0_4px_10px_rgba(30,19,8,0.18)]">
+                              H {homeCount}
+                            </span>
+                          ) : <span />}
+                          {awayCount > 0 ? (
+                            <span className="rounded-full bg-[rgba(239,68,68,0.84)] px-1.5 py-[1px] text-[8px] font-black text-[#fff7eb] shadow-[0_4px_10px_rgba(30,19,8,0.18)]">
+                              A {awayCount}
+                            </span>
+                          ) : null}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
+              </div>
+            )}
+
+            {activeMoveModifiers.length > 0 && (
+              <div className="absolute inset-0 pointer-events-none z-[11]">
+                {activeMoveModifiers.map(({ x, y, count }) => (
+                  <div
+                    key={`move-${x}-${y}`}
+                    className="absolute"
+                    style={{
+                      left: `${x * GRID_CELL_SIZE}px`,
+                      top: `${y * GRID_CELL_SIZE}px`,
+                      width: `${GRID_CELL_SIZE}px`,
+                      height: `${GRID_CELL_SIZE}px`,
+                    }}
+                  >
+                    <div className="absolute inset-[5px] rounded-lg border border-[rgba(239,68,68,0.32)] bg-[rgba(239,68,68,0.14)]" />
+                    <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[rgba(43,29,18,0.86)] px-2 py-[2px] text-[9px] font-black text-[#fff7eb] shadow-[0_4px_12px_rgba(30,19,8,0.22)]">
+                      -{count}
+                    </span>
+                  </div>
+                ))}
               </div>
             )}
 
@@ -1361,6 +1451,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                   ? String(token.playerData.jerseyNumber)
                   : config.label;
                 const isSelected = token.id === selectedTokenId;
+                const tokenPassModifier = activeTool === 'pass' && selectedTokenId === token.id ? activePassModifier : null;
                 const sideRingClass = token.teamSide === 'away'
                   ? 'ring-[3px] ring-[rgba(220,38,38,0.28)]'
                   : 'ring-[3px] ring-[rgba(16,185,129,0.24)]';
@@ -1405,6 +1496,11 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                           <span className="absolute -bottom-1 -right-1 min-w-[18px] rounded-full bg-[#2b1d12] px-1 py-[1px] text-[8px] font-black text-[#fff7eb] shadow-[0_4px_10px_rgba(30,19,8,0.32)]">
                             {tokenLabel}
                           </span>
+                          {typeof tokenPassModifier === 'number' && tokenPassModifier > 0 && (
+                            <span className="absolute -top-2 left-1/2 -translate-x-1/2 rounded-full bg-[rgba(239,68,68,0.88)] px-2 py-[1px] text-[8px] font-black text-[#fff7eb] shadow-[0_4px_10px_rgba(30,19,8,0.28)]">
+                              P -{tokenPassModifier}
+                            </span>
+                          )}
                           {token.isDown && (
                             <span className="absolute inset-0 flex items-center justify-center rounded-full bg-[rgba(43,29,18,0.28)] text-[8px] font-black uppercase tracking-[0.14em] text-[#fff7eb]">
                               KO
@@ -1414,6 +1510,11 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                       ) : (
                         <>
                           <span className="text-[9px] font-black text-[#2b1d12] italic">{tokenLabel}</span>
+                          {typeof tokenPassModifier === 'number' && tokenPassModifier > 0 && (
+                            <span className="absolute -top-2 left-1/2 -translate-x-1/2 rounded-full bg-[rgba(239,68,68,0.88)] px-2 py-[1px] text-[8px] font-black text-[#fff7eb] shadow-[0_4px_10px_rgba(30,19,8,0.28)]">
+                              P -{tokenPassModifier}
+                            </span>
+                          )}
                           {token.isDown && (
                             <span className="absolute inset-0 flex items-center justify-center rounded-full bg-[rgba(43,29,18,0.20)] text-[8px] font-black uppercase tracking-[0.14em] text-[#2b1d12]">
                               KO
