@@ -239,6 +239,26 @@ const buildFormationStatus = (tokens: BoardToken[], side: 'home' | 'away' = 'hom
   return { onLoS: onLoSTokens, onLeftWide, onRightWide, totalOnField, inOwnHalf, isLegal, reasons };
 };
 
+const isTokenInOwnHalf = (token: BoardToken, side: 'home' | 'away' = 'home') => {
+  const isHome = side === 'home';
+  return isHome ? token.x >= PITCH_INFO.homeHalfStart : token.x <= PITCH_INFO.losColumn;
+};
+
+const getIllegalTokenIdsForSide = (tokens: BoardToken[], side: 'home' | 'away' = 'home') =>
+  new Set(tokens.filter((token) => token.teamSide === side && !isTokenInOwnHalf(token, side)).map((token) => token.id));
+
+const restoreBallCarrier = (nextTokens: BoardToken[], previousTokens: BoardToken[]) => {
+  const previousCarrier = previousTokens.find((token) => token.hasBall);
+  if (!previousCarrier) return nextTokens;
+
+  const carrierRef = previousCarrier.playerRef || String(previousCarrier.id);
+  return nextTokens.map((token) =>
+    (token.playerRef && token.playerRef === carrierRef) || token.id === previousCarrier.id
+      ? { ...token, hasBall: true }
+      : token
+  );
+};
+
 const decorateTokensWithTeamData = (baseTokens: BoardToken[], team?: ManagedTeam | null): BoardToken[] => {
   if (!team) return baseTokens;
 
@@ -547,6 +567,8 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
       return a.customName.localeCompare(b.customName);
     });
   }, [opponentTeam]);
+  const homeIllegalTokenIds = useMemo(() => getIllegalTokenIdsForSide(tokens, 'home'), [tokens]);
+  const awayIllegalTokenIds = useMemo(() => getIllegalTokenIdsForSide(tokens, 'away'), [tokens]);
   const availableOpponentTeams = useMemo(
     () => managedTeams.filter((team) => team.id !== selectedTeamId),
     [managedTeams, selectedTeamId]
@@ -605,6 +627,9 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
   const boardIsLegal =
     (!homeSideActive || formationStatus.isLegal) &&
     (!awaySideActive || awayFormationStatus.isLegal);
+  const homeLoSNeedsHelp = homeSideActive && formationStatus.onLoS < 3;
+  const awayLoSNeedsHelp = awaySideActive && awayFormationStatus.onLoS < 3;
+  const showLoSWarning = homeLoSNeedsHelp || awayLoSNeedsHelp;
   const activeMoveModifiers = useMemo(() => {
     if (activeTool !== 'move' || !selectedToken || selectedToken.isDown) return [];
     const modifiers: Array<{ x: number; y: number; count: number }> = [];
@@ -852,6 +877,27 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     pushHistory([], [], DEFAULT_BALL_POSITION);
     setSelectedPlayer(null);
     setSelectedTokenId(null);
+  };
+
+  const handleAutoCorrectFormation = () => {
+    const nextHomeTokens = currentTeam
+      ? restoreBallCarrier(buildTeamLoadFormation(currentTeam.players, 'home'), tokens.filter((token) => token.teamSide === 'home'))
+      : tokens.filter((token) => token.teamSide === 'home');
+
+    const nextAwayTokens = opponentTeam
+      ? restoreBallCarrier(buildTeamLoadFormation(opponentTeam.players, 'away'), tokens.filter((token) => token.teamSide === 'away'))
+      : tokens.filter((token) => token.teamSide === 'away');
+
+    const combined = [...nextHomeTokens, ...nextAwayTokens];
+    const synced = syncBallWithTokens(combined, ballPosition);
+    pushHistory(synced.tokens, drawnPaths, synced.ballPosition);
+
+    if (selectedToken && (homeIllegalTokenIds.has(selectedToken.id) || awayIllegalTokenIds.has(selectedToken.id))) {
+      setSelectedPlayer(null);
+      setSelectedTokenId(null);
+    }
+
+    showToast('Formación legalizada automáticamente.');
   };
 
   const handleSavePlay = () => {
@@ -1773,6 +1819,18 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                 </span>
               </div>
             </div>
+            <button
+              type="button"
+              onClick={handleAutoCorrectFormation}
+              className={`ml-2 flex items-center gap-2 rounded-xl border px-3 py-2 text-[9px] font-black uppercase tracking-widest transition-all ${
+                boardIsLegal
+                  ? 'border-[rgba(16,185,129,0.20)] bg-[rgba(16,185,129,0.08)] text-emerald-700 hover:bg-[rgba(16,185,129,0.14)]'
+                  : 'border-[rgba(239,68,68,0.20)] bg-[rgba(239,68,68,0.08)] text-red-700 hover:bg-[rgba(239,68,68,0.14)]'
+              }`}
+            >
+              <span className="material-symbols-outlined text-sm">auto_fix_high</span>
+              Autocorregir
+            </button>
             <div className="pointer-events-none absolute left-0 top-full z-50 mt-2 w-[22rem] rounded-2xl border border-[rgba(111,87,56,0.14)] bg-[rgba(255,250,240,0.98)] p-3 text-left opacity-0 shadow-[0_18px_40px_rgba(89,59,21,0.12)] transition-all group-hover:opacity-100">
               {homeSideActive && (
                 <div className="mb-3">
@@ -1947,6 +2005,25 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
               <div className="absolute bottom-[160px] w-full h-[1px] bg-primary/15 border-t border-dashed border-primary/25"></div>
             </div>
 
+            {showLoSWarning && (
+              <div className="absolute inset-0 pointer-events-none z-[9]">
+                <div
+                  className="absolute"
+                  style={{
+                    left: `${PITCH_INFO.losColumn * GRID_CELL_SIZE}px`,
+                    top: `${4 * GRID_CELL_SIZE}px`,
+                    width: `${GRID_CELL_SIZE}px`,
+                    height: `${7 * GRID_CELL_SIZE}px`,
+                  }}
+                >
+                  <div className="absolute inset-[2px] rounded-xl border border-red-500/35 bg-red-500/12 shadow-[0_0_0_1px_rgba(239,68,68,0.18),0_0_18px_rgba(239,68,68,0.18)] animate-pulse" />
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-red-600 px-2 py-[1px] text-[8px] font-black uppercase tracking-[0.16em] text-white shadow-[0_4px_10px_rgba(30,19,8,0.22)]">
+                    LoS
+                  </span>
+                </div>
+              </div>
+            )}
+
             {showDefenseZones && (
               <div className="absolute inset-0 pointer-events-none z-10">
                 {Array.from(
@@ -2065,6 +2142,9 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                 const isSelected = token.id === selectedTokenId;
                 const tokenPassModifier = activeTool === 'pass' && selectedTokenId === token.id ? activePassModifier : null;
                 const tokenInterceptModifier = activeTool === 'intercept' && selectedTokenId === token.id ? activeInterceptModifier : null;
+                const isIllegalPlacement = token.teamSide === 'home'
+                  ? homeIllegalTokenIds.has(token.id)
+                  : awayIllegalTokenIds.has(token.id);
                 const sideRingClass = token.teamSide === 'away'
                   ? 'ring-[3px] ring-[rgba(220,38,38,0.28)]'
                   : 'ring-[3px] ring-[rgba(16,185,129,0.24)]';
@@ -2081,7 +2161,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                     initial={{ opacity: 0, scale: 0 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0 }}
-                    className="absolute z-30 flex items-center justify-center"
+                    className={`absolute z-30 flex items-center justify-center ${isIllegalPlacement ? 'drop-shadow-[0_0_0_1px_rgba(239,68,68,0.22)]' : ''}`}
                     style={{
                       width: `${GRID_CELL_SIZE}px`,
                       height: `${GRID_CELL_SIZE}px`,
@@ -2094,13 +2174,13 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                       whileTap={{ scale: 0.96 }}
                       onMouseDown={(e) => { e.stopPropagation(); handleTokenClick(token.id); }}
                       onTouchStart={(e) => { e.stopPropagation(); handleTokenClick(token.id); }}
-                      className={`relative rounded-full border-[3px] ${config.border} ${isSelected ? 'bg-[rgba(255,243,214,0.98)] ring-4 ring-[rgba(245,159,10,0.26)]' : `${sideSurfaceClass} ${sideRingClass}`} flex items-center justify-center shadow-[0_12px_22px_rgba(30,19,8,0.34)] cursor-grab active:cursor-grabbing transition-shadow active:shadow-[0_0_0_4px_rgba(245,159,10,0.22)] ${token.isDown ? 'opacity-70' : ''}`}
-                      style={{
-                        width: `${TOKEN_SIZE}px`,
-                        height: `${TOKEN_SIZE}px`,
-                        transform: token.isDown ? 'rotate(-14deg) scale(0.92)' : 'none',
-                      }}
-                    >
+                       className={`relative rounded-full border-[3px] ${config.border} ${isSelected ? 'bg-[rgba(255,243,214,0.98)] ring-4 ring-[rgba(245,159,10,0.26)]' : `${sideSurfaceClass} ${sideRingClass}`} ${isIllegalPlacement ? 'ring-4 ring-red-500/40 bg-[rgba(239,68,68,0.12)]' : ''} flex items-center justify-center shadow-[0_12px_22px_rgba(30,19,8,0.34)] cursor-grab active:cursor-grabbing transition-shadow active:shadow-[0_0_0_4px_rgba(245,159,10,0.22)] ${token.isDown ? 'opacity-70' : ''}`}
+                       style={{
+                         width: `${TOKEN_SIZE}px`,
+                         height: `${TOKEN_SIZE}px`,
+                         transform: token.isDown ? 'rotate(-14deg) scale(0.92)' : 'none',
+                       }}
+                     >
                       {tokenImage ? (
                         <>
                           <div className="absolute inset-[1px] overflow-hidden rounded-full">
@@ -2134,6 +2214,11 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                               KO
                             </span>
                           )}
+                          {isIllegalPlacement && !token.isDown && (
+                            <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-red-600 px-1.5 py-[1px] text-[7px] font-black uppercase tracking-[0.12em] text-white shadow-[0_4px_10px_rgba(30,19,8,0.22)]">
+                              !
+                            </span>
+                          )}
                         </>
                       ) : (
                         <>
@@ -2151,6 +2236,11 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                           {token.isDown && (
                             <span className="absolute inset-0 flex items-center justify-center rounded-full bg-[rgba(43,29,18,0.20)] text-[8px] font-black uppercase tracking-[0.14em] text-[#2b1d12]">
                               KO
+                            </span>
+                          )}
+                          {isIllegalPlacement && !token.isDown && (
+                            <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-red-600 px-1.5 py-[1px] text-[7px] font-black uppercase tracking-[0.12em] text-white shadow-[0_4px_10px_rgba(30,19,8,0.22)]">
+                              !
                             </span>
                           )}
                         </>
