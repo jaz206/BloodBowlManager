@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import type { Play, PlayerPosition, ManagedTeam, ManagedPlayer, BoardToken, DrawingPath } from '../../types';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const MAX_TOKENS = 11;
+const MAX_TOKENS_PER_SIDE = 11;
 const GRID_COLS = 26;
 const GRID_ROWS = 15;
 const GRID_CELL_SIZE = 40;
@@ -138,7 +138,7 @@ const getRoleSlot = (position: PlayerPosition, index: number) => {
 const buildTeamLoadFormation = (players: ManagedPlayer[]): BoardToken[] => {
   const ordered = [...players]
     .sort((a, b) => getLoadPriority(a) - getLoadPriority(b))
-    .slice(0, MAX_TOKENS);
+    .slice(0, MAX_TOKENS_PER_SIDE);
 
   const roleCounters: Record<string, number> = {};
 
@@ -159,14 +159,17 @@ const buildTeamLoadFormation = (players: ManagedPlayer[]): BoardToken[] => {
   });
 };
 
-const buildFormationStatus = (tokens: BoardToken[]) => {
-  const onLoS = tokens.filter(token => token.x === PITCH_INFO.losColumn && token.y >= 4 && token.y <= 10).length;
-  const onLeftWide = tokens.filter(token => token.x >= PITCH_INFO.homeHalfStart && token.y >= 0 && token.y <= PITCH_INFO.leftWideMaxRow).length;
-  const onRightWide = tokens.filter(token => token.x >= PITCH_INFO.homeHalfStart && token.y >= PITCH_INFO.rightWideMinRow && token.y < GRID_ROWS).length;
-  const totalOnField = tokens.length;
-  const inOwnHalf = tokens.filter(token => token.x >= PITCH_INFO.homeHalfStart).length;
-  const isLegal = onLoS >= 3 && onLeftWide <= 2 && onRightWide <= 2 && totalOnField <= 11 && inOwnHalf === totalOnField;
-  return { onLoS, onLeftWide, onRightWide, totalOnField, inOwnHalf, isLegal };
+const buildFormationStatus = (tokens: BoardToken[], side: 'home' | 'away' = 'home') => {
+  const sideTokens = tokens.filter((token) => token.teamSide === side);
+  const isHome = side === 'home';
+  const inOwnSide = (token: BoardToken) => isHome ? token.x >= PITCH_INFO.homeHalfStart : token.x <= PITCH_INFO.losColumn;
+  const onLeftWide = sideTokens.filter(token => inOwnSide(token) && token.y >= 0 && token.y <= PITCH_INFO.leftWideMaxRow).length;
+  const onRightWide = sideTokens.filter(token => inOwnSide(token) && token.y >= PITCH_INFO.rightWideMinRow && token.y < GRID_ROWS).length;
+  const totalOnField = sideTokens.length;
+  const inOwnHalf = sideTokens.filter(token => inOwnSide(token)).length;
+  const onLoSTokens = sideTokens.filter(token => token.x === PITCH_INFO.losColumn && token.y >= 4 && token.y <= 10).length;
+  const isLegal = onLoSTokens >= 3 && onLeftWide <= 2 && onRightWide <= 2 && totalOnField <= MAX_TOKENS_PER_SIDE && inOwnHalf === totalOnField;
+  return { onLoS: onLoSTokens, onLeftWide, onRightWide, totalOnField, inOwnHalf, isLegal };
 };
 
 const decorateTokensWithTeamData = (baseTokens: BoardToken[], team?: ManagedTeam | null): BoardToken[] => {
@@ -191,15 +194,19 @@ const decorateTokensWithTeamData = (baseTokens: BoardToken[], team?: ManagedTeam
   });
 };
 
-const getNextOpenSlot = (currentTokens: BoardToken[]) => {
+const getNextOpenSlot = (currentTokens: BoardToken[], side: 'home' | 'away' = 'home') => {
   const usedSlots = new Set(currentTokens.map((token) => `${token.x}-${token.y}`));
-  const preferredSlots = [...FALLBACK_FORMATION_SLOTS];
+  const preferredSlots = [...FALLBACK_FORMATION_SLOTS].map((slot) =>
+    side === 'home' ? slot : { x: GRID_COLS - 1 - slot.x, y: slot.y }
+  );
 
   for (const slot of preferredSlots) {
     if (!usedSlots.has(`${slot.x}-${slot.y}`)) return slot;
   }
 
-  for (let x = PITCH_INFO.homeHalfStart; x < GRID_COLS - 1; x += 1) {
+  const startX = side === 'home' ? PITCH_INFO.homeHalfStart : 1;
+  const endX = side === 'home' ? GRID_COLS - 1 : PITCH_INFO.losColumn + 1;
+  for (let x = startX; x < endX; x += 1) {
     for (let y = 1; y < GRID_ROWS - 1; y += 1) {
       if (!usedSlots.has(`${x}-${y}`)) return { x, y };
     }
@@ -216,6 +223,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
   const [playName, setPlayName] = useState('');
   const [selectedPlayId, setSelectedPlayId] = useState<string | undefined>(plays.length > 0 ? plays[0].id : undefined);
   const [selectedTeamId, setSelectedTeamId] = useState<string>('');
+  const [opponentTeamId, setOpponentTeamId] = useState<string>('');
   const [selectedStyle, setSelectedStyle] = useState<TacticStyle>('Defensivo');
   const [styleMenuExpanded, setStyleMenuExpanded] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<ManagedPlayer | null>(null);
@@ -268,16 +276,32 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
   const fieldRef = useRef<HTMLDivElement>(null);
   const styleMenuRef = useRef<HTMLDivElement>(null);
   const draggedTokenRef = useRef<{ id: number } | null>(null);
-  const draggedBenchPlayerRef = useRef<ManagedPlayer | null>(null);
-  const formationStatus = useMemo(() => buildFormationStatus(tokens), [tokens]);
+  const draggedBenchPlayerRef = useRef<{ player: ManagedPlayer; side: 'home' | 'away' } | null>(null);
+  const formationStatus = useMemo(() => buildFormationStatus(tokens, 'home'), [tokens]);
+  const awayFormationStatus = useMemo(() => buildFormationStatus(tokens, 'away'), [tokens]);
   const currentTeam = useMemo(
     () => managedTeams.find((team) => team.id === selectedTeamId) || null,
     [managedTeams, selectedTeamId]
   );
-  const tokensOnFieldPlayerIds = useMemo(
+  const opponentTeam = useMemo(
+    () => managedTeams.find((team) => team.id === opponentTeamId) || null,
+    [managedTeams, opponentTeamId]
+  );
+  const homeTokensOnFieldPlayerIds = useMemo(
     () =>
       new Set(
         tokens
+          .filter((token) => token.teamSide === 'home')
+          .map((token) => token.playerData?.id ?? (token.playerRef ? Number(token.playerRef) : null))
+          .filter((value): value is number => typeof value === 'number' && !Number.isNaN(value))
+      ),
+    [tokens]
+  );
+  const awayTokensOnFieldPlayerIds = useMemo(
+    () =>
+      new Set(
+        tokens
+          .filter((token) => token.teamSide === 'away')
           .map((token) => token.playerData?.id ?? (token.playerRef ? Number(token.playerRef) : null))
           .filter((value): value is number => typeof value === 'number' && !Number.isNaN(value))
       ),
@@ -286,17 +310,18 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
   const benchPlayers = useMemo(() => {
     if (!currentTeam) return [];
     return [...currentTeam.players]
-      .filter((player) => !tokensOnFieldPlayerIds.has(player.id))
+      .filter((player) => !homeTokensOnFieldPlayerIds.has(player.id))
       .sort((a, b) => {
         const jerseyA = a.jerseyNumber ?? Number.MAX_SAFE_INTEGER;
         const jerseyB = b.jerseyNumber ?? Number.MAX_SAFE_INTEGER;
         if (jerseyA !== jerseyB) return jerseyA - jerseyB;
         return a.customName.localeCompare(b.customName);
       });
-  }, [currentTeam, tokensOnFieldPlayerIds]);
+  }, [currentTeam, homeTokensOnFieldPlayerIds]);
   const fieldPlayers = useMemo(() => {
     if (!currentTeam) return [];
     return tokens
+      .filter((token) => token.teamSide === 'home')
       .map((token) => {
         const playerId = token.playerData?.id ?? (token.playerRef ? Number(token.playerRef) : null);
         if (!playerId) return null;
@@ -312,6 +337,40 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
         return a.player.customName.localeCompare(b.player.customName);
       });
   }, [currentTeam, tokens]);
+  const opponentBenchPlayers = useMemo(() => {
+    if (!opponentTeam) return [];
+    return [...opponentTeam.players]
+      .filter((player) => !awayTokensOnFieldPlayerIds.has(player.id))
+      .sort((a, b) => {
+        const jerseyA = a.jerseyNumber ?? Number.MAX_SAFE_INTEGER;
+        const jerseyB = b.jerseyNumber ?? Number.MAX_SAFE_INTEGER;
+        if (jerseyA !== jerseyB) return jerseyA - jerseyB;
+        return a.customName.localeCompare(b.customName);
+      });
+  }, [opponentTeam, awayTokensOnFieldPlayerIds]);
+  const opponentFieldPlayers = useMemo(() => {
+    if (!opponentTeam) return [];
+    return tokens
+      .filter((token) => token.teamSide === 'away')
+      .map((token) => {
+        const playerId = token.playerData?.id ?? (token.playerRef ? Number(token.playerRef) : null);
+        if (!playerId) return null;
+        const matchingPlayer = opponentTeam.players.find((player) => player.id === playerId);
+        if (!matchingPlayer) return null;
+        return { token, player: matchingPlayer };
+      })
+      .filter((entry): entry is { token: BoardToken; player: ManagedPlayer } => Boolean(entry))
+      .sort((a, b) => {
+        const jerseyA = a.player.jerseyNumber ?? Number.MAX_SAFE_INTEGER;
+        const jerseyB = b.player.jerseyNumber ?? Number.MAX_SAFE_INTEGER;
+        if (jerseyA !== jerseyB) return jerseyA - jerseyB;
+        return a.player.customName.localeCompare(b.player.customName);
+      });
+  }, [opponentTeam, tokens]);
+  const availableOpponentTeams = useMemo(
+    () => managedTeams.filter((team) => team.id !== selectedTeamId),
+    [managedTeams, selectedTeamId]
+  );
   const occupiedSlots = useMemo(
     () => new Set(tokens.map((token) => `${token.x}-${token.y}`)),
     [tokens]
@@ -485,16 +544,25 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
   };
 
   const handleAddToken = (position: PlayerPosition) => {
-    if (tokens.length < MAX_TOKENS) {
-      const newTokens = [...tokens, {
-        id: Date.now(),
-        x: 4,
-        y: Math.floor(GRID_ROWS / 2),
-        position,
-        teamSide: currentPlacementSide,
-      }];
-      pushHistory(newTokens);
+    const sideTokenCount = tokens.filter((token) => token.teamSide === currentPlacementSide).length;
+    if (sideTokenCount >= MAX_TOKENS_PER_SIDE) {
+      showToast(currentPlacementSide === 'home' ? 'Ya tienes 11 jugadores locales en el campo.' : 'Ya tienes 11 jugadores rivales en el campo.');
+      return;
     }
+
+    const slot = getNextOpenSlot(tokens, currentPlacementSide) || {
+      x: currentPlacementSide === 'home' ? 4 : GRID_COLS - 5,
+      y: Math.floor(GRID_ROWS / 2),
+    };
+
+    const newTokens = [...tokens, {
+      id: Date.now(),
+      x: slot.x,
+      y: slot.y,
+      position,
+      teamSide: currentPlacementSide,
+    }];
+    pushHistory(newTokens);
   };
 
   const handleToggleSelectedTokenDown = () => {
@@ -535,6 +603,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
       name: playName.trim(),
       style: selectedStyle,
       teamId: selectedTeamId || undefined,
+      opponentTeamId: opponentTeamId || undefined,
       rosterName: managedTeams.find(t => t.id === selectedTeamId)?.rosterName || 'Táctica',
       tokens: tokens.map(({ playerData, ...token }) => ({
         ...token,
@@ -554,8 +623,11 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
       const linkedTeam =
         managedTeams.find((team) => playToLoad.teamId && team.id === playToLoad.teamId) ||
         managedTeams.find((team) => normalizeLookupKey(team.rosterName) === normalizeLookupKey(playToLoad.rosterName));
+      const linkedOpponentTeam =
+        managedTeams.find((team) => playToLoad.opponentTeamId && team.id === playToLoad.opponentTeamId) || null;
       const hydratedTokens = linkedTeam ? decorateTokensWithTeamData(playToLoad.tokens, linkedTeam) : playToLoad.tokens;
       if (linkedTeam?.id) setSelectedTeamId(linkedTeam.id);
+      setOpponentTeamId(linkedOpponentTeam?.id || '');
       setTokens(hydratedTokens);
       setDrawnPaths(playToLoad.paths || []);
       setHistory([{ tokens: hydratedTokens, paths: playToLoad.paths || [] }]);
@@ -579,6 +651,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
 
       if (matchingPlay) {
         const hydratedTokens = decorateTokensWithTeamData(matchingPlay.tokens, team);
+        setOpponentTeamId(matchingPlay.opponentTeamId || '');
         setTokens(hydratedTokens);
         setDrawnPaths(matchingPlay.paths || []);
         setHistory([{ tokens: hydratedTokens, paths: matchingPlay.paths || [] }]);
@@ -594,11 +667,25 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
 
       const newTokens = buildTeamLoadFormation(team.players);
       pushHistory(newTokens);
+      setOpponentTeamId('');
       setSelectedPlayId(undefined);
       setSelectedPlayer(null);
       setSelectedTokenId(null);
       showToast(`Plantilla ${team.name} alineada.`);
     }
+  };
+
+  const handleSelectOpponentTeam = (teamId: string) => {
+    const team = managedTeams.find((item) => item.id === teamId);
+    if (!team) return;
+    setOpponentTeamId(teamId);
+    const nextTokens = tokens.filter((token) => token.teamSide !== 'away');
+    pushHistory(nextTokens, drawnPaths);
+    if (selectedToken?.teamSide === 'away') {
+      setSelectedPlayer(null);
+      setSelectedTokenId(null);
+    }
+    showToast(`Rival ${team.name} preparado.`);
   };
 
   useEffect(() => {
@@ -615,6 +702,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
 
     if (matchingPlay) {
       const hydratedTokens = decorateTokensWithTeamData(matchingPlay.tokens, team);
+      setOpponentTeamId(matchingPlay.opponentTeamId || '');
       setTokens(hydratedTokens);
       setDrawnPaths(matchingPlay.paths || []);
       setHistory([{ tokens: hydratedTokens, paths: matchingPlay.paths || [] }]);
@@ -663,13 +751,18 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     draggedTokenRef.current = { id };
   };
 
-  const placeBenchPlayer = (player: ManagedPlayer, slotOverride?: { x: number; y: number } | null) => {
-    if (tokens.length >= MAX_TOKENS) {
-      showToast('Ya tienes 11 jugadores en el campo.');
+  const placeBenchPlayer = (
+    player: ManagedPlayer,
+    side: 'home' | 'away' = 'home',
+    slotOverride?: { x: number; y: number } | null
+  ) => {
+    const sideTokenCount = tokens.filter((token) => token.teamSide === side).length;
+    if (sideTokenCount >= MAX_TOKENS_PER_SIDE) {
+      showToast(side === 'home' ? 'Ya tienes 11 jugadores locales en el campo.' : 'Ya tienes 11 jugadores rivales en el campo.');
       return;
     }
 
-    const slot = slotOverride || getNextOpenSlot(tokens);
+    const slot = slotOverride || getNextOpenSlot(tokens, side);
     if (!slot) {
       showToast('No queda hueco libre en la rejilla.');
       return;
@@ -687,7 +780,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
       position: normalizePositionType(player.position),
       x: slot.x,
       y: slot.y,
-      teamSide: 'home',
+      teamSide: side,
     };
 
     const nextTokens = [...tokens, newToken];
@@ -696,8 +789,8 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     setSelectedTokenId(newToken.id);
   };
 
-  const handleAddBenchPlayer = (player: ManagedPlayer) => {
-    placeBenchPlayer(player);
+  const handleAddBenchPlayer = (player: ManagedPlayer, side: 'home' | 'away' = 'home') => {
+    placeBenchPlayer(player, side);
   };
 
   const handleRemoveTokenFromField = () => {
@@ -708,13 +801,80 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     setSelectedTokenId(null);
   };
 
-  const handleBenchDragStart = (player: ManagedPlayer) => {
-    draggedBenchPlayerRef.current = player;
+  const handleBenchDragStart = (player: ManagedPlayer, side: 'home' | 'away' = 'home') => {
+    draggedBenchPlayerRef.current = { player, side };
   };
 
   const handleBenchDragEnd = () => {
     draggedBenchPlayerRef.current = null;
   };
+
+  const renderBenchPlayerCard = (
+    player: ManagedPlayer,
+    side: 'home' | 'away',
+    disabled: boolean
+  ) => (
+    <button
+      key={`${side}-bench-${player.id}`}
+      onClick={() => handleAddBenchPlayer(player, side)}
+      draggable
+      onDragStart={() => handleBenchDragStart(player, side)}
+      onDragEnd={handleBenchDragEnd}
+      disabled={disabled}
+      className="w-full rounded-2xl border border-[rgba(111,87,56,0.12)] bg-[rgba(255,251,241,0.96)] px-3 py-3 text-left shadow-[0_8px_20px_rgba(89,59,21,0.04)] transition hover:border-[rgba(202,138,4,0.28)] hover:bg-[rgba(202,138,4,0.06)] disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-[rgba(43,29,18,0.08)] px-2 py-0.5 text-[9px] font-black text-[#2b1d12]">
+              #{player.jerseyNumber ?? '--'}
+            </span>
+            <span className="truncate text-[12px] font-black uppercase italic text-[#2b1d12]">
+              {player.customName}
+            </span>
+          </div>
+          <div className="mt-1 text-[9px] font-bold uppercase tracking-[0.14em] text-[#8f745c]">
+            {player.position}
+          </div>
+        </div>
+        <div className="flex flex-col items-end gap-1">
+          <span className="material-symbols-outlined text-base text-[#ca8a04]">add_circle</span>
+          <span className="text-[8px] font-black uppercase tracking-[0.14em] text-[#8f745c]">
+            Arrastra
+          </span>
+        </div>
+      </div>
+    </button>
+  );
+
+  const renderFieldPlayerCard = (token: BoardToken, player: ManagedPlayer) => (
+    <button
+      key={`field-${token.id}`}
+      onClick={() => handleTokenClick(token.id)}
+      className={`w-full rounded-2xl border px-3 py-2 text-left transition ${
+        selectedTokenId === token.id
+          ? 'border-[rgba(202,138,4,0.30)] bg-[rgba(202,138,4,0.08)]'
+          : 'border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.94)] hover:bg-[rgba(202,138,4,0.05)]'
+      }`}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-[rgba(43,29,18,0.08)] px-2 py-0.5 text-[9px] font-black text-[#2b1d12]">
+              #{player.jerseyNumber ?? '--'}
+            </span>
+            <span className="truncate text-[11px] font-black uppercase italic text-[#2b1d12]">
+              {player.customName}
+            </span>
+          </div>
+          <div className="mt-1 text-[8px] font-bold uppercase tracking-[0.14em] text-[#8f745c]">
+            Casilla {token.x + 1}-{token.y + 1}
+          </div>
+        </div>
+        <span className="material-symbols-outlined text-sm text-[#8f745c]">north_east</span>
+      </div>
+    </button>
+  );
 
   const handleFieldDragOver = (event: React.DragEvent<HTMLDivElement>) => {
     if (!draggedBenchPlayerRef.current) return;
@@ -729,7 +889,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     const gridX = Math.max(0, Math.min(GRID_COLS - 1, Math.floor((event.clientX - fieldRect.left) / (GRID_CELL_SIZE * zoom))));
     const gridY = Math.max(0, Math.min(GRID_ROWS - 1, Math.floor((event.clientY - fieldRect.top) / (GRID_CELL_SIZE * zoom))));
 
-    placeBenchPlayer(draggedBenchPlayerRef.current, { x: gridX, y: gridY });
+    placeBenchPlayer(draggedBenchPlayerRef.current.player, draggedBenchPlayerRef.current.side, { x: gridX, y: gridY });
     draggedBenchPlayerRef.current = null;
   };
 
@@ -947,287 +1107,196 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
 
       <main className="flex flex-1 overflow-hidden">
         {/* Left Sidebar */}
-        <aside className="w-72 bg-[rgba(255,250,240,0.98)] border-r border-[rgba(111,87,56,0.12)] flex flex-col p-5 gap-8 shrink-0 shadow-[0_0_0_1px_rgba(255,255,255,0.35)_inset] overflow-y-auto">
-          <section>
-            <div className="flex items-center justify-between mb-5">
-              <div>
-                <h2 className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">
-                  {currentTeam ? 'Banquillo del equipo' : 'Tokens de Equipo'}
-                </h2>
-                <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.16em] text-[#8f745c]">
-                  {currentTeam ? `${benchPlayers.length} disponibles` : 'Añade fichas genéricas'}
-                </p>
-              </div>
-              <div className="relative group">
-                <span className="text-[9px] bg-[rgba(202,138,4,0.08)] text-[#8f5a00] px-2 py-0.5 rounded-full border border-[rgba(202,138,4,0.18)] font-black cursor-pointer hover:bg-[rgba(202,138,4,0.14)] transition-colors">
-                  {managedTeams.find(t => t.id === selectedTeamId)?.name || 'Seleccionar'}
-                </span>
-                <div className="absolute left-0 top-full mt-2 w-48 bg-[rgba(255,250,240,0.98)] border border-[rgba(111,87,56,0.14)] rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 p-1">
-                  {managedTeams.map(t => (
-                    <button key={t.id} className="w-full text-left p-2 hover:bg-[rgba(202,138,4,0.08)] rounded-lg text-[10px] font-bold text-[#2b1d12]" onClick={() => handleLoadTeam(t.id!)}>
-                      {t.name}
-                    </button>
+        <aside className="w-72 bg-[rgba(255,250,240,0.98)] border-r border-[rgba(111,87,56,0.12)] flex flex-col p-5 gap-5 shrink-0 shadow-[0_0_0_1px_rgba(255,255,255,0.35)_inset] overflow-hidden">
+          <AnimatePresence>
+            {selectedPlayer && selectedToken && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="bg-[rgba(255,251,241,0.98)] rounded-2xl p-4 border border-[rgba(111,87,56,0.12)] shadow-[0_10px_24px_rgba(89,59,21,0.05)] shrink-0"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[9px] font-black text-[#ca8a04] uppercase">Detalle: {selectedPlayer.customName}</span>
+                  <button onClick={() => { setSelectedPlayer(null); setSelectedTokenId(null); }} className="text-[#8f745c] hover:text-[#2b1d12]">
+                    <span className="material-symbols-outlined text-xs">close</span>
+                  </button>
+                </div>
+                <div className="grid grid-cols-5 gap-1 text-center mb-2">
+                  {['MV', 'FU', 'AG', 'PA', 'AR'].map(stat => (
+                    <div key={stat} className="flex flex-col">
+                      <span className="text-[8px] text-[#8f745c] font-bold">{stat}</span>
+                      <span className="text-[10px] text-[#2b1d12] font-black">{(selectedPlayer.stats as any)[stat]}</span>
+                    </div>
                   ))}
                 </div>
+                <div className="text-[8px] text-[#8f745c] italic font-medium leading-relaxed line-clamp-3">
+                  {selectedPlayer.skills}
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <button
+                    onClick={handleToggleSelectedTokenDown}
+                    className={`rounded-xl border px-3 py-2 text-[9px] font-black uppercase tracking-[0.16em] transition ${
+                      selectedToken.isDown
+                        ? 'border-[rgba(239,68,68,0.18)] bg-[rgba(239,68,68,0.08)] text-red-700'
+                        : 'border-[rgba(16,185,129,0.18)] bg-[rgba(16,185,129,0.08)] text-emerald-700'
+                    }`}
+                  >
+                    {selectedToken.isDown ? 'Derribado' : 'De pie'}
+                  </button>
+                  <button
+                    onClick={handleToggleSelectedTokenSide}
+                    className={`rounded-xl border px-3 py-2 text-[9px] font-black uppercase tracking-[0.16em] transition ${
+                      selectedToken.teamSide === 'away'
+                        ? 'border-[rgba(239,68,68,0.18)] bg-[rgba(239,68,68,0.08)] text-red-700'
+                        : 'border-[rgba(16,185,129,0.18)] bg-[rgba(16,185,129,0.08)] text-emerald-700'
+                    }`}
+                  >
+                    {selectedToken.teamSide === 'away' ? 'Rival' : 'Local'}
+                  </button>
+                </div>
+                <button
+                  onClick={handleRemoveTokenFromField}
+                  className="mt-3 w-full rounded-xl border border-[rgba(220,38,38,0.15)] bg-[rgba(220,38,38,0.06)] px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-red-600 transition hover:bg-[rgba(220,38,38,0.10)]"
+                >
+                  {selectedToken.playerData ? 'Mandar al banquillo' : 'Quitar del campo'}
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div className="flex-1 overflow-y-auto pr-1 space-y-5">
+            <section className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Equipo local</h2>
+                  <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.16em] text-[#8f745c]">
+                    {currentTeam ? currentTeam.name : 'Selecciona una franquicia'}
+                  </p>
+                </div>
+                <div className="relative group">
+                  <button className="text-[9px] bg-[rgba(202,138,4,0.08)] text-[#8f5a00] px-2 py-0.5 rounded-full border border-[rgba(202,138,4,0.18)] font-black hover:bg-[rgba(202,138,4,0.14)] transition-colors">
+                    {managedTeams.find(t => t.id === selectedTeamId)?.name || 'Seleccionar'}
+                  </button>
+                  <div className="absolute left-0 top-full mt-2 w-52 bg-[rgba(255,250,240,0.98)] border border-[rgba(111,87,56,0.14)] rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 p-1 max-h-72 overflow-y-auto">
+                    {managedTeams.map(t => (
+                      <button key={t.id} className="w-full text-left p-2 hover:bg-[rgba(202,138,4,0.08)] rounded-lg text-[10px] font-bold text-[#2b1d12]" onClick={() => handleLoadTeam(t.id!)}>
+                        {t.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
-            </div>
 
-            {currentTeam ? (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="rounded-2xl border border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.96)] px-3 py-3">
-                    <div className="text-[8px] font-black uppercase tracking-[0.16em] text-[#8f745c]">En el campo</div>
-                    <div className="mt-1 text-[18px] font-black italic text-[#2b1d12]">{fieldPlayers.length}</div>
-                  </div>
-                  <div className="rounded-2xl border border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.96)] px-3 py-3">
-                    <div className="text-[8px] font-black uppercase tracking-[0.16em] text-[#8f745c]">Banquillo</div>
-                    <div className="mt-1 text-[18px] font-black italic text-[#ca8a04]">{benchPlayers.length}</div>
-                  </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="rounded-2xl border border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.96)] px-3 py-3">
+                  <div className="text-[8px] font-black uppercase tracking-[0.16em] text-[#8f745c]">En el campo</div>
+                  <div className="mt-1 text-[18px] font-black italic text-[#2b1d12]">{fieldPlayers.length}</div>
                 </div>
-
-                <div className="space-y-2">
-                  <div className="text-[9px] font-black uppercase tracking-[0.18em] text-[#8f745c]">Banquillo real</div>
-                  {benchPlayers.length > 0 ? (
-                    benchPlayers.map((player) => (
-                      <button
-                        key={player.id}
-                        onClick={() => handleAddBenchPlayer(player)}
-                        draggable
-                        onDragStart={() => handleBenchDragStart(player)}
-                        onDragEnd={handleBenchDragEnd}
-                        disabled={tokens.length >= MAX_TOKENS}
-                        className="w-full rounded-2xl border border-[rgba(111,87,56,0.12)] bg-[rgba(255,251,241,0.96)] px-3 py-3 text-left shadow-[0_8px_20px_rgba(89,59,21,0.04)] transition hover:border-[rgba(202,138,4,0.28)] hover:bg-[rgba(202,138,4,0.06)] disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="rounded-full bg-[rgba(43,29,18,0.08)] px-2 py-0.5 text-[9px] font-black text-[#2b1d12]">
-                                #{player.jerseyNumber ?? '--'}
-                              </span>
-                              <span className="truncate text-[12px] font-black uppercase italic text-[#2b1d12]">
-                                {player.customName}
-                              </span>
-                            </div>
-                            <div className="mt-1 text-[9px] font-bold uppercase tracking-[0.14em] text-[#8f745c]">
-                              {player.position}
-                            </div>
-                          </div>
-                          <div className="flex flex-col items-end gap-1">
-                            <span className="material-symbols-outlined text-base text-[#ca8a04]">add_circle</span>
-                            <span className="text-[8px] font-black uppercase tracking-[0.14em] text-[#8f745c]">
-                              Arrastra
-                            </span>
-                          </div>
-                        </div>
-                      </button>
-                    ))
-                  ) : (
-                    <div className="rounded-2xl border border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.92)] px-4 py-5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#8f745c]">
-                      Todo el roster está en el campo
-                    </div>
-                  )}
+                <div className="rounded-2xl border border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.96)] px-3 py-3">
+                  <div className="text-[8px] font-black uppercase tracking-[0.16em] text-[#8f745c]">Banquillo</div>
+                  <div className="mt-1 text-[18px] font-black italic text-[#ca8a04]">{benchPlayers.length}</div>
                 </div>
+              </div>
 
-                {fieldPlayers.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="text-[9px] font-black uppercase tracking-[0.18em] text-[#8f745c]">En juego</div>
-                    <div className="space-y-2">
-                      {fieldPlayers.map(({ token, player }) => (
-                        <button
-                          key={player.id}
-                          onClick={() => handleTokenClick(token.id)}
-                          className={`w-full rounded-2xl border px-3 py-2 text-left transition ${
-                            selectedTokenId === token.id
-                              ? 'border-[rgba(202,138,4,0.30)] bg-[rgba(202,138,4,0.08)]'
-                              : 'border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.94)] hover:bg-[rgba(202,138,4,0.05)]'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span className="rounded-full bg-[rgba(43,29,18,0.08)] px-2 py-0.5 text-[9px] font-black text-[#2b1d12]">
-                                  #{player.jerseyNumber ?? '--'}
-                                </span>
-                                <span className="truncate text-[11px] font-black uppercase italic text-[#2b1d12]">
-                                  {player.customName}
-                                </span>
-                              </div>
-                              <div className="mt-1 text-[8px] font-bold uppercase tracking-[0.14em] text-[#8f745c]">
-                                Casilla {token.x + 1}-{token.y + 1}
-                              </div>
-                            </div>
-                            <span className="material-symbols-outlined text-sm text-[#8f745c]">north_east</span>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
+              {!currentTeam && (
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="text-[9px] font-black uppercase tracking-[0.18em] text-[#8f745c]">Rival genérico</div>
-                    <div className="flex items-center gap-1 rounded-full border border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.96)] p-1">
-                      <button
-                        onClick={() => setCurrentPlacementSide('home')}
-                        className={`rounded-full px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.16em] transition ${currentPlacementSide === 'home' ? 'bg-[rgba(16,185,129,0.14)] text-emerald-700' : 'text-[#8f745c]'}`}
-                      >
-                        Local
-                      </button>
-                      <button
-                        onClick={() => setCurrentPlacementSide('away')}
-                        className={`rounded-full px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.16em] transition ${currentPlacementSide === 'away' ? 'bg-[rgba(239,68,68,0.12)] text-red-700' : 'text-[#8f745c]'}`}
-                      >
-                        Rival
-                      </button>
-                    </div>
-                  </div>
+                  <div className="text-[9px] font-black uppercase tracking-[0.18em] text-[#8f745c]">Local generico</div>
                   <div className="grid grid-cols-2 gap-2">
                     {(Object.keys(positionConfig) as Array<keyof typeof positionConfig>).slice(0, 4).map((pos) => (
                       <button
-                        key={`generic-${pos}`}
-                        onClick={() => handleAddToken(pos as PlayerPosition)}
-                        disabled={tokens.length >= MAX_TOKENS}
-                        className="rounded-2xl border border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.96)] px-3 py-3 text-center transition hover:border-[rgba(202,138,4,0.24)] hover:bg-[rgba(202,138,4,0.06)] disabled:opacity-50 disabled:cursor-not-allowed"
+                        key={`generic-home-${pos}`}
+                        onClick={() => {
+                          setCurrentPlacementSide('home');
+                          handleAddToken(pos as PlayerPosition);
+                        }}
+                        disabled={fieldPlayers.length >= MAX_TOKENS_PER_SIDE}
+                        className="rounded-2xl border border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.96)] px-3 py-3 text-center transition hover:border-[rgba(16,185,129,0.24)] hover:bg-[rgba(16,185,129,0.05)] disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <div className="mx-auto mb-2 flex size-10 items-center justify-center rounded-full border-2 border-[rgba(111,87,56,0.22)] bg-[rgba(255,250,240,0.98)]">
-                          <span className="material-symbols-outlined text-base text-[#8f745c]">{positionConfig[pos].icon}</span>
+                        <div className="mx-auto mb-2 flex size-10 items-center justify-center rounded-full border-2 border-[rgba(16,185,129,0.20)] bg-[rgba(255,250,240,0.98)]">
+                          <span className="material-symbols-outlined text-base text-emerald-700">{positionConfig[pos].icon}</span>
                         </div>
                         <div className="text-[8px] font-black uppercase tracking-[0.14em] text-[#2b1d12]">{pos}</div>
                       </button>
                     ))}
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-4">
-                {(Object.keys(positionConfig) as Array<keyof typeof positionConfig>).slice(0, 4).map((pos) => (
-                  <button
-                    key={pos}
-                    onClick={() => handleAddToken(pos as PlayerPosition)}
-                    disabled={tokens.length >= MAX_TOKENS}
-                    className="group flex flex-col items-center gap-2 cursor-grab active:cursor-grabbing disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <div className={`relative flex items-center justify-center size-14 rounded-full bg-background-dark border-4 ${positionConfig[pos].border} shadow-lg transition-transform group-hover:scale-110`}>
-                      <span className="material-symbols-outlined text-2xl text-[#8f745c] group-hover:text-[#ca8a04] transition-colors">
-                        {positionConfig[pos].icon}
-                      </span>
+              )}
+
+              <div className="space-y-2">
+                <div className="text-[9px] font-black uppercase tracking-[0.18em] text-[#8f745c]">Banquillo real</div>
+                <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
+                  {benchPlayers.length > 0 ? (
+                    benchPlayers.map((player) => renderBenchPlayerCard(player, 'home', fieldPlayers.length >= MAX_TOKENS_PER_SIDE))
+                  ) : (
+                    <div className="rounded-2xl border border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.92)] px-4 py-5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#8f745c]">
+                      Todo el roster esta en el campo
                     </div>
-                    <span className="text-[10px] font-bold text-[#8f745c] uppercase tracking-widest">{pos}</span>
+                  )}
+                </div>
+              </div>
+
+              {fieldPlayers.length > 0 && (
+                <div className="space-y-2">
+                  <div className="text-[9px] font-black uppercase tracking-[0.18em] text-[#8f745c]">En juego</div>
+                  <div className="max-h-48 space-y-2 overflow-y-auto pr-1">
+                    {fieldPlayers.map(({ token, player }) => renderFieldPlayerCard(token, player))}
+                  </div>
+                </div>
+              )}
+            </section>
+
+            <div className="h-px bg-[rgba(111,87,56,0.10)]"></div>
+
+            <section className="space-y-4">
+              <h2 className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Herramientas</h2>
+              <div className="flex flex-col gap-2">
+                {([
+                  { id: 'move', icon: 'brush', label: 'Ruta movimiento' },
+                  { id: 'pass', icon: 'near_me', label: 'Pase / trayectoria' },
+                  { id: 'defense', icon: 'groups', label: 'Zonas defensa' },
+                ] as { id: ActiveTool; icon: string; label: string }[]).map(tool => (
+                  <button
+                    key={tool.id}
+                    onClick={() => setActiveTool(prev => prev === tool.id ? null : tool.id)}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all ${activeTool === tool.id
+                      ? 'bg-primary text-black shadow-lg shadow-primary/20'
+                      : 'text-[#8f745c] hover:bg-[rgba(202,138,4,0.08)] hover:text-[#2b1d12]'
+                      }`}
+                  >
+                    <span className="material-symbols-outlined text-sm">{tool.icon}</span>
+                    {tool.label}
                   </button>
                 ))}
-              </div>
-            )}
-          </section>
-
-          <div className="h-px bg-white/5"></div>
-
-          <section className="space-y-4">
-            <h2 className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Herramientas</h2>
-            <div className="flex flex-col gap-2">
-              {([
-                { id: 'move', icon: 'brush', label: 'Ruta Movimiento' },
-                { id: 'pass', icon: 'near_me', label: 'Pase / Trayectoria' },
-                { id: 'defense', icon: 'groups', label: 'Zonas Defensa' },
-              ] as { id: ActiveTool; icon: string; label: string }[]).map(tool => (
-                <button
-                  key={tool.id}
-                  onClick={() => setActiveTool(prev => prev === tool.id ? null : tool.id)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all ${activeTool === tool.id
-                    ? 'bg-primary text-black shadow-lg shadow-primary/20'
-                    : 'text-slate-500 hover:bg-white/5 hover:text-slate-300'
-                    }`}
-                >
-                  <span className="material-symbols-outlined text-sm">{tool.icon}</span>
-                  {tool.label}
+                <button onClick={handleClearField} className="flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-500/10 transition-all font-bold text-[10px] uppercase tracking-widest mt-2">
+                  <span className="material-symbols-outlined text-sm">backspace</span>
+                  Limpiar todo
                 </button>
-              ))}
-              <button onClick={handleClearField} className="flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-500/10 transition-all font-bold text-[10px] uppercase tracking-widest mt-2">
-                <span className="material-symbols-outlined text-sm">backspace</span>
-                Limpiar Todo
-              </button>
-            </div>
-          </section>
-
-          <div className="mt-auto">
-            <AnimatePresence>
-              {selectedPlayer && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  className="bg-[rgba(255,251,241,0.96)] rounded-2xl p-4 border border-[rgba(111,87,56,0.12)] mb-4 shadow-[0_10px_24px_rgba(89,59,21,0.05)]"
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-[9px] font-black text-[#ca8a04] uppercase">Detalle: {selectedPlayer.customName}</span>
-                    <button onClick={() => setSelectedPlayer(null)} className="text-[#8f745c] hover:text-[#2b1d12]">
-                      <span className="material-symbols-outlined text-xs">close</span>
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-5 gap-1 text-center mb-2">
-                    {['MV', 'FU', 'AG', 'PA', 'AR'].map(stat => (
-                      <div key={stat} className="flex flex-col">
-                        <span className="text-[8px] text-[#8f745c] font-bold">{stat}</span>
-                        <span className="text-[10px] text-[#2b1d12] font-black">{(selectedPlayer.stats as any)[stat]}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="text-[8px] text-[#8f745c] italic font-medium leading-relaxed line-clamp-3">
-                    {selectedPlayer.skills}
-                  </div>
-                  {selectedTokenId !== null && (
-                    <>
-                      <div className="mt-3 grid grid-cols-2 gap-2">
-                        <button
-                          onClick={handleToggleSelectedTokenDown}
-                          className={`rounded-xl border px-3 py-2 text-[9px] font-black uppercase tracking-[0.16em] transition ${
-                            selectedToken?.isDown
-                              ? 'border-[rgba(239,68,68,0.18)] bg-[rgba(239,68,68,0.08)] text-red-700'
-                              : 'border-[rgba(16,185,129,0.18)] bg-[rgba(16,185,129,0.08)] text-emerald-700'
-                          }`}
-                        >
-                          {selectedToken?.isDown ? 'Derribado' : 'De pie'}
-                        </button>
-                        <button
-                          onClick={handleToggleSelectedTokenSide}
-                          className={`rounded-xl border px-3 py-2 text-[9px] font-black uppercase tracking-[0.16em] transition ${
-                            selectedToken?.teamSide === 'away'
-                              ? 'border-[rgba(239,68,68,0.18)] bg-[rgba(239,68,68,0.08)] text-red-700'
-                              : 'border-[rgba(16,185,129,0.18)] bg-[rgba(16,185,129,0.08)] text-emerald-700'
-                          }`}
-                        >
-                          {selectedToken?.teamSide === 'away' ? 'Rival' : 'Local'}
-                        </button>
-                      </div>
-                      <button
-                        onClick={handleRemoveTokenFromField}
-                        className="mt-3 w-full rounded-xl border border-[rgba(220,38,38,0.15)] bg-[rgba(220,38,38,0.06)] px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-red-600 transition hover:bg-[rgba(220,38,38,0.10)]"
-                      >
-                        {selectedToken?.playerData ? 'Mandar al banquillo' : 'Quitar del campo'}
-                      </button>
-                    </>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
+              </div>
+            </section>
 
             <div className="bg-[rgba(255,251,241,0.96)] rounded-2xl p-4 border border-[rgba(111,87,56,0.12)] shadow-[0_10px_24px_rgba(89,59,21,0.05)]">
               <div className="flex items-center gap-2 mb-3">
                 <span className="material-symbols-outlined text-[#ca8a04] text-xs">analytics</span>
-                <span className="text-[9px] font-black text-[#2b1d12] uppercase italic">Resumen táctico</span>
+                <span className="text-[9px] font-black text-[#2b1d12] uppercase italic">Resumen tactico</span>
               </div>
               <div className="flex justify-between text-[10px] mb-2">
                 <span className="text-[#8f745c] font-bold uppercase tracking-tighter">Jugadores:</span>
-                <span className="text-[#ca8a04] font-black italic">{tokens.length}/11</span>
+                <span className="text-[#ca8a04] font-black italic">{formationStatus.totalOnField}/11</span>
+              </div>
+              <div className="flex justify-between text-[10px] mb-2">
+                <span className="text-[#8f745c] font-bold uppercase tracking-tighter">Legalidad:</span>
+                <span className={`font-black italic ${formationStatus.isLegal ? 'text-emerald-600' : 'text-red-600'}`}>
+                  {formationStatus.isLegal ? 'Lista' : 'Revisar'}
+                </span>
               </div>
               <div className="flex justify-between text-[10px]">
-                <span className="text-[#8f745c] font-bold uppercase tracking-tighter">Prob. éxito:</span>
-                <span className="text-emerald-600 font-black italic">68%</span>
+                <span className="text-[#8f745c] font-bold uppercase tracking-tighter">Presion rival:</span>
+                <span className="text-[#2b1d12] font-black italic">{Array.from(enemyTackleZoneCounts.values()).reduce((acc, value) => acc + value, 0)}</span>
               </div>
             </div>
           </div>
         </aside>
-
         {/* Main Pitch Workspace */}
         <section className="flex-1 bg-[linear-gradient(180deg,rgba(255,250,240,0.98),rgba(240,227,199,0.98))] relative flex items-center justify-center p-10 overflow-auto scrollbar-hide">
           {/* Zoom & View Controls Overlay */}
@@ -1538,24 +1607,118 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
             </motion.div>
           </div>
 
-          {/* Bottom Formation Presets Overlay */}
-          <div className="absolute bottom-10 right-10 flex flex-col gap-4 items-end">
-            <div className="bg-[rgba(255,250,240,0.98)] p-5 rounded-[2rem] border border-[rgba(111,87,56,0.14)] shadow-2xl w-64 translate-y-2 group hover:translate-y-0 transition-transform">
-              <h3 className="text-[10px] font-black text-[#8f745c] uppercase tracking-[0.2em] mb-4 pl-1">Preajustes rápidos</h3>
-              <div className="space-y-2">
-                {['Defensa Estándar', 'Ataque Jaula', 'Presión Lateral'].map(preset => (
-                  <button
-                    key={preset}
-                    onClick={() => handleApplyPreset(preset)}
-                    className="w-full text-left px-4 py-3 rounded-2xl bg-white/70 border border-[rgba(111,87,56,0.10)] text-[10px] font-black text-[#2b1d12] uppercase italic tracking-widest hover:bg-[rgba(202,138,4,0.08)] hover:border-[rgba(202,138,4,0.18)] hover:text-[#ca8a04] transition-all"
-                  >
-                    {preset}
-                  </button>
-                ))}
+        </section>
+
+        {/* Right Sidebar */}
+        <aside className="w-72 bg-[rgba(255,250,240,0.98)] border-l border-[rgba(111,87,56,0.12)] flex flex-col p-5 gap-5 shrink-0 shadow-[0_0_0_1px_rgba(255,255,255,0.35)_inset] overflow-hidden">
+          <section className="space-y-4 shrink-0">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Equipo rival</h2>
+                <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.16em] text-[#8f745c]">
+                  {opponentTeam ? opponentTeam.name : 'Elige otra franquicia'}
+                </p>
+              </div>
+              <div className="relative group">
+                <button className="text-[9px] bg-[rgba(220,38,38,0.08)] text-red-700 px-2 py-0.5 rounded-full border border-[rgba(220,38,38,0.18)] font-black hover:bg-[rgba(220,38,38,0.14)] transition-colors">
+                  {opponentTeam?.name || 'Seleccionar'}
+                </button>
+                <div className="absolute right-0 top-full mt-2 w-52 bg-[rgba(255,250,240,0.98)] border border-[rgba(111,87,56,0.14)] rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 p-1 max-h-72 overflow-y-auto">
+                  {availableOpponentTeams.length > 0 ? availableOpponentTeams.map(t => (
+                    <button key={t.id} className="w-full text-left p-2 hover:bg-[rgba(220,38,38,0.06)] rounded-lg text-[10px] font-bold text-[#2b1d12]" onClick={() => handleSelectOpponentTeam(t.id!)}>
+                      {t.name}
+                    </button>
+                  )) : (
+                    <div className="p-2 text-[10px] font-bold text-[#8f745c]">Sin equipos disponibles</div>
+                  )}
+                </div>
               </div>
             </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-2xl border border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.96)] px-3 py-3">
+                <div className="text-[8px] font-black uppercase tracking-[0.16em] text-[#8f745c]">En el campo</div>
+                <div className="mt-1 text-[18px] font-black italic text-red-700">{opponentFieldPlayers.length}</div>
+              </div>
+              <div className="rounded-2xl border border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.96)] px-3 py-3">
+                <div className="text-[8px] font-black uppercase tracking-[0.16em] text-[#8f745c]">Banquillo</div>
+                <div className="mt-1 text-[18px] font-black italic text-[#2b1d12]">{opponentBenchPlayers.length}</div>
+              </div>
+            </div>
+          </section>
+
+          <div className="flex-1 overflow-y-auto pr-1 space-y-5">
+            {opponentTeam ? (
+              <>
+                <section className="space-y-2">
+                  <div className="text-[9px] font-black uppercase tracking-[0.18em] text-[#8f745c]">Banquillo rival</div>
+                  <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
+                    {opponentBenchPlayers.length > 0 ? (
+                      opponentBenchPlayers.map((player) => renderBenchPlayerCard(player, 'away', opponentFieldPlayers.length >= MAX_TOKENS_PER_SIDE))
+                    ) : (
+                      <div className="rounded-2xl border border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.92)] px-4 py-5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#8f745c]">
+                        Todo el roster rival esta en el campo
+                      </div>
+                    )}
+                  </div>
+                </section>
+
+                {opponentFieldPlayers.length > 0 && (
+                  <section className="space-y-2">
+                    <div className="text-[9px] font-black uppercase tracking-[0.18em] text-[#8f745c]">Rival en juego</div>
+                    <div className="max-h-48 space-y-2 overflow-y-auto pr-1">
+                      {opponentFieldPlayers.map(({ token, player }) => renderFieldPlayerCard(token, player))}
+                    </div>
+                  </section>
+                )}
+              </>
+            ) : (
+              <section className="space-y-3">
+                <div className="text-[9px] font-black uppercase tracking-[0.18em] text-[#8f745c]">Rival generico</div>
+                <p className="text-[10px] font-bold text-[#8f745c] leading-relaxed">
+                  Si aun no eliges otro equipo, puedes poblar el rival con fichas genericas para probar espacios y coberturas.
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {(Object.keys(positionConfig) as Array<keyof typeof positionConfig>).slice(0, 4).map((pos) => (
+                    <button
+                      key={`generic-away-${pos}`}
+                      onClick={() => {
+                        setCurrentPlacementSide('away');
+                        handleAddToken(pos as PlayerPosition);
+                      }}
+                      disabled={opponentFieldPlayers.length >= MAX_TOKENS_PER_SIDE}
+                      className="rounded-2xl border border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.96)] px-3 py-3 text-center transition hover:border-[rgba(220,38,38,0.24)] hover:bg-[rgba(220,38,38,0.05)] disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <div className="mx-auto mb-2 flex size-10 items-center justify-center rounded-full border-2 border-[rgba(220,38,38,0.20)] bg-[rgba(255,250,240,0.98)]">
+                        <span className="material-symbols-outlined text-base text-red-700">{positionConfig[pos].icon}</span>
+                      </div>
+                      <div className="text-[8px] font-black uppercase tracking-[0.14em] text-[#2b1d12]">{pos}</div>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            <div className="h-px bg-[rgba(111,87,56,0.10)]"></div>
+
+            <section className="space-y-3">
+              <h3 className="text-[10px] font-black text-[#8f745c] uppercase tracking-[0.2em]">Preajustes rapidos</h3>
+              <div className="space-y-2">
+                {['Defensa Estandar', 'Ataque Jaula', 'Presion Lateral'].map((presetLabel, index) => {
+                  const presetKey = Object.keys(FORMATION_PRESETS)[index];
+                  return (
+                    <button
+                      key={presetKey}
+                      onClick={() => handleApplyPreset(presetKey)}
+                      className="w-full text-left px-4 py-3 rounded-2xl bg-[rgba(255,251,241,0.96)] border border-[rgba(111,87,56,0.10)] text-[10px] font-black text-[#2b1d12] uppercase italic tracking-widest hover:bg-[rgba(202,138,4,0.08)] hover:border-[rgba(202,138,4,0.18)] hover:text-[#ca8a04] transition-all"
+                    >
+                      {presetLabel}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
           </div>
-        </section>
+        </aside>
       </main>
 
       {/* Bottom Status Bar */}
