@@ -1479,10 +1479,6 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
       <main className="flex flex-1 overflow-hidden">
         {/* Left Sidebar */}
         <aside className="w-[24rem] bg-[rgba(255,250,240,0.98)] border-r border-[rgba(111,87,56,0.12)] flex flex-col p-5 gap-5 shrink-0 shadow-[0_0_0_1px_rgba(255,255,255,0.35)_inset] overflow-hidden">
-          <AnimatePresence>
-            {selectedInspectorSide === 'home' && renderSelectedInspector()}
-          </AnimatePresence>
-
           <div className="flex-1 overflow-y-auto pr-1 space-y-5">
             <section className="space-y-4">
               <div className="flex items-center justify-between">
@@ -1630,9 +1626,10 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
           </div>
         </aside>
         {/* Main Pitch Workspace */}
-        <section className="flex-1 bg-[linear-gradient(180deg,rgba(255,250,240,0.98),rgba(240,227,199,0.98))] relative flex items-center justify-center p-10 overflow-auto scrollbar-hide">
+        <section className="flex-1 bg-[linear-gradient(180deg,rgba(255,250,240,0.98),rgba(240,227,199,0.98))] relative flex flex-col items-center justify-start p-8 overflow-auto scrollbar-hide">
           {/* Zoom & View Controls Overlay */}
-          <div className="absolute top-8 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-[rgba(255,250,240,0.98)] p-2 rounded-2xl border border-[rgba(111,87,56,0.14)] shadow-[0_20px_50px_rgba(89,59,21,0.10)] z-40">
+          <div className="sticky top-2 z-40 mb-6 flex w-full max-w-[min(100%,1040px)] items-center justify-center">
+            <div className="flex max-w-full flex-wrap items-center gap-3 rounded-2xl border border-[rgba(111,87,56,0.14)] bg-[rgba(255,250,240,0.98)] p-2 shadow-[0_20px_50px_rgba(89,59,21,0.10)]">
             <div className={`flex items-center gap-2 rounded-xl px-3 py-2 border ${formationStatus.isLegal ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-700' : 'border-red-500/20 bg-red-500/10 text-red-700'}`}>
               <span className="material-symbols-outlined text-sm">{formationStatus.isLegal ? 'verified' : 'warning'}</span>
               <div className="flex flex-col leading-none">
@@ -1713,6 +1710,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
               <span className="material-symbols-outlined text-sm">backspace</span>
               <span className="text-[10px] font-black uppercase tracking-widest">Limpiar</span>
             </button>
+            </div>
           </div>
 
           {/* The Pitch Rendering */}
@@ -2017,14 +2015,18 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
             </motion.div>
           </div>
 
+          <AnimatePresence>
+            {selectedToken && selectedPlayer && (
+              <div className="mt-6 w-full max-w-[min(100%,1040px)]">
+                {renderSelectedInspector()}
+              </div>
+            )}
+          </AnimatePresence>
+
         </section>
 
         {/* Right Sidebar */}
         <aside className="w-[24rem] bg-[rgba(255,250,240,0.98)] border-l border-[rgba(111,87,56,0.12)] flex flex-col p-5 gap-5 shrink-0 shadow-[0_0_0_1px_rgba(255,255,255,0.35)_inset] overflow-hidden">
-          <AnimatePresence>
-            {selectedInspectorSide === 'away' && renderSelectedInspector()}
-          </AnimatePresence>
-
           <section className="space-y-4 shrink-0">
             <div className="flex items-center justify-between">
               <div>
