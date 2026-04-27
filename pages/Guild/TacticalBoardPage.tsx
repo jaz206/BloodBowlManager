@@ -57,8 +57,8 @@ interface PlaysProps {
 const TACTIC_STYLES: TacticStyle[] = ['Defensivo', 'Ofensivo'];
 
 const PITCH_INFO = {
-  losColumn: 13,
-  homeHalfStart: 13,
+  losColumn: 12,
+  homeHalfStart: 12,
   leftWideMaxRow: 3,
   rightWideMinRow: 11,
 };
@@ -66,52 +66,52 @@ const PITCH_INFO = {
 const ROLE_PRIORITY: PlayerPosition[] = ['Linea', 'Blitzer', 'Lanzador', 'Corredor', 'Receptor'];
 const ROLE_FORMATION_SLOTS: Record<PlayerPosition, { x: number; y: number }[]> = {
   Linea: [
-    { x: 13, y: 7 },
-    { x: 13, y: 6 },
-    { x: 13, y: 8 },
-    { x: 12, y: 5 },
-    { x: 12, y: 9 },
-    { x: 11, y: 4 },
-    { x: 11, y: 10 },
+    { x: 12, y: 7 },
+    { x: 12, y: 6 },
+    { x: 12, y: 8 },
+    { x: 11, y: 5 },
+    { x: 11, y: 9 },
+    { x: 10, y: 4 },
+    { x: 10, y: 10 },
   ],
   Blitzer: [
-    { x: 12, y: 7 },
-    { x: 11, y: 6 },
-    { x: 11, y: 8 },
-    { x: 10, y: 5 },
-    { x: 10, y: 9 },
+    { x: 11, y: 7 },
+    { x: 10, y: 6 },
+    { x: 10, y: 8 },
+    { x: 9, y: 5 },
+    { x: 9, y: 9 },
   ],
   Lanzador: [
-    { x: 10, y: 7 },
-    { x: 9, y: 7 },
-    { x: 9, y: 6 },
-  ],
-  Corredor: [
-    { x: 9, y: 8 },
     { x: 9, y: 7 },
     { x: 8, y: 7 },
+    { x: 8, y: 6 },
+  ],
+  Corredor: [
+    { x: 8, y: 8 },
+    { x: 8, y: 7 },
+    { x: 7, y: 7 },
   ],
   Receptor: [
-    { x: 8, y: 4 },
-    { x: 8, y: 10 },
-    { x: 7, y: 3 },
-    { x: 7, y: 11 },
+    { x: 7, y: 4 },
+    { x: 7, y: 10 },
+    { x: 6, y: 3 },
+    { x: 6, y: 11 },
   ],
-  BigGuy: [{ x: 12, y: 7 }],
+  BigGuy: [{ x: 11, y: 7 }],
 };
 
 const FALLBACK_FORMATION_SLOTS = [
-  { x: 13, y: 7 },
-  { x: 13, y: 6 },
-  { x: 13, y: 8 },
-  { x: 12, y: 5 },
-  { x: 12, y: 9 },
-  { x: 11, y: 4 },
-  { x: 11, y: 10 },
-  { x: 10, y: 7 },
-  { x: 9, y: 6 },
-  { x: 9, y: 8 },
-  { x: 8, y: 7 },
+  { x: 12, y: 7 },
+  { x: 12, y: 6 },
+  { x: 12, y: 8 },
+  { x: 11, y: 5 },
+  { x: 11, y: 9 },
+  { x: 10, y: 4 },
+  { x: 10, y: 10 },
+  { x: 9, y: 7 },
+  { x: 8, y: 6 },
+  { x: 8, y: 8 },
+  { x: 7, y: 7 },
 ];
 
 const normalizePositionType = (position: string): PlayerPosition => {
