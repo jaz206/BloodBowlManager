@@ -375,6 +375,15 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
         return a.player.customName.localeCompare(b.player.customName);
       });
   }, [currentTeam, tokens]);
+  const homeRosterPlayers = useMemo(() => {
+    if (!currentTeam) return [];
+    return [...currentTeam.players].sort((a, b) => {
+      const jerseyA = a.jerseyNumber ?? Number.MAX_SAFE_INTEGER;
+      const jerseyB = b.jerseyNumber ?? Number.MAX_SAFE_INTEGER;
+      if (jerseyA !== jerseyB) return jerseyA - jerseyB;
+      return a.customName.localeCompare(b.customName);
+    });
+  }, [currentTeam]);
   const opponentBenchPlayers = useMemo(() => {
     if (!opponentTeam) return [];
     return [...opponentTeam.players]
@@ -405,6 +414,15 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
         return a.player.customName.localeCompare(b.player.customName);
       });
   }, [opponentTeam, tokens]);
+  const opponentRosterPlayers = useMemo(() => {
+    if (!opponentTeam) return [];
+    return [...opponentTeam.players].sort((a, b) => {
+      const jerseyA = a.jerseyNumber ?? Number.MAX_SAFE_INTEGER;
+      const jerseyB = b.jerseyNumber ?? Number.MAX_SAFE_INTEGER;
+      if (jerseyA !== jerseyB) return jerseyA - jerseyB;
+      return a.customName.localeCompare(b.customName);
+    });
+  }, [opponentTeam]);
   const availableOpponentTeams = useMemo(
     () => managedTeams.filter((team) => team.id !== selectedTeamId),
     [managedTeams, selectedTeamId]
@@ -985,6 +1003,51 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     </button>
   );
 
+  const renderRosterDisc = (
+    player: ManagedPlayer,
+    side: 'home' | 'away',
+    isOnField: boolean,
+    disabled: boolean
+  ) => {
+    const role = normalizePositionType(player.position);
+    const config = positionConfig[role] || positionConfig['LÃ­nea'] || positionConfig.Blitzer;
+    const sideClass = side === 'away'
+      ? 'border-[rgba(220,38,38,0.18)] bg-[rgba(255,239,239,0.98)]'
+      : 'border-[rgba(16,185,129,0.18)] bg-[rgba(239,255,247,0.98)]';
+
+    return (
+      <button
+        key={`${side}-roster-${player.id}`}
+        type="button"
+        onClick={() => !isOnField && handleAddBenchPlayer(player, side)}
+        draggable={!isOnField && !disabled}
+        onDragStart={!isOnField && !disabled ? () => handleBenchDragStart(player, side) : undefined}
+        onDragEnd={!isOnField && !disabled ? handleBenchDragEnd : undefined}
+        disabled={isOnField || disabled}
+        title={`${player.customName} · ${player.position}`}
+        className={`group flex flex-col items-center gap-1 rounded-2xl border px-2 py-2 transition ${
+          isOnField
+            ? 'border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.72)] opacity-45 grayscale'
+            : 'border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.96)] hover:border-[rgba(202,138,4,0.28)] hover:bg-[rgba(202,138,4,0.06)]'
+        } ${disabled && !isOnField ? 'opacity-50 cursor-not-allowed' : ''}`}
+      >
+        <div className={`relative flex size-12 items-center justify-center overflow-hidden rounded-full border-2 ${sideClass}`}>
+          {player.image ? (
+            <img src={player.image} alt={player.customName} className="h-full w-full object-cover" draggable={false} />
+          ) : (
+            <span className="text-[11px] font-black italic text-[#2b1d12]">{config.label}</span>
+          )}
+          <span className="absolute -bottom-1 right-0 rounded-full bg-[#2b1d12] px-1.5 py-[1px] text-[8px] font-black text-[#fff7eb] shadow-[0_4px_10px_rgba(30,19,8,0.32)]">
+            {player.jerseyNumber ?? '--'}
+          </span>
+        </div>
+        <span className="w-full truncate text-center text-[8px] font-black uppercase italic text-[#2b1d12]">
+          {player.position}
+        </span>
+      </button>
+    );
+  };
+
   const renderSelectedInspector = () => {
     if (!selectedPlayer || !selectedToken) return null;
     const sideAccent = selectedToken.teamSide === 'away'
@@ -1375,26 +1438,29 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
               )}
 
               <div className="space-y-2">
-                <div className="text-[9px] font-black uppercase tracking-[0.18em] text-[#8f745c]">Banquillo real</div>
-                <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
-                  {benchPlayers.length > 0 ? (
-                    benchPlayers.map((player) => renderBenchPlayerCard(player, 'home', fieldPlayers.length >= MAX_TOKENS_PER_SIDE))
+                <div className="flex items-center justify-between">
+                  <div className="text-[9px] font-black uppercase tracking-[0.18em] text-[#8f745c]">Roster local</div>
+                  <div className="text-[8px] font-black uppercase tracking-[0.14em] text-[#8f745c]">
+                    gris = en campo
+                  </div>
+                </div>
+                <div className="grid max-h-[28rem] grid-cols-4 gap-2 overflow-y-auto pr-1">
+                  {homeRosterPlayers.length > 0 ? (
+                    homeRosterPlayers.map((player) =>
+                      renderRosterDisc(
+                        player,
+                        'home',
+                        homeTokensOnFieldPlayerIds.has(player.id),
+                        fieldPlayers.length >= MAX_TOKENS_PER_SIDE && !homeTokensOnFieldPlayerIds.has(player.id)
+                      )
+                    )
                   ) : (
-                    <div className="rounded-2xl border border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.92)] px-4 py-5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#8f745c]">
-                      Todo el roster esta en el campo
+                    <div className="col-span-4 rounded-2xl border border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.92)] px-4 py-5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#8f745c]">
+                      Carga una franquicia para poblar el roster
                     </div>
                   )}
                 </div>
               </div>
-
-              {fieldPlayers.length > 0 && (
-                <div className="space-y-2">
-                  <div className="text-[9px] font-black uppercase tracking-[0.18em] text-[#8f745c]">En juego</div>
-                  <div className="max-h-48 space-y-2 overflow-y-auto pr-1">
-                    {fieldPlayers.map(({ token, player }) => renderFieldPlayerCard(token, player))}
-                  </div>
-                </div>
-              )}
             </section>
 
             <div className="h-px bg-[rgba(111,87,56,0.10)]"></div>
@@ -1852,26 +1918,29 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
             {opponentTeam ? (
               <>
                 <section className="space-y-2">
-                  <div className="text-[9px] font-black uppercase tracking-[0.18em] text-[#8f745c]">Banquillo rival</div>
-                  <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
-                    {opponentBenchPlayers.length > 0 ? (
-                      opponentBenchPlayers.map((player) => renderBenchPlayerCard(player, 'away', opponentFieldPlayers.length >= MAX_TOKENS_PER_SIDE))
+                  <div className="flex items-center justify-between">
+                    <div className="text-[9px] font-black uppercase tracking-[0.18em] text-[#8f745c]">Roster rival</div>
+                    <div className="text-[8px] font-black uppercase tracking-[0.14em] text-[#8f745c]">
+                      gris = en campo
+                    </div>
+                  </div>
+                  <div className="grid max-h-[28rem] grid-cols-4 gap-2 overflow-y-auto pr-1">
+                    {opponentRosterPlayers.length > 0 ? (
+                      opponentRosterPlayers.map((player) =>
+                        renderRosterDisc(
+                          player,
+                          'away',
+                          awayTokensOnFieldPlayerIds.has(player.id),
+                          opponentFieldPlayers.length >= MAX_TOKENS_PER_SIDE && !awayTokensOnFieldPlayerIds.has(player.id)
+                        )
+                      )
                     ) : (
-                      <div className="rounded-2xl border border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.92)] px-4 py-5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#8f745c]">
-                        Todo el roster rival esta en el campo
+                      <div className="col-span-4 rounded-2xl border border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.92)] px-4 py-5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#8f745c]">
+                        Carga un rival para poblar el roster
                       </div>
                     )}
                   </div>
                 </section>
-
-                {opponentFieldPlayers.length > 0 && (
-                  <section className="space-y-2">
-                    <div className="text-[9px] font-black uppercase tracking-[0.18em] text-[#8f745c]">Rival en juego</div>
-                    <div className="max-h-48 space-y-2 overflow-y-auto pr-1">
-                      {opponentFieldPlayers.map(({ token, player }) => renderFieldPlayerCard(token, player))}
-                    </div>
-                  </section>
-                )}
               </>
             ) : (
               <section className="space-y-3">
