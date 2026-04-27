@@ -165,6 +165,49 @@ const buildTeamLoadFormation = (
   });
 };
 
+const buildPresetTokensForSide = (
+  presetName: string,
+  side: 'home' | 'away',
+  team?: ManagedTeam | null
+): BoardToken[] => {
+  const preset = FORMATION_PRESETS[presetName];
+  if (!preset) return [];
+
+  const availablePlayers = team
+    ? [...team.players]
+        .sort((a, b) => getLoadPriority(a) - getLoadPriority(b))
+        .slice(0, MAX_TOKENS_PER_SIDE)
+    : [];
+  const usedPlayerIds = new Set<number>();
+
+  return preset.slice(0, MAX_TOKENS_PER_SIDE).map((slot, index) => {
+    const normalizedRole = normalizePositionType(slot.position);
+    const matchingPlayer =
+      availablePlayers.find(
+        (player) =>
+          !usedPlayerIds.has(player.id) &&
+          normalizePositionType(player.position) === normalizedRole
+      ) ||
+      availablePlayers.find((player) => !usedPlayerIds.has(player.id)) ||
+      null;
+
+    if (matchingPlayer) usedPlayerIds.add(matchingPlayer.id);
+
+    const x = side === 'home' ? slot.x : GRID_COLS - 1 - slot.x;
+
+    return {
+      id: matchingPlayer?.id ?? Date.now() + index,
+      playerRef: matchingPlayer ? String(matchingPlayer.id) : undefined,
+      playerData: matchingPlayer || undefined,
+      position: matchingPlayer ? normalizePositionType(matchingPlayer.position) : normalizedRole,
+      x,
+      y: slot.y,
+      teamSide: side,
+      hasBall: false,
+    };
+  });
+};
+
 const buildFormationStatus = (tokens: BoardToken[], side: 'home' | 'away' = 'home') => {
   const sideTokens = tokens.filter((token) => token.teamSide === side);
   const isHome = side === 'home';
@@ -576,7 +619,11 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
       targetSide: 'home' | 'away',
       team?: ManagedTeam | null,
     ) => {
-      const preserved = tokens.filter((token) => token.teamSide !== targetSide);
+      const incomingSideTokens = sourceTokens.filter((token) => token.teamSide === sourceSide);
+      const incomingHasBall = incomingSideTokens.some((token) => token.hasBall);
+      const preserved = tokens
+        .filter((token) => token.teamSide !== targetSide)
+        .map((token) => (incomingHasBall && token.hasBall ? { ...token, hasBall: false } : token));
       const normalized = sourceTokens
         .filter((token) => token.teamSide === sourceSide)
         .map((token) => {
@@ -587,7 +634,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
             x: homeX,
             y: token.y,
             teamSide: targetSide,
-            hasBall: false,
+            hasBall: !!token.hasBall,
           };
         });
       const hydrated = team ? decorateTokensWithTeamData(normalized, team) : normalized;
@@ -889,6 +936,55 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     showToast(`Rival ${team.name} preparado.`);
   };
 
+  const handleApplyPreset = (presetName: string, side: 'home' | 'away') => {
+    const team = side === 'home' ? currentTeam : opponentTeam;
+    const presetTokens = buildPresetTokensForSide(presetName, side, team);
+    if (presetTokens.length === 0) return;
+
+    const preserved = tokens
+      .filter((token) => token.teamSide !== side)
+      .map((token) => (presetTokens.some((presetToken) => presetToken.hasBall) && token.hasBall ? { ...token, hasBall: false } : token));
+    const synced = syncBallWithTokens([...preserved, ...presetTokens], ballPosition);
+
+    pushHistory(synced.tokens, drawnPaths, synced.ballPosition);
+
+    if (selectedToken?.teamSide === side) {
+      setSelectedPlayer(null);
+      setSelectedTokenId(null);
+    }
+
+    showToast(`Formación "${presetName}" aplicada al ${side === 'home' ? 'local' : 'rival'}.`);
+  };
+
+  const handleApplyPlayToSide = (playId: string, targetSide: 'home' | 'away') => {
+    const play = plays.find((item) => item.id === playId);
+    if (!play) return;
+
+    const targetTeam = targetSide === 'home' ? currentTeam : opponentTeam;
+    if (!targetTeam) {
+      showToast(targetSide === 'home' ? 'Selecciona un equipo local antes de cargar la jugada.' : 'Selecciona un equipo rival antes de cargar la jugada.');
+      return;
+    }
+
+    const sourceSide: 'home' | 'away' =
+      play.teamId === targetTeam.id
+        ? 'home'
+        : play.opponentTeamId === targetTeam.id
+          ? 'away'
+          : play.tokens.some((token) => token.teamSide === targetSide)
+            ? targetSide
+            : 'home';
+
+    applyTokensToSide(play.tokens, sourceSide, targetSide, targetTeam);
+
+    if (selectedToken?.teamSide === targetSide) {
+      setSelectedPlayer(null);
+      setSelectedTokenId(null);
+    }
+
+    showToast(`Jugada "${play.name}" aplicada al ${targetSide === 'home' ? 'local' : 'rival'}.`);
+  };
+
   useEffect(() => {
     if (!initialTeamId || managedTeams.length === 0) return;
 
@@ -931,19 +1027,6 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     showToast('Jugada eliminada.');
   };
 
-  const handleApplyPreset = (presetName: string) => {
-    const preset = FORMATION_PRESETS[presetName];
-    if (!preset) return;
-    const newTokens: BoardToken[] = preset.map((p, index) => ({
-      id: Date.now() + index,
-      position: p.position as PlayerPosition,
-      x: p.x,
-      y: p.y,
-      teamSide: 'home'
-    }));
-    pushHistory(newTokens);
-    showToast(`Formación "${presetName}" aplicada.`);
-  };
 
   const handleTokenClick = (id: number) => {
     const token = tokens.find(t => t.id === id);
@@ -1626,9 +1709,10 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
           </div>
         </aside>
         {/* Main Pitch Workspace */}
-        <section className="flex-1 bg-[linear-gradient(180deg,rgba(255,250,240,0.98),rgba(240,227,199,0.98))] relative flex flex-col items-center justify-start p-8 overflow-auto scrollbar-hide">
+        <section className="flex-1 bg-[linear-gradient(180deg,rgba(255,250,240,0.98),rgba(240,227,199,0.98))] relative overflow-auto scrollbar-hide">
+          <div className="mx-auto flex w-full max-w-[1080px] flex-col items-center px-6 py-8">
           {/* Zoom & View Controls Overlay */}
-          <div className="sticky top-2 z-40 mb-6 flex w-full max-w-[min(100%,1040px)] items-center justify-center">
+          <div className="sticky top-2 z-40 mb-6 flex w-full items-center justify-center">
             <div className="flex max-w-full flex-wrap items-center gap-3 rounded-2xl border border-[rgba(111,87,56,0.14)] bg-[rgba(255,250,240,0.98)] p-2 shadow-[0_20px_50px_rgba(89,59,21,0.10)]">
             <div className={`flex items-center gap-2 rounded-xl px-3 py-2 border ${formationStatus.isLegal ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-700' : 'border-red-500/20 bg-red-500/10 text-red-700'}`}>
               <span className="material-symbols-outlined text-sm">{formationStatus.isLegal ? 'verified' : 'warning'}</span>
@@ -1720,7 +1804,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
             onTouchStart={handleFieldMouseDown}
             onDragOver={handleFieldDragOver}
             onDrop={handleFieldDrop}
-            className="pitch-lines shadow-[0_0_100px_rgba(0,0,0,0.8)] relative"
+            className="pitch-lines relative mx-auto shadow-[0_0_100px_rgba(0,0,0,0.8)]"
             style={{
               width: `${GRID_COLS * GRID_CELL_SIZE}px`,
               height: `${GRID_ROWS * GRID_CELL_SIZE}px`,
@@ -2015,14 +2099,26 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
             </motion.div>
           </div>
 
-          <AnimatePresence>
-            {selectedToken && selectedPlayer && (
-              <div className="mt-6 w-full max-w-[min(100%,1040px)]">
-                {renderSelectedInspector()}
-              </div>
-            )}
-          </AnimatePresence>
-
+          <div className="mt-6 w-full">
+            <AnimatePresence mode="wait">
+              {selectedToken && selectedPlayer ? (
+                <motion.div
+                  key={`dock-${selectedToken.id}`}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 12 }}
+                  className="w-full"
+                >
+                  {renderSelectedInspector()}
+                </motion.div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-[rgba(111,87,56,0.14)] bg-[rgba(255,251,241,0.55)] px-5 py-4 text-[10px] font-bold uppercase tracking-[0.16em] text-[#8f745c]">
+                  Selecciona un jugador del campo para ver su ficha táctica aquí.
+                </div>
+              )}
+            </AnimatePresence>
+          </div>
+          </div>
         </section>
 
         {/* Right Sidebar */}
