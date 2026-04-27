@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+﻿import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import type { Play, PlayerPosition, ManagedTeam, ManagedPlayer, BoardToken, DrawingPath } from '../../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getPlayerImageUrl } from '../../utils/imageUtils';
@@ -14,25 +14,25 @@ type ActiveTool = 'move' | 'pickup' | 'pass' | 'intercept' | 'defense' | 'ball' 
 type TacticStyle = 'Defensivo' | 'Ofensivo';
 
 const FORMATION_PRESETS: Record<string, { position: string; x: number; y: number }[]> = {
-  'Defensa Estándar': [
-    { position: 'Línea', x: 12, y: 7 }, { position: 'Línea', x: 12, y: 6 }, { position: 'Línea', x: 12, y: 8 },
+  'Defensa EstÃ¡ndar': [
+    { position: 'Linea', x: 12, y: 7 }, { position: 'Linea', x: 12, y: 6 }, { position: 'Linea', x: 12, y: 8 },
     { position: 'Blitzer', x: 10, y: 4 }, { position: 'Blitzer', x: 10, y: 10 },
-    { position: 'Corredor', x: 8, y: 7 }, { position: 'Línea', x: 8, y: 5 }, { position: 'Línea', x: 8, y: 9 },
+    { position: 'Corredor', x: 8, y: 7 }, { position: 'Linea', x: 8, y: 5 }, { position: 'Linea', x: 8, y: 9 },
     { position: 'Receptor', x: 5, y: 4 }, { position: 'Receptor', x: 5, y: 10 }, { position: 'Lanzador', x: 4, y: 7 },
   ],
   'Ataque Jaula': [
-    { position: 'Línea', x: 12, y: 7 }, { position: 'Línea', x: 12, y: 6 }, { position: 'Línea', x: 12, y: 8 },
+    { position: 'Linea', x: 12, y: 7 }, { position: 'Linea', x: 12, y: 6 }, { position: 'Linea', x: 12, y: 8 },
     { position: 'Blitzer', x: 10, y: 6 }, { position: 'Blitzer', x: 10, y: 8 },
     { position: 'Lanzador', x: 9, y: 7 }, { position: 'Corredor', x: 8, y: 7 },
     { position: 'Receptor', x: 6, y: 3 }, { position: 'Receptor', x: 6, y: 11 },
-    { position: 'Línea', x: 9, y: 5 }, { position: 'Línea', x: 9, y: 9 },
+    { position: 'Linea', x: 9, y: 5 }, { position: 'Linea', x: 9, y: 9 },
   ],
-  'Presión Lateral': [
+  'PresiÃ³n Lateral': [
     { position: 'Blitzer', x: 12, y: 3 }, { position: 'Blitzer', x: 12, y: 11 },
-    { position: 'Línea', x: 12, y: 7 }, { position: 'Línea', x: 11, y: 5 }, { position: 'Línea', x: 11, y: 9 },
+    { position: 'Linea', x: 12, y: 7 }, { position: 'Linea', x: 11, y: 5 }, { position: 'Linea', x: 11, y: 9 },
     { position: 'Receptor', x: 9, y: 1 }, { position: 'Receptor', x: 9, y: 13 },
     { position: 'Corredor', x: 8, y: 7 }, { position: 'Lanzador', x: 6, y: 7 },
-    { position: 'Línea', x: 7, y: 5 }, { position: 'Línea', x: 7, y: 9 },
+    { position: 'Linea', x: 7, y: 5 }, { position: 'Linea', x: 7, y: 9 },
   ],
 };
 
@@ -40,7 +40,7 @@ const positionConfig: Record<string, { icon: string; border: string; label: stri
   Blitzer: { icon: 'swords', border: 'border-primary', label: 'BZ' },
   Lanzador: { icon: 'ads_click', border: 'border-slate-400', label: 'LZ' },
   Corredor: { icon: 'directions_run', border: 'border-emerald-500', label: 'CR' },
-  Línea: { icon: 'shield', border: 'border-slate-600', label: 'LN' },
+  Linea: { icon: 'shield', border: 'border-slate-600', label: 'LN' },
   Receptor: { icon: 'sports_football', border: 'border-amber-500', label: 'RC' },
   BigGuy: { icon: 'star', border: 'border-accent-gold', label: 'BG' },
 };
@@ -63,9 +63,9 @@ const PITCH_INFO = {
   rightWideMinRow: 11,
 };
 
-const ROLE_PRIORITY: PlayerPosition[] = ['Línea', 'Blitzer', 'Lanzador', 'Corredor', 'Receptor'];
+const ROLE_PRIORITY: PlayerPosition[] = ['Linea', 'Blitzer', 'Lanzador', 'Corredor', 'Receptor'];
 const ROLE_FORMATION_SLOTS: Record<PlayerPosition, { x: number; y: number }[]> = {
-  Línea: [
+  Linea: [
     { x: 13, y: 7 },
     { x: 13, y: 6 },
     { x: 13, y: 8 },
@@ -120,13 +120,13 @@ const normalizePositionType = (position: string): PlayerPosition => {
   if (lowerPos.includes('thrower') || lowerPos.includes('lanzador')) return 'Lanzador';
   if (lowerPos.includes('runner') || lowerPos.includes('corredor')) return 'Corredor';
   if (lowerPos.includes('catcher') || lowerPos.includes('receptor')) return 'Receptor';
-  return 'Línea';
+  return 'Linea';
 };
 
 const getLoadPriority = (player: ManagedPlayer) => {
   const normalized = player.position.toLowerCase();
   if (player.status === 'Activo' || !player.isBenched) return 0;
-  if (normalized.includes('línea') || normalized.includes('linea')) return 1;
+  if (normalized.includes('linea') || normalized.includes('linea')) return 1;
   if (normalized.includes('blitzer') || normalized.includes('lanzador')) return 2;
   if (normalized.includes('corredor') || normalized.includes('receptor')) return 3;
   return 4;
@@ -218,7 +218,25 @@ const buildFormationStatus = (tokens: BoardToken[], side: 'home' | 'away' = 'hom
   const inOwnHalf = sideTokens.filter(token => inOwnSide(token)).length;
   const onLoSTokens = sideTokens.filter(token => token.x === PITCH_INFO.losColumn && token.y >= 4 && token.y <= 10).length;
   const isLegal = onLoSTokens >= 3 && onLeftWide <= 2 && onRightWide <= 2 && totalOnField <= MAX_TOKENS_PER_SIDE && inOwnHalf === totalOnField;
-  return { onLoS: onLoSTokens, onLeftWide, onRightWide, totalOnField, inOwnHalf, isLegal };
+  const reasons: string[] = [];
+
+  if (totalOnField < MAX_TOKENS_PER_SIDE) {
+    reasons.push(`Faltan ${MAX_TOKENS_PER_SIDE - totalOnField} jugadores para llegar a 11.`);
+  }
+  if (onLoSTokens < 3) {
+    reasons.push(`Solo hay ${onLoSTokens} jugadores en la linea de golpeo y deben ser al menos 3.`);
+  }
+  if (onLeftWide > 2) {
+    reasons.push(`Hay ${onLeftWide} jugadores en la banda superior y el maximo es 2.`);
+  }
+  if (onRightWide > 2) {
+    reasons.push(`Hay ${onRightWide} jugadores en la banda inferior y el maximo es 2.`);
+  }
+  if (inOwnHalf !== totalOnField) {
+    reasons.push('Hay jugadores colocados fuera de su mitad legal del campo.');
+  }
+
+  return { onLoS: onLoSTokens, onLeftWide, onRightWide, totalOnField, inOwnHalf, isLegal, reasons };
 };
 
 const decorateTokensWithTeamData = (baseTokens: BoardToken[], team?: ManagedTeam | null): BoardToken[] => {
@@ -582,6 +600,11 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
   const enemyTackleZoneCounts = selectedPerspectiveSide === 'home' ? tackleZonesBySide.away : tackleZonesBySide.home;
   const alliedTackleZoneCounts = selectedPerspectiveSide === 'home' ? tackleZonesBySide.home : tackleZonesBySide.away;
   const ballZoneKey = `${ballPosition.x}-${ballPosition.y}`;
+  const homeSideActive = Boolean(currentTeam) || formationStatus.totalOnField > 0;
+  const awaySideActive = Boolean(opponentTeam) || awayFormationStatus.totalOnField > 0;
+  const boardIsLegal =
+    (!homeSideActive || formationStatus.isLegal) &&
+    (!awaySideActive || awayFormationStatus.isLegal);
   const activeMoveModifiers = useMemo(() => {
     if (activeTool !== 'move' || !selectedToken || selectedToken.isDown) return [];
     const modifiers: Array<{ x: number; y: number; count: number }> = [];
@@ -781,7 +804,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     if (lowerPos.includes('thrower') || lowerPos.includes('lanzador')) return 'Lanzador';
     if (lowerPos.includes('runner') || lowerPos.includes('corredor')) return 'Corredor';
     if (lowerPos.includes('catcher') || lowerPos.includes('receptor')) return 'Receptor';
-    return 'Línea';
+    return 'Linea';
   };
 
   const handleAddToken = (position: PlayerPosition) => {
@@ -846,7 +869,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
       style: selectedStyle,
       teamId: selectedTeamId || undefined,
       opponentTeamId: opponentTeamId || undefined,
-      rosterName: managedTeams.find(t => t.id === selectedTeamId)?.rosterName || 'Táctica',
+      rosterName: managedTeams.find(t => t.id === selectedTeamId)?.rosterName || 'Tactica',
       tokens: tokens.map(({ playerData, ...token }) => ({
         ...token,
         playerRef: token.playerRef || (playerData ? String(playerData.id) : undefined),
@@ -908,7 +931,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
         setSelectedPlayId(matchingPlay.id);
         setSelectedPlayer(null);
         setSelectedTokenId(null);
-        showToast(`Táctica ${matchingPlay.name} cargada.`);
+        showToast(`Tactica ${matchingPlay.name} cargada.`);
         return;
       }
 
@@ -953,7 +976,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
       setSelectedTokenId(null);
     }
 
-    showToast(`Formación "${presetName}" aplicada al ${side === 'home' ? 'local' : 'rival'}.`);
+    showToast(`Formacion "${presetName}" aplicada al ${side === 'home' ? 'local' : 'rival'}.`);
   };
 
   const handleApplyPlayToSide = (playId: string, targetSide: 'home' | 'away') => {
@@ -1044,7 +1067,32 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
   ) => {
     const sideTokenCount = tokens.filter((token) => token.teamSide === side).length;
     if (sideTokenCount >= MAX_TOKENS_PER_SIDE) {
-      showToast(side === 'home' ? 'Ya tienes 11 jugadores locales en el campo.' : 'Ya tienes 11 jugadores rivales en el campo.');
+      if (selectedToken && selectedToken.teamSide === side) {
+        const replacementToken: BoardToken = {
+          id: player.id,
+          playerRef: String(player.id),
+          playerData: player,
+          position: normalizePositionType(player.position),
+          x: selectedToken.x,
+          y: selectedToken.y,
+          teamSide: side,
+          hasBall: !!selectedToken.hasBall,
+        };
+        const replacedName = selectedToken.playerData?.customName || positionConfig[selectedToken.position]?.label || 'jugador';
+        const nextTokens = tokens.map((token) => (token.id === selectedToken.id ? replacementToken : token));
+        const synced = syncBallWithTokens(nextTokens, ballPosition);
+        pushHistory(synced.tokens, undefined, synced.ballPosition);
+        setSelectedPlayer(player);
+        setSelectedTokenId(replacementToken.id);
+        showToast(`${player.customName} sustituye a ${replacedName} en el ${side === 'home' ? 'local' : 'rival'}.`);
+        return;
+      }
+
+      showToast(
+        side === 'home'
+          ? 'Ya hay 11 jugadores locales en el campo. Selecciona uno del local para sustituirlo.'
+          : 'Ya hay 11 jugadores rivales en el campo. Selecciona uno del rival para sustituirlo.'
+      );
       return;
     }
 
@@ -1055,7 +1103,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     }
 
     if (occupiedSlots.has(`${slot.x}-${slot.y}`)) {
-      showToast('Esa casilla ya está ocupada.');
+      showToast('Esa casilla ya esta ocupada.');
       return;
     }
 
@@ -1196,7 +1244,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     disabled: boolean
   ) => {
     const role = normalizePositionType(player.position);
-    const config = positionConfig[role] || positionConfig['LÃ­nea'] || positionConfig.Blitzer;
+    const config = positionConfig[role] || positionConfig['LÃƒÂ­nea'] || positionConfig.Blitzer;
     const sideClass = side === 'away'
       ? 'border-[rgba(220,38,38,0.18)] bg-[rgba(255,239,239,0.98)]'
       : 'border-[rgba(16,185,129,0.18)] bg-[rgba(239,255,247,0.98)]';
@@ -1206,16 +1254,16 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
         key={`${side}-roster-${player.id}`}
         type="button"
         onClick={() => !isOnField && handleAddBenchPlayer(player, side)}
-        draggable={!isOnField && !disabled}
-        onDragStart={!isOnField && !disabled ? () => handleBenchDragStart(player, side) : undefined}
-        onDragEnd={!isOnField && !disabled ? handleBenchDragEnd : undefined}
-        disabled={isOnField || disabled}
+        draggable={!isOnField}
+        onDragStart={!isOnField ? () => handleBenchDragStart(player, side) : undefined}
+        onDragEnd={!isOnField ? handleBenchDragEnd : undefined}
+        disabled={isOnField}
         title={`${player.customName} · ${player.position}`}
         className={`group flex flex-col items-center gap-1 rounded-2xl border px-2 py-2 transition ${
           isOnField
             ? 'border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.72)] opacity-45 grayscale'
             : 'border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.96)] hover:border-[rgba(202,138,4,0.28)] hover:bg-[rgba(202,138,4,0.06)]'
-        } ${disabled && !isOnField ? 'opacity-50 cursor-not-allowed' : ''}`}
+        }`}
       >
         <div className={`relative flex size-12 items-center justify-center overflow-hidden rounded-full border-2 ${sideClass}`}>
           <PlayerAvatar
@@ -1275,7 +1323,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                 </span>
                 {selectedToken.hasBall && (
                   <span className="rounded-full border border-[rgba(202,138,4,0.18)] bg-[rgba(202,138,4,0.10)] px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-[#8f5a00]">
-                    Con balón
+                    Con balÃ³n
                   </span>
                 )}
               </div>
@@ -1378,8 +1426,8 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
               exit={{ scale: 0.9 }}
               className="bg-[rgba(255,250,240,0.98)] border border-red-500/20 rounded-[2rem] p-8 max-w-sm w-full shadow-2xl text-[#2b1d12]"
             >
-              <h3 className="text-[#2b1d12] font-black italic uppercase text-xl mb-2">¿Borrar jugada?</h3>
-              <p className="text-[#8f745c] text-xs mb-6 font-medium">Esta acción no se puede deshacer.</p>
+              <h3 className="text-[#2b1d12] font-black italic uppercase text-xl mb-2">Â¿Borrar jugada?</h3>
+              <p className="text-[#8f745c] text-xs mb-6 font-medium">Esta acciÃ³n no se puede deshacer.</p>
               <div className="flex gap-3">
                 <button onClick={() => setDeleteConfirmId(null)} className="flex-1 py-3 rounded-xl bg-[rgba(255,251,241,0.96)] text-[#2b1d12] font-black text-xs uppercase tracking-widest hover:bg-[rgba(202,138,4,0.10)] transition-all border border-[rgba(111,87,56,0.12)]">Cancelar</button>
                 <button onClick={() => confirmDeletePlay(deleteConfirmId)} className="flex-1 py-3 rounded-xl bg-red-600 text-white font-black text-xs uppercase tracking-widest hover:bg-red-500 transition-all">Borrar</button>
@@ -1478,7 +1526,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 text-primary">
             <span className="material-symbols-outlined text-3xl">sports_football</span>
-            <h1 className="text-xl font-bold tracking-tight uppercase text-[#2b1d12]">Pizarra <span className="text-[#ca8a04]">Táctica</span></h1>
+            <h1 className="text-xl font-bold tracking-tight uppercase text-[#2b1d12]">Pizarra <span className="text-[#ca8a04]">Tactica</span></h1>
           </div>
           <div className="h-6 w-px bg-[rgba(111,87,56,0.14)] mx-2"></div>
           <div className="flex items-center gap-3">
@@ -1714,12 +1762,43 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
           {/* Zoom & View Controls Overlay */}
           <div className="sticky top-2 z-40 mb-6 flex w-full items-center justify-center">
             <div className="flex max-w-full flex-wrap items-center gap-3 rounded-2xl border border-[rgba(111,87,56,0.14)] bg-[rgba(255,250,240,0.98)] p-2 shadow-[0_20px_50px_rgba(89,59,21,0.10)]">
-            <div className={`flex items-center gap-2 rounded-xl px-3 py-2 border ${formationStatus.isLegal ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-700' : 'border-red-500/20 bg-red-500/10 text-red-700'}`}>
-              <span className="material-symbols-outlined text-sm">{formationStatus.isLegal ? 'verified' : 'warning'}</span>
+            <div className="relative group">
+            <div className={`flex items-center gap-2 rounded-xl px-3 py-2 border ${boardIsLegal ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-700' : 'border-red-500/20 bg-red-500/10 text-red-700'}`}>
+              <span className="material-symbols-outlined text-sm">{boardIsLegal ? 'verified' : 'warning'}</span>
               <div className="flex flex-col leading-none">
-                <span className="text-[9px] font-black uppercase tracking-widest">{formationStatus.isLegal ? 'Legal' : 'Ilegal'}</span>
-                <span className="text-[9px] font-bold opacity-80">{formationStatus.totalOnField}/11</span>
+                <span className="text-[9px] font-black uppercase tracking-widest">{boardIsLegal ? 'Legal' : 'Ilegal'}</span>
+                <span className="text-[9px] font-bold opacity-80">
+                  L {formationStatus.totalOnField}/11
+                  {awaySideActive ? ` · R ${awayFormationStatus.totalOnField}/11` : ''}
+                </span>
               </div>
+            </div>
+            <div className="pointer-events-none absolute left-0 top-full z-50 mt-2 w-[22rem] rounded-2xl border border-[rgba(111,87,56,0.14)] bg-[rgba(255,250,240,0.98)] p-3 text-left opacity-0 shadow-[0_18px_40px_rgba(89,59,21,0.12)] transition-all group-hover:opacity-100">
+              {homeSideActive && (
+                <div className="mb-3">
+                  <div className="text-[9px] font-black uppercase tracking-[0.16em] text-[#2b1d12]">Local</div>
+                  {formationStatus.isLegal ? (
+                    <div className="mt-1 text-[10px] font-bold text-emerald-700">Alineacion correcta.</div>
+                  ) : (
+                    <ul className="mt-1 space-y-1 text-[10px] font-medium text-[#8f745c]">
+                      {formationStatus.reasons.map((reason) => <li key={`home-${reason}`}>- {reason}</li>)}
+                    </ul>
+                  )}
+                </div>
+              )}
+              {awaySideActive && (
+                <div>
+                  <div className="text-[9px] font-black uppercase tracking-[0.16em] text-[#2b1d12]">Rival</div>
+                  {awayFormationStatus.isLegal ? (
+                    <div className="mt-1 text-[10px] font-bold text-emerald-700">Alineacion correcta.</div>
+                  ) : (
+                    <ul className="mt-1 space-y-1 text-[10px] font-medium text-[#8f745c]">
+                      {awayFormationStatus.reasons.map((reason) => <li key={`away-${reason}`}>- {reason}</li>)}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
             </div>
             <div className="flex items-center bg-[rgba(255,251,241,0.96)] rounded-xl p-1 border border-[rgba(111,87,56,0.10)]">
               <button
@@ -1770,9 +1849,9 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
               { id: 'move', icon: 'brush', label: 'Ruta' },
               { id: 'pickup', icon: 'sports_football', label: 'Recoger' },
               { id: 'pass', icon: 'near_me', label: 'Pase' },
-              { id: 'intercept', icon: 'pan_tool_alt', label: 'Intercepción' },
+              { id: 'intercept', icon: 'pan_tool_alt', label: 'IntercepciÃ³n' },
               { id: 'defense', icon: 'groups', label: 'ZD' },
-              { id: 'ball', icon: 'my_location', label: 'Balón' },
+              { id: 'ball', icon: 'my_location', label: 'BalÃ³n' },
             ] as { id: ActiveTool; icon: string; label: string }[]).map((tool) => (
               <button
                 key={`top-tool-${tool.id}`}
@@ -1977,7 +2056,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
             {/* Placed Tokens */}
             <AnimatePresence>
               {tokens.map((token) => {
-                const config = positionConfig[token.position] || positionConfig.Línea;
+                const config = positionConfig[token.position] || positionConfig.Linea;
                 const tokenTeam = token.teamSide === 'home' ? currentTeam : opponentTeam;
                 const tokenImage = token.playerData ? resolvePlayerImage(token.playerData, tokenTeam)?.trim() : '';
                 const tokenLabel = token.playerData?.jerseyNumber
@@ -2113,7 +2192,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                 </motion.div>
               ) : (
                 <div className="rounded-2xl border border-dashed border-[rgba(111,87,56,0.14)] bg-[rgba(255,251,241,0.55)] px-5 py-4 text-[10px] font-bold uppercase tracking-[0.16em] text-[#8f745c]">
-                  Selecciona un jugador del campo para ver su ficha táctica aquí.
+                  Selecciona un jugador del campo para ver su ficha tÃ¡ctica aquÃ­.
                 </div>
               )}
             </AnimatePresence>
@@ -2278,4 +2357,6 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
 };
 
 export default Plays;
+
+
 
