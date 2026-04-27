@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import type { Play, PlayerPosition, ManagedTeam, ManagedPlayer, BoardToken, DrawingPath } from '../../types';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getPlayerImageUrl } from '../../utils/imageUtils';
 
 const MAX_TOKENS_PER_SIDE = 11;
 const GRID_COLS = 26;
@@ -242,6 +243,68 @@ const syncBallWithTokens = (
   };
 };
 
+const extractImageNumber = (url?: string | null): number | null => {
+  const match = String(url || '').match(/(\d+)\.png/i);
+  if (!match) return null;
+  const parsed = Number(match[1]);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const resolvePlayerImage = (player: ManagedPlayer, team?: ManagedTeam | null): string => {
+  if (player.image) return player.image;
+  if (!team) return '';
+  return getPlayerImageUrl(team.rosterName, player.position, 1, 'nested');
+};
+
+const fallbackPlayerImage = (player: ManagedPlayer, team?: ManagedTeam | null): string => {
+  if (!team) return '';
+  const imageNumber = extractImageNumber(player.image) || 1;
+  return getPlayerImageUrl(team.rosterName, player.position, imageNumber, 'nested');
+};
+
+const PlayerAvatar: React.FC<{
+  player: ManagedPlayer;
+  team?: ManagedTeam | null;
+  label: string;
+  className?: string;
+}> = ({ player, team, label, className = '' }) => {
+  const [useFallback, setUseFallback] = useState(false);
+  const [hideImage, setHideImage] = useState(false);
+
+  useEffect(() => {
+    setUseFallback(false);
+    setHideImage(false);
+  }, [player.id, player.image, team?.id]);
+
+  const primary = resolvePlayerImage(player, team);
+  const fallback = fallbackPlayerImage(player, team);
+  const activeSrc = useFallback ? fallback : primary;
+
+  if (!activeSrc || hideImage) {
+    return (
+      <div className={`flex items-center justify-center ${className}`}>
+        <span className="text-[11px] font-black italic text-[#2b1d12]">{label}</span>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={activeSrc}
+      alt={player.customName}
+      draggable={false}
+      className={className}
+      onError={() => {
+        if (!useFallback && fallback && fallback !== primary) {
+          setUseFallback(true);
+          return;
+        }
+        setHideImage(true);
+      }}
+    />
+  );
+};
+
 const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDeletePlay, initialTeamId, onInitialTeamHandled }) => {
   const [tokens, setTokens] = useState<BoardToken[]>([]);
   const [drawnPaths, setDrawnPaths] = useState<DrawingPath[]>([]);
@@ -427,6 +490,17 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     () => managedTeams.filter((team) => team.id !== selectedTeamId),
     [managedTeams, selectedTeamId]
   );
+  const selectedTeamPlays = useMemo(
+    () => plays.filter((play) => selectedTeamId && play.teamId === selectedTeamId),
+    [plays, selectedTeamId]
+  );
+  const opponentTeamPlays = useMemo(
+    () =>
+      plays.filter((play) =>
+        opponentTeamId && (play.teamId === opponentTeamId || play.opponentTeamId === opponentTeamId)
+      ),
+    [plays, opponentTeamId]
+  );
   const occupiedSlots = useMemo(
     () => new Set(tokens.map((token) => `${token.x}-${token.y}`)),
     [tokens]
@@ -494,6 +568,34 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     if (activeTool !== 'intercept' || !selectedToken) return null;
     return enemyTackleZoneCounts.get(`${selectedToken.x}-${selectedToken.y}`) || 0;
   }, [activeTool, selectedToken, enemyTackleZoneCounts]);
+
+  const applyTokensToSide = useCallback(
+    (
+      sourceTokens: BoardToken[],
+      sourceSide: 'home' | 'away',
+      targetSide: 'home' | 'away',
+      team?: ManagedTeam | null,
+    ) => {
+      const preserved = tokens.filter((token) => token.teamSide !== targetSide);
+      const normalized = sourceTokens
+        .filter((token) => token.teamSide === sourceSide)
+        .map((token) => {
+          const homeX = sourceSide === targetSide ? token.x : GRID_COLS - 1 - token.x;
+          return {
+            ...token,
+            id: token.playerRef ? Number(token.playerRef) || token.id : token.id,
+            x: homeX,
+            y: token.y,
+            teamSide: targetSide,
+            hasBall: false,
+          };
+        });
+      const hydrated = team ? decorateTokensWithTeamData(normalized, team) : normalized;
+      const synced = syncBallWithTokens([...preserved, ...hydrated], ballPosition);
+      pushHistory(synced.tokens, drawnPaths, synced.ballPosition);
+    },
+    [tokens, ballPosition, drawnPaths]
+  );
 
   // Sync selection
   useEffect(() => {
@@ -1005,6 +1107,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
 
   const renderRosterDisc = (
     player: ManagedPlayer,
+    team: ManagedTeam | null | undefined,
     side: 'home' | 'away',
     isOnField: boolean,
     disabled: boolean
@@ -1032,11 +1135,12 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
         } ${disabled && !isOnField ? 'opacity-50 cursor-not-allowed' : ''}`}
       >
         <div className={`relative flex size-12 items-center justify-center overflow-hidden rounded-full border-2 ${sideClass}`}>
-          {player.image ? (
-            <img src={player.image} alt={player.customName} className="h-full w-full object-cover" draggable={false} />
-          ) : (
-            <span className="text-[11px] font-black italic text-[#2b1d12]">{config.label}</span>
-          )}
+          <PlayerAvatar
+            player={player}
+            team={team}
+            label={config.label}
+            className="h-full w-full object-cover"
+          />
           <span className="absolute -bottom-1 right-0 rounded-full bg-[#2b1d12] px-1.5 py-[1px] text-[8px] font-black text-[#fff7eb] shadow-[0_4px_10px_rgba(30,19,8,0.32)]">
             {player.jerseyNumber ?? '--'}
           </span>
@@ -1050,6 +1154,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
 
   const renderSelectedInspector = () => {
     if (!selectedPlayer || !selectedToken) return null;
+    const selectedTeam = selectedToken.teamSide === 'home' ? currentTeam : opponentTeam;
     const sideAccent = selectedToken.teamSide === 'away'
       ? {
           chip: 'border-[rgba(239,68,68,0.18)] bg-[rgba(239,68,68,0.08)] text-red-700',
@@ -1072,13 +1177,12 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex items-start gap-3 min-w-0">
             <div className="size-14 overflow-hidden rounded-2xl border border-[rgba(111,87,56,0.12)] bg-[rgba(255,250,240,0.96)] shrink-0">
-              {selectedPlayer.image ? (
-                <img src={selectedPlayer.image} alt={selectedPlayer.customName} className="h-full w-full object-cover" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-[#8f745c]">
-                  <span className="material-symbols-outlined text-xl">shield_person</span>
-                </div>
-              )}
+              <PlayerAvatar
+                player={selectedPlayer}
+                team={selectedTeam}
+                label={positionConfig[selectedToken.position || normalizePositionType(selectedPlayer.position)]?.label || 'LN'}
+                className="h-full w-full object-cover"
+              />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
@@ -1374,7 +1478,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
 
       <main className="flex flex-1 overflow-hidden">
         {/* Left Sidebar */}
-        <aside className="w-[22rem] bg-[rgba(255,250,240,0.98)] border-r border-[rgba(111,87,56,0.12)] flex flex-col p-5 gap-5 shrink-0 shadow-[0_0_0_1px_rgba(255,255,255,0.35)_inset] overflow-hidden">
+        <aside className="w-[24rem] bg-[rgba(255,250,240,0.98)] border-r border-[rgba(111,87,56,0.12)] flex flex-col p-5 gap-5 shrink-0 shadow-[0_0_0_1px_rgba(255,255,255,0.35)_inset] overflow-hidden">
           <AnimatePresence>
             {selectedInspectorSide === 'home' && renderSelectedInspector()}
           </AnimatePresence>
@@ -1449,6 +1553,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                     homeRosterPlayers.map((player) =>
                       renderRosterDisc(
                         player,
+                        currentTeam,
                         'home',
                         homeTokensOnFieldPlayerIds.has(player.id),
                         fieldPlayers.length >= MAX_TOKENS_PER_SIDE && !homeTokensOnFieldPlayerIds.has(player.id)
@@ -1466,32 +1571,39 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
             <div className="h-px bg-[rgba(111,87,56,0.10)]"></div>
 
             <section className="space-y-4">
-              <h2 className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Herramientas</h2>
-              <div className="flex flex-col gap-2">
-                {([
-                  { id: 'move', icon: 'brush', label: 'Ruta movimiento' },
-                  { id: 'pickup', icon: 'sports_football', label: 'Recoger balon' },
-                  { id: 'pass', icon: 'near_me', label: 'Pase / trayectoria' },
-                  { id: 'intercept', icon: 'pan_tool_alt', label: 'Intercepcion' },
-                  { id: 'defense', icon: 'groups', label: 'Zonas defensa' },
-                  { id: 'ball', icon: 'my_location', label: 'Colocar balon' },
-                ] as { id: ActiveTool; icon: string; label: string }[]).map(tool => (
-                  <button
-                    key={tool.id}
-                    onClick={() => setActiveTool(prev => prev === tool.id ? null : tool.id)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all ${activeTool === tool.id
-                      ? 'bg-primary text-black shadow-lg shadow-primary/20'
-                      : 'text-[#8f745c] hover:bg-[rgba(202,138,4,0.08)] hover:text-[#2b1d12]'
-                      }`}
-                  >
-                    <span className="material-symbols-outlined text-sm">{tool.icon}</span>
-                    {tool.label}
-                  </button>
-                ))}
-                <button onClick={handleClearField} className="flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-500/10 transition-all font-bold text-[10px] uppercase tracking-widest mt-2">
-                  <span className="material-symbols-outlined text-sm">backspace</span>
-                  Limpiar todo
-                </button>
+              <h2 className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Jugadas locales</h2>
+              <div className="space-y-2">
+                {selectedTeamPlays.length > 0 ? (
+                  selectedTeamPlays.slice().reverse().map((play) => (
+                    <button
+                      key={`home-play-${play.id}`}
+                      onClick={() => handleApplyPlayToSide(play.id!, 'home')}
+                      className="w-full rounded-2xl border border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.96)] px-3 py-2 text-left transition hover:border-[rgba(202,138,4,0.22)] hover:bg-[rgba(202,138,4,0.06)]"
+                    >
+                      <div className="truncate text-[10px] font-black uppercase italic text-[#2b1d12]">{play.name}</div>
+                      <div className="mt-1 text-[8px] font-black uppercase tracking-[0.16em] text-[#8f745c]">{play.style || 'Defensivo'}</div>
+                    </button>
+                  ))
+                ) : (
+                  <div className="rounded-2xl border border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.92)] px-4 py-4 text-[9px] font-bold uppercase tracking-[0.16em] text-[#8f745c]">
+                    Sin jugadas guardadas para este local
+                  </div>
+                )}
+              </div>
+              <div className="space-y-2">
+                <div className="text-[9px] font-black uppercase tracking-[0.18em] text-[#8f745c]">Preajustes local</div>
+                {['Defensa Estandar', 'Ataque Jaula', 'Presion Lateral'].map((presetLabel, index) => {
+                  const presetKey = Object.keys(FORMATION_PRESETS)[index];
+                  return (
+                    <button
+                      key={`home-${presetKey}`}
+                      onClick={() => handleApplyPreset(presetKey, 'home')}
+                      className="w-full rounded-2xl border border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.96)] px-4 py-3 text-left text-[10px] font-black uppercase italic tracking-widest text-[#2b1d12] transition hover:border-[rgba(202,138,4,0.18)] hover:bg-[rgba(202,138,4,0.08)] hover:text-[#ca8a04]"
+                    >
+                      {presetLabel}
+                    </button>
+                  );
+                })}
               </div>
             </section>
 
@@ -1571,6 +1683,35 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
             >
               <span className="material-symbols-outlined text-sm">shield</span>
               <span className="text-[10px] font-black uppercase tracking-widest">Zonas</span>
+            </button>
+            <div className="w-px h-6 bg-[rgba(111,87,56,0.14)]"></div>
+            {([
+              { id: 'move', icon: 'brush', label: 'Ruta' },
+              { id: 'pickup', icon: 'sports_football', label: 'Recoger' },
+              { id: 'pass', icon: 'near_me', label: 'Pase' },
+              { id: 'intercept', icon: 'pan_tool_alt', label: 'Intercepción' },
+              { id: 'defense', icon: 'groups', label: 'ZD' },
+              { id: 'ball', icon: 'my_location', label: 'Balón' },
+            ] as { id: ActiveTool; icon: string; label: string }[]).map((tool) => (
+              <button
+                key={`top-tool-${tool.id}`}
+                onClick={() => setActiveTool((prev) => (prev === tool.id ? null : tool.id))}
+                className={`flex items-center gap-2 rounded-xl px-3 py-2 transition-all ${
+                  activeTool === tool.id
+                    ? 'bg-[rgba(202,138,4,0.12)] text-[#ca8a04]'
+                    : 'text-[#8f745c] hover:bg-[rgba(202,138,4,0.10)] hover:text-[#2b1d12]'
+                }`}
+              >
+                <span className="material-symbols-outlined text-sm">{tool.icon}</span>
+                <span className="text-[10px] font-black uppercase tracking-widest">{tool.label}</span>
+              </button>
+            ))}
+            <button
+              onClick={handleClearField}
+              className="flex items-center gap-2 rounded-xl px-3 py-2 text-red-600 transition-all hover:bg-[rgba(220,38,38,0.08)]"
+            >
+              <span className="material-symbols-outlined text-sm">backspace</span>
+              <span className="text-[10px] font-black uppercase tracking-widest">Limpiar</span>
             </button>
           </div>
 
@@ -1755,7 +1896,8 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
             <AnimatePresence>
               {tokens.map((token) => {
                 const config = positionConfig[token.position] || positionConfig.Línea;
-                const tokenImage = token.playerData?.image?.trim();
+                const tokenTeam = token.teamSide === 'home' ? currentTeam : opponentTeam;
+                const tokenImage = token.playerData ? resolvePlayerImage(token.playerData, tokenTeam)?.trim() : '';
                 const tokenLabel = token.playerData?.jerseyNumber
                   ? String(token.playerData.jerseyNumber)
                   : config.label;
@@ -1801,12 +1943,16 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                       {tokenImage ? (
                         <>
                           <div className="absolute inset-[1px] overflow-hidden rounded-full">
-                            <img
-                              src={tokenImage}
-                              alt={token.playerData?.customName || token.position}
-                              className="h-full w-full object-cover"
-                              draggable={false}
-                            />
+                            {token.playerData ? (
+                              <PlayerAvatar
+                                player={token.playerData}
+                                team={tokenTeam}
+                                label={config.label}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <span className="flex h-full w-full items-center justify-center text-[9px] font-black text-[#2b1d12] italic">{tokenLabel}</span>
+                            )}
                             <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,250,240,0.02),rgba(43,29,18,0.14))]" />
                           </div>
                           <span className="absolute -bottom-1 -right-1 min-w-[18px] rounded-full bg-[#2b1d12] px-1 py-[1px] text-[8px] font-black text-[#fff7eb] shadow-[0_4px_10px_rgba(30,19,8,0.32)]">
@@ -1874,7 +2020,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
         </section>
 
         {/* Right Sidebar */}
-        <aside className="w-[22rem] bg-[rgba(255,250,240,0.98)] border-l border-[rgba(111,87,56,0.12)] flex flex-col p-5 gap-5 shrink-0 shadow-[0_0_0_1px_rgba(255,255,255,0.35)_inset] overflow-hidden">
+        <aside className="w-[24rem] bg-[rgba(255,250,240,0.98)] border-l border-[rgba(111,87,56,0.12)] flex flex-col p-5 gap-5 shrink-0 shadow-[0_0_0_1px_rgba(255,255,255,0.35)_inset] overflow-hidden">
           <AnimatePresence>
             {selectedInspectorSide === 'away' && renderSelectedInspector()}
           </AnimatePresence>
@@ -1929,6 +2075,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                       opponentRosterPlayers.map((player) =>
                         renderRosterDisc(
                           player,
+                          opponentTeam,
                           'away',
                           awayTokensOnFieldPlayerIds.has(player.id),
                           opponentFieldPlayers.length >= MAX_TOKENS_PER_SIDE && !awayTokensOnFieldPlayerIds.has(player.id)
@@ -1971,16 +2118,35 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
 
             <div className="h-px bg-[rgba(111,87,56,0.10)]"></div>
 
-            <section className="space-y-3">
-              <h3 className="text-[10px] font-black text-[#8f745c] uppercase tracking-[0.2em]">Preajustes rapidos</h3>
+            <section className="space-y-4">
+              <h3 className="text-[10px] font-black text-[#8f745c] uppercase tracking-[0.2em]">Jugadas rival</h3>
               <div className="space-y-2">
+                {opponentTeamPlays.length > 0 ? (
+                  opponentTeamPlays.slice().reverse().map((play) => (
+                    <button
+                      key={`away-play-${play.id}`}
+                      onClick={() => handleApplyPlayToSide(play.id!, 'away')}
+                      className="w-full rounded-2xl border border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.96)] px-3 py-2 text-left transition hover:border-[rgba(220,38,38,0.22)] hover:bg-[rgba(220,38,38,0.05)]"
+                    >
+                      <div className="truncate text-[10px] font-black uppercase italic text-[#2b1d12]">{play.name}</div>
+                      <div className="mt-1 text-[8px] font-black uppercase tracking-[0.16em] text-[#8f745c]">{play.style || 'Defensivo'}</div>
+                    </button>
+                  ))
+                ) : (
+                  <div className="rounded-2xl border border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.92)] px-4 py-4 text-[9px] font-bold uppercase tracking-[0.16em] text-[#8f745c]">
+                    Sin jugadas guardadas para este rival
+                  </div>
+                )}
+              </div>
+              <div className="space-y-2">
+                <div className="text-[9px] font-black uppercase tracking-[0.18em] text-[#8f745c]">Preajustes rival</div>
                 {['Defensa Estandar', 'Ataque Jaula', 'Presion Lateral'].map((presetLabel, index) => {
                   const presetKey = Object.keys(FORMATION_PRESETS)[index];
                   return (
                     <button
-                      key={presetKey}
-                      onClick={() => handleApplyPreset(presetKey)}
-                      className="w-full text-left px-4 py-3 rounded-2xl bg-[rgba(255,251,241,0.96)] border border-[rgba(111,87,56,0.10)] text-[10px] font-black text-[#2b1d12] uppercase italic tracking-widest hover:bg-[rgba(202,138,4,0.08)] hover:border-[rgba(202,138,4,0.18)] hover:text-[#ca8a04] transition-all"
+                      key={`away-${presetKey}`}
+                      onClick={() => handleApplyPreset(presetKey, 'away')}
+                      className="w-full rounded-2xl border border-[rgba(111,87,56,0.10)] bg-[rgba(255,251,241,0.96)] px-4 py-3 text-left text-[10px] font-black uppercase italic tracking-widest text-[#2b1d12] transition hover:border-[rgba(220,38,38,0.18)] hover:bg-[rgba(220,38,38,0.06)] hover:text-red-700"
                     >
                       {presetLabel}
                     </button>
