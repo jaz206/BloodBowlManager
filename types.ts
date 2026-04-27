@@ -203,6 +203,7 @@ export interface Play {
   rosterName: string;
   tokens: BoardToken[];
   paths?: DrawingPath[];
+  ballPosition?: { x: number; y: number };
 }
 
 export interface CompetitionTeam {

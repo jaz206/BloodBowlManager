@@ -7,8 +7,9 @@ const GRID_COLS = 26;
 const GRID_ROWS = 15;
 const GRID_CELL_SIZE = 40;
 const TOKEN_SIZE = 28;
+const DEFAULT_BALL_POSITION = { x: Math.floor(GRID_COLS / 2), y: Math.floor(GRID_ROWS / 2) };
 
-type ActiveTool = 'move' | 'pass' | 'defense' | null;
+type ActiveTool = 'move' | 'pickup' | 'pass' | 'intercept' | 'defense' | 'ball' | null;
 type TacticStyle = 'Defensivo' | 'Ofensivo';
 
 const FORMATION_PRESETS: Record<string, { position: string; x: number; y: number }[]> = {
@@ -218,7 +219,10 @@ const getNextOpenSlot = (currentTokens: BoardToken[], side: 'home' | 'away' = 'h
 const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDeletePlay, initialTeamId, onInitialTeamHandled }) => {
   const [tokens, setTokens] = useState<BoardToken[]>([]);
   const [drawnPaths, setDrawnPaths] = useState<DrawingPath[]>([]);
-  const [history, setHistory] = useState<{ tokens: BoardToken[], paths: DrawingPath[] }[]>([{ tokens: [], paths: [] }]);
+  const [ballPosition, setBallPosition] = useState(DEFAULT_BALL_POSITION);
+  const [history, setHistory] = useState<{ tokens: BoardToken[], paths: DrawingPath[], ballPosition: { x: number; y: number } }[]>([
+    { tokens: [], paths: [], ballPosition: DEFAULT_BALL_POSITION }
+  ]);
   const [historyIndex, setHistoryIndex] = useState(0);
   const [playName, setPlayName] = useState('');
   const [selectedPlayId, setSelectedPlayId] = useState<string | undefined>(plays.length > 0 ? plays[0].id : undefined);
@@ -244,15 +248,21 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     setTimeout(() => setToastMessage(null), 2500);
   };
 
-  const pushHistory = (newTokens: BoardToken[], newPaths?: DrawingPath[]) => {
+  const pushHistory = (
+    newTokens: BoardToken[],
+    newPaths?: DrawingPath[],
+    newBallPosition?: { x: number; y: number }
+  ) => {
     const pathsToSave = newPaths !== undefined ? newPaths : drawnPaths;
+    const ballToSave = newBallPosition !== undefined ? newBallPosition : ballPosition;
     setHistory(prev => {
       const sliced = prev.slice(0, historyIndex + 1);
-      return [...sliced, { tokens: newTokens, paths: pathsToSave }];
+      return [...sliced, { tokens: newTokens, paths: pathsToSave, ballPosition: ballToSave }];
     });
     setHistoryIndex(prev => prev + 1);
     setTokens(newTokens);
     if (newPaths !== undefined) setDrawnPaths(newPaths);
+    if (newBallPosition !== undefined) setBallPosition(newBallPosition);
   };
 
   const handleUndo = () => {
@@ -262,6 +272,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     setHistoryIndex(newIndex);
     setTokens(state.tokens);
     setDrawnPaths(state.paths);
+    setBallPosition(state.ballPosition);
   };
 
   const handleRedo = () => {
@@ -271,6 +282,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     setHistoryIndex(newIndex);
     setTokens(state.tokens);
     setDrawnPaths(state.paths);
+    setBallPosition(state.ballPosition);
   };
 
   const fieldRef = useRef<HTMLDivElement>(null);
@@ -403,6 +415,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
   const selectedPerspectiveSide = selectedToken?.teamSide ?? currentPlacementSide;
   const enemyTackleZoneCounts = selectedPerspectiveSide === 'home' ? tackleZonesBySide.away : tackleZonesBySide.home;
   const alliedTackleZoneCounts = selectedPerspectiveSide === 'home' ? tackleZonesBySide.home : tackleZonesBySide.away;
+  const ballZoneKey = `${ballPosition.x}-${ballPosition.y}`;
   const activeMoveModifiers = useMemo(() => {
     if (activeTool !== 'move' || !selectedToken || selectedToken.isDown) return [];
     const modifiers: Array<{ x: number; y: number; count: number }> = [];
@@ -422,6 +435,14 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
   }, [activeTool, selectedToken, enemyTackleZoneCounts]);
   const activePassModifier = useMemo(() => {
     if (activeTool !== 'pass' || !selectedToken) return null;
+    return enemyTackleZoneCounts.get(`${selectedToken.x}-${selectedToken.y}`) || 0;
+  }, [activeTool, selectedToken, enemyTackleZoneCounts]);
+  const activePickupModifier = useMemo(() => {
+    if (activeTool !== 'pickup') return null;
+    return enemyTackleZoneCounts.get(ballZoneKey) || 0;
+  }, [activeTool, enemyTackleZoneCounts, ballZoneKey]);
+  const activeInterceptModifier = useMemo(() => {
+    if (activeTool !== 'intercept' || !selectedToken) return null;
     return enemyTackleZoneCounts.get(`${selectedToken.x}-${selectedToken.y}`) || 0;
   }, [activeTool, selectedToken, enemyTackleZoneCounts]);
 
@@ -491,10 +512,15 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     if (draggedTokenRef.current) {
       pushHistory(tokens);
       draggedTokenRef.current = null;
-    } else if (isDrawing && activeTool && currentPathPoints.length > 1) {
+    } else if (
+      isDrawing &&
+      activeTool &&
+      ['move', 'pass', 'defense'].includes(activeTool) &&
+      currentPathPoints.length > 1
+    ) {
       const newPath: DrawingPath = {
         id: Date.now().toString(),
-        type: activeTool,
+        type: activeTool as DrawingPath['type'],
         points: currentPathPoints
       };
       const newPaths = [...drawnPaths, newPath];
@@ -515,6 +541,17 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     const fieldRect = fieldRef.current.getBoundingClientRect();
     const x = (clientX - fieldRect.left) / zoom;
     const y = (clientY - fieldRect.top) / zoom;
+
+    if (activeTool === 'ball') {
+      const gridX = Math.max(0, Math.min(GRID_COLS - 1, Math.floor(x / GRID_CELL_SIZE)));
+      const gridY = Math.max(0, Math.min(GRID_ROWS - 1, Math.floor(y / GRID_CELL_SIZE)));
+      pushHistory(tokens, drawnPaths, { x: gridX, y: gridY });
+      return;
+    }
+
+    if (!['move', 'pass', 'defense'].includes(activeTool)) {
+      return;
+    }
 
     setIsDrawing(true);
     setCurrentPathPoints([{ x, y }]);
@@ -584,7 +621,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
   };
 
   const handleClearField = () => {
-    pushHistory([], []);
+    pushHistory([], [], DEFAULT_BALL_POSITION);
     setSelectedPlayer(null);
     setSelectedTokenId(null);
   };
@@ -609,7 +646,8 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
         ...token,
         playerRef: token.playerRef || (playerData ? String(playerData.id) : undefined),
       })),
-      paths: drawnPaths
+      paths: drawnPaths,
+      ballPosition,
     };
     onSavePlay(newPlay);
     setPlayName('');
@@ -630,7 +668,9 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
       setOpponentTeamId(linkedOpponentTeam?.id || '');
       setTokens(hydratedTokens);
       setDrawnPaths(playToLoad.paths || []);
-      setHistory([{ tokens: hydratedTokens, paths: playToLoad.paths || [] }]);
+      const nextBallPosition = playToLoad.ballPosition || DEFAULT_BALL_POSITION;
+      setBallPosition(nextBallPosition);
+      setHistory([{ tokens: hydratedTokens, paths: playToLoad.paths || [], ballPosition: nextBallPosition }]);
       setHistoryIndex(0);
       setPlayName(playToLoad.name);
       setSelectedStyle((playToLoad.style as TacticStyle) || 'Defensivo');
@@ -654,7 +694,9 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
         setOpponentTeamId(matchingPlay.opponentTeamId || '');
         setTokens(hydratedTokens);
         setDrawnPaths(matchingPlay.paths || []);
-        setHistory([{ tokens: hydratedTokens, paths: matchingPlay.paths || [] }]);
+        const nextBallPosition = matchingPlay.ballPosition || DEFAULT_BALL_POSITION;
+        setBallPosition(nextBallPosition);
+        setHistory([{ tokens: hydratedTokens, paths: matchingPlay.paths || [], ballPosition: nextBallPosition }]);
         setHistoryIndex(0);
         setPlayName(matchingPlay.name);
         setSelectedStyle((matchingPlay.style as TacticStyle) || 'Defensivo');
@@ -705,7 +747,9 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
       setOpponentTeamId(matchingPlay.opponentTeamId || '');
       setTokens(hydratedTokens);
       setDrawnPaths(matchingPlay.paths || []);
-      setHistory([{ tokens: hydratedTokens, paths: matchingPlay.paths || [] }]);
+      const nextBallPosition = matchingPlay.ballPosition || DEFAULT_BALL_POSITION;
+      setBallPosition(nextBallPosition);
+      setHistory([{ tokens: hydratedTokens, paths: matchingPlay.paths || [], ballPosition: nextBallPosition }]);
       setHistoryIndex(0);
       setPlayName(matchingPlay.name);
       setSelectedStyle((matchingPlay.style as TacticStyle) || 'Defensivo');
@@ -1253,8 +1297,11 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
               <div className="flex flex-col gap-2">
                 {([
                   { id: 'move', icon: 'brush', label: 'Ruta movimiento' },
+                  { id: 'pickup', icon: 'sports_football', label: 'Recoger balon' },
                   { id: 'pass', icon: 'near_me', label: 'Pase / trayectoria' },
+                  { id: 'intercept', icon: 'pan_tool_alt', label: 'Intercepcion' },
                   { id: 'defense', icon: 'groups', label: 'Zonas defensa' },
+                  { id: 'ball', icon: 'my_location', label: 'Colocar balon' },
                 ] as { id: ActiveTool; icon: string; label: string }[]).map(tool => (
                   <button
                     key={tool.id}
@@ -1511,6 +1558,23 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
               </div>
             )}
 
+            {typeof activePickupModifier === 'number' && activeTool === 'pickup' && activePickupModifier > 0 && (
+              <div
+                className="absolute pointer-events-none z-[12]"
+                style={{
+                  left: `${ballPosition.x * GRID_CELL_SIZE}px`,
+                  top: `${ballPosition.y * GRID_CELL_SIZE}px`,
+                  width: `${GRID_CELL_SIZE}px`,
+                  height: `${GRID_CELL_SIZE}px`,
+                }}
+              >
+                <div className="absolute inset-[5px] rounded-lg border border-[rgba(239,68,68,0.32)] bg-[rgba(239,68,68,0.14)]" />
+                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[rgba(43,29,18,0.86)] px-2 py-[2px] text-[9px] font-black text-[#fff7eb] shadow-[0_4px_12px_rgba(30,19,8,0.22)]">
+                  B -{activePickupModifier}
+                </span>
+              </div>
+            )}
+
             {/* Placed Tokens */}
             <AnimatePresence>
               {tokens.map((token) => {
@@ -1521,6 +1585,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                   : config.label;
                 const isSelected = token.id === selectedTokenId;
                 const tokenPassModifier = activeTool === 'pass' && selectedTokenId === token.id ? activePassModifier : null;
+                const tokenInterceptModifier = activeTool === 'intercept' && selectedTokenId === token.id ? activeInterceptModifier : null;
                 const sideRingClass = token.teamSide === 'away'
                   ? 'ring-[3px] ring-[rgba(220,38,38,0.28)]'
                   : 'ring-[3px] ring-[rgba(16,185,129,0.24)]';
@@ -1570,6 +1635,11 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                               P -{tokenPassModifier}
                             </span>
                           )}
+                          {typeof tokenInterceptModifier === 'number' && tokenInterceptModifier > 0 && (
+                            <span className="absolute -top-6 left-1/2 -translate-x-1/2 rounded-full bg-[rgba(59,130,246,0.88)] px-2 py-[1px] text-[8px] font-black text-[#fff7eb] shadow-[0_4px_10px_rgba(30,19,8,0.28)]">
+                              I -{tokenInterceptModifier}
+                            </span>
+                          )}
                           {token.isDown && (
                             <span className="absolute inset-0 flex items-center justify-center rounded-full bg-[rgba(43,29,18,0.28)] text-[8px] font-black uppercase tracking-[0.14em] text-[#fff7eb]">
                               KO
@@ -1582,6 +1652,11 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                           {typeof tokenPassModifier === 'number' && tokenPassModifier > 0 && (
                             <span className="absolute -top-2 left-1/2 -translate-x-1/2 rounded-full bg-[rgba(239,68,68,0.88)] px-2 py-[1px] text-[8px] font-black text-[#fff7eb] shadow-[0_4px_10px_rgba(30,19,8,0.28)]">
                               P -{tokenPassModifier}
+                            </span>
+                          )}
+                          {typeof tokenInterceptModifier === 'number' && tokenInterceptModifier > 0 && (
+                            <span className="absolute -top-6 left-1/2 -translate-x-1/2 rounded-full bg-[rgba(59,130,246,0.88)] px-2 py-[1px] text-[8px] font-black text-[#fff7eb] shadow-[0_4px_10px_rgba(30,19,8,0.28)]">
+                              I -{tokenInterceptModifier}
                             </span>
                           )}
                           {token.isDown && (
@@ -1601,7 +1676,12 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
             <motion.div
               animate={{ y: [0, -5, 0], scale: [1, 1.1, 1] }}
               transition={{ repeat: Infinity, duration: 2 }}
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-accent-gold z-40 drop-shadow-[0_0_10px_rgba(212,175,55,0.4)] pointer-events-none"
+              className="absolute text-accent-gold z-40 drop-shadow-[0_0_10px_rgba(212,175,55,0.4)] pointer-events-none"
+              style={{
+                left: `${ballPosition.x * GRID_CELL_SIZE + GRID_CELL_SIZE / 2}px`,
+                top: `${ballPosition.y * GRID_CELL_SIZE + GRID_CELL_SIZE / 2}px`,
+                transform: 'translate(-50%, -50%)',
+              }}
             >
               <span className="material-symbols-outlined text-2xl fill-1">sports_football</span>
             </motion.div>
