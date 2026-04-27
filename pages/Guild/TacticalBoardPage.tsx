@@ -211,7 +211,7 @@ const buildPresetTokensForSide = (
 const buildFormationStatus = (tokens: BoardToken[], side: 'home' | 'away' = 'home') => {
   const sideTokens = tokens.filter((token) => token.teamSide === side);
   const isHome = side === 'home';
-  const inOwnSide = (token: BoardToken) => isHome ? token.x >= PITCH_INFO.homeHalfStart : token.x <= PITCH_INFO.losColumn;
+  const inOwnSide = (token: BoardToken) => isHome ? token.x <= PITCH_INFO.losColumn : token.x >= PITCH_INFO.losColumn;
   const onLeftWide = sideTokens.filter(token => inOwnSide(token) && token.y >= 0 && token.y <= PITCH_INFO.leftWideMaxRow).length;
   const onRightWide = sideTokens.filter(token => inOwnSide(token) && token.y >= PITCH_INFO.rightWideMinRow && token.y < GRID_ROWS).length;
   const totalOnField = sideTokens.length;
@@ -291,9 +291,9 @@ const getNextOpenSlot = (currentTokens: BoardToken[], side: 'home' | 'away' = 'h
     if (!usedSlots.has(`${slot.x}-${slot.y}`)) return slot;
   }
 
-  const startX = side === 'home' ? PITCH_INFO.homeHalfStart : 1;
-  const endX = side === 'home' ? GRID_COLS - 1 : PITCH_INFO.losColumn + 1;
-  for (let x = startX; x < endX; x += 1) {
+  const startX = side === 'home' ? PITCH_INFO.losColumn : PITCH_INFO.losColumn + 1;
+  const endX = side === 'home' ? 0 : GRID_COLS;
+  for (let x = startX; side === 'home' ? x >= endX : x < endX; side === 'home' ? x -= 1 : x += 1) {
     for (let y = 1; y < GRID_ROWS - 1; y += 1) {
       if (!usedSlots.has(`${x}-${y}`)) return { x, y };
     }
