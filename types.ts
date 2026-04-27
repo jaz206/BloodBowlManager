@@ -398,6 +398,7 @@ export interface BoardToken extends Token {
   teamId?: string;
   playerData?: ManagedPlayer;
   isDown?: boolean;
+  hasBall?: boolean;
 }
 
 export interface GameRule {
