@@ -63,7 +63,7 @@ const PITCH_INFO = {
   awayHalfMinColumn: 13,
   leftWideMaxRow: 3,
   rightWideMinRow: 11,
-  minWidePlayersTotal: 2,
+  minWidePlayersPerZone: 2,
   maxWidePlayersPerZone: 2,
   requiredLoSPlayers: 3,
 };
@@ -227,13 +227,13 @@ const buildFormationStatus = (tokens: BoardToken[], side: 'home' | 'away' = 'hom
   const inOwnSide = (token: BoardToken) => isTokenInOwnHalf(token, side);
   const onLeftWide = sideTokens.filter(token => inOwnSide(token) && token.y >= 0 && token.y <= PITCH_INFO.leftWideMaxRow).length;
   const onRightWide = sideTokens.filter(token => inOwnSide(token) && token.y >= PITCH_INFO.rightWideMinRow && token.y < GRID_ROWS).length;
-  const wideZoneTotal = onLeftWide + onRightWide;
   const totalOnField = sideTokens.length;
   const inOwnHalf = sideTokens.filter(token => inOwnSide(token)).length;
   const onLoSTokens = sideTokens.filter(token => token.x === loSColumn && token.y >= 4 && token.y <= 10).length;
   const isLegal =
     onLoSTokens === PITCH_INFO.requiredLoSPlayers &&
-    wideZoneTotal >= PITCH_INFO.minWidePlayersTotal &&
+    onLeftWide >= PITCH_INFO.minWidePlayersPerZone &&
+    onRightWide >= PITCH_INFO.minWidePlayersPerZone &&
     onLeftWide <= PITCH_INFO.maxWidePlayersPerZone &&
     onRightWide <= PITCH_INFO.maxWidePlayersPerZone &&
     totalOnField <= MAX_TOKENS_PER_SIDE &&
@@ -246,8 +246,11 @@ const buildFormationStatus = (tokens: BoardToken[], side: 'home' | 'away' = 'hom
   if (onLoSTokens !== PITCH_INFO.requiredLoSPlayers) {
     reasons.push(`Hay ${onLoSTokens} jugadores en la linea de golpeo y deben ser exactamente ${PITCH_INFO.requiredLoSPlayers}.`);
   }
-  if (wideZoneTotal < PITCH_INFO.minWidePlayersTotal) {
-    reasons.push(`Solo hay ${wideZoneTotal} jugadores entre las dos bandas y deben ser al menos ${PITCH_INFO.minWidePlayersTotal}.`);
+  if (onLeftWide < PITCH_INFO.minWidePlayersPerZone) {
+    reasons.push(`Solo hay ${onLeftWide} jugadores en la banda superior y deben ser al menos ${PITCH_INFO.minWidePlayersPerZone}.`);
+  }
+  if (onRightWide < PITCH_INFO.minWidePlayersPerZone) {
+    reasons.push(`Solo hay ${onRightWide} jugadores en la banda inferior y deben ser al menos ${PITCH_INFO.minWidePlayersPerZone}.`);
   }
   if (onLeftWide > PITCH_INFO.maxWidePlayersPerZone) {
     reasons.push(`Hay ${onLeftWide} jugadores en la banda superior y el maximo es ${PITCH_INFO.maxWidePlayersPerZone}.`);
@@ -259,7 +262,7 @@ const buildFormationStatus = (tokens: BoardToken[], side: 'home' | 'away' = 'hom
     reasons.push('Hay jugadores colocados fuera de su mitad legal del campo.');
   }
 
-  return { onLoS: onLoSTokens, onLeftWide, onRightWide, wideZoneTotal, totalOnField, inOwnHalf, isLegal, reasons };
+  return { onLoS: onLoSTokens, onLeftWide, onRightWide, totalOnField, inOwnHalf, isLegal, reasons };
 };
 
 const getIllegalTokenIdsForSide = (tokens: BoardToken[], side: 'home' | 'away' = 'home') =>
@@ -647,8 +650,14 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     (!awaySideActive || awayFormationStatus.isLegal);
   const homeLoSNeedsHelp = homeSideActive && formationStatus.onLoS !== PITCH_INFO.requiredLoSPlayers;
   const awayLoSNeedsHelp = awaySideActive && awayFormationStatus.onLoS !== PITCH_INFO.requiredLoSPlayers;
-  const homeWideNeedsHelp = homeSideActive && formationStatus.wideZoneTotal < PITCH_INFO.minWidePlayersTotal;
-  const awayWideNeedsHelp = awaySideActive && awayFormationStatus.wideZoneTotal < PITCH_INFO.minWidePlayersTotal;
+  const homeWideNeedsHelp =
+    homeSideActive &&
+    (formationStatus.onLeftWide < PITCH_INFO.minWidePlayersPerZone ||
+      formationStatus.onRightWide < PITCH_INFO.minWidePlayersPerZone);
+  const awayWideNeedsHelp =
+    awaySideActive &&
+    (awayFormationStatus.onLeftWide < PITCH_INFO.minWidePlayersPerZone ||
+      awayFormationStatus.onRightWide < PITCH_INFO.minWidePlayersPerZone);
   const showLoSWarning = homeLoSNeedsHelp || awayLoSNeedsHelp;
   const activeMoveModifiers = useMemo(() => {
     if (activeTool !== 'move' || !selectedToken || selectedToken.isDown) return [];
