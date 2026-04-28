@@ -28,7 +28,6 @@ import { addDoc, collection, onSnapshot, setDoc, doc, updateDoc, deleteDoc, quer
 import { useLanguage } from '../../contexts/LanguageContext';
 import LanguageSelector from '../common/LanguageSelector';
 import { useMasterData } from '../../hooks/useMasterData';
-import { getGuestTeams } from '../../utils/testData';
 import { generateJoinCode } from '../../pages/Arena/competitionUtils';
 import { normalizeManagedTeamCollection, normalizeManagedTeamRecord } from '../../utils/teamData';
 
@@ -304,14 +303,7 @@ const MainApp: React.FC = () => {
 
   useEffect(() => {
     if (isGuest || !user || !db) {
-      if (managedTeams.length === 0) {
-        const cached = localStorage.getItem('bb-guest-teams');
-        if (cached) {
-          setManagedTeams(normalizeManagedTeamCollection(JSON.parse(cached)));
-        } else {
-          setManagedTeams(normalizeManagedTeamCollection(getGuestTeams()));
-        }
-      }
+      setManagedTeams([]);
       setPlays([]);
       setDataInitiallyLoaded(true);
       setSyncState('synced');
@@ -396,24 +388,12 @@ const MainApp: React.FC = () => {
   }, [db, localCompetitionsKey]);
 
   const handleTeamCreate = async (newTeamData: Omit<ManagedTeam, 'id'>) => {
-    if (!user) return;
+    if (!user || isGuest || !db) return;
     setSyncState('syncing');
-    if (isGuest) {
-      const updated = [...managedTeams, { ...newTeamData, id: `temp_${Date.now()}` } as ManagedTeam];
-      setManagedTeams(updated);
-      localStorage.setItem('bb-guest-teams', JSON.stringify(updated));
-      setSyncState('synced');
-      return;
-    }
     try {
-      if (!db) return;
       // Sanitizar datos para evitar errores de Firestore (eliminar undefined)
       const sanitizedTeam = JSON.parse(JSON.stringify(newTeamData));
-      const teamRef = await addDoc(collection(db, 'users', user.id, 'teams'), sanitizedTeam);
-      setManagedTeams(prev => {
-        if (prev.some(team => team.id === teamRef.id)) return prev;
-        return [...prev, { ...sanitizedTeam, id: teamRef.id } as ManagedTeam];
-      });
+      await addDoc(collection(db, 'users', user.id, 'teams'), sanitizedTeam);
       setSyncState('synced');
     } catch (error) {
       console.error("Error creating team in Firestore:", error);
@@ -467,7 +447,6 @@ const MainApp: React.FC = () => {
       const teamRef = doc(db, 'users', user.id, 'teams', sanitizedTeam.id || updatedTeam.id);
       const { id, ...data } = firestoreSafeTeam as ManagedTeam;
       await updateDoc(teamRef, data);
-      setManagedTeams(prev => prev.map(team => team.id === updatedTeam.id ? sanitizedTeam : team));
       setSyncState('synced');
     } catch (error) {
       console.error("Error updating team:", error);
@@ -509,7 +488,6 @@ const MainApp: React.FC = () => {
     setSyncState('syncing');
     try {
       await deleteDoc(doc(db, 'users', user.id, 'teams', teamId));
-      setManagedTeams(prev => prev.filter(team => team.id !== teamId));
       setSyncState('synced');
     } catch (error) {
       console.error("Error deleting team:", error);

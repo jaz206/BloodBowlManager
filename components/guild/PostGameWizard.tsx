@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import type { ManagedTeam, ManagedPlayer, Skill } from '../../types';
 import { skillsData } from '../../data/skills';
-import { teamsData } from '../../data/teams';
+import { useMasterData } from '../../hooks/useMasterData';
 
 interface SkillSelectionModalProps {
     player: ManagedPlayer;
@@ -12,7 +12,8 @@ interface SkillSelectionModalProps {
 }
 
 const SkillSelectionModal: React.FC<SkillSelectionModalProps> = ({ player, rosterName, skillType, onSelect, onClose }) => {
-    const baseTeam = useMemo(() => teamsData.find(t => t.name === rosterName), [rosterName]);
+    const { teams } = useMasterData();
+    const baseTeam = useMemo(() => teams.find(t => t.name === rosterName), [teams, rosterName]);
     const basePlayer = useMemo(() => baseTeam?.roster.find(p => p.position === player.position), [baseTeam, player.position]);
 
     const availableSkills = useMemo(() => {

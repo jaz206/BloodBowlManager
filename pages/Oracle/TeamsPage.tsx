@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { teamsData as staticTeams } from '../../data/teams';
 import type { Team, Skill } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
 import { useMasterData } from '../../hooks/useMasterData';
@@ -13,13 +12,10 @@ import TeamDetailPage from './TeamDetailPage';
 import SkillBadge from '../../components/shared/SkillBadge';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { getTeamLogoUrl } from '../../utils/imageUtils';
-import { mergeTeamWithFallback } from '../../utils/teamData';
 
 const resolveTeamImage = (team?: Team | null) => {
     if (!team) return '';
-    const staticTeam = staticTeams.find(t => t.name === team.name);
-    const merged = mergeTeamWithFallback(team as any, staticTeam as any);
-    return merged.crestImage || merged.image || getTeamLogoUrl(team.name);
+    return team.crestImage || team.image || getTeamLogoUrl(team.name);
 };
 const PopularTeamCard: React.FC<{ team: Team; icon: string; subtitle: string; onClick: () => void }> = ({ team, icon, subtitle, onClick }) => (
     <motion.button
@@ -344,13 +340,7 @@ const Teams: React.FC<{
     const { teams: fetchedTeams, updateMasterItem, syncMasterData, loading } = useMasterData();
     const { isAdmin } = useAuth();
 
-    // Safety merge: ensures teams have rosters from static data if Firestore is incomplete
-    const teams = useMemo(() => {
-        return fetchedTeams.map(ft => {
-            const st = staticTeams.find(s => s.name === ft.name);
-            return mergeTeamWithFallback(ft as any, st as any) as Team;
-        });
-    }, [fetchedTeams]);
+    const teams = useMemo(() => fetchedTeams as Team[], [fetchedTeams]);
 
     const [selectedTeamName, setSelectedTeamName] = useState<string | null>(null);
     const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
@@ -452,8 +442,8 @@ const Teams: React.FC<{
 
     const updateTeamImage = async (teamName: string) => {
         try {
-            const staticTeam = staticTeams.find(team => team.name === teamName);
-            const officialLogo = staticTeam?.crestImage || staticTeam?.image || getTeamLogoUrl(teamName);
+            const firestoreTeam = teams.find(team => team.name === teamName);
+            const officialLogo = firestoreTeam?.crestImage || firestoreTeam?.image || getTeamLogoUrl(teamName);
             await updateMasterItem('teams', teamName, { image: officialLogo, crestImage: officialLogo });
             showToast(`Escudo actualizado para ${teamName}.`);
         } catch (error) {

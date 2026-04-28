@@ -5,8 +5,8 @@ import TeamCreator from './CreateTeamPage';
 import { TeamDashboard } from '../../components/guild/TeamDashboard';
 import { calculateTeamValue } from '../../utils/teamUtils';
 import { getTeamLogoUrl } from '../../utils/imageUtils';
-import { teamsData } from '../../data/teams';
 import { useAuth } from '../../hooks/useAuth';
+import { useMasterData } from '../../hooks/useMasterData';
 import type { Competition } from '../../types';
 
 // SPP Levels for S3
@@ -137,16 +137,8 @@ const getRosterAliases = (rosterName: string) => {
     return aliases[normalized] || [];
 };
 
-const resolveGuildTeamCrestUrl = (team: ManagedTeam): string => {
-    const staticTeam = teamsData.find(t => t.name === team.rosterName);
-    return (
-        team.crestImage ||
-        staticTeam?.crestImage ||
-        staticTeam?.image ||
-        getTeamLogoUrl(team.rosterName) ||
-        ''
-    );
-};
+const resolveGuildTeamCrestUrl = (team: ManagedTeam): string =>
+    team.crestImage || getTeamLogoUrl(team.rosterName) || '';
 
 const getGuildListCrestStyle = (team: ManagedTeam): React.CSSProperties => ({
     transform: `scale(${team.crestScale ?? 1.18}) translateY(${team.crestOffsetY ?? 0}px)`,
@@ -170,6 +162,7 @@ interface TeamManagerProps {
 
 const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUpdate, onTeamDelete, requestedRoster, onRosterRequestHandled = () => { }, isGuest, matchReports, initialTeamId, onInitialTeamHandled = () => {}, onOpenTacticalBoard, competitions }) => {
     const { user } = useAuth();
+    const { teams: masterTeams } = useMasterData();
     // State for which team is shown in the top summary bar
     const [activeSummaryTeamId, setActiveSummaryTeamId] = useState<string | null>(null);
     // State for which team is being edited (inline rename)
@@ -490,11 +483,6 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                         const rosterUrl = getTeamLogoUrl(team.rosterName);
                                         if (img.src !== rosterUrl) {
                                             img.src = rosterUrl;
-                                        } else {
-                                            const originalData = teamsData.find(t => t.name === team.rosterName);
-                                            if (originalData && img.src !== originalData.image) {
-                                                img.src = originalData.image;
-                                            }
                                         }
                                     }}
                                     alt={team.name}
@@ -626,11 +614,6 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onTeamCreate, onTeamUp
                                 const rosterUrl = getTeamLogoUrl(team.rosterName);
                                 if (img.src !== rosterUrl) {
                                     img.src = rosterUrl;
-                                } else {
-                                    const originalData = teamsData.find(t => t.name === team.rosterName);
-                                    if (originalData && img.src !== originalData.image) {
-                                        img.src = originalData.image;
-                                    }
                                 }
                             }}
                             alt={team.name}

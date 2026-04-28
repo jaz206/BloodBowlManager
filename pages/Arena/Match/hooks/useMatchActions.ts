@@ -14,13 +14,14 @@ import { updatePlayerSppActionLogic } from '../engine/sppEngine';
 import { handleHalftimeLogic, handleNextTurnLogic, checkStalling } from '../engine/matchEngine';
 import { skillsData } from '../../../../data/skills';
 import { weatherConditions } from '../../../../data/weather';
-import { teamsData } from '../../../../data/teams';
+import { useMasterData } from '../../../../hooks/useMasterData';
 
 /**
  * useMatchActions — encapsula toda la lógica de acciones del partido.
  * Recibe el estado del hook useMatchState y retorna funciones de acción memoizadas.
  */
 export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props: GameBoardProps) => {
+    const { teams } = useMasterData();
     const {
         setGameLog, turn, half, setTurn, setHalf, setGameState, setGameStatus,
         firstHalfReceiver, homeTeam, opponentTeam, liveHomeTeam, liveOpponentTeam,
@@ -757,7 +758,7 @@ const updatePlayerSppAndAction = useCallback((
             if (side === 'home') setHomeTeam(team);
             else setOpponentTeam({ ...team, players: team.players.map(p => ({ ...p, status: 'Reserva' })) });
         }
-    }, [state]);
+    }, [state, teams]);
 
     /** Procesa los datos decodificados de un código QR para importar un equipo oponente. */
     const handleProcessQrCode = useCallback((decodedText: string) => {
@@ -770,7 +771,7 @@ const updatePlayerSppAndAction = useCallback((
 
             if (!teamName || !rosterName) throw new Error('Código QR no válido.');
 
-            const baseTeam = teamsData.find((t: any) => t.name === rosterName);
+            const baseTeam = teams.find((t: any) => t.name === rosterName);
             if (!baseTeam) throw new Error(`Facción "${rosterName}" no encontrada.`);
 
             const playersData = isNewFormat ? parsedTeam.pl : parsedTeam.players;

@@ -4,7 +4,6 @@ import { collection, doc, onSnapshot, setDoc, serverTimestamp, getDoc } from 'fi
 import { useLanguage } from '../contexts/LanguageContext';
 
 // ── Static Fallback Data ──────────────────────────────────────────────────────
-import { teamsData as staticTeamsData } from '../data/teams';
 import { skillsData as staticSkills } from '../data/skills';
 import { starPlayersData as staticStarsData } from '../data/starPlayers';
 import { inducements as staticInducementsEs } from '../data/inducements';
@@ -79,7 +78,7 @@ export const useMasterData = () => {
     const { language } = useLanguage();
 
     // ── State ─────────────────────────────────────────────────────────────────
-    const [teams, setTeams] = useState<Team[]>(staticTeamsData);
+    const [teams, setTeams] = useState<Team[]>([]);
     const [skills, setSkills] = useState<Skill[]>(normalizeSkillsCollection(staticSkills));
     const [starPlayers, setStarPlayers] = useState<StarPlayer[]>(normalizeStarPlayersCollection(staticStarsData));
     const [inducements, setInducements] = useState<Inducement[]>(language === 'es' ? staticInducementsEs : (staticInducementsEn as unknown as Inducement[]));
@@ -92,36 +91,13 @@ export const useMasterData = () => {
     const [isFromFirestore, setIsFromFirestore] = useState(false);
 
     const normalizeTeams = useCallback((items: Team[]) => {
-        return normalizeTeamCollection(
-            items as Partial<TeamAsset>[],
-            staticTeamsData as TeamAsset[]
-        );
+        return normalizeTeamCollection(items as Partial<TeamAsset>[]);
     }, []);
-
-    const mergeCanonicalTeams = useCallback((firestoreItems: Team[], staticItems: Team[]) => {
-        const normalizedFirestore = normalizeTeams(firestoreItems || []);
-        const normalizedStatic = normalizeTeams(staticItems || []);
-        const existingByName = new Map(normalizedFirestore.map((team) => [team.name, team]));
-
-        const canonicalTeams = normalizedStatic.map((baseTeam) => {
-            const existing = existingByName.get(baseTeam.name);
-            return {
-                ...baseTeam,
-                namePools: existing?.namePools?.length ? existing.namePools : (baseTeam.namePools || []),
-                megaFactions: existing?.megaFactions?.length ? existing.megaFactions : (baseTeam.megaFactions || []),
-            };
-        });
-
-        const canonicalNames = new Set(canonicalTeams.map((team) => team.name));
-        const customTeams = normalizedFirestore.filter((team) => !canonicalNames.has(team.name));
-
-        return [...canonicalTeams, ...customTeams];
-    }, [normalizeTeams]);
 
     // ── Firestore listeners ───────────────────────────────────────────────────
     useEffect(() => {
         if (!db) {
-            setTeams(normalizeTeams(staticTeamsData));
+            setTeams([]);
             setSkills(normalizeSkillsCollection(staticSkills));
             setStarPlayers(normalizeStarPlayersCollection(staticStarsData));
             setInducements(language === 'es' ? staticInducementsEs : (staticInducementsEn as unknown as Inducement[]));
@@ -142,13 +118,13 @@ export const useMasterData = () => {
         const unsubTeams = onSnapshot(
             doc(db, MASTER_COL, 'teams'),
             (snap) => {
-                if (snap.exists() && snap.data()?.items?.length > 0) {
-                    setTeams(mergeCanonicalTeams(snap.data().items as Team[], staticTeamsData));
+                if (snap.exists() && Array.isArray(snap.data()?.items)) {
+                    setTeams(normalizeTeams(snap.data().items as Team[]));
                     setIsFromFirestore(true);
                     setError(null);
                 } else {
-                    setTeams(normalizeTeams(staticTeamsData));
-                    setIsFromFirestore(false);
+                    setTeams([]);
+                    setIsFromFirestore(true);
                 }
                 checkDone();
             },
@@ -157,7 +133,7 @@ export const useMasterData = () => {
                 if (err.code === 'permission-denied') {
                     setError(err);
                 }
-                    setTeams(normalizeTeams(staticTeamsData));
+                setTeams([]);
                 setIsFromFirestore(false);
                 checkDone();
             }
@@ -299,10 +275,9 @@ export const useMasterData = () => {
                 getDoc(doc(db, MASTER_COL, 'heraldo')),
             ]);
 
-            const teamsToSave = sanitizeCollectionForFirestore(mergeCanonicalTeams(
-                teamsSnap.exists() ? teamsSnap.data().items : [],
-                staticTeamsData
-            ));
+            const teamsToSave = sanitizeCollectionForFirestore(
+                normalizeTeams(teamsSnap.exists() ? (teamsSnap.data().items as Team[] || []) : [])
+            );
             const skillsToSave = sanitizeCollectionForFirestore(normalizeSkillsCollection(mergeItems(skillsSnap.exists() ? skillsSnap.data().items : [], staticSkills, 'keyEN')));
             const starsToSave = sanitizeCollectionForFirestore(normalizeStarPlayersCollection(mergeItems(starsSnap.exists() ? starsSnap.data().items : [], staticStarsData, 'name')));
             const inducEsToSave = sanitizeCollectionForFirestore(mergeItems(inducEsSnap.exists() ? inducEsSnap.data().items : [], staticInducementsEs, 'name'));
@@ -318,7 +293,7 @@ export const useMasterData = () => {
                 setDoc(doc(db, MASTER_COL, 'meta'), {
                     lastSync: ts,
                     version: new Date().toISOString().split('T')[0],
-                    strategy: force ? 'overwrite' : 'canonical-teams-smart-merge',
+                    strategy: force ? 'overwrite-firestore' : 'firestore-source-of-truth',
                     source: 'admin-panel',
                     teamsCount: teamsToSave.length,
                     skillsCount: skillsToSave.length,
@@ -334,7 +309,7 @@ export const useMasterData = () => {
             setError(err.message ?? 'Error al sincronizar con Firestore');
             throw err;
         }
-    }, [db, mergeCanonicalTeams, normalizeTeams, heraldoItems]);
+    }, [db, normalizeTeams, heraldoItems]);
 
     // ── Update a single field in a Firestore master doc ───────────────────────
     /**
@@ -360,7 +335,6 @@ export const useMasterData = () => {
         const snap = await getDoc(ref);
 
         const getFallbackItems = () => {
-            if (docId === 'teams') return staticTeamsData as any[];
             if (docId === 'skills') return staticSkills as any[];
             if (docId === 'star_players') return staticStarsData as any[];
             if (docId === 'inducements_es') return staticInducementsEs as any[];
@@ -386,6 +360,9 @@ export const useMasterData = () => {
         let idx = getMatchIndex(items);
 
         if (idx === -1) {
+            if (docId === 'teams') {
+                throw new Error(`Item "${itemId}" no encontrado en Firestore para ${docId}`);
+            }
             const fallbackItems = getFallbackItems();
             const fallbackIdx = getMatchIndex(fallbackItems);
 

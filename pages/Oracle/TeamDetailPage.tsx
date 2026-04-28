@@ -10,7 +10,6 @@ import { getTeamLogoUrl } from '../../utils/imageUtils';
 import { getStarPlayerImageUrl } from '../../utils/imageUtils';
 import { useMasterData } from '../../hooks/useMasterData';
 import StatValue from '../../components/oracle/StatValue';
-import { teamsData as staticTeamsData } from '../../data/teams';
 import { mergeTeamWithFallback } from '../../utils/teamData';
 
 interface TeamDetailPageProps {
@@ -47,9 +46,8 @@ const TeamDetailPage: React.FC<TeamDetailPageProps> = ({ team, onBack, onRequest
     const [isFullscreenImage, setIsFullscreenImage] = useState(false);
     const [activeTab, setActiveTab] = useState<'roster' | 'stars' | 'rules'>('roster');
 
-    const staticTeam = staticTeamsData.find(t => t.name === team.name);
     const masterTeam = masterTeams.find(t => t.name === team.name);
-    const mergedTeam = mergeTeamWithFallback(team as any, (masterTeam || staticTeam) as any);
+    const mergedTeam = mergeTeamWithFallback(team as any, masterTeam as any);
     const heroImage = mergedTeam.crestImage || mergedTeam.image || getTeamLogoUrl(team.name);
 
     const currentSpecialRulesStr = language === 'es'

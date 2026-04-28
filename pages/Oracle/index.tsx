@@ -10,7 +10,6 @@ import RulesPage from './RulesPage';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useMasterData } from '../../hooks/useMasterData';
 import { getStarPlayerImageUrl, getTeamLogoUrl } from '../../utils/imageUtils';
-import { teamsData as staticTeams } from '../../data/teams';
 import { ELITE_SKILLS, type ManagedTeam } from '../../types';
 
 type SubView = 'hub' | 'teams' | 'skills' | 'star_players' | 'calculator' | 'inducements' | 'rules';
@@ -34,7 +33,7 @@ interface OraclePageProps {
 
 const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTeamCreation = () => { }, initialSearchTerm = '' }) => {
     const { t } = useLanguage();
-    const { skills, starPlayers } = useMasterData();
+    const { skills, starPlayers, teams: masterTeams } = useMasterData();
     const [activeView, setActiveView] = useState<SubView>('hub');
     const [selectedHubTeam, setSelectedHubTeam] = useState<string | null>(null);
     const [initialSkillCategory, setInitialSkillCategory] = useState<string>('General');
@@ -42,8 +41,8 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
     const hubSearchInputRef = useRef<HTMLInputElement | null>(null);
 
     const resolveHubTeamImage = (team: ManagedTeam & { crestImage?: string; image?: string }) => {
-        const staticTeam = staticTeams.find(t => t.name === team.name);
-        return team?.crestImage || team?.image || staticTeam?.crestImage || staticTeam?.image || getTeamLogoUrl(team.name) || '';
+        const masterTeam = masterTeams.find(t => t.name === team.name);
+        return team?.crestImage || team?.image || masterTeam?.crestImage || masterTeam?.image || getTeamLogoUrl(team.name) || '';
     };
 
     // Update search term when initialSearchTerm changes from outside
@@ -90,7 +89,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
         }));
     }, [skills]);
 
-    const featuredTeams = useMemo(() => staticTeams.slice(0, 4), []);
+    const featuredTeams = useMemo(() => masterTeams.slice(0, 4), [masterTeams]);
     const featuredStarPlayers = useMemo(() => starPlayers.slice(0, 4), [starPlayers]);
 
     const handleBackToHub = () => {

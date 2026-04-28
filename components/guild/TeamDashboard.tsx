@@ -2,7 +2,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ManagedTeam, ManagedPlayer, Player, Skill, ManagedTeamSnapshot, MatchReport } from '../../types';
 import { ELITE_SKILLS } from '../../types';
-import { teamsData } from '../../data/teams';
 import { skillsData } from '../../data/skills';
 import PlayerModal from './PlayerModal';
 import SkillModal from '../oracle/SkillModal';
@@ -153,10 +152,9 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
     }, [team.rosterName, team.players, imageStock]);
     const baseRoster = useMemo(() => {
         const master = masterTeams.find(t => t.name === team.rosterName);
-        const staticRoster = teamsData.find(t => t.name === team.rosterName);
-        return mergeTeamWithFallback(master as any, staticRoster as any);
+        return mergeTeamWithFallback(team as any, master as any);
     }, [masterTeams, team.rosterName]);
-    const canonicalTeamTemplate = useMemo(() => teamsData.find(t => t.name === team.rosterName), [team.rosterName]);
+    const canonicalTeamTemplate = useMemo(() => masterTeams.find(t => t.name === team.rosterName), [masterTeams, team.rosterName]);
 
     const skillCatalog = useMemo(() => (masterSkills?.length ? masterSkills : skillsData), [masterSkills]);
 
@@ -193,7 +191,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
 
     const findRosterTemplateForPlayer = (player: ManagedPlayer): Player | undefined => {
         const playerKey = normalizeLookupKey(player.position);
-        const rosterPool = [...(baseRoster?.roster || []), ...(canonicalTeamTemplate?.roster || [])];
+        const rosterPool = baseRoster?.roster || canonicalTeamTemplate?.roster || [];
         const matchedByName = rosterPool.find((entry) => {
             const entryKey = normalizeLookupKey(entry.position);
             return entryKey === playerKey || entryKey.includes(playerKey) || playerKey.includes(entryKey);
@@ -274,9 +272,8 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
     };
 
     const resolveTeamCrestUrl = (managedTeam: ManagedTeam): string => {
-        const staticTeam = teamsData.find(t => t.name === managedTeam.rosterName);
         const masterTeam = masterTeams.find(t => t.name === managedTeam.rosterName);
-        const merged = mergeTeamWithFallback(managedTeam as any, (masterTeam || staticTeam) as any);
+        const merged = mergeTeamWithFallback(managedTeam as any, masterTeam as any);
         return (
             managedTeam.crestImage ||
             merged.crestImage ||
@@ -317,7 +314,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
         }
     }, [showQr, team]);
 
-    const teamValue = useMemo(() => calculateTeamValue(team), [team]);
+    const teamValue = useMemo(() => calculateTeamValue(team, false, canonicalTeamTemplate), [team, canonicalTeamTemplate]);
     const historySummary = useMemo(() => {
         const matches = team.history || [];
         return matches.reduce((acc, match) => {
@@ -679,12 +676,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
                                         const rosterUrl = getTeamLogoUrl(team.rosterName);
                                         if (img.src !== rosterUrl) {
                                             img.src = rosterUrl;
-                                        } else {
-                                            const originalData = teamsData.find(t => t.name === team.rosterName);
-                                            if (originalData && img.src !== originalData.image) {
-                                            img.src = originalData.image;
                                         }
-                                    }
                                     }}
                                     alt={team.name}
                                     style={getCrestPresentationStyle(team.crestScale, team.crestOffsetY)}

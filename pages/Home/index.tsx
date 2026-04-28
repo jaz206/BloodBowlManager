@@ -4,7 +4,6 @@ import type { ManagedTeam, League as Competition, GameEvent, MatchReport } from 
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../hooks/useAuth';
 import { skillsData } from '../../data/skills_es';
-import { teamsData } from '../../data/teams';
 import { useMasterData } from '../../hooks/useMasterData';
 import { getTeamLogoUrl } from '../../utils/imageUtils';
 import SkillModal from '../../components/oracle/SkillModal';
@@ -72,7 +71,7 @@ const Home: React.FC<HomeProps> = ({
 }) => {
     const { t } = useLanguage();
     const { user } = useAuth();
-    const { heraldoItems: remoteHeraldo, starPlayers } = useMasterData();
+    const { heraldoItems: remoteHeraldo, starPlayers, teams: masterTeams } = useMasterData();
 
     // The Heraldo now primarily showcases Star Players
     const items = useMemo(() => {
@@ -124,8 +123,8 @@ const Home: React.FC<HomeProps> = ({
     }, [oracleSearch]);
 
     const resolveTeamCrest = (team: ManagedTeam) => {
-        const staticMatch = teamsData.find(t => t.name === team.rosterName || t.name === team.name);
-        return team.crestImage || staticMatch?.image || getTeamLogoUrl(team.rosterName || team.name);
+        const masterMatch = masterTeams.find(t => t.name === team.rosterName || t.name === team.name);
+        return team.crestImage || masterMatch?.crestImage || masterMatch?.image || getTeamLogoUrl(team.rosterName || team.name);
     };
 
     // Heraldo Rotation Logic (30 seconds)
@@ -350,8 +349,8 @@ const Home: React.FC<HomeProps> = ({
                                                 src={resolveTeamCrest(team)}
                                                 onError={(e) => {
                                                     const img = e.target as HTMLImageElement;
-                                                    const staticMatch = teamsData.find(t => t.name === team.rosterName || t.name === team.name);
-                                                    const fallback = staticMatch?.image || getTeamLogoUrl(team.rosterName || team.name);
+                                                    const masterMatch = masterTeams.find(t => t.name === team.rosterName || t.name === team.name);
+                                                    const fallback = masterMatch?.crestImage || masterMatch?.image || getTeamLogoUrl(team.rosterName || team.name);
                                                     if (img.src !== fallback) {
                                                         img.src = fallback;
                                                     }

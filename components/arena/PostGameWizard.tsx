@@ -1,9 +1,9 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useArenaConfig } from '../../hooks/useArenaConfig';
+import { useMasterData } from '../../hooks/useMasterData';
 import { createPortal } from 'react-dom';
 import type { ManagedTeam, ManagedPlayer, Skill } from '../../types';
 import { skillsData } from '../../data/skills';
-import { teamsData } from '../../data/teams';
 
 interface SkillSelectionModalProps {
     player: ManagedPlayer;
@@ -14,7 +14,8 @@ interface SkillSelectionModalProps {
 }
 
 const SkillSelectionModal: React.FC<SkillSelectionModalProps> = ({ player, rosterName, skillType, onSelect, onClose }) => {
-    const baseTeam = useMemo(() => teamsData.find(t => t.name === rosterName), [rosterName]);
+    const { teams } = useMasterData();
+    const baseTeam = useMemo(() => teams.find(t => t.name === rosterName), [teams, rosterName]);
     const basePlayer = useMemo(() => baseTeam?.roster.find(p => p.position === player.position), [baseTeam, player.position]);
 
     const availableSkills = useMemo(() => {
@@ -101,6 +102,7 @@ interface PostGameState {
 
 const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalHomeTeam, opponentTeam, score, fame, playersMNG, onConfirm, initialConcession }) => {
     const { config: arenaConfig } = useArenaConfig();
+    const { teams } = useMasterData();
     const diceConfig = arenaConfig?.dice || { winnings: '1D3', mvp: '1D3', fans: '1D6' };
 
     const [step, setStep] = useState(0);
@@ -307,7 +309,7 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
     };
 
     const handleRandomSkill = (player: ManagedPlayer, type: 'Primary' | 'Secondary', cost: number) => {
-        const baseTeam = teamsData.find(t => t.name === initialHomeTeam.rosterName);
+        const baseTeam = teams.find(t => t.name === initialHomeTeam.rosterName);
         const basePlayer = baseTeam?.roster.find(p => p.position === player.position);
         if (!basePlayer) return;
 

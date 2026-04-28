@@ -1,6 +1,5 @@
 ﻿import React, { useState } from 'react';
 import { useMatch } from '../context/MatchContext';
-import { teamsData } from '../../../../data/teams';
 import { starPlayersData } from '../../../../data/starPlayers';
 import { weatherConditions } from '../../../../data/weather';
 import { kickoffEvents } from '../../../../data/kickoffEvents';
@@ -9,6 +8,7 @@ import PlayerStatusCard from '../../../../components/arena/PlayerStatusCard';
 import ShieldCheckIcon from '../../../../components/icons/ShieldCheckIcon';
 import { DiceRollButton } from '../components/MatchUIComponents';
 import { StarPlayer, Team } from '../../../../types';
+import { useMasterData } from '../../../../hooks/useMasterData';
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Helpers
@@ -61,6 +61,7 @@ const JourneymenNotification: React.FC = () => {
 // SubComponent: Step 1 â€” Inducements + Fate + Coin Toss
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const CommandCenterStep: React.FC = () => {
+    const { teams } = useMasterData();
     const {
         liveHomeTeam, liveOpponentTeam, gameStatus, setGameStatus,
         inducementState, setInducementState, fame, setFame,
@@ -73,9 +74,10 @@ const CommandCenterStep: React.FC = () => {
     if (!liveHomeTeam || !liveOpponentTeam) return null;
 
     const underdogTeam = inducementState.underdog === 'home' ? liveHomeTeam : liveOpponentTeam;
-    const baseRoster = underdogTeam ? teamsData.find((t: any) => t.name === underdogTeam.rosterName) : null;
+    const baseRoster = underdogTeam ? teams.find((t: any) => t.name === underdogTeam.rosterName) : null;
     const eligibleStars = baseRoster ? starPlayersData.filter((star: StarPlayer) => isEligibleStar(star, baseRoster)) : [];
-    const bribeCost = baseRoster?.specialRules.includes("Sobornos y corrupción") ? 50000 : 100000;
+    const specialRules = String(baseRoster?.specialRules_es || baseRoster?.specialRules_en || baseRoster?.specialRules || '');
+    const bribeCost = specialRules.includes("Sobornos y corrupción") ? 50000 : 100000;
     const isUndead = ["Nigrománticos", "No Muertos", "Khemri", "Vampiros"].includes(underdogTeam?.rosterName || '');
     const isNurgle = underdogTeam?.rosterName === "Nurgle";
     const canHaveApo = baseRoster?.apothecary === "Sí";
