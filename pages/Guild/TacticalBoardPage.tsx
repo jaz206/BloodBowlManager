@@ -14,25 +14,26 @@ type ActiveTool = 'move' | 'pickup' | 'pass' | 'intercept' | 'defense' | 'ball' 
 type TacticStyle = 'Defensivo' | 'Ofensivo';
 
 const FORMATION_PRESETS: Record<string, { position: string; x: number; y: number }[]> = {
-  'Defensa EstÃ¡ndar': [
-    { position: 'Linea', x: 12, y: 7 }, { position: 'Linea', x: 12, y: 6 }, { position: 'Linea', x: 12, y: 8 },
-    { position: 'Blitzer', x: 10, y: 4 }, { position: 'Blitzer', x: 10, y: 10 },
-    { position: 'Corredor', x: 8, y: 7 }, { position: 'Linea', x: 8, y: 5 }, { position: 'Linea', x: 8, y: 9 },
-    { position: 'Receptor', x: 5, y: 4 }, { position: 'Receptor', x: 5, y: 10 }, { position: 'Lanzador', x: 4, y: 7 },
+  'Defensa Estándar': [
+    { position: 'Linea', x: 12, y: 5 }, { position: 'Linea', x: 12, y: 7 }, { position: 'Linea', x: 12, y: 9 },
+    { position: 'Blitzer', x: 10, y: 2 }, { position: 'Receptor', x: 8, y: 3 },
+    { position: 'Blitzer', x: 10, y: 12 }, { position: 'Receptor', x: 8, y: 11 },
+    { position: 'Corredor', x: 9, y: 7 }, { position: 'Lanzador', x: 7, y: 7 },
+    { position: 'Linea', x: 10, y: 6 }, { position: 'Linea', x: 10, y: 8 },
   ],
   'Ataque Jaula': [
-    { position: 'Linea', x: 12, y: 7 }, { position: 'Linea', x: 12, y: 6 }, { position: 'Linea', x: 12, y: 8 },
-    { position: 'Blitzer', x: 10, y: 6 }, { position: 'Blitzer', x: 10, y: 8 },
-    { position: 'Lanzador', x: 9, y: 7 }, { position: 'Corredor', x: 8, y: 7 },
-    { position: 'Receptor', x: 6, y: 3 }, { position: 'Receptor', x: 6, y: 11 },
-    { position: 'Linea', x: 9, y: 5 }, { position: 'Linea', x: 9, y: 9 },
+    { position: 'Linea', x: 12, y: 5 }, { position: 'Linea', x: 12, y: 7 }, { position: 'Linea', x: 12, y: 9 },
+    { position: 'Receptor', x: 9, y: 2 }, { position: 'Linea', x: 10, y: 3 },
+    { position: 'Receptor', x: 9, y: 12 }, { position: 'Linea', x: 10, y: 11 },
+    { position: 'Blitzer', x: 9, y: 6 }, { position: 'Blitzer', x: 9, y: 8 },
+    { position: 'Lanzador', x: 8, y: 7 }, { position: 'Corredor', x: 10, y: 7 },
   ],
-  'PresiÃ³n Lateral': [
-    { position: 'Blitzer', x: 12, y: 3 }, { position: 'Blitzer', x: 12, y: 11 },
-    { position: 'Linea', x: 12, y: 7 }, { position: 'Linea', x: 11, y: 5 }, { position: 'Linea', x: 11, y: 9 },
-    { position: 'Receptor', x: 9, y: 1 }, { position: 'Receptor', x: 9, y: 13 },
-    { position: 'Corredor', x: 8, y: 7 }, { position: 'Lanzador', x: 6, y: 7 },
-    { position: 'Linea', x: 7, y: 5 }, { position: 'Linea', x: 7, y: 9 },
+  'Presión Lateral': [
+    { position: 'Linea', x: 12, y: 5 }, { position: 'Linea', x: 12, y: 7 }, { position: 'Linea', x: 12, y: 9 },
+    { position: 'Blitzer', x: 11, y: 2 }, { position: 'Receptor', x: 9, y: 3 },
+    { position: 'Blitzer', x: 11, y: 12 }, { position: 'Receptor', x: 9, y: 11 },
+    { position: 'Corredor', x: 10, y: 7 }, { position: 'Lanzador', x: 8, y: 7 },
+    { position: 'Linea', x: 10, y: 5 }, { position: 'Linea', x: 10, y: 9 },
   ],
 };
 
@@ -69,53 +70,17 @@ const PITCH_INFO = {
 };
 
 const ROLE_PRIORITY: PlayerPosition[] = ['Linea', 'Blitzer', 'Lanzador', 'Corredor', 'Receptor'];
-const ROLE_FORMATION_SLOTS: Record<PlayerPosition, { x: number; y: number }[]> = {
-  Linea: [
-    { x: 12, y: 7 },
-    { x: 12, y: 6 },
-    { x: 12, y: 8 },
-    { x: 11, y: 5 },
-    { x: 11, y: 9 },
-    { x: 10, y: 4 },
-    { x: 10, y: 10 },
-  ],
-  Blitzer: [
-    { x: 11, y: 7 },
-    { x: 10, y: 6 },
-    { x: 10, y: 8 },
-    { x: 9, y: 5 },
-    { x: 9, y: 9 },
-  ],
-  Lanzador: [
-    { x: 9, y: 7 },
-    { x: 8, y: 7 },
-    { x: 8, y: 6 },
-  ],
-  Corredor: [
-    { x: 8, y: 8 },
-    { x: 8, y: 7 },
-    { x: 7, y: 7 },
-  ],
-  Receptor: [
-    { x: 7, y: 4 },
-    { x: 7, y: 10 },
-    { x: 6, y: 3 },
-    { x: 6, y: 11 },
-  ],
-  BigGuy: [{ x: 11, y: 7 }],
-};
-
-const FALLBACK_FORMATION_SLOTS = [
+const LEGAL_KICKOFF_SLOTS = [
+  { x: 12, y: 5 },
   { x: 12, y: 7 },
-  { x: 12, y: 6 },
-  { x: 12, y: 8 },
-  { x: 11, y: 5 },
-  { x: 11, y: 9 },
-  { x: 10, y: 4 },
-  { x: 10, y: 10 },
+  { x: 12, y: 9 },
+  { x: 10, y: 2 },
+  { x: 8, y: 3 },
+  { x: 10, y: 12 },
+  { x: 8, y: 11 },
+  { x: 10, y: 6 },
+  { x: 10, y: 8 },
   { x: 9, y: 7 },
-  { x: 8, y: 6 },
-  { x: 8, y: 8 },
   { x: 7, y: 7 },
 ];
 
@@ -137,11 +102,6 @@ const getLoadPriority = (player: ManagedPlayer) => {
   return 4;
 };
 
-const getRoleSlot = (position: PlayerPosition, index: number) => {
-  const slots = ROLE_FORMATION_SLOTS[position] || FALLBACK_FORMATION_SLOTS;
-  return slots[index % slots.length];
-};
-
 const getLoSColumn = (side: 'home' | 'away' = 'home') =>
   side === 'home' ? PITCH_INFO.homeLoSColumn : PITCH_INFO.awayLoSColumn;
 
@@ -158,13 +118,9 @@ const buildTeamLoadFormation = (
     .sort((a, b) => getLoadPriority(a) - getLoadPriority(b))
     .slice(0, MAX_TOKENS_PER_SIDE);
 
-  const roleCounters: Record<string, number> = {};
-
   return ordered.map((player, index) => {
     const role = normalizePositionType(player.position);
-    const slotIndex = roleCounters[role] ?? 0;
-    roleCounters[role] = slotIndex + 1;
-    const homeSlot = getRoleSlot(role, slotIndex) || FALLBACK_FORMATION_SLOTS[index % FALLBACK_FORMATION_SLOTS.length];
+    const homeSlot = LEGAL_KICKOFF_SLOTS[index % LEGAL_KICKOFF_SLOTS.length];
     const slot = side === 'home' ? homeSlot : { x: GRID_COLS - 1 - homeSlot.x, y: homeSlot.y };
 
     return {
@@ -304,7 +260,7 @@ const decorateTokensWithTeamData = (baseTokens: BoardToken[], team?: ManagedTeam
 
 const getNextOpenSlot = (currentTokens: BoardToken[], side: 'home' | 'away' = 'home') => {
   const usedSlots = new Set(currentTokens.map((token) => `${token.x}-${token.y}`));
-  const preferredSlots = [...FALLBACK_FORMATION_SLOTS].map((slot) =>
+  const preferredSlots = [...LEGAL_KICKOFF_SLOTS].map((slot) =>
     side === 'home' ? slot : { x: GRID_COLS - 1 - slot.x, y: slot.y }
   );
 
@@ -1864,6 +1820,9 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
               {homeSideActive && (
                 <div className="mb-3">
                   <div className="text-[9px] font-black uppercase tracking-[0.16em] text-[#2b1d12]">Local</div>
+                  <div className="mt-1 text-[9px] font-black uppercase tracking-[0.12em] text-[#8f745c]">
+                    LoS {formationStatus.onLoS}/{PITCH_INFO.requiredLoSPlayers} · Banda sup. {formationStatus.onLeftWide}/{PITCH_INFO.minWidePlayersPerZone} · Banda inf. {formationStatus.onRightWide}/{PITCH_INFO.minWidePlayersPerZone}
+                  </div>
                   {formationStatus.isLegal ? (
                     <div className="mt-1 text-[10px] font-bold text-emerald-700">Alineacion correcta.</div>
                   ) : (
@@ -1876,6 +1835,9 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
               {awaySideActive && (
                 <div>
                   <div className="text-[9px] font-black uppercase tracking-[0.16em] text-[#2b1d12]">Rival</div>
+                  <div className="mt-1 text-[9px] font-black uppercase tracking-[0.12em] text-[#8f745c]">
+                    LoS {awayFormationStatus.onLoS}/{PITCH_INFO.requiredLoSPlayers} · Banda sup. {awayFormationStatus.onLeftWide}/{PITCH_INFO.minWidePlayersPerZone} · Banda inf. {awayFormationStatus.onRightWide}/{PITCH_INFO.minWidePlayersPerZone}
+                  </div>
                   {awayFormationStatus.isLegal ? (
                     <div className="mt-1 text-[10px] font-bold text-emerald-700">Alineacion correcta.</div>
                   ) : (
@@ -2079,7 +2041,11 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                         width: `${(PITCH_INFO.homeHalfMaxColumn + 1) * GRID_CELL_SIZE}px`,
                         height: `${(PITCH_INFO.leftWideMaxRow + 1) * GRID_CELL_SIZE}px`,
                       }}
-                    />
+                    >
+                      <span className="absolute left-3 top-3 rounded-full bg-red-600 px-2 py-[1px] text-[8px] font-black uppercase tracking-[0.14em] text-white shadow-[0_4px_10px_rgba(30,19,8,0.22)]">
+                        Sup {formationStatus.onLeftWide}/{PITCH_INFO.minWidePlayersPerZone}
+                      </span>
+                    </div>
                     <div
                       className="absolute rounded-xl border border-red-500/30 bg-red-500/10"
                       style={{
@@ -2088,7 +2054,11 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                         width: `${(PITCH_INFO.homeHalfMaxColumn + 1) * GRID_CELL_SIZE}px`,
                         height: `${(GRID_ROWS - PITCH_INFO.rightWideMinRow) * GRID_CELL_SIZE}px`,
                       }}
-                    />
+                    >
+                      <span className="absolute left-3 top-3 rounded-full bg-red-600 px-2 py-[1px] text-[8px] font-black uppercase tracking-[0.14em] text-white shadow-[0_4px_10px_rgba(30,19,8,0.22)]">
+                        Inf {formationStatus.onRightWide}/{PITCH_INFO.minWidePlayersPerZone}
+                      </span>
+                    </div>
                   </>
                 )}
                 {awayWideNeedsHelp && (
@@ -2101,7 +2071,11 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                         width: `${(GRID_COLS - PITCH_INFO.awayHalfMinColumn) * GRID_CELL_SIZE}px`,
                         height: `${(PITCH_INFO.leftWideMaxRow + 1) * GRID_CELL_SIZE}px`,
                       }}
-                    />
+                    >
+                      <span className="absolute right-3 top-3 rounded-full bg-red-600 px-2 py-[1px] text-[8px] font-black uppercase tracking-[0.14em] text-white shadow-[0_4px_10px_rgba(30,19,8,0.22)]">
+                        Sup {awayFormationStatus.onLeftWide}/{PITCH_INFO.minWidePlayersPerZone}
+                      </span>
+                    </div>
                     <div
                       className="absolute rounded-xl border border-red-500/30 bg-red-500/10"
                       style={{
@@ -2110,7 +2084,11 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                         width: `${(GRID_COLS - PITCH_INFO.awayHalfMinColumn) * GRID_CELL_SIZE}px`,
                         height: `${(GRID_ROWS - PITCH_INFO.rightWideMinRow) * GRID_CELL_SIZE}px`,
                       }}
-                    />
+                    >
+                      <span className="absolute right-3 top-3 rounded-full bg-red-600 px-2 py-[1px] text-[8px] font-black uppercase tracking-[0.14em] text-white shadow-[0_4px_10px_rgba(30,19,8,0.22)]">
+                        Inf {awayFormationStatus.onRightWide}/{PITCH_INFO.minWidePlayersPerZone}
+                      </span>
+                    </div>
                   </>
                 )}
               </div>
