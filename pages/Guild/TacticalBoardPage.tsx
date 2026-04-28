@@ -12,6 +12,7 @@ const DEFAULT_BALL_POSITION = { x: Math.floor(GRID_COLS / 2), y: Math.floor(GRID
 
 type ActiveTool = 'move' | 'pickup' | 'pass' | 'intercept' | 'defense' | 'ball' | null;
 type TacticStyle = 'Defensivo' | 'Ofensivo';
+type BoardMode = 'setup' | 'analysis';
 
 const FORMATION_PRESETS: Record<string, { position: string; x: number; y: number }[]> = {
   'Defensa Estándar': [
@@ -380,6 +381,8 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
   const [selectedPlayer, setSelectedPlayer] = useState<ManagedPlayer | null>(null);
   const [selectedTokenId, setSelectedTokenId] = useState<number | null>(null);
   const [currentPlacementSide, setCurrentPlacementSide] = useState<'home' | 'away'>('home');
+  const [boardMode, setBoardMode] = useState<BoardMode>('setup');
+  const [hasValidatedSetup, setHasValidatedSetup] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [showGrid, setShowGrid] = useState(true);
   const [showDefenseZones, setShowDefenseZones] = useState(false);
@@ -604,6 +607,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
   const boardIsLegal =
     (!homeSideActive || formationStatus.isLegal) &&
     (!awaySideActive || awayFormationStatus.isLegal);
+  const setupWarningsVisible = boardMode === 'setup';
   const homeLoSNeedsHelp = homeSideActive && formationStatus.onLoS !== PITCH_INFO.requiredLoSPlayers;
   const awayLoSNeedsHelp = awaySideActive && awayFormationStatus.onLoS !== PITCH_INFO.requiredLoSPlayers;
   const homeWideNeedsHelp =
@@ -614,7 +618,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     awaySideActive &&
     (awayFormationStatus.onLeftWide < PITCH_INFO.minWidePlayersPerZone ||
       awayFormationStatus.onRightWide < PITCH_INFO.minWidePlayersPerZone);
-  const showLoSWarning = homeLoSNeedsHelp || awayLoSNeedsHelp;
+  const showLoSWarning = setupWarningsVisible && (homeLoSNeedsHelp || awayLoSNeedsHelp);
   const activeMoveModifiers = useMemo(() => {
     if (activeTool !== 'move' || !selectedToken || selectedToken.isDown) return [];
     const modifiers: Array<{ x: number; y: number; count: number }> = [];
@@ -860,8 +864,26 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
 
   const handleClearField = () => {
     pushHistory([], [], DEFAULT_BALL_POSITION);
+    setBoardMode('setup');
+    setHasValidatedSetup(false);
     setSelectedPlayer(null);
     setSelectedTokenId(null);
+  };
+
+  const handleConfirmSetup = () => {
+    if (!boardIsLegal) {
+      showToast('La colocación inicial aún no es legal. Revisa LoS, bandas y mitad del campo.');
+      return;
+    }
+
+    setBoardMode('analysis');
+    setHasValidatedSetup(true);
+    showToast('Setup confirmado. Ya puedes mover y probar jugadas sin alertas de kickoff.');
+  };
+
+  const handleReturnToSetup = () => {
+    setBoardMode('setup');
+    showToast('Has vuelto al modo setup para revisar o recolocar la formación inicial.');
   };
 
   const handleAutoCorrectFormation = () => {
@@ -876,6 +898,8 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     const combined = [...nextHomeTokens, ...nextAwayTokens];
     const synced = syncBallWithTokens(combined, ballPosition);
     pushHistory(synced.tokens, drawnPaths, synced.ballPosition);
+    setBoardMode('setup');
+    setHasValidatedSetup(false);
 
     if (selectedToken && (homeIllegalTokenIds.has(selectedToken.id) || awayIllegalTokenIds.has(selectedToken.id))) {
       setSelectedPlayer(null);
@@ -925,6 +949,8 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
       const hydratedTokens = linkedTeam ? decorateTokensWithTeamData(playToLoad.tokens, linkedTeam) : playToLoad.tokens;
       if (linkedTeam?.id) setSelectedTeamId(linkedTeam.id);
       setOpponentTeamId(linkedOpponentTeam?.id || '');
+      setBoardMode('setup');
+      setHasValidatedSetup(false);
       setTokens(hydratedTokens);
       setDrawnPaths(playToLoad.paths || []);
       const nextBallPosition = playToLoad.ballPosition || DEFAULT_BALL_POSITION;
@@ -960,6 +986,8 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
         setPlayName(matchingPlay.name);
         setSelectedStyle((matchingPlay.style as TacticStyle) || 'Defensivo');
         setSelectedPlayId(matchingPlay.id);
+        setBoardMode('setup');
+        setHasValidatedSetup(false);
         setSelectedPlayer(null);
         setSelectedTokenId(null);
         showToast(`Tactica ${matchingPlay.name} cargada.`);
@@ -969,6 +997,8 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
       const newTokens = buildTeamLoadFormation(team.players);
       pushHistory(newTokens);
       setOpponentTeamId('');
+      setBoardMode('setup');
+      setHasValidatedSetup(false);
       setSelectedPlayId(undefined);
       setSelectedPlayer(null);
       setSelectedTokenId(null);
@@ -983,6 +1013,8 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     const homeTokens = tokens.filter((token) => token.teamSide !== 'away');
     const awayTokens = buildTeamLoadFormation(team.players, 'away');
     pushHistory([...homeTokens, ...awayTokens], drawnPaths);
+    setBoardMode('setup');
+    setHasValidatedSetup(false);
     if (selectedToken?.teamSide === 'away') {
       setSelectedPlayer(null);
       setSelectedTokenId(null);
@@ -1001,6 +1033,8 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
     const synced = syncBallWithTokens([...preserved, ...presetTokens], ballPosition);
 
     pushHistory(synced.tokens, drawnPaths, synced.ballPosition);
+    setBoardMode('setup');
+    setHasValidatedSetup(false);
 
     if (selectedToken?.teamSide === side) {
       setSelectedPlayer(null);
@@ -1030,6 +1064,8 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
             : 'home';
 
     applyTokensToSide(play.tokens, sourceSide, targetSide, targetTeam);
+    setBoardMode('setup');
+    setHasValidatedSetup(false);
 
     if (selectedToken?.teamSide === targetSide) {
       setSelectedPlayer(null);
@@ -1063,6 +1099,8 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
       setPlayName(matchingPlay.name);
       setSelectedStyle((matchingPlay.style as TacticStyle) || 'Defensivo');
       setSelectedPlayId(matchingPlay.id);
+      setBoardMode('setup');
+      setHasValidatedSetup(false);
     } else {
       handleLoadTeam(initialTeamId);
     }
@@ -1776,8 +1814,16 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
               </div>
               <div className="flex justify-between text-[10px] mb-2">
                 <span className="text-[#8f745c] font-bold uppercase tracking-tighter">Legalidad:</span>
-                <span className={`font-black italic ${formationStatus.isLegal ? 'text-emerald-600' : 'text-red-600'}`}>
-                  {formationStatus.isLegal ? 'Lista' : 'Revisar'}
+                <span className={`font-black italic ${
+                  boardMode === 'analysis'
+                    ? hasValidatedSetup
+                      ? 'text-sky-600'
+                      : 'text-[#8f745c]'
+                    : formationStatus.isLegal
+                      ? 'text-emerald-600'
+                      : 'text-red-600'
+                }`}>
+                  {boardMode === 'analysis' ? (hasValidatedSetup ? 'Analisis' : 'Libre') : (formationStatus.isLegal ? 'Lista' : 'Revisar')}
                 </span>
               </div>
               <div className="flex justify-between text-[10px]">
@@ -1794,28 +1840,65 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
           <div className="sticky top-2 z-40 mb-6 w-full">
             <div className="flex w-full flex-wrap items-center gap-3 rounded-2xl border border-[rgba(111,87,56,0.14)] bg-[rgba(255,250,240,0.98)] p-2 shadow-[0_20px_50px_rgba(89,59,21,0.10)]">
             <div className="relative group">
-            <div className={`flex items-center gap-2 rounded-xl px-3 py-2 border ${boardIsLegal ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-700' : 'border-red-500/20 bg-red-500/10 text-red-700'}`}>
-              <span className="material-symbols-outlined text-sm">{boardIsLegal ? 'verified' : 'warning'}</span>
+            <div className={`flex items-center gap-2 rounded-xl px-3 py-2 border ${
+              boardMode === 'analysis'
+                ? 'border-sky-500/20 bg-sky-500/10 text-sky-700'
+                : boardIsLegal
+                  ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-700'
+                  : 'border-red-500/20 bg-red-500/10 text-red-700'
+            }`}>
+              <span className="material-symbols-outlined text-sm">
+                {boardMode === 'analysis' ? 'analytics' : boardIsLegal ? 'verified' : 'warning'}
+              </span>
               <div className="flex flex-col leading-none">
-                <span className="text-[9px] font-black uppercase tracking-widest">{boardIsLegal ? 'Legal' : 'Ilegal'}</span>
+                <span className="text-[9px] font-black uppercase tracking-widest">
+                  {boardMode === 'analysis' ? 'Analisis' : boardIsLegal ? 'Legal' : 'Ilegal'}
+                </span>
                 <span className="text-[9px] font-bold opacity-80">
                   L {formationStatus.totalOnField}/11
                   {awaySideActive ? ` · R ${awayFormationStatus.totalOnField}/11` : ''}
                 </span>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={handleAutoCorrectFormation}
-              className={`ml-2 flex items-center gap-2 rounded-xl border px-3 py-2 text-[9px] font-black uppercase tracking-widest transition-all ${
-                boardIsLegal
-                  ? 'border-[rgba(16,185,129,0.20)] bg-[rgba(16,185,129,0.08)] text-emerald-700 hover:bg-[rgba(16,185,129,0.14)]'
-                  : 'border-[rgba(239,68,68,0.20)] bg-[rgba(239,68,68,0.08)] text-red-700 hover:bg-[rgba(239,68,68,0.14)]'
-              }`}
-            >
-              <span className="material-symbols-outlined text-sm">auto_fix_high</span>
-              Autocorregir
-            </button>
+            <div className="ml-2 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleAutoCorrectFormation}
+                className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-[9px] font-black uppercase tracking-widest transition-all ${
+                  boardMode === 'analysis'
+                    ? 'border-[rgba(111,87,56,0.16)] bg-[rgba(255,251,241,0.9)] text-[#8f745c] hover:bg-[rgba(202,138,4,0.08)]'
+                    : boardIsLegal
+                      ? 'border-[rgba(16,185,129,0.20)] bg-[rgba(16,185,129,0.08)] text-emerald-700 hover:bg-[rgba(16,185,129,0.14)]'
+                      : 'border-[rgba(239,68,68,0.20)] bg-[rgba(239,68,68,0.08)] text-red-700 hover:bg-[rgba(239,68,68,0.14)]'
+                }`}
+              >
+                <span className="material-symbols-outlined text-sm">auto_fix_high</span>
+                Autocorregir
+              </button>
+              {boardMode === 'setup' ? (
+                <button
+                  type="button"
+                  onClick={handleConfirmSetup}
+                  className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-[9px] font-black uppercase tracking-widest transition-all ${
+                    boardIsLegal
+                      ? 'border-[rgba(14,165,233,0.24)] bg-[rgba(14,165,233,0.10)] text-sky-700 hover:bg-[rgba(14,165,233,0.16)]'
+                      : 'border-[rgba(111,87,56,0.14)] bg-[rgba(255,251,241,0.92)] text-[#8f745c] opacity-70'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-sm">check_circle</span>
+                  Confirmar setup
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleReturnToSetup}
+                  className="flex items-center gap-2 rounded-xl border border-[rgba(14,165,233,0.24)] bg-[rgba(14,165,233,0.10)] px-3 py-2 text-[9px] font-black uppercase tracking-widest text-sky-700 transition-all hover:bg-[rgba(14,165,233,0.16)]"
+                >
+                  <span className="material-symbols-outlined text-sm">restart_alt</span>
+                  Volver a setup
+                </button>
+              )}
+            </div>
             <div className="pointer-events-none absolute left-0 top-full z-50 mt-2 w-[22rem] rounded-2xl border border-[rgba(111,87,56,0.14)] bg-[rgba(255,250,240,0.98)] p-3 text-left opacity-0 shadow-[0_18px_40px_rgba(89,59,21,0.12)] transition-all group-hover:opacity-100">
               {homeSideActive && (
                 <div className="mb-3">
@@ -1823,8 +1906,12 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                   <div className="mt-1 text-[9px] font-black uppercase tracking-[0.12em] text-[#8f745c]">
                     LoS {formationStatus.onLoS}/{PITCH_INFO.requiredLoSPlayers} · Banda sup. {formationStatus.onLeftWide}/{PITCH_INFO.minWidePlayersPerZone} · Banda inf. {formationStatus.onRightWide}/{PITCH_INFO.minWidePlayersPerZone}
                   </div>
-                  {formationStatus.isLegal ? (
-                    <div className="mt-1 text-[10px] font-bold text-emerald-700">Alineacion correcta.</div>
+                  {boardMode === 'analysis' ? (
+                    <div className="mt-1 text-[10px] font-bold text-sky-700">
+                      {hasValidatedSetup ? 'Setup validado. Ahora estas en simulacion tactica.' : 'Modo analisis activo.'}
+                    </div>
+                  ) : formationStatus.isLegal ? (
+                    <div className="mt-1 text-[10px] font-bold text-emerald-700">Alineación correcta.</div>
                   ) : (
                     <ul className="mt-1 space-y-1 text-[10px] font-medium text-[#8f745c]">
                       {formationStatus.reasons.map((reason) => <li key={`home-${reason}`}>- {reason}</li>)}
@@ -1838,8 +1925,12 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                   <div className="mt-1 text-[9px] font-black uppercase tracking-[0.12em] text-[#8f745c]">
                     LoS {awayFormationStatus.onLoS}/{PITCH_INFO.requiredLoSPlayers} · Banda sup. {awayFormationStatus.onLeftWide}/{PITCH_INFO.minWidePlayersPerZone} · Banda inf. {awayFormationStatus.onRightWide}/{PITCH_INFO.minWidePlayersPerZone}
                   </div>
-                  {awayFormationStatus.isLegal ? (
-                    <div className="mt-1 text-[10px] font-bold text-emerald-700">Alineacion correcta.</div>
+                  {boardMode === 'analysis' ? (
+                    <div className="mt-1 text-[10px] font-bold text-sky-700">
+                      {hasValidatedSetup ? 'Setup validado. El rival ya esta en fase de analisis.' : 'Modo analisis activo.'}
+                    </div>
+                  ) : awayFormationStatus.isLegal ? (
+                    <div className="mt-1 text-[10px] font-bold text-emerald-700">Alineación correcta.</div>
                   ) : (
                     <ul className="mt-1 space-y-1 text-[10px] font-medium text-[#8f745c]">
                       {awayFormationStatus.reasons.map((reason) => <li key={`away-${reason}`}>- {reason}</li>)}
@@ -1997,7 +2088,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
               <div className="absolute bottom-[160px] w-full h-[1px] bg-primary/15 border-t border-dashed border-primary/25"></div>
             </div>
 
-            {(showLoSWarning || homeWideNeedsHelp || awayWideNeedsHelp) && (
+            {setupWarningsVisible && (showLoSWarning || homeWideNeedsHelp || awayWideNeedsHelp) && (
               <div className="absolute inset-0 pointer-events-none z-[9]">
                 {homeLoSNeedsHelp && (
                   <div
