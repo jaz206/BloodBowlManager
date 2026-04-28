@@ -57,10 +57,15 @@ interface PlaysProps {
 const TACTIC_STYLES: TacticStyle[] = ['Defensivo', 'Ofensivo'];
 
 const PITCH_INFO = {
-  losColumn: 12,
-  homeHalfStart: 12,
+  homeLoSColumn: 12,
+  awayLoSColumn: 13,
+  homeHalfMaxColumn: 12,
+  awayHalfMinColumn: 13,
   leftWideMaxRow: 3,
   rightWideMinRow: 11,
+  minWidePlayersTotal: 2,
+  maxWidePlayersPerZone: 2,
+  requiredLoSPlayers: 3,
 };
 
 const ROLE_PRIORITY: PlayerPosition[] = ['Linea', 'Blitzer', 'Lanzador', 'Corredor', 'Receptor'];
@@ -137,6 +142,14 @@ const getRoleSlot = (position: PlayerPosition, index: number) => {
   return slots[index % slots.length];
 };
 
+const getLoSColumn = (side: 'home' | 'away' = 'home') =>
+  side === 'home' ? PITCH_INFO.homeLoSColumn : PITCH_INFO.awayLoSColumn;
+
+const isTokenInOwnHalf = (token: BoardToken, side: 'home' | 'away' = 'home') => {
+  const isHome = side === 'home';
+  return isHome ? token.x <= PITCH_INFO.homeHalfMaxColumn : token.x >= PITCH_INFO.awayHalfMinColumn;
+};
+
 const buildTeamLoadFormation = (
   players: ManagedPlayer[],
   side: 'home' | 'away' = 'home'
@@ -210,38 +223,43 @@ const buildPresetTokensForSide = (
 
 const buildFormationStatus = (tokens: BoardToken[], side: 'home' | 'away' = 'home') => {
   const sideTokens = tokens.filter((token) => token.teamSide === side);
-  const isHome = side === 'home';
-  const inOwnSide = (token: BoardToken) => isHome ? token.x <= PITCH_INFO.losColumn : token.x >= PITCH_INFO.losColumn;
+  const loSColumn = getLoSColumn(side);
+  const inOwnSide = (token: BoardToken) => isTokenInOwnHalf(token, side);
   const onLeftWide = sideTokens.filter(token => inOwnSide(token) && token.y >= 0 && token.y <= PITCH_INFO.leftWideMaxRow).length;
   const onRightWide = sideTokens.filter(token => inOwnSide(token) && token.y >= PITCH_INFO.rightWideMinRow && token.y < GRID_ROWS).length;
+  const wideZoneTotal = onLeftWide + onRightWide;
   const totalOnField = sideTokens.length;
   const inOwnHalf = sideTokens.filter(token => inOwnSide(token)).length;
-  const onLoSTokens = sideTokens.filter(token => token.x === PITCH_INFO.losColumn && token.y >= 4 && token.y <= 10).length;
-  const isLegal = onLoSTokens >= 3 && onLeftWide <= 2 && onRightWide <= 2 && totalOnField <= MAX_TOKENS_PER_SIDE && inOwnHalf === totalOnField;
+  const onLoSTokens = sideTokens.filter(token => token.x === loSColumn && token.y >= 4 && token.y <= 10).length;
+  const isLegal =
+    onLoSTokens === PITCH_INFO.requiredLoSPlayers &&
+    wideZoneTotal >= PITCH_INFO.minWidePlayersTotal &&
+    onLeftWide <= PITCH_INFO.maxWidePlayersPerZone &&
+    onRightWide <= PITCH_INFO.maxWidePlayersPerZone &&
+    totalOnField <= MAX_TOKENS_PER_SIDE &&
+    inOwnHalf === totalOnField;
   const reasons: string[] = [];
 
   if (totalOnField < MAX_TOKENS_PER_SIDE) {
     reasons.push(`Faltan ${MAX_TOKENS_PER_SIDE - totalOnField} jugadores para llegar a 11.`);
   }
-  if (onLoSTokens < 3) {
-    reasons.push(`Solo hay ${onLoSTokens} jugadores en la linea de golpeo y deben ser al menos 3.`);
+  if (onLoSTokens !== PITCH_INFO.requiredLoSPlayers) {
+    reasons.push(`Hay ${onLoSTokens} jugadores en la linea de golpeo y deben ser exactamente ${PITCH_INFO.requiredLoSPlayers}.`);
   }
-  if (onLeftWide > 2) {
-    reasons.push(`Hay ${onLeftWide} jugadores en la banda superior y el maximo es 2.`);
+  if (wideZoneTotal < PITCH_INFO.minWidePlayersTotal) {
+    reasons.push(`Solo hay ${wideZoneTotal} jugadores entre las dos bandas y deben ser al menos ${PITCH_INFO.minWidePlayersTotal}.`);
   }
-  if (onRightWide > 2) {
-    reasons.push(`Hay ${onRightWide} jugadores en la banda inferior y el maximo es 2.`);
+  if (onLeftWide > PITCH_INFO.maxWidePlayersPerZone) {
+    reasons.push(`Hay ${onLeftWide} jugadores en la banda superior y el maximo es ${PITCH_INFO.maxWidePlayersPerZone}.`);
+  }
+  if (onRightWide > PITCH_INFO.maxWidePlayersPerZone) {
+    reasons.push(`Hay ${onRightWide} jugadores en la banda inferior y el maximo es ${PITCH_INFO.maxWidePlayersPerZone}.`);
   }
   if (inOwnHalf !== totalOnField) {
     reasons.push('Hay jugadores colocados fuera de su mitad legal del campo.');
   }
 
-  return { onLoS: onLoSTokens, onLeftWide, onRightWide, totalOnField, inOwnHalf, isLegal, reasons };
-};
-
-const isTokenInOwnHalf = (token: BoardToken, side: 'home' | 'away' = 'home') => {
-  const isHome = side === 'home';
-  return isHome ? token.x >= PITCH_INFO.homeHalfStart : token.x <= PITCH_INFO.losColumn;
+  return { onLoS: onLoSTokens, onLeftWide, onRightWide, wideZoneTotal, totalOnField, inOwnHalf, isLegal, reasons };
 };
 
 const getIllegalTokenIdsForSide = (tokens: BoardToken[], side: 'home' | 'away' = 'home') =>
@@ -291,7 +309,7 @@ const getNextOpenSlot = (currentTokens: BoardToken[], side: 'home' | 'away' = 'h
     if (!usedSlots.has(`${slot.x}-${slot.y}`)) return slot;
   }
 
-  const startX = side === 'home' ? PITCH_INFO.losColumn : PITCH_INFO.losColumn + 1;
+  const startX = side === 'home' ? PITCH_INFO.homeHalfMaxColumn : PITCH_INFO.awayHalfMinColumn;
   const endX = side === 'home' ? 0 : GRID_COLS;
   for (let x = startX; side === 'home' ? x >= endX : x < endX; side === 'home' ? x -= 1 : x += 1) {
     for (let y = 1; y < GRID_ROWS - 1; y += 1) {
@@ -627,8 +645,10 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
   const boardIsLegal =
     (!homeSideActive || formationStatus.isLegal) &&
     (!awaySideActive || awayFormationStatus.isLegal);
-  const homeLoSNeedsHelp = homeSideActive && formationStatus.onLoS < 3;
-  const awayLoSNeedsHelp = awaySideActive && awayFormationStatus.onLoS < 3;
+  const homeLoSNeedsHelp = homeSideActive && formationStatus.onLoS !== PITCH_INFO.requiredLoSPlayers;
+  const awayLoSNeedsHelp = awaySideActive && awayFormationStatus.onLoS !== PITCH_INFO.requiredLoSPlayers;
+  const homeWideNeedsHelp = homeSideActive && formationStatus.wideZoneTotal < PITCH_INFO.minWidePlayersTotal;
+  const awayWideNeedsHelp = awaySideActive && awayFormationStatus.wideZoneTotal < PITCH_INFO.minWidePlayersTotal;
   const showLoSWarning = homeLoSNeedsHelp || awayLoSNeedsHelp;
   const activeMoveModifiers = useMemo(() => {
     if (activeTool !== 'move' || !selectedToken || selectedToken.isDown) return [];
@@ -1804,10 +1824,10 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
         </aside>
         {/* Main Pitch Workspace */}
         <section className="flex-1 bg-[linear-gradient(180deg,rgba(255,250,240,0.98),rgba(240,227,199,0.98))] relative overflow-auto scrollbar-hide">
-          <div className="mx-auto flex w-full max-w-[1080px] flex-col items-center px-6 py-8">
+          <div className="flex w-full flex-col px-6 py-8">
           {/* Zoom & View Controls Overlay */}
-          <div className="sticky top-2 z-40 mb-6 flex w-full items-center justify-center">
-            <div className="flex max-w-full flex-wrap items-center gap-3 rounded-2xl border border-[rgba(111,87,56,0.14)] bg-[rgba(255,250,240,0.98)] p-2 shadow-[0_20px_50px_rgba(89,59,21,0.10)]">
+          <div className="sticky top-2 z-40 mb-6 w-full">
+            <div className="flex w-full flex-wrap items-center gap-3 rounded-2xl border border-[rgba(111,87,56,0.14)] bg-[rgba(255,250,240,0.98)] p-2 shadow-[0_20px_50px_rgba(89,59,21,0.10)]">
             <div className="relative group">
             <div className={`flex items-center gap-2 rounded-xl px-3 py-2 border ${boardIsLegal ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-700' : 'border-red-500/20 bg-red-500/10 text-red-700'}`}>
               <span className="material-symbols-outlined text-sm">{boardIsLegal ? 'verified' : 'warning'}</span>
@@ -1907,9 +1927,9 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
               { id: 'move', icon: 'brush', label: 'Ruta' },
               { id: 'pickup', icon: 'sports_football', label: 'Recoger' },
               { id: 'pass', icon: 'near_me', label: 'Pase' },
-              { id: 'intercept', icon: 'pan_tool_alt', label: 'IntercepciÃ³n' },
+              { id: 'intercept', icon: 'pan_tool_alt', label: 'Intercepción' },
               { id: 'defense', icon: 'groups', label: 'ZD' },
-              { id: 'ball', icon: 'my_location', label: 'BalÃ³n' },
+              { id: 'ball', icon: 'my_location', label: 'Balón' },
             ] as { id: ActiveTool; icon: string; label: string }[]).map((tool) => (
               <button
                 key={`top-tool-${tool.id}`}
@@ -1935,20 +1955,21 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
           </div>
 
           {/* The Pitch Rendering */}
-          <div
-            ref={fieldRef}
-            onMouseDown={handleFieldMouseDown}
-            onTouchStart={handleFieldMouseDown}
-            onDragOver={handleFieldDragOver}
-            onDrop={handleFieldDrop}
-            className="pitch-lines relative mx-auto shadow-[0_0_100px_rgba(0,0,0,0.8)]"
-            style={{
-              width: `${GRID_COLS * GRID_CELL_SIZE}px`,
-              height: `${GRID_ROWS * GRID_CELL_SIZE}px`,
-              transform: `scale(${zoom})`,
-              transition: 'transform 0.3s cubic-bezier(0.2, 0, 0, 1)'
-            }}
-          >
+          <div className="flex w-full justify-center">
+            <div
+              ref={fieldRef}
+              onMouseDown={handleFieldMouseDown}
+              onTouchStart={handleFieldMouseDown}
+              onDragOver={handleFieldDragOver}
+              onDrop={handleFieldDrop}
+              className="pitch-lines relative mx-auto shadow-[0_0_100px_rgba(0,0,0,0.8)]"
+              style={{
+                width: `${GRID_COLS * GRID_CELL_SIZE}px`,
+                height: `${GRID_ROWS * GRID_CELL_SIZE}px`,
+                transform: `scale(${zoom})`,
+                transition: 'transform 0.3s cubic-bezier(0.2, 0, 0, 1)'
+              }}
+            >
             {/* SVG Drawing Layer */}
             <svg className="absolute inset-0 z-20 pointer-events-none w-full h-full overflow-visible">
               <filter id="glow">
@@ -2005,22 +2026,84 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
               <div className="absolute bottom-[160px] w-full h-[1px] bg-primary/15 border-t border-dashed border-primary/25"></div>
             </div>
 
-            {showLoSWarning && (
+            {(showLoSWarning || homeWideNeedsHelp || awayWideNeedsHelp) && (
               <div className="absolute inset-0 pointer-events-none z-[9]">
-                <div
-                  className="absolute"
-                  style={{
-                    left: `${PITCH_INFO.losColumn * GRID_CELL_SIZE}px`,
-                    top: `${4 * GRID_CELL_SIZE}px`,
-                    width: `${GRID_CELL_SIZE}px`,
-                    height: `${7 * GRID_CELL_SIZE}px`,
-                  }}
-                >
-                  <div className="absolute inset-[2px] rounded-xl border border-red-500/35 bg-red-500/12 shadow-[0_0_0_1px_rgba(239,68,68,0.18),0_0_18px_rgba(239,68,68,0.18)] animate-pulse" />
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-red-600 px-2 py-[1px] text-[8px] font-black uppercase tracking-[0.16em] text-white shadow-[0_4px_10px_rgba(30,19,8,0.22)]">
-                    LoS
-                  </span>
-                </div>
+                {homeLoSNeedsHelp && (
+                  <div
+                    className="absolute"
+                    style={{
+                      left: `${getLoSColumn('home') * GRID_CELL_SIZE}px`,
+                      top: `${4 * GRID_CELL_SIZE}px`,
+                      width: `${GRID_CELL_SIZE}px`,
+                      height: `${7 * GRID_CELL_SIZE}px`,
+                    }}
+                  >
+                    <div className="absolute inset-[2px] rounded-xl border border-red-500/35 bg-red-500/12 shadow-[0_0_0_1px_rgba(239,68,68,0.18),0_0_18px_rgba(239,68,68,0.18)] animate-pulse" />
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-red-600 px-2 py-[1px] text-[8px] font-black uppercase tracking-[0.16em] text-white shadow-[0_4px_10px_rgba(30,19,8,0.22)]">
+                      LoS
+                    </span>
+                  </div>
+                )}
+                {awayLoSNeedsHelp && (
+                  <div
+                    className="absolute"
+                    style={{
+                      left: `${getLoSColumn('away') * GRID_CELL_SIZE}px`,
+                      top: `${4 * GRID_CELL_SIZE}px`,
+                      width: `${GRID_CELL_SIZE}px`,
+                      height: `${7 * GRID_CELL_SIZE}px`,
+                    }}
+                  >
+                    <div className="absolute inset-[2px] rounded-xl border border-red-500/35 bg-red-500/12 shadow-[0_0_0_1px_rgba(239,68,68,0.18),0_0_18px_rgba(239,68,68,0.18)] animate-pulse" />
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-red-600 px-2 py-[1px] text-[8px] font-black uppercase tracking-[0.16em] text-white shadow-[0_4px_10px_rgba(30,19,8,0.22)]">
+                      LoS
+                    </span>
+                  </div>
+                )}
+                {homeWideNeedsHelp && (
+                  <>
+                    <div
+                      className="absolute rounded-xl border border-red-500/30 bg-red-500/10"
+                      style={{
+                        left: `0px`,
+                        top: `0px`,
+                        width: `${(PITCH_INFO.homeHalfMaxColumn + 1) * GRID_CELL_SIZE}px`,
+                        height: `${(PITCH_INFO.leftWideMaxRow + 1) * GRID_CELL_SIZE}px`,
+                      }}
+                    />
+                    <div
+                      className="absolute rounded-xl border border-red-500/30 bg-red-500/10"
+                      style={{
+                        left: `0px`,
+                        top: `${PITCH_INFO.rightWideMinRow * GRID_CELL_SIZE}px`,
+                        width: `${(PITCH_INFO.homeHalfMaxColumn + 1) * GRID_CELL_SIZE}px`,
+                        height: `${(GRID_ROWS - PITCH_INFO.rightWideMinRow) * GRID_CELL_SIZE}px`,
+                      }}
+                    />
+                  </>
+                )}
+                {awayWideNeedsHelp && (
+                  <>
+                    <div
+                      className="absolute rounded-xl border border-red-500/30 bg-red-500/10"
+                      style={{
+                        left: `${PITCH_INFO.awayHalfMinColumn * GRID_CELL_SIZE}px`,
+                        top: `0px`,
+                        width: `${(GRID_COLS - PITCH_INFO.awayHalfMinColumn) * GRID_CELL_SIZE}px`,
+                        height: `${(PITCH_INFO.leftWideMaxRow + 1) * GRID_CELL_SIZE}px`,
+                      }}
+                    />
+                    <div
+                      className="absolute rounded-xl border border-red-500/30 bg-red-500/10"
+                      style={{
+                        left: `${PITCH_INFO.awayHalfMinColumn * GRID_CELL_SIZE}px`,
+                        top: `${PITCH_INFO.rightWideMinRow * GRID_CELL_SIZE}px`,
+                        width: `${(GRID_COLS - PITCH_INFO.awayHalfMinColumn) * GRID_CELL_SIZE}px`,
+                        height: `${(GRID_ROWS - PITCH_INFO.rightWideMinRow) * GRID_CELL_SIZE}px`,
+                      }}
+                    />
+                  </>
+                )}
               </div>
             )}
 
@@ -2266,6 +2349,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
             >
               <span className={`material-symbols-outlined fill-1 ${ballCarrier ? 'text-lg' : 'text-2xl'}`}>sports_football</span>
             </motion.div>
+            </div>
           </div>
 
           <div className="mt-6 w-full">
@@ -2282,7 +2366,7 @@ const Plays: React.FC<PlaysProps> = ({ managedTeams, plays, onSavePlay, onDelete
                 </motion.div>
               ) : (
                 <div className="rounded-2xl border border-dashed border-[rgba(111,87,56,0.14)] bg-[rgba(255,251,241,0.55)] px-5 py-4 text-[10px] font-bold uppercase tracking-[0.16em] text-[#8f745c]">
-                  Selecciona un jugador del campo para ver su ficha tÃ¡ctica aquÃ­.
+                  Selecciona un jugador del campo para ver su ficha táctica aquí.
                 </div>
               )}
             </AnimatePresence>
