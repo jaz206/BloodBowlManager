@@ -32,10 +32,40 @@ const normalizeStarPlayerRecord = (star: StarPlayer): StarPlayer => {
 const normalizeStarPlayersCollection = (items: StarPlayer[]) =>
     items.map(normalizeStarPlayerRecord);
 
-const normalizeSkillRecord = (skill: Skill): Skill => deepSanitizeText(skill);
+const coerceFirestoreItemsArray = <T,>(value: unknown): T[] => {
+    if (Array.isArray(value)) return value as T[];
+    if (value && typeof value === 'object') {
+        return Object.keys(value as Record<string, unknown>)
+            .sort((a, b) => Number(a) - Number(b))
+            .map((key) => (value as Record<string, unknown>)[key] as T);
+    }
+    return [];
+};
+
+const normalizeSkillRecord = (skill: Skill): Skill => {
+    const normalized = deepSanitizeText(skill) as Skill & Record<string, any>;
+    const keyEN = sanitizeMojibakeText(String(normalized.keyEN || normalized.name_en || normalized.name || normalized.name_es || '')).trim();
+    const nameEs = sanitizeMojibakeText(String(normalized.name_es || normalized.name || normalized.name_en || keyEN || '')).trim();
+    const nameEn = sanitizeMojibakeText(String(normalized.name_en || normalized.keyEN || normalized.name || normalized.name_es || '')).trim();
+    const descEs = sanitizeMojibakeText(String(normalized.desc_es || normalized.description || normalized.desc_en || '')).trim();
+    const descEn = sanitizeMojibakeText(String(normalized.desc_en || normalized.description || normalized.desc_es || '')).trim();
+    const category = sanitizeMojibakeText(String(normalized.category || 'General')).trim() || 'General';
+
+    return {
+        ...normalized,
+        keyEN,
+        name_es: nameEs,
+        name_en: nameEn,
+        desc_es: descEs,
+        desc_en: descEn,
+        category,
+        name: normalized.name || nameEs || nameEn || keyEN,
+        description: normalized.description || descEs || descEn || ''
+    };
+};
 
 const normalizeSkillsCollection = (items: Skill[]) =>
-    items.map(normalizeSkillRecord);
+    items.map(normalizeSkillRecord).filter((skill) => Boolean(skill.keyEN || skill.name_es || skill.name_en));
 
 const stripUndefinedDeep = <T,>(value: T): T => {
     if (Array.isArray(value)) {
@@ -141,8 +171,9 @@ export const useMasterData = () => {
         const unsubSkills = onSnapshot(
             doc(db, MASTER_COL, 'skills'),
             (snap) => {
-                if (snap.exists() && snap.data()?.items?.length > 0) {
-                    setSkills(normalizeSkillsCollection(snap.data().items as Skill[]));
+                const skillItems = snap.exists() ? coerceFirestoreItemsArray<Skill>(snap.data()?.items) : [];
+                if (skillItems.length > 0) {
+                    setSkills(normalizeSkillsCollection(skillItems));
                 } else {
                     setSkills([]);
                 }
@@ -276,7 +307,7 @@ export const useMasterData = () => {
                 normalizeTeams(teamsSnap.exists() ? (teamsSnap.data().items as Team[] || []) : [])
             );
             const skillsToSave = sanitizeCollectionForFirestore(
-                normalizeSkillsCollection(skillsSnap.exists() ? ((skillsSnap.data().items || []) as Skill[]) : [])
+                normalizeSkillsCollection(coerceFirestoreItemsArray<Skill>(skillsSnap.exists() ? skillsSnap.data()?.items : []))
             );
             const starsToSave = sanitizeCollectionForFirestore(normalizeStarPlayersCollection(mergeItems(starsSnap.exists() ? starsSnap.data().items : [], staticStarsData, 'name')));
             const inducEsToSave = sanitizeCollectionForFirestore(mergeItems(inducEsSnap.exists() ? inducEsSnap.data().items : [], staticInducementsEs, 'name'));
@@ -353,7 +384,7 @@ export const useMasterData = () => {
             return candidates.includes(normalizedItemId);
         });
 
-        const currentItems: any[] = snap.exists() ? (snap.data().items ?? []) : [];
+        const currentItems: any[] = snap.exists() ? coerceFirestoreItemsArray<any>(snap.data()?.items) : [];
         const items = [...currentItems];
         let idx = getMatchIndex(items);
 
@@ -438,7 +469,7 @@ export const useMasterData = () => {
             if (!db) return;
             const ref = doc(db, MASTER_COL, docId);
             const snap = await getDoc(ref);
-            const items = (snap.exists() ? snap.data().items : []) || [];
+            const items = snap.exists() ? coerceFirestoreItemsArray<any>(snap.data()?.items) : [];
             items.push(item);
             await setDoc(ref, { items: sanitizeCollectionForFirestore(items), updatedAt: serverTimestamp() }, { merge: true });
         },
@@ -447,9 +478,11 @@ export const useMasterData = () => {
             const ref = doc(db, MASTER_COL, docId);
             const snap = await getDoc(ref);
             if (!snap.exists()) return;
-            const items = (snap.data().items || []).filter((i: any) => (i.keyEN ?? i.name ?? i.title) !== itemId);
+            const items = coerceFirestoreItemsArray<any>(snap.data()?.items).filter((i: any) => (i.keyEN ?? i.name ?? i.title) !== itemId);
             await setDoc(ref, { items: sanitizeCollectionForFirestore(items), updatedAt: serverTimestamp() }, { merge: true });
         },
         refresh: () => setLoading(true),
     };
 };
+
+
