@@ -1,4 +1,4 @@
-Ôªøimport React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { StarPlayer, PlayerStats, Skill } from '../../types';
 import { useMasterData } from '../../hooks/useMasterData';
@@ -114,13 +114,21 @@ const StarPlayerCard: React.FC<{
     );
 };
 
-const StarPlayers: React.FC = () => {
+interface StarPlayersProps {
+    initialSearchTerm?: string;
+}
+
+const StarPlayers: React.FC<StarPlayersProps> = ({ initialSearchTerm = '' }) => {
     const { starPlayers, loading } = useMasterData();
     const { isAdmin } = useAuth();
     const { language } = useLanguage();
 
-    const [searchTerm, setSearchTerm] = useState('');
+    const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
     const [selectedFaction, setSelectedFaction] = useState('Todas');
+
+    React.useEffect(() => {
+        setSearchTerm(initialSearchTerm || '');
+    }, [initialSearchTerm]);
     const [selectedPlayerName, setSelectedPlayerName] = useState<string | null>(null);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -158,7 +166,7 @@ const StarPlayers: React.FC = () => {
         return (
             <div className="flex flex-col items-center justify-center py-40 gap-4">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary border-transparent"></div>
-                <span className="text-xs font-black text-primary uppercase tracking-[0.3em] animate-pulse">Contactando al Or√°culo...</span>
+                <span className="text-xs font-black text-primary uppercase tracking-[0.3em] animate-pulse">Contactando al Or·culo...</span>
             </div>
         );
     }
@@ -182,7 +190,7 @@ const StarPlayers: React.FC = () => {
 
             {/* Breadcrumbs */}
             <nav className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
-                <span className="text-[#7b6853]">Or√°culo</span>
+                <span className="text-[#7b6853]">Or·culo</span>
                 <span className="text-[#2b1d12]">/</span>
                 <span className="text-primary italic">Jugadores Estrella</span>
             </nav>
@@ -194,12 +202,12 @@ const StarPlayers: React.FC = () => {
                         Compendio de <span className="text-primary italic">Estrellas</span>
                     </h1>
                     <p className="text-[#7b6853] text-sm mt-3 font-medium italic opacity-80 max-w-xl">
-                        Consulta las leyendas vivas de los campos de Blood Bowl. Contrataciones de √©lite para entrenadores con ambici√≥n.
+                        Consulta las leyendas vivas de los campos de Blood Bowl. Contrataciones de Èlite para entrenadores con ambiciÛn.
                     </p>
                 </div>
                 {isAdmin && (
                     <button
-                        onClick={() => showToast('Funcionalidad de creaci√≥n en desarrollo para administradores.')}
+                        onClick={() => showToast('Funcionalidad de creaciÛn en desarrollo para administradores.')}
                         className="flex items-center gap-3 bg-primary text-background-dark px-8 py-4 rounded-2xl font-black uppercase italic tracking-widest text-xs hover:scale-105 transition-all shadow-xl shadow-primary/20"
                     >
                         <span className="material-symbols-outlined font-bold">add</span>
@@ -224,7 +232,7 @@ const StarPlayers: React.FC = () => {
                     </div>
                 </div>
                 <div>
-                    <label className="block text-[10px] font-black text-[#7b6853] uppercase mb-3 tracking-[0.2em] italic pl-1">Afiliaci√≥n / Raza</label>
+                    <label className="block text-[10px] font-black text-[#7b6853] uppercase mb-3 tracking-[0.2em] italic pl-1">AfiliaciÛn / Raza</label>
                     <select
                         value={selectedFaction}
                         onChange={e => setSelectedFaction(e.target.value)}
@@ -239,7 +247,7 @@ const StarPlayers: React.FC = () => {
                         className={`flex-1 flex items-center justify-center gap-2 h-14 rounded-2xl transition-all ${viewMode === 'grid' ? 'bg-primary text-background-dark font-black' : 'bg-border-gold/20 text-[#7b6853] font-bold hover:bg-border-gold/40'}`}
                     >
                         <span className="material-symbols-outlined text-sm">grid_view</span>
-                        <span className="text-[10px] uppercase tracking-widest">Cuadr√≠cula</span>
+                        <span className="text-[10px] uppercase tracking-widest">CuadrÌcula</span>
                     </button>
                     <button
                         onClick={() => setViewMode('list')}
@@ -341,10 +349,10 @@ const StarPlayers: React.FC = () => {
                                     <div className="p-8 bg-[rgba(255,251,241,0.7)] rounded-3xl border border-[rgba(111,87,56,0.12)] space-y-4 shadow-inner">
                                         <h4 className="text-[#2b1d12] font-black italic uppercase tracking-widest text-xs flex items-center gap-3">
                                             <span className="material-symbols-outlined text-primary text-sm">info</span>
-                                            Biograf√≠a y Trasfondo
+                                            BiografÌa y Trasfondo
                                         </h4>
                                         <p className="text-[#7b6853] leading-relaxed text-sm font-medium italic">
-                                            {selectedPlayer.description || `Esta leyenda de los campos de Blood Bowl es conocida por su impecable t√©cnica y su capacidad para cambiar el rumbo de cualquier partido. Con un coste de ${(selectedPlayer.cost / 1000)},000 monedas de oro, es una inversi√≥n en victoria.`}
+                                            {selectedPlayer.description || `Esta leyenda de los campos de Blood Bowl es conocida por su impecable tÈcnica y su capacidad para cambiar el rumbo de cualquier partido. Con un coste de ${(selectedPlayer.cost / 1000)},000 monedas de oro, es una inversiÛn en victoria.`}
                                         </p>
                                     </div>
 
@@ -386,13 +394,13 @@ const StarPlayers: React.FC = () => {
                                 >
                                     <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                     <div className="text-background-dark relative z-10 mb-6 md:mb-0">
-                                        <span className="text-[9px] font-black uppercase tracking-[0.3em] opacity-80 block mb-1">Honorarios de Contrataci√≥n</span>
+                                        <span className="text-[9px] font-black uppercase tracking-[0.3em] opacity-80 block mb-1">Honorarios de ContrataciÛn</span>
                                         <p className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter leading-none border-l-2 border-black/40 pl-6">
                                             {selectedPlayer.cost.toLocaleString('es-ES')} <span className="text-base">M.O.</span>
                                         </p>
                                     </div>
                                     <button
-                                        onClick={() => showToast(`¬°${selectedPlayer.name} anotado para contrataci√≥n!`)}
+                                        onClick={() => showToast(`°${selectedPlayer.name} anotado para contrataciÛn!`)}
                                         className="w-full md:w-auto bg-background-dark text-primary px-12 py-5 rounded-2xl font-black uppercase italic tracking-widest text-xs hover:shadow-2xl transition-all border-2 border-background-dark/20 relative z-10"
                                     >
                                         Contratar Ahora
@@ -412,7 +420,7 @@ const StarPlayers: React.FC = () => {
                 </div>
                 <div className="flex gap-8 text-[9px] font-black text-[#2b1d12] uppercase tracking-[0.3em]">
                     <a href="#" className="hover:text-primary transition-colors">Privacidad</a>
-                    <a href="#" className="hover:text-primary transition-colors">T√©rminos</a>
+                    <a href="#" className="hover:text-primary transition-colors">TÈrminos</a>
                     <a href="#" className="hover:text-primary transition-colors">API Endpoint</a>
                 </div>
             </div>
@@ -446,3 +454,4 @@ const StarPlayers: React.FC = () => {
 };
 
 export default StarPlayers;
+

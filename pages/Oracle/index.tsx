@@ -39,6 +39,8 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
     const [selectedHubTeam, setSelectedHubTeam] = useState<string | null>(null);
     const [initialSkillCategory, setInitialSkillCategory] = useState<string>('General');
     const [hubSearchTerm, setHubSearchTerm] = useState(initialSearchTerm);
+    const [teamsSearchTerm, setTeamsSearchTerm] = useState('');
+    const [starsSearchTerm, setStarsSearchTerm] = useState('');
     const hubSearchInputRef = useRef<HTMLInputElement | null>(null);
 
     const resolveHubTeamImage = (team: ManagedTeam & { crestImage?: string; image?: string }) => {
@@ -59,6 +61,8 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                 else if (initialSearchTerm === 'rules') setActiveView('rules');
                 
                 setHubSearchTerm(''); // Clear search if it was a tab navigation
+                setTeamsSearchTerm('');
+                setStarsSearchTerm('');
             } else {
                 // If it's actual text, stay in hub and search (unless we are already in a subview, then maybe we want to search there?)
                 setHubSearchTerm(initialSearchTerm);
@@ -92,6 +96,65 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
 
     const featuredTeams = useMemo(() => masterTeams.slice(0, 4), [masterTeams]);
     const featuredStarPlayers = useMemo(() => starPlayers.slice(0, 4), [starPlayers]);
+
+    const routeHubSearch = React.useCallback(() => {
+        const term = hubSearchTerm.trim();
+        if (!term) return;
+        const normalizedTerm = term.toLowerCase();
+
+        const teamMatch = masterTeams.some(team => team.name.toLowerCase().includes(normalizedTerm));
+        if (teamMatch) {
+            setSelectedHubTeam(null);
+            setTeamsSearchTerm(term);
+            setActiveView('teams');
+            return;
+        }
+
+        const skillMatch = skills.some(skill => {
+            const es = (skill.name_es || '').toLowerCase();
+            const en = (skill.name_en || '').toLowerCase();
+            const descEs = (skill.desc_es || '').toLowerCase();
+            const descEn = (skill.desc_en || '').toLowerCase();
+            const key = (skill.keyEN || '').toLowerCase();
+            return es.includes(normalizedTerm) || en.includes(normalizedTerm) || descEs.includes(normalizedTerm) || descEn.includes(normalizedTerm) || key.includes(normalizedTerm);
+        });
+        if (skillMatch) {
+            setActiveView('skills');
+            return;
+        }
+
+        const starMatch = starPlayers.some(player => {
+            const name = (player.name || '').toLowerCase();
+            const playerSkillMatch = player.skillKeys?.some(key => key.toLowerCase().includes(normalizedTerm)) || false;
+            return name.includes(normalizedTerm) || playerSkillMatch;
+        });
+        if (starMatch) {
+            setStarsSearchTerm(term);
+            setActiveView('star_players');
+            return;
+        }
+
+        const helperKeywords: Record<string, Exclude<SubView, 'hub'>> = {
+            calculadora: 'calculator',
+            probabilidad: 'calculator',
+            probabilidades: 'calculator',
+            incentivo: 'inducements',
+            incentivos: 'inducements',
+            soborno: 'inducements',
+            sobornos: 'inducements',
+            manual: 'rules',
+            regla: 'rules',
+            reglas: 'rules'
+        };
+
+        const helperView = helperKeywords[normalizedTerm];
+        if (helperView) {
+            openSubview(helperView);
+            return;
+        }
+
+        setActiveView('skills');
+    }, [hubSearchTerm, masterTeams, skills, starPlayers]);
 
     const handleBackToHub = () => {
         setActiveView('hub');
@@ -149,6 +212,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                             placeholder="Buscar equipos, habilidades, reglas o estrellas..."
                             value={hubSearchTerm}
                             onChange={(e) => setHubSearchTerm(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Enter') routeHubSearch(); }}
                         />
                     </div>
                 </div>
@@ -350,7 +414,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                                 />
                             )}
                             {activeView === 'skills' && <Skills initialCategory={initialSkillCategory} initialSearchTerm={hubSearchTerm} />}
-                            {activeView === 'star_players' && <StarPlayers />}
+                            {activeView === 'star_players' && <StarPlayers initialSearchTerm={starsSearchTerm} />}
                             {activeView === 'calculator' && (
                                 <div className="blood-ui-light-card max-w-3xl mx-auto py-10 p-8 rounded-[2.5rem] shadow-[0_24px_60px_rgba(75,52,27,0.14)]">
                                     <h3 className="blood-ui-light-title text-xl md:text-2xl font-black italic tracking-tighter uppercase mb-4 text-center">{t('oracle.calculator.title')}</h3>
@@ -373,3 +437,4 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
 };
 
 export default OraclePage;
+

@@ -344,8 +344,12 @@ const Teams: React.FC<{
 
     const [selectedTeamName, setSelectedTeamName] = useState<string | null>(null);
     const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
-    const [searchTerm, setSearchTerm] = useState('');
+    const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
     const searchInputRef = useRef<HTMLInputElement | null>(null);
+
+    React.useEffect(() => {
+        setSearchTerm(initialSearchTerm || '');
+    }, [initialSearchTerm]);
     const [selectedTiers, setSelectedTiers] = useState<number[]>([]);
     const [sortOrder, setSortOrder] = useState<'alpha' | 'tier_asc' | 'tier_desc'>('alpha');
     const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -685,3 +689,5 @@ const Teams: React.FC<{
 };
 
 export default Teams;
+
+
