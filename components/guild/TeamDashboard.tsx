@@ -2,7 +2,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ManagedTeam, ManagedPlayer, Player, Skill, ManagedTeamSnapshot, MatchReport } from '../../types';
 import { ELITE_SKILLS } from '../../types';
-import { skillsData } from '../../data/skills';
 import PlayerModal from './PlayerModal';
 import SkillModal from '../oracle/SkillModal';
 import { generateRandomName } from '../../data/randomNames';
@@ -156,7 +155,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
     }, [masterTeams, team.rosterName]);
     const canonicalTeamTemplate = useMemo(() => masterTeams.find(t => t.name === team.rosterName), [masterTeams, team.rosterName]);
 
-    const skillCatalog = useMemo(() => (masterSkills?.length ? masterSkills : skillsData), [masterSkills]);
+    const skillCatalog = useMemo(() => masterSkills || [], [masterSkills]);
 
     const normalizeLookupKey = (value?: string) =>
         sanitizeMojibakeText(String(value || ''))
@@ -314,7 +313,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
         }
     }, [showQr, team]);
 
-    const teamValue = useMemo(() => calculateTeamValue(team, false, canonicalTeamTemplate), [team, canonicalTeamTemplate]);
+    const teamValue = useMemo(() => calculateTeamValue(team, false, canonicalTeamTemplate, skillCatalog), [team, canonicalTeamTemplate, skillCatalog]);
     const historySummary = useMemo(() => {
         const matches = team.history || [];
         return matches.reduce((acc, match) => {

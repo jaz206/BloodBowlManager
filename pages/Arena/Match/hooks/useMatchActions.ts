@@ -12,16 +12,16 @@ import { handleFoulActionLogic } from '../engine/foulEngine';
 import { handleInjuryActionLogic } from '../engine/injuryEngine';
 import { updatePlayerSppActionLogic } from '../engine/sppEngine';
 import { handleHalftimeLogic, handleNextTurnLogic, checkStalling } from '../engine/matchEngine';
-import { skillsData } from '../../../../data/skills';
 import { weatherConditions } from '../../../../data/weather';
 import { useMasterData } from '../../../../hooks/useMasterData';
+import { findSkillRecord } from '../../../../utils/skillUtils';
 
 /**
  * useMatchActions — encapsula toda la lógica de acciones del partido.
  * Recibe el estado del hook useMatchState y retorna funciones de acción memoizadas.
  */
 export const useMatchActions = (state: ReturnType<typeof useMatchState>, _props: GameBoardProps) => {
-    const { teams } = useMasterData();
+    const { teams, skills } = useMasterData();
     const {
         setGameLog, turn, half, setTurn, setHalf, setGameState, setGameStatus,
         firstHalfReceiver, homeTeam, opponentTeam, liveHomeTeam, liveOpponentTeam,
@@ -198,19 +198,11 @@ const updatePlayerSppAndAction = useCallback((
         const baseName = name.split('(')[0].trim().toLowerCase();
         
         // 1. Búsqueda por coincidencia exacta o Key EN
-        let found = skillsData.find(s => 
-            (s.keyEN && s.keyEN.toLowerCase() === name.toLowerCase()) ||
-            (s.name_en && s.name_en.toLowerCase() === name.toLowerCase()) ||
-            (s.name_es && s.name_es.toLowerCase() === name.toLowerCase())
-        );
+        let found = findSkillRecord(skills, name);
         
         // 2. Búsqueda por el nombre "limpio" (sin +1, +2 o puntuación)
         if (!found) {
-            found = skillsData.find(s => 
-                (s.keyEN && s.keyEN.toLowerCase().startsWith(baseName)) ||
-                (s.name_en && s.name_en.toLowerCase().startsWith(baseName)) ||
-                (s.name_es && s.name_es.toLowerCase().startsWith(baseName))
-            );
+            found = findSkillRecord(skills, baseName);
         }
 
         if (found) {
@@ -219,7 +211,7 @@ const updatePlayerSppAndAction = useCallback((
         } else {
             console.warn(`[handleSkillClick] No se encontró definición para: "${skillName}"`);
         }
-    }, [setSelectedSkillForModal]);
+    }, [setSelectedSkillForModal, skills]);
 
     /** Alterna al portador del balón. */
     const handleBallToggle = useCallback((playerId: number) => {

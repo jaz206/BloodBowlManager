@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import type { ManagedPlayer, Skill } from '../../types';
-import { skillsData } from '../../data/skills';
+import { useMasterData } from '../../hooks/useMasterData';
+import { findSkillRecord, skillHasDescription } from '../../utils/skillUtils';
 import SkillModal from '../oracle/SkillModal';
 
 interface PlayerCardModalProps {
@@ -12,9 +13,8 @@ interface PlayerCardModalProps {
   onBallToggle?: () => void;
 }
 
-const SkillButton: React.FC<{ skillName: string; onSkillClick: (name: string) => void }> = ({ skillName, onSkillClick }) => {
+const SkillButton: React.FC<{ skillName: string; onSkillClick: (name: string) => void; hasDescription: boolean }> = ({ skillName, onSkillClick, hasDescription }) => {
   const cleanSkillName = skillName.split('(')[0].trim();
-  const hasDescription = skillsData.some(s => s.name.toLowerCase().startsWith(cleanSkillName.toLowerCase()));
 
   if (hasDescription) {
     return (
@@ -31,6 +31,7 @@ const SkillButton: React.FC<{ skillName: string; onSkillClick: (name: string) =>
 
 const PlayerCardModal: React.FC<PlayerCardModalProps> = ({ player, onClose, isBallCarrier, onBallToggle }) => {
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
+  const { skills } = useMasterData();
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
@@ -39,7 +40,7 @@ const PlayerCardModal: React.FC<PlayerCardModalProps> = ({ player, onClose, isBa
   };
 
   const handleSkillClick = (skillName: string) => {
-    const foundSkill = skillsData.find(s => s.name.toLowerCase().startsWith(skillName.toLowerCase()));
+    const foundSkill = findSkillRecord(skills, skillName);
     if (foundSkill) {
       setSelectedSkill(foundSkill);
     }
@@ -97,7 +98,11 @@ const PlayerCardModal: React.FC<PlayerCardModalProps> = ({ player, onClose, isBa
               <div className="flex flex-wrap gap-2">
                 {allSkills.length > 0 ? allSkills.map((skill, index) => (
                   <div key={`${skill}-${index}`} className="flex items-center">
-                    <SkillButton skillName={skill} onSkillClick={handleSkillClick} />
+                    <SkillButton
+                      skillName={skill}
+                      onSkillClick={handleSkillClick}
+                      hasDescription={skillHasDescription(skills, skill)}
+                    />
                   </div>
                 )) : <span className="text-white/20 font-display font-medium italic">Sin habilidades especiales</span>}
               </div>

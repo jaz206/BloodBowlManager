@@ -3,9 +3,9 @@ import { AnimatePresence } from 'framer-motion';
 import type { ManagedTeam, League as Competition, GameEvent, MatchReport } from '../../types';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../hooks/useAuth';
-import { skillsData } from '../../data/skills_es';
 import { useMasterData } from '../../hooks/useMasterData';
 import { getTeamLogoUrl } from '../../utils/imageUtils';
+import { getSkillDisplayName } from '../../utils/skillUtils';
 import SkillModal from '../../components/oracle/SkillModal';
 
 interface HomeProps {
@@ -71,7 +71,7 @@ const Home: React.FC<HomeProps> = ({
 }) => {
     const { t } = useLanguage();
     const { user } = useAuth();
-    const { heraldoItems: remoteHeraldo, starPlayers, teams: masterTeams } = useMasterData();
+    const { heraldoItems: remoteHeraldo, starPlayers, teams: masterTeams, skills } = useMasterData();
 
     // The Heraldo now primarily showcases Star Players
     const items = useMemo(() => {
@@ -116,11 +116,11 @@ const Home: React.FC<HomeProps> = ({
 
     // Oracle Search Logic
     const filteredSkills = useMemo(() => {
-        if (!oracleSearch) return skillsData.slice(0, 5);
-        return skillsData
-            .filter(s => s.name.toLowerCase().includes(oracleSearch.toLowerCase()))
+        if (!oracleSearch) return skills.slice(0, 5);
+        return skills
+            .filter(s => getSkillDisplayName(s).toLowerCase().includes(oracleSearch.toLowerCase()))
             .slice(0, 10);
-    }, [oracleSearch]);
+    }, [oracleSearch, skills]);
 
     const resolveTeamCrest = (team: ManagedTeam) => {
         const masterMatch = masterTeams.find(t => t.name === team.rosterName || t.name === team.name);

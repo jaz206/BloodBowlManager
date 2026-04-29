@@ -3,7 +3,7 @@ import { useArenaConfig } from '../../hooks/useArenaConfig';
 import { useMasterData } from '../../hooks/useMasterData';
 import { createPortal } from 'react-dom';
 import type { ManagedTeam, ManagedPlayer, Skill } from '../../types';
-import { skillsData } from '../../data/skills';
+import { getSkillDescription, getSkillDisplayName, skillCategoryMatches } from '../../utils/skillUtils';
 
 interface SkillSelectionModalProps {
     player: ManagedPlayer;
@@ -14,7 +14,7 @@ interface SkillSelectionModalProps {
 }
 
 const SkillSelectionModal: React.FC<SkillSelectionModalProps> = ({ player, rosterName, skillType, onSelect, onClose }) => {
-    const { teams } = useMasterData();
+    const { teams, skills } = useMasterData();
     const baseTeam = useMemo(() => teams.find(t => t.name === rosterName), [teams, rosterName]);
     const basePlayer = useMemo(() => baseTeam?.roster.find(p => p.position === player.position), [baseTeam, player.position]);
 
@@ -30,18 +30,17 @@ const SkillSelectionModal: React.FC<SkillSelectionModalProps> = ({ player, roste
         const skillCategories = categories.map(c => categoryMap[c]).filter(Boolean);
         const currentSkills = new Set([...(player.skills || '').split(', ').filter(Boolean), ...(player.gainedSkills || [])]);
 
-        return skillsData.filter(skill => {
+        return skills.filter(skill => {
             if (!skill) return false;
-            const skillName = skill.name_es || skill.name_en || skill.name || '';
-            const category = skill.category || '';
-            return skillCategories.includes(category) && !currentSkills.has(skillName);
+            const skillName = getSkillDisplayName(skill);
+            return skillCategoryMatches(skill, skillCategories) && !currentSkills.has(skillName) && !currentSkills.has(skill.keyEN);
         }).sort((a, b) => {
-            const nameA = a.name_es || a.name_en || a.name || '';
-            const nameB = b.name_es || b.name_en || b.name || '';
+            const nameA = getSkillDisplayName(a);
+            const nameB = getSkillDisplayName(b);
             return nameA.localeCompare(nameB);
         });
 
-    }, [basePlayer, skillType, player.gainedSkills, player.skills]);
+    }, [basePlayer, skillType, player.gainedSkills, player.skills, skills]);
 
     return createPortal(
         <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[500] p-4" onClick={onClose}>
@@ -57,14 +56,14 @@ const SkillSelectionModal: React.FC<SkillSelectionModalProps> = ({ player, roste
                 </div>
                 <div className="p-6 overflow-y-auto space-y-3 custom-scrollbar">
                     {availableSkills.map(skill => {
-                        const sName = skill.name_es || skill.name_en || skill.name || 'Habilidad';
+                        const sName = getSkillDisplayName(skill);
                         return (
                             <button key={sName} onClick={() => onSelect(sName)} className="w-full text-left bg-white/5 border border-white/5 p-4 rounded-2xl hover:bg-premium-gold/10 hover:border-premium-gold/30 group transition-all">
                                 <div className="flex justify-between items-center mb-1">
                                     <p className="font-display font-bold text-white group-hover:text-premium-gold transition-colors">{sName}</p>
                                     <span className="text-[9px] font-display font-black text-slate-500 uppercase tracking-widest group-hover:text-premium-gold/50">{skill.category}</span>
                                 </div>
-                                <p className="text-xs text-slate-400 group-hover:text-slate-300 leading-relaxed font-display">{skill.desc_es || skill.desc_en || skill.description}</p>
+                                <p className="text-xs text-slate-400 group-hover:text-slate-300 leading-relaxed font-display">{getSkillDescription(skill)}</p>
                             </button>
                         );
                     })}
@@ -102,7 +101,7 @@ interface PostGameState {
 
 const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalHomeTeam, opponentTeam, score, fame, playersMNG, onConfirm, initialConcession }) => {
     const { config: arenaConfig } = useArenaConfig();
-    const { teams } = useMasterData();
+    const { teams, skills } = useMasterData();
     const diceConfig = arenaConfig?.dice || { winnings: '1D3', mvp: '1D3', fans: '1D6' };
 
     const [step, setStep] = useState(0);
@@ -319,11 +318,14 @@ const PostGameWizard: React.FC<PostGameWizardProps> = ({ initialHomeTeam, finalH
         const skillCategories = categories.map(c => categoryMap[c]).filter(Boolean);
         const currentSkills = new Set([...(player.skills || '').split(', ').filter(Boolean), ...(player.gainedSkills || [])]);
 
-        const available = skillsData.filter(s => skillCategories.includes(s.category || '') && !currentSkills.has(s.name_es || s.name_en || s.name || ''));
+        const available = skills.filter((s) => {
+            const skillName = getSkillDisplayName(s);
+            return skillCategoryMatches(s, skillCategories) && !currentSkills.has(skillName) && !currentSkills.has(s.keyEN);
+        });
         if (available.length === 0) return;
 
         const randomSkill = available[Math.floor(Math.random() * available.length)];
-        const skillName = randomSkill.name_es || randomSkill.name_en || randomSkill.name || 'Habilidad';
+        const skillName = getSkillDisplayName(randomSkill);
 
         handleSkillSelectionUpdate(player.id, skillName, cost);
     };

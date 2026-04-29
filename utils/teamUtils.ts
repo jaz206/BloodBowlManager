@@ -1,11 +1,12 @@
 
-import { ManagedTeam, ELITE_SKILLS, ManagedTeamSnapshot, Team } from '../types';
-import { skillsData } from '../data/skills';
+import { ManagedTeam, ELITE_SKILLS, ManagedTeamSnapshot, Team, Skill } from '../types';
+import { findSkillRecord } from './skillUtils';
 
 export const calculateTeamValue = (
     team: ManagedTeam | null | undefined,
     includeInducements = false,
-    baseRoster?: Team | null
+    baseRoster?: Team | null,
+    skillCatalog: Skill[] = []
 ): number => {
     if (!team) return 0;
     if (!baseRoster) return 0;
@@ -32,7 +33,7 @@ export const calculateTeamValue = (
                 // Add Season 3 Elite Penalty (+10k MO)
                 let eliteBonus = 0;
                 if (adv.skillName) {
-                    const skillEntry = skillsData.find(s => s.name_es === adv.skillName || s.name_en === adv.skillName || s.keyEN === adv.skillName || s.name === adv.skillName);
+                    const skillEntry = findSkillRecord(skillCatalog, adv.skillName);
                     if (skillEntry && ELITE_SKILLS.includes(skillEntry.keyEN)) {
                         eliteBonus = 10000;
                     }
@@ -49,7 +50,7 @@ export const calculateTeamValue = (
                 
                 // Add Season 3 Elite Penalty (+10k MO)
                 let eliteBonus = 0;
-                const skillEntry = skillsData.find(s => s.name_es === skillName || s.name_en === skillName || s.keyEN === skillName || s.name === skillName);
+                const skillEntry = findSkillRecord(skillCatalog, skillName);
                 if (skillEntry && ELITE_SKILLS.includes(skillEntry.keyEN)) {
                     eliteBonus = 10000;
                 }

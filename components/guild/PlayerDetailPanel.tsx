@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { BoardToken, Skill } from '../../types';
-import { skillsData } from '../../data/skills';
+import { useMasterData } from '../../hooks/useMasterData';
+import { findSkillRecord, skillHasDescription } from '../../utils/skillUtils';
 import SkillModal from '../oracle/SkillModal';
 
 interface PlayerDetailPanelProps {
@@ -8,10 +9,8 @@ interface PlayerDetailPanelProps {
     onClose: () => void;
 }
 
-const SkillButton: React.FC<{ skillName: string; onSkillClick: (name: string) => void }> = ({ skillName, onSkillClick }) => {
+const SkillButton: React.FC<{ skillName: string; onSkillClick: (name: string) => void; hasDescription: boolean }> = ({ skillName, onSkillClick, hasDescription }) => {
     const cleanSkillName = skillName.split('(')[0].trim();
-    const hasDescription = skillsData.some(s => s.name.toLowerCase().startsWith(cleanSkillName.toLowerCase()));
-
     if (hasDescription) {
         return (
             <button
@@ -28,13 +27,14 @@ const SkillButton: React.FC<{ skillName: string; onSkillClick: (name: string) =>
 
 const PlayerDetailPanel: React.FC<PlayerDetailPanelProps> = ({ playerToken, onClose }) => {
     const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
+    const { skills } = useMasterData();
 
     const player = playerToken.playerData;
 
     if (!player) return null;
 
     const handleSkillClick = (skillName: string) => {
-        const foundSkill = skillsData.find(s => s.name.toLowerCase().startsWith(skillName.toLowerCase()));
+        const foundSkill = findSkillRecord(skills, skillName);
         if (foundSkill) {
             setSelectedSkill(foundSkill);
         }
@@ -90,7 +90,7 @@ const PlayerDetailPanel: React.FC<PlayerDetailPanelProps> = ({ playerToken, onCl
                             <p className="text-sm text-slate-300">
                                 {allSkills.length > 0 ? allSkills.map((skill, index) => (
                                     <React.Fragment key={`${skill}-${index}`}>
-                                        <SkillButton skillName={skill} onSkillClick={handleSkillClick} />
+                                        <SkillButton skillName={skill} onSkillClick={handleSkillClick} hasDescription={skillHasDescription(skills, skill)} />
                                         {index < allSkills.length - 1 && ', '}
                                     </React.Fragment>
                                 )) : 'Ninguna'}

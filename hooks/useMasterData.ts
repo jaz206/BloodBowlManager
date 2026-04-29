@@ -4,7 +4,6 @@ import { collection, doc, onSnapshot, setDoc, serverTimestamp, getDoc } from 'fi
 import { useLanguage } from '../contexts/LanguageContext';
 
 // ── Static Fallback Data ──────────────────────────────────────────────────────
-import { skillsData as staticSkills } from '../data/skills';
 import { starPlayersData as staticStarsData } from '../data/starPlayers';
 import { inducements as staticInducementsEs } from '../data/inducements';
 import { inducementsData as staticInducementsEn } from '../data/inducements_en';
@@ -63,12 +62,11 @@ const sanitizeCollectionForFirestore = <T,>(items: T[]): T[] =>
 export type SyncStatus = 'idle' | 'syncing' | 'success' | 'error';
 
 /**
- * useMasterData hook — Firestore-first with static fallback.
+ * useMasterData hook -- Firestore-first.
  *
  * Data layout in Firestore:
  *   master_data/teams          → { items: Team[], updatedAt }
- *   master_data/skills_es      → { items: Skill[], updatedAt }
- *   master_data/skills_en      → { items: Skill[], updatedAt }
+ *   master_data/skills         → { items: Skill[], updatedAt }
  *   master_data/star_players   → { items: StarPlayer[], updatedAt }
  *   master_data/inducements_es → { items: Inducement[], updatedAt }
  *   master_data/inducements_en → { items: Inducement[], updatedAt }
@@ -79,7 +77,7 @@ export const useMasterData = () => {
 
     // ── State ─────────────────────────────────────────────────────────────────
     const [teams, setTeams] = useState<Team[]>([]);
-    const [skills, setSkills] = useState<Skill[]>(normalizeSkillsCollection(staticSkills));
+    const [skills, setSkills] = useState<Skill[]>([]);
     const [starPlayers, setStarPlayers] = useState<StarPlayer[]>(normalizeStarPlayersCollection(staticStarsData));
     const [inducements, setInducements] = useState<Inducement[]>(language === 'es' ? staticInducementsEs : (staticInducementsEn as unknown as Inducement[]));
     const [heraldoItems, setHeraldoItems] = useState<any[]>([]);
@@ -98,7 +96,7 @@ export const useMasterData = () => {
     useEffect(() => {
         if (!db) {
             setTeams([]);
-            setSkills(normalizeSkillsCollection(staticSkills));
+            setSkills([]);
             setStarPlayers(normalizeStarPlayersCollection(staticStarsData));
             setInducements(language === 'es' ? staticInducementsEs : (staticInducementsEn as unknown as Inducement[]));
             setLoading(false);
@@ -146,11 +144,11 @@ export const useMasterData = () => {
                 if (snap.exists() && snap.data()?.items?.length > 0) {
                     setSkills(normalizeSkillsCollection(snap.data().items as Skill[]));
                 } else {
-                    setSkills(normalizeSkillsCollection(staticSkills));
+                    setSkills([]);
                 }
                 checkDone();
             },
-            () => { setSkills(normalizeSkillsCollection(staticSkills)); checkDone(); }
+            () => { setSkills([]); checkDone(); }
         );
 
         // Star Players listener
@@ -228,19 +226,18 @@ export const useMasterData = () => {
             unsubHeraldo();
             unsubMeta();
         };
-        // Re-subscribe when language changes to get the right skills/inducements doc
+        // Re-subscribe when language changes to get the right inducements doc
     }, [language]);
 
     // ── Sync to Firestore (admin action) ─────────────────────────────────────
     /**
-     * Uploads all static master data to Firestore.
+     * Uploads all master data to Firestore.
      * Overwrites existing documents atomically.
      * Only admins should be able to call this (enforced by Firestore Rules).
      */
     // ── Sync to Firestore (admin action) ─────────────────────────────────────
     /**
-     * Uploads static master data to Firestore using a Smart Merge strategy.
-     * Preserves existing items in Firestore (with their manual edits) and adds new ones from code.
+     * Uploads master data to Firestore using Firestore as source of truth.
      * @param force - If true, performs a full overwrite.
      */
     const syncMasterData = useCallback(async (force = false): Promise<void> => {
@@ -278,7 +275,9 @@ export const useMasterData = () => {
             const teamsToSave = sanitizeCollectionForFirestore(
                 normalizeTeams(teamsSnap.exists() ? (teamsSnap.data().items as Team[] || []) : [])
             );
-            const skillsToSave = sanitizeCollectionForFirestore(normalizeSkillsCollection(mergeItems(skillsSnap.exists() ? skillsSnap.data().items : [], staticSkills, 'keyEN')));
+            const skillsToSave = sanitizeCollectionForFirestore(
+                normalizeSkillsCollection(skillsSnap.exists() ? ((skillsSnap.data().items || []) as Skill[]) : [])
+            );
             const starsToSave = sanitizeCollectionForFirestore(normalizeStarPlayersCollection(mergeItems(starsSnap.exists() ? starsSnap.data().items : [], staticStarsData, 'name')));
             const inducEsToSave = sanitizeCollectionForFirestore(mergeItems(inducEsSnap.exists() ? inducEsSnap.data().items : [], staticInducementsEs, 'name'));
             const inducEnToSave = sanitizeCollectionForFirestore(mergeItems(inducEnSnap.exists() ? inducEnSnap.data().items : [], staticInducementsEn, 'name'));
@@ -335,7 +334,6 @@ export const useMasterData = () => {
         const snap = await getDoc(ref);
 
         const getFallbackItems = () => {
-            if (docId === 'skills') return staticSkills as any[];
             if (docId === 'star_players') return staticStarsData as any[];
             if (docId === 'inducements_es') return staticInducementsEs as any[];
             if (docId === 'inducements_en') return staticInducementsEn as any[];

@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import type { ManagedTeam, ManagedPlayer, Skill } from '../../types';
-import { skillsData } from '../../data/skills';
 import { useMasterData } from '../../hooks/useMasterData';
+import { getSkillDescription, getSkillDisplayName, skillCategoryMatches } from '../../utils/skillUtils';
 
 interface SkillSelectionModalProps {
     player: ManagedPlayer;
@@ -12,7 +12,7 @@ interface SkillSelectionModalProps {
 }
 
 const SkillSelectionModal: React.FC<SkillSelectionModalProps> = ({ player, rosterName, skillType, onSelect, onClose }) => {
-    const { teams } = useMasterData();
+    const { teams, skills } = useMasterData();
     const baseTeam = useMemo(() => teams.find(t => t.name === rosterName), [teams, rosterName]);
     const basePlayer = useMemo(() => baseTeam?.roster.find(p => p.position === player.position), [baseTeam, player.position]);
 
@@ -28,11 +28,14 @@ const SkillSelectionModal: React.FC<SkillSelectionModalProps> = ({ player, roste
         const skillCategories = categories.map(c => categoryMap[c]).filter(Boolean);
         const currentSkills = new Set([...(player.skills || '').split(', ').filter(Boolean), ...(player.gainedSkills || [])]);
 
-        return skillsData.filter(skill =>
-            skillCategories.includes(skill.category) && !currentSkills.has(skill.name)
-        ).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        return skills
+            .filter((skill) => {
+                const skillName = getSkillDisplayName(skill);
+                return skillCategoryMatches(skill, skillCategories) && !currentSkills.has(skillName) && !currentSkills.has(skill.keyEN);
+            })
+            .sort((a, b) => getSkillDisplayName(a).localeCompare(getSkillDisplayName(b)));
 
-    }, [basePlayer, skillType, player.gainedSkills, player.skills]);
+    }, [basePlayer, skillType, player.gainedSkills, player.skills, skills]);
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[60] p-4" onClick={onClose}>
@@ -40,9 +43,9 @@ const SkillSelectionModal: React.FC<SkillSelectionModalProps> = ({ player, roste
                 <h3 className="text-xl font-bold text-amber-400 p-4 border-b border-slate-700">Elige una Habilidad {skillType === 'Primary' ? 'Primaria' : 'Secundaria'}</h3>
                 <div className="p-5 overflow-y-auto space-y-2">
                     {availableSkills.map(skill => (
-                        <button key={skill.name} onClick={() => onSelect(skill.name)} className="w-full text-left bg-slate-700/50 p-3 rounded-md hover:bg-slate-700 transition-colors">
-                            <p className="font-semibold text-white">{skill.name}</p>
-                            <p className="text-xs text-slate-400 mt-1">{skill.description}</p>
+                        <button key={skill.keyEN} onClick={() => onSelect(getSkillDisplayName(skill))} className="w-full text-left bg-slate-700/50 p-3 rounded-md hover:bg-slate-700 transition-colors">
+                            <p className="font-semibold text-white">{getSkillDisplayName(skill)}</p>
+                            <p className="text-xs text-slate-400 mt-1">{getSkillDescription(skill)}</p>
                         </button>
                     ))}
                 </div>

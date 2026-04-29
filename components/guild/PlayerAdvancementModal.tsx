@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { ManagedPlayer, AdvancementType, Advancement, Skill } from '../../types';
-import { skillsData } from '../../data/skills';
+import { useMasterData } from '../../hooks/useMasterData';
+import { getSkillDescription, getSkillDisplayName, skillCategoryMatches } from '../../utils/skillUtils';
 
 interface PlayerAdvancementModalProps {
     player: ManagedPlayer;
@@ -31,6 +32,7 @@ const getAvailableSkillCategories = (categoriesString: string): string[] => {
 };
 
 export const PlayerAdvancementModal: React.FC<PlayerAdvancementModalProps> = ({ player, isOpen, onClose, onAdvance }) => {
+    const { skills } = useMasterData();
     const [step, setStep] = useState<'TYPE' | 'SKILL_SELECT' | 'CHARACTERISTIC_ROLL' | 'CHARACTERISTIC_SELECT'>('TYPE');
     const [selectedType, setSelectedType] = useState<AdvancementType | null>(null);
     const [randomSkill, setRandomSkill] = useState<string | null>(null);
@@ -47,14 +49,19 @@ export const PlayerAdvancementModal: React.FC<PlayerAdvancementModalProps> = ({ 
         setSelectedType(type);
         if (type === 'RandomPrimary' || type === 'RandomSecondary') {
             const categories = getAvailableSkillCategories(type === 'RandomPrimary' ? player.primary : player.secondary);
-            const availableSkills = skillsData.filter(h =>
-                categories.includes(h.category) &&
-                !player.skills.includes(h.name) &&
-                !player.gainedSkills.includes(h.name)
-            );
+            const currentSkills = new Set([
+                ...(player.skills ? player.skills.split(', ').map((skill) => skill.trim()).filter(Boolean) : []),
+                ...(player.gainedSkills || [])
+            ]);
+            const availableSkills = skills.filter((h) => {
+                const skillName = getSkillDisplayName(h);
+                return skillCategoryMatches(h, categories) &&
+                    !currentSkills.has(skillName) &&
+                    !currentSkills.has(h.keyEN);
+            });
             if (availableSkills.length > 0) {
                 const random = availableSkills[Math.floor(Math.random() * availableSkills.length)];
-                setRandomSkill(random.name);
+                setRandomSkill(getSkillDisplayName(random));
                 setStep('SKILL_SELECT');
             }
         } else if (type === 'ChosenPrimary' || type === 'ChosenSecondary') {
@@ -203,19 +210,24 @@ export const PlayerAdvancementModal: React.FC<PlayerAdvancementModalProps> = ({ 
                                 <div className="space-y-4">
                                     <p className="text-slate-300 text-xs font-display mb-2">Elige una habilidad de las categorías disponibles:</p>
                                     <div className="max-h-60 overflow-y-auto pr-2 space-y-1">
-                                        {skillsData
+                                        {skills
                                             .filter(s => {
                                                 const categories = getAvailableSkillCategories(selectedType === 'ChosenPrimary' ? player.primary : player.secondary);
-                                                return categories.includes(s.category) && !player.skills.includes(s.name) && !player.gainedSkills.includes(s.name);
+                                                const skillName = getSkillDisplayName(s);
+                                                const currentSkills = new Set([
+                                                    ...(player.skills ? player.skills.split(', ').map((skill) => skill.trim()).filter(Boolean) : []),
+                                                    ...(player.gainedSkills || [])
+                                                ]);
+                                                return skillCategoryMatches(s, categories) && !currentSkills.has(skillName) && !currentSkills.has(s.keyEN);
                                             })
                                             .map(skill => (
                                                 <button
-                                                    key={skill.name}
-                                                    onClick={() => confirmSkill(skill.name)}
+                                                    key={skill.keyEN}
+                                                    onClick={() => confirmSkill(getSkillDisplayName(skill))}
                                                     className="w-full text-left p-3 rounded-lg bg-white/5 border border-white/5 hover:border-premium-gold/50 hover:bg-premium-gold/5 transition-premium group"
                                                 >
-                                                    <div className="font-display font-bold text-white group-hover:text-premium-gold">{skill.name}</div>
-                                                    <div className="text-[10px] text-slate-500 line-clamp-1 italic opacity-70">{skill.desc_es || skill.description}</div>
+                                                    <div className="font-display font-bold text-white group-hover:text-premium-gold">{getSkillDisplayName(skill)}</div>
+                                                    <div className="text-[10px] text-slate-500 line-clamp-1 italic opacity-70">{getSkillDescription(skill)}</div>
                                                 </button>
                                             ))
                                         }
