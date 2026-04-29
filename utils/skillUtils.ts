@@ -23,6 +23,31 @@ export const getSkillDescription = (skill: Skill, preferredLanguage: 'es' | 'en'
             : skill.desc_en || skill.desc_es || skill.description || ''
     );
 
+const SKILL_CATEGORY_MAP: Record<string, string> = {
+    general: 'General',
+    fuerza: 'Strength',
+    strength: 'Strength',
+    agilidad: 'Agility',
+    agility: 'Agility',
+    pase: 'Passing',
+    passing: 'Passing',
+    mutacion: 'Mutation',
+    mutation: 'Mutation',
+    rasgo: 'Trait',
+    trait: 'Trait',
+    triquinuelas: 'Triquiñuelas',
+    trickery: 'Triquiñuelas',
+    elite: 'Elite'
+};
+
+export const getSkillCategoryId = (value?: string) => {
+    const normalized = normalizeSkillLookup(value);
+    return SKILL_CATEGORY_MAP[normalized] || sanitizeMojibakeText(value || '');
+};
+
+export const isEliteSkill = (skill: Skill, eliteSkillKeys: string[]) =>
+    eliteSkillKeys.includes(skill.keyEN) || getSkillCategoryId(skill.category) === 'Elite';
+
 export const findSkillRecord = (skills: Skill[], skillRef: string) => {
     const cleanRef = sanitizeMojibakeText(skillRef.split('(')[0].trim());
     const lookup = normalizeSkillLookup(cleanRef);
@@ -36,6 +61,6 @@ export const findSkillRecord = (skills: Skill[], skillRef: string) => {
 export const skillHasDescription = (skills: Skill[], skillRef: string) => !!findSkillRecord(skills, skillRef);
 
 export const skillCategoryMatches = (skill: Skill, allowedCategories: string[]) => {
-    const normalizedCategory = normalizeSkillLookup(skill.category);
-    return allowedCategories.some((category) => normalizeSkillLookup(category) === normalizedCategory);
+    const normalizedCategory = getSkillCategoryId(skill.category);
+    return allowedCategories.some((category) => getSkillCategoryId(category) === normalizedCategory);
 };

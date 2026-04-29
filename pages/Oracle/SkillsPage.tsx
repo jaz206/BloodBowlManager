@@ -4,6 +4,7 @@ import { ELITE_SKILLS, type Skill } from '../../types';
 import { useMasterData } from '../../hooks/useMasterData';
 import { useLanguage } from '../../contexts/LanguageContext';
 import SkillModal from '../../components/oracle/SkillModal';
+import { getSkillCategoryId, getSkillDescription, getSkillDisplayName, isEliteSkill } from '../../utils/skillUtils';
 
 const SKILLS_PER_PAGE = 8;
 
@@ -30,8 +31,9 @@ const OracleTips: Record<string, string> = {
 };
 const SkillCard: React.FC<{ skill: Skill; onClick: () => void; isSelected: boolean }> = ({ skill, onClick, isSelected }) => {
     const { language } = useLanguage();
-    const name = language === 'es' ? (skill.name_es || skill.name_en) : skill.name_en;
-    const description = language === 'es' ? (skill.desc_es || skill.desc_en) : skill.desc_en;
+    const name = getSkillDisplayName(skill, language === 'es' ? 'es' : 'en');
+    const description = getSkillDescription(skill, language === 'es' ? 'es' : 'en');
+    const categoryId = getSkillCategoryId(skill.category);
 
     return (
         <motion.div
@@ -48,10 +50,10 @@ const SkillCard: React.FC<{ skill: Skill; onClick: () => void; isSelected: boole
                 <div className={`p-3 rounded-xl transition-colors ${isSelected ? 'bg-[#ca8a04] text-[#2b1d12]' : 'bg-[rgba(202,138,4,0.12)] text-[#ca8a04] group-hover:bg-primary group-hover:text-[#2b1d12]'
                     }`}>
                     <span className="material-symbols-outlined text-sm">
-                        {Categories.find(c => c.id === skill.category)?.icon || 'auto_awesome'}
+                        {Categories.find(c => c.id === categoryId)?.icon || 'auto_awesome'}
                     </span>
                 </div>
-                <span className="text-[10px] font-black text-[#7b6853] uppercase tracking-[0.2em]">{skill.category}</span>
+                <span className="text-[10px] font-black text-[#7b6853] uppercase tracking-[0.2em]">{categoryId}</span>
             </div>
             <h4 className="text-[1.05rem] font-black text-[#2b1d12] mb-2 uppercase italic tracking-tighter group-hover:text-[#ca8a04] transition-colors">
                 {name}
@@ -96,23 +98,26 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
     const filteredSkills = useMemo(() => {
         return skills.filter(skill => {
             const searchTermLower = searchTerm.trim().toLowerCase();
+            const displayNameEs = getSkillDisplayName(skill, 'es').toLowerCase();
+            const displayNameEn = getSkillDisplayName(skill, 'en').toLowerCase();
+            const descriptionEs = getSkillDescription(skill, 'es').toLowerCase();
+            const descriptionEn = getSkillDescription(skill, 'en').toLowerCase();
             const matchesSearch = !searchTermLower ||
-                (skill.name_es.toLowerCase().includes(searchTermLower)) ||
-                (skill.name_en.toLowerCase().includes(searchTermLower)) ||
-                (skill.desc_es.toLowerCase().includes(searchTermLower)) ||
-                (skill.desc_en.toLowerCase().includes(searchTermLower)) ||
-                (skill.name.toLowerCase().includes(searchTermLower)) ||
-                (skill.description.toLowerCase().includes(searchTermLower));
+                displayNameEs.includes(searchTermLower) ||
+                displayNameEn.includes(searchTermLower) ||
+                descriptionEs.includes(searchTermLower) ||
+                descriptionEn.includes(searchTermLower) ||
+                (skill.keyEN || '').toLowerCase().includes(searchTermLower);
 
             // If there's a search term, allow matches across all categories
             if (searchTermLower) return matchesSearch;
 
             // Otherwise match current category
             if (activeCategory === 'Elite') {
-                return ELITE_SKILLS.includes(skill.keyEN);
+                return isEliteSkill(skill, ELITE_SKILLS);
             }
 
-            return skill.category === activeCategory;
+            return getSkillCategoryId(skill.category) === activeCategory;
         });
     }, [activeCategory, searchTerm, skills]);
 
@@ -124,7 +129,7 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
 
     const featuredSkill = useMemo(() => {
         if (selectedSkillName) {
-            return skills.find(s => s.name === selectedSkillName) || filteredSkills[0];
+            return skills.find(s => s.keyEN === selectedSkillName) || filteredSkills[0];
         }
         return filteredSkills[0];
     }, [selectedSkillName, filteredSkills, skills]);
@@ -136,15 +141,15 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
     const handlePinSkill = (skill: Skill) => {
         if (pinnedSkills.includes(skill.name)) {
             setPinnedSkills(prev => prev.filter(n => n !== skill.name));
-            showToast(`"${skill.name}" eliminada de tu referencia`);
+            showToast(`"${getSkillDisplayName(skill, language === 'es' ? 'es' : 'en')}" eliminada de tu referencia`);
         } else {
             setPinnedSkills(prev => [...prev, skill.name]);
-            showToast(`"${skill.name}" añadida a tu referencia`);
+            showToast(`"${getSkillDisplayName(skill, language === 'es' ? 'es' : 'en')}" añadida a tu referencia`);
         }
     };
 
     const handleOpenSkill = (skill: Skill) => {
-        setSelectedSkillName(skill.name);
+        setSelectedSkillName(skill.keyEN);
         setSelectedSkill(skill);
     };
 
@@ -277,7 +282,7 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
                         >
                             <div className="absolute top-0 right-0 p-12 opacity-[0.03]">
                                 <span className="material-symbols-outlined !text-[200px] text-[#ca8a04]">
-                                    {Categories.find(c => c.id === featuredSkill.category).icon || 'auto_awesome'}
+                                    {Categories.find(c => c.id === getSkillCategoryId(featuredSkill.category))?.icon || 'auto_awesome'}
                                 </span>
                             </div>
 
@@ -289,7 +294,7 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
                                         </span>
                                         <span className="flex items-center gap-1 text-[8px] text-[#7b6853] font-black uppercase tracking-[0.3em]">
                                             <span className="material-symbols-outlined text-sm text-[#ca8a04]">bolt</span>
-                                            {featuredSkill.category}
+                                            {getSkillCategoryId(featuredSkill.category)}
                                         </span>
                                     </div>
                                     <h3 className="text-4xl md:text-6xl font-black text-[#2b1d12] uppercase italic tracking-tighter leading-none">
