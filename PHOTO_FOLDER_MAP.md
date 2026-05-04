@@ -1,323 +1,140 @@
-﻿# PHOTO_FOLDER_MAP
+# PHOTO_FOLDER_MAP
 
-Documento vivo para mantener alineados:
-- los nombres canonicos de las razas
-- las carpetas de `Foto plantilla`
-- las subcarpetas de posiciones
-- y la logica de sincronizacion de imagenes del codigo
+Guia viva para mantener alineadas:
+- la BBDD (`master_data/teams`)
+- la app web
+- y la carpeta de fotos en `C:\Users\jazex\Documents\GitHub\Bloodbowl-image\Foto plantilla`
 
-La referencia principal del codigo esta en:
-- [`utils/imageUtils.ts`](utils/imageUtils.ts)
+## Regla canonica nueva
 
-## Regla general
+La estructura buena, a partir de ahora, es:
 
-Para anadir nuevas fotos de plantilla:
-1. usa el nombre canonico de la raza
-2. mete la imagen en la carpeta de esa raza
-3. si la raza usa subcarpetas, usa la subcarpeta de posicion correcta
-4. nombra la imagen con un numero o identificador coherente con el resto del stock
+```text
+Foto plantilla/
+  <Team.name exacto de Firebase>/
+    <Player.position exacto de Firebase>/
+      00.png
+      01.png
+      02.png
+```
 
-## Carpetas raiz canonicas
+Ejemplos reales:
 
-Estas son las carpetas que la app debe intentar por defecto en `Foto plantilla`:
+```text
+Foto plantilla/
+  Amazons/
+    Eagle Warrior/
+      00.png
+      01.png
+      02.png
+    Jaguar Warrior/
+      00.png
+      01.png
 
-| Raza en la app | Carpeta raiz canonica | Alias legados detectados |
-|---|---|---|
-| Amazons | `Amazonas` | `Amazons` |
-| Old World Alliance | `Alianza del Viejo Mundo` | `Old World Alliance` |
-| Chosen of Chaos | `Elegidos del Caos` | `Chosen of Chaos` |
-| High Elves | `Elfos Altos` | `Altos Elfos` |
-| Dark Elves | `Elfos Oscuros` | `Dark Elves` |
-| Wood Elves | `Elfos Silvanos` | `Wood Elves` |
-| Dwarfs | `Enanos` | `Dwarfs` |
-| Chaos Dwarfs | `Enanos del caos` | `Enanos del Caos`, `Chaos Dwarfs` |
-| Gnomes | `Gnomos` | `Gnomes` |
-| Goblins | `Goblins` | - |
-| Underworld Denizens | `Habitantes del Inframundo` | `Underworld Denizens` |
-| Halflings | `Halflings` | - |
-| Lizardmen | `Hombres Lagarto` | `Lagartos`, `Lizardmen` |
-| Necromantic Horror | `Horror Nigromantico` | `Horror Nigromantico`, `Horror Nigromantico legacy`, `Necromantic Horror` |
-| Humans | `Humano` | `Humanos`, `Humans` |
-| Shambling Undead | `No Muertos` | `Shambling Undead` |
-| Norse | `Nordicos` | `Nordicos`, `Norse` |
-| Nurgle | `Nurgle` | - |
-| Ogres | `Ogros` | `Ogres` |
-| Orcs | `Orcos` | `Orcs` |
-| Black Orcs | `Orcos negros` | `Black Orcs` |
-| Chaos Renegades | `Renegados` | `Renegados del Caos`, `Chaos Renegades` |
-| Tomb Kings | `Reyes de las Tumbas` | `Tomb Kings` |
-| Skaven | `Skaven` | - |
-| Slann (NAF) | `Slann (NAF)` | - |
-| Elven Union | `Union Elfica` | `Union Elfica`, `Unión Elfica`, `Elven Union` |
-| Vampires | `Vampiros` | `Vampires` |
+  Dwarfs/
+    Dwarf Blocker/
+      00.png
+      01.png
+    Troll Slayer/
+      00.png
+```
 
-## Subcarpetas canonicas de posicion
+## Convencion de ficheros
 
-Las siguientes subcarpetas son las que el codigo usa para construir las rutas de fotos de jugador.
-Si existe un alias antiguo en GitHub, el codigo intenta normalizarlo al nombre canonico.
+- `00.png`: imagen generica de la posicion
+- `01.png`, `02.png`, `03.png`...: variantes unicas
 
-### Amazonas
-- `eagle-guerrero-linea`
-- `python-guerrero-lanzador`
-- `jaguar-guerrero-bloqueador`
-- `piranha-guerrero-placador`
+La app prioriza ya esta estructura:
+1. carpeta de equipo exacta
+2. carpeta de posicion exacta
+3. ficheros numerados
 
-### Alianza del Viejo Mundo
-- `old-world-humanos-linea`
-- `old-world-humanos-lanzador`
-- `old-world-humanos-placador`
-- `old-world-humanos-receptor`
-- `old-world-enanos-bloqueador`
-- `old-world-enanos-corredor`
-- `old-world-enanos-placador`
-- `old-world-enanos-troll-slayer`
-- `old-world-halflings-hopeful`
+Si no encuentra eso, sigue tolerando temporalmente carpetas legacy antiguas para no romper lo ya subido.
 
-### Elegidos del Caos
-- `bestia-del-caos`
-- `elegido-bloqueador`
-- `minotauro-del-caos`
+## Que nombres usar
 
-### Elfos Altos
-- `linea`
-- `lanzador`
-- `placador`
-- `receptor`
+Usa siempre los nombres exactos que ya viven en Firebase:
 
-### Elfos Oscuros
-- `elfos-oscuros-linea`
-- `corredor`
-- `assassin`
-- `placador`
-- `witch-elf`
+- Equipo: `team.name`
+- Posicion: `player.position`
 
-### Elfos Silvanos
-- `elfos-silvanos-linea`
-- `lanzador`
-- `receptor`
-- `wardancer`
-- `loren-forest-treeman`
+No traduzcas ni conviertas a slug si no hace falta.
 
-### Enanos
-- `enanos-bloqueador-linea`
-- `corredor`
-- `placador`
-- `troll-slayer`
-- `deathroller`
+Ejemplos correctos:
+- `Amazons`
+- `Black Orcs`
+- `Necromantic Horror`
+- `Elven Union`
+- `Eagle Warrior`
+- `Python Warrior`
+- `Dwarf Blocker`
+- `Goblin Bruiser`
+- `Orc Lineman`
 
-### Enanos del caos
-- `hobgoblin-linea`
-- `hobgoblin-sneaky-stabba`
-- `enanos-del-caos-bloqueador`
-- `bull-centaur-placador`
-- `renegade-minotauro`
+## Estado actual del repo de imagenes
 
-### Gnomos
-- `gnomos-linea`
-- `gnomos-beastmaster`
-- `gnomos-illusionist`
-- `woodland-fox`
-- `altern-forest-treeman`
+Ahora mismo en `Bloodbowl-image` conviven dos mundos:
 
-### Goblins
-- `goblins-linea`
-- `looney`
-- `bomma`
-- `hooligan`
-- `doom-diver`
-- `fanatic`
-- `pogoer`
-- `trained-troll`
+### Estructura legacy
+- carpetas de raza en espanol
+- subcarpetas slugged
+- algunas duplicadas
+- algunos nombres con mojibake
 
-### Habitantes del Inframundo
-- `underworld-goblins-linea`
-- `gutter-corredor`
-- `skaven-clanrat-linea`
-- `skaven-lanzador`
-- `skaven-placador`
-- `underworld-snotlings`
-- `underworld-troll`
-- `mutant-rat-ogros`
-
-### Halflings
-- `halflings-hopeful-linea`
-- `halflings-hefty`
-- `halflings-receptor`
-- `altern-forest-treeman`
-
-### Hombres Lagarto
-- `skink-corredor-linea`
-- `chameleon-skink`
-- `saurus-bloqueador`
-- `kroxigor`
-
-### Horror Nigromantico
-- `zombie-linea`
-- `ghoul-corredor`
-- `espectro`
-- `flesh-golem-de-carne`
-- `werewolf`
-
-### Humano
-- `humanos-linea`
-- `lanzador`
-- `placador-blitzer`
-- `receptor`
-- `ogros`
-- `halflings-hopeful`
-
-### No Muertos
-- `zombie-linea`
-- `esqueleto-linea`
-- `ghoul-corredor`
-- `momia`
-- `tumulo-placador`
-
-### Nordicos
-- `nordicos-berserker`
-- `nordicos-raider-linea`
-- `beer-boar`
-- `ulfwerener`
-- `valkyrie`
-- `yhetee`
-
-### Nurgle
-- `rotter-linea`
-- `pestigor`
-- `bloater`
-- `rotspawn`
-
-### Ogros
-- `gnoblar-linea`
-- `ogros-bloqueador`
-- `ogros-runt-punter`
-
-### Orcos
-- `orcos-linea`
-- `lanzador`
-- `blitzer-orco`
-- `fortachon-bloqueador`
-- `goblins`
-- `untrained-troll`
-
-### Orcos negros
-- `orcos-negros`
-- `goblins-bruiser-linea`
-- `trained-troll`
-
-### Renegados
-- `renegade-humanos-linea`
-- `renegade-humanos-lanzador`
-- `renegade-goblins`
-- `renegade-orcos`
-- `renegade-skaven`
-- `renegade-elfos-oscuros`
-- `renegade-troll`
-- `renegade-ogros`
-- `renegade-minotauro`
-- `renegade-rat-ogros`
-
-### Reyes de las Tumbas
-- `esqueleto-linea`
-- `anointed-lanzador`
-- `anointed-placador`
-- `tomb-guardian`
-
-### Skaven
-- `skaven-clanrat-linea`
-- `gutter-corredor`
-- `lanzador`
-- `placador`
-- `rat-ogros`
-
-### Slann (NAF)
-- `linea`
-- `placador`
-- `receptor`
-- `kroxigor`
-
-### Union Elfica
-- `la-nea`
-- `lanzador`
-- `placador`
-- `receptor`
-
-### Vampiros
-- `thrall-linea`
-- `vampiros-corredor`
-- `vampiros-lanzador`
-- `vampiros-placador`
-- `vargheist`
-
-## Alias y carpetas legacy
-
-Hay carpetas duplicadas o con mojibake que la app sigue tolerando para no romper el stock ya existente:
-
-- `Nordicos` y `Nórdicos`
-- `Horror Nigromantico` y `Horror Nigromántico`
-- `Union Elfica` y `Unión Elfica`
-- algunas subcarpetas `la-nea` / `linea`
-- algunas subcarpetas `na-rdicos-*` frente a `nordicos-*`
-- algunas subcarpetas `zombie-la-nea` frente a `zombie-linea`
-
-La idea es:
-- carpeta canónica para nuevas fotos
-- alias de lectura para fotos antiguas
-- rutas generadas siempre desde el nombre canónico
-
-## Duplicados detectados en disco
-
-En la carpeta real de `Foto plantilla`, conviene considerar estas como las carpetas canónicas:
-
-- `Elfos Altos`
-- `Elfos Silvanos`
-- `Horror Nigromántico`
-- `Nórdicos`
-- `Union Elfica`
-
-Y tratar estas como legacy o duplicadas:
-
-- `Altos Elfos`
-- `Wood Elves`
+Ejemplos:
+- `Amazonas/eagle-guerrero-linea`
+- `Enanos/enanos-bloqueador-linea`
+- `Orcos/blitzer-orco`
 - `Horror NigromÃ¡ntico`
 - `Nordicos`
 - `Unión �0lfica`
 
-El resto de razas ya queda alineado con la app:
+### Estructura objetivo
+- carpetas exactas de Firebase
+- sin slugs manuales
+- sin nombres duplicados
+- sin mojibake
 
-- `Amazonas`
-- `Alianza del Viejo Mundo`
-- `Elegidos del Caos`
-- `Enanos`
-- `Enanos del caos`
-- `Gnomos`
-- `Goblins`
-- `Habitantes del Inframundo`
-- `Halflings`
-- `Hombres Lagarto`
-- `Humano`
-- `No Muertos`
-- `Nurgle`
-- `Ogros`
-- `Orcos`
-- `Orcos negros`
-- `Renegados`
-- `Reyes de las Tumbas`
-- `Skaven`
-- `Slann (NAF)`
-- `Vampiros`
+## Compatibilidad actual del codigo
 
-## Como se sincroniza la app
+La web ya esta preparada para:
 
-1. La raza se normaliza con `getTeamPrefix(...)`.
-2. Se intenta leer la carpeta raiz canonica y sus alias.
-3. Si hay subcarpetas, se normalizan a su tag canonico.
-4. `TeamDashboard` reparte fotos por posicion sin repetir mientras haya stock.
-5. Si una imagen falla, se intenta la siguiente disponible.
+1. intentar primero la estructura nueva exacta
+2. aceptar aun las carpetas legacy antiguas como fallback
+3. leer stock aunque las carpetas viejas sigan existiendo
+
+Esto permite migrar sin romper la app.
+
+## Plan de limpieza recomendado
+
+### Fase 1
+Para fotos nuevas:
+- usa solo estructura canonica nueva
+- no anadas nada nuevo en carpetas legacy
+
+### Fase 2
+Migra poco a poco las carpetas antiguas:
+- `Amazonas` -> `Amazons`
+- `Enanos` -> `Dwarfs`
+- `Orcos` -> `Orcs`
+- `Horror NigromÃ¡ntico` -> `Necromantic Horror`
+- `Nordicos` / `Nórdicos` -> `Norse`
+- `Union Elfica` / `Unión �0lfica` -> `Elven Union`
+
+### Fase 3
+Dentro de cada equipo:
+- `eagle-guerrero-linea` -> `Eagle Warrior`
+- `python-guerrero-lanzador` -> `Python Warrior`
+- `enanos-bloqueador-linea` -> `Dwarf Blocker`
+- `blitzer-orco` -> `Blitzer`
+- `orcos-linea` -> `Orc Lineman`
 
 ## Regla de oro
 
-Si vas a subir fotos nuevas:
-- usa primero la carpeta canónica
-- usa los nombres de subcarpeta de esta guía
-- evita crear una segunda carpeta con el mismo equipo salvo que sea un alias viejo que ya existe
+Si quieres que una foto sincronice de inmediato en la web:
+
+- crea la carpeta del equipo con el nombre exacto de Firebase
+- crea la carpeta de posicion con el nombre exacto de Firebase
+- mete `00.png`, `01.png`, `02.png`...
+
+Eso ya es lo que la app entiende como estructura prioritaria.

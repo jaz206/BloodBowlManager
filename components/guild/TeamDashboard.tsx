@@ -16,7 +16,8 @@ import {
     fetchTeamImageStock,
     type PositionStock,
     type PositionStockEntry,
-    getRosterPositionTag
+    getRosterPositionTagCandidates,
+    findPositionStockEntry
 } from '../../utils/imageUtils';
 import { mergeTeamWithFallback } from '../../utils/teamData';
 
@@ -420,8 +421,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
     };
 
     const getImageStockEntry = (position: string): PositionStockEntry | null => {
-        const posTag = getRosterPositionTag(team.rosterName, position).toLowerCase();
-        return imageStock?.[posTag] || null;
+        return findPositionStockEntry(imageStock, team.rosterName, position);
     };
 
     const getExistingImageParts = (url?: string): { folder: string; filename: string } => {
@@ -437,7 +437,8 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
     const isValidNestedImage = (url: string | undefined, position: string, filenames: string[]): boolean => {
         if (!url) return false;
         const { folder, filename } = getExistingImageParts(url);
-        if (folder !== getRosterPositionTag(team.rosterName, position).toLowerCase()) return false;
+        const validFolders = getRosterPositionTagCandidates(team.rosterName, position).map((candidate) => candidate.toLowerCase());
+        if (!validFolders.includes(folder)) return false;
         return filenames.includes(filename);
     };
 
@@ -483,7 +484,8 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
             position,
             Number.isFinite(resolvedNumber) ? resolvedNumber : 1,
             stockEntry.storage || 'nested',
-            fromFiles ? assetKey : undefined
+            fromFiles ? assetKey : undefined,
+            stockEntry.folder
         );
     };
 
@@ -491,7 +493,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
         const imageMap: Record<number, string> = {};
 
         const playersByPosition = players.reduce<Record<string, ManagedPlayer[]>>((acc, player) => {
-            const key = getRosterPositionTag(team.rosterName, player.position).toLowerCase();
+            const key = getRosterPositionTagCandidates(team.rosterName, player.position)[0]?.toLowerCase() || player.position.toLowerCase();
             if (!acc[key]) acc[key] = [];
             acc[key].push(player);
             return acc;
@@ -499,7 +501,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
 
         Object.values(playersByPosition).forEach((group) => {
             const position = group[0]?.position;
-            const stockEntry = position ? (stockSource?.[getRosterPositionTag(team.rosterName, position).toLowerCase()] || null) : null;
+            const stockEntry = position ? findPositionStockEntry(stockSource, team.rosterName, position) : null;
             if (!stockEntry) {
                 group.forEach((player) => {
                     imageMap[player.id] = player.image || '';

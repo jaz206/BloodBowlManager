@@ -439,6 +439,9 @@ const normalizePositionAssetKey = (value: string): string =>
 const normalizeFolderTag = (value: string): string =>
   slugify(value || '');
 
+const normalizeCanonicalFolderName = (value: string): string =>
+  fixMojibake(value || '').trim();
+
 const POSITION_FOLDER_ALIASES: Record<string, Record<string, string>> = {
   "elfos altos": {
     "la-nea": "linea",
@@ -491,10 +494,11 @@ const POSITION_FOLDER_ALIASES: Record<string, Record<string, string>> = {
 };
 
 const getRosterFolderCandidates = (rosterName: string): string[] => {
+  const exact = normalizeCanonicalFolderName(rosterName);
   const primary = getTeamPrefix(rosterName);
   const aliasKey = normalizeTeamAssetKey(primary);
   const aliases = ROSTER_FOLDER_ALIASES[primary] || ROSTER_FOLDER_ALIASES[aliasKey] || [];
-  return Array.from(new Set([primary, ...aliases].filter(Boolean)));
+  return Array.from(new Set([exact, primary, ...aliases].filter(Boolean)));
 };
 
 const resolveCanonicalPositionFolderTag = (rosterName: string, folderName: string): string => {
@@ -502,6 +506,15 @@ const resolveCanonicalPositionFolderTag = (rosterName: string, folderName: strin
   const folderKey = normalizeFolderTag(folderName);
   const canonicalFolder = POSITION_FOLDER_ALIASES[rosterKey]?.[folderKey] || folderName;
   return slugify(canonicalFolder);
+};
+
+const getCanonicalPositionFolderTag = (position: string): string =>
+  slugify(normalizeCanonicalFolderName(position));
+
+export const getRosterPositionTagCandidates = (rosterName: string, position: string): string[] => {
+  const exact = getCanonicalPositionFolderTag(position);
+  const mapped = getRosterPositionTag(rosterName, position);
+  return Array.from(new Set([exact, mapped].filter(Boolean)));
 };
 
 export const getTeamPrefix = (rosterName: string): string => {
@@ -522,21 +535,141 @@ export interface PositionStockEntry {
   numbers: number[];
   files: string[];
   storage: PlayerImageStorageMode;
+  folder?: string;
 }
 
 export interface PositionStock {
   [posTag: string]: PositionStockEntry;
 }
 
+export const findPositionStockEntry = (
+  stock: PositionStock | null | undefined,
+  rosterName: string,
+  position: string
+): PositionStockEntry | null => {
+  if (!stock) return null;
+  for (const candidate of getRosterPositionTagCandidates(rosterName, position)) {
+    const entry = stock[candidate.toLowerCase()];
+    if (entry) return entry;
+  }
+  return null;
+};
+
+export type PlayerImageDistributionRole = 'line' | 'specialist';
+
+const PLAYER_IMAGE_SPECIALIST_KEYWORDS = [
+  'thrower',
+  'catcher',
+  'runner',
+  'blitzer',
+  'slayer',
+  'troll',
+  'ogre',
+  'minotaur',
+  'kroxigor',
+  'treeman',
+  'wardancer',
+  'wight',
+  'wraith',
+  'ghoul',
+  'werewolf',
+  'vargheist',
+  'pestigor',
+  'bloater',
+  'receptor',
+  'corredor',
+  'lanzador',
+  'placador',
+  'matatroll',
+  'snotling pump wagon',
+  'doom diver',
+  'fanatic',
+  'looney',
+  'hooligan',
+  'bomma',
+  'wiggler',
+  'warden',
+  'big un',
+  'big’un',
+  'bigun',
+  'witch elf',
+  'assassin',
+  'ghast',
+  'gutter runner',
+  'beastmaster',
+  'illusionist',
+];
+
+const hashSeed = (value: string): number => {
+  let hash = 2166136261;
+  for (let i = 0; i < value.length; i += 1) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return Math.abs(hash >>> 0);
+};
+
+const rotateArray = <T,>(items: T[], offset: number): T[] => {
+  if (items.length <= 1) return [...items];
+  const normalizedOffset = offset % items.length;
+  return [...items.slice(normalizedOffset), ...items.slice(0, normalizedOffset)];
+};
+
+const normalizeAssetKeyForComparison = (value: string): string =>
+  fixMojibake(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\\/g, '/')
+    .split('/')
+    .pop() || '';
+
+const isGenericAssetKey = (value: string): boolean => {
+  const filename = normalizeAssetKeyForComparison(value).replace(/\.png$/i, '');
+  return /^0+$/.test(filename);
+};
+
+export const isLinePlayerPosition = (position: string): boolean => {
+  const normalized = normalizePositionAssetKey(position);
+  if (!normalized) return true;
+  return !PLAYER_IMAGE_SPECIALIST_KEYWORDS.some((keyword) => normalized.includes(keyword));
+};
+
+export const getOrderedPlayerImageAssetKeys = (
+  seed: string,
+  assetKeys: string[],
+  role: PlayerImageDistributionRole = 'line',
+): string[] => {
+  const uniqueAssetKeys = Array.from(new Set(assetKeys.filter(Boolean)));
+  if (uniqueAssetKeys.length === 0) return [];
+
+  const genericKeys = uniqueAssetKeys.filter(isGenericAssetKey);
+  const uniqueKeys = uniqueAssetKeys.filter((key) => !isGenericAssetKey(key));
+
+  const normalizedGeneric = genericKeys.length > 0 ? genericKeys : uniqueKeys.slice(0, 1);
+  const normalizedUnique = genericKeys.length > 0 ? uniqueKeys : uniqueKeys.slice(1);
+
+  const seedHash = hashSeed(seed || '0');
+  const rotatedGeneric = rotateArray(normalizedGeneric, seedHash);
+  const rotatedUnique = rotateArray(normalizedUnique, seedHash);
+
+  if (role === 'specialist') {
+    return [...rotatedUnique, ...rotatedGeneric];
+  }
+
+  const preferUnique = seedHash % 4 === 3;
+  return preferUnique ? [...rotatedUnique, ...rotatedGeneric] : [...rotatedGeneric, ...rotatedUnique];
+};
+
 const addStockNumber = (
   stock: PositionStock,
   key: string,
   number: number,
   storage: PlayerImageStorageMode,
-  filename: string
+  filename: string,
+  folder?: string
 ) => {
   if (!stock[key]) {
-    stock[key] = { numbers: [], files: [], storage };
+    stock[key] = { numbers: [], files: [], storage, folder };
   }
 
   if (!stock[key].numbers.includes(number)) {
@@ -545,6 +678,10 @@ const addStockNumber = (
 
   if (!stock[key].files.includes(filename)) {
     stock[key].files.push(filename);
+  }
+
+  if (!stock[key].folder && folder) {
+    stock[key].folder = folder;
   }
 };
 
@@ -585,8 +722,12 @@ export const fetchTeamImageStock = async (rosterName: string): Promise<PositionS
             if (file.type !== 'file' || !file.name.endsWith('.png')) return;
             const match = file.name.match(/(\d+)\.png$/i);
             if (!match) return;
+            const exactTag = getCanonicalPositionFolderTag(entry.name);
             const canonicalTag = resolveCanonicalPositionFolderTag(rosterName, entry.name);
-            addStockNumber(stock, canonicalTag, parseInt(match[1], 10), 'nested', file.name);
+            addStockNumber(stock, exactTag, parseInt(match[1], 10), 'nested', file.name, entry.name);
+            if (canonicalTag !== exactTag) {
+              addStockNumber(stock, canonicalTag, parseInt(match[1], 10), 'nested', file.name, entry.name);
+            }
           });
         }));
 
@@ -644,7 +785,8 @@ export const getPlayerImageUrl = (
   position: string,
   number: number,
   storage: PlayerImageStorageMode = 'nested',
-  filename?: string
+  filename?: string,
+  folderName?: string
 ): string => {
   if (storage === 'legacy') {
     if (filename) {
@@ -654,8 +796,8 @@ export const getPlayerImageUrl = (
     return getLegacyPlayerImageUrl(rosterName, position, number);
   }
 
-  const teamPrefix = getTeamPrefix(rosterName);
-  const positionFolder = getRosterPositionTag(rosterName, position);
+  const teamPrefix = normalizeCanonicalFolderName(rosterName) || getTeamPrefix(rosterName);
+  const positionFolder = folderName || normalizeCanonicalFolderName(position) || getRosterPositionTag(rosterName, position);
   const resolvedFilename = filename || `${number < 10 ? `0${number}` : `${number}`}.png`;
 
   return `${BASE_URL}${encodeURIComponent(teamPrefix)}/${encodeURIComponent(positionFolder)}/${encodeURIComponent(resolvedFilename)}`;
