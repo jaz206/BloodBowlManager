@@ -42,6 +42,26 @@ const coerceFirestoreItemsArray = <T,>(value: unknown): T[] => {
     return [];
 };
 
+const extractMasterDocItems = <T,>(rawData: unknown): T[] => {
+    if (!rawData || typeof rawData !== 'object') return [];
+
+    const data = rawData as Record<string, unknown>;
+
+    if ('items' in data) {
+        return coerceFirestoreItemsArray<T>(data.items);
+    }
+
+    // Some master docs were saved as indexed root fields: { "0": {...}, "1": {...} }
+    const numericRootKeys = Object.keys(data).filter((key) => /^\d+$/.test(key));
+    if (numericRootKeys.length > 0) {
+        return numericRootKeys
+            .sort((a, b) => Number(a) - Number(b))
+            .map((key) => data[key] as T);
+    }
+
+    return [];
+};
+
 const normalizeSkillRecord = (skill: Skill): Skill => {
     const normalized = deepSanitizeText(skill) as Skill & Record<string, any>;
     const keyEN = sanitizeMojibakeText(String(normalized.keyEN || normalized.name_en || normalized.name || normalized.name_es || '')).trim();
@@ -146,8 +166,9 @@ export const useMasterData = () => {
         const unsubTeams = onSnapshot(
             doc(db, MASTER_COL, 'teams'),
             (snap) => {
-                if (snap.exists() && Array.isArray(snap.data()?.items)) {
-                    setTeams(normalizeTeams(snap.data().items as Team[]));
+                const teamItems = snap.exists() ? extractMasterDocItems<Team>(snap.data()) : [];
+                if (teamItems.length > 0) {
+                    setTeams(normalizeTeams(teamItems));
                     setIsFromFirestore(true);
                     setError(null);
                 } else {
@@ -171,7 +192,7 @@ export const useMasterData = () => {
         const unsubSkills = onSnapshot(
             doc(db, MASTER_COL, 'skills'),
             (snap) => {
-                const skillItems = snap.exists() ? coerceFirestoreItemsArray<Skill>(snap.data()?.items) : [];
+                const skillItems = snap.exists() ? extractMasterDocItems<Skill>(snap.data()) : [];
                 if (skillItems.length > 0) {
                     setSkills(normalizeSkillsCollection(skillItems));
                 } else {
@@ -186,8 +207,9 @@ export const useMasterData = () => {
         const unsubStars = onSnapshot(
             doc(db, MASTER_COL, 'star_players'),
             (snap) => {
-                if (snap.exists() && snap.data()?.items?.length > 0) {
-                    setStarPlayers(normalizeStarPlayersCollection(snap.data().items as StarPlayer[]));
+                const starItems = snap.exists() ? extractMasterDocItems<StarPlayer>(snap.data()) : [];
+                if (starItems.length > 0) {
+                    setStarPlayers(normalizeStarPlayersCollection(starItems));
                 } else {
                     setStarPlayers(normalizeStarPlayersCollection(staticStarsData));
                 }
@@ -202,8 +224,9 @@ export const useMasterData = () => {
         const unsubInducements = onSnapshot(
             doc(db, MASTER_COL, inducementsDoc),
             (snap) => {
-                if (snap.exists() && snap.data()?.items?.length > 0) {
-                    setInducements(snap.data().items as Inducement[]);
+                const inducementItems = snap.exists() ? extractMasterDocItems<Inducement>(snap.data()) : [];
+                if (inducementItems.length > 0) {
+                    setInducements(inducementItems);
                 } else {
                     setInducements(staticInducementsFallback);
                 }
@@ -226,8 +249,9 @@ export const useMasterData = () => {
         const unsubHeraldo = onSnapshot(
             doc(db, MASTER_COL, 'heraldo'),
             (snap) => {
-                if (snap.exists() && snap.data()?.items?.length > 0) {
-                    setHeraldoItems(snap.data().items);
+                const heraldoData = snap.exists() ? extractMasterDocItems<any>(snap.data()) : [];
+                if (heraldoData.length > 0) {
+                    setHeraldoItems(heraldoData);
                 } else {
                     setHeraldoItems([]);
                 }
@@ -304,14 +328,14 @@ export const useMasterData = () => {
             ]);
 
             const teamsToSave = sanitizeCollectionForFirestore(
-                normalizeTeams(teamsSnap.exists() ? (teamsSnap.data().items as Team[] || []) : [])
+                normalizeTeams(teamsSnap.exists() ? extractMasterDocItems<Team>(teamsSnap.data()) : [])
             );
             const skillsToSave = sanitizeCollectionForFirestore(
-                normalizeSkillsCollection(coerceFirestoreItemsArray<Skill>(skillsSnap.exists() ? skillsSnap.data()?.items : []))
+                normalizeSkillsCollection(skillsSnap.exists() ? extractMasterDocItems<Skill>(skillsSnap.data()) : [])
             );
-            const starsToSave = sanitizeCollectionForFirestore(normalizeStarPlayersCollection(mergeItems(starsSnap.exists() ? starsSnap.data().items : [], staticStarsData, 'name')));
-            const inducEsToSave = sanitizeCollectionForFirestore(mergeItems(inducEsSnap.exists() ? inducEsSnap.data().items : [], staticInducementsEs, 'name'));
-            const inducEnToSave = sanitizeCollectionForFirestore(mergeItems(inducEnSnap.exists() ? inducEnSnap.data().items : [], staticInducementsEn, 'name'));
+            const starsToSave = sanitizeCollectionForFirestore(normalizeStarPlayersCollection(mergeItems(starsSnap.exists() ? extractMasterDocItems<StarPlayer>(starsSnap.data()) : [], staticStarsData, 'name')));
+            const inducEsToSave = sanitizeCollectionForFirestore(mergeItems(inducEsSnap.exists() ? extractMasterDocItems<Inducement>(inducEsSnap.data()) : [], staticInducementsEs, 'name'));
+            const inducEnToSave = sanitizeCollectionForFirestore(mergeItems(inducEnSnap.exists() ? extractMasterDocItems<Inducement>(inducEnSnap.data()) : [], staticInducementsEn, 'name'));
 
             await Promise.all([
                 setDoc(doc(db, MASTER_COL, 'teams'), { items: teamsToSave, updatedAt: ts }),

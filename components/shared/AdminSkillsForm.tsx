@@ -5,7 +5,7 @@ type AdminSkillsFormProps = {
     setEditingItem: React.Dispatch<React.SetStateAction<any>>;
 };
 
-const SKILL_CATEGORIES = ['General', 'Strength', 'Agility', 'Passing', 'Mutation', 'Trait'];
+const SKILL_CATEGORIES = ['General', 'Elite', 'Strength', 'Agility', 'Passing', 'Mutation', 'Trait', 'Triquiñuelas'];
 
 const AdminSkillsForm: React.FC<AdminSkillsFormProps> = ({ editingItem, setEditingItem }) => {
     return (
