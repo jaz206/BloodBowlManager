@@ -336,7 +336,8 @@ const TeamArticle: React.FC<{
 const Teams: React.FC<{
     onRequestTeamCreation: (rosterName: string) => void;
     initialTeamName: string | null;
-}> = ({ onRequestTeamCreation = (_name: string) => { }, initialTeamName }) => {
+    initialSearchTerm?: string;
+}> = ({ onRequestTeamCreation = (_name: string) => { }, initialTeamName, initialSearchTerm = '' }) => {
     const { teams: fetchedTeams, updateMasterItem, syncMasterData, loading } = useMasterData();
     const { isAdmin } = useAuth();
 

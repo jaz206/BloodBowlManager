@@ -119,6 +119,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
             return es.includes(normalizedTerm) || en.includes(normalizedTerm) || descEs.includes(normalizedTerm) || descEn.includes(normalizedTerm) || key.includes(normalizedTerm);
         });
         if (skillMatch) {
+            setInitialSkillCategory('General');
             setActiveView('skills');
             return;
         }
@@ -153,6 +154,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
             return;
         }
 
+        setTeamsSearchTerm(term);
         setActiveView('skills');
     }, [hubSearchTerm, masterTeams, skills, starPlayers]);
 
@@ -200,9 +202,14 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                 </div>
                 <div className="relative mt-8 max-w-4xl mx-auto md:mx-0">
                     <div className="blood-ui-light-card blood-ui-light-input flex w-full items-stretch rounded-2xl h-16 focus-within:border-premium-gold/50 transition-all group">
-                        <div className="text-premium-gold flex items-center justify-center pl-6">
+                        <button
+                            type="button"
+                            onClick={routeHubSearch}
+                            aria-label="Buscar en el Oráculo"
+                            className="text-premium-gold flex items-center justify-center pl-6 pr-2"
+                        >
                             <span className="material-symbols-outlined font-bold group-hover:scale-110 transition-transform">search</span>
-                        </div>
+                        </button>
                         <input
                             ref={hubSearchInputRef}
                             autoComplete="off"
@@ -411,6 +418,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
                                 <Teams
                                     onRequestTeamCreation={onRequestTeamCreation}
                                     initialTeamName={selectedHubTeam}
+                                    initialSearchTerm={teamsSearchTerm}
                                 />
                             )}
                             {activeView === 'skills' && <Skills initialCategory={initialSkillCategory} initialSearchTerm={hubSearchTerm} />}
