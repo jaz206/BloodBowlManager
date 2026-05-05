@@ -47,8 +47,8 @@ export const getSkillCategoryId = (value?: string) => {
     return SKILL_CATEGORY_MAP[normalized] || sanitizeMojibakeText(value || '');
 };
 
-export const isEliteSkill = (skill: Skill, eliteSkillKeys: string[]) =>
-    skill.isElite === true || getSkillCategoryId(skill.category) === 'Elite' || eliteSkillKeys.includes(skill.keyEN);
+export const isEliteSkill = (skill: Skill) =>
+    skill.isElite === true || getSkillCategoryId(skill.category) === 'Elite';
 
 export const findSkillRecord = (skills: Skill[], skillRef: string) => {
     const cleanRef = sanitizeMojibakeText(skillRef.split('(')[0].trim());

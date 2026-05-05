@@ -27,7 +27,7 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({ skillKey, onClick, variant = 'd
     const preferredLanguage = language === 'es' ? 'es' : 'en';
     const name = getSkillDisplayName(skill, preferredLanguage);
     const description = getSkillDescription(skill, preferredLanguage);
-    const elite = isEliteSkill(skill, []);
+    const elite = isEliteSkill(skill);
 
     const variants = {
         premium: 'bg-premium-gold/10 border-premium-gold/30 text-premium-gold hover:bg-premium-gold/20',

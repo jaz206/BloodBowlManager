@@ -19,7 +19,7 @@ const SkillModal: React.FC<SkillModalProps> = ({ skill, onClose }) => {
 
   const name = language === 'es' ? (skill.name_es || skill.name_en) : skill.name_en;
   const description = language === 'es' ? (skill.desc_es || skill.desc_en) : skill.desc_en;
-  const elite = isEliteSkill(skill, []);
+  const elite = isEliteSkill(skill);
 
   return (
     <div
@@ -39,7 +39,8 @@ const SkillModal: React.FC<SkillModalProps> = ({ skill, onClose }) => {
                 {skill.category}
               </div>
               {elite && (
-                <div className="text-[10px] font-display font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-full border inline-block bg-[rgba(202,138,4,0.16)] text-[#8a5f10] border-[rgba(202,138,4,0.3)]">
+                <div className="text-[10px] font-display font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-full border inline-flex items-center gap-2 bg-[rgba(202,138,4,0.16)] text-[#8a5f10] border-[rgba(202,138,4,0.3)] shadow-[0_8px_20px_rgba(202,138,4,0.12)]">
+                  <span className="material-symbols-outlined text-sm">workspace_premium</span>
                   Elite
                 </div>
               )}

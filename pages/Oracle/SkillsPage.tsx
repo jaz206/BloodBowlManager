@@ -1,6 +1,6 @@
 ﻿import React, { useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ELITE_SKILLS, type Skill } from '../../types';
+import type { Skill } from '../../types';
 import { useMasterData } from '../../hooks/useMasterData';
 import { useLanguage } from '../../contexts/LanguageContext';
 import SkillModal from '../../components/oracle/SkillModal';
@@ -34,7 +34,7 @@ const SkillCard: React.FC<{ skill: Skill; onClick: () => void; isSelected: boole
     const name = getSkillDisplayName(skill, language === 'es' ? 'es' : 'en');
     const description = getSkillDescription(skill, language === 'es' ? 'es' : 'en');
     const categoryId = getSkillCategoryId(skill.category);
-    const elite = isEliteSkill(skill, ELITE_SKILLS);
+    const elite = isEliteSkill(skill);
 
     return (
         <motion.div
@@ -57,9 +57,17 @@ const SkillCard: React.FC<{ skill: Skill; onClick: () => void; isSelected: boole
                 <div className="flex items-center gap-2">
                     <span className="text-[10px] font-black text-[#7b6853] uppercase tracking-[0.2em]">{categoryId}</span>
                     {elite && (
-                        <span className="rounded-full border border-[rgba(202,138,4,0.35)] bg-[rgba(202,138,4,0.16)] px-2 py-1 text-[8px] font-black uppercase tracking-[0.22em] text-[#8a5f10]">
-                            Elite
-                        </span>
+                        <div className="relative group/elite">
+                            <span className="rounded-full border border-[rgba(202,138,4,0.35)] bg-[rgba(202,138,4,0.16)] px-2 py-1 text-[8px] font-black uppercase tracking-[0.22em] text-[#8a5f10]">
+                                Elite
+                            </span>
+                            <div className="pointer-events-none absolute right-0 top-full z-20 mt-2 hidden w-56 rounded-2xl border border-[rgba(202,138,4,0.18)] bg-[rgba(255,251,241,0.98)] p-3 text-left shadow-[0_16px_36px_rgba(92,68,39,0.16)] group-hover/elite:block">
+                                <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[#8a5f10] mb-1 italic">Habilidad Elite</p>
+                                <p className="text-[11px] leading-relaxed text-[#6f5738] italic font-medium">
+                                    Mejora avanzada del reglamento. Aumenta el valor del jugador y cuenta para los límites de Elite cuando aplique.
+                                </p>
+                            </div>
+                        </div>
                     )}
                 </div>
             </div>
@@ -122,7 +130,7 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
 
             // Otherwise match current category
             if (activeCategory === 'Elite') {
-                return isEliteSkill(skill, ELITE_SKILLS);
+                return isEliteSkill(skill);
             }
 
             return getSkillCategoryId(skill.category) === activeCategory;
@@ -296,7 +304,7 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
 
                             <div className="relative z-10 flex flex-col md:flex-row gap-10 items-start justify-between">
                                 <div className="space-y-6 flex-1">
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-3 flex-wrap">
                                         <span className="px-3 py-1 rounded-lg bg-[rgba(202,138,4,0.16)] text-[#ca8a04] text-[8px] font-black uppercase tracking-[0.2em] border border-[rgba(202,138,4,0.2)]">
                                             Habilidad Destacada
                                         </span>
@@ -304,6 +312,19 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
                                             <span className="material-symbols-outlined text-sm text-[#ca8a04]">bolt</span>
                                             {getSkillCategoryId(featuredSkill.category)}
                                         </span>
+                                        {isEliteSkill(featuredSkill) && (
+                                            <div className="relative group/elite-feature">
+                                                <span className="rounded-full border border-[rgba(202,138,4,0.35)] bg-[rgba(202,138,4,0.16)] px-3 py-1 text-[8px] font-black uppercase tracking-[0.22em] text-[#8a5f10]">
+                                                    Elite
+                                                </span>
+                                                <div className="pointer-events-none absolute left-0 top-full z-20 mt-2 hidden w-64 rounded-2xl border border-[rgba(202,138,4,0.18)] bg-[rgba(255,251,241,0.98)] p-3 text-left shadow-[0_16px_36px_rgba(92,68,39,0.16)] group-hover/elite-feature:block">
+                                                    <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[#8a5f10] mb-1 italic">Habilidad Elite</p>
+                                                    <p className="text-[11px] leading-relaxed text-[#6f5738] italic font-medium">
+                                                        Esta habilidad estÃ¡ marcada como Elite en Firebase y debe tratarse como capacidad especial avanzada.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                     <h3 className="text-4xl md:text-6xl font-black text-[#2b1d12] uppercase italic tracking-tighter leading-none">
                                         {language === 'es' ? (featuredSkill.name_es || featuredSkill.name_en || featuredSkill.name) : (featuredSkill.name_en || featuredSkill.name)}

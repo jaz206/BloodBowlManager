@@ -10,7 +10,7 @@ import RulesPage from './RulesPage';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useMasterData } from '../../hooks/useMasterData';
 import { getStarPlayerImageUrl, getTeamLogoUrl } from '../../utils/imageUtils';
-import { ELITE_SKILLS, type ManagedTeam } from '../../types';
+import type { ManagedTeam } from '../../types';
 import { getSkillCategoryId, isEliteSkill } from '../../utils/skillUtils';
 
 type SubView = 'hub' | 'teams' | 'skills' | 'star_players' | 'calculator' | 'inducements' | 'rules';
@@ -89,7 +89,7 @@ const OraclePage: React.FC<OraclePageProps> = ({ managedTeams = [], onRequestTea
         return SKILL_CATEGORIES.map(category => ({
             ...category,
             count: category.id === 'Elite'
-                ? skills.filter(skill => isEliteSkill(skill, ELITE_SKILLS)).length
+                ? skills.filter(skill => isEliteSkill(skill)).length
                 : skills.filter(skill => getSkillCategoryId(skill.category) === category.id).length
         }));
     }, [skills]);

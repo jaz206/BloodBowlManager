@@ -42,6 +42,7 @@ export interface Skill {
   category: string;
   desc_es: string;
   desc_en: string;
+  isElite?: boolean;
   /** @deprecated Kept temporarily for migration */
   name?: string;
   /** @deprecated Kept temporarily for migration */
