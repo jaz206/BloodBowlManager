@@ -1,7 +1,6 @@
 ﻿import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ManagedTeam, ManagedPlayer, Player, Skill, ManagedTeamSnapshot, MatchReport } from '../../types';
-import { ELITE_SKILLS } from '../../types';
 import PlayerModal from './PlayerModal';
 import SkillModal from '../oracle/SkillModal';
 import { generateRandomName } from '../../data/randomNames';
@@ -9,6 +8,7 @@ import { PlayerAdvancementModal } from './PlayerAdvancementModal';
 import { useMasterData } from '../../hooks/useMasterData';
 import { calculateTeamValue } from '../../utils/teamUtils';
 import { sanitizeMojibakeText } from '../../utils/textSanitizer';
+import { isEliteSkill } from '../../utils/skillUtils';
 import {
     getPlayerImageUrl,
     getRandomImageNumber,
@@ -227,7 +227,10 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({
         return deduped.map((skill) => ({
             key: resolveSkillRecord(skill)?.keyEN || skill,
             label: resolveSkillLabel(skill),
-            isElite: ELITE_SKILLS.includes(resolveSkillRecord(skill)?.keyEN || skill) || ELITE_SKILLS.includes(skill),
+            isElite: (() => {
+                const record = resolveSkillRecord(skill);
+                return record ? isEliteSkill(record) : false;
+            })(),
         }));
     };
 

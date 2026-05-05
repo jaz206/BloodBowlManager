@@ -1,7 +1,7 @@
 import type { Player, PlayerStats, Skill, StarPlayer, Team } from '../types';
 import { resolveTeamLogoPreference } from './imageUtils';
 
-const SKILL_CATEGORIES = ['General', 'Strength', 'Agility', 'Passing', 'Mutation', 'Trait', 'Elite'];
+const SKILL_CATEGORIES = ['General', 'Strength', 'Agility', 'Passing', 'Mutation', 'Trait', 'Traits', 'Elite', 'Triquinuelas', 'Triquiñuelas', 'Devious'];
 
 const cleanText = (value: unknown): string =>
     typeof value === 'string'
@@ -126,6 +126,7 @@ export const sanitizeSkillForSave = (raw: any): Skill => {
         category: SKILL_CATEGORIES.includes(category) ? category : 'General',
         desc_es: cleanLongText(raw?.desc_es) || cleanLongText(raw?.description) || '',
         desc_en: cleanLongText(raw?.desc_en) || cleanLongText(raw?.description) || '',
+        isElite: raw?.isElite === true,
         name: cleanText(raw?.name) || undefined,
         description: cleanLongText(raw?.description) || undefined,
     });
@@ -228,4 +229,5 @@ export const getHeraldoValidationIssues = (raw: any): string[] => {
     if (!cleanLongText(raw?.content)) issues.push('Contenido principal');
     return issues;
 };
+
 

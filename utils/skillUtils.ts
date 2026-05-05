@@ -37,9 +37,9 @@ const SKILL_CATEGORY_MAP: Record<string, string> = {
     rasgo: 'Trait',
     trait: 'Trait',
     traits: 'Trait',
-    triquinuelas: 'Triquiï¿½uelas',
-    trickery: 'Triquiï¿½uelas',
-    devious: 'Triquiï¿½uelas'
+    triquinuelas: 'Triquiñuelas',
+    trickery: 'Triquiñuelas',
+    devious: 'Triquiñuelas'
 };
 
 export const getSkillCategoryId = (value?: string) => {
@@ -66,3 +66,4 @@ export const skillCategoryMatches = (skill: Skill, allowedCategories: string[]) 
     const normalizedCategory = getSkillCategoryId(skill.category);
     return allowedCategories.some((category) => getSkillCategoryId(category) === normalizedCategory);
 };
+

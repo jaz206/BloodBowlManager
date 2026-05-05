@@ -65,22 +65,25 @@ const AdminEditorModal: React.FC<AdminEditorModalProps> = ({
     const currentSubtitle = editingItem.type === 'hero'
         ? 'Ajusta la portada principal de Inicio.'
         : editingItem.type === 'teams'
-            ? 'Edición completa de roster, identidad, imagen y pools de nombres.'
+            ? 'Edicion completa de roster, identidad, imagen y pools de nombres.'
             : editingItem.type === 'stars'
-                ? 'Edición completa de ficha, imagen, atributos y compatibilidad.'
+                ? 'Edicion completa de ficha, imagen, atributos y compatibilidad.'
                 : editingItem.type === 'skills'
-                    ? 'Edición bilingüe del Codex de habilidades.'
+                    ? 'Edicion operativa del Codex: clave, bilingue, categoria y estado Elite.'
                     : editingItem.type === 'inducements'
-                        ? 'Edición del catálogo de incentivos por idioma.'
+                        ? 'Edicion del catalogo de incentivos por idioma.'
                         : editingItem.type === 'heraldo'
-                            ? 'Edición editorial del Heraldo.'
+                            ? 'Edicion editorial del Heraldo.'
                             : 'Editor maestro';
 
-    const getNavigatorLabel = (item: any) => item.name || item.title || item.keyEN || 'Sin título';
+    const getNavigatorLabel = (item: any) => item.name || item.title || item.keyEN || 'Sin titulo';
     const getNavigatorMeta = (item: any) => {
         if (editingItem.type === 'teams') return item.tier ? `Tier ${item.tier}` : 'Equipo';
         if (editingItem.type === 'stars') return item.cost ? `${Math.round(Number(item.cost) / 1000)}k MO` : 'Estrella';
-        if (editingItem.type === 'skills') return item.category || 'Habilidad';
+        if (editingItem.type === 'skills') {
+            const category = item.category || 'Habilidad';
+            return item.isElite ? `${category} - Elite` : category;
+        }
         if (editingItem.type === 'inducements') return item.cost ? `${Math.round(Number(item.cost) / 1000)}k MO` : 'Incentivo';
         if (editingItem.type === 'heraldo') return item.category || item.tag || 'Entrada';
         return '';
@@ -98,7 +101,7 @@ const AdminEditorModal: React.FC<AdminEditorModalProps> = ({
                     {showNavigator && (
                         <aside className="w-[320px] shrink-0 border-r border-[rgba(111,87,56,0.14)] bg-[rgba(255,251,241,0.82)] flex flex-col">
                             <div className="px-6 py-6 border-b border-[rgba(111,87,56,0.12)]">
-                                <p className="text-[9px] font-black text-gold uppercase tracking-[0.35em]">Mesa de edición</p>
+                                <p className="text-[9px] font-black text-gold uppercase tracking-[0.35em]">Mesa de edicion</p>
                                 <h3 className="mt-2 text-2xl font-header font-black italic uppercase tracking-tighter">
                                     {tabs.find(t => t.id === activeTab)?.label}
                                 </h3>
@@ -386,3 +389,5 @@ const AdminEditorModal: React.FC<AdminEditorModalProps> = ({
 };
 
 export default AdminEditorModal;
+
+
