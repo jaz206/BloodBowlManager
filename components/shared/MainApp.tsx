@@ -12,7 +12,7 @@ import SyncStatusIndicator from '../common/SyncStatusIndicator';
 // ── Components / Oracle ───────────────────────────────────────────────────────
 const QuickGuide = lazy(() => import('../oracle/QuickGuide'));
 // ── Components / Shared ───────────────────────────────────────────────────────
-const AdminPanel = lazy(() => import('./AdminPanel'));
+import AdminPanel from './AdminPanel';
 // ── Icons ─────────────────────────────────────────────────────────────────────
 import BookOpenIcon from '../icons/BookOpenIcon';
 import UsersIcon from '../icons/UsersIcon';
