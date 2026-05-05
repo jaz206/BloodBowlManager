@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { db } from '../firebaseConfig';
 import { collection, doc, onSnapshot, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { useLanguage } from '../contexts/LanguageContext';
 
-// ── Static Fallback Data ──────────────────────────────────────────────────────
+// â”€â”€ Static Fallback Data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 import { starPlayersData as staticStarsData } from '../data/starPlayers';
 import { inducements as staticInducementsEs } from '../data/inducements';
 import { inducementsData as staticInducementsEn } from '../data/inducements_en';
@@ -12,7 +12,7 @@ import { deepSanitizeText, sanitizeMojibakeText } from '../utils/textSanitizer';
 
 import type { Team, Skill, StarPlayer, Inducement } from '../types';
 
-// ── Firestore collection ID ───────────────────────────────────────────────────
+// â”€â”€ Firestore collection ID â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const MASTER_COL = 'master_data';
 
 const normalizeStarPlayerRecord = (star: StarPlayer): StarPlayer => {
@@ -23,7 +23,7 @@ const normalizeStarPlayerRecord = (star: StarPlayer): StarPlayer => {
         stats: normalized.stats
             ? {
                 ...normalized.stats,
-                PA: normalized.stats.PA === 'â€“' ? '-' : normalized.stats.PA
+                PA: normalized.stats.PA === 'Ã¢â‚¬â€œ' ? '-' : normalized.stats.PA
             }
             : normalized.stats
     };
@@ -84,8 +84,61 @@ const normalizeSkillRecord = (skill: Skill): Skill => {
     };
 };
 
-const normalizeSkillsCollection = (items: Skill[]) =>
-    items.map(normalizeSkillRecord).filter((skill) => Boolean(skill.keyEN || skill.name_es || skill.name_en));
+const getSkillIdentityKey = (skill: Skill) =>
+    sanitizeMojibakeText(String(skill.keyEN || skill.name_en || skill.name_es || skill.name || ''))
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+
+const getSkillRichnessScore = (skill: Skill) => {
+    const fields = [skill.keyEN, skill.name_en, skill.name_es, skill.desc_en, skill.desc_es, skill.description];
+    return fields.reduce((score, field) => score + (String(field || '').trim().length > 0 ? 1 : 0), 0);
+};
+
+const mergeSkillRecords = (base: Skill, incoming: Skill): Skill => ({
+    ...base,
+    ...incoming,
+    keyEN: base.keyEN || incoming.keyEN,
+    name_en: base.name_en || incoming.name_en,
+    name_es: base.name_es || incoming.name_es,
+    name: base.name || incoming.name,
+    desc_en: base.desc_en || incoming.desc_en,
+    desc_es: base.desc_es || incoming.desc_es,
+    description: base.description || incoming.description,
+    category: base.category || incoming.category,
+    isElite: base.isElite === true || incoming.isElite === true,
+});
+
+const normalizeSkillsCollection = (items: Skill[]) => {
+    const normalized = items
+        .map(normalizeSkillRecord)
+        .filter((skill) => Boolean(skill.keyEN || skill.name_es || skill.name_en));
+
+    const deduped = new Map<string, Skill>();
+
+    normalized.forEach((skill) => {
+        const identity = getSkillIdentityKey(skill);
+        if (!identity) return;
+
+        const existing = deduped.get(identity);
+        if (!existing) {
+            deduped.set(identity, skill);
+            return;
+        }
+
+        const existingScore = getSkillRichnessScore(existing) + (existing.isElite === true ? 10 : 0);
+        const incomingScore = getSkillRichnessScore(skill) + (skill.isElite === true ? 10 : 0);
+
+        if (incomingScore > existingScore) {
+            deduped.set(identity, mergeSkillRecords(skill, existing));
+        } else {
+            deduped.set(identity, mergeSkillRecords(existing, skill));
+        }
+    });
+
+    return [...deduped.values()];
+};
 
 const stripUndefinedDeep = <T,>(value: T): T => {
     if (Array.isArray(value)) {
@@ -108,24 +161,24 @@ const stripUndefinedDeep = <T,>(value: T): T => {
 const sanitizeCollectionForFirestore = <T,>(items: T[]): T[] =>
     items.map((item) => stripUndefinedDeep(item));
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export type SyncStatus = 'idle' | 'syncing' | 'success' | 'error';
 
 /**
  * useMasterData hook -- Firestore-first.
  *
  * Data layout in Firestore:
- *   master_data/teams          → { items: Team[], updatedAt }
- *   master_data/skills         → { items: Skill[], updatedAt }
- *   master_data/star_players   → { items: StarPlayer[], updatedAt }
- *   master_data/inducements_es → { items: Inducement[], updatedAt }
- *   master_data/inducements_en → { items: Inducement[], updatedAt }
- *   master_data/meta           → { lastSync, version, ... }
+ *   master_data/teams          â†’ { items: Team[], updatedAt }
+ *   master_data/skills         â†’ { items: Skill[], updatedAt }
+ *   master_data/star_players   â†’ { items: StarPlayer[], updatedAt }
+ *   master_data/inducements_es â†’ { items: Inducement[], updatedAt }
+ *   master_data/inducements_en â†’ { items: Inducement[], updatedAt }
+ *   master_data/meta           â†’ { lastSync, version, ... }
  */
 export const useMasterData = () => {
     const { language } = useLanguage();
 
-    // ── State ─────────────────────────────────────────────────────────────────
+    // â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const [teams, setTeams] = useState<Team[]>([]);
     const [skills, setSkills] = useState<Skill[]>([]);
     const [starPlayers, setStarPlayers] = useState<StarPlayer[]>(normalizeStarPlayersCollection(staticStarsData));
@@ -142,7 +195,7 @@ export const useMasterData = () => {
         return normalizeTeamCollection(items as Partial<TeamAsset>[]);
     }, []);
 
-    // ── Firestore listeners ───────────────────────────────────────────────────
+    // â”€â”€ Firestore listeners â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     useEffect(() => {
         if (!db) {
             setTeams([]);
@@ -188,7 +241,7 @@ export const useMasterData = () => {
             }
         );
 
-        // Skills listener — uses consolidated bilingual document
+        // Skills listener â€” uses consolidated bilingual document
         const unsubSkills = onSnapshot(
             doc(db, MASTER_COL, 'skills'),
             (snap) => {
@@ -218,7 +271,7 @@ export const useMasterData = () => {
             () => { setStarPlayers(normalizeStarPlayersCollection(staticStarsData)); checkDone(); }
         );
 
-        // Inducements listener — language-aware
+        // Inducements listener â€” language-aware
         const inducementsDoc = language === 'es' ? 'inducements_es' : 'inducements_en';
         const staticInducementsFallback = language === 'es' ? staticInducementsEs : (staticInducementsEn as unknown as Inducement[]);
         const unsubInducements = onSnapshot(
@@ -284,19 +337,19 @@ export const useMasterData = () => {
         // Re-subscribe when language changes to get the right inducements doc
     }, [language]);
 
-    // ── Sync to Firestore (admin action) ─────────────────────────────────────
+    // â”€â”€ Sync to Firestore (admin action) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     /**
      * Uploads all master data to Firestore.
      * Overwrites existing documents atomically.
      * Only admins should be able to call this (enforced by Firestore Rules).
      */
-    // ── Sync to Firestore (admin action) ─────────────────────────────────────
+    // â”€â”€ Sync to Firestore (admin action) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     /**
      * Uploads master data to Firestore using Firestore as source of truth.
      * @param force - If true, performs a full overwrite.
      */
     const syncMasterData = useCallback(async (force = false): Promise<void> => {
-        if (!db) throw new Error('Firebase no está disponible');
+        if (!db) throw new Error('Firebase no estÃ¡ disponible');
 
         setSyncStatus('syncing');
         setError(null);
@@ -365,7 +418,7 @@ export const useMasterData = () => {
         }
     }, [db, normalizeTeams, heraldoItems]);
 
-    // ── Update a single field in a Firestore master doc ───────────────────────
+    // â”€â”€ Update a single field in a Firestore master doc â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     /**
      * Updates a single item within a master_data document's items array.
      * Finds the item by keyEN (skills) or name (teams/stars/inducements).
@@ -464,7 +517,7 @@ export const useMasterData = () => {
         await setDoc(ref, { items: sanitizeCollectionForFirestore(items), updatedAt: serverTimestamp() }, { merge: true });
     }, []);
 
-    // ── Hero image helper ─────────────────────────────────────────────────────
+    // â”€â”€ Hero image helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const updateHeroImage = useCallback(async (url: string): Promise<void> => {
         if (!db) return;
         await setDoc(doc(db, 'settings_master', 'home_hero'), { url });
@@ -508,5 +561,6 @@ export const useMasterData = () => {
         refresh: () => setLoading(true),
     };
 };
+
 
 
