@@ -1,7 +1,7 @@
-
-import React from 'react';
+﻿import React from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import type { Skill } from '../../types';
+import { isEliteSkill } from '../../utils/skillUtils';
 
 interface SkillModalProps {
   skill: Skill;
@@ -19,7 +19,7 @@ const SkillModal: React.FC<SkillModalProps> = ({ skill, onClose }) => {
 
   const name = language === 'es' ? (skill.name_es || skill.name_en) : skill.name_en;
   const description = language === 'es' ? (skill.desc_es || skill.desc_en) : skill.desc_en;
-
+  const elite = isEliteSkill(skill, []);
 
   return (
     <div
@@ -32,7 +32,19 @@ const SkillModal: React.FC<SkillModalProps> = ({ skill, onClose }) => {
     >
       <div className="blood-ui-light-card max-w-lg w-full transform animate-slide-in-up overflow-hidden shadow-[0_24px_70px_rgba(92,68,39,0.16)] rounded-[1.8rem]">
         <div className="flex justify-between items-center p-6 border-b border-[rgba(111,87,56,0.12)] bg-[rgba(255,251,241,0.55)]">
-          <h2 id="skill-modal-title" className="blood-ui-light-title text-2xl uppercase italic tracking-tighter">{name}</h2>
+          <div className="space-y-3">
+            <h2 id="skill-modal-title" className="blood-ui-light-title text-2xl uppercase italic tracking-tighter">{name}</h2>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className={`text-[10px] font-display font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-full border inline-block ${skill.category === 'Rasgo' || skill.category === 'Trait' ? 'bg-[rgba(202,138,4,0.14)] text-[#2b1d12] border-[rgba(202,138,4,0.25)]' : 'bg-white/60 text-[#4b3a28] border-[rgba(111,87,56,0.12)]'}`}>
+                {skill.category}
+              </div>
+              {elite && (
+                <div className="text-[10px] font-display font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-full border inline-block bg-[rgba(202,138,4,0.16)] text-[#8a5f10] border-[rgba(202,138,4,0.3)]">
+                  Elite
+                </div>
+              )}
+            </div>
+          </div>
           <button
             onClick={onClose}
             className="text-[#7b6853] hover:text-[#2b1d12] transition-premium p-2 rounded-xl hover:bg-white/50 focus:outline-none"
@@ -44,9 +56,6 @@ const SkillModal: React.FC<SkillModalProps> = ({ skill, onClose }) => {
           </button>
         </div>
         <div className="p-8 space-y-4">
-          <div className={`text-[10px] font-display font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-full border inline-block ${skill.category === 'Rasgo' || skill.category === 'Trait' ? 'bg-[rgba(202,138,4,0.14)] text-[#2b1d12] border-[rgba(202,138,4,0.25)]' : 'bg-white/60 text-[#4b3a28] border-[rgba(111,87,56,0.12)]'}`}>
-            {skill.category}
-          </div>
           <p className="blood-ui-light-body font-medium leading-relaxed italic text-base">{description}</p>
         </div>
         <div className="p-6 bg-[rgba(255,251,241,0.62)] border-t border-[rgba(111,87,56,0.12)] flex justify-end">

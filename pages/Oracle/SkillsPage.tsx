@@ -34,6 +34,7 @@ const SkillCard: React.FC<{ skill: Skill; onClick: () => void; isSelected: boole
     const name = getSkillDisplayName(skill, language === 'es' ? 'es' : 'en');
     const description = getSkillDescription(skill, language === 'es' ? 'es' : 'en');
     const categoryId = getSkillCategoryId(skill.category);
+    const elite = isEliteSkill(skill, ELITE_SKILLS);
 
     return (
         <motion.div
@@ -53,7 +54,14 @@ const SkillCard: React.FC<{ skill: Skill; onClick: () => void; isSelected: boole
                         {Categories.find(c => c.id === categoryId)?.icon || 'auto_awesome'}
                     </span>
                 </div>
-                <span className="text-[10px] font-black text-[#7b6853] uppercase tracking-[0.2em]">{categoryId}</span>
+                <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black text-[#7b6853] uppercase tracking-[0.2em]">{categoryId}</span>
+                    {elite && (
+                        <span className="rounded-full border border-[rgba(202,138,4,0.35)] bg-[rgba(202,138,4,0.16)] px-2 py-1 text-[8px] font-black uppercase tracking-[0.22em] text-[#8a5f10]">
+                            Elite
+                        </span>
+                    )}
+                </div>
             </div>
             <h4 className="text-[1.05rem] font-black text-[#2b1d12] mb-2 uppercase italic tracking-tighter group-hover:text-[#ca8a04] transition-colors">
                 {name}

@@ -37,9 +37,9 @@ const SKILL_CATEGORY_MAP: Record<string, string> = {
     rasgo: 'Trait',
     trait: 'Trait',
     traits: 'Trait',
-    triquinuelas: 'Triquiñuelas',
-    trickery: 'Triquiñuelas',
-    devious: 'Triquiñuelas'
+    triquinuelas: 'Triquiï¿½uelas',
+    trickery: 'Triquiï¿½uelas',
+    devious: 'Triquiï¿½uelas'
 };
 
 export const getSkillCategoryId = (value?: string) => {
@@ -48,7 +48,7 @@ export const getSkillCategoryId = (value?: string) => {
 };
 
 export const isEliteSkill = (skill: Skill, eliteSkillKeys: string[]) =>
-    getSkillCategoryId(skill.category) === 'Elite' || eliteSkillKeys.includes(skill.keyEN);
+    skill.isElite === true || getSkillCategoryId(skill.category) === 'Elite' || eliteSkillKeys.includes(skill.keyEN);
 
 export const findSkillRecord = (skills: Skill[], skillRef: string) => {
     const cleanRef = sanitizeMojibakeText(skillRef.split('(')[0].trim());
