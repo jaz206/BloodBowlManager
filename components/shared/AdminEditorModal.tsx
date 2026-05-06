@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import AdminTeamForm from './AdminTeamForm';
 import AdminStarForm from './AdminStarForm';
@@ -151,7 +151,7 @@ const AdminEditorModal: React.FC<AdminEditorModalProps> = ({
                                 </p>
                                 {showNavigator && (
                                     <p className="mt-3 text-[9px] font-black uppercase tracking-[0.28em] text-[#8a7760]">
-                                        {filteredContent.length} registros visibles · cambio rápido activo
+                                        {filteredContent.length} registros visibles - cambio rapido activo
                                     </p>
                                 )}
                             </div>
@@ -216,7 +216,7 @@ const AdminEditorModal: React.FC<AdminEditorModalProps> = ({
                                             </div>
 
                                             <div className="space-y-4">
-                                                <h5 className="text-[10px] font-black text-green-700 uppercase tracking-[0.3em] mb-4">Parámetros económicos</h5>
+                                                <h5 className="text-[10px] font-black text-green-700 uppercase tracking-[0.3em] mb-4">Parametros economicos</h5>
                                                 <div className="space-y-4 bg-[rgba(255,251,241,0.82)] p-6 rounded-2xl border border-[rgba(111,87,56,0.12)]">
                                                     {Object.entries(editingItem.data.economics).map(([key, value]) => (
                                                         <div key={key} className="flex justify-between items-center gap-4">
@@ -240,7 +240,7 @@ const AdminEditorModal: React.FC<AdminEditorModalProps> = ({
                                         </div>
 
                                         <div className="space-y-4">
-                                            <h5 className="text-[10px] font-black text-sky-600 uppercase tracking-[0.3em] mb-4">Lógica de datos</h5>
+                                            <h5 className="text-[10px] font-black text-sky-600 uppercase tracking-[0.3em] mb-4">Logica de datos</h5>
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-[rgba(255,251,241,0.82)] p-6 rounded-2xl border border-[rgba(111,87,56,0.12)]">
                                                 {Object.entries(editingItem.data.dice).map(([key, value]) => (
                                                     <div key={key} className="space-y-2">
@@ -355,7 +355,7 @@ const AdminEditorModal: React.FC<AdminEditorModalProps> = ({
                                 <div className="sticky bottom-0 pt-6">
                                     <div className="rounded-[2rem] border border-[rgba(111,87,56,0.12)] bg-[rgba(255,251,241,0.92)] backdrop-blur px-6 py-5 flex flex-wrap items-center justify-between gap-4">
                                         <div>
-                                            <p className="text-[9px] font-black uppercase tracking-[0.28em] text-[#7b6853]">Edición activa</p>
+                                            <p className="text-[9px] font-black uppercase tracking-[0.28em] text-[#7b6853]">Edicion activa</p>
                                             <p className="mt-1 text-[12px] font-black uppercase tracking-tight text-[#2b1d12]">
                                                 {currentTitle}
                                             </p>
