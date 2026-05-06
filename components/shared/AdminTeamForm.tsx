@@ -172,129 +172,63 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
 
     return (
         <>
-        <div className="space-y-6">
-            <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Origen de la imagen</label>
-                <AdminGitHubImagePicker
-                    title="Explorador de GitHub"
-                    helperText="Haz clic para buscar imágenes en el repositorio"
-                    isExpanded={isImageExplorerExpanded}
-                    setIsExpanded={setIsImageExplorerExpanded}
-                    search={githubSearch}
-                    setSearch={setGithubSearch}
-                    images={gitHubImages}
-                    isLoading={isLoadingGitHub}
-                    currentImage={currentImage}
-                    onPick={updateTeamImage}
-                />
-
-                <div className="relative">
-                    <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center px-8 opacity-20 pointer-events-none">
-                        <div className="h-px w-full bg-white/50"></div>
-                        <span className="mx-4 text-[9px] font-black uppercase tracking-widest bg-[#f4ead7] px-2 whitespace-nowrap text-[#7b6853]">
-                            O introduce URL manual
-                        </span>
-                        <div className="h-px w-full bg-white/50"></div>
-                    </div>
-                    <div className="h-10"></div>
-                </div>
-
-                <div className="flex gap-4 items-center">
-                    <div className="grow">
-                        <input
-                            type="text"
-                            value={currentImage}
-                            onChange={(e) => updateTeamImage(e.target.value)}
-                            className="w-full bg-[#fcf6ea] border border-[#d7c39a] rounded-2xl py-4 px-6 text-[10px] text-[#5f4d39] font-mono focus:border-premium-gold/50 outline-none transition-all"
-                            placeholder="URL personalizada..."
-                        />
-                    </div>
-                    <div className="w-24 h-16 rounded-2xl border border-[#d7c39a] bg-[#f7efe1] overflow-hidden flex-shrink-0 flex items-center justify-center">
-                        {currentImage || suggestedImage ? (
-                            <img
-                                src={currentImage || suggestedImage}
-                                alt=""
-                                onError={(e) => {
-                                    const fallback = suggestedImage;
-                                    if ((e.currentTarget as HTMLImageElement).src !== fallback) {
-                                        (e.currentTarget as HTMLImageElement).src = fallback;
-                                    }
-                                }}
-                                style={getCrestPresentationStyle(editingItem.data.crestScale, editingItem.data.crestOffsetY)}
-                                className="w-full h-full object-contain p-0.5 transform-gpu"
-                            />
-                        ) : (
-                            <span className="material-symbols-outlined text-white/10">image_not_supported</span>
-                        )}
-                    </div>
-                </div>
-
-                <div className="rounded-2xl border border-[#e3cfaa] bg-[#fcf6ea] px-5 py-4 space-y-4">
-                    <div>
-                        <p className="text-[9px] font-black uppercase tracking-[0.28em] text-gold">Ajuste del escudo</p>
-                        <p className="mt-2 text-[10px] leading-relaxed text-[#7b6853]">
-                            Usa estos controles para acercar el escudo al encuadre del cuadrado y centrarlo mejor.
-                        </p>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <label className="space-y-2">
-                            <span className="block text-[9px] font-black text-[#7b6853] uppercase tracking-widest">Escala</span>
-                            <input
-                                type="range"
-                                min="0.85"
-                                max="1.6"
-                                step="0.01"
-                                value={editingItem.data.crestScale ?? 1.14}
-                                onChange={(e) => updateCrestPresentation({ crestScale: parseFloat(e.target.value) })}
-                                className="w-full accent-gold"
-                            />
-                        </label>
-                        <label className="space-y-2">
-                            <span className="block text-[9px] font-black text-[#7b6853] uppercase tracking-widest">Desplazamiento</span>
-                            <input
-                                type="range"
-                                min="-40"
-                                max="40"
-                                step="1"
-                                value={editingItem.data.crestOffsetY ?? 0}
-                                onChange={(e) => updateCrestPresentation({ crestOffsetY: parseInt(e.target.value, 10) })}
-                                className="w-full accent-gold"
-                            />
-                        </label>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <div className="rounded-2xl border border-[#d7c39a] bg-[#fffaf1] px-4 py-3">
-                            <p className="text-[8px] font-black uppercase tracking-[0.28em] text-[#7b6853]">Escala ideal</p>
-                            <p className="mt-1 text-sm font-black italic text-[#2b1d12] font-epilogue">1.12 - 1.18</p>
+            <div className="space-y-6">
+                <div className="rounded-[2rem] border border-[#e3cfaa] bg-[#fcf6ea] p-5">
+                    <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+                        <div className="flex items-center gap-4 min-w-0">
+                            <div className="h-20 w-28 shrink-0 overflow-hidden rounded-[1.5rem] border border-[#d7c39a] bg-[#f7efe1] flex items-center justify-center">
+                                {currentImage || suggestedImage ? (
+                                    <img
+                                        src={currentImage || suggestedImage}
+                                        alt=""
+                                        onError={(e) => {
+                                            const fallback = suggestedImage;
+                                            if ((e.currentTarget as HTMLImageElement).src !== fallback) {
+                                                (e.currentTarget as HTMLImageElement).src = fallback;
+                                            }
+                                        }}
+                                        style={getCrestPresentationStyle(editingItem.data.crestScale, editingItem.data.crestOffsetY)}
+                                        className="w-full h-full object-contain p-1 transform-gpu"
+                                    />
+                                ) : (
+                                    <span className="material-symbols-outlined text-[#c8b79e]">image_not_supported</span>
+                                )}
+                            </div>
+                            <div className="min-w-0">
+                                <p className="text-[9px] font-black uppercase tracking-[0.32em] text-gold">Editor de equipo</p>
+                                <h3 className="mt-2 truncate text-3xl font-header font-black italic uppercase tracking-tight text-[#2b1d12]">
+                                    {editingItem.data.name || 'Nueva raza'}
+                                </h3>
+                                <p className="mt-2 text-[11px] leading-relaxed text-[#7b6853] max-w-2xl">
+                                    Gestiona identidad, reglas base, roster y diccionario de nombres desde un flujo mas corto y mas orientado a tareas.
+                                </p>
+                            </div>
                         </div>
-                        <div className="rounded-2xl border border-[#d7c39a] bg-[#fffaf1] px-4 py-3">
-                            <p className="text-[8px] font-black uppercase tracking-[0.28em] text-[#7b6853]">Desplazamiento ideal</p>
-                            <p className="mt-1 text-sm font-black italic text-[#2b1d12] font-epilogue">-4 a +4 px</p>
-                        </div>
-                        <div className="rounded-2xl border border-[#d7c39a] bg-[#fffaf1] px-4 py-3">
-                            <p className="text-[8px] font-black uppercase tracking-[0.28em] text-[#7b6853]">Encuadre recomendado</p>
-                            <p className="mt-1 text-[10px] leading-relaxed text-[#5f4d39]">PNG cuadrado, logo centrado y sin mucho margen vacio arriba o abajo.</p>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 xl:min-w-[520px]">
+                            <div className="rounded-2xl border border-[#d7c39a] bg-[#fffaf1] px-4 py-3">
+                                <p className="text-[8px] font-black uppercase tracking-[0.28em] text-[#8a7760]">Tier</p>
+                                <p className="mt-1 text-lg font-header font-black italic text-[#2b1d12]">{editingItem.data.tier || 1}</p>
+                            </div>
+                            <div className="rounded-2xl border border-[#d7c39a] bg-[#fffaf1] px-4 py-3">
+                                <p className="text-[8px] font-black uppercase tracking-[0.28em] text-[#8a7760]">Reroll</p>
+                                <p className="mt-1 text-lg font-header font-black italic text-[#2b1d12]">
+                                    {Math.round((editingItem.data.rerollCost || 0) / 1000)}k
+                                </p>
+                            </div>
+                            <div className="rounded-2xl border border-[#d7c39a] bg-[#fffaf1] px-4 py-3">
+                                <p className="text-[8px] font-black uppercase tracking-[0.28em] text-[#8a7760]">Posiciones</p>
+                                <p className="mt-1 text-lg font-header font-black italic text-[#2b1d12]">{roster.length}</p>
+                            </div>
+                            <div className="rounded-2xl border border-[#d7c39a] bg-[#fffaf1] px-4 py-3">
+                                <p className="text-[8px] font-black uppercase tracking-[0.28em] text-[#8a7760]">Pool nombres</p>
+                                <p className="mt-1 text-lg font-header font-black italic text-[#2b1d12]">{visibleNamePool.length}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="rounded-2xl border border-[#e3cfaa] bg-[#fcf6ea] px-5 py-4">
-                    <p className="text-[9px] font-black uppercase tracking-[0.28em] text-gold">Escudo esperado en GitHub</p>
-                    <div className="mt-3 flex flex-wrap items-center gap-3">
-                        <span className="px-3 py-2 rounded-xl bg-[#fffaf1] border border-[#d7c39a] text-[10px] font-mono font-bold text-[#2b1d12]">
-                            {expectedFilename}
-                        </span>
-                        <span className="text-[10px] font-bold text-[#7b6853]">
-                            Carpeta: <span className="font-mono text-[#2b1d12]">Escudos</span>
-                        </span>
-                    </div>
-                    <p className="mt-3 text-[10px] leading-relaxed text-[#7b6853]">
-                        Este es el PNG base que se usará por defecto para la raza. Si luego el jugador cambia el escudo, ese override pasará a ser el visible en su franquicia.
-                    </p>
-                </div>
-            </div>
-
-            <div className="space-y-6 mt-8">
-                <div className="flex flex-wrap gap-2 p-1.5 bg-[#f6e9d0] border border-[#dfcaa7] rounded-2xl w-fit">
+                <div className="sticky top-0 z-30 border-b border-[#e6d2ad] bg-[rgba(248,240,227,0.94)] px-1 py-3 backdrop-blur">
+                    <div className="flex flex-wrap gap-2 p-1.5 bg-[#f6e9d0] border border-[#dfcaa7] rounded-2xl w-fit shadow-[0_8px_24px_rgba(111,87,56,0.08)]">
                     {(['general', 'identidad', 'roster', 'nombres'] as const).map(tab => (
                         <button
                             key={tab}
@@ -308,11 +242,13 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                             {tab}
                         </button>
                     ))}
+                    </div>
                 </div>
 
                 {activeTeamTab === 'general' && (
                     <div className="space-y-8 animate-fade-in-up">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-[#fcf6ea] p-6 rounded-[2rem] border border-[#e3cfaa]">
+                        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,0.9fr)_minmax(320px,0.7fr)] gap-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-[#fcf6ea] p-6 rounded-[2rem] border border-[#e3cfaa]">
                             <div className="space-y-4">
                                 <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Costo segunda tirada</label>
                                 <input
@@ -337,6 +273,30 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                                 >
                                     {[1, 2, 3].map(t => <option key={t} value={t}>Tier {t}</option>)}
                                 </select>
+                            </div>
+                        </div>
+                            <div className="rounded-[2rem] border border-[#e3cfaa] bg-[#fcf6ea] p-6 space-y-5">
+                                <div>
+                                    <p className="text-[10px] font-black text-[#7b6853] uppercase tracking-widest">Chequeo rapido</p>
+                                    <p className="mt-2 text-[11px] leading-relaxed text-[#7b6853]">
+                                        Usa esta columna para vigilar la consistencia del equipo mientras editas el reglamento base.
+                                    </p>
+                                </div>
+                                <div className="space-y-3">
+                                    {[
+                                        ['Nombre visible', editingItem.data.name ? 'OK' : 'Falta'],
+                                        ['Reroll definido', editingItem.data.rerollCost ? 'OK' : 'Falta'],
+                                        ['Tier asignado', editingItem.data.tier ? 'OK' : 'Falta'],
+                                        ['Roster cargado', roster.length > 0 ? 'OK' : 'Falta'],
+                                    ].map(([label, state]) => (
+                                        <div key={label} className="flex items-center justify-between rounded-2xl border border-[#dcc8a1] bg-[#fffaf1] px-4 py-3">
+                                            <span className="text-[10px] font-black uppercase tracking-[0.22em] text-[#7b6853]">{label}</span>
+                                            <span className={`rounded-full px-3 py-1 text-[9px] font-black uppercase tracking-[0.22em] ${state === 'OK' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                                                {state}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </div>
 
@@ -398,17 +358,144 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
 
                 {activeTeamTab === 'identidad' && (
                     <div className="space-y-8 animate-fade-in-up">
-                        <div className="space-y-4">
-                            <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Biografía y trasfondo de la facción</label>
-                            <textarea
-                                value={editingItem.data.description || ''}
-                                onChange={(e) => setEditingItem({
-                                    ...editingItem,
-                                    data: { ...editingItem.data, description: e.target.value },
-                                })}
-                                className="w-full bg-[#fcf6ea] border border-[#d7c39a] rounded-2xl py-4 px-6 text-[#2b1d12] focus:border-premium-gold/50 outline-none h-64 resize-none text-[11px] leading-relaxed transition-all"
-                                placeholder="Describe aquí el trasfondo de esta raza en el mundo de Blood Bowl..."
-                            />
+                        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,0.95fr)_minmax(360px,0.75fr)] gap-8">
+                            <div className="space-y-6">
+                                <div className="space-y-4">
+                                    <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Origen de la imagen</label>
+                                    <AdminGitHubImagePicker
+                                        title="Explorador de GitHub"
+                                        helperText="Haz clic para buscar imágenes en el repositorio"
+                                        isExpanded={isImageExplorerExpanded}
+                                        setIsExpanded={setIsImageExplorerExpanded}
+                                        search={githubSearch}
+                                        setSearch={setGithubSearch}
+                                        images={gitHubImages}
+                                        isLoading={isLoadingGitHub}
+                                        currentImage={currentImage}
+                                        onPick={updateTeamImage}
+                                    />
+                                </div>
+
+                                <div className="relative">
+                                    <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center px-8 opacity-20 pointer-events-none">
+                                        <div className="h-px w-full bg-white/50"></div>
+                                        <span className="mx-4 text-[9px] font-black uppercase tracking-widest bg-[#f4ead7] px-2 whitespace-nowrap text-[#7b6853]">
+                                            O introduce URL manual
+                                        </span>
+                                        <div className="h-px w-full bg-white/50"></div>
+                                    </div>
+                                    <div className="h-10"></div>
+                                </div>
+
+                                <div className="flex gap-4 items-center">
+                                    <div className="grow">
+                                        <input
+                                            type="text"
+                                            value={currentImage}
+                                            onChange={(e) => updateTeamImage(e.target.value)}
+                                            className="w-full bg-[#fcf6ea] border border-[#d7c39a] rounded-2xl py-4 px-6 text-[10px] text-[#5f4d39] font-mono focus:border-premium-gold/50 outline-none transition-all"
+                                            placeholder="URL personalizada..."
+                                        />
+                                    </div>
+                                    <div className="w-24 h-16 rounded-2xl border border-[#d7c39a] bg-[#f7efe1] overflow-hidden flex-shrink-0 flex items-center justify-center">
+                                        {currentImage || suggestedImage ? (
+                                            <img
+                                                src={currentImage || suggestedImage}
+                                                alt=""
+                                                onError={(e) => {
+                                                    const fallback = suggestedImage;
+                                                    if ((e.currentTarget as HTMLImageElement).src !== fallback) {
+                                                        (e.currentTarget as HTMLImageElement).src = fallback;
+                                                    }
+                                                }}
+                                                style={getCrestPresentationStyle(editingItem.data.crestScale, editingItem.data.crestOffsetY)}
+                                                className="w-full h-full object-contain p-0.5 transform-gpu"
+                                            />
+                                        ) : (
+                                            <span className="material-symbols-outlined text-white/10">image_not_supported</span>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="rounded-2xl border border-[#e3cfaa] bg-[#fcf6ea] px-5 py-4 space-y-4">
+                                    <div>
+                                        <p className="text-[9px] font-black uppercase tracking-[0.28em] text-gold">Ajuste del escudo</p>
+                                        <p className="mt-2 text-[10px] leading-relaxed text-[#7b6853]">
+                                            Usa estos controles para acercar el escudo al encuadre del cuadrado y centrarlo mejor.
+                                        </p>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <label className="space-y-2">
+                                            <span className="block text-[9px] font-black text-[#7b6853] uppercase tracking-widest">Escala</span>
+                                            <input
+                                                type="range"
+                                                min="0.85"
+                                                max="1.6"
+                                                step="0.01"
+                                                value={editingItem.data.crestScale ?? 1.14}
+                                                onChange={(e) => updateCrestPresentation({ crestScale: parseFloat(e.target.value) })}
+                                                className="w-full accent-gold"
+                                            />
+                                        </label>
+                                        <label className="space-y-2">
+                                            <span className="block text-[9px] font-black text-[#7b6853] uppercase tracking-widest">Desplazamiento</span>
+                                            <input
+                                                type="range"
+                                                min="-40"
+                                                max="40"
+                                                step="1"
+                                                value={editingItem.data.crestOffsetY ?? 0}
+                                                onChange={(e) => updateCrestPresentation({ crestOffsetY: parseInt(e.target.value, 10) })}
+                                                className="w-full accent-gold"
+                                            />
+                                        </label>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                        <div className="rounded-2xl border border-[#d7c39a] bg-[#fffaf1] px-4 py-3">
+                                            <p className="text-[8px] font-black uppercase tracking-[0.28em] text-[#7b6853]">Escala ideal</p>
+                                            <p className="mt-1 text-sm font-black italic text-[#2b1d12] font-epilogue">1.12 - 1.18</p>
+                                        </div>
+                                        <div className="rounded-2xl border border-[#d7c39a] bg-[#fffaf1] px-4 py-3">
+                                            <p className="text-[8px] font-black uppercase tracking-[0.28em] text-[#7b6853]">Desplazamiento ideal</p>
+                                            <p className="mt-1 text-sm font-black italic text-[#2b1d12] font-epilogue">-4 a +4 px</p>
+                                        </div>
+                                        <div className="rounded-2xl border border-[#d7c39a] bg-[#fffaf1] px-4 py-3">
+                                            <p className="text-[8px] font-black uppercase tracking-[0.28em] text-[#7b6853]">Encuadre recomendado</p>
+                                            <p className="mt-1 text-[10px] leading-relaxed text-[#5f4d39]">PNG cuadrado, logo centrado y sin mucho margen vacio arriba o abajo.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-6">
+                                <div className="rounded-2xl border border-[#e3cfaa] bg-[#fcf6ea] px-5 py-4">
+                                    <p className="text-[9px] font-black uppercase tracking-[0.28em] text-gold">Escudo esperado en GitHub</p>
+                                    <div className="mt-3 flex flex-wrap items-center gap-3">
+                                        <span className="px-3 py-2 rounded-xl bg-[#fffaf1] border border-[#d7c39a] text-[10px] font-mono font-bold text-[#2b1d12]">
+                                            {expectedFilename}
+                                        </span>
+                                        <span className="text-[10px] font-bold text-[#7b6853]">
+                                            Carpeta: <span className="font-mono text-[#2b1d12]">Escudos</span>
+                                        </span>
+                                    </div>
+                                    <p className="mt-3 text-[10px] leading-relaxed text-[#7b6853]">
+                                        Este es el PNG base que se usará por defecto para la raza. Si luego el jugador cambia el escudo, ese override pasará a ser el visible en su franquicia.
+                                    </p>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Biografía y trasfondo de la facción</label>
+                                    <textarea
+                                        value={editingItem.data.description || ''}
+                                        onChange={(e) => setEditingItem({
+                                            ...editingItem,
+                                            data: { ...editingItem.data, description: e.target.value },
+                                        })}
+                                        className="w-full bg-[#fcf6ea] border border-[#d7c39a] rounded-2xl py-4 px-6 text-[#2b1d12] focus:border-premium-gold/50 outline-none h-64 resize-none text-[11px] leading-relaxed transition-all"
+                                        placeholder="Describe aquí el trasfondo de esta raza en el mundo de Blood Bowl..."
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -448,7 +535,7 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                                     <table className="min-w-[1120px] w-full text-left">
                                         <thead className="sticky top-0 z-20 border-b border-[#e7d8bb] bg-[#f8efdf] shadow-[0_1px_0_rgba(231,216,187,0.95)]">
                                             <tr className="text-[9px] font-black uppercase tracking-[0.24em] text-[#8a7760]">
-                                                <th className="px-4 py-3">Posicion</th>
+                                                <th className="sticky left-0 z-30 bg-[#f8efdf] px-4 py-3 min-w-[220px]">Posicion</th>
                                                 <th className="px-3 py-3 text-center">Coste</th>
                                                 <th className="px-3 py-3 text-center">Cant.</th>
                                                 {ROSTER_STATS.map((stat) => (
@@ -463,7 +550,7 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                                         <tbody className="divide-y divide-[#eee1c7]">
                                             {roster.map((player: any, idx: number) => (
                                                 <tr key={idx} className="align-top hover:bg-[#fff8ec] transition-colors">
-                                                    <td className="px-4 py-4 min-w-[220px]">
+                                                    <td className="sticky left-0 z-10 bg-[#fffaf1] px-4 py-4 min-w-[220px]">
                                                         <input
                                                             type="text"
                                                             value={player.position}
@@ -648,13 +735,6 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
         </>
     );
 };
-
-const Field: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
-    <div className="space-y-1">
-        <label className="text-[8px] font-bold text-[#8a7760] uppercase ml-1">{label}</label>
-        {children}
-    </div>
-);
 
 export default AdminTeamForm;
 
