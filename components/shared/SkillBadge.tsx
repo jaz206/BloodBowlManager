@@ -45,7 +45,10 @@ const SkillBadge: React.FC<SkillBadgeProps> = ({ skillKey, onClick, variant = 'd
             >
                 <span>{name}</span>
                 {elite && (
-                    <span className="rounded-full border border-[rgba(202,138,4,0.35)] bg-[rgba(202,138,4,0.18)] px-2 py-[2px] text-[8px] leading-none tracking-[0.2em] text-[#8a5f10]">
+                    <span
+                        title="Habilidad Elite: capacidad especial avanzada."
+                        className="cursor-help rounded-full border border-[rgba(202,138,4,0.35)] bg-[rgba(202,138,4,0.18)] px-2 py-[2px] text-[8px] leading-none tracking-[0.2em] text-[#8a5f10] shadow-[0_6px_12px_rgba(202,138,4,0.12)]"
+                    >
                         ELITE
                     </span>
                 )}

@@ -58,13 +58,16 @@ const SkillCard: React.FC<{ skill: Skill; onClick: () => void; isSelected: boole
                     <span className="text-[10px] font-black text-[#7b6853] uppercase tracking-[0.2em]">{categoryId}</span>
                     {elite && (
                         <div className="relative group/elite">
-                            <span className="rounded-full border border-[rgba(202,138,4,0.35)] bg-[rgba(202,138,4,0.16)] px-2 py-1 text-[8px] font-black uppercase tracking-[0.22em] text-[#8a5f10]">
+                            <span
+                                title="Habilidad Elite: mejora avanzada con reglas y limites especiales."
+                                className="cursor-help rounded-full border border-[rgba(202,138,4,0.35)] bg-[rgba(202,138,4,0.16)] px-2 py-1 text-[8px] font-black uppercase tracking-[0.22em] text-[#8a5f10] shadow-[0_8px_18px_rgba(202,138,4,0.14)]"
+                            >
                                 Elite
                             </span>
                             <div className="pointer-events-none absolute right-0 top-full z-20 mt-2 hidden w-56 rounded-2xl border border-[rgba(202,138,4,0.18)] bg-[rgba(255,251,241,0.98)] p-3 text-left shadow-[0_16px_36px_rgba(92,68,39,0.16)] group-hover/elite:block">
                                 <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[#8a5f10] mb-1 italic">Habilidad Elite</p>
                                 <p className="text-[11px] leading-relaxed text-[#6f5738] italic font-medium">
-                                    Mejora avanzada del reglamento. Aumenta el valor del jugador y cuenta para los límites de Elite cuando aplique.
+                                    Mejora avanzada del reglamento. Aumenta el valor del jugador y cuenta para los limites de Elite cuando aplique.
                                 </p>
                             </div>
                         </div>
@@ -294,7 +297,7 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
-                            className="relative overflow-hidden rounded-[2.5rem] blood-ui-light-card border border-[rgba(202,138,4,0.2)] p-8 md:p-12 shadow-[0_20px_50px_rgba(92,68,39,0.12)] group"
+                            className="relative overflow-visible rounded-[2.5rem] blood-ui-light-card border border-[rgba(202,138,4,0.2)] p-8 md:p-12 shadow-[0_20px_50px_rgba(92,68,39,0.12)] group"
                         >
                             <div className="absolute top-0 right-0 p-12 opacity-[0.03]">
                                 <span className="material-symbols-outlined !text-[200px] text-[#ca8a04]">
@@ -314,13 +317,16 @@ const Skills: React.FC<SkillsProps> = ({ initialCategory, initialSearchTerm = ''
                                         </span>
                                         {isEliteSkill(featuredSkill) && (
                                             <div className="relative group/elite-feature">
-                                                <span className="rounded-full border border-[rgba(202,138,4,0.35)] bg-[rgba(202,138,4,0.16)] px-3 py-1 text-[8px] font-black uppercase tracking-[0.22em] text-[#8a5f10]">
+                                                <span
+                                                    title="Habilidad Elite: marcada como especial en Firebase."
+                                                    className="cursor-help rounded-full border border-[rgba(202,138,4,0.35)] bg-[rgba(202,138,4,0.16)] px-3 py-1 text-[8px] font-black uppercase tracking-[0.22em] text-[#8a5f10] shadow-[0_8px_18px_rgba(202,138,4,0.14)]"
+                                                >
                                                     Elite
                                                 </span>
                                                 <div className="pointer-events-none absolute left-0 top-full z-20 mt-2 hidden w-64 rounded-2xl border border-[rgba(202,138,4,0.18)] bg-[rgba(255,251,241,0.98)] p-3 text-left shadow-[0_16px_36px_rgba(92,68,39,0.16)] group-hover/elite-feature:block">
                                                     <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[#8a5f10] mb-1 italic">Habilidad Elite</p>
                                                     <p className="text-[11px] leading-relaxed text-[#6f5738] italic font-medium">
-                                                        Esta habilidad estÃ¡ marcada como Elite en Firebase y debe tratarse como capacidad especial avanzada.
+                                                        Esta habilidad esta marcada como Elite en Firebase y debe tratarse como capacidad especial avanzada.
                                                     </p>
                                                 </div>
                                             </div>

@@ -39,9 +39,17 @@ const SkillModal: React.FC<SkillModalProps> = ({ skill, onClose }) => {
                 {skill.category}
               </div>
               {elite && (
-                <div className="text-[10px] font-display font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-full border inline-flex items-center gap-2 bg-[rgba(202,138,4,0.16)] text-[#8a5f10] border-[rgba(202,138,4,0.3)] shadow-[0_8px_20px_rgba(202,138,4,0.12)]">
-                  <span className="material-symbols-outlined text-sm">workspace_premium</span>
-                  Elite
+                <div className="inline-flex flex-col gap-2">
+                  <div
+                    title="Habilidad Elite: capacidad especial avanzada."
+                    className="text-[10px] font-display font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-full border inline-flex items-center gap-2 bg-[rgba(202,138,4,0.16)] text-[#8a5f10] border-[rgba(202,138,4,0.3)] shadow-[0_8px_20px_rgba(202,138,4,0.12)] cursor-help"
+                  >
+                    <span className="material-symbols-outlined text-sm">workspace_premium</span>
+                    Elite
+                  </div>
+                  <div className="rounded-2xl border border-[rgba(202,138,4,0.18)] bg-[rgba(202,138,4,0.08)] px-4 py-3 text-[11px] leading-relaxed italic font-medium text-[#6f5738]">
+                    Habilidad avanzada marcada como Elite en el catalogo maestro. Puede tener coste adicional y limites especificos segun el formato de juego.
+                  </div>
                 </div>
               )}
             </div>
