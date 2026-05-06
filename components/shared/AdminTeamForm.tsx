@@ -88,6 +88,12 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
         return fallbackEntry?.[1] || [];
     }, [editingItem.data.name]);
     const visibleNamePool = editingItem.data.namePools?.length ? editingItem.data.namePools : defaultNamePool;
+    const roster = editingItem.data.roster || [];
+
+    const getSkillLabel = (skill: any, fallbackKey: string) =>
+        language === 'es'
+            ? (skill?.name_es || skill?.name_en || fallbackKey)
+            : (skill?.name_en || skill?.name_es || fallbackKey);
 
     const updateTeamImage = (url: string) => {
         setEditingItem({
@@ -107,6 +113,27 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
     const updateRosterPlayer = (idx: number, patch: Record<string, unknown>) => {
         const newRoster = [...(editingItem.data.roster || [])];
         newRoster[idx] = { ...newRoster[idx], ...patch };
+        setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
+    };
+
+    const addRosterPlayer = () => {
+        const newPlayer = {
+            qty: '0-16',
+            position: 'Lineman',
+            cost: 50000,
+            stats: { MV: 6, FU: '3', AG: '3+', PA: '4+', AR: '9+' },
+            skillKeys: [],
+            primary: 'G',
+            secondary: 'A, S',
+        };
+        setEditingItem({
+            ...editingItem,
+            data: { ...editingItem.data, roster: [...roster, newPlayer] },
+        });
+    };
+
+    const removeRosterPlayer = (idx: number) => {
+        const newRoster = roster.filter((_: any, i: number) => i !== idx);
         setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
     };
 
@@ -388,176 +415,171 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
 
                 {activeTeamTab === 'roster' && (
                     <div className="space-y-6 animate-fade-in-up">
-                        <div className="flex justify-between items-center px-1">
-                            <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest">Roster de jugadores</label>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                     const newPlayer = {
-                                         qty: '0-16',
-                                         position: 'Lineman',
-                                         cost: 50000,
-                                         stats: { MV: 6, FU: '3', AG: '3+', PA: '4+', AR: '9+' },
-                                        skillKeys: [],
-                                        primary: 'G',
-                                        secondary: 'A, S',
-                                    };
-                                    setEditingItem({
-                                        ...editingItem,
-                                        data: { ...editingItem.data, roster: [...(editingItem.data.roster || []), newPlayer] },
-                                    });
-                                }}
-                                className="text-premium-gold hover:text-white transition-colors flex items-center gap-1 text-[9px] font-black uppercase tracking-widest"
-                            >
-                                <span className="material-symbols-outlined text-sm">add</span> Añadir posición
-                            </button>
-                        </div>
-
-                        <div className="space-y-4">
-                            {(editingItem.data.roster || []).map((player: any, idx: number) => (
-                                <div key={idx} className="bg-[#fcf6ea] border border-[#e3cfaa] rounded-[1.75rem] p-5 space-y-4">
-                                    <div className="flex justify-between gap-4">
-                                        <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                            <Field label="Posicion">
-                                                <input
-                                                    type="text"
-                                                    value={player.position}
-                                                    onChange={(e) => {
-                                                        updateRosterPlayer(idx, { position: e.target.value });
-                                                    }}
-                                                    className="w-full bg-[#fffaf1] border border-[#d7c39a] rounded-xl px-4 py-2 text-xs text-[#2b1d12] outline-none focus:border-premium-gold/30"
-                                                />
-                                            </Field>
-                                            <Field label="Cantidad">
-                                                <input
-                                                    type="text"
-                                                    value={player.qty}
-                                                    onChange={(e) => {
-                                                        updateRosterPlayer(idx, { qty: e.target.value });
-                                                    }}
-                                                    className="w-full bg-[#fffaf1] border border-[#d7c39a] rounded-xl px-4 py-2 text-xs text-[#2b1d12] outline-none focus:border-premium-gold/30"
-                                                />
-                                            </Field>
-                                            <Field label="Costo (MO)">
-                                                <input
-                                                    type="number"
-                                                    value={player.cost}
-                                                    onChange={(e) => {
-                                                        updateRosterPlayer(idx, { cost: parseInt(e.target.value) || 0 });
-                                                    }}
-                                                    className="w-full bg-[#fffaf1] border border-[#d7c39a] rounded-xl px-4 py-2 text-xs text-[#2b1d12] outline-none focus:border-premium-gold/30"
-                                                />
-                                            </Field>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                const newRoster = (editingItem.data.roster || []).filter((_: any, i: number) => i !== idx);
-                                                setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
-                                            }}
-                                            className="w-10 h-10 rounded-xl bg-blood-red/10 border border-blood-red/20 text-blood-red flex items-center justify-center hover:bg-blood-red hover:text-white transition-all self-end"
-                                        >
-                                            <span className="material-symbols-outlined text-sm">delete</span>
-                                        </button>
-                                    </div>
-
-                                    <div className="grid grid-cols-5 gap-3 bg-[#fffaf1] p-3 rounded-xl border border-[#ead9bb]">
-                                        {ROSTER_STATS.map(stat => (
-                                            <div key={stat} className="space-y-1">
-                                                <span className="block text-[8px] font-bold text-[#8a7760] uppercase text-center">{stat}</span>
-                                                <input
-                                                    type="text"
-                                                    value={player.stats?.[stat] || ''}
-                                                    onChange={(e) => {
-                                                        const currentStats = editingItem.data.roster?.[idx]?.stats || {};
-                                                        updateRosterPlayer(idx, {
-                                                            stats: { ...currentStats, [stat]: e.target.value },
-                                                        });
-                                                    }}
-                                                    className="w-full bg-transparent border-b border-[#d7c39a] text-center text-[#2b1d12] text-xs py-1 focus:border-premium-gold outline-none font-display font-black transition-colors"
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <Field label="Primarias">
-                                            <input
-                                                type="text"
-                                                value={player.primary || ''}
-                                                onChange={(e) => {
-                                                    const newRoster = [...editingItem.data.roster];
-                                                    newRoster[idx] = { ...newRoster[idx], primary: e.target.value };
-                                                    setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
-                                                }}
-                                                className="w-full bg-[#fffaf1] border border-[#d7c39a] rounded-xl px-4 py-2 text-xs text-[#2b1d12] outline-none focus:border-premium-gold/30"
-                                            />
-                                        </Field>
-                                        <Field label="Secundarias">
-                                            <input
-                                                type="text"
-                                                value={player.secondary || ''}
-                                                onChange={(e) => {
-                                                    const newRoster = [...editingItem.data.roster];
-                                                    newRoster[idx] = { ...newRoster[idx], secondary: e.target.value };
-                                                    setEditingItem({ ...editingItem, data: { ...editingItem.data, roster: newRoster } });
-                                                }}
-                                                className="w-full bg-[#fffaf1] border border-[#d7c39a] rounded-xl px-4 py-2 text-xs text-[#2b1d12] outline-none focus:border-premium-gold/30"
-                                            />
-                                        </Field>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <label className="text-[8px] font-bold text-[#8a7760] uppercase ml-1">Habilidades Iniciales</label>
-                                        <div className="space-y-3 p-3 bg-[#fffaf1] rounded-xl border border-[#ead9bb]">
-                                            <div className="flex flex-wrap gap-1.5 min-h-[40px]">
-                                                {(player.skillKeys || []).length > 0 ? (
-                                                    (player.skillKeys || []).map((skillKey: string) => {
-                                                        const skill = skills.find((entry: any) => entry.keyEN === skillKey);
-                                                        return (
-                                                            <button
-                                                                key={skillKey}
-                                                                type="button"
-                                                                onClick={() => removeInitialSkill(idx, skillKey)}
-                                                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-tighter border bg-premium-gold/20 border-premium-gold/40 text-premium-gold hover:bg-blood-red/10 hover:border-blood-red/30 hover:text-blood-red transition-all"
-                                                            >
-                                                                {language === 'es' ? (skill?.name_es || skill?.name_en || skillKey) : (skill?.name_en || skill?.name_es || skillKey)}
-                                                                <span className="material-symbols-outlined text-[12px]">close</span>
-                                                            </button>
-                                                        );
-                                                    })
-                                                ) : (
-                                                    <p className="text-[9px] font-bold text-[#8a7760]">Sin habilidades asignadas todavía.</p>
-                                                )}
-                                            </div>
-                                            <div className="flex flex-col md:flex-row gap-3">
-                                                <select
-                                                    value={pendingSkillSelections[idx] || ''}
-                                                    onChange={(e) => setPendingSkillSelections(prev => ({ ...prev, [idx]: e.target.value }))}
-                                                    className="flex-1 bg-white border border-[#d7c39a] rounded-xl px-4 py-2 text-[10px] font-bold text-[#2b1d12] outline-none focus:border-premium-gold/40"
-                                                >
-                                                    <option value="">Añadir habilidad...</option>
-                                                    {skills
-                                                        .filter((skill: any) => !(player.skillKeys || []).includes(skill.keyEN))
-                                                        .map((skill: any) => (
-                                                            <option key={skill.keyEN} value={skill.keyEN}>
-                                                                {language === 'es' ? (skill.name_es || skill.name_en) : (skill.name_en || skill.name_es)}
-                                                            </option>
-                                                        ))}
-                                                </select>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => addInitialSkill(idx)}
-                                                    disabled={!pendingSkillSelections[idx]}
-                                                    className="px-4 py-2 rounded-xl bg-premium-gold text-black text-[10px] font-black uppercase tracking-widest disabled:opacity-40 disabled:cursor-not-allowed"
-                                                >
-                                                    Añadir
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
+                        <div className="rounded-[2rem] border border-[#e3cfaa] bg-[#fcf6ea] p-5 space-y-5">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                    <p className="text-[10px] font-black text-[#7b6853] uppercase tracking-widest">Roster de jugadores</p>
+                                    <p className="mt-1 text-[11px] text-[#7b6853]">
+                                        Edicion densa del roster: posicion, coste, cantidad, perfil y skills en una sola mesa.
+                                    </p>
                                 </div>
-                            ))}
+                                <div className="flex items-center gap-3">
+                                    <div className="rounded-2xl border border-[#d7c39a] bg-[#fffaf1] px-4 py-2 text-center">
+                                        <p className="text-[8px] font-black uppercase tracking-[0.28em] text-[#8a7760]">Posiciones</p>
+                                        <p className="mt-1 text-lg font-header font-black italic text-[#2b1d12]">{roster.length}</p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={addRosterPlayer}
+                                        className="inline-flex items-center gap-2 rounded-2xl bg-premium-gold px-4 py-3 text-[10px] font-black uppercase tracking-widest text-black transition-all hover:shadow-[0_0_24px_rgba(202,138,4,0.25)]"
+                                    >
+                                        <span className="material-symbols-outlined text-sm">add</span>
+                                        Añadir posicion
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="overflow-hidden rounded-[1.5rem] border border-[#e3cfaa] bg-[#fffaf1]">
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-[1120px] w-full text-left">
+                                        <thead className="border-b border-[#e7d8bb] bg-[#f8efdf]">
+                                            <tr className="text-[9px] font-black uppercase tracking-[0.24em] text-[#8a7760]">
+                                                <th className="px-4 py-3">Posicion</th>
+                                                <th className="px-3 py-3 text-center">Coste</th>
+                                                <th className="px-3 py-3 text-center">Cant.</th>
+                                                {ROSTER_STATS.map((stat) => (
+                                                    <th key={stat} className="px-2 py-3 text-center">{stat}</th>
+                                                ))}
+                                                <th className="px-3 py-3 text-center">1ª</th>
+                                                <th className="px-3 py-3 text-center">2ª</th>
+                                                <th className="px-4 py-3">Skills iniciales</th>
+                                                <th className="px-3 py-3 text-right">Accion</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-[#eee1c7]">
+                                            {roster.map((player: any, idx: number) => (
+                                                <tr key={idx} className="align-top hover:bg-[#fff8ec] transition-colors">
+                                                    <td className="px-4 py-4 min-w-[220px]">
+                                                        <input
+                                                            type="text"
+                                                            value={player.position}
+                                                            onChange={(e) => updateRosterPlayer(idx, { position: e.target.value })}
+                                                            className="w-full rounded-xl border border-[#d7c39a] bg-white px-3 py-2 text-[11px] font-bold text-[#2b1d12] outline-none focus:border-premium-gold/40"
+                                                        />
+                                                    </td>
+                                                    <td className="px-3 py-4">
+                                                        <input
+                                                            type="number"
+                                                            value={player.cost}
+                                                            onChange={(e) => updateRosterPlayer(idx, { cost: parseInt(e.target.value) || 0 })}
+                                                            className="w-24 rounded-xl border border-[#d7c39a] bg-white px-3 py-2 text-center text-[11px] font-mono text-[#2b1d12] outline-none focus:border-premium-gold/40"
+                                                        />
+                                                    </td>
+                                                    <td className="px-3 py-4">
+                                                        <input
+                                                            type="text"
+                                                            value={player.qty}
+                                                            onChange={(e) => updateRosterPlayer(idx, { qty: e.target.value })}
+                                                            className="w-16 rounded-xl border border-[#d7c39a] bg-white px-2 py-2 text-center text-[11px] font-bold text-[#2b1d12] outline-none focus:border-premium-gold/40"
+                                                        />
+                                                    </td>
+                                                    {ROSTER_STATS.map((stat) => (
+                                                        <td key={stat} className="px-2 py-4">
+                                                            <input
+                                                                type="text"
+                                                                value={player.stats?.[stat] || ''}
+                                                                onChange={(e) => {
+                                                                    const currentStats = roster[idx]?.stats || {};
+                                                                    updateRosterPlayer(idx, {
+                                                                        stats: { ...currentStats, [stat]: e.target.value },
+                                                                    });
+                                                                }}
+                                                                className="w-14 rounded-xl border border-[#d7c39a] bg-white px-2 py-2 text-center text-[11px] font-black text-[#2b1d12] outline-none focus:border-premium-gold/40"
+                                                            />
+                                                        </td>
+                                                    ))}
+                                                    <td className="px-3 py-4">
+                                                        <input
+                                                            type="text"
+                                                            value={player.primary || ''}
+                                                            onChange={(e) => updateRosterPlayer(idx, { primary: e.target.value })}
+                                                            className="w-14 rounded-xl border border-[#d7c39a] bg-white px-2 py-2 text-center text-[11px] font-black text-emerald-700 outline-none focus:border-premium-gold/40"
+                                                        />
+                                                    </td>
+                                                    <td className="px-3 py-4">
+                                                        <input
+                                                            type="text"
+                                                            value={player.secondary || ''}
+                                                            onChange={(e) => updateRosterPlayer(idx, { secondary: e.target.value })}
+                                                            className="w-16 rounded-xl border border-[#d7c39a] bg-white px-2 py-2 text-center text-[11px] font-black text-purple-700 outline-none focus:border-premium-gold/40"
+                                                        />
+                                                    </td>
+                                                    <td className="px-4 py-4 min-w-[340px]">
+                                                        <div className="space-y-3">
+                                                            <div className="flex flex-wrap gap-1.5 min-h-[34px]">
+                                                                {(player.skillKeys || []).length > 0 ? (
+                                                                    (player.skillKeys || []).map((skillKey: string) => {
+                                                                        const skill = skills.find((entry: any) => entry.keyEN === skillKey);
+                                                                        return (
+                                                                            <button
+                                                                                key={skillKey}
+                                                                                type="button"
+                                                                                onClick={() => removeInitialSkill(idx, skillKey)}
+                                                                                className="inline-flex items-center gap-1.5 rounded-lg border border-premium-gold/30 bg-premium-gold/15 px-2.5 py-1 text-[9px] font-black uppercase tracking-tight text-[#2b1d12] transition-all hover:border-blood-red/30 hover:bg-blood-red/10 hover:text-blood-red"
+                                                                            >
+                                                                                {getSkillLabel(skill, skillKey)}
+                                                                                <span className="material-symbols-outlined text-[12px]">close</span>
+                                                                            </button>
+                                                                        );
+                                                                    })
+                                                                ) : (
+                                                                    <span className="text-[10px] font-bold text-[#8a7760]">Sin skills iniciales.</span>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex gap-2">
+                                                                <select
+                                                                    value={pendingSkillSelections[idx] || ''}
+                                                                    onChange={(e) => setPendingSkillSelections(prev => ({ ...prev, [idx]: e.target.value }))}
+                                                                    className="min-w-0 flex-1 rounded-xl border border-[#d7c39a] bg-white px-3 py-2 text-[10px] font-bold text-[#2b1d12] outline-none focus:border-premium-gold/40"
+                                                                >
+                                                                    <option value="">Añadir habilidad...</option>
+                                                                    {skills
+                                                                        .filter((skill: any) => !(player.skillKeys || []).includes(skill.keyEN))
+                                                                        .map((skill: any) => (
+                                                                            <option key={skill.keyEN} value={skill.keyEN}>
+                                                                                {getSkillLabel(skill, skill.keyEN)}
+                                                                            </option>
+                                                                        ))}
+                                                                </select>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => addInitialSkill(idx)}
+                                                                    disabled={!pendingSkillSelections[idx]}
+                                                                    className="rounded-xl bg-premium-gold px-3 py-2 text-[10px] font-black uppercase tracking-widest text-black disabled:cursor-not-allowed disabled:opacity-40"
+                                                                >
+                                                                    Añadir
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-3 py-4 text-right">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeRosterPlayer(idx)}
+                                                            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-blood-red/20 bg-blood-red/10 text-blood-red transition-all hover:bg-blood-red hover:text-white"
+                                                        >
+                                                            <span className="material-symbols-outlined text-sm">delete</span>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <p className="px-1 text-[9px] font-bold uppercase tracking-tight text-[#8a7760]">
+                                Edicion rapida inspirada en el editor maestro: cambia costes, cantidades, perfil y skills sin abrir subpaneles.
+                            </p>
                         </div>
                     </div>
                 )}
