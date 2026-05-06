@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+ï»¿import React, { useMemo, useState } from 'react';
 import AdminGitHubImagePicker from './AdminGitHubImagePicker';
 import { getStarPlayerImageFilename, getStarPlayerImageUrl } from '../../utils/imageUtils';
 import { isEliteSkill } from '../../utils/skillUtils';
@@ -110,8 +110,7 @@ const AdminStarForm: React.FC<AdminStarFormProps> = ({
     );
 
     const selectedSkills = useMemo(
-        () =>
-            sortedSkills.filter((skill) => selectedSkillKeys.includes(skill.keyEN)),
+        () => sortedSkills.filter((skill) => selectedSkillKeys.includes(skill.keyEN)),
         [sortedSkills, selectedSkillKeys]
     );
 
@@ -149,20 +148,20 @@ const AdminStarForm: React.FC<AdminStarFormProps> = ({
     ];
 
     return (
-        <div className="space-y-8 mt-6">
+        <div className="mt-6 space-y-8">
             <div className="rounded-[1.75rem] border border-[#e3cfaa] bg-[#fffaf1] p-5">
                 <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-                    <div className="space-y-3 min-w-0">
+                    <div className="min-w-0 space-y-3">
                         <p className="text-[9px] font-black uppercase tracking-[0.32em] text-gold">Editor de estrellas</p>
-                        <h4 className="text-3xl font-header font-black italic uppercase tracking-tight text-[#2b1d12] leading-none">
+                        <h4 className="text-3xl font-header font-black italic uppercase tracking-tight leading-none text-[#2b1d12]">
                             {data.name || 'Nueva estrella'}
                         </h4>
-                        <p className="text-[11px] leading-relaxed text-[#6f5738] max-w-3xl">
-                            Estamos editando una ficha de contratación completa: imagen, coste, perfil, skills, facciones compatibles y regla especial.
+                        <p className="max-w-3xl text-[11px] leading-relaxed text-[#6f5738]">
+                            Estamos editando una ficha completa: imagen, coste, perfil, habilidades, compatibilidad y regla especial.
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-4 gap-2 self-stretch xl:min-w-[360px]">
+                    <div className="grid grid-cols-2 gap-2 self-stretch md:grid-cols-4 xl:min-w-[360px]">
                         {[
                             { label: 'Coste', value: data.cost ? `${Math.round(Number(data.cost) / 1000)}k` : '0k' },
                             { label: 'Skills', value: selectedSkillKeys.length },
@@ -177,10 +176,10 @@ const AdminStarForm: React.FC<AdminStarFormProps> = ({
                     </div>
                 </div>
 
-                <div className="mt-5 grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(340px,400px)] gap-6">
+                <div className="mt-5 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,380px)]">
                     <div className="space-y-6">
                         <div className="space-y-6">
-                            <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Imagen oficial</label>
+                            <label className="ml-1 block text-[10px] font-black uppercase tracking-widest text-[#7b6853]">Imagen oficial</label>
                             <AdminGitHubImagePicker
                                 title="Imagen de la estrella"
                                 helperText="Explora GitHub o pega una URL manual."
@@ -194,20 +193,20 @@ const AdminStarForm: React.FC<AdminStarFormProps> = ({
                                 onPick={updateImage}
                             />
 
-                            <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_220px] gap-4">
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_220px]">
                                 <div className="space-y-2">
-                                    <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">URL de imagen</label>
+                                    <label className="ml-1 block text-[10px] font-black uppercase tracking-widest text-[#7b6853]">URL de imagen</label>
                                     <input
                                         type="text"
                                         value={currentImage}
                                         onChange={(e) => updateImage(e.target.value)}
-                                        className="w-full bg-[#fcf6ea] border border-[#d7c39a] rounded-2xl py-4 px-5 text-[#2b1d12] font-mono text-sm focus:border-premium-gold/50 outline-none"
+                                        className="w-full rounded-2xl border border-[#d7c39a] bg-[#fcf6ea] px-5 py-4 font-mono text-sm text-[#2b1d12] outline-none focus:border-premium-gold/50"
                                         placeholder="Pega URL o usa el explorador..."
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Vista previa</label>
-                                    <div className="w-full h-28 rounded-2xl border border-[#d7c39a] bg-[#f7efe1] overflow-hidden flex items-center justify-center">
+                                    <label className="ml-1 block text-[10px] font-black uppercase tracking-widest text-[#7b6853]">Vista previa</label>
+                                    <div className="flex h-28 w-full items-center justify-center overflow-hidden rounded-2xl border border-[#d7c39a] bg-[#f7efe1]">
                                         {currentImage || suggestedImage ? (
                                             <img
                                                 src={currentImage || suggestedImage}
@@ -218,7 +217,7 @@ const AdminStarForm: React.FC<AdminStarFormProps> = ({
                                                         (e.currentTarget as HTMLImageElement).src = fallback;
                                                     }
                                                 }}
-                                                className="w-full h-full object-cover"
+                                                className="h-full w-full object-cover"
                                             />
                                         ) : (
                                             <span className="material-symbols-outlined text-[#c8b79e]">image_not_supported</span>
@@ -230,7 +229,7 @@ const AdminStarForm: React.FC<AdminStarFormProps> = ({
                             <div className="rounded-2xl border border-[#e3cfaa] bg-[#fcf6ea] px-5 py-4">
                                 <p className="text-[9px] font-black uppercase tracking-[0.28em] text-gold">Imagen esperada en GitHub</p>
                                 <div className="mt-3 flex flex-wrap items-center gap-3">
-                                    <span className="px-3 py-2 rounded-xl bg-[#fffaf1] border border-[#d7c39a] text-[10px] font-mono font-bold text-[#2b1d12]">
+                                    <span className="rounded-xl border border-[#d7c39a] bg-[#fffaf1] px-3 py-2 font-mono text-[10px] font-bold text-[#2b1d12]">
                                         {expectedFilename}
                                     </span>
                                     <span className="text-[10px] font-bold text-[#7b6853]">
@@ -240,114 +239,112 @@ const AdminStarForm: React.FC<AdminStarFormProps> = ({
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_160px] gap-4">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_160px]">
                             <div className="space-y-2">
-                                <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Nombre visible</label>
+                                <label className="ml-1 block text-[10px] font-black uppercase tracking-widest text-[#7b6853]">Nombre visible</label>
                                 <input
                                     type="text"
                                     value={data.name || ''}
                                     onChange={(e) => updateField('name', e.target.value)}
-                                    className="w-full bg-[#fcf6ea] border border-[#d7c39a] rounded-2xl py-4 px-5 text-[#2b1d12] text-sm focus:border-premium-gold/50 outline-none"
+                                    className="w-full rounded-2xl border border-[#d7c39a] bg-[#fcf6ea] px-5 py-4 text-sm text-[#2b1d12] outline-none focus:border-premium-gold/50"
                                     placeholder="Ej: Griff Oberwald"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Coste</label>
+                                <label className="ml-1 block text-[10px] font-black uppercase tracking-widest text-[#7b6853]">Coste</label>
                                 <input
                                     type="number"
                                     value={data.cost || 0}
                                     onChange={(e) => updateField('cost', parseInt(e.target.value) || 0)}
-                                    className="w-full bg-[#fcf6ea] border border-[#d7c39a] rounded-2xl py-4 px-5 text-[#2b1d12] text-sm focus:border-premium-gold/50 outline-none"
+                                    className="w-full rounded-2xl border border-[#d7c39a] bg-[#fcf6ea] px-5 py-4 text-sm text-[#2b1d12] outline-none focus:border-premium-gold/50"
                                 />
                             </div>
                         </div>
 
                         <div className="space-y-3">
-                            <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Perfil de atributos</label>
-                            <div className="grid grid-cols-5 gap-3 bg-[#fcf6ea] p-4 rounded-2xl border border-[#e3cfaa]">
+                            <label className="ml-1 block text-[10px] font-black uppercase tracking-widest text-[#7b6853]">Perfil de atributos</label>
+                            <div className="grid grid-cols-5 gap-3 rounded-2xl border border-[#e3cfaa] bg-[#fcf6ea] p-4">
                                 {STAT_KEYS.map((stat) => (
                                     <div key={stat} className="space-y-1">
-                                        <span className="block text-[8px] font-bold text-[#8a7760] uppercase text-center">{stat}</span>
+                                        <span className="block text-center text-[8px] font-bold uppercase text-[#8a7760]">{stat}</span>
                                         <input
                                             type="text"
                                             value={data.stats?.[stat] || ''}
                                             onChange={(e) => updateStat(stat, e.target.value)}
-                                            className="w-full bg-transparent border-b border-[#d7c39a] text-center text-[#2b1d12] text-sm py-1 focus:border-premium-gold outline-none font-display font-black transition-colors"
+                                            className="w-full border-b border-[#d7c39a] bg-transparent py-1 text-center font-display text-sm font-black text-[#2b1d12] outline-none transition-colors focus:border-premium-gold"
                                         />
                                     </div>
                                 ))}
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(280px,320px)] gap-4">
-                            <div className="space-y-3">
-                                <div className="flex items-center justify-between gap-3">
-                                    <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Habilidades base</label>
-                                    <input
-                                        type="text"
-                                        value={skillSearch}
-                                        onChange={(e) => setSkillSearch(e.target.value)}
-                                        className="w-full max-w-[220px] bg-white/80 border border-[#e3cfaa] rounded-xl px-4 py-2 text-[11px] text-[#2b1d12] outline-none focus:border-premium-gold/50"
-                                        placeholder="Filtrar skills..."
-                                    />
-                                </div>
-                                <div className="flex flex-wrap gap-2 p-4 bg-[#fcf6ea] border border-[#e3cfaa] rounded-2xl max-h-72 overflow-y-auto custom-scrollbar">
-                                    {filteredSkills.map((skill) => {
-                                        const isSelected = selectedSkillKeys.includes(skill.keyEN);
-                                        const isElite = isEliteSkill(skill);
-                                        return (
-                                            <button
-                                                key={skill.keyEN}
-                                                type="button"
-                                                onClick={() => toggleSkill(skill.keyEN)}
-                                                className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${isSelected
-                                                    ? 'bg-sky-500/20 text-sky-700 border-sky-500/30'
-                                                    : 'bg-white text-[#8a7760] border-[#e3cfaa] hover:border-gold/30 hover:text-[#2b1d12]'
-                                                }`}
-                                                title={skill.desc_es || skill.desc_en || ''}
-                                            >
-                                                <span>{displaySkillName(skill)}</span>
-                                                {isElite && <span className="ml-2 rounded-full border border-[#efc666] bg-[#fff1c4] px-2 py-0.5 text-[8px] text-[#9e6500]">Elite</span>}
-                                            </button>
-                                        );
-                                    })}
+                        <div className="space-y-4">
+                            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                <label className="ml-1 block text-[10px] font-black uppercase tracking-widest text-[#7b6853]">Habilidades base</label>
+                                <input
+                                    type="text"
+                                    value={skillSearch}
+                                    onChange={(e) => setSkillSearch(e.target.value)}
+                                    className="w-full rounded-xl border border-[#e3cfaa] bg-white/80 px-4 py-2 text-[11px] text-[#2b1d12] outline-none focus:border-premium-gold/50 md:max-w-[260px]"
+                                    placeholder="Filtrar skills..."
+                                />
+                            </div>
+
+                            <div className="rounded-2xl border border-[#e3cfaa] bg-[#fff8eb] p-4">
+                                <p className="text-[9px] font-black uppercase tracking-[0.28em] text-gold">Skills elegidas</p>
+                                <div className="mt-3 flex flex-wrap gap-2">
+                                    {selectedSkills.length > 0 ? selectedSkills.map((skill) => (
+                                        <button
+                                            key={skill.keyEN}
+                                            type="button"
+                                            onClick={() => toggleSkill(skill.keyEN)}
+                                            className="rounded-xl border border-[#d7c39a] bg-white px-3 py-2 text-[10px] font-black uppercase tracking-widest text-[#2b1d12] transition-colors hover:border-red-400 hover:text-red-700"
+                                        >
+                                            {displaySkillName(skill)}
+                                        </button>
+                                    )) : (
+                                        <p className="text-[11px] leading-relaxed text-[#7b6853]">Todavia no hay habilidades asignadas a esta estrella.</p>
+                                    )}
                                 </div>
                             </div>
 
-                            <aside className="space-y-3">
-                                <p className="text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Selección activa</p>
-                                <div className="rounded-2xl border border-[#e3cfaa] bg-[#fff8eb] p-4 min-h-[288px]">
-                                    <p className="text-[9px] font-black uppercase tracking-[0.28em] text-gold">Skills elegidas</p>
-                                    <div className="mt-3 flex flex-wrap gap-2">
-                                        {selectedSkills.length > 0 ? selectedSkills.map((skill) => (
-                                            <button
-                                                key={skill.keyEN}
-                                                type="button"
-                                                onClick={() => toggleSkill(skill.keyEN)}
-                                                className="px-3 py-2 rounded-xl border border-[#d7c39a] bg-white text-[#2b1d12] text-[10px] font-black uppercase tracking-widest hover:border-red-400 hover:text-red-700 transition-colors"
-                                            >
-                                                {displaySkillName(skill)}
-                                            </button>
-                                        )) : (
-                                            <p className="text-[11px] leading-relaxed text-[#7b6853]">Todavía no hay habilidades asignadas a esta estrella.</p>
-                                        )}
-                                    </div>
-                                </div>
-                            </aside>
+                            <div className="grid max-h-80 grid-cols-1 gap-2 overflow-y-auto rounded-2xl border border-[#e3cfaa] bg-[#fcf6ea] p-4 custom-scrollbar sm:grid-cols-2 xl:grid-cols-3">
+                                {filteredSkills.map((skill) => {
+                                    const isSelected = selectedSkillKeys.includes(skill.keyEN);
+                                    const isElite = isEliteSkill(skill);
+                                    return (
+                                        <button
+                                            key={skill.keyEN}
+                                            type="button"
+                                            onClick={() => toggleSkill(skill.keyEN)}
+                                            className={`min-w-0 rounded-xl border px-3 py-3 text-left text-[10px] font-black uppercase tracking-widest transition-all ${isSelected
+                                                ? 'border-sky-500/30 bg-sky-500/20 text-sky-700'
+                                                : 'border-[#e3cfaa] bg-white text-[#8a7760] hover:border-gold/30 hover:text-[#2b1d12]'
+                                            }`}
+                                            title={skill.desc_es || skill.desc_en || ''}
+                                        >
+                                            <div className="flex items-start justify-between gap-2">
+                                                <span className="leading-tight break-words">{displaySkillName(skill)}</span>
+                                                {isElite && <span className="shrink-0 rounded-full border border-[#efc666] bg-[#fff1c4] px-2 py-0.5 text-[8px] text-[#9e6500]">Elite</span>}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
 
                         <div className="space-y-3">
-                            <div className="flex items-center justify-between gap-3">
-                                <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Equipos compatibles</label>
+                            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                <label className="ml-1 block text-[10px] font-black uppercase tracking-widest text-[#7b6853]">Equipos compatibles</label>
                                 <input
                                     type="text"
                                     value={factionSearch}
                                     onChange={(e) => setFactionSearch(e.target.value)}
-                                    className="w-full max-w-[220px] bg-white/80 border border-[#e3cfaa] rounded-xl px-4 py-2 text-[11px] text-[#2b1d12] outline-none focus:border-premium-gold/50"
+                                    className="w-full rounded-xl border border-[#e3cfaa] bg-white/80 px-4 py-2 text-[11px] text-[#2b1d12] outline-none focus:border-premium-gold/50 md:max-w-[220px]"
                                     placeholder="Filtrar facciones..."
                                 />
                             </div>
-                            <div className="flex flex-wrap gap-2 p-4 bg-[#fcf6ea] border border-[#e3cfaa] rounded-2xl max-h-48 overflow-y-auto custom-scrollbar">
+                            <div className="flex max-h-48 flex-wrap gap-2 overflow-y-auto rounded-2xl border border-[#e3cfaa] bg-[#fcf6ea] p-4 custom-scrollbar">
                                 {filteredFactions.map((faction) => {
                                     const isSelected = selectedFactions.includes(faction);
                                     return (
@@ -355,9 +352,9 @@ const AdminStarForm: React.FC<AdminStarFormProps> = ({
                                             key={faction}
                                             type="button"
                                             onClick={() => toggleFaction(faction)}
-                                            className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${isSelected
-                                                ? 'bg-premium-gold/20 text-premium-gold border-premium-gold/30'
-                                                : 'bg-white text-[#8a7760] border-[#e3cfaa] hover:border-gold/30 hover:text-[#2b1d12]'
+                                            className={`rounded-xl border px-3 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${isSelected
+                                                ? 'border-premium-gold/30 bg-premium-gold/20 text-premium-gold'
+                                                : 'border-[#e3cfaa] bg-white text-[#8a7760] hover:border-gold/30 hover:text-[#2b1d12]'
                                             }`}
                                         >
                                             {faction}
@@ -367,44 +364,44 @@ const AdminStarForm: React.FC<AdminStarFormProps> = ({
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <div className="space-y-2">
-                                <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Regla especial ES</label>
+                                <label className="ml-1 block text-[10px] font-black uppercase tracking-widest text-[#7b6853]">Regla especial ES</label>
                                 <textarea
                                     value={data.specialRules_es || ''}
                                     onChange={(e) => updateField('specialRules_es', e.target.value)}
-                                    className="w-full bg-[#fcf6ea] border border-[#d7c39a] rounded-2xl py-4 px-5 text-[#2b1d12] focus:border-premium-gold/50 outline-none h-28 resize-none text-[11px] leading-relaxed"
-                                    placeholder="Regla especial en español..."
+                                    className="h-28 w-full resize-none rounded-2xl border border-[#d7c39a] bg-[#fcf6ea] px-5 py-4 text-[11px] leading-relaxed text-[#2b1d12] outline-none focus:border-premium-gold/50"
+                                    placeholder="Regla especial en espanol..."
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Special Rule EN</label>
+                                <label className="ml-1 block text-[10px] font-black uppercase tracking-widest text-[#7b6853]">Special Rule EN</label>
                                 <textarea
                                     value={data.specialRules_en || ''}
                                     onChange={(e) => updateField('specialRules_en', e.target.value)}
-                                    className="w-full bg-[#fcf6ea] border border-[#d7c39a] rounded-2xl py-4 px-5 text-[#2b1d12] focus:border-premium-gold/50 outline-none h-28 resize-none text-[11px] leading-relaxed"
+                                    className="h-28 w-full resize-none rounded-2xl border border-[#d7c39a] bg-[#fcf6ea] px-5 py-4 text-[11px] leading-relaxed text-[#2b1d12] outline-none focus:border-premium-gold/50"
                                     placeholder="Special rule in English..."
                                 />
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <label className="block text-[10px] font-black text-[#7b6853] uppercase tracking-widest ml-1">Biografía y trasfondo</label>
+                            <label className="ml-1 block text-[10px] font-black uppercase tracking-widest text-[#7b6853]">Biografia y trasfondo</label>
                             <textarea
                                 value={data.description || ''}
                                 onChange={(e) => updateField('description', e.target.value)}
-                                className="w-full bg-[#fcf6ea] border border-[#d7c39a] rounded-2xl py-4 px-5 text-[#2b1d12] focus:border-premium-gold/50 outline-none h-32 resize-none text-[11px] leading-relaxed"
-                                placeholder="Describe aquí el trasfondo de la leyenda..."
+                                className="h-32 w-full resize-none rounded-2xl border border-[#d7c39a] bg-[#fcf6ea] px-5 py-4 text-[11px] leading-relaxed text-[#2b1d12] outline-none focus:border-premium-gold/50"
+                                placeholder="Describe aqui el trasfondo de la leyenda..."
                             />
                         </div>
                     </div>
 
                     <aside className="space-y-4">
                         <div className="rounded-[1.75rem] border border-[#e3cfaa] bg-[#fcf6ea] p-5">
-                            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-gold">Vista rápida</p>
+                            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-gold">Vista rapida</p>
                             <div className="mt-4 flex items-start justify-between gap-3">
-                                <div className="space-y-2 min-w-0">
-                                    <h5 className="text-2xl font-header font-black italic uppercase tracking-tight text-[#2b1d12] break-words">
+                                <div className="min-w-0 space-y-2">
+                                    <h5 className="break-words text-2xl font-header font-black italic uppercase tracking-tight text-[#2b1d12]">
                                         {data.name || 'Nueva estrella'}
                                     </h5>
                                     <div className="flex flex-wrap gap-2">
@@ -416,7 +413,7 @@ const AdminStarForm: React.FC<AdminStarFormProps> = ({
                                         </span>
                                     </div>
                                 </div>
-                                <div className="size-20 rounded-2xl border border-[#d7c39a] bg-white/70 overflow-hidden shrink-0 flex items-center justify-center">
+                                <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[#d7c39a] bg-white/70">
                                     {currentImage || suggestedImage ? (
                                         <img
                                             src={currentImage || suggestedImage}
@@ -427,7 +424,7 @@ const AdminStarForm: React.FC<AdminStarFormProps> = ({
                                                     (e.currentTarget as HTMLImageElement).src = fallback;
                                                 }
                                             }}
-                                            className="w-full h-full object-cover"
+                                            className="h-full w-full object-cover"
                                         />
                                     ) : (
                                         <span className="material-symbols-outlined text-[#c8b79e]">star</span>
@@ -437,7 +434,7 @@ const AdminStarForm: React.FC<AdminStarFormProps> = ({
                             <p className="mt-5 text-[12px] leading-relaxed text-[#6f5738]">{previewDescription}</p>
                         </div>
 
-                        <div className="rounded-[1.75rem] border border-[#e3cfaa] bg-[#fffaf1] p-5 space-y-4">
+                        <div className="space-y-4 rounded-[1.75rem] border border-[#e3cfaa] bg-[#fffaf1] p-5">
                             <p className="text-[9px] font-black uppercase tracking-[0.3em] text-gold">Chequeo de datos</p>
                             <div className="space-y-3">
                                 {qaChecks.map((item) => (
@@ -454,7 +451,7 @@ const AdminStarForm: React.FC<AdminStarFormProps> = ({
                         <div className="rounded-[1.75rem] border border-[#e3cfaa] bg-[#fff8eb] p-5">
                             <p className="text-[9px] font-black uppercase tracking-[0.3em] text-gold">Uso recomendado</p>
                             <p className="mt-3 text-[11px] leading-relaxed text-[#7b6853]">
-                                La ficha ideal deja tres cosas cerradas: skills canonizadas por `skillKeys`, facciones compatibles bien delimitadas y una regla especial bilingüe lista para el Oráculo.
+                                La ficha ideal deja tres cosas cerradas: skills canonizadas por `skillKeys`, facciones compatibles bien delimitadas y una regla especial bilingue lista para el Oraculo.
                             </p>
                         </div>
                     </aside>
