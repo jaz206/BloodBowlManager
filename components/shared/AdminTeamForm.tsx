@@ -439,10 +439,14 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                                 </div>
                             </div>
 
-                            <div className="overflow-hidden rounded-[1.5rem] border border-[#e3cfaa] bg-[#fffaf1]">
-                                <div className="overflow-x-auto">
+                            <div className="overflow-hidden rounded-[1.5rem] border border-[#e3cfaa] bg-[#fffaf1] shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]">
+                                <div className="flex items-center justify-between gap-3 border-b border-[#ead9bb] bg-[#fbf3e4] px-4 py-3 text-[9px] font-bold uppercase tracking-[0.22em] text-[#8a7760]">
+                                    <span>Tabla con scroll independiente</span>
+                                    <span className="text-[#b88a1d]">Cabecera fija · scroll horizontal visible abajo</span>
+                                </div>
+                                <div className="max-h-[68vh] overflow-auto overscroll-contain">
                                     <table className="min-w-[1120px] w-full text-left">
-                                        <thead className="border-b border-[#e7d8bb] bg-[#f8efdf]">
+                                        <thead className="sticky top-0 z-20 border-b border-[#e7d8bb] bg-[#f8efdf] shadow-[0_1px_0_rgba(231,216,187,0.95)]">
                                             <tr className="text-[9px] font-black uppercase tracking-[0.24em] text-[#8a7760]">
                                                 <th className="px-4 py-3">Posicion</th>
                                                 <th className="px-3 py-3 text-center">Coste</th>
