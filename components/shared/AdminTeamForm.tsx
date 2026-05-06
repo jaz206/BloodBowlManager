@@ -465,6 +465,47 @@ const AdminTeamForm: React.FC<AdminTeamFormProps> = ({
                                         </div>
                                     </div>
                                 </div>
+
+                                <div className="rounded-2xl border border-[#e3cfaa] bg-[#fcf6ea] px-5 py-4 space-y-4">
+                                    <div>
+                                        <p className="text-[9px] font-black uppercase tracking-[0.28em] text-gold">Medidas por superficie</p>
+                                        <p className="mt-2 text-[10px] leading-relaxed text-[#7b6853]">
+                                            Usa esta referencia para preparar un solo escudo maestro que encuadre bien en todas las zonas de la web.
+                                        </p>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                                        <div className="rounded-2xl border border-[#d7c39a] bg-[#fffaf1] px-4 py-3">
+                                            <p className="text-[8px] font-black uppercase tracking-[0.28em] text-[#7b6853]">Dossier de Gremio</p>
+                                            <p className="mt-1 text-sm font-black italic text-[#2b1d12] font-epilogue">128 x 128 px</p>
+                                            <p className="mt-1 text-[10px] leading-relaxed text-[#5f4d39]">Cabecera del equipo. Safe zone recomendada: 86%.</p>
+                                        </div>
+                                        <div className="rounded-2xl border border-[#d7c39a] bg-[#fffaf1] px-4 py-3">
+                                            <p className="text-[8px] font-black uppercase tracking-[0.28em] text-[#7b6853]">Lista de Gremio</p>
+                                            <p className="mt-1 text-sm font-black italic text-[#2b1d12] font-epilogue">192 x 192 px</p>
+                                            <p className="mt-1 text-[10px] leading-relaxed text-[#5f4d39]">Tarjeta grande de franquicia. Conviene centrar símbolo y texto.</p>
+                                        </div>
+                                        <div className="rounded-2xl border border-[#d7c39a] bg-[#fffaf1] px-4 py-3">
+                                            <p className="text-[8px] font-black uppercase tracking-[0.28em] text-[#7b6853]">Cuadrícula de Gremio</p>
+                                            <p className="mt-1 text-sm font-black italic text-[#2b1d12] font-epilogue">160 x 160 px</p>
+                                            <p className="mt-1 text-[10px] leading-relaxed text-[#5f4d39]">Vista compacta; evita marcos muy finos en el borde.</p>
+                                        </div>
+                                        <div className="rounded-2xl border border-[#d7c39a] bg-[#fffaf1] px-4 py-3">
+                                            <p className="text-[8px] font-black uppercase tracking-[0.28em] text-[#7b6853]">Fundar equipo</p>
+                                            <p className="mt-1 text-sm font-black italic text-[#2b1d12] font-epilogue">174 x 174 px</p>
+                                            <p className="mt-1 text-[10px] leading-relaxed text-[#5f4d39]">Selector principal. Mejor con logo más grande y poco margen vacío.</p>
+                                        </div>
+                                        <div className="rounded-2xl border border-[#d7c39a] bg-[#fffaf1] px-4 py-3">
+                                            <p className="text-[8px] font-black uppercase tracking-[0.28em] text-[#7b6853]">Oráculo</p>
+                                            <p className="mt-1 text-sm font-black italic text-[#2b1d12] font-epilogue">450 x 338 px</p>
+                                            <p className="mt-1 text-[10px] leading-relaxed text-[#5f4d39]">Aquí el escudo se usa como hero 4:3; funciona mejor un PNG de 1:1 con fondo generoso.</p>
+                                        </div>
+                                        <div className="rounded-2xl border border-[#d7c39a] bg-[#fffaf1] px-4 py-3">
+                                            <p className="text-[8px] font-black uppercase tracking-[0.28em] text-[#7b6853]">Archivo maestro</p>
+                                            <p className="mt-1 text-sm font-black italic text-[#2b1d12] font-epilogue">1024 x 1024 px</p>
+                                            <p className="mt-1 text-[10px] leading-relaxed text-[#5f4d39]">Zona segura recomendada: 820 x 820 px, logo centrado y sin tocar borde.</p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="space-y-6">

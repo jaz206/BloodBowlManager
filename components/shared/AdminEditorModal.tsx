@@ -57,7 +57,7 @@ const AdminEditorModal: React.FC<AdminEditorModalProps> = ({
 }) => {
     if (!editingItem) return null;
 
-    const showNavigator = ['teams', 'stars', 'skills', 'inducements', 'heraldo'].includes(editingItem.type);
+    const showNavigator = ['stars', 'skills', 'inducements', 'heraldo'].includes(editingItem.type);
     const currentItemKey = String(editingItem.data?.keyEN || editingItem.data?.name || editingItem.data?.title || '');
     const currentTitle = editingItem.type === 'hero'
         ? 'Configurar Fondo Hero'
@@ -165,7 +165,7 @@ const AdminEditorModal: React.FC<AdminEditorModalProps> = ({
                         </div>
 
                         <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar px-8 py-8 bg-[rgba(255,248,233,0.46)]">
-                            <form onSubmit={handleSave} className="space-y-8 max-w-[1520px] mx-auto">
+                            <form onSubmit={handleSave} className={`space-y-8 mx-auto w-full ${editingItem.type === 'teams' ? 'max-w-[1840px]' : 'max-w-[1520px]'}`}>
                                 {validationIssues.length > 0 && (
                                     <div className="rounded-3xl border border-amber-500/30 bg-amber-500/10 p-5">
                                         <div className="flex items-start gap-3">
