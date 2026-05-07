@@ -246,6 +246,10 @@ export interface MatchTeamResult {
   ownerName: string;
   score: number;
   treasuryDelta?: number;
+  winnings?: number;
+  expenses?: number;
+  pettyCashUsed?: number;
+  inducementsPurchased?: string[];
   dedicatedFansDelta?: number;
   postMatchNotes?: string;
   mvpPlayerId?: number | null;

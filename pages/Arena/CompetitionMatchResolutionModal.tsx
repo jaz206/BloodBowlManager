@@ -13,6 +13,10 @@ import { lastingInjuryResults } from '../../data/lastingInjuries';
 type TeamDraft = {
     score: number;
     treasuryDelta: number;
+    winnings: number;
+    expenses: number;
+    pettyCashUsed: number;
+    inducementsPurchasedText: string;
     dedicatedFansDelta: number;
     postMatchNotes: string;
     mvpPlayerId: number | null;
@@ -50,6 +54,10 @@ const buildDraft = (team: CompetitionTeam, existing?: MatchResolution['team1'] |
     return {
         score: existing?.score ?? 0,
         treasuryDelta: existing?.treasuryDelta ?? 0,
+        winnings: existing?.winnings ?? 0,
+        expenses: existing?.expenses ?? 0,
+        pettyCashUsed: existing?.pettyCashUsed ?? 0,
+        inducementsPurchasedText: (existing?.inducementsPurchased || []).join(', '),
         dedicatedFansDelta: existing?.dedicatedFansDelta ?? 0,
         postMatchNotes: existing?.postMatchNotes ?? '',
         mvpPlayerId: existing?.mvpPlayerId ?? null,
@@ -157,7 +165,14 @@ const CompetitionMatchResolutionModal: React.FC<CompetitionMatchResolutionModalP
                 ownerId: team1?.ownerId || '',
                 ownerName: team1?.ownerName || '',
                 score: team1Draft.score,
-                treasuryDelta: team1Draft.treasuryDelta,
+                treasuryDelta: team1Draft.winnings - team1Draft.expenses - team1Draft.pettyCashUsed,
+                winnings: team1Draft.winnings,
+                expenses: team1Draft.expenses,
+                pettyCashUsed: team1Draft.pettyCashUsed,
+                inducementsPurchased: team1Draft.inducementsPurchasedText
+                    .split(',')
+                    .map(item => item.trim())
+                    .filter(Boolean),
                 dedicatedFansDelta: team1Draft.dedicatedFansDelta,
                 postMatchNotes: team1Draft.postMatchNotes,
                 mvpPlayerId: team1Draft.mvpPlayerId,
@@ -168,7 +183,14 @@ const CompetitionMatchResolutionModal: React.FC<CompetitionMatchResolutionModalP
                 ownerId: team2?.ownerId || '',
                 ownerName: team2?.ownerName || '',
                 score: team2Draft.score,
-                treasuryDelta: team2Draft.treasuryDelta,
+                treasuryDelta: team2Draft.winnings - team2Draft.expenses - team2Draft.pettyCashUsed,
+                winnings: team2Draft.winnings,
+                expenses: team2Draft.expenses,
+                pettyCashUsed: team2Draft.pettyCashUsed,
+                inducementsPurchased: team2Draft.inducementsPurchasedText
+                    .split(',')
+                    .map(item => item.trim())
+                    .filter(Boolean),
                 dedicatedFansDelta: team2Draft.dedicatedFansDelta,
                 postMatchNotes: team2Draft.postMatchNotes,
                 mvpPlayerId: team2Draft.mvpPlayerId,
@@ -209,17 +231,63 @@ const CompetitionMatchResolutionModal: React.FC<CompetitionMatchResolutionModalP
                 <div className="border-t border-white/5 pt-4 space-y-3 max-h-[48vh] overflow-y-auto pr-1">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                         <div>
-                            <label className="block text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1">Tesorería +/-</label>
+                            <label className="block text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1">Ganancias</label>
                             <input
                                 type="number"
-                                value={teamDraft.treasuryDelta}
+                                min={0}
+                                value={teamDraft.winnings}
                                 onChange={e => {
                                     const val = Number(e.target.value) || 0;
                                     teamIndex === 1
-                                        ? setTeam1Draft(prev => ({ ...prev, treasuryDelta: val }))
-                                        : setTeam2Draft(prev => ({ ...prev, treasuryDelta: val }));
+                                        ? setTeam1Draft(prev => ({ ...prev, winnings: val }))
+                                        : setTeam2Draft(prev => ({ ...prev, winnings: val }));
                                 }}
                                 className="w-full bg-black/60 border border-white/10 rounded-xl py-2 px-3 text-center text-white font-black"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1">Gastos</label>
+                            <input
+                                type="number"
+                                min={0}
+                                value={teamDraft.expenses}
+                                onChange={e => {
+                                    const val = Number(e.target.value) || 0;
+                                    teamIndex === 1
+                                        ? setTeam1Draft(prev => ({ ...prev, expenses: val }))
+                                        : setTeam2Draft(prev => ({ ...prev, expenses: val }));
+                                }}
+                                className="w-full bg-black/60 border border-white/10 rounded-xl py-2 px-3 text-center text-white font-black"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1">Petty Cash usado</label>
+                            <input
+                                type="number"
+                                min={0}
+                                value={teamDraft.pettyCashUsed}
+                                onChange={e => {
+                                    const val = Number(e.target.value) || 0;
+                                    teamIndex === 1
+                                        ? setTeam1Draft(prev => ({ ...prev, pettyCashUsed: val }))
+                                        : setTeam2Draft(prev => ({ ...prev, pettyCashUsed: val }));
+                                }}
+                                className="w-full bg-black/60 border border-white/10 rounded-xl py-2 px-3 text-center text-white font-black"
+                            />
+                        </div>
+                        <div className="sm:col-span-2 lg:col-span-1">
+                            <label className="block text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1">Inducements comprados</label>
+                            <input
+                                type="text"
+                                value={teamDraft.inducementsPurchasedText}
+                                onChange={e => {
+                                    const val = e.target.value;
+                                    teamIndex === 1
+                                        ? setTeam1Draft(prev => ({ ...prev, inducementsPurchasedText: val }))
+                                        : setTeam2Draft(prev => ({ ...prev, inducementsPurchasedText: val }));
+                                }}
+                                className="w-full bg-black/60 border border-white/10 rounded-xl py-2 px-3 text-white font-bold text-sm"
+                                placeholder="Mago, soborno, reroll..."
                             />
                         </div>
                         <div>
@@ -251,6 +319,14 @@ const CompetitionMatchResolutionModal: React.FC<CompetitionMatchResolutionModalP
                                 placeholder="Cobros, secuelas, notas..."
                             />
                         </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-primary/15 bg-primary/5 px-4 py-3 flex items-center justify-between text-[10px] font-black uppercase tracking-widest">
+                        <span className="text-slate-500">Impacto neto en tesorería</span>
+                        <span className="text-primary">
+                            {(teamDraft.winnings - teamDraft.expenses - teamDraft.pettyCashUsed) >= 0 ? '+' : ''}
+                            {teamDraft.winnings - teamDraft.expenses - teamDraft.pettyCashUsed}
+                        </span>
                     </div>
 
                     {teamDraft.players.length === 0 ? (
