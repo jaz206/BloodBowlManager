@@ -8,8 +8,9 @@ import QrCodeIcon from '../../components/icons/QrCodeIcon';
 import { TeamDashboard } from '../../components/guild/TeamDashboard';
 import { cloneCompetition, generateBracket, generateJoinCode, generateSchedule } from './competitionUtils';
 import CompetitionMatchResolutionModal from './CompetitionMatchResolutionModal';
-import { calculateTeamValue } from '../../utils/teamUtils';
+import { buildMatchReadyTeamSummary, calculateTeamValue } from '../../utils/teamUtils';
 import LeaguesTabbedList from './LeaguesTabbedList';
+import { useMasterData } from '../../hooks/useMasterData';
 
 declare global {
     interface Window {
@@ -42,6 +43,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
     isGuest 
 }) => {
     const { user } = useAuth();
+    const { teams: baseTeams, skills } = useMasterData();
     const [activeTab, setActiveTab] = useState<'my-leagues' | 'my-tournaments' | 'discover' | 'organization'>('my-leagues');
     const [view, setView] = useState<'list' | 'create' | 'detail'>('list');
     const [selectedCompetition, setSelectedCompetition] = useState<Competition | null>(null);
@@ -77,6 +79,12 @@ export const Leagues: React.FC<LeaguesProps> = ({
     const [statsModalTeam, setStatsModalTeam] = useState<import('../../types').ManagedTeam | null>(null);
     const [showReportModal, setShowReportModal] = useState(false);
     const [reportForm, setReportForm] = useState({ headline: '', subHeadline: '', article: '', homeTeam: '', opponentTeam: '', score1: 0, score2: 0 });
+
+    const buildTeamReadySummary = (teamState?: ManagedTeam | null) => {
+        if (!teamState) return null;
+        const baseRoster = baseTeams.find(team => team.name === teamState.rosterName);
+        return buildMatchReadyTeamSummary(teamState, baseRoster, skills);
+    };
 
     const isCompetitionOwnedByMe = (competition: Competition) => (
         competition.ownerId === user?.id || competition.createdBy === user?.id
@@ -1060,8 +1068,11 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                 const myTeam = myFranchise?.teamState;
                                                 if (!myFranchise || !myTeam) return null;
 
-                                                const availablePlayers = myTeam.players.filter(p => p.status === 'Activo').length;
-                                                const injuredPlayers = myTeam.players.filter(p => p.status === 'Lesionado' || (p.missNextGame && p.missNextGame > 0)).length;
+                                                const teamReady = buildTeamReadySummary(myTeam);
+                                                const availablePlayers = teamReady?.availableCount ?? 0;
+                                                const injuredPlayers = teamReady?.unavailableCount ?? 0;
+                                                const journeymenNeeded = teamReady?.journeymenNeeded ?? 0;
+                                                const realTV = teamReady?.realTV ?? myTeam.totalTV ?? 0;
 
                                                 return (
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1069,9 +1080,10 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Plantilla</p>
                                                             <div className="flex items-baseline gap-2">
                                                                 <span className="text-2xl font-black text-white italic">{availablePlayers}</span>
-                                                                <span className="text-[10px] font-bold text-slate-600 uppercase">Activos</span>
+                                                                <span className="text-[10px] font-bold text-slate-600 uppercase">Disponibles</span>
                                                             </div>
                                                             {injuredPlayers > 0 && <p className="text-[9px] font-bold text-red-500 uppercase italic">+{injuredPlayers} Bajas</p>}
+                                                            {journeymenNeeded > 0 && <p className="text-[9px] font-bold text-primary uppercase italic">{journeymenNeeded} Sustitutos</p>}
                                                         </div>
                                                         <div className="p-6 bg-zinc-900/40 border border-white/5 rounded-3xl space-y-2">
                                                             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Tesorería Liga</p>
@@ -1081,11 +1093,12 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                             </div>
                                                         </div>
                                                         <div className="p-6 bg-zinc-900/40 border border-white/5 rounded-3xl space-y-2">
-                                                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Valor Equipo</p>
+                                                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">TV Real Partido</p>
                                                             <div className="flex items-baseline gap-2">
-                                                                <span className="text-2xl font-black text-white italic">{(myTeam.totalTV || 0) / 1000}k</span>
+                                                                <span className="text-2xl font-black text-white italic">{realTV / 1000}k</span>
                                                                 <span className="text-[10px] font-bold text-slate-600 uppercase">TV</span>
                                                             </div>
+                                                            {!!teamReady?.tvLoss && <p className="text-[9px] font-bold text-amber-400 uppercase italic">-{teamReady.tvLoss / 1000}k por bajas</p>}
                                                         </div>
                                                         <div 
                                                             onClick={() => setStatsModalTeam(myTeam)}
@@ -1136,6 +1149,14 @@ export const Leagues: React.FC<LeaguesProps> = ({
 
                                         const opponentFranchise = selectedCompetition.teams.find(t => t.teamName === opponentName);
                                         const myFranchise = selectedCompetition.teams.find(t => t.ownerId === user.id);
+                                        const myReady = buildTeamReadySummary(myFranchise?.teamState);
+                                        const opponentReady = buildTeamReadySummary(opponentFranchise?.teamState);
+                                        const tvDifference = Math.abs((myReady?.realTV || 0) - (opponentReady?.realTV || 0));
+                                        const underdog = (myReady?.realTV || 0) < (opponentReady?.realTV || 0)
+                                            ? myFranchise?.teamName
+                                            : (opponentReady?.realTV || 0) < (myReady?.realTV || 0)
+                                                ? opponentFranchise?.teamName
+                                                : null;
 
                                         return (
                                             <div className="mt-12 pt-12 border-t border-white/5">
@@ -1157,18 +1178,49 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                             <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
                                                                 <span>{opponentFranchise?.teamState?.rosterName || 'Desconocido'}</span>
                                                                 <span className="w-1 h-1 rounded-full bg-slate-700"></span>
-                                                                <span>TV {(opponentFranchise?.teamState?.totalTV || 0) / 1000}k</span>
+                                                                <span>TV real {(opponentReady?.realTV || 0) / 1000}k</span>
                                                             </div>
                                                         </div>
                                                     </div>
 
-                                                    <button 
-                                                        onClick={() => onNavigateToMatch?.(nextMatch!, selectedCompetition, myFranchise?.teamState, opponentFranchise?.teamState)}
-                                                        className="w-full md:w-auto relative z-10 bg-primary text-black font-black px-10 py-5 rounded-2xl flex items-center justify-center gap-3 transition-all hover:scale-105 active:scale-95 uppercase tracking-tighter text-sm shadow-xl shadow-primary/10"
-                                                    >
-                                                        <span className="material-symbols-outlined font-bold">sports_football</span>
-                                                        Jugar Partido
-                                                    </button>
+                                                    <div className="relative z-10 w-full md:w-auto space-y-4">
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 min-w-[320px]">
+                                                            <div className="rounded-2xl border border-white/10 bg-black/40 p-4 space-y-1">
+                                                                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Mi franquicia</p>
+                                                                <p className="text-sm font-black text-white uppercase italic">{myFranchise?.teamName}</p>
+                                                                <div className="flex flex-wrap gap-2 text-[9px] font-bold uppercase">
+                                                                    <span className="text-white">{myReady?.availableCount || 0} listos</span>
+                                                                    <span className="text-red-400">{myReady?.unavailableCount || 0} bajas</span>
+                                                                    <span className="text-primary">{(myReady?.realTV || 0) / 1000}k TV</span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="rounded-2xl border border-white/10 bg-black/40 p-4 space-y-1">
+                                                                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Rival</p>
+                                                                <p className="text-sm font-black text-white uppercase italic">{opponentFranchise?.teamName}</p>
+                                                                <div className="flex flex-wrap gap-2 text-[9px] font-bold uppercase">
+                                                                    <span className="text-white">{opponentReady?.availableCount || 0} listos</span>
+                                                                    <span className="text-red-400">{opponentReady?.unavailableCount || 0} bajas</span>
+                                                                    <span className="text-primary">{(opponentReady?.realTV || 0) / 1000}k TV</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex flex-wrap items-center gap-3 text-[10px] font-black uppercase tracking-widest italic text-slate-400">
+                                                            <span>Diferencia TV: <span className="text-white">{tvDifference / 1000}k</span></span>
+                                                            {underdog && selectedCompetition.rules?.pettyCashEnabled && tvDifference > 0 && (
+                                                                <span className="text-primary">Petty Cash para {underdog}</span>
+                                                            )}
+                                                            {!!myReady?.journeymenNeeded && <span className="text-amber-400">{myReady.journeymenNeeded} sustitutos</span>}
+                                                        </div>
+
+                                                        <button 
+                                                            onClick={() => onNavigateToMatch?.(nextMatch!, selectedCompetition, myFranchise?.teamState, opponentFranchise?.teamState)}
+                                                            className="w-full md:w-auto bg-primary text-black font-black px-10 py-5 rounded-2xl flex items-center justify-center gap-3 transition-all hover:scale-105 active:scale-95 uppercase tracking-tighter text-sm shadow-xl shadow-primary/10"
+                                                        >
+                                                            <span className="material-symbols-outlined font-bold">sports_football</span>
+                                                            Jugar Partido
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         );

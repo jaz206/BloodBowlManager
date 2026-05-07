@@ -1,5 +1,5 @@
 
-import { ManagedTeam, ELITE_SKILLS, ManagedTeamSnapshot, Team, Skill } from '../types';
+import { ManagedPlayer, ManagedTeam, ELITE_SKILLS, ManagedTeamSnapshot, Team, Skill } from '../types';
 import { findSkillRecord } from './skillUtils';
 
 export const calculateTeamValue = (
@@ -34,7 +34,7 @@ export const calculateTeamValue = (
                 let eliteBonus = 0;
                 if (adv.skillName) {
                     const skillEntry = findSkillRecord(skillCatalog, adv.skillName);
-                    if (skillEntry && ELITE_SKILLS.includes(skillEntry.keyEN)) {
+                    if (skillEntry && (skillEntry.isElite || ELITE_SKILLS.includes(skillEntry.keyEN))) {
                         eliteBonus = 10000;
                     }
                 }
@@ -51,7 +51,7 @@ export const calculateTeamValue = (
                 // Add Season 3 Elite Penalty (+10k MO)
                 let eliteBonus = 0;
                 const skillEntry = findSkillRecord(skillCatalog, skillName);
-                if (skillEntry && ELITE_SKILLS.includes(skillEntry.keyEN)) {
+                if (skillEntry && (skillEntry.isElite || ELITE_SKILLS.includes(skillEntry.keyEN))) {
                     eliteBonus = 10000;
                 }
                 
@@ -82,6 +82,66 @@ export const calculateTeamValue = (
     }
 
     return total;
+};
+
+export interface MatchReadyTeamSummary {
+    matchReadyTeam: ManagedTeam;
+    availablePlayers: ManagedPlayer[];
+    unavailablePlayers: ManagedPlayer[];
+    availableCount: number;
+    unavailableCount: number;
+    journeymenNeeded: number;
+    realTV: number;
+    fullTV: number;
+    tvLoss: number;
+}
+
+export const buildMatchReadyTeamSummary = (
+    team: ManagedTeam | null | undefined,
+    baseRoster?: Team | null,
+    skillCatalog: Skill[] = []
+): MatchReadyTeamSummary | null => {
+    if (!team) return null;
+
+    const unavailablePlayers = team.players.filter(player =>
+        player.status === 'Muerto' ||
+        player.status === 'Lesionado' ||
+        (player.missNextGame || 0) > 0
+    );
+
+    const availablePlayers = team.players.filter(player =>
+        !unavailablePlayers.some(unavailable => unavailable.id === player.id)
+    );
+
+    const matchReadyTeam: ManagedTeam = {
+        ...team,
+        players: availablePlayers.map(player => ({
+            ...player,
+            status: player.status === 'Activo' ? 'Activo' : 'Reserva',
+        })),
+    };
+
+    const fullTV = baseRoster
+        ? calculateTeamValue(team, false, baseRoster, skillCatalog)
+        : (team.totalTV || 0);
+    const realTV = baseRoster
+        ? calculateTeamValue(matchReadyTeam, false, baseRoster, skillCatalog)
+        : (team.totalTV || 0);
+
+    return {
+        matchReadyTeam: {
+            ...matchReadyTeam,
+            totalTV: realTV,
+        },
+        availablePlayers,
+        unavailablePlayers,
+        availableCount: availablePlayers.length,
+        unavailableCount: unavailablePlayers.length,
+        journeymenNeeded: Math.max(0, 11 - availablePlayers.length),
+        realTV,
+        fullTV,
+        tvLoss: Math.max(0, fullTV - realTV),
+    };
 };
 
 export const createTeamSnapshot = (team: ManagedTeam, matchId?: string): ManagedTeamSnapshot => {

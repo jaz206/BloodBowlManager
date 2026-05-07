@@ -21,7 +21,8 @@ import {
     MatchReport,
     PlayerStatus
 } from '../../../../types';
-import { calculateTeamValue } from '../../../../utils/teamUtils';
+import { buildMatchReadyTeamSummary, calculateTeamValue } from '../../../../utils/teamUtils';
+import { useMasterData } from '../../../../hooks/useMasterData';
 
 export const initialFoulState: FoulState = {
     step: 'select_fouler_team',
@@ -66,6 +67,7 @@ export const initialInjuryState: InjuryState = {
 };
 
 export const useMatchState = (props: GameBoardProps) => {
+    const { teams: baseTeams, skills } = useMasterData();
     // ESTADOS DE NAVEGACIÓN Y CONFIGURACIÓN
     const [gameState, setGameState] = useState<GameState>('selection');
     const [matchMode, setMatchMode] = useState<'friendly' | 'competition'>('competition');
@@ -189,8 +191,18 @@ export const useMatchState = (props: GameBoardProps) => {
     });
 
     // VALOR DE EQUIPO DINÁMICO
-    const homeTV = useMemo(() => liveHomeTeam ? calculateTeamValue(liveHomeTeam) : 0, [liveHomeTeam]);
-    const opponentTV = useMemo(() => liveOpponentTeam ? calculateTeamValue(liveOpponentTeam) : 0, [liveOpponentTeam]);
+    const homeTV = useMemo(() => {
+        if (!liveHomeTeam) return 0;
+        const baseRoster = baseTeams.find(team => team.name === liveHomeTeam.rosterName);
+        const summary = buildMatchReadyTeamSummary(liveHomeTeam, baseRoster, skills);
+        return summary?.realTV ?? calculateTeamValue(liveHomeTeam, false, baseRoster, skills);
+    }, [liveHomeTeam, baseTeams, skills]);
+    const opponentTV = useMemo(() => {
+        if (!liveOpponentTeam) return 0;
+        const baseRoster = baseTeams.find(team => team.name === liveOpponentTeam.rosterName);
+        const summary = buildMatchReadyTeamSummary(liveOpponentTeam, baseRoster, skills);
+        return summary?.realTV ?? calculateTeamValue(liveOpponentTeam, false, baseRoster, skills);
+    }, [liveOpponentTeam, baseTeams, skills]);
 
     const playSound = (type: 'td' | 'injury' | 'turnover' | 'dice') => {
         const audio = new Audio(`/sounds/${type}.mp3`);
@@ -230,8 +242,13 @@ export const useMatchState = (props: GameBoardProps) => {
             }
 
             // CALCULAR INCENTIVOS (UNDERDOG) Y AVANZAR
-            const hTV = calculateTeamValue(homeTeam);
-            const oTV = opponentTeam ? calculateTeamValue(opponentTeam) : 0;
+            const homeBaseRoster = baseTeams.find(team => team.name === homeTeam.rosterName);
+            const opponentBaseRoster = opponentTeam ? baseTeams.find(team => team.name === opponentTeam.rosterName) : null;
+            const homeSummary = buildMatchReadyTeamSummary(homeTeam, homeBaseRoster, skills);
+            const opponentSummary = opponentTeam ? buildMatchReadyTeamSummary(opponentTeam, opponentBaseRoster, skills) : null;
+
+            const hTV = homeSummary?.realTV ?? calculateTeamValue(homeTeam, false, homeBaseRoster, skills);
+            const oTV = opponentTeam ? (opponentSummary?.realTV ?? calculateTeamValue(opponentTeam, false, opponentBaseRoster, skills)) : 0;
             const diff = oTV - hTV; // Positivo si local es underdog
 
             if (Math.abs(diff) >= 10000) {
@@ -247,7 +264,7 @@ export const useMatchState = (props: GameBoardProps) => {
             // Saltamos a paso 1 (Mercado) si no hay heridos procesados por JourneymenNotification
             setPreGameStep(1);
         }
-    }, [gameState, homeTeam, opponentTeam, liveHomeTeam]);
+    }, [gameState, homeTeam, opponentTeam, liveHomeTeam, baseTeams, skills]);
 
     // Log de estado para depuración (opcional, pero útil ahora)
     useEffect(() => {
@@ -320,3 +337,6 @@ export const useMatchState = (props: GameBoardProps) => {
         calculateTeamValue
     };
 };
+
+
+
