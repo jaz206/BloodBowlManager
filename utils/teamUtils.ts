@@ -1,5 +1,5 @@
 
-import { ManagedPlayer, ManagedTeam, ELITE_SKILLS, ManagedTeamSnapshot, Team, Skill } from '../types';
+import { ManagedPlayer, ManagedTeam, ELITE_SKILLS, ManagedTeamSnapshot, Team, Skill, Player } from '../types';
 import { findSkillRecord } from './skillUtils';
 
 export const calculateTeamValue = (
@@ -95,6 +95,80 @@ export interface MatchReadyTeamSummary {
     fullTV: number;
     tvLoss: number;
 }
+
+const parseQtyMax = (qty: string | undefined): number => {
+    if (!qty) return 0;
+    const match = qty.match(/(\d+)\s*-\s*(\d+)/);
+    if (match) return Number.parseInt(match[2], 10);
+    const single = qty.match(/(\d+)/);
+    return single ? Number.parseInt(single[1], 10) : 0;
+};
+
+const isJourneymanFriendlyPosition = (position: string): boolean => {
+    const normalized = position.toLowerCase();
+    return [
+        'lineman',
+        'lineman',
+        'linewoman',
+        'thrall',
+        'raider',
+        'zombie',
+        'skeleton',
+        'goblin',
+        'halfling',
+        'snotling',
+        'rotter',
+        'beastman',
+        'gnoblar',
+    ].some(token => normalized.includes(token));
+};
+
+export const getJourneymanProfile = (baseRoster?: Team | null): Player | null => {
+    if (!baseRoster?.roster?.length) return null;
+
+    const candidates = [...baseRoster.roster].sort((a, b) => {
+        const aPreferred = isJourneymanFriendlyPosition(a.position) ? 1 : 0;
+        const bPreferred = isJourneymanFriendlyPosition(b.position) ? 1 : 0;
+        if (aPreferred !== bPreferred) return bPreferred - aPreferred;
+
+        const aQty = parseQtyMax(a.qty);
+        const bQty = parseQtyMax(b.qty);
+        if (aQty !== bQty) return bQty - aQty;
+
+        return a.cost - b.cost;
+    });
+
+    return candidates[0] ?? null;
+};
+
+export const createJourneymen = (
+    team: ManagedTeam,
+    baseRoster: Team | null | undefined,
+    count: number
+): ManagedPlayer[] => {
+    const profile = getJourneymanProfile(baseRoster);
+    if (!profile || count <= 0) return [];
+
+    const currentMaxId = team.players.reduce((max, player) => Math.max(max, player.id || 0), 0);
+    const currentMaxJersey = team.players.reduce((max, player) => Math.max(max, player.jerseyNumber || 0), 0);
+
+    return Array.from({ length: count }, (_, index) => ({
+        ...profile,
+        id: currentMaxId + index + 1,
+        jerseyNumber: currentMaxJersey + index + 1,
+        customName: `Sustituto ${profile.position} #${index + 1}`,
+        spp: 0,
+        gainedSkills: [],
+        lastingInjuries: [],
+        status: 'Reserva',
+        statusDetail: 'Sustituto temporal',
+        missNextGame: 0,
+        isJourneyman: true,
+        fieldPosition: null,
+        advancements: [],
+        isActivated: false,
+    }));
+};
 
 export const buildMatchReadyTeamSummary = (
     team: ManagedTeam | null | undefined,

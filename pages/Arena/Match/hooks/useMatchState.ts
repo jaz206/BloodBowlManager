@@ -21,7 +21,7 @@ import {
     MatchReport,
     PlayerStatus
 } from '../../../../types';
-import { buildMatchReadyTeamSummary, calculateTeamValue } from '../../../../utils/teamUtils';
+import { buildMatchReadyTeamSummary, calculateTeamValue, createJourneymen } from '../../../../utils/teamUtils';
 import { useMasterData } from '../../../../hooks/useMasterData';
 
 export const initialFoulState: FoulState = {
@@ -213,7 +213,6 @@ export const useMatchState = (props: GameBoardProps) => {
     useEffect(() => {
         if (props.initialHomeTeam && props.initialOpponentTeam) {
             setGameState('pre_game');
-            setPreGameStep(1);
         } else if (props.managedTeams && props.managedTeams.length > 0 && !homeTeam) {
             if (props.managedTeams.length === 1) {
                 setHomeTeam(props.managedTeams[0]);
@@ -223,22 +222,27 @@ export const useMatchState = (props: GameBoardProps) => {
 
     // INICIALIZACIÓN DE EQUIPOS EN VIVO AL EMPEZAR EL PRE-GAME
     useEffect(() => {
-        if (gameState === 'pre_game' && homeTeam && !liveHomeTeam) {
+        if (gameState === 'pre_game' && homeTeam && preGameStep === 0) {
             console.log("[MatchState] Inicializando equipos en vivo...");
             
             const initLiveTeam = (team: ManagedTeam): ManagedTeam => ({
                 ...team,
                 players: team.players.map(p => ({
                     ...p,
-                    status: (p.status === 'Muerto' || p.status === 'Lesionado') ? p.status : 'Reserva',
+                    status: (p.status === 'Muerto' || p.status === 'Lesionado' || (p.missNextGame && p.missNextGame > 0)) ? p.status : 'Reserva',
                     fieldPosition: null
                 })),
                 liveRerolls: team.rerolls || 0
             });
 
-            setLiveHomeTeam(initLiveTeam(homeTeam));
-            if (opponentTeam) {
-                setLiveOpponentTeam(initLiveTeam(opponentTeam));
+            const preparedHomeTeam = liveHomeTeam ?? initLiveTeam(homeTeam);
+            const preparedOpponentTeam = opponentTeam ? (liveOpponentTeam ?? initLiveTeam(opponentTeam)) : null;
+
+            if (!liveHomeTeam) {
+                setLiveHomeTeam(preparedHomeTeam);
+            }
+            if (opponentTeam && preparedOpponentTeam && !liveOpponentTeam) {
+                setLiveOpponentTeam(preparedOpponentTeam);
             }
 
             // CALCULAR INCENTIVOS (UNDERDOG) Y AVANZAR
@@ -261,10 +265,36 @@ export const useMatchState = (props: GameBoardProps) => {
                 setInducementState({ underdog: null, money: 0, hiredStars: [] });
             }
 
-            // Saltamos a paso 1 (Mercado) si no hay heridos procesados por JourneymenNotification
+            const homeJourneymen = homeSummary?.journeymenNeeded
+                ? createJourneymen(preparedHomeTeam, homeBaseRoster, homeSummary.journeymenNeeded)
+                : [];
+            const opponentJourneymen = opponentSummary?.journeymenNeeded && preparedOpponentTeam
+                ? createJourneymen(preparedOpponentTeam, opponentBaseRoster, opponentSummary.journeymenNeeded)
+                : [];
+
+            if (homeJourneymen.length > 0 || opponentJourneymen.length > 0) {
+                setPendingJourneymen({ home: homeJourneymen, opponent: opponentJourneymen });
+
+                const notificationLines: string[] = [];
+                if (homeJourneymen.length > 0) {
+                    notificationLines.push(
+                        `${preparedHomeTeam.name} llega con ${homeSummary?.availableCount || 0} jugadores disponibles y recibe ${homeJourneymen.length} sustituto(s): ${homeJourneymen.map(player => player.position).join(', ')}.`
+                    );
+                }
+                if (opponentJourneymen.length > 0 && preparedOpponentTeam) {
+                    notificationLines.push(
+                        `${preparedOpponentTeam.name} llega con ${opponentSummary?.availableCount || 0} jugadores disponibles y recibe ${opponentJourneymen.length} sustituto(s): ${opponentJourneymen.map(player => player.position).join(', ')}.`
+                    );
+                }
+                notificationLines.push('Confirma para añadirlos antes de entrar al mercado prepartido.');
+                setJourneymenNotification(notificationLines.join('\n\n'));
+                return;
+            }
+
+            // Saltamos a paso 1 (Mercado) si no hay sustitutos pendientes
             setPreGameStep(1);
         }
-    }, [gameState, homeTeam, opponentTeam, liveHomeTeam, baseTeams, skills]);
+    }, [gameState, homeTeam, opponentTeam, liveHomeTeam, liveOpponentTeam, baseTeams, skills, preGameStep]);
 
     // Log de estado para depuración (opcional, pero útil ahora)
     useEffect(() => {
