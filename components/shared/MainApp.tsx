@@ -112,7 +112,6 @@ const MainApp: React.FC = () => {
     matchup: any;
   } | null>(null);
   const [directOpenTacticalTeamId, setDirectOpenTacticalTeamId] = useState<string | null>(null);
-  const localCompetitionsKey = user ? `bb-local-competitions-${user.id}` : null;
   const [viewResetKeys, setViewResetKeys] = useState<Record<View, number>>({
     home: 0,
     oracle: 0,
@@ -124,21 +123,6 @@ const MainApp: React.FC = () => {
     guide: 0,
     admin: 0,
   });
-
-  const readLocalCompetitions = (): League[] => {
-    if (!localCompetitionsKey || typeof window === 'undefined') return [];
-    try {
-      return JSON.parse(localStorage.getItem(localCompetitionsKey) || '[]') as League[];
-    } catch {
-      return [];
-    }
-  };
-
-  const persistLocalCompetitions = (nextCompetitions: League[]) => {
-    if (!localCompetitionsKey || typeof window === 'undefined') return;
-    localStorage.setItem(localCompetitionsKey, JSON.stringify(nextCompetitions));
-  };
-
 
   const normalizeCompetitionRecord = (competition: Partial<League> | Partial<Competition> | undefined): League => {
     const rawTeams = Array.isArray(competition?.teams) ? competition.teams : [];
@@ -202,14 +186,6 @@ const MainApp: React.FC = () => {
     ...competition,
     participantIds: deriveParticipantIds(competition),
   });
-
-  const mergeCompetitions = (remote: League[], local: League[]) => {
-    const byId = new Map<string, League>();
-    [...local, ...remote].forEach(comp => {
-      if (comp?.id) byId.set(comp.id, normalizeCompetition(comp as League) as League);
-    });
-    return Array.from(byId.values()).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-  };
 
   const handleNavigate = (view: View, payload?: string) => {
     if (view === 'oracle') {
@@ -304,15 +280,11 @@ const MainApp: React.FC = () => {
   useEffect(() => {
     if (isGuest || !user || !db) {
       setManagedTeams([]);
+      setLeagues([]);
       setPlays([]);
       setDataInitiallyLoaded(true);
       setSyncState('synced');
     } else {
-      const cachedCompetitions = readLocalCompetitions().map(comp => normalizeCompetitionRecord(comp));
-      if (cachedCompetitions.length) {
-        setLeagues(prev => mergeCompetitions(prev as League[], cachedCompetitions));
-      }
-
       const teamsUnsub = onSnapshot(collection(db, 'users', user.id, 'teams'),
         (snapshot) => {
           setManagedTeams(normalizeManagedTeamCollection(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))));
@@ -377,15 +349,17 @@ const MainApp: React.FC = () => {
   }, [user, isGuest]);
 
   useEffect(() => {
-    if (!db) return;
+    if (!db || isGuest) {
+      setLeagues([]);
+      return;
+    }
     const q = query(collection(db, 'leagues'), orderBy('createdAt', 'desc'), limit(10));
     const leaguesUnsub = onSnapshot(q, (snapshot) => {
       const remote = snapshot.docs.map(doc => normalizeCompetitionRecord({ id: doc.id, ...doc.data() }));
-      const local = readLocalCompetitions().map(comp => normalizeCompetitionRecord(comp));
-      setLeagues(mergeCompetitions(remote, local));
+      setLeagues(remote);
     });
     return () => leaguesUnsub();
-  }, [db, localCompetitionsKey]);
+  }, [db, isGuest]);
 
   const handleTeamCreate = async (newTeamData: Omit<ManagedTeam, 'id'>) => {
     if (!user || isGuest || !db) return;
@@ -571,7 +545,7 @@ const MainApp: React.FC = () => {
   };
 
   const handleCompetitionCreate = async (newCompData: Omit<Competition, 'id'>) => {
-    if (!user) return;
+    if (!user || isGuest || !db) return;
     setSyncState('syncing');
     try {
       const competitionId = crypto.randomUUID ? crypto.randomUUID() : `comp_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
@@ -580,34 +554,10 @@ const MainApp: React.FC = () => {
         createdBy: newCompData.createdBy || user.id,
         joinCode: newCompData.joinCode || generateJoinCode(newCompData.name),
       });
-      const tempCompetition = { ...competitionPayload, id: competitionId } as League;
-      if (isGuest || !db) {
-        setLeagues(prev => [tempCompetition, ...prev.filter(c => c.id !== tempCompetition.id)]);
-        persistLocalCompetitions([tempCompetition, ...readLocalCompetitions().filter(c => c.id !== tempCompetition.id)]);
-      } else {
-        setLeagues(prev => [tempCompetition, ...prev.filter(c => c.id !== tempCompetition.id)]);
-        persistLocalCompetitions([tempCompetition, ...readLocalCompetitions().filter(c => c.id !== tempCompetition.id)]);
-        await setDoc(doc(db, 'leagues', competitionId), {
-          ...competitionPayload,
-          createdAt: serverTimestamp()
-        });
-        setLeagues(prev => [
-          {
-            ...competitionPayload,
-            id: competitionId,
-            createdAt: { seconds: Math.floor(Date.now() / 1000) }
-          } as League,
-          ...prev.filter(c => c.id !== competitionId),
-        ]);
-        persistLocalCompetitions([
-          {
-            ...competitionPayload,
-            id: competitionId,
-            createdAt: { seconds: Math.floor(Date.now() / 1000) }
-          } as League,
-          ...readLocalCompetitions().filter(c => c.id !== competitionId),
-        ]);
-      }
+      await setDoc(doc(db, 'leagues', competitionId), {
+        ...competitionPayload,
+        createdAt: serverTimestamp()
+      });
       setSyncState('synced');
     } catch (error) {
       console.error("Error creating competition:", error);
@@ -616,27 +566,13 @@ const MainApp: React.FC = () => {
   };
 
   const handleCompetitionUpdate = async (updatedComp: Competition) => {
-    if (!user || !updatedComp.id) return;
+    if (!user || isGuest || !db || !updatedComp.id) return;
     setSyncState('syncing');
     try {
       const normalizedComp = normalizeCompetition(updatedComp);
-      if (isGuest || !db) {
-        const updatedLocal = mergeCompetitions(
-          [normalizedComp as League],
-          readLocalCompetitions().map(c => c.id === updatedComp.id ? normalizedComp as League : c)
-        );
-        setLeagues(prev => prev.map(c => c.id === updatedComp.id ? normalizedComp as League : c));
-        persistLocalCompetitions(updatedLocal);
-      } else {
-        const compRef = doc(db, 'leagues', updatedComp.id);
-        const { id, ...data } = normalizedComp;
-        await updateDoc(compRef, data);
-        setLeagues(prev => prev.map(c => c.id === updatedComp.id ? normalizedComp as League : c));
-        persistLocalCompetitions(mergeCompetitions(
-          readLocalCompetitions().map(c => c.id === updatedComp.id ? normalizedComp as League : c),
-          [normalizedComp as League]
-        ));
-      }
+      const compRef = doc(db, 'leagues', updatedComp.id);
+      const { id, ...data } = normalizedComp;
+      await updateDoc(compRef, data);
       setSyncState('synced');
     } catch (error) {
       console.error("Error updating competition:", error);
@@ -645,17 +581,10 @@ const MainApp: React.FC = () => {
   };
 
   const handleCompetitionDelete = async (compId: string) => {
-    if (!user) return;
+    if (!user || isGuest || !db) return;
     setSyncState('syncing');
     try {
-      if (isGuest || !db) {
-        setLeagues(prev => prev.filter(c => c.id !== compId));
-        persistLocalCompetitions(readLocalCompetitions().filter(c => c.id !== compId));
-      } else {
-        await deleteDoc(doc(db, 'leagues', compId));
-        setLeagues(prev => prev.filter(c => c.id !== compId));
-        persistLocalCompetitions(readLocalCompetitions().filter(c => c.id !== compId));
-      }
+      await deleteDoc(doc(db, 'leagues', compId));
       setSyncState('synced');
     } catch (error) {
       console.error("Error deleting competition:", error);
