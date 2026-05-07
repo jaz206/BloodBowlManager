@@ -208,9 +208,11 @@ export interface Play {
 }
 
 export interface CompetitionTeam {
+  entryId?: string;
   teamName: string;
   ownerId: string;
   ownerName: string;
+  isManual?: boolean;
   // Franquicia de Competición (Clon)
   teamState?: ManagedTeam;
   stats?: {

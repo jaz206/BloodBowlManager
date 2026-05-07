@@ -73,6 +73,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
     const [ownerTeamToJoin, setOwnerTeamToJoin] = useState<string>('');
     const [isSelectingOwnerTeam, setIsSelectingOwnerTeam] = useState(false);
     const [pendingCreatedCompetitionId, setPendingCreatedCompetitionId] = useState<string | null>(null);
+    const [manualAddState, setManualAddState] = useState<{ isOpen: boolean; coachName: string; teamName: string }>({ isOpen: false, coachName: '', teamName: '' });
 
     const [joinModalState, setJoinModalState] = useState<{ comp: Competition | null; teamToJoin: string }>({ comp: null, teamToJoin: '' });
     const [scoreModalState, setScoreModalState] = useState<{ isOpen: boolean; roundIndex: string; matchIndex: number; matchup: Matchup; } | null>(null);
@@ -85,6 +86,21 @@ export const Leagues: React.FC<LeaguesProps> = ({
         if (!teamState) return null;
         const baseRoster = baseTeams.find(team => team.name === teamState.rosterName);
         return buildMatchReadyTeamSummary(teamState, baseRoster, skills);
+    };
+
+    const createCompetitionEntry = (baseTeam: ManagedTeam, ownerId: string, ownerName: string, isManual = false): CompetitionTeam => {
+        const teamState: ManagedTeam = JSON.parse(JSON.stringify(baseTeam));
+        teamState.record = { wins: 0, draws: 0, losses: 0 };
+
+        return {
+            entryId: crypto.randomUUID ? crypto.randomUUID() : `entry_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
+            teamName: baseTeam.name,
+            ownerId,
+            ownerName,
+            isManual,
+            teamState,
+            stats: { played: 0, won: 0, drawn: 0, lost: 0, tdFor: 0, tdAgainst: 0, casFor: 0, casAgainst: 0, points: 0 }
+        };
     };
 
     const isCompetitionOwnedByMe = (competition: Competition) => (
@@ -334,15 +350,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
         if (ownerTeamToJoin) {
             const baseTeam = managedTeams.find(t => t.name === ownerTeamToJoin);
             if (baseTeam) {
-                const teamState: ManagedTeam = JSON.parse(JSON.stringify(baseTeam));
-                teamState.record = { wins: 0, draws: 0, losses: 0 };
-                teams.push({
-                    teamName: ownerTeamToJoin,
-                    ownerId: user.id || '',
-                    ownerName: user.name || '',
-                    teamState,
-                    stats: { played: 0, won: 0, drawn: 0, lost: 0, tdFor: 0, tdAgainst: 0, casFor: 0, casAgainst: 0, points: 0 }
-                });
+                teams.push(createCompetitionEntry(baseTeam, user.id || '', user.name || '', false));
             }
         }
 
@@ -468,19 +476,10 @@ export const Leagues: React.FC<LeaguesProps> = ({
         }
 
         // Crear el clon (Franquicia de Competición)
-        const teamState: ManagedTeam = JSON.parse(JSON.stringify(baseTeam));
-        teamState.record = { wins: 0, draws: 0, losses: 0 };
-
         const updatedComp = {
             ...cleanComp,
             participantIds: Array.from(new Set([...(cleanComp.participantIds || []), user.id])),
-            teams: [...cleanComp.teams, { 
-                teamName: targetTeamName, 
-                ownerId: user.id, 
-                ownerName: user.name,
-                teamState,
-                stats: { played: 0, won: 0, drawn: 0, lost: 0, tdFor: 0, tdAgainst: 0, casFor: 0, casAgainst: 0, points: 0 }
-            }]
+            teams: [...cleanComp.teams, createCompetitionEntry(baseTeam, user.id, user.name, false)]
         };
         onCompetitionUpdate(updatedComp as Competition);
         
@@ -490,6 +489,75 @@ export const Leagues: React.FC<LeaguesProps> = ({
         }
 
         setJoinModalState({ comp: null, teamToJoin: '' });
+    };
+
+    const handleAddManualParticipant = () => {
+        if (!selectedCompetition || !user) return;
+
+        if (selectedCompetition.status !== 'Open') {
+            setConfirmation({
+                title: "Competición cerrada",
+                message: "Solo puedes añadir participantes manuales mientras la competición está abierta.",
+                onConfirm: () => setConfirmation(null),
+                type: 'info'
+            });
+            return;
+        }
+
+        const coachName = manualAddState.coachName.trim();
+        const targetTeamName = manualAddState.teamName || managedTeams[0]?.name || '';
+        const baseTeam = managedTeams.find(t => t.name === targetTeamName);
+
+        if (!coachName) {
+            setConfirmation({
+                title: "Entrenador requerido",
+                message: "Introduce el nombre del entrenador manual para continuar.",
+                onConfirm: () => setConfirmation(null),
+                type: 'info'
+            });
+            return;
+        }
+
+        if (!targetTeamName || !baseTeam) {
+            setConfirmation({
+                title: "Franquicia requerida",
+                message: "Selecciona una franquicia del Gremio para añadirla manualmente a la competición.",
+                onConfirm: () => setConfirmation(null),
+                type: 'info'
+            });
+            return;
+        }
+
+        const cleanComp = cloneCompetition(selectedCompetition);
+
+        if (cleanComp.maxTeams && cleanComp.teams.length >= cleanComp.maxTeams) {
+            setConfirmation({
+                title: "Cupo completo",
+                message: "Esta competición ya ha alcanzado el número máximo de equipos permitidos.",
+                onConfirm: () => setConfirmation(null),
+                type: 'info'
+            });
+            return;
+        }
+
+        if (cleanComp.teams.some(t => t.teamName === targetTeamName)) {
+            setConfirmation({
+                title: "Equipo duplicado",
+                message: "Esta franquicia ya está inscrita en la competición.",
+                onConfirm: () => setConfirmation(null),
+                type: 'info'
+            });
+            return;
+        }
+
+        const updatedComp: Competition = {
+            ...cleanComp,
+            teams: [...cleanComp.teams, createCompetitionEntry(baseTeam, '', coachName, true)]
+        };
+
+        onCompetitionUpdate(updatedComp);
+        setSelectedCompetition(updatedComp);
+        setManualAddState({ isOpen: false, coachName: '', teamName: '' });
     };
 
     const handleStartCompetition = (comp: Competition) => {
@@ -1049,27 +1117,37 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                             Equipos Inscritos <span className="text-primary font-black ml-1">({selectedCompetition.teams.length})</span>
                                         </h3>
 
-                                        {!selectedCompetition.teams.some(t => t.ownerId === user?.id) && (
-                                            <button
-                                                onClick={() => setJoinModalState({ comp: selectedCompetition, teamToJoin: managedTeams[0]?.name || '' })}
-                                                className="bg-primary text-black font-black py-3 px-8 rounded-2xl text-[10px] uppercase tracking-widest transition-all hover:scale-105 shadow-lg shadow-primary/20"
-                                            >
-                                                Inscribir mi Equipo
-                                            </button>
-                                        )}
+                                        <div className="flex flex-wrap gap-3">
+                                            {!selectedCompetition.teams.some(t => t.ownerId === user?.id) && (
+                                                <button
+                                                    onClick={() => setJoinModalState({ comp: selectedCompetition, teamToJoin: managedTeams[0]?.name || '' })}
+                                                    className="bg-primary text-black font-black py-3 px-8 rounded-2xl text-[10px] uppercase tracking-widest transition-all hover:scale-105 shadow-lg shadow-primary/20"
+                                                >
+                                                    Inscribir mi Equipo
+                                                </button>
+                                            )}
+                                            {user?.id === selectedCompetition.ownerId && (
+                                                <button
+                                                    onClick={() => setManualAddState({ isOpen: true, coachName: '', teamName: managedTeams[0]?.name || '' })}
+                                                    className="bg-black/40 border border-white/10 text-white font-black py-3 px-8 rounded-2xl text-[10px] uppercase tracking-widest transition-all hover:border-primary/30 hover:text-primary"
+                                                >
+                                                    Añadir participante manual
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                     
                                     {selectedCompetition.teams.length > 0 ? (
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             {selectedCompetition.teams.map(t => (
-                                                <div key={t.ownerId + t.teamName} className="p-5 bg-black/40 border border-white/5 rounded-2xl flex items-center justify-between group hover:border-primary/30 transition-all">
+                                                <div key={t.entryId || `${t.ownerId || 'manual'}:${t.ownerName}:${t.teamName}`} className="p-5 bg-black/40 border border-white/5 rounded-2xl flex items-center justify-between group hover:border-primary/30 transition-all">
                                                     <div className="flex items-center gap-4">
                                                         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black text-sm italic">
                                                             {t.teamName.charAt(0)}
                                                         </div>
                                                         <div>
                                                             <p className="font-black text-white uppercase italic tracking-tight">{t.teamName}</p>
-                                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{t.ownerName}</p>
+                                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{t.ownerName} {t.isManual ? '· Manual' : ''}</p>
                                                         </div>
                                                     </div>
                                                     {t.stats && (
@@ -1750,6 +1828,68 @@ export const Leagues: React.FC<LeaguesProps> = ({
                 )}
                 {view === 'create' && <motion.div key="create" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>{renderCreateView()}</motion.div>}
                 {view === 'detail' && <motion.div key="detail" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}>{renderDetailView()}</motion.div>}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {manualAddState.isOpen && selectedCompetition && (
+                    <div className="leagues-modal-overlay fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={() => setManualAddState({ isOpen: false, coachName: '', teamName: '' })}>
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="bg-zinc-900 border border-white/5 rounded-[2.5rem] shadow-2xl max-w-lg w-full overflow-hidden relative"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="p-10 space-y-8">
+                                <div>
+                                    <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter">Añadir participante <span className="text-primary">manual</span></h3>
+                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Registrar coach de mesa en {selectedCompetition.name}</p>
+                                </div>
+
+                                <div className="space-y-6">
+                                    <div>
+                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-2">Entrenador</label>
+                                        <input
+                                            type="text"
+                                            value={manualAddState.coachName}
+                                            onChange={e => setManualAddState(prev => ({ ...prev, coachName: e.target.value }))}
+                                            className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-4 text-white focus:ring-2 focus:ring-primary/50 outline-none transition-all font-bold"
+                                            placeholder="Ej: Jorge Álvarez"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-2">Franquicia</label>
+                                        <div className="relative">
+                                            <select
+                                                value={manualAddState.teamName}
+                                                onChange={e => setManualAddState(prev => ({ ...prev, teamName: e.target.value }))}
+                                                className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-4 text-white focus:ring-2 focus:ring-primary/50 outline-none transition-all font-bold appearance-none"
+                                            >
+                                                {managedTeams.length > 0 ? (
+                                                    managedTeams.map(t => <option key={t.id || t.name} value={t.name}>{t.name}</option>)
+                                                ) : (
+                                                    <option value="">No tienes franquicias en el Gremio</option>
+                                                )}
+                                            </select>
+                                            <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">expand_more</span>
+                                        </div>
+                                        <p className="mt-2 text-[10px] text-slate-500 font-bold uppercase tracking-widest">Usaremos una franquicia real del Gremio, pero sin vincularla a una cuenta web.</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-3">
+                                    <button onClick={() => setManualAddState({ isOpen: false, coachName: '', teamName: '' })} className="flex-1 py-4 text-slate-400 font-black uppercase tracking-widest text-[10px] hover:text-white transition-colors">Cancelar</button>
+                                    <button
+                                        onClick={handleAddManualParticipant}
+                                        className="flex-1 bg-primary text-black py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:scale-[1.02] transition-transform shadow-xl shadow-primary/20"
+                                    >
+                                        Añadir a la liga
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
             </AnimatePresence>
 
             {/* Modal: Unirse */}
