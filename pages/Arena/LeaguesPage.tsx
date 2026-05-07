@@ -33,7 +33,7 @@ interface LeaguesProps {
     isGuest: boolean;
 }
 
-export const Leagues: React.FC<LeaguesProps> = ({ 
+export const Leagues: React.FC<LeaguesProps> = ({
     managedTeams, 
     initialCompetitions, 
     onCompetitionCreate, 
@@ -42,6 +42,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
     onNavigateToMatch,
     isGuest 
 }) => {
+    const MANUAL_TEAM_BUDGET = 1_000_000;
     const { user } = useAuth();
     const { teams: baseTeams, skills } = useMasterData();
     const [activeTab, setActiveTab] = useState<'my-leagues' | 'my-tournaments' | 'discover' | 'organization'>('my-leagues');
@@ -149,6 +150,29 @@ export const Leagues: React.FC<LeaguesProps> = ({
         crestImage: baseRoster.image,
         record: { wins: 0, draws: 0, losses: 0 }
     });
+
+    const calculateManualTeamSpend = (baseRoster: Team, config: { treasury: number; rerolls: number; dedicatedFans: number; apothecary: boolean }, counts: Record<string, number>) => {
+        const playersCost = baseRoster.roster.reduce((sum, position) => {
+            const count = Math.max(0, Math.min(parseQtyMax(position.qty), Number(counts[position.position] || 0)));
+            return sum + (position.cost * count);
+        }, 0);
+        const rerollsCost = Math.max(0, Number(config.rerolls || 0)) * Number(baseRoster.rerollCost || 0);
+        const fansCost = Math.max(0, Number(config.dedicatedFans || 0)) * 10_000;
+        const apothecaryCost = config.apothecary ? 50_000 : 0;
+        const treasuryReserved = Math.max(0, Number(config.treasury || 0));
+        const totalSpend = playersCost + rerollsCost + fansCost + apothecaryCost + treasuryReserved;
+
+        return {
+            playersCost,
+            rerollsCost,
+            fansCost,
+            apothecaryCost,
+            treasuryReserved,
+            totalSpend,
+            remainingBudget: MANUAL_TEAM_BUDGET - totalSpend,
+            overBudget: totalSpend > MANUAL_TEAM_BUDGET,
+        };
+    };
 
     const isCompetitionOwnedByMe = (competition: Competition) => (
         competition.ownerId === user?.id || competition.createdBy === user?.id
@@ -639,11 +663,27 @@ export const Leagues: React.FC<LeaguesProps> = ({
             dedicatedFans: manualAddState.dedicatedFans,
             apothecary: manualAddState.apothecary
         }, manualRosterCounts);
+        const budgetSummary = calculateManualTeamSpend(baseTeam, {
+            treasury: manualAddState.treasury,
+            rerolls: manualAddState.rerolls,
+            dedicatedFans: manualAddState.dedicatedFans,
+            apothecary: manualAddState.apothecary
+        }, manualRosterCounts);
 
         if (builtTeamState.players.length === 0) {
             setConfirmation({
                 title: "Plantilla vacía",
                 message: "Añade al menos un jugador al roster manual antes de inscribir la franquicia.",
+                onConfirm: () => setConfirmation(null),
+                type: 'info'
+            });
+            return;
+        }
+
+        if (budgetSummary.overBudget) {
+            setConfirmation({
+                title: "Presupuesto excedido",
+                message: `La franquicia manual supera el límite de creación de ${Math.round(MANUAL_TEAM_BUDGET / 1000)}k. Ajusta jugadores, rerolls, fans, boticario o tesorería reservada antes de continuar.`,
                 onConfirm: () => setConfirmation(null),
                 type: 'info'
             });
@@ -2007,6 +2047,12 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                             }, manualRosterCounts)
                                             : null;
                                         const previewTV = previewTeam ? calculateTeamValue(previewTeam, skills) : 0;
+                                        const budgetSummary = calculateManualTeamSpend(selectedRoster, {
+                                            treasury: manualAddState.treasury,
+                                            rerolls: manualAddState.rerolls,
+                                            dedicatedFans: manualAddState.dedicatedFans,
+                                            apothecary: manualAddState.apothecary
+                                        }, manualRosterCounts);
 
                                         if (!selectedRoster) return null;
 
@@ -2039,6 +2085,16 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                         <div className="flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-widest">
                                                             <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-slate-300">{totalPlayers} jugadores</span>
                                                             <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary">{Math.round(previewTV / 1000)}k TV</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className={`grid grid-cols-2 md:grid-cols-3 gap-2 text-[10px] font-black uppercase tracking-widest ${budgetSummary.overBudget ? 'text-red-300' : 'text-slate-300'}`}>
+                                                        <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2">Jugadores: {Math.round(budgetSummary.playersCost / 1000)}k</div>
+                                                        <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2">Rerolls: {Math.round(budgetSummary.rerollsCost / 1000)}k</div>
+                                                        <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2">Fans+Apo: {Math.round((budgetSummary.fansCost + budgetSummary.apothecaryCost) / 1000)}k</div>
+                                                        <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2">Tesorería: {Math.round(budgetSummary.treasuryReserved / 1000)}k</div>
+                                                        <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2">Gastado: {Math.round(budgetSummary.totalSpend / 1000)}k</div>
+                                                        <div className={`rounded-2xl border px-3 py-2 ${budgetSummary.overBudget ? 'border-red-400/40 bg-red-500/10 text-red-300' : 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300'}`}>
+                                                            {budgetSummary.overBudget ? `Exceso ${Math.round(Math.abs(budgetSummary.remainingBudget) / 1000)}k` : `Restante ${Math.round(budgetSummary.remainingBudget / 1000)}k`}
                                                         </div>
                                                     </div>
                                                     <div className="max-h-72 overflow-y-auto pr-2 space-y-3">
@@ -2075,7 +2131,17 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                     <button onClick={() => { setManualAddState({ isOpen: false, coachName: '', franchiseName: '', baseRosterName: '', treasury: 0, rerolls: 0, dedicatedFans: 1, apothecary: false }); setManualRosterCounts({}); }} className="flex-1 py-4 text-slate-400 font-black uppercase tracking-widest text-[10px] hover:text-white transition-colors">Cancelar</button>
                                     <button
                                         onClick={handleAddManualParticipant}
-                                        className="flex-1 bg-primary text-black py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:scale-[1.02] transition-transform shadow-xl shadow-primary/20"
+                                        disabled={(() => {
+                                            const selectedRoster = baseTeams.find(team => team.name === manualAddState.baseRosterName);
+                                            if (!selectedRoster) return true;
+                                            return calculateManualTeamSpend(selectedRoster, {
+                                                treasury: manualAddState.treasury,
+                                                rerolls: manualAddState.rerolls,
+                                                dedicatedFans: manualAddState.dedicatedFans,
+                                                apothecary: manualAddState.apothecary
+                                            }, manualRosterCounts).overBudget;
+                                        })()}
+                                        className="flex-1 bg-primary text-black py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:scale-[1.02] transition-transform shadow-xl shadow-primary/20 disabled:opacity-40 disabled:hover:scale-100"
                                     >
                                         Añadir a la liga
                                     </button>
