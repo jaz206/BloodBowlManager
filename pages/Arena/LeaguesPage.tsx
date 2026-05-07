@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { ManagedTeam, Competition, Matchup, CompetitionTeam, MatchResolution } from '../../types';
+import type { ManagedTeam, Competition, Matchup, CompetitionTeam, MatchResolution, ManagedPlayer, Team } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
 import PencilIcon from '../../components/icons/PencilIcon';
 import CalendarIcon from '../../components/icons/CalendarIcon';
@@ -73,7 +73,8 @@ export const Leagues: React.FC<LeaguesProps> = ({
     const [ownerTeamToJoin, setOwnerTeamToJoin] = useState<string>('');
     const [isSelectingOwnerTeam, setIsSelectingOwnerTeam] = useState(false);
     const [pendingCreatedCompetitionId, setPendingCreatedCompetitionId] = useState<string | null>(null);
-    const [manualAddState, setManualAddState] = useState<{ isOpen: boolean; coachName: string; teamName: string }>({ isOpen: false, coachName: '', teamName: '' });
+    const [manualAddState, setManualAddState] = useState<{ isOpen: boolean; coachName: string; franchiseName: string; baseRosterName: string; treasury: number; rerolls: number; dedicatedFans: number; apothecary: boolean }>({ isOpen: false, coachName: '', franchiseName: '', baseRosterName: '', treasury: 0, rerolls: 0, dedicatedFans: 1, apothecary: false });
+    const [manualRosterCounts, setManualRosterCounts] = useState<Record<string, number>>({});
 
     const [joinModalState, setJoinModalState] = useState<{ comp: Competition | null; teamToJoin: string }>({ comp: null, teamToJoin: '' });
     const [scoreModalState, setScoreModalState] = useState<{ isOpen: boolean; roundIndex: string; matchIndex: number; matchup: Matchup; } | null>(null);
@@ -102,6 +103,52 @@ export const Leagues: React.FC<LeaguesProps> = ({
             stats: { played: 0, won: 0, drawn: 0, lost: 0, tdFor: 0, tdAgainst: 0, casFor: 0, casAgainst: 0, points: 0 }
         };
     };
+
+    const parseQtyMax = (qty?: string): number => {
+        const match = String(qty || '').match(/(\d+)\s*-\s*(\d+)/);
+        if (match) return Number(match[2]);
+        const single = Number(String(qty || '').trim());
+        return Number.isFinite(single) ? single : 16;
+    };
+
+    const buildManualPlayers = (baseRoster: Team, counts: Record<string, number>): ManagedPlayer[] => {
+        const players: ManagedPlayer[] = [];
+        let nextId = 1;
+        let nextJersey = 1;
+
+        baseRoster.roster.forEach(position => {
+            const count = Math.max(0, Math.min(parseQtyMax(position.qty), Number(counts[position.position] || 0)));
+            for (let i = 0; i < count; i++) {
+                players.push({
+                    ...position,
+                    id: nextId++,
+                    jerseyNumber: nextJersey++,
+                    customName: `${position.position} #${i + 1}`,
+                    spp: 0,
+                    gainedSkills: [],
+                    lastingInjuries: [],
+                    status: 'Reserva',
+                    sppActions: {}
+                });
+            }
+        });
+
+        return players;
+    };
+
+    const buildManualTeamFromRoster = (baseRoster: Team, franchiseName: string, config: { treasury: number; rerolls: number; dedicatedFans: number; apothecary: boolean }, counts: Record<string, number>): ManagedTeam => ({
+        name: franchiseName.trim(),
+        rosterName: baseRoster.name,
+        treasury: Math.max(0, Number(config.treasury || 0)),
+        rerolls: Math.max(0, Number(config.rerolls || 0)),
+        dedicatedFans: Math.max(0, Number(config.dedicatedFans || 0)),
+        cheerleaders: 0,
+        assistantCoaches: 0,
+        apothecary: !!config.apothecary,
+        players: buildManualPlayers(baseRoster, counts),
+        crestImage: baseRoster.image,
+        record: { wins: 0, draws: 0, losses: 0 }
+    });
 
     const isCompetitionOwnedByMe = (competition: Competition) => (
         competition.ownerId === user?.id || competition.createdBy === user?.id
@@ -139,6 +186,31 @@ export const Leagues: React.FC<LeaguesProps> = ({
         setActiveTab('organization');
         setPendingCreatedCompetitionId(null);
     }, [pendingCreatedCompetitionId, initialCompetitions]);
+
+    useEffect(() => {
+        if (!manualAddState.isOpen) return;
+        const selectedRoster = baseTeams.find(team => team.name === manualAddState.baseRosterName) || baseTeams[0];
+        if (!selectedRoster) return;
+
+        setManualAddState(prev => {
+            if (prev.baseRosterName === selectedRoster.name && prev.franchiseName) return prev;
+            return {
+                ...prev,
+                baseRosterName: selectedRoster.name,
+                franchiseName: prev.franchiseName || selectedRoster.name,
+                rerolls: prev.rerolls || 0,
+                dedicatedFans: prev.dedicatedFans || 1,
+            };
+        });
+
+        setManualRosterCounts(prev => {
+            const next: Record<string, number> = {};
+            selectedRoster.roster.forEach(position => {
+                next[position.position] = prev[position.position] ?? 0;
+            });
+            return next;
+        });
+    }, [manualAddState.isOpen, manualAddState.baseRosterName, manualAddState.franchiseName, manualAddState.rerolls, manualAddState.dedicatedFans, baseTeams]);
 
     const isMatchCompleted = (match: Matchup) => Boolean(match.played || (match.score1 != null && match.score2 != null));
 
@@ -505,8 +577,9 @@ export const Leagues: React.FC<LeaguesProps> = ({
         }
 
         const coachName = manualAddState.coachName.trim();
-        const targetTeamName = manualAddState.teamName || managedTeams[0]?.name || '';
-        const baseTeam = managedTeams.find(t => t.name === targetTeamName);
+        const franchiseName = manualAddState.franchiseName.trim();
+        const targetRosterName = manualAddState.baseRosterName || baseTeams[0]?.name || '';
+        const baseTeam = baseTeams.find(t => t.name === targetRosterName);
 
         if (!coachName) {
             setConfirmation({
@@ -518,10 +591,20 @@ export const Leagues: React.FC<LeaguesProps> = ({
             return;
         }
 
-        if (!targetTeamName || !baseTeam) {
+        if (!targetRosterName || !baseTeam) {
             setConfirmation({
-                title: "Franquicia requerida",
-                message: "Selecciona una franquicia del Gremio para añadirla manualmente a la competición.",
+                title: "Raza requerida",
+                message: "Selecciona una raza base del catálogo para añadirla manualmente a la competición.",
+                onConfirm: () => setConfirmation(null),
+                type: 'info'
+            });
+            return;
+        }
+
+        if (!franchiseName) {
+            setConfirmation({
+                title: "Nombre requerido",
+                message: "Define el nombre de la franquicia manual para continuar.",
                 onConfirm: () => setConfirmation(null),
                 type: 'info'
             });
@@ -540,7 +623,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
             return;
         }
 
-        if (cleanComp.teams.some(t => t.teamName === targetTeamName)) {
+        if (cleanComp.teams.some(t => t.teamName === franchiseName)) {
             setConfirmation({
                 title: "Equipo duplicado",
                 message: "Esta franquicia ya está inscrita en la competición.",
@@ -550,14 +633,40 @@ export const Leagues: React.FC<LeaguesProps> = ({
             return;
         }
 
+        const builtTeamState = buildManualTeamFromRoster(baseTeam, franchiseName, {
+            treasury: manualAddState.treasury,
+            rerolls: manualAddState.rerolls,
+            dedicatedFans: manualAddState.dedicatedFans,
+            apothecary: manualAddState.apothecary
+        }, manualRosterCounts);
+
+        if (builtTeamState.players.length === 0) {
+            setConfirmation({
+                title: "Plantilla vacía",
+                message: "Añade al menos un jugador al roster manual antes de inscribir la franquicia.",
+                onConfirm: () => setConfirmation(null),
+                type: 'info'
+            });
+            return;
+        }
+
         const updatedComp: Competition = {
             ...cleanComp,
-            teams: [...cleanComp.teams, createCompetitionEntry(baseTeam, '', coachName, true)]
+            teams: [...cleanComp.teams, {
+                entryId: crypto.randomUUID ? crypto.randomUUID() : `entry_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
+                teamName: franchiseName,
+                ownerId: '',
+                ownerName: coachName,
+                isManual: true,
+                teamState: builtTeamState,
+                stats: { played: 0, won: 0, drawn: 0, lost: 0, tdFor: 0, tdAgainst: 0, casFor: 0, casAgainst: 0, points: 0 }
+            }]
         };
 
         onCompetitionUpdate(updatedComp);
         setSelectedCompetition(updatedComp);
-        setManualAddState({ isOpen: false, coachName: '', teamName: '' });
+        setManualAddState({ isOpen: false, coachName: '', franchiseName: '', baseRosterName: '', treasury: 0, rerolls: 0, dedicatedFans: 1, apothecary: false });
+        setManualRosterCounts({});
     };
 
     const handleStartCompetition = (comp: Competition) => {
@@ -1128,7 +1237,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                             )}
                                             {user?.id === selectedCompetition.ownerId && (
                                                 <button
-                                                    onClick={() => setManualAddState({ isOpen: true, coachName: '', teamName: managedTeams[0]?.name || '' })}
+                                                    onClick={() => setManualAddState({ isOpen: true, coachName: '', franchiseName: '', baseRosterName: baseTeams[0]?.name || '', treasury: 0, rerolls: 0, dedicatedFans: 1, apothecary: false })}
                                                     className="bg-black/40 border border-white/10 text-white font-black py-3 px-8 rounded-2xl text-[10px] uppercase tracking-widest transition-all hover:border-primary/30 hover:text-primary"
                                                 >
                                                     Añadir participante manual
@@ -1832,7 +1941,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
 
             <AnimatePresence>
                 {manualAddState.isOpen && selectedCompetition && (
-                    <div className="leagues-modal-overlay fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={() => setManualAddState({ isOpen: false, coachName: '', teamName: '' })}>
+                    <div className="leagues-modal-overlay fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={() => { setManualAddState({ isOpen: false, coachName: '', franchiseName: '', baseRosterName: '', treasury: 0, rerolls: 0, dedicatedFans: 1, apothecary: false }); setManualRosterCounts({}); }}>
                         <motion.div
                             initial={{ opacity: 0, scale: 0.9, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -1858,27 +1967,112 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-2">Franquicia</label>
+                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-2">Nombre de franquicia</label>
+                                        <input
+                                            type="text"
+                                            value={manualAddState.franchiseName}
+                                            onChange={e => setManualAddState(prev => ({ ...prev, franchiseName: e.target.value }))}
+                                            className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-4 text-white focus:ring-2 focus:ring-primary/50 outline-none transition-all font-bold"
+                                            placeholder="Ej: Barbas del Barril"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-2">Raza base</label>
                                         <div className="relative">
                                             <select
-                                                value={manualAddState.teamName}
-                                                onChange={e => setManualAddState(prev => ({ ...prev, teamName: e.target.value }))}
+                                                value={manualAddState.baseRosterName}
+                                                onChange={e => setManualAddState(prev => ({ ...prev, baseRosterName: e.target.value }))}
                                                 className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-4 text-white focus:ring-2 focus:ring-primary/50 outline-none transition-all font-bold appearance-none"
                                             >
-                                                {managedTeams.length > 0 ? (
-                                                    managedTeams.map(t => <option key={t.id || t.name} value={t.name}>{t.name}</option>)
+                                                {baseTeams.length > 0 ? (
+                                                    baseTeams.map(t => <option key={t.name} value={t.name}>{t.name}</option>)
                                                 ) : (
-                                                    <option value="">No tienes franquicias en el Gremio</option>
+                                                    <option value="">No hay razas cargadas en master data</option>
                                                 )}
                                             </select>
                                             <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">expand_more</span>
                                         </div>
-                                        <p className="mt-2 text-[10px] text-slate-500 font-bold uppercase tracking-widest">Usaremos una franquicia real del Gremio, pero sin vincularla a una cuenta web.</p>
+                                        <p className="mt-2 text-[10px] text-slate-500 font-bold uppercase tracking-widest">Usaremos el roster canónico de Firebase y esta franquicia no quedará vinculada a una cuenta web.</p>
                                     </div>
+
+                                    {(() => {
+                                        const selectedRoster = baseTeams.find(team => team.name === manualAddState.baseRosterName);
+                                        const totalPlayers = Object.values(manualRosterCounts).reduce((sum, value) => sum + Number(value || 0), 0);
+                                        const previewTeam = selectedRoster && manualAddState.franchiseName
+                                            ? buildManualTeamFromRoster(selectedRoster, manualAddState.franchiseName || selectedRoster.name, {
+                                                treasury: manualAddState.treasury,
+                                                rerolls: manualAddState.rerolls,
+                                                dedicatedFans: manualAddState.dedicatedFans,
+                                                apothecary: manualAddState.apothecary
+                                            }, manualRosterCounts)
+                                            : null;
+                                        const previewTV = previewTeam ? calculateTeamValue(previewTeam, skills) : 0;
+
+                                        if (!selectedRoster) return null;
+
+                                        return (
+                                            <>
+                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                                    <div>
+                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-2">Tesorería</label>
+                                                        <input type="number" min="0" value={manualAddState.treasury} onChange={e => setManualAddState(prev => ({ ...prev, treasury: Number(e.target.value || 0) }))} className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-4 text-white focus:ring-2 focus:ring-primary/50 outline-none transition-all font-bold" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-2">Rerolls</label>
+                                                        <input type="number" min="0" value={manualAddState.rerolls} onChange={e => setManualAddState(prev => ({ ...prev, rerolls: Number(e.target.value || 0) }))} className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-4 text-white focus:ring-2 focus:ring-primary/50 outline-none transition-all font-bold" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-2">Fans</label>
+                                                        <input type="number" min="0" value={manualAddState.dedicatedFans} onChange={e => setManualAddState(prev => ({ ...prev, dedicatedFans: Number(e.target.value || 0) }))} className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-4 text-white focus:ring-2 focus:ring-primary/50 outline-none transition-all font-bold" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-2">Boticario</label>
+                                                        <button type="button" onClick={() => setManualAddState(prev => ({ ...prev, apothecary: !prev.apothecary }))} className={`w-full rounded-2xl px-4 py-4 border font-black uppercase tracking-widest text-[10px] transition-all ${manualAddState.apothecary ? 'bg-primary text-black border-primary' : 'bg-black/40 border-white/10 text-slate-300'}`}>
+                                                            {manualAddState.apothecary ? 'Sí' : 'No'}
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <div className="rounded-3xl border border-white/10 bg-black/20 p-5 space-y-4">
+                                                    <div className="flex items-center justify-between gap-3">
+                                                        <h4 className="text-[10px] font-black text-primary uppercase tracking-widest">Roster manual</h4>
+                                                        <div className="flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-widest">
+                                                            <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-slate-300">{totalPlayers} jugadores</span>
+                                                            <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary">{Math.round(previewTV / 1000)}k TV</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="max-h-72 overflow-y-auto pr-2 space-y-3">
+                                                        {selectedRoster.roster.map(position => {
+                                                            const maxQty = parseQtyMax(position.qty);
+                                                            return (
+                                                                <div key={position.position} className="grid grid-cols-[minmax(0,1fr)_84px] gap-3 items-center">
+                                                                    <div className="min-w-0">
+                                                                        <p className="text-white font-black uppercase italic text-sm truncate">{position.position}</p>
+                                                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{position.qty} · {Math.round(position.cost / 1000)}k</p>
+                                                                    </div>
+                                                                    <input
+                                                                        type="number"
+                                                                        min="0"
+                                                                        max={maxQty}
+                                                                        value={manualRosterCounts[position.position] ?? 0}
+                                                                        onChange={e => {
+                                                                            const next = Math.max(0, Math.min(maxQty, Number(e.target.value || 0)));
+                                                                            setManualRosterCounts(prev => ({ ...prev, [position.position]: next }));
+                                                                        }}
+                                                                        className="w-full bg-black/40 border border-white/10 rounded-2xl px-3 py-3 text-white text-center focus:ring-2 focus:ring-primary/50 outline-none transition-all font-black"
+                                                                    />
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            </>
+                                        );
+                                    })()}
                                 </div>
 
                                 <div className="flex gap-3">
-                                    <button onClick={() => setManualAddState({ isOpen: false, coachName: '', teamName: '' })} className="flex-1 py-4 text-slate-400 font-black uppercase tracking-widest text-[10px] hover:text-white transition-colors">Cancelar</button>
+                                    <button onClick={() => { setManualAddState({ isOpen: false, coachName: '', franchiseName: '', baseRosterName: '', treasury: 0, rerolls: 0, dedicatedFans: 1, apothecary: false }); setManualRosterCounts({}); }} className="flex-1 py-4 text-slate-400 font-black uppercase tracking-widest text-[10px] hover:text-white transition-colors">Cancelar</button>
                                     <button
                                         onClick={handleAddManualParticipant}
                                         className="flex-1 bg-primary text-black py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:scale-[1.02] transition-transform shadow-xl shadow-primary/20"
