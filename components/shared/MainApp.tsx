@@ -562,8 +562,9 @@ const MainApp: React.FC = () => {
         createdBy: newCompData.createdBy || user.id,
         joinCode: newCompData.joinCode || generateJoinCode(newCompData.name),
       });
+      const firestoreSafeCompetition = stripUndefinedDeep(competitionPayload);
       await setDoc(doc(db, 'leagues', competitionId), {
-        ...competitionPayload,
+        ...firestoreSafeCompetition,
         createdAt: serverTimestamp()
       });
       setSyncState('synced');
