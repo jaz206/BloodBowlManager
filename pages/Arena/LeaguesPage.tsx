@@ -509,6 +509,10 @@ export const Leagues: React.FC<LeaguesProps> = ({
         setScoreModalState(null);
     };
 
+    const openManualResolution = (roundIndex: string, matchIndex: number, matchup: Matchup) => {
+        setScoreModalState({ isOpen: true, roundIndex, matchIndex, matchup });
+    };
+
     const handleWinnerSelect = (roundIndexStr: string, matchIndex: number, winnerTeam: string) => {
         if (!selectedCompetition || !selectedCompetition.bracket) return;
 
@@ -1118,14 +1122,19 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                         if (!user || !selectedCompetition || selectedCompetition.status !== 'In Progress') return null;
                                         
                                         let nextMatch: Matchup | null = null;
+                                        let nextRoundIndex: string | null = null;
+                                        let nextMatchIndex = -1;
                                         let opponentName = '';
                                         
                                         // Buscar en Ligas
                                         if (selectedCompetition.format === 'Liguilla' && selectedCompetition.schedule) {
-                                            for (const round of Object.values(selectedCompetition.schedule)) {
-                                                const myMatch = round.find(m => !isMatchCompleted(m) && (m.team1 === user.name || m.team2 === user.name || selectedCompetition.teams.find(t => t.ownerId === user.id)?.teamName === m.team1 || selectedCompetition.teams.find(t => t.ownerId === user.id)?.teamName === m.team2));
+                                            for (const [roundIdx, round] of Object.entries(selectedCompetition.schedule)) {
+                                                const matchIdx = round.findIndex(m => !isMatchCompleted(m) && (m.team1 === user.name || m.team2 === user.name || selectedCompetition.teams.find(t => t.ownerId === user.id)?.teamName === m.team1 || selectedCompetition.teams.find(t => t.ownerId === user.id)?.teamName === m.team2));
+                                                const myMatch = matchIdx >= 0 ? round[matchIdx] : undefined;
                                                 if (myMatch) {
                                                     nextMatch = myMatch;
+                                                    nextRoundIndex = roundIdx;
+                                                    nextMatchIndex = matchIdx;
                                                     const myTeamName = selectedCompetition.teams.find(t => t.ownerId === user.id)?.teamName;
                                                     opponentName = myMatch.team1 === myTeamName ? myMatch.team2 : myMatch.team1;
                                                     break;
@@ -1134,10 +1143,13 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                         } 
                                         // Buscar en Torneos
                                         else if (selectedCompetition.format === 'Torneo' && selectedCompetition.bracket) {
-                                            for (const round of Object.values(selectedCompetition.bracket)) {
-                                                const myMatch = round.find(m => !isMatchCompleted(m) && m.team1 !== 'Por determinar' && m.team2 !== 'Por determinar' && (selectedCompetition.teams.find(t => t.ownerId === user.id)?.teamName === m.team1 || selectedCompetition.teams.find(t => t.ownerId === user.id)?.teamName === m.team2));
+                                            for (const [roundIdx, round] of Object.entries(selectedCompetition.bracket)) {
+                                                const matchIdx = round.findIndex(m => !isMatchCompleted(m) && m.team1 !== 'Por determinar' && m.team2 !== 'Por determinar' && (selectedCompetition.teams.find(t => t.ownerId === user.id)?.teamName === m.team1 || selectedCompetition.teams.find(t => t.ownerId === user.id)?.teamName === m.team2));
+                                                const myMatch = matchIdx >= 0 ? round[matchIdx] : undefined;
                                                 if (myMatch) {
                                                     nextMatch = myMatch;
+                                                    nextRoundIndex = roundIdx;
+                                                    nextMatchIndex = matchIdx;
                                                     const myTeamName = selectedCompetition.teams.find(t => t.ownerId === user.id)?.teamName;
                                                     opponentName = myMatch.team1 === myTeamName ? myMatch.team2 : myMatch.team1;
                                                     break;
@@ -1173,7 +1185,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                             {opponentName.charAt(0)}
                                                         </div>
                                                         <div>
-                                                            <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-1 italic">Vs Rival Especial</p>
+                                                            <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-1 italic">Pr?xima mesa</p>
                                                             <h4 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">{opponentName}</h4>
                                                             <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
                                                                 <span>{opponentFranchise?.teamState?.rosterName || 'Desconocido'}</span>
@@ -1213,13 +1225,27 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                             {!!myReady?.journeymenNeeded && <span className="text-amber-400">{myReady.journeymenNeeded} sustitutos</span>}
                                                         </div>
 
-                                                        <button 
-                                                            onClick={() => onNavigateToMatch?.(nextMatch!, selectedCompetition, myFranchise?.teamState, opponentFranchise?.teamState)}
-                                                            className="w-full md:w-auto bg-primary text-black font-black px-10 py-5 rounded-2xl flex items-center justify-center gap-3 transition-all hover:scale-105 active:scale-95 uppercase tracking-tighter text-sm shadow-xl shadow-primary/10"
-                                                        >
-                                                            <span className="material-symbols-outlined font-bold">sports_football</span>
-                                                            Jugar Partido
-                                                        </button>
+                                                            <div className="flex flex-col md:flex-row gap-3">
+                                                                <button 
+                                                                    onClick={() => nextRoundIndex != null && openManualResolution(nextRoundIndex, nextMatchIndex, nextMatch!)}
+                                                                    className="w-full md:w-auto bg-primary text-black font-black px-10 py-5 rounded-2xl flex items-center justify-center gap-3 transition-all hover:scale-105 active:scale-95 uppercase tracking-tighter text-sm shadow-xl shadow-primary/10"
+                                                                >
+                                                                    <span className="material-symbols-outlined font-bold">fact_check</span>
+                                                                    Registrar resultado de mesa
+                                                                </button>
+                                                                {onNavigateToMatch && (
+                                                                    <button 
+                                                                        onClick={() => onNavigateToMatch(nextMatch!, selectedCompetition, myFranchise?.teamState, opponentFranchise?.teamState)}
+                                                                        className="w-full md:w-auto bg-black/40 border border-white/10 text-white font-black px-8 py-5 rounded-2xl flex items-center justify-center gap-3 transition-all hover:border-primary/30 hover:text-primary uppercase tracking-tighter text-sm"
+                                                                    >
+                                                                        <span className="material-symbols-outlined font-bold">sports_esports</span>
+                                                                        Abrir en Arena
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                            <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
+                                                                El gestor de ligas prioriza actas de mesa. Arena queda como apoyo opcional.
+                                                            </p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1501,11 +1527,11 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                                     <div className="font-black text-xl text-white w-8 text-center">{match.score2 ?? '-'}</div>
                                                                     {!match.played && (user?.id === selectedCompetition.ownerId || selectedCompetition.teams.some(t => t.ownerId === user?.id && (t.teamName === match.team1 || t.teamName === match.team2))) && (
                                                                         <button
-                                                                            onClick={() => setScoreModalState({ isOpen: true, roundIndex: roundIdx, matchIndex: matchIdx, matchup: match })}
+                                                                            onClick={() => openManualResolution(roundIdx, matchIdx, match)}
                                                                             className="absolute inset-0 bg-primary/90 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center text-black"
                                                                         >
                                                                             <span className="material-symbols-outlined font-black">edit</span>
-                                                                            <span className="ml-2 text-[10px] font-black uppercase tracking-widest italic">Cerrar acta</span>
+                                                                            <span className="ml-2 text-[10px] font-black uppercase tracking-widest italic">Registrar acta</span>
                                                                         </button>
                                                                     )}
                                                                 </div>
@@ -1543,11 +1569,11 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                                     </div>
                                                                     {!match.played && (user?.id === selectedCompetition.ownerId || selectedCompetition.teams.some(t => t.ownerId === user?.id && (t.teamName === match.team1 || t.teamName === match.team2))) && (
                                                                         <button
-                                                                            onClick={() => setScoreModalState({ isOpen: true, roundIndex: roundIdx, matchIndex: matchIdx, matchup: match })}
+                                                                            onClick={() => openManualResolution(roundIdx, matchIdx, match)}
                                                                             className="w-full mt-2 py-3 rounded-2xl bg-primary/10 hover:bg-primary/90 text-primary hover:text-black transition-all font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2"
                                                                         >
                                                                             <span className="material-symbols-outlined text-sm font-bold">edit</span>
-                                                                            {match.played ? 'Editar acta' : 'Cerrar acta'}
+                                                                            {match.played ? 'Editar acta' : 'Registrar acta'}
                                                                         </button>
                                                                     )}
                                                                 </div>
