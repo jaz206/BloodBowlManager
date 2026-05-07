@@ -26,7 +26,7 @@ const trophyImageUrl = 'https://i.pinimg.com/736x/95/dc/9a/95dc9a37df924d550e992
 interface LeaguesProps {
     managedTeams: ManagedTeam[];
     initialCompetitions: Competition[];
-    onCompetitionCreate: (comp: Omit<Competition, 'id'>) => void;
+    onCompetitionCreate: (comp: Omit<Competition, 'id'>) => Promise<string | null> | string | null;
     onCompetitionUpdate: (comp: Competition) => void;
     onCompetitionDelete: (id: string) => void;
     onNavigateToMatch?: (matchup: Matchup, comp: Competition, myTeam?: ManagedTeam, opponentTeam?: ManagedTeam) => void;
@@ -72,6 +72,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
     const [newCompRedraftBase, setNewCompRedraftBase] = useState(0);
     const [ownerTeamToJoin, setOwnerTeamToJoin] = useState<string>('');
     const [isSelectingOwnerTeam, setIsSelectingOwnerTeam] = useState(false);
+    const [pendingCreatedCompetitionId, setPendingCreatedCompetitionId] = useState<string | null>(null);
 
     const [joinModalState, setJoinModalState] = useState<{ comp: Competition | null; teamToJoin: string }>({ comp: null, teamToJoin: '' });
     const [scoreModalState, setScoreModalState] = useState<{ isOpen: boolean; roundIndex: string; matchIndex: number; matchup: Matchup; } | null>(null);
@@ -91,9 +92,9 @@ export const Leagues: React.FC<LeaguesProps> = ({
     );
 
     // Ligas donde el usuario es un participante activo (como jugador)
-    const myLeagues = useMemo(() => initialCompetitions.filter(c => c.format === 'Liguilla' && c.teams.some(t => t.ownerId === user?.id)), [initialCompetitions, user]);
+    const myLeagues = useMemo(() => initialCompetitions.filter(c => c.format === 'Liguilla' && (c.teams.some(t => t.ownerId === user?.id) || isCompetitionOwnedByMe(c))), [initialCompetitions, user]);
     // Torneos donde el usuario participa activamente
-    const myTournaments = useMemo(() => initialCompetitions.filter(c => c.format === 'Torneo' && c.teams.some(t => t.ownerId === user?.id)), [initialCompetitions, user]);
+    const myTournaments = useMemo(() => initialCompetitions.filter(c => c.format === 'Torneo' && (c.teams.some(t => t.ownerId === user?.id) || isCompetitionOwnedByMe(c))), [initialCompetitions, user]);
     // Ligas/Torneos públicos donde el usuario NO participa aún
     const publicLeagues = useMemo(() => initialCompetitions.filter(c => c.format === 'Liguilla' && c.status === 'Open' && c.visibility !== 'Private' && !c.teams.some(t => t.ownerId === user?.id)), [initialCompetitions, user]);
     const publicTournaments = useMemo(() => initialCompetitions.filter(c => c.format === 'Torneo' && c.status === 'Open' && c.visibility !== 'Private' && !c.teams.some(t => t.ownerId === user?.id)), [initialCompetitions, user]);
@@ -111,6 +112,17 @@ export const Leagues: React.FC<LeaguesProps> = ({
             }
         }
     }, [initialCompetitions, managedTeams, joinModalState.comp]);
+
+    useEffect(() => {
+        if (!pendingCreatedCompetitionId) return;
+        const createdCompetition = initialCompetitions.find(c => c.id === pendingCreatedCompetitionId);
+        if (!createdCompetition) return;
+
+        setSelectedCompetition(createdCompetition);
+        setView('detail');
+        setActiveTab('organization');
+        setPendingCreatedCompetitionId(null);
+    }, [pendingCreatedCompetitionId, initialCompetitions]);
 
     const isMatchCompleted = (match: Matchup) => Boolean(match.played || (match.score1 != null && match.score2 != null));
 
@@ -307,7 +319,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
         return updatedComp;
     };
 
-    const handleCreateCompetition = () => {
+    const handleCreateCompetition = async () => {
         if (!newCompetitionName.trim() || !user) {
             setConfirmation({
                 title: "Campo requerido",
@@ -361,14 +373,24 @@ export const Leagues: React.FC<LeaguesProps> = ({
                 redraftBudgetBase: newCompRedraftBase
             }
         };
-        onCompetitionCreate(newCompetition);
+        const createdCompetitionId = await onCompetitionCreate(newCompetition);
+        if (!createdCompetitionId) {
+            setConfirmation({
+                title: "No se pudo crear",
+                message: "La liga no pudo guardarse en Firebase. Revisa tu sesiÃ³n o permisos e intÃ©ntalo de nuevo.",
+                onConfirm: () => setConfirmation(null),
+                type: 'info'
+            });
+            return;
+        }
+
+        setPendingCreatedCompetitionId(createdCompetitionId);
         setNewCompetitionName('');
         setOwnerTeamToJoin('');
         setNewCompPettyCash(true);
         setNewCompPrayers(true);
         setNewCompExpensiveMistakes(true);
         setNewCompRedraftBase(0);
-        setView('list');
         setActiveTab('organization');
     };
 

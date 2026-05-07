@@ -553,7 +553,7 @@ const MainApp: React.FC = () => {
   };
 
   const handleCompetitionCreate = async (newCompData: Omit<Competition, 'id'>) => {
-    if (!user || isGuest || !db) return;
+    if (!user || isGuest || !db) return null;
     setSyncState('syncing');
     try {
       const competitionId = crypto.randomUUID ? crypto.randomUUID() : `comp_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
@@ -567,9 +567,11 @@ const MainApp: React.FC = () => {
         createdAt: serverTimestamp()
       });
       setSyncState('synced');
+      return competitionId;
     } catch (error) {
       console.error("Error creating competition:", error);
       setSyncState('error');
+      return null;
     }
   };
 
