@@ -319,6 +319,8 @@ export const Leagues: React.FC<LeaguesProps> = ({
         const newCompetition: Omit<Competition, 'id'> = {
             name: newCompetitionName.trim(),
             format: newCompetitionFormat,
+            phase: 'registration',
+            seasonNumber: 1,
             visibility: newCompVisibility,
             maxTeams: newCompMaxTeams,
             joinCode: generateJoinCode(newCompetitionName.trim()),
@@ -334,7 +336,11 @@ export const Leagues: React.FC<LeaguesProps> = ({
                 muerteSubita: newCompMuerteSubita,
                 incentivos: newCompIncentivos,
                 tiempoTurno: newCompTiempoTurno,
-                mercenarios: newCompMercenarios
+                mercenarios: newCompMercenarios,
+                pettyCashEnabled: true,
+                prayersToNuffleEnabled: true,
+                expensiveMistakesEnabled: true,
+                redraftBudgetBase: 0
             }
         };
         onCompetitionCreate(newCompetition);
@@ -461,6 +467,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
             updatedComp = {
                 ...cleanComp,
                 status: 'In Progress',
+                phase: 'regular_season',
                 schedule: generateSchedule(teamNames),
                 bracket: null,
             };
@@ -468,6 +475,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
             updatedComp = {
                 ...cleanComp,
                 status: 'In Progress',
+                phase: 'playoffs',
                 bracket: generateBracket(teamNames),
                 schedule: null,
             };
@@ -835,6 +843,16 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                 }`}>
                                 {selectedCompetition.status}
                             </span>
+                            <span className="text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-[0.2em] italic border bg-white/5 text-slate-300 border-white/10">
+                                T{selectedCompetition.seasonNumber || 1}
+                            </span>
+                            <span className="text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-[0.2em] italic border bg-primary/10 text-primary border-primary/20">
+                                {selectedCompetition.phase === 'registration' && 'Inscripción'}
+                                {selectedCompetition.phase === 'regular_season' && 'Temporada'}
+                                {selectedCompetition.phase === 'playoffs' && 'Playoffs'}
+                                {selectedCompetition.phase === 'offseason' && 'Offseason'}
+                                {selectedCompetition.phase === 'redraft' && 'Redraft'}
+                            </span>
                             {selectedCompetition.visibility === 'Private' && (
                                 <span className="text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-[0.2em] italic border bg-red-500/10 text-red-500 border-red-500/20 flex items-center gap-1">
                                     <span className="material-symbols-outlined text-[12px]">lock</span> PRIVADA
@@ -1122,6 +1140,30 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                 <div className="flex justify-between items-center py-2 border-b border-white/5">
                                                     <span className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Turno</span>
                                                     <span className="text-white font-black uppercase tracking-widest text-[10px] italic">{selectedCompetition.rules.tiempoTurno} min</span>
+                                                </div>
+                                                <div className="flex justify-between items-center py-2 border-b border-white/5">
+                                                    <span className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Petty Cash</span>
+                                                    <span className={`font-black uppercase tracking-widest text-[10px] italic ${selectedCompetition.rules.pettyCashEnabled ? 'text-white' : 'text-slate-600'}`}>
+                                                        {selectedCompetition.rules.pettyCashEnabled ? 'Habilitado' : 'Desactivado'}
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between items-center py-2 border-b border-white/5">
+                                                    <span className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Prayers To Nuffle</span>
+                                                    <span className={`font-black uppercase tracking-widest text-[10px] italic ${selectedCompetition.rules.prayersToNuffleEnabled ? 'text-white' : 'text-slate-600'}`}>
+                                                        {selectedCompetition.rules.prayersToNuffleEnabled ? 'Habilitado' : 'Desactivado'}
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between items-center py-2 border-b border-white/5">
+                                                    <span className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Expensive Mistakes</span>
+                                                    <span className={`font-black uppercase tracking-widest text-[10px] italic ${selectedCompetition.rules.expensiveMistakesEnabled ? 'text-white' : 'text-slate-600'}`}>
+                                                        {selectedCompetition.rules.expensiveMistakesEnabled ? 'Habilitado' : 'Desactivado'}
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between items-center py-2 border-b border-white/5">
+                                                    <span className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Redraft Base</span>
+                                                    <span className="text-white font-black uppercase tracking-widest text-[10px] italic">
+                                                        {(selectedCompetition.rules.redraftBudgetBase || 0).toLocaleString('es-ES')} mo
+                                                    </span>
                                                 </div>
                                                 <div className="flex justify-between items-center py-2">
                                                     <span className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Mercenarios</span>

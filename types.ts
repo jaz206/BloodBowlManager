@@ -274,7 +274,13 @@ export interface CompetitionRules {
   incentivos: 'Todos' | 'Reducidos' | 'Ninguno';
   tiempoTurno: number;
   mercenarios: boolean;
+  pettyCashEnabled?: boolean;
+  prayersToNuffleEnabled?: boolean;
+  expensiveMistakesEnabled?: boolean;
+  redraftBudgetBase?: number;
 }
+
+export type CompetitionPhase = 'registration' | 'regular_season' | 'playoffs' | 'offseason' | 'redraft';
 
 export interface Competition {
   id: string;
@@ -286,6 +292,8 @@ export interface Competition {
   joinCode?: string;
   format: 'Liguilla' | 'Torneo';
   status: 'Open' | 'In Progress' | 'Finished';
+  phase?: CompetitionPhase;
+  seasonNumber?: number;
   visibility?: 'Public' | 'Private'; // Nueva propiedad
   maxTeams?: number; // Nueva propiedad S3
   teams: CompetitionTeam[];
