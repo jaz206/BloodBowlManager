@@ -64,6 +64,10 @@ export const Leagues: React.FC<LeaguesProps> = ({
     const [newCompIncentivos, setNewCompIncentivos] = useState<'Todos' | 'Reducidos' | 'Ninguno'>('Todos');
     const [newCompTiempoTurno, setNewCompTiempoTurno] = useState(4);
     const [newCompMercenarios, setNewCompMercenarios] = useState(true);
+    const [newCompPettyCash, setNewCompPettyCash] = useState(true);
+    const [newCompPrayers, setNewCompPrayers] = useState(true);
+    const [newCompExpensiveMistakes, setNewCompExpensiveMistakes] = useState(true);
+    const [newCompRedraftBase, setNewCompRedraftBase] = useState(0);
     const [ownerTeamToJoin, setOwnerTeamToJoin] = useState<string>('');
     const [isSelectingOwnerTeam, setIsSelectingOwnerTeam] = useState(false);
 
@@ -337,15 +341,19 @@ export const Leagues: React.FC<LeaguesProps> = ({
                 incentivos: newCompIncentivos,
                 tiempoTurno: newCompTiempoTurno,
                 mercenarios: newCompMercenarios,
-                pettyCashEnabled: true,
-                prayersToNuffleEnabled: true,
-                expensiveMistakesEnabled: true,
-                redraftBudgetBase: 0
+                pettyCashEnabled: newCompPettyCash,
+                prayersToNuffleEnabled: newCompPrayers,
+                expensiveMistakesEnabled: newCompExpensiveMistakes,
+                redraftBudgetBase: newCompRedraftBase
             }
         };
         onCompetitionCreate(newCompetition);
         setNewCompetitionName('');
         setOwnerTeamToJoin('');
+        setNewCompPettyCash(true);
+        setNewCompPrayers(true);
+        setNewCompExpensiveMistakes(true);
+        setNewCompRedraftBase(0);
         setView('list');
         setActiveTab('organization');
     };
@@ -750,6 +758,17 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                 </li>
                             </ul>
 
+                            <div className="grid grid-cols-2 gap-3 mb-8">
+                                <div className="rounded-2xl border border-zinc-900/10 bg-white/30 px-4 py-3">
+                                    <p className="text-[9px] font-black uppercase tracking-[0.18em] opacity-60">Temporada</p>
+                                    <p className="text-lg font-black italic">T1</p>
+                                </div>
+                                <div className="rounded-2xl border border-zinc-900/10 bg-white/30 px-4 py-3">
+                                    <p className="text-[9px] font-black uppercase tracking-[0.18em] opacity-60">Fase inicial</p>
+                                    <p className="text-lg font-black italic">InscripciÃ³n</p>
+                                </div>
+                            </div>
+
                             <button
                                 onClick={handleCreateCompetition}
                                 disabled={!newCompetitionName.trim()}
@@ -805,6 +824,43 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                 >
                                     {newCompMercenarios ? 'Habilitado' : 'Desactivado'}
                                 </button>
+                            </div>
+                            <div className="flex justify-between items-center py-4 border-t border-white/5">
+                                <span className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Petty Cash</span>
+                                <button 
+                                    onClick={() => setNewCompPettyCash(!newCompPettyCash)}
+                                    className={`font-black uppercase tracking-widest text-[10px] italic underline decoration-primary/30 underline-offset-4 transition-all ${newCompPettyCash ? 'text-white' : 'text-slate-600'}`}
+                                >
+                                    {newCompPettyCash ? 'Habilitado' : 'Desactivado'}
+                                </button>
+                            </div>
+                            <div className="flex justify-between items-center py-4 border-t border-white/5">
+                                <span className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Prayers To Nuffle</span>
+                                <button 
+                                    onClick={() => setNewCompPrayers(!newCompPrayers)}
+                                    className={`font-black uppercase tracking-widest text-[10px] italic underline decoration-primary/30 underline-offset-4 transition-all ${newCompPrayers ? 'text-white' : 'text-slate-600'}`}
+                                >
+                                    {newCompPrayers ? 'Habilitado' : 'Desactivado'}
+                                </button>
+                            </div>
+                            <div className="flex justify-between items-center py-4 border-t border-white/5">
+                                <span className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Expensive Mistakes</span>
+                                <button 
+                                    onClick={() => setNewCompExpensiveMistakes(!newCompExpensiveMistakes)}
+                                    className={`font-black uppercase tracking-widest text-[10px] italic underline decoration-primary/30 underline-offset-4 transition-all ${newCompExpensiveMistakes ? 'text-white' : 'text-slate-600'}`}
+                                >
+                                    {newCompExpensiveMistakes ? 'Habilitado' : 'Desactivado'}
+                                </button>
+                            </div>
+                            <div className="flex justify-between items-center py-4 border-t border-white/5">
+                                <span className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Base Redraft</span>
+                                <div className="flex items-center gap-2">
+                                    <button onClick={() => setNewCompRedraftBase(Math.max(0, newCompRedraftBase - 50000))} className="text-primary font-bold opacity-50 hover:opacity-100 p-1">-</button>
+                                    <span className="text-white font-black uppercase tracking-widest text-[10px] italic w-24 text-center">
+                                        {newCompRedraftBase.toLocaleString('es-ES')} mo
+                                    </span>
+                                    <button onClick={() => setNewCompRedraftBase(newCompRedraftBase + 50000)} className="text-primary font-bold opacity-50 hover:opacity-100 p-1">+</button>
+                                </div>
                             </div>
                         </div>
                     </div>
