@@ -12,6 +12,9 @@ import { lastingInjuryResults } from '../../data/lastingInjuries';
 
 type TeamDraft = {
     score: number;
+    treasuryDelta: number;
+    dedicatedFansDelta: number;
+    postMatchNotes: string;
     mvpPlayerId: number | null;
     players: MatchPlayerResult[];
 };
@@ -46,6 +49,9 @@ const buildDraft = (team: CompetitionTeam, existing?: MatchResolution['team1'] |
 
     return {
         score: existing?.score ?? 0,
+        treasuryDelta: existing?.treasuryDelta ?? 0,
+        dedicatedFansDelta: existing?.dedicatedFansDelta ?? 0,
+        postMatchNotes: existing?.postMatchNotes ?? '',
         mvpPlayerId: existing?.mvpPlayerId ?? null,
         players: playerResults,
     };
@@ -151,6 +157,9 @@ const CompetitionMatchResolutionModal: React.FC<CompetitionMatchResolutionModalP
                 ownerId: team1?.ownerId || '',
                 ownerName: team1?.ownerName || '',
                 score: team1Draft.score,
+                treasuryDelta: team1Draft.treasuryDelta,
+                dedicatedFansDelta: team1Draft.dedicatedFansDelta,
+                postMatchNotes: team1Draft.postMatchNotes,
                 mvpPlayerId: team1Draft.mvpPlayerId,
                 players: team1Draft.players,
             },
@@ -159,6 +168,9 @@ const CompetitionMatchResolutionModal: React.FC<CompetitionMatchResolutionModalP
                 ownerId: team2?.ownerId || '',
                 ownerName: team2?.ownerName || '',
                 score: team2Draft.score,
+                treasuryDelta: team2Draft.treasuryDelta,
+                dedicatedFansDelta: team2Draft.dedicatedFansDelta,
+                postMatchNotes: team2Draft.postMatchNotes,
                 mvpPlayerId: team2Draft.mvpPlayerId,
                 players: team2Draft.players,
             },
@@ -195,6 +207,52 @@ const CompetitionMatchResolutionModal: React.FC<CompetitionMatchResolutionModalP
                 </div>
 
                 <div className="border-t border-white/5 pt-4 space-y-3 max-h-[48vh] overflow-y-auto pr-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                        <div>
+                            <label className="block text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1">Tesorería +/-</label>
+                            <input
+                                type="number"
+                                value={teamDraft.treasuryDelta}
+                                onChange={e => {
+                                    const val = Number(e.target.value) || 0;
+                                    teamIndex === 1
+                                        ? setTeam1Draft(prev => ({ ...prev, treasuryDelta: val }))
+                                        : setTeam2Draft(prev => ({ ...prev, treasuryDelta: val }));
+                                }}
+                                className="w-full bg-black/60 border border-white/10 rounded-xl py-2 px-3 text-center text-white font-black"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1">Fans dedicados +/-</label>
+                            <input
+                                type="number"
+                                value={teamDraft.dedicatedFansDelta}
+                                onChange={e => {
+                                    const val = Number(e.target.value) || 0;
+                                    teamIndex === 1
+                                        ? setTeam1Draft(prev => ({ ...prev, dedicatedFansDelta: val }))
+                                        : setTeam2Draft(prev => ({ ...prev, dedicatedFansDelta: val }));
+                                }}
+                                className="w-full bg-black/60 border border-white/10 rounded-xl py-2 px-3 text-center text-white font-black"
+                            />
+                        </div>
+                        <div className="sm:col-span-2 lg:col-span-1">
+                            <label className="block text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1">Nota de franquicia</label>
+                            <input
+                                type="text"
+                                value={teamDraft.postMatchNotes}
+                                onChange={e => {
+                                    const val = e.target.value;
+                                    teamIndex === 1
+                                        ? setTeam1Draft(prev => ({ ...prev, postMatchNotes: val }))
+                                        : setTeam2Draft(prev => ({ ...prev, postMatchNotes: val }));
+                                }}
+                                className="w-full bg-black/60 border border-white/10 rounded-xl py-2 px-3 text-white font-bold text-sm"
+                                placeholder="Cobros, secuelas, notas..."
+                            />
+                        </div>
+                    </div>
+
                     {teamDraft.players.length === 0 ? (
                         <p className="text-slate-500 text-[10px] uppercase italic tracking-widest text-center py-6">Sin jugadores registrados en este clon</p>
                     ) : (

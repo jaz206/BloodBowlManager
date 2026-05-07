@@ -245,6 +245,9 @@ export interface MatchTeamResult {
   ownerId: string;
   ownerName: string;
   score: number;
+  treasuryDelta?: number;
+  dedicatedFansDelta?: number;
+  postMatchNotes?: string;
   mvpPlayerId?: number | null;
   players: MatchPlayerResult[];
 }

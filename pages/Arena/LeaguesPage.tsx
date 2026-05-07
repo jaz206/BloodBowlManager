@@ -224,6 +224,9 @@ export const Leagues: React.FC<LeaguesProps> = ({
             losses: previousRecord.losses + (result === 'L' ? 1 : 0),
         };
 
+        teamState.treasury = Math.max(0, (teamState.treasury || 0) + (teamResolution?.treasuryDelta || 0));
+        teamState.dedicatedFans = Math.max(0, (teamState.dedicatedFans || 0) + (teamResolution?.dedicatedFansDelta || 0));
+
         teamState.history = [
             ...(teamState.history || []),
             {
