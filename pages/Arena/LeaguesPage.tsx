@@ -74,7 +74,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
     const [ownerTeamToJoin, setOwnerTeamToJoin] = useState<string>('');
     const [isSelectingOwnerTeam, setIsSelectingOwnerTeam] = useState(false);
     const [pendingCreatedCompetitionId, setPendingCreatedCompetitionId] = useState<string | null>(null);
-    const [manualAddState, setManualAddState] = useState<{ isOpen: boolean; coachName: string; franchiseName: string; baseRosterName: string; treasury: number; rerolls: number; dedicatedFans: number; apothecary: boolean }>({ isOpen: false, coachName: '', franchiseName: '', baseRosterName: '', treasury: 0, rerolls: 0, dedicatedFans: 1, apothecary: false });
+    const [manualAddState, setManualAddState] = useState<{ isOpen: boolean; editEntryId?: string | null; coachName: string; franchiseName: string; baseRosterName: string; treasury: number; rerolls: number; dedicatedFans: number; apothecary: boolean }>({ isOpen: false, editEntryId: null, coachName: '', franchiseName: '', baseRosterName: '', treasury: 0, rerolls: 0, dedicatedFans: 1, apothecary: false });
     const [manualRosterCounts, setManualRosterCounts] = useState<Record<string, number>>({});
 
     const [joinModalState, setJoinModalState] = useState<{ comp: Competition | null; teamToJoin: string }>({ comp: null, teamToJoin: '' });
@@ -150,6 +150,47 @@ export const Leagues: React.FC<LeaguesProps> = ({
         crestImage: baseRoster.image,
         record: { wins: 0, draws: 0, losses: 0 }
     });
+
+    const resetManualParticipantState = () => {
+        setManualAddState({ isOpen: false, editEntryId: null, coachName: '', franchiseName: '', baseRosterName: '', treasury: 0, rerolls: 0, dedicatedFans: 1, apothecary: false });
+        setManualRosterCounts({});
+    };
+
+    const openManualParticipantModal = (team?: CompetitionTeam) => {
+        if (!team?.isManual || !team.teamState) {
+            setManualAddState({
+                isOpen: true,
+                editEntryId: null,
+                coachName: '',
+                franchiseName: '',
+                baseRosterName: baseTeams[0]?.name || '',
+                treasury: 0,
+                rerolls: 0,
+                dedicatedFans: 1,
+                apothecary: false
+            });
+            setManualRosterCounts({});
+            return;
+        }
+
+        const counts = team.teamState.players.reduce<Record<string, number>>((acc, player) => {
+            acc[player.position] = (acc[player.position] || 0) + 1;
+            return acc;
+        }, {});
+
+        setManualAddState({
+            isOpen: true,
+            editEntryId: team.entryId || null,
+            coachName: team.ownerName,
+            franchiseName: team.teamName,
+            baseRosterName: team.teamState.rosterName,
+            treasury: team.teamState.treasury || 0,
+            rerolls: team.teamState.rerolls || 0,
+            dedicatedFans: team.teamState.dedicatedFans || 0,
+            apothecary: !!team.teamState.apothecary
+        });
+        setManualRosterCounts(counts);
+    };
 
     const calculateManualTeamSpend = (baseRoster: Team, config: { treasury: number; rerolls: number; dedicatedFans: number; apothecary: boolean }, counts: Record<string, number>) => {
         const playersCost = baseRoster.roster.reduce((sum, position) => {
@@ -647,7 +688,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
             return;
         }
 
-        if (cleanComp.teams.some(t => t.teamName === franchiseName)) {
+        if (cleanComp.teams.some(t => t.teamName === franchiseName && t.entryId !== manualAddState.editEntryId)) {
             setConfirmation({
                 title: "Equipo duplicado",
                 message: "Esta franquicia ya está inscrita en la competición.",
@@ -690,23 +731,51 @@ export const Leagues: React.FC<LeaguesProps> = ({
             return;
         }
 
+        const manualEntry: CompetitionTeam = {
+            entryId: manualAddState.editEntryId || (crypto.randomUUID ? crypto.randomUUID() : `entry_${Date.now()}_${Math.floor(Math.random() * 10000)}`),
+            teamName: franchiseName,
+            ownerId: '',
+            ownerName: coachName,
+            isManual: true,
+            teamState: builtTeamState,
+            stats: manualAddState.editEntryId
+                ? (cleanComp.teams.find(t => t.entryId === manualAddState.editEntryId)?.stats || { played: 0, won: 0, drawn: 0, lost: 0, tdFor: 0, tdAgainst: 0, casFor: 0, casAgainst: 0, points: 0 })
+                : { played: 0, won: 0, drawn: 0, lost: 0, tdFor: 0, tdAgainst: 0, casFor: 0, casAgainst: 0, points: 0 }
+        };
+
         const updatedComp: Competition = {
             ...cleanComp,
-            teams: [...cleanComp.teams, {
-                entryId: crypto.randomUUID ? crypto.randomUUID() : `entry_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
-                teamName: franchiseName,
-                ownerId: '',
-                ownerName: coachName,
-                isManual: true,
-                teamState: builtTeamState,
-                stats: { played: 0, won: 0, drawn: 0, lost: 0, tdFor: 0, tdAgainst: 0, casFor: 0, casAgainst: 0, points: 0 }
-            }]
+            teams: manualAddState.editEntryId
+                ? cleanComp.teams.map(team => team.entryId === manualAddState.editEntryId ? manualEntry : team)
+                : [...cleanComp.teams, manualEntry]
         };
 
         onCompetitionUpdate(updatedComp);
         setSelectedCompetition(updatedComp);
-        setManualAddState({ isOpen: false, coachName: '', franchiseName: '', baseRosterName: '', treasury: 0, rerolls: 0, dedicatedFans: 1, apothecary: false });
-        setManualRosterCounts({});
+        resetManualParticipantState();
+    };
+
+    const handleDeleteManualParticipant = (entryId?: string) => {
+        if (!selectedCompetition || !entryId) return;
+
+        const target = selectedCompetition.teams.find(team => team.entryId === entryId && team.isManual);
+        if (!target) return;
+
+        setConfirmation({
+            title: "¿Eliminar participante manual?",
+            message: `Se eliminará la franquicia manual "${target.teamName}" de la competición. Podrás volver a crearla más tarde si hace falta.`,
+            type: 'danger',
+            onConfirm: () => {
+                const cleanComp = cloneCompetition(selectedCompetition);
+                const updatedComp: Competition = {
+                    ...cleanComp,
+                    teams: cleanComp.teams.filter(team => team.entryId !== entryId)
+                };
+                onCompetitionUpdate(updatedComp);
+                setSelectedCompetition(updatedComp);
+                setConfirmation(null);
+            }
+        });
     };
 
     const handleStartCompetition = (comp: Competition) => {
@@ -1277,7 +1346,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                             )}
                                             {user?.id === selectedCompetition.ownerId && (
                                                 <button
-                                                    onClick={() => setManualAddState({ isOpen: true, coachName: '', franchiseName: '', baseRosterName: baseTeams[0]?.name || '', treasury: 0, rerolls: 0, dedicatedFans: 1, apothecary: false })}
+                                                    onClick={() => openManualParticipantModal()}
                                                     className="bg-black/40 border border-white/10 text-white font-black py-3 px-8 rounded-2xl text-[10px] uppercase tracking-widest transition-all hover:border-primary/30 hover:text-primary"
                                                 >
                                                     Añadir participante manual
@@ -1289,22 +1358,42 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                     {selectedCompetition.teams.length > 0 ? (
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             {selectedCompetition.teams.map(t => (
-                                                <div key={t.entryId || `${t.ownerId || 'manual'}:${t.ownerName}:${t.teamName}`} className="p-5 bg-black/40 border border-white/5 rounded-2xl flex items-center justify-between group hover:border-primary/30 transition-all">
+                                                <div key={t.entryId || `${t.ownerId || 'manual'}:${t.ownerName}:${t.teamName}`} className="p-5 bg-black/40 border border-white/5 rounded-2xl flex items-center justify-between gap-4 group hover:border-primary/30 transition-all">
                                                     <div className="flex items-center gap-4">
                                                         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black text-sm italic">
                                                             {t.teamName.charAt(0)}
                                                         </div>
                                                         <div>
                                                             <p className="font-black text-white uppercase italic tracking-tight">{t.teamName}</p>
-                                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{t.ownerName} {t.isManual ? '· Manual' : ''}</p>
+                                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{t.ownerName} {t.isManual ? '? Manual' : ''}</p>
                                                         </div>
                                                     </div>
-                                                    {t.stats && (
-                                                        <div className="text-right">
-                                                            <p className="text-[10px] font-black text-primary italic uppercase">{t.stats.points} PTS</p>
-                                                            <p className="text-[8px] text-slate-600 font-bold uppercase">{t.stats.played} PJ</p>
-                                                        </div>
-                                                    )}
+                                                    <div className="flex items-center gap-3">
+                                                        {t.stats && (
+                                                            <div className="text-right">
+                                                                <p className="text-[10px] font-black text-primary italic uppercase">{t.stats.points} PTS</p>
+                                                                <p className="text-[8px] text-slate-600 font-bold uppercase">{t.stats.played} PJ</p>
+                                                            </div>
+                                                        )}
+                                                        {user?.id === selectedCompetition.ownerId && t.isManual && (
+                                                            <div className="flex items-center gap-2">
+                                                                <button
+                                                                    onClick={() => openManualParticipantModal(t)}
+                                                                    className="w-9 h-9 rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:text-primary hover:border-primary/30 transition-all flex items-center justify-center"
+                                                                    title="Editar franquicia manual"
+                                                                >
+                                                                    <span className="material-symbols-outlined text-[18px]">edit</span>
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDeleteManualParticipant(t.entryId)}
+                                                                    className="w-9 h-9 rounded-xl border border-red-500/20 bg-red-500/10 text-red-300 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center"
+                                                                    title="Eliminar franquicia manual"
+                                                                >
+                                                                    <span className="material-symbols-outlined text-[18px]">delete</span>
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
@@ -1981,7 +2070,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
 
             <AnimatePresence>
                 {manualAddState.isOpen && selectedCompetition && (
-                    <div className="leagues-modal-overlay fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={() => { setManualAddState({ isOpen: false, coachName: '', franchiseName: '', baseRosterName: '', treasury: 0, rerolls: 0, dedicatedFans: 1, apothecary: false }); setManualRosterCounts({}); }}>
+                    <div className="leagues-modal-overlay fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={() => { resetManualParticipantState(); }}>
                         <motion.div
                             initial={{ opacity: 0, scale: 0.9, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -1991,7 +2080,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
                         >
                             <div className="p-10 space-y-8">
                                 <div>
-                                    <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter">Añadir participante <span className="text-primary">manual</span></h3>
+                                    <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter">{manualAddState.editEntryId ? <>Editar franquicia <span className="text-primary">manual</span></> : <>A?adir participante <span className="text-primary">manual</span></>}</h3>
                                     <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Registrar coach de mesa en {selectedCompetition.name}</p>
                                 </div>
 
@@ -2003,7 +2092,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                             value={manualAddState.coachName}
                                             onChange={e => setManualAddState(prev => ({ ...prev, coachName: e.target.value }))}
                                             className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-4 text-white focus:ring-2 focus:ring-primary/50 outline-none transition-all font-bold"
-                                            placeholder="Ej: Jorge Álvarez"
+                                            placeholder="Ej: Jorge ?lvarez"
                                         />
                                     </div>
                                     <div>
@@ -2128,7 +2217,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                 </div>
 
                                 <div className="flex gap-3">
-                                    <button onClick={() => { setManualAddState({ isOpen: false, coachName: '', franchiseName: '', baseRosterName: '', treasury: 0, rerolls: 0, dedicatedFans: 1, apothecary: false }); setManualRosterCounts({}); }} className="flex-1 py-4 text-slate-400 font-black uppercase tracking-widest text-[10px] hover:text-white transition-colors">Cancelar</button>
+                                    <button onClick={() => { resetManualParticipantState(); }} className="flex-1 py-4 text-slate-400 font-black uppercase tracking-widest text-[10px] hover:text-white transition-colors">Cancelar</button>
                                     <button
                                         onClick={handleAddManualParticipant}
                                         disabled={(() => {
