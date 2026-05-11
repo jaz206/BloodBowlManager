@@ -81,6 +81,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
     const [scoreModalState, setScoreModalState] = useState<{ isOpen: boolean; roundIndex: string; matchIndex: number; matchup: Matchup; } | null>(null);
     const [confirmation, setConfirmation] = useState<{ title: string; message: string; onConfirm: () => void; type?: 'danger' | 'info' } | null>(null);
     const [statsModalTeam, setStatsModalTeam] = useState<import('../../types').ManagedTeam | null>(null);
+    const [statsModalEntryId, setStatsModalEntryId] = useState<string | null>(null);
     const [showReportModal, setShowReportModal] = useState(false);
     const [reportForm, setReportForm] = useState({ headline: '', subHeadline: '', article: '', homeTeam: '', opponentTeam: '', score1: 0, score2: 0 });
 
@@ -88,6 +89,12 @@ export const Leagues: React.FC<LeaguesProps> = ({
         if (!teamState) return null;
         const baseRoster = baseTeams.find(team => team.name === teamState.rosterName);
         return buildMatchReadyTeamSummary(teamState, baseRoster, skills);
+    };
+
+    const openCloneDashboard = (entry: CompetitionTeam) => {
+        if (!entry.teamState) return;
+        setStatsModalTeam(entry.teamState);
+        setStatsModalEntryId(entry.entryId || null);
     };
 
     const createCompetitionEntry = (baseTeam: ManagedTeam, ownerId: string, ownerName: string, isManual = false): CompetitionTeam => {
@@ -545,7 +552,10 @@ export const Leagues: React.FC<LeaguesProps> = ({
         const updatedComp = {
             ...selectedCompetition,
             teams: selectedCompetition.teams.map(t => 
-                (t.ownerId === statsModalTeam.ownerId && t.teamName === statsModalTeam.name)
+                (
+                    (statsModalEntryId && t.entryId === statsModalEntryId) ||
+                    (!statsModalEntryId && t.ownerId === statsModalTeam.ownerId && t.teamName === statsModalTeam.name)
+                )
                 ? { ...t, teamState: updatedTeam } 
                 : t
             )
@@ -1365,7 +1375,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                         </div>
                                                         <div>
                                                             <p className="font-black text-white uppercase italic tracking-tight">{t.teamName}</p>
-                                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{t.ownerName} {t.isManual ? '? Manual' : ''}</p>
+                                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{t.ownerName} {t.isManual ? '· Manual' : ''}</p>
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center gap-3">
@@ -1375,8 +1385,18 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                                 <p className="text-[8px] text-slate-600 font-bold uppercase">{t.stats.played} PJ</p>
                                                             </div>
                                                         )}
-                                                        {user?.id === selectedCompetition.ownerId && t.isManual && (
+                                                        {user?.id === selectedCompetition.ownerId && (
                                                             <div className="flex items-center gap-2">
+                                                                {t.teamState && (
+                                                                    <button
+                                                                        onClick={() => openCloneDashboard(t)}
+                                                                        className="w-9 h-9 rounded-xl border border-primary/20 bg-primary/10 text-primary hover:bg-primary hover:text-black transition-all flex items-center justify-center"
+                                                                        title="Ver ficha del clon"
+                                                                    >
+                                                                        <span className="material-symbols-outlined text-[18px]">visibility</span>
+                                                                    </button>
+                                                                )}
+                                                                {t.isManual && (
                                                                 <button
                                                                     onClick={() => openManualParticipantModal(t)}
                                                                     className="w-9 h-9 rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:text-primary hover:border-primary/30 transition-all flex items-center justify-center"
@@ -1384,13 +1404,16 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                                 >
                                                                     <span className="material-symbols-outlined text-[18px]">edit</span>
                                                                 </button>
-                                                                <button
-                                                                    onClick={() => handleDeleteManualParticipant(t.entryId)}
-                                                                    className="w-9 h-9 rounded-xl border border-red-500/20 bg-red-500/10 text-red-300 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center"
-                                                                    title="Eliminar franquicia manual"
-                                                                >
-                                                                    <span className="material-symbols-outlined text-[18px]">delete</span>
-                                                                </button>
+                                                                )}
+                                                                {t.isManual && (
+                                                                    <button
+                                                                        onClick={() => handleDeleteManualParticipant(t.entryId)}
+                                                                        className="w-9 h-9 rounded-xl border border-red-500/20 bg-red-500/10 text-red-300 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center"
+                                                                        title="Eliminar franquicia manual"
+                                                                    >
+                                                                        <span className="material-symbols-outlined text-[18px]">delete</span>
+                                                                    </button>
+                                                                )}
                                                             </div>
                                                         )}
                                                     </div>
@@ -1449,7 +1472,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                             {!!teamReady?.tvLoss && <p className="text-[9px] font-bold text-amber-400 uppercase italic">-{teamReady.tvLoss / 1000}k por bajas</p>}
                                                         </div>
                                                         <div 
-                                                            onClick={() => setStatsModalTeam(myTeam)}
+                                                            onClick={() => openCloneDashboard(myFranchise)}
                                                             className="p-6 bg-primary/10 border border-primary/20 rounded-3xl flex flex-col justify-center items-center gap-2 group cursor-pointer hover:bg-primary/20 transition-all"
                                                         >
                                                             <span className="material-symbols-outlined text-primary font-bold">stadium</span>
@@ -2075,96 +2098,116 @@ export const Leagues: React.FC<LeaguesProps> = ({
                             initial={{ opacity: 0, scale: 0.9, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="bg-zinc-900 border border-white/5 rounded-[2.5rem] shadow-2xl max-w-lg w-full overflow-hidden relative"
+                            className="bg-zinc-900 border border-white/5 rounded-[2.5rem] shadow-2xl max-w-6xl w-full max-h-[92vh] overflow-hidden relative flex flex-col"
                             onClick={e => e.stopPropagation()}
                         >
-                            <div className="p-10 space-y-8">
-                                <div>
-                                    <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter">{manualAddState.editEntryId ? <>Editar franquicia <span className="text-primary">manual</span></> : <>A?adir participante <span className="text-primary">manual</span></>}</h3>
-                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Registrar coach de mesa en {selectedCompetition.name}</p>
-                                </div>
+                            {(() => {
+                                const selectedRoster = baseTeams.find(team => team.name === manualAddState.baseRosterName);
+                                if (!selectedRoster) return null;
 
-                                <div className="space-y-6">
-                                    <div>
-                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-2">Entrenador</label>
-                                        <input
-                                            type="text"
-                                            value={manualAddState.coachName}
-                                            onChange={e => setManualAddState(prev => ({ ...prev, coachName: e.target.value }))}
-                                            className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-4 text-white focus:ring-2 focus:ring-primary/50 outline-none transition-all font-bold"
-                                            placeholder="Ej: Jorge ?lvarez"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-2">Nombre de franquicia</label>
-                                        <input
-                                            type="text"
-                                            value={manualAddState.franchiseName}
-                                            onChange={e => setManualAddState(prev => ({ ...prev, franchiseName: e.target.value }))}
-                                            className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-4 text-white focus:ring-2 focus:ring-primary/50 outline-none transition-all font-bold"
-                                            placeholder="Ej: Barbas del Barril"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-2">Raza base</label>
-                                        <div className="relative">
-                                            <select
-                                                value={manualAddState.baseRosterName}
-                                                onChange={e => setManualAddState(prev => ({ ...prev, baseRosterName: e.target.value }))}
-                                                className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-4 text-white focus:ring-2 focus:ring-primary/50 outline-none transition-all font-bold appearance-none"
-                                            >
-                                                {baseTeams.length > 0 ? (
-                                                    baseTeams.map(t => <option key={t.name} value={t.name}>{t.name}</option>)
-                                                ) : (
-                                                    <option value="">No hay razas cargadas en master data</option>
-                                                )}
-                                            </select>
-                                            <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">expand_more</span>
+                                const totalPlayers = Object.values(manualRosterCounts).reduce((sum, value) => sum + Number(value || 0), 0);
+                                const previewTeam = manualAddState.franchiseName
+                                    ? buildManualTeamFromRoster(selectedRoster, manualAddState.franchiseName || selectedRoster.name, {
+                                        treasury: manualAddState.treasury,
+                                        rerolls: manualAddState.rerolls,
+                                        dedicatedFans: manualAddState.dedicatedFans,
+                                        apothecary: manualAddState.apothecary
+                                    }, manualRosterCounts)
+                                    : null;
+                                const previewTV = previewTeam ? calculateTeamValue(previewTeam, skills) : 0;
+                                const budgetSummary = calculateManualTeamSpend(selectedRoster, {
+                                    treasury: manualAddState.treasury,
+                                    rerolls: manualAddState.rerolls,
+                                    dedicatedFans: manualAddState.dedicatedFans,
+                                    apothecary: manualAddState.apothecary
+                                }, manualRosterCounts);
+                                const isOverBudget = budgetSummary.overBudget;
+
+                                return (
+                                    <>
+                                        <div className="p-8 lg:p-10 border-b border-white/5 shrink-0">
+                                            <div className="flex items-start justify-between gap-6">
+                                                <div className="space-y-2">
+                                                    <h3 className="text-2xl lg:text-3xl font-black text-white italic uppercase tracking-tighter">{manualAddState.editEntryId ? <>Editar franquicia <span className="text-primary">manual</span></> : <>Añadir participante <span className="text-primary">manual</span></>}</h3>
+                                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Registrar coach de mesa en {selectedCompetition.name}</p>
+                                                </div>
+                                                <div className="flex flex-wrap gap-2 justify-end">
+                                                    <span className="px-3 py-2 rounded-2xl bg-white/5 border border-white/10 text-slate-300 text-[10px] font-black uppercase tracking-widest">{selectedRoster.name}</span>
+                                                    <span className="px-3 py-2 rounded-2xl bg-primary/10 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-widest">{totalPlayers} jugadores</span>
+                                                    <span className={`px-3 py-2 rounded-2xl border text-[10px] font-black uppercase tracking-widest ${isOverBudget ? 'border-red-400/40 bg-red-500/10 text-red-300' : 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300'}`}>{isOverBudget ? `Exceso ${Math.round(Math.abs(budgetSummary.remainingBudget) / 1000)}k` : `Restante ${Math.round(budgetSummary.remainingBudget / 1000)}k`}</span>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <p className="mt-2 text-[10px] text-slate-500 font-bold uppercase tracking-widest">Usaremos el roster canónico de Firebase y esta franquicia no quedará vinculada a una cuenta web.</p>
-                                    </div>
 
-                                    {(() => {
-                                        const selectedRoster = baseTeams.find(team => team.name === manualAddState.baseRosterName);
-                                        const totalPlayers = Object.values(manualRosterCounts).reduce((sum, value) => sum + Number(value || 0), 0);
-                                        const previewTeam = selectedRoster && manualAddState.franchiseName
-                                            ? buildManualTeamFromRoster(selectedRoster, manualAddState.franchiseName || selectedRoster.name, {
-                                                treasury: manualAddState.treasury,
-                                                rerolls: manualAddState.rerolls,
-                                                dedicatedFans: manualAddState.dedicatedFans,
-                                                apothecary: manualAddState.apothecary
-                                            }, manualRosterCounts)
-                                            : null;
-                                        const previewTV = previewTeam ? calculateTeamValue(previewTeam, skills) : 0;
-                                        const budgetSummary = calculateManualTeamSpend(selectedRoster, {
-                                            treasury: manualAddState.treasury,
-                                            rerolls: manualAddState.rerolls,
-                                            dedicatedFans: manualAddState.dedicatedFans,
-                                            apothecary: manualAddState.apothecary
-                                        }, manualRosterCounts);
+                                        <div className="p-8 lg:p-10 overflow-y-auto space-y-8">
+                                            <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.08fr)_minmax(420px,0.92fr)] gap-8">
+                                                <div className="space-y-6">
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        <div className="md:col-span-2">
+                                                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-2">Entrenador</label>
+                                                            <input
+                                                                type="text"
+                                                                value={manualAddState.coachName}
+                                                                onChange={e => setManualAddState(prev => ({ ...prev, coachName: e.target.value }))}
+                                                                className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-4 text-white focus:ring-2 focus:ring-primary/50 outline-none transition-all font-bold"
+                                                                placeholder="Ej: Jorge Álvarez"
+                                                            />
+                                                        </div>
+                                                        <div className="md:col-span-2">
+                                                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-2">Nombre de franquicia</label>
+                                                            <input
+                                                                type="text"
+                                                                value={manualAddState.franchiseName}
+                                                                onChange={e => setManualAddState(prev => ({ ...prev, franchiseName: e.target.value }))}
+                                                                className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-4 text-white focus:ring-2 focus:ring-primary/50 outline-none transition-all font-bold"
+                                                                placeholder="Ej: Barbas del Barril"
+                                                            />
+                                                        </div>
+                                                        <div className="md:col-span-2">
+                                                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-2">Raza base</label>
+                                                            <div className="relative">
+                                                                <select
+                                                                    value={manualAddState.baseRosterName}
+                                                                    onChange={e => setManualAddState(prev => ({ ...prev, baseRosterName: e.target.value }))}
+                                                                    className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-4 text-white focus:ring-2 focus:ring-primary/50 outline-none transition-all font-bold appearance-none"
+                                                                >
+                                                                    {baseTeams.length > 0 ? (
+                                                                        baseTeams.map(t => <option key={t.name} value={t.name}>{t.name}</option>)
+                                                                    ) : (
+                                                                        <option value="">No hay razas cargadas en master data</option>
+                                                                    )}
+                                                                </select>
+                                                                <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">expand_more</span>
+                                                            </div>
+                                                            <p className="mt-2 text-[10px] text-slate-500 font-bold uppercase tracking-widest">Usaremos el roster canónico de Firebase y esta franquicia no quedará vinculada a una cuenta web.</p>
+                                                        </div>
+                                                    </div>
 
-                                        if (!selectedRoster) return null;
-
-                                        return (
-                                            <>
-                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                                    <div>
-                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-2">Tesorería</label>
-                                                        <input type="number" min="0" value={manualAddState.treasury} onChange={e => setManualAddState(prev => ({ ...prev, treasury: Number(e.target.value || 0) }))} className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-4 text-white focus:ring-2 focus:ring-primary/50 outline-none transition-all font-bold" />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-2">Rerolls</label>
-                                                        <input type="number" min="0" value={manualAddState.rerolls} onChange={e => setManualAddState(prev => ({ ...prev, rerolls: Number(e.target.value || 0) }))} className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-4 text-white focus:ring-2 focus:ring-primary/50 outline-none transition-all font-bold" />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-2">Fans</label>
-                                                        <input type="number" min="0" value={manualAddState.dedicatedFans} onChange={e => setManualAddState(prev => ({ ...prev, dedicatedFans: Number(e.target.value || 0) }))} className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-4 text-white focus:ring-2 focus:ring-primary/50 outline-none transition-all font-bold" />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-2">Boticario</label>
-                                                        <button type="button" onClick={() => setManualAddState(prev => ({ ...prev, apothecary: !prev.apothecary }))} className={`w-full rounded-2xl px-4 py-4 border font-black uppercase tracking-widest text-[10px] transition-all ${manualAddState.apothecary ? 'bg-primary text-black border-primary' : 'bg-black/40 border-white/10 text-slate-300'}`}>
-                                                            {manualAddState.apothecary ? 'Sí' : 'No'}
-                                                        </button>
+                                                    <div className="rounded-3xl border border-white/10 bg-black/20 p-5 space-y-4">
+                                                        <div className="flex items-center justify-between gap-3">
+                                                            <h4 className="text-[10px] font-black text-primary uppercase tracking-widest">Economía inicial</h4>
+                                                            <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-widest">{Math.round(previewTV / 1000)}k TV</span>
+                                                        </div>
+                                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                                            <div>
+                                                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-2">Tesorería</label>
+                                                                <input type="number" min="0" value={manualAddState.treasury} onChange={e => setManualAddState(prev => ({ ...prev, treasury: Number(e.target.value || 0) }))} className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-4 text-white focus:ring-2 focus:ring-primary/50 outline-none transition-all font-bold" />
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-2">Rerolls</label>
+                                                                <input type="number" min="0" value={manualAddState.rerolls} onChange={e => setManualAddState(prev => ({ ...prev, rerolls: Number(e.target.value || 0) }))} className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-4 text-white focus:ring-2 focus:ring-primary/50 outline-none transition-all font-bold" />
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-2">Fans</label>
+                                                                <input type="number" min="0" value={manualAddState.dedicatedFans} onChange={e => setManualAddState(prev => ({ ...prev, dedicatedFans: Number(e.target.value || 0) }))} className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-4 text-white focus:ring-2 focus:ring-primary/50 outline-none transition-all font-bold" />
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-2">Boticario</label>
+                                                                <button type="button" onClick={() => setManualAddState(prev => ({ ...prev, apothecary: !prev.apothecary }))} className={`w-full rounded-2xl px-4 py-4 border font-black uppercase tracking-widest text-[10px] transition-all ${manualAddState.apothecary ? 'bg-primary text-black border-primary' : 'bg-black/40 border-white/10 text-slate-300'}`}>
+                                                                    {manualAddState.apothecary ? 'Sí' : 'No'}
+                                                                </button>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
 
@@ -2173,24 +2216,24 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                         <h4 className="text-[10px] font-black text-primary uppercase tracking-widest">Roster manual</h4>
                                                         <div className="flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-widest">
                                                             <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-slate-300">{totalPlayers} jugadores</span>
-                                                            <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary">{Math.round(previewTV / 1000)}k TV</span>
+                                                            <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-slate-300">{selectedRoster.roster.length} posiciones</span>
                                                         </div>
                                                     </div>
-                                                    <div className={`grid grid-cols-2 md:grid-cols-3 gap-2 text-[10px] font-black uppercase tracking-widest ${budgetSummary.overBudget ? 'text-red-300' : 'text-slate-300'}`}>
+                                                    <div className={`grid grid-cols-2 xl:grid-cols-3 gap-2 text-[10px] font-black uppercase tracking-widest ${isOverBudget ? 'text-red-300' : 'text-slate-300'}`}>
                                                         <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2">Jugadores: {Math.round(budgetSummary.playersCost / 1000)}k</div>
                                                         <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2">Rerolls: {Math.round(budgetSummary.rerollsCost / 1000)}k</div>
-                                                        <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2">Fans+Apo: {Math.round((budgetSummary.fansCost + budgetSummary.apothecaryCost) / 1000)}k</div>
+                                                        <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2">Fans + Apo: {Math.round((budgetSummary.fansCost + budgetSummary.apothecaryCost) / 1000)}k</div>
                                                         <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2">Tesorería: {Math.round(budgetSummary.treasuryReserved / 1000)}k</div>
                                                         <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2">Gastado: {Math.round(budgetSummary.totalSpend / 1000)}k</div>
-                                                        <div className={`rounded-2xl border px-3 py-2 ${budgetSummary.overBudget ? 'border-red-400/40 bg-red-500/10 text-red-300' : 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300'}`}>
-                                                            {budgetSummary.overBudget ? `Exceso ${Math.round(Math.abs(budgetSummary.remainingBudget) / 1000)}k` : `Restante ${Math.round(budgetSummary.remainingBudget / 1000)}k`}
+                                                        <div className={`rounded-2xl border px-3 py-2 ${isOverBudget ? 'border-red-400/40 bg-red-500/10 text-red-300' : 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300'}`}>
+                                                            {isOverBudget ? `Exceso ${Math.round(Math.abs(budgetSummary.remainingBudget) / 1000)}k` : `Restante ${Math.round(budgetSummary.remainingBudget / 1000)}k`}
                                                         </div>
                                                     </div>
-                                                    <div className="max-h-72 overflow-y-auto pr-2 space-y-3">
+                                                    <div className="max-h-[52vh] overflow-y-auto pr-2 space-y-3">
                                                         {selectedRoster.roster.map(position => {
                                                             const maxQty = parseQtyMax(position.qty);
                                                             return (
-                                                                <div key={position.position} className="grid grid-cols-[minmax(0,1fr)_84px] gap-3 items-center">
+                                                                <div key={position.position} className="grid grid-cols-[minmax(0,1fr)_96px] gap-3 items-center rounded-2xl border border-white/5 bg-white/[0.03] px-4 py-3">
                                                                     <div className="min-w-0">
                                                                         <p className="text-white font-black uppercase italic text-sm truncate">{position.position}</p>
                                                                         <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{position.qty} · {Math.round(position.cost / 1000)}k</p>
@@ -2211,31 +2254,24 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                         })}
                                                     </div>
                                                 </div>
-                                            </>
-                                        );
-                                    })()}
-                                </div>
+                                            </div>
+                                        </div>
 
-                                <div className="flex gap-3">
-                                    <button onClick={() => { resetManualParticipantState(); }} className="flex-1 py-4 text-slate-400 font-black uppercase tracking-widest text-[10px] hover:text-white transition-colors">Cancelar</button>
-                                    <button
-                                        onClick={handleAddManualParticipant}
-                                        disabled={(() => {
-                                            const selectedRoster = baseTeams.find(team => team.name === manualAddState.baseRosterName);
-                                            if (!selectedRoster) return true;
-                                            return calculateManualTeamSpend(selectedRoster, {
-                                                treasury: manualAddState.treasury,
-                                                rerolls: manualAddState.rerolls,
-                                                dedicatedFans: manualAddState.dedicatedFans,
-                                                apothecary: manualAddState.apothecary
-                                            }, manualRosterCounts).overBudget;
-                                        })()}
-                                        className="flex-1 bg-primary text-black py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:scale-[1.02] transition-transform shadow-xl shadow-primary/20 disabled:opacity-40 disabled:hover:scale-100"
-                                    >
-                                        Añadir a la liga
-                                    </button>
-                                </div>
-                            </div>
+                                        <div className="p-6 lg:px-10 border-t border-white/5 bg-zinc-900/80 backdrop-blur-sm shrink-0">
+                                            <div className="flex flex-col sm:flex-row gap-3">
+                                                <button onClick={() => { resetManualParticipantState(); }} className="flex-1 py-4 text-slate-400 font-black uppercase tracking-widest text-[10px] hover:text-white transition-colors">Cancelar</button>
+                                                <button
+                                                    onClick={handleAddManualParticipant}
+                                                    disabled={isOverBudget}
+                                                    className="flex-1 bg-primary text-black py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:scale-[1.02] transition-transform shadow-xl shadow-primary/20 disabled:opacity-40 disabled:hover:scale-100"
+                                                >
+                                                    {manualAddState.editEntryId ? 'Guardar clon manual' : 'Añadir a la liga'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </>
+                                );
+                            })()}
                         </motion.div>
                     </div>
                 )}
@@ -2354,15 +2390,16 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                 onConfirm: () => {
                                     const updatedComp = {
                                         ...selectedCompetition!,
-                                        teams: selectedCompetition!.teams.filter(t => t.teamName !== statsModalTeam.name)
+                                        teams: selectedCompetition!.teams.filter(t => statsModalEntryId ? t.entryId !== statsModalEntryId : t.teamName !== statsModalTeam.name)
                                     };
                                     onCompetitionUpdate(updatedComp);
                                     setSelectedCompetition(updatedComp);
                                     setStatsModalTeam(null);
+                                    setStatsModalEntryId(null);
                                     setConfirmation(null);
                                 }
                             })}
-                            onBack={() => setStatsModalTeam(null)}
+                            onBack={() => { setStatsModalTeam(null); setStatsModalEntryId(null); }}
                             isGuest={isGuest}
                             hideDelete={true}
                             syncLabel="Sync Clon"
