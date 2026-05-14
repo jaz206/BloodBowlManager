@@ -124,3 +124,16 @@ export const generateBracket = (teamNames: string[]): Record<string, Matchup[]> 
     }
     return bracket;
 };
+
+export const formatScheduledMatchDate = (isoDate?: string, locale: string = 'es-ES'): string => {
+    if (!isoDate) return 'Sin fecha propuesta';
+    const date = new Date(isoDate);
+    if (Number.isNaN(date.getTime())) return 'Sin fecha propuesta';
+    return new Intl.DateTimeFormat(locale, {
+        weekday: 'short',
+        day: '2-digit',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+    }).format(date);
+};
