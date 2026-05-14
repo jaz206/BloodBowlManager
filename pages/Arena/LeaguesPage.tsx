@@ -1562,12 +1562,12 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                     </div>
                                     
                                     {selectedCompetition.teams.length > 0 ? (
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                                             {selectedCompetition.teams.map(t => (
                                                 <div
                                                     key={t.entryId || `${t.ownerId || 'manual'}:${t.ownerName}:${t.teamName}`}
                                                     onClick={() => setSelectedEntryId(t.entryId || null)}
-                                                    className={`p-5 bg-black/40 border rounded-2xl flex flex-col gap-4 group transition-all overflow-hidden min-w-0 cursor-pointer ${selectedEntryId === t.entryId ? 'border-primary/50 bg-primary/5' : 'border-white/5 hover:border-primary/30'}`}
+                                                    className={`p-5 bg-black/40 border rounded-2xl flex flex-col gap-4 group transition-all overflow-hidden min-w-0 min-h-[140px] cursor-pointer ${selectedEntryId === t.entryId ? 'border-primary/50 bg-primary/5' : 'border-white/5 hover:border-primary/30'}`}
                                                 >
                                                     <div className="flex items-start gap-4 min-w-0">
                                                         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black text-sm italic shrink-0">
@@ -1578,15 +1578,15 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest break-words">{t.ownerName} {t.isManual ? '- Manual' : ''}</p>
                                                         </div>
                                                     </div>
-                                                    <div className="flex flex-wrap items-center justify-between gap-3 min-w-0">
+                                                    <div className="mt-auto flex flex-col gap-3 min-w-0">
                                                         {t.stats && (
-                                                            <div className="text-left sm:text-right shrink-0">
+                                                            <div className="text-left shrink-0">
                                                                 <p className="text-[10px] font-black text-primary italic uppercase">{t.stats.points} PTS</p>
                                                                 <p className="text-[8px] text-slate-600 font-bold uppercase">{t.stats.played} PJ</p>
                                                             </div>
                                                         )}
                                                         {user?.id === selectedCompetition.ownerId && (
-                                                            <div className="flex items-center gap-2 shrink-0 ml-auto">
+                                                            <div className="flex items-center gap-2 shrink-0 flex-wrap">
                                                                 {t.teamState && (
                                                                     <button
                                                                         onClick={() => openCloneDashboard(t)}
@@ -1637,6 +1637,24 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                         const mngCount = teamState.players.filter(player => (player.missNextGame || 0) > 0).length;
                                         const injuryCount = teamState.players.reduce((sum, player) => sum + (player.lastingInjuries?.length || 0), 0);
                                         const pendingLevelUps = getPendingLevelUps(teamState);
+                                        const playerAlerts = teamState.players
+                                            .map(player => {
+                                                const advances = player.advancements?.length || 0;
+                                                const nextLevel = SPP_LEVELS[advances] || Number.POSITIVE_INFINITY;
+                                                const needsLevelUp = (player.spp || 0) >= nextLevel;
+                                                const injuries = player.lastingInjuries?.length || 0;
+                                                const isMng = (player.missNextGame || 0) > 0;
+                                                return {
+                                                    id: player.id,
+                                                    name: player.customName || player.position,
+                                                    position: player.position,
+                                                    injuries,
+                                                    isMng,
+                                                    needsLevelUp,
+                                                };
+                                            })
+                                            .filter(player => player.injuries > 0 || player.isMng || player.needsLevelUp)
+                                            .slice(0, 6);
 
                                         return (
                                             <div className="mt-8 pt-8 border-t border-white/5 space-y-6">
@@ -1717,6 +1735,34 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Aun sin actas registradas</p>
                                                         )}
                                                     </div>
+                                                </div>
+
+                                                <div className="p-5 bg-black/30 border border-white/5 rounded-3xl">
+                                                    <div className="flex items-center justify-between gap-3 mb-4">
+                                                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Alertas de plantilla</p>
+                                                        <span className="text-[9px] font-black text-primary uppercase tracking-widest">{playerAlerts.length} visibles</span>
+                                                    </div>
+                                                    {playerAlerts.length > 0 ? (
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                            {playerAlerts.map(player => (
+                                                                <div key={player.id} className="p-4 bg-zinc-900/40 border border-white/5 rounded-2xl space-y-2 min-w-0">
+                                                                    <div className="flex items-start justify-between gap-3">
+                                                                        <div className="min-w-0">
+                                                                            <p className="text-sm font-black text-white uppercase italic truncate">{player.name}</p>
+                                                                            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest truncate">{player.position}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="flex flex-wrap gap-2 text-[9px] font-black uppercase tracking-widest">
+                                                                        {player.needsLevelUp && <span className="px-2 py-1 rounded-xl bg-primary/10 border border-primary/20 text-primary">Subida pendiente</span>}
+                                                                        {player.isMng && <span className="px-2 py-1 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300">MNG</span>}
+                                                                        {player.injuries > 0 && <span className="px-2 py-1 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300">{player.injuries} lesion{player.injuries > 1 ? 'es' : ''}</span>}
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Sin alertas activas en este clon</p>
+                                                    )}
                                                 </div>
                                             </div>
                                         );
