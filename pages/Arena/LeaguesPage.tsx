@@ -43,6 +43,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
     isGuest 
 }) => {
     const MANUAL_TEAM_BUDGET = 1_000_000;
+    const SPP_LEVELS = [6, 16, 31, 51, 76, 126, 176];
     const getDefaultStartDate = () => {
         const nextWeek = new Date();
         nextWeek.setDate(nextWeek.getDate() + 7);
@@ -62,6 +63,17 @@ export const Leagues: React.FC<LeaguesProps> = ({
     useEffect(() => {
         if (view === 'detail') setDetailTab('summary');
     }, [view]);
+
+    useEffect(() => {
+        if (!selectedCompetition?.teams?.length) {
+            setSelectedEntryId(null);
+            return;
+        }
+        if (selectedEntryId && selectedCompetition.teams.some(team => team.entryId === selectedEntryId)) {
+            return;
+        }
+        setSelectedEntryId(selectedCompetition.teams[0]?.entryId || null);
+    }, [selectedCompetition, selectedEntryId]);
 
     const [newCompetitionName, setNewCompetitionName] = useState('');
     const [newCompetitionFormat, setNewCompetitionFormat] = useState<'Liguilla' | 'Torneo'>('Liguilla');
@@ -92,6 +104,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
     const [confirmation, setConfirmation] = useState<{ title: string; message: string; onConfirm: () => void; type?: 'danger' | 'info' } | null>(null);
     const [statsModalTeam, setStatsModalTeam] = useState<import('../../types').ManagedTeam | null>(null);
     const [statsModalEntryId, setStatsModalEntryId] = useState<string | null>(null);
+    const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
     const [showReportModal, setShowReportModal] = useState(false);
     const [reportForm, setReportForm] = useState({ headline: '', subHeadline: '', article: '', homeTeam: '', opponentTeam: '', score1: 0, score2: 0 });
 
@@ -99,6 +112,15 @@ export const Leagues: React.FC<LeaguesProps> = ({
         if (!teamState) return null;
         const baseRoster = baseTeams.find(team => team.name === teamState.rosterName);
         return buildMatchReadyTeamSummary(teamState, baseRoster, skills);
+    };
+
+    const getPendingLevelUps = (teamState?: ManagedTeam | null) => {
+        if (!teamState?.players?.length) return 0;
+        return teamState.players.filter(player => {
+            const advances = player.advancements?.length || 0;
+            const nextLevel = SPP_LEVELS[advances] || Number.POSITIVE_INFINITY;
+            return (player.spp || 0) >= nextLevel;
+        }).length;
     };
 
     const openCloneDashboard = (entry: CompetitionTeam) => {
@@ -924,6 +946,11 @@ export const Leagues: React.FC<LeaguesProps> = ({
         const updatedComp = applyMatchResolution(selectedCompetition, scoreModalState.roundIndex, scoreModalState.matchIndex, resolution);
         onCompetitionUpdate(updatedComp);
         setSelectedCompetition(updatedComp);
+        const preferredTeam = updatedComp.teams.find(team => team.teamName === resolution.team1.teamName)
+            || updatedComp.teams.find(team => team.teamName === resolution.team2.teamName);
+        if (preferredTeam?.entryId) {
+            setSelectedEntryId(preferredTeam.entryId);
+        }
         setScoreModalState(null);
     };
 
@@ -1537,7 +1564,11 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                     {selectedCompetition.teams.length > 0 ? (
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             {selectedCompetition.teams.map(t => (
-                                                <div key={t.entryId || `${t.ownerId || 'manual'}:${t.ownerName}:${t.teamName}`} className="p-5 bg-black/40 border border-white/5 rounded-2xl flex flex-col gap-4 group hover:border-primary/30 transition-all overflow-hidden min-w-0">
+                                                <div
+                                                    key={t.entryId || `${t.ownerId || 'manual'}:${t.ownerName}:${t.teamName}`}
+                                                    onClick={() => setSelectedEntryId(t.entryId || null)}
+                                                    className={`p-5 bg-black/40 border rounded-2xl flex flex-col gap-4 group transition-all overflow-hidden min-w-0 cursor-pointer ${selectedEntryId === t.entryId ? 'border-primary/50 bg-primary/5' : 'border-white/5 hover:border-primary/30'}`}
+                                                >
                                                     <div className="flex items-start gap-4 min-w-0">
                                                         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black text-sm italic shrink-0">
                                                             {t.teamName.charAt(0)}
@@ -1594,6 +1625,102 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                             <p className="text-slate-500 font-bold italic uppercase tracking-widest text-xs">Esperando aspirantes... Unete o invita a otros coaches!</p>
                                         </div>
                                     )}
+
+                                    {(() => {
+                                        const selectedEntry = selectedCompetition.teams.find(team => team.entryId === selectedEntryId) || selectedCompetition.teams[0];
+                                        const teamState = selectedEntry?.teamState;
+                                        if (!selectedEntry || !teamState) return null;
+
+                                        const ready = buildTeamReadySummary(teamState);
+                                        const treasury = Math.max(0, teamState.treasury || 0);
+                                        const fans = Math.max(0, teamState.dedicatedFans || 0);
+                                        const mngCount = teamState.players.filter(player => (player.missNextGame || 0) > 0).length;
+                                        const injuryCount = teamState.players.reduce((sum, player) => sum + (player.lastingInjuries?.length || 0), 0);
+                                        const pendingLevelUps = getPendingLevelUps(teamState);
+
+                                        return (
+                                            <div className="mt-8 pt-8 border-t border-white/5 space-y-6">
+                                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                                    <div>
+                                                        <p className="text-[10px] font-black text-primary uppercase tracking-widest italic">Ficha del clon</p>
+                                                        <h4 className="text-2xl font-black text-white uppercase italic tracking-tight">{selectedEntry.teamName}</h4>
+                                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{selectedEntry.ownerName} {selectedEntry.isManual ? '- Manual' : ''}</p>
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-3">
+                                                        <button
+                                                            onClick={() => openCloneDashboard(selectedEntry)}
+                                                            className="bg-primary/10 border border-primary/20 text-primary font-black py-3 px-5 rounded-2xl text-[10px] uppercase tracking-widest hover:bg-primary hover:text-black transition-all"
+                                                        >
+                                                            Abrir clon
+                                                        </button>
+                                                        {selectedEntry.isManual && (
+                                                            <button
+                                                                onClick={() => openManualParticipantModal(selectedEntry)}
+                                                                className="bg-black/40 border border-white/10 text-white font-black py-3 px-5 rounded-2xl text-[10px] uppercase tracking-widest hover:border-primary/30 hover:text-primary transition-all"
+                                                            >
+                                                                Editar alta
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+                                                    <div className="p-4 bg-zinc-900/40 border border-white/5 rounded-3xl space-y-1">
+                                                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic">Tesoreria</p>
+                                                        <p className="text-xl font-black text-primary italic">{Math.round(treasury / 1000)}k</p>
+                                                    </div>
+                                                    <div className="p-4 bg-zinc-900/40 border border-white/5 rounded-3xl space-y-1">
+                                                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic">Fans</p>
+                                                        <p className="text-xl font-black text-white italic">{fans}</p>
+                                                    </div>
+                                                    <div className="p-4 bg-zinc-900/40 border border-white/5 rounded-3xl space-y-1">
+                                                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic">Disponibles</p>
+                                                        <p className="text-xl font-black text-white italic">{ready?.availableCount || 0}</p>
+                                                    </div>
+                                                    <div className="p-4 bg-zinc-900/40 border border-white/5 rounded-3xl space-y-1">
+                                                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic">MNG</p>
+                                                        <p className="text-xl font-black text-amber-400 italic">{mngCount}</p>
+                                                    </div>
+                                                    <div className="p-4 bg-zinc-900/40 border border-white/5 rounded-3xl space-y-1">
+                                                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic">Lesiones</p>
+                                                        <p className="text-xl font-black text-red-400 italic">{injuryCount}</p>
+                                                    </div>
+                                                    <div className="p-4 bg-zinc-900/40 border border-white/5 rounded-3xl space-y-1">
+                                                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic">Subidas</p>
+                                                        <p className="text-xl font-black text-primary italic">{pendingLevelUps}</p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div className="p-5 bg-black/30 border border-white/5 rounded-3xl">
+                                                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-3">Estado de partido</p>
+                                                        <div className="flex flex-wrap gap-3 text-[10px] font-black uppercase tracking-widest">
+                                                            <span className="px-3 py-2 rounded-2xl bg-white/5 border border-white/10 text-white">{ready?.availableCount || 0} listos</span>
+                                                            <span className="px-3 py-2 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-300">{ready?.unavailableCount || 0} bajas</span>
+                                                            <span className="px-3 py-2 rounded-2xl bg-primary/10 border border-primary/20 text-primary">{Math.round((ready?.realTV || teamState.totalTV || 0) / 1000)}k TV real</span>
+                                                            {!!ready?.journeymenNeeded && <span className="px-3 py-2 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-300">{ready.journeymenNeeded} sustitutos</span>}
+                                                        </div>
+                                                    </div>
+                                                    <div className="p-5 bg-black/30 border border-white/5 rounded-3xl">
+                                                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-3">Ultimo seguimiento</p>
+                                                        {teamState.history?.length ? (
+                                                            <div className="space-y-2">
+                                                                {[...teamState.history].slice(-2).reverse().map(item => (
+                                                                    <div key={item.id} className="flex items-center justify-between gap-3 text-[10px] font-black uppercase tracking-widest">
+                                                                        <span className="text-white truncate">{item.opponentName}</span>
+                                                                        <span className="text-slate-500">{item.score}</span>
+                                                                        <span className={`${item.result === 'W' ? 'text-emerald-400' : item.result === 'L' ? 'text-red-400' : 'text-amber-300'}`}>{item.result}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        ) : (
+                                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Aun sin actas registradas</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
 
                                     {/* Dashboard de Franquicia del Usuario */}
                                     {selectedCompetition.teams.find(t => t.ownerId === user?.id) && (
