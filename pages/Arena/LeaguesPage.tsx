@@ -5,7 +5,6 @@ import { useAuth } from '../../hooks/useAuth';
 import PencilIcon from '../../components/icons/PencilIcon';
 import CalendarIcon from '../../components/icons/CalendarIcon';
 import QrCodeIcon from '../../components/icons/QrCodeIcon';
-import { TeamDashboard } from '../../components/guild/TeamDashboard';
 import { cloneCompetition, formatScheduledMatchDate, generateBracket, generateJoinCode, generateSchedule } from './competitionUtils';
 import CompetitionMatchResolutionModal from './CompetitionMatchResolutionModal';
 import { buildMatchReadyTeamSummary, calculateTeamValue } from '../../utils/teamUtils';
@@ -20,6 +19,8 @@ declare global {
 }
 declare const QRCode: any;
 declare const Html5Qrcode: any;
+
+const TeamDashboard = React.lazy(() => import('../../components/guild/TeamDashboard').then(module => ({ default: module.TeamDashboard })));
 
 const trophyImageUrl = 'https://i.pinimg.com/736x/95/dc/9a/95dc9a37df924d550e9922dbf37b9089.jpg';
 
@@ -2746,6 +2747,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
                         exit={{ opacity: 0, scale: 0.95 }}
                         className="fixed inset-0 z-[100] bg-background-dark/95 backdrop-blur-xl overflow-y-auto"
                     >
+                        <React.Suspense fallback={<div className="flex items-center justify-center min-h-screen text-white font-black uppercase tracking-widest text-sm">Cargando clon...</div>}>
                         <TeamDashboard 
                             team={statsModalTeam}
                             onUpdate={handleUpdateClone}
@@ -2770,6 +2772,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
                             syncLabel="Sync Clon"
                             stickyOffset="top-0"
                         />
+                        </React.Suspense>
                     </motion.div>
                 )}
             </AnimatePresence>
