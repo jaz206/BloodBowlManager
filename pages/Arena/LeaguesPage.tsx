@@ -56,6 +56,9 @@ export const Leagues: React.FC<LeaguesProps> = ({
     const [view, setView] = useState<'list' | 'create' | 'detail'>('list');
     const [selectedCompetition, setSelectedCompetition] = useState<Competition | null>(null);
     const [detailTab, setDetailTab] = useState<'summary' | 'standings' | 'calendar' | 'news' | 'stats'>('summary');
+    const [statsModalTeam, setStatsModalTeam] = useState<import('../../types').ManagedTeam | null>(null);
+    const [statsModalEntryId, setStatsModalEntryId] = useState<string | null>(null);
+    const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -103,9 +106,6 @@ export const Leagues: React.FC<LeaguesProps> = ({
     const [joinModalState, setJoinModalState] = useState<{ comp: Competition | null; teamToJoin: string }>({ comp: null, teamToJoin: '' });
     const [scoreModalState, setScoreModalState] = useState<{ isOpen: boolean; roundIndex: string; matchIndex: number; matchup: Matchup; } | null>(null);
     const [confirmation, setConfirmation] = useState<{ title: string; message: string; onConfirm: () => void; type?: 'danger' | 'info' } | null>(null);
-    const [statsModalTeam, setStatsModalTeam] = useState<import('../../types').ManagedTeam | null>(null);
-    const [statsModalEntryId, setStatsModalEntryId] = useState<string | null>(null);
-    const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
     const [showReportModal, setShowReportModal] = useState(false);
     const [reportForm, setReportForm] = useState({ headline: '', subHeadline: '', article: '', homeTeam: '', opponentTeam: '', score1: 0, score2: 0 });
 
