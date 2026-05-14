@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { ManagedTeam, Competition, Matchup, CompetitionTeam, MatchResolution, ManagedPlayer, Team } from '../../types';
+import type { ManagedTeam, Competition, Matchup, CompetitionTeam, MatchResolution, ManagedPlayer, Team, CompetitionAvailability, CompetitionCadence, CompetitionSchedulingPreferences } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
 import PencilIcon from '../../components/icons/PencilIcon';
 import CalendarIcon from '../../components/icons/CalendarIcon';
 import QrCodeIcon from '../../components/icons/QrCodeIcon';
 import { TeamDashboard } from '../../components/guild/TeamDashboard';
-import { cloneCompetition, generateBracket, generateJoinCode, generateSchedule } from './competitionUtils';
+import { cloneCompetition, formatScheduledMatchDate, generateBracket, generateJoinCode, generateSchedule } from './competitionUtils';
 import CompetitionMatchResolutionModal from './CompetitionMatchResolutionModal';
 import { buildMatchReadyTeamSummary, calculateTeamValue } from '../../utils/teamUtils';
 import LeaguesTabbedList from './LeaguesTabbedList';
@@ -43,6 +43,11 @@ export const Leagues: React.FC<LeaguesProps> = ({
     isGuest 
 }) => {
     const MANUAL_TEAM_BUDGET = 1_000_000;
+    const getDefaultStartDate = () => {
+        const nextWeek = new Date();
+        nextWeek.setDate(nextWeek.getDate() + 7);
+        return nextWeek.toISOString().slice(0, 10);
+    };
     const { user } = useAuth();
     const { teams: baseTeams, skills } = useMasterData();
     const [activeTab, setActiveTab] = useState<'my-leagues' | 'my-tournaments' | 'discover' | 'organization'>('my-leagues');
@@ -71,6 +76,11 @@ export const Leagues: React.FC<LeaguesProps> = ({
     const [newCompPrayers, setNewCompPrayers] = useState(true);
     const [newCompExpensiveMistakes, setNewCompExpensiveMistakes] = useState(true);
     const [newCompRedraftBase, setNewCompRedraftBase] = useState(0);
+    const [newCompAvailability, setNewCompAvailability] = useState<CompetitionAvailability>('both');
+    const [newCompCadence, setNewCompCadence] = useState<CompetitionCadence>('weekly');
+    const [newCompPreferredTime, setNewCompPreferredTime] = useState('20:30');
+    const [newCompDurationMinutes, setNewCompDurationMinutes] = useState(180);
+    const [newCompStartDate, setNewCompStartDate] = useState(getDefaultStartDate());
     const [ownerTeamToJoin, setOwnerTeamToJoin] = useState<string>('');
     const [isSelectingOwnerTeam, setIsSelectingOwnerTeam] = useState(false);
     const [pendingCreatedCompetitionId, setPendingCreatedCompetitionId] = useState<string | null>(null);
@@ -97,7 +107,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
         setStatsModalEntryId(entry.entryId || null);
     };
 
-    const createCompetitionEntry = (baseTeam: ManagedTeam, ownerId: string, ownerName: string, isManual = false): CompetitionTeam => {
+    const createCompetitionEntry = (baseTeam: ManagedTeam, ownerId: string, ownerName: string, ownerEmail = '', isManual = false): CompetitionTeam => {
         const teamState: ManagedTeam = JSON.parse(JSON.stringify(baseTeam));
         teamState.record = { wins: 0, draws: 0, losses: 0 };
 
@@ -106,6 +116,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
             teamName: baseTeam.name,
             ownerId,
             ownerName,
+            ownerEmail,
             isManual,
             teamState,
             stats: { played: 0, won: 0, drawn: 0, lost: 0, tdFor: 0, tdAgainst: 0, casFor: 0, casAgainst: 0, points: 0 }
@@ -220,6 +231,74 @@ export const Leagues: React.FC<LeaguesProps> = ({
             remainingBudget: MANUAL_TEAM_BUDGET - totalSpend,
             overBudget: totalSpend > MANUAL_TEAM_BUDGET,
         };
+    };
+
+    const isAllowedLeagueDay = (date: Date, availability: CompetitionAvailability) => {
+        const day = date.getDay();
+        const isWeekend = day === 0 || day === 6;
+        if (availability === 'weekends') return isWeekend;
+        if (availability === 'weekdays') return !isWeekend;
+        return true;
+    };
+
+    const buildScheduledDate = (baseDate: string, preferredTime: string, availability: CompetitionAvailability) => {
+        const [year, month, day] = baseDate.split('-').map(Number);
+        const [hours, minutes] = preferredTime.split(':').map(Number);
+        const candidate = new Date(year, (month || 1) - 1, day || 1, hours || 20, minutes || 0, 0, 0);
+        while (!isAllowedLeagueDay(candidate, availability)) {
+            candidate.setDate(candidate.getDate() + 1);
+        }
+        return candidate;
+    };
+
+    const addCadenceToDate = (date: Date, cadence: CompetitionCadence) => {
+        const next = new Date(date);
+        next.setDate(next.getDate() + (cadence === 'biweekly' ? 14 : 7));
+        return next;
+    };
+
+    const applySchedulingToRounds = (
+        rounds: Record<string, Matchup[]>,
+        scheduling: CompetitionSchedulingPreferences | undefined,
+        competitionName: string,
+        competitionTeams: CompetitionTeam[],
+        format: Competition['format']
+    ) => {
+        if (!scheduling) return rounds;
+
+        const emailByTeam = new Map(
+            competitionTeams
+                .filter(team => team.ownerEmail?.trim())
+                .map(team => [team.teamName, team.ownerEmail!.trim()])
+        );
+
+        const sortedRoundEntries = Object.entries(rounds).sort((a, b) => Number(a[0]) - Number(b[0]));
+        let roundDate = buildScheduledDate(scheduling.startDate, scheduling.preferredTime, scheduling.availability);
+
+        const scheduledRounds: Record<string, Matchup[]> = {};
+        sortedRoundEntries.forEach(([roundIdx, matches]) => {
+            const roundNumber = Number(roundIdx) + 1;
+            scheduledRounds[roundIdx] = matches.map(match => {
+                const scheduledDate = new Date(roundDate);
+                const scheduledEndDate = new Date(scheduledDate.getTime() + scheduling.durationMinutes * 60_000);
+                const invitedEmails = [emailByTeam.get(match.team1), emailByTeam.get(match.team2)].filter(Boolean) as string[];
+                const labelPrefix = format === 'Liguilla' ? `J${roundNumber}` : `R${roundNumber}`;
+                return {
+                    ...match,
+                    scheduledDate: scheduledDate.toISOString(),
+                    scheduledEndDate: scheduledEndDate.toISOString(),
+                    dateStatus: 'proposed' as const,
+                    calendarTitle: `[${competitionName}] ${labelPrefix} · ${match.team1} vs ${match.team2}`,
+                    invitedEmails,
+                };
+            });
+            roundDate = addCadenceToDate(roundDate, scheduling.cadence);
+            while (!isAllowedLeagueDay(roundDate, scheduling.availability)) {
+                roundDate.setDate(roundDate.getDate() + 1);
+            }
+        });
+
+        return scheduledRounds;
     };
 
     const isCompetitionOwnedByMe = (competition: Competition) => (
@@ -494,7 +573,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
         if (ownerTeamToJoin) {
             const baseTeam = managedTeams.find(t => t.name === ownerTeamToJoin);
             if (baseTeam) {
-                teams.push(createCompetitionEntry(baseTeam, user.id || '', user.name || '', false));
+                teams.push(createCompetitionEntry(baseTeam, user.id || '', user.name || '', user.email || '', false));
             }
         }
 
@@ -512,6 +591,14 @@ export const Leagues: React.FC<LeaguesProps> = ({
             createdBy: user.id,
             participantIds: [user.id],
             status: 'Open',
+            scheduling: {
+                availability: newCompAvailability,
+                cadence: newCompCadence,
+                preferredTime: newCompPreferredTime,
+                durationMinutes: newCompDurationMinutes,
+                startDate: newCompStartDate,
+                timezone: 'Europe/Madrid',
+            },
             baseTeam: managedTeams.find(t => t.name === ownerTeamToJoin),
             rules: {
                 reglamento: newCompReglamento,
@@ -543,6 +630,11 @@ export const Leagues: React.FC<LeaguesProps> = ({
         setNewCompPrayers(true);
         setNewCompExpensiveMistakes(true);
         setNewCompRedraftBase(0);
+        setNewCompAvailability('both');
+        setNewCompCadence('weekly');
+        setNewCompPreferredTime('20:30');
+        setNewCompDurationMinutes(180);
+        setNewCompStartDate(getDefaultStartDate());
         setActiveTab('organization');
     };
 
@@ -626,7 +718,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
         const updatedComp = {
             ...cleanComp,
             participantIds: Array.from(new Set([...(cleanComp.participantIds || []), user.id])),
-            teams: [...cleanComp.teams, createCompetitionEntry(baseTeam, user.id, user.name, false)]
+            teams: [...cleanComp.teams, createCompetitionEntry(baseTeam, user.id, user.name, user.email || '', false)]
         };
         onCompetitionUpdate(updatedComp as Competition);
         
@@ -804,19 +896,21 @@ export const Leagues: React.FC<LeaguesProps> = ({
         let updatedComp: Competition;
 
         if (comp.format === 'Liguilla') {
+            const rawSchedule = generateSchedule(teamNames);
             updatedComp = {
                 ...cleanComp,
                 status: 'In Progress',
                 phase: 'regular_season',
-                schedule: generateSchedule(teamNames),
+                schedule: applySchedulingToRounds(rawSchedule, cleanComp.scheduling, cleanComp.name, cleanComp.teams, cleanComp.format),
                 bracket: null,
             };
         } else { // Torneo
+            const rawBracket = generateBracket(teamNames);
             updatedComp = {
                 ...cleanComp,
                 status: 'In Progress',
                 phase: 'playoffs',
-                bracket: generateBracket(teamNames),
+                bracket: applySchedulingToRounds(rawBracket, cleanComp.scheduling, cleanComp.name, cleanComp.teams, cleanComp.format),
                 schedule: null,
             };
         }
@@ -980,6 +1074,81 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                         </select>
                                         <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">expand_more</span>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section className="bg-zinc-900/40 rounded-[2rem] border border-white/5 p-8 shadow-2xl backdrop-blur-xl">
+                        <div className="flex items-center gap-3 mb-8">
+                            <span className="material-symbols-outlined text-primary font-bold">calendar_month</span>
+                            <h3 className="text-xl font-bold text-white uppercase italic tracking-tight">Planificación de Jornadas</h3>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-2">Cuándo se juega</label>
+                                <div className="flex bg-black/40 border border-white/10 rounded-2xl p-1">
+                                    {[
+                                        { value: 'weekdays', label: 'Entre semana' },
+                                        { value: 'weekends', label: 'Fin de semana' },
+                                        { value: 'both', label: 'Ambos' },
+                                    ].map(option => (
+                                        <button
+                                            key={option.value}
+                                            type="button"
+                                            onClick={() => setNewCompAvailability(option.value as CompetitionAvailability)}
+                                            className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest italic rounded-xl transition-all ${newCompAvailability === option.value ? 'bg-primary text-black' : 'text-slate-500 hover:text-white'}`}
+                                        >
+                                            {option.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-2">Cadencia</label>
+                                <div className="flex bg-black/40 border border-white/10 rounded-2xl p-1">
+                                    {[
+                                        { value: 'weekly', label: 'Semanal' },
+                                        { value: 'biweekly', label: 'Quincenal' },
+                                    ].map(option => (
+                                        <button
+                                            key={option.value}
+                                            type="button"
+                                            onClick={() => setNewCompCadence(option.value as CompetitionCadence)}
+                                            className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest italic rounded-xl transition-all ${newCompCadence === option.value ? 'bg-primary text-black' : 'text-slate-500 hover:text-white'}`}
+                                        >
+                                            {option.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-2">Fecha base</label>
+                                <input
+                                    type="date"
+                                    value={newCompStartDate}
+                                    onChange={e => setNewCompStartDate(e.target.value)}
+                                    className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-4 text-white focus:ring-2 focus:ring-primary/50 outline-none transition-all font-bold"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-2">Hora preferida</label>
+                                <input
+                                    type="time"
+                                    value={newCompPreferredTime}
+                                    onChange={e => setNewCompPreferredTime(e.target.value)}
+                                    className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-4 text-white focus:ring-2 focus:ring-primary/50 outline-none transition-all font-bold"
+                                />
+                            </div>
+                            <div className="sm:col-span-2">
+                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic mb-2">Duración estimada</label>
+                                <div className="flex items-center gap-3 bg-black/40 border border-white/10 rounded-2xl px-4 py-3">
+                                    <button onClick={() => setNewCompDurationMinutes(Math.max(60, newCompDurationMinutes - 30))} className="text-primary font-bold opacity-70 hover:opacity-100 p-1">-</button>
+                                    <div className="flex-1 text-center text-white font-black uppercase tracking-widest text-[10px] italic">
+                                        {Math.floor(newCompDurationMinutes / 60)}h {newCompDurationMinutes % 60 ? `${newCompDurationMinutes % 60}m` : ''}
+                                    </div>
+                                    <button onClick={() => setNewCompDurationMinutes(Math.min(480, newCompDurationMinutes + 30))} className="text-primary font-bold opacity-70 hover:opacity-100 p-1">+</button>
                                 </div>
                             </div>
                         </div>
@@ -1359,7 +1528,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                     onClick={() => openManualParticipantModal()}
                                                     className="bg-black/40 border border-white/10 text-white font-black py-3 px-8 rounded-2xl text-[10px] uppercase tracking-widest transition-all hover:border-primary/30 hover:text-primary"
                                                 >
-                                                    Añadir participante manual
+                                                    Anadir participante manual
                                                 </button>
                                             )}
                                         </div>
@@ -1368,25 +1537,25 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                     {selectedCompetition.teams.length > 0 ? (
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             {selectedCompetition.teams.map(t => (
-                                                <div key={t.entryId || `${t.ownerId || 'manual'}:${t.ownerName}:${t.teamName}`} className="p-5 bg-black/40 border border-white/5 rounded-2xl flex items-center justify-between gap-4 group hover:border-primary/30 transition-all">
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black text-sm italic">
+                                                <div key={t.entryId || `${t.ownerId || 'manual'}:${t.ownerName}:${t.teamName}`} className="p-5 bg-black/40 border border-white/5 rounded-2xl flex flex-col gap-4 group hover:border-primary/30 transition-all overflow-hidden min-w-0">
+                                                    <div className="flex items-start gap-4 min-w-0">
+                                                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black text-sm italic shrink-0">
                                                             {t.teamName.charAt(0)}
                                                         </div>
-                                                        <div>
-                                                            <p className="font-black text-white uppercase italic tracking-tight">{t.teamName}</p>
-                                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{t.ownerName} {t.isManual ? '· Manual' : ''}</p>
+                                                        <div className="min-w-0 flex-1">
+                                                            <p className="font-black text-white uppercase italic tracking-tight break-words">{t.teamName}</p>
+                                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest break-words">{t.ownerName} {t.isManual ? '- Manual' : ''}</p>
                                                         </div>
                                                     </div>
-                                                    <div className="flex items-center gap-3">
+                                                    <div className="flex flex-wrap items-center justify-between gap-3 min-w-0">
                                                         {t.stats && (
-                                                            <div className="text-right">
+                                                            <div className="text-left sm:text-right shrink-0">
                                                                 <p className="text-[10px] font-black text-primary italic uppercase">{t.stats.points} PTS</p>
                                                                 <p className="text-[8px] text-slate-600 font-bold uppercase">{t.stats.played} PJ</p>
                                                             </div>
                                                         )}
                                                         {user?.id === selectedCompetition.ownerId && (
-                                                            <div className="flex items-center gap-2">
+                                                            <div className="flex items-center gap-2 shrink-0 ml-auto">
                                                                 {t.teamState && (
                                                                     <button
                                                                         onClick={() => openCloneDashboard(t)}
@@ -1397,13 +1566,13 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                                     </button>
                                                                 )}
                                                                 {t.isManual && (
-                                                                <button
-                                                                    onClick={() => openManualParticipantModal(t)}
-                                                                    className="w-9 h-9 rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:text-primary hover:border-primary/30 transition-all flex items-center justify-center"
-                                                                    title="Editar franquicia manual"
-                                                                >
-                                                                    <span className="material-symbols-outlined text-[18px]">edit</span>
-                                                                </button>
+                                                                    <button
+                                                                        onClick={() => openManualParticipantModal(t)}
+                                                                        className="w-9 h-9 rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:text-primary hover:border-primary/30 transition-all flex items-center justify-center"
+                                                                        title="Editar franquicia manual"
+                                                                    >
+                                                                        <span className="material-symbols-outlined text-[18px]">edit</span>
+                                                                    </button>
                                                                 )}
                                                                 {t.isManual && (
                                                                     <button
@@ -1422,7 +1591,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                         </div>
                                     ) : (
                                         <div className="text-center py-10">
-                                            <p className="text-slate-500 font-bold italic uppercase tracking-widest text-xs">Esperando aspirantes... ¡Únete o invita a otros coaches!</p>
+                                            <p className="text-slate-500 font-bold italic uppercase tracking-widest text-xs">Esperando aspirantes... Unete o invita a otros coaches!</p>
                                         </div>
                                     )}
 
@@ -1552,13 +1721,16 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                             {opponentName.charAt(0)}
                                                         </div>
                                                         <div>
-                                                            <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-1 italic">Pr?xima mesa</p>
+                                                            <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-1 italic">Próxima mesa</p>
                                                             <h4 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">{opponentName}</h4>
                                                             <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
                                                                 <span>{opponentFranchise?.teamState?.rosterName || 'Desconocido'}</span>
                                                                 <span className="w-1 h-1 rounded-full bg-slate-700"></span>
                                                                 <span>TV real {(opponentReady?.realTV || 0) / 1000}k</span>
                                                             </div>
+                                                            <p className="mt-2 text-[10px] font-black uppercase tracking-widest italic text-primary">
+                                                                {formatScheduledMatchDate(nextMatch.scheduledDate)}
+                                                            </p>
                                                         </div>
                                                     </div>
 
@@ -1880,13 +2052,28 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                             {Object.entries(selectedCompetition.schedule).map(([roundIdx, round]) => (
                                                 <div key={roundIdx} className="bg-zinc-900/20 border border-white/5 rounded-[2.5rem] p-8">
-                                                    <h4 className="text-sm font-black text-primary italic tracking-[0.2em] uppercase mb-6 flex items-center gap-2">
+                                                    <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+                                                    <h4 className="text-sm font-black text-primary italic tracking-[0.2em] uppercase flex items-center gap-2">
                                                         <span className="material-symbols-outlined text-sm font-bold">calendar_month</span>
                                                         Jornada {parseInt(roundIdx) + 1}
                                                     </h4>
+                                                    <span className="text-[10px] font-black uppercase tracking-widest italic px-3 py-1.5 rounded-full border border-primary/20 bg-primary/10 text-primary">
+                                                        {formatScheduledMatchDate((round as Matchup[])[0]?.scheduledDate)}
+                                                    </span>
+                                                    </div>
                                                     <div className="space-y-4">
                                                         {(round as Matchup[]).map((match, matchIdx) => (
-                                                            <div key={matchIdx} className="bg-black/40 p-4 rounded-3xl border border-white/5 flex items-center justify-between gap-4 group">
+                                                            <div key={matchIdx} className="bg-black/40 p-4 rounded-3xl border border-white/5 flex flex-col gap-3 group">
+                                                                <div className="flex items-center justify-between gap-3 text-[10px] font-black uppercase tracking-widest italic text-slate-500">
+                                                                    <span>{match.dateStatus === 'confirmed' ? 'Fecha confirmada' : 'Fecha propuesta'}</span>
+                                                                    <span className="text-primary">{formatScheduledMatchDate(match.scheduledDate)}</span>
+                                                                </div>
+                                                                {!!match.invitedEmails?.length && (
+                                                                    <div className="text-[9px] font-bold uppercase tracking-widest text-slate-600">
+                                                                        Invitables: {match.invitedEmails.join(', ')}
+                                                                    </div>
+                                                                )}
+                                                                <div className="flex items-center justify-between gap-4">
                                                                 <span className="flex-1 text-right font-black text-[11px] uppercase italic truncate text-slate-300">{match.team1}</span>
                                                                 <div className="flex items-center gap-4 px-4 py-2 bg-zinc-900 rounded-2xl border border-white/10 shrink-0 relative overflow-hidden">
                                                                     <div className="font-black text-xl text-white w-8 text-center">{match.score1 ?? '-'}</div>
@@ -1903,6 +2090,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                                     )}
                                                                 </div>
                                                                 <span className="flex-1 text-left font-black text-[11px] uppercase italic truncate text-slate-300">{match.team2}</span>
+                                                                </div>
                                                             </div>
                                                         ))}
                                                     </div>
@@ -1925,6 +2113,10 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                         {(round as Matchup[]).map((match, matchIdx) => (
                                                             <div key={matchIdx} className="relative group">
                                                                 <div className="bg-zinc-900 border border-white/10 p-4 rounded-[2rem] shadow-2xl relative z-10 space-y-3">
+                                                                    <div className="flex items-center justify-between gap-3 text-[10px] font-black uppercase tracking-widest italic text-slate-500">
+                                                                        <span>{match.dateStatus === 'confirmed' ? 'Fecha confirmada' : 'Fecha propuesta'}</span>
+                                                                        <span className="text-primary">{formatScheduledMatchDate(match.scheduledDate)}</span>
+                                                                    </div>
                                                                     <div className="w-full flex justify-between items-center p-3 rounded-2xl bg-black/40 text-slate-400 font-bold">
                                                                         <span className="truncate text-[10px] uppercase tracking-tighter">{match.team1}</span>
                                                                         <span className="font-black text-sm">{match.score1 ?? '-'}</span>
