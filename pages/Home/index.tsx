@@ -197,50 +197,61 @@ const Home: React.FC<HomeProps> = ({
     // Próximo partido lógico
     const nextMatchData = useMemo(() => {
         if (!activeComp || !user) return null;
-        let foundMatch: any = null;
-        let foundRound: string = '';
-        let myTeamClone: any = null;
-        let oppTeamClone: any = null;
 
-        // Try to find the user's team in this comp
         const myTeam = activeComp.teams.find(t => t.ownerId === user.id);
-        if (!myTeam) return null;
+
+        const sortMatches = (matches: any[]) =>
+            [...matches].sort((a, b) => {
+                const aTime = a?.scheduledDate ? new Date(a.scheduledDate).getTime() : Number.POSITIVE_INFINITY;
+                const bTime = b?.scheduledDate ? new Date(b.scheduledDate).getTime() : Number.POSITIVE_INFINITY;
+                return aTime - bTime;
+            });
+
+        let foundMatch: any = null;
+        let foundRound = '';
 
         if (activeComp.format === 'Liguilla' && activeComp.schedule) {
-            // Find earliest unplayed match involving user
-            const rounds = Object.keys(activeComp.schedule).sort();
+            const rounds = Object.keys(activeComp.schedule).sort((a, b) => Number(a) - Number(b));
             for (const r of rounds) {
-                const matches = activeComp.schedule[r] as any[];
-                const match = matches.find(m => (m.team1 === myTeam.teamName || m.team2 === myTeam.teamName) && m.score1 === null);
-                if (match) {
-                    foundMatch = match;
+                const roundMatches = (activeComp.schedule[r] as any[]).filter(m => m && m.score1 === null && m.team1 !== 'BYE' && m.team2 !== 'BYE');
+                const prioritizedMatches = myTeam
+                    ? sortMatches(roundMatches.filter(m => m.team1 === myTeam.teamName || m.team2 === myTeam.teamName))
+                    : [];
+                const fallbackMatches = sortMatches(roundMatches);
+                const candidate = prioritizedMatches[0] || fallbackMatches[0];
+                if (candidate) {
+                    foundMatch = candidate;
                     foundRound = r;
                     break;
                 }
             }
         } else if (activeComp.format === 'Torneo' && activeComp.bracket) {
-            // Very simplified bracket unplayed finding
-            const phases = Object.keys(activeComp.bracket).sort((a, b) => Number(b) - Number(a)); // 8, 4, 2, 1
+            const phases = Object.keys(activeComp.bracket).sort((a, b) => Number(b) - Number(a));
             for (const p of phases) {
-                const matches = activeComp.bracket[p] as any[];
-                for (const m of matches) {
-                    if (m && (m.team1 === myTeam.teamName || m.team2 === myTeam.teamName) && m.score1 === null) {
-                        foundMatch = m;
-                        foundRound = `Ronda de ${p}`;
-                        break;
-                    }
+                const phaseMatches = ((activeComp.bracket[p] as any[]) || []).filter(m => m && m.score1 === null && m.team1 && m.team2);
+                const prioritizedMatches = myTeam
+                    ? sortMatches(phaseMatches.filter(m => m.team1 === myTeam.teamName || m.team2 === myTeam.teamName))
+                    : [];
+                const fallbackMatches = sortMatches(phaseMatches);
+                const candidate = prioritizedMatches[0] || fallbackMatches[0];
+                if (candidate) {
+                    foundMatch = candidate;
+                    foundRound = `Ronda de ${p}`;
+                    break;
                 }
-                if (foundMatch) break;
             }
         }
 
-        if (foundMatch) {
-            myTeamClone = activeComp.teams.find(t => t.teamName === myTeam.teamName)?.teamState;
-            const oppName = foundMatch.team1 === myTeam.teamName ? foundMatch.team2 : foundMatch.team1;
-            oppTeamClone = activeComp.teams.find(t => t.teamName === oppName)?.teamState;
-        }
+        if (!foundMatch) return null;
 
-        return foundMatch ? { match: foundMatch, round: foundRound, myTeamClone, oppTeamClone } : null;
+        const primaryTeamName = myTeam && (foundMatch.team1 === myTeam.teamName || foundMatch.team2 === myTeam.teamName)
+            ? myTeam.teamName
+            : foundMatch.team1;
+        const opponentName = foundMatch.team1 === primaryTeamName ? foundMatch.team2 : foundMatch.team1;
+        const myTeamClone = activeComp.teams.find(t => t.teamName === primaryTeamName)?.teamState;
+        const oppTeamClone = activeComp.teams.find(t => t.teamName === opponentName)?.teamState;
+
+        return { match: foundMatch, round: foundRound, myTeamClone, oppTeamClone };
     }, [activeComp, user]);
 
     const liveTeamsCount = managedTeams.length;
