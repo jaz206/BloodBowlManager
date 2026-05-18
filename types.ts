@@ -5,6 +5,7 @@ export interface User {
   email: string;
   picture: string;
   isAdmin?: boolean;
+  googleCalendarConnected?: boolean;
 }
 
 export interface PlayerStats {
@@ -280,6 +281,9 @@ export interface Matchup {
   dateStatus?: 'proposed' | 'confirmed' | 'played' | 'postponed';
   calendarTitle?: string;
   invitedEmails?: string[];
+  googleCalendarEventId?: string;
+  googleCalendarHtmlLink?: string;
+  googleCalendarLastSyncedAt?: string;
   resolution?: MatchResolution;
 }
 

@@ -50,7 +50,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
         nextWeek.setDate(nextWeek.getDate() + 7);
         return nextWeek.toISOString().slice(0, 10);
     };
-    const { user } = useAuth();
+    const { user, connectGoogleCalendar, disconnectGoogleCalendar, calendarAccessToken, calendarConnected } = useAuth();
     const { teams: baseTeams, skills } = useMasterData();
     const [activeTab, setActiveTab] = useState<'my-leagues' | 'my-tournaments' | 'discover' | 'organization'>('my-leagues');
     const [view, setView] = useState<'list' | 'create' | 'detail'>('list');
@@ -341,31 +341,153 @@ export const Leagues: React.FC<LeaguesProps> = ({
         return url.toString();
     };
 
-    const updateCompetitionMatch = (
+    const buildGoogleCalendarEventPayload = (match: Matchup, competitionName: string) => {
+        const timezone = selectedCompetition?.scheduling?.timezone || 'Europe/Madrid';
+        return {
+            summary: match.calendarTitle || `[${competitionName}] ${match.team1} vs ${match.team2}`,
+            description: [
+                `Competicion: ${competitionName}`,
+                `Partido: ${match.team1} vs ${match.team2}`,
+                match.dateStatus === 'postponed' ? 'Estado: Aplazado' : `Estado: ${getMatchDateStatusLabel(match)}`,
+                match.invitedEmails?.length ? `Participantes con correo: ${match.invitedEmails.join(', ')}` : 'Participantes manuales o sin correo: revisar liga',
+            ].join('\n'),
+            start: {
+                dateTime: match.scheduledDate,
+                timeZone: timezone,
+            },
+            end: {
+                dateTime: match.scheduledEndDate,
+                timeZone: timezone,
+            },
+            attendees: (match.invitedEmails || []).map(email => ({ email })),
+        };
+    };
+
+    const syncGoogleCalendarEvent = async (match: Matchup, competitionName: string) => {
+        if (!calendarAccessToken || !match.scheduledDate || !match.scheduledEndDate) {
+            return { success: false as const, reason: 'missing-token-or-date' as const };
+        }
+
+        const hasExistingEvent = !!match.googleCalendarEventId;
+        const endpoint = hasExistingEvent
+            ? `https://www.googleapis.com/calendar/v3/calendars/primary/events/${encodeURIComponent(match.googleCalendarEventId!)}`
+            : 'https://www.googleapis.com/calendar/v3/calendars/primary/events';
+
+        const response = await fetch(endpoint, {
+            method: hasExistingEvent ? 'PATCH' : 'POST',
+            headers: {
+                Authorization: `Bearer ${calendarAccessToken}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(buildGoogleCalendarEventPayload(match, competitionName)),
+        });
+
+        if (!response.ok) {
+            if (response.status === 401 || response.status === 403) {
+                disconnectGoogleCalendar();
+            }
+            return { success: false as const, reason: 'api-error' as const };
+        }
+
+        const data = await response.json();
+        return {
+            success: true as const,
+            eventId: data.id as string | undefined,
+            htmlLink: data.htmlLink as string | undefined,
+        };
+    };
+
+    const handleGoogleCalendarAction = async (
         source: 'schedule' | 'bracket',
         roundIndex: string,
         matchIndex: number,
-        updater: (match: Matchup) => void
+        match: Matchup,
+        competitionName: string
     ) => {
-        if (!selectedCompetition) return;
-        const updatedComp = cloneCompetition(selectedCompetition);
-        const collection = source === 'schedule' ? updatedComp.schedule : updatedComp.bracket;
-        const match = collection?.[roundIndex]?.[matchIndex];
-        if (!match) return;
-        updater(match);
-        void (async () => {
-            const saved = await onCompetitionUpdate(updatedComp);
-            if (!saved) {
+        if (!calendarConnected) {
+            try {
+                await connectGoogleCalendar();
+            } catch {
                 setConfirmation({
-                    title: "No se pudo guardar",
-                    message: "Firebase no aceptó el cambio. Revisa permisos y vuelve a intentarlo.",
+                    title: 'Calendar no conectado',
+                    message: 'Google Calendar necesita tu permiso antes de crear eventos.',
                     onConfirm: () => setConfirmation(null),
                     type: 'info'
                 });
                 return;
             }
-            setSelectedCompetition(updatedComp);
-        })();
+        }
+
+        if (match.googleCalendarHtmlLink) {
+            window.open(match.googleCalendarHtmlLink, '_blank', 'noopener,noreferrer');
+            return;
+        }
+
+        const result = await updateCompetitionMatch(source, roundIndex, matchIndex, current => {
+            if (!current.calendarTitle) {
+                current.calendarTitle = `[${competitionName}] ${current.team1} vs ${current.team2}`;
+            }
+        });
+        if (!result.saved || !result.updatedComp || !result.match) return;
+
+        const calendarResult = await syncGoogleCalendarEvent(result.match, competitionName);
+        if (!calendarResult.success) {
+            setConfirmation({
+                title: 'Calendar no respondió',
+                message: 'La liga está bien, pero Google Calendar no aceptó el evento.',
+                onConfirm: () => setConfirmation(null),
+                type: 'info'
+            });
+            return;
+        }
+
+        const syncedComp = cloneCompetition(result.updatedComp);
+        const syncedCollection = source === 'schedule' ? syncedComp.schedule : syncedComp.bracket;
+        const syncedMatch = syncedCollection?.[roundIndex]?.[matchIndex];
+        if (!syncedMatch) return;
+        syncedMatch.googleCalendarEventId = calendarResult.eventId;
+        syncedMatch.googleCalendarHtmlLink = calendarResult.htmlLink;
+        syncedMatch.googleCalendarLastSyncedAt = new Date().toISOString();
+        const saved = await onCompetitionUpdate(syncedComp);
+        if (!saved) {
+            setConfirmation({
+                title: 'Evento creado a medias',
+                message: 'Google Calendar creó el evento, pero la liga no pudo guardar el enlace.',
+                onConfirm: () => setConfirmation(null),
+                type: 'info'
+            });
+            return;
+        }
+        setSelectedCompetition(syncedComp);
+        if (calendarResult.htmlLink) {
+            window.open(calendarResult.htmlLink, '_blank', 'noopener,noreferrer');
+        }
+    };
+
+    const updateCompetitionMatch = async (
+        source: 'schedule' | 'bracket',
+        roundIndex: string,
+        matchIndex: number,
+        updater: (match: Matchup) => void
+    ) => {
+        if (!selectedCompetition) return { saved: false as const, updatedComp: null as Competition | null, match: null as Matchup | null };
+        const updatedComp = cloneCompetition(selectedCompetition);
+        const collection = source === 'schedule' ? updatedComp.schedule : updatedComp.bracket;
+        const match = collection?.[roundIndex]?.[matchIndex];
+        if (!match) return { saved: false as const, updatedComp: null as Competition | null, match: null as Matchup | null };
+        updater(match);
+        const saved = await onCompetitionUpdate(updatedComp);
+        if (!saved) {
+            setConfirmation({
+                title: "No se pudo guardar",
+                message: "Firebase no acepto el cambio. Revisa permisos y vuelve a intentarlo.",
+                onConfirm: () => setConfirmation(null),
+                type: 'info'
+            });
+            return { saved: false as const, updatedComp, match };
+        }
+        setSelectedCompetition(updatedComp);
+        return { saved: true as const, updatedComp, match };
     };
 
     const openScheduleEditor = (
@@ -394,7 +516,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
             openScheduleEditor(source, roundIndex, matchIndex, match, 'confirm');
             return;
         }
-        updateCompetitionMatch(source, roundIndex, matchIndex, current => {
+        void updateCompetitionMatch(source, roundIndex, matchIndex, current => {
             current.dateStatus = 'confirmed';
         });
     };
@@ -420,12 +542,40 @@ export const Leagues: React.FC<LeaguesProps> = ({
         }
 
         const end = new Date(start.getTime() + (scheduleEditState.durationMinutes * 60_000));
-        updateCompetitionMatch(scheduleEditState.source, scheduleEditState.roundIndex, scheduleEditState.matchIndex, match => {
-            match.scheduledDate = start.toISOString();
-            match.scheduledEndDate = end.toISOString();
-            match.dateStatus = scheduleEditState.mode === 'postpone' ? 'postponed' : 'confirmed';
-        });
-        setScheduleEditState(null);
+        void (async () => {
+            const result = await updateCompetitionMatch(scheduleEditState.source, scheduleEditState.roundIndex, scheduleEditState.matchIndex, match => {
+                match.scheduledDate = start.toISOString();
+                match.scheduledEndDate = end.toISOString();
+                match.dateStatus = scheduleEditState.mode === 'postpone' ? 'postponed' : 'confirmed';
+            });
+            if (!result.saved || !result.updatedComp || !result.match) return;
+
+            if (calendarConnected && user?.id === result.updatedComp.ownerId) {
+                const calendarResult = await syncGoogleCalendarEvent(result.match, result.updatedComp.name);
+                if (calendarResult.success) {
+                    const syncedComp = cloneCompetition(result.updatedComp);
+                    const syncedCollection = scheduleEditState.source === 'schedule' ? syncedComp.schedule : syncedComp.bracket;
+                    const syncedMatch = syncedCollection?.[scheduleEditState.roundIndex]?.[scheduleEditState.matchIndex];
+                    if (syncedMatch) {
+                        syncedMatch.googleCalendarEventId = calendarResult.eventId;
+                        syncedMatch.googleCalendarHtmlLink = calendarResult.htmlLink;
+                        syncedMatch.googleCalendarLastSyncedAt = new Date().toISOString();
+                        const syncedSaved = await onCompetitionUpdate(syncedComp);
+                        if (syncedSaved) {
+                            setSelectedCompetition(syncedComp);
+                        }
+                    }
+                } else if (calendarResult.reason === 'api-error') {
+                    setConfirmation({
+                        title: 'Calendar no respondi?',
+                        message: 'La fecha se guard? en la liga, pero Google Calendar no acept? el evento.',
+                        onConfirm: () => setConfirmation(null),
+                        type: 'info'
+                    });
+                }
+            }
+            setScheduleEditState(null);
+        })();
     };
 
     const applySchedulingToRounds = (
@@ -2155,16 +2305,28 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                                 <span className="material-symbols-outlined font-bold shrink-0">fact_check</span>
                                                                 <span className="leading-tight">Registrar resultado de mesa</span>
                                                             </button>
-                                                            {buildGoogleCalendarUrl(nextMatch, selectedCompetition.name) && (
-                                                                <a
-                                                                    href={buildGoogleCalendarUrl(nextMatch, selectedCompetition.name)!}
-                                                                    target="_blank"
-                                                                    rel="noreferrer"
-                                                                    className="w-full min-h-16 bg-black/40 border border-white/10 text-white font-black px-5 py-4 rounded-2xl flex items-center justify-center gap-3 transition-all hover:border-primary/30 hover:text-primary uppercase tracking-tighter text-sm text-center"
-                                                                >
-                                                                    <span className="material-symbols-outlined font-bold shrink-0">event</span>
-                                                                    <span className="leading-tight">Google Calendar</span>
-                                                                </a>
+                                                            {nextMatch.scheduledDate && nextRoundIndex != null && (
+                                                                user?.id === selectedCompetition.ownerId ? (
+                                                                    <button
+                                                                        onClick={() => void handleGoogleCalendarAction(selectedCompetition.format === 'Liguilla' ? 'schedule' : 'bracket', nextRoundIndex!, nextMatchIndex, nextMatch!, selectedCompetition.name)}
+                                                                        className="w-full min-h-16 bg-black/40 border border-white/10 text-white font-black px-5 py-4 rounded-2xl flex items-center justify-center gap-3 transition-all hover:border-primary/30 hover:text-primary uppercase tracking-tighter text-sm text-center"
+                                                                    >
+                                                                        <span className="material-symbols-outlined font-bold shrink-0">event</span>
+                                                                        <span className="leading-tight">
+                                                                            {!calendarConnected ? 'Conectar Calendar' : nextMatch.googleCalendarHtmlLink ? 'Abrir evento' : 'Crear evento'}
+                                                                        </span>
+                                                                    </button>
+                                                                ) : buildGoogleCalendarUrl(nextMatch, selectedCompetition.name) && (
+                                                                    <a
+                                                                        href={buildGoogleCalendarUrl(nextMatch, selectedCompetition.name)!}
+                                                                        target="_blank"
+                                                                        rel="noreferrer"
+                                                                        className="w-full min-h-16 bg-black/40 border border-white/10 text-white font-black px-5 py-4 rounded-2xl flex items-center justify-center gap-3 transition-all hover:border-primary/30 hover:text-primary uppercase tracking-tighter text-sm text-center"
+                                                                    >
+                                                                        <span className="material-symbols-outlined font-bold shrink-0">event</span>
+                                                                        <span className="leading-tight">Google Calendar</span>
+                                                                    </a>
+                                                                )
                                                             )}
                                                             {onNavigateToMatch && (
                                                                 <button 
@@ -2467,16 +2629,26 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                                         Invitables: {match.invitedEmails.join(', ')}
                                                                     </div>
                                                                 )}
-                                                                {buildGoogleCalendarUrl(match, selectedCompetition.name) && (
-                                                                    <a
-                                                                        href={buildGoogleCalendarUrl(match, selectedCompetition.name)!}
-                                                                        target="_blank"
-                                                                        rel="noreferrer"
-                                                                        className="inline-flex w-fit items-center gap-2 px-3 py-2 rounded-xl bg-primary/10 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-widest"
-                                                                    >
-                                                                        <span className="material-symbols-outlined text-sm font-bold">event</span>
-                                                                        Google Calendar
-                                                                    </a>
+                                                                {match.scheduledDate && (
+                                                                    user?.id === selectedCompetition.ownerId ? (
+                                                                        <button
+                                                                            onClick={() => void handleGoogleCalendarAction('schedule', roundIdx, matchIdx, match, selectedCompetition.name)}
+                                                                            className="inline-flex w-fit items-center gap-2 px-3 py-2 rounded-xl bg-primary/10 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-widest"
+                                                                        >
+                                                                            <span className="material-symbols-outlined text-sm font-bold">event</span>
+                                                                            {!calendarConnected ? 'Conectar Calendar' : match.googleCalendarHtmlLink ? 'Abrir evento' : 'Crear evento'}
+                                                                        </button>
+                                                                    ) : buildGoogleCalendarUrl(match, selectedCompetition.name) && (
+                                                                        <a
+                                                                            href={buildGoogleCalendarUrl(match, selectedCompetition.name)!}
+                                                                            target="_blank"
+                                                                            rel="noreferrer"
+                                                                            className="inline-flex w-fit items-center gap-2 px-3 py-2 rounded-xl bg-primary/10 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-widest"
+                                                                        >
+                                                                            <span className="material-symbols-outlined text-sm font-bold">event</span>
+                                                                            Google Calendar
+                                                                        </a>
+                                                                    )
                                                                 )}
                                                                 <div className="flex items-center justify-between gap-4">
                                                                 <span className="flex-1 text-right font-black text-[11px] uppercase italic truncate text-slate-300">{match.team1}</span>
@@ -2555,16 +2727,26 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                                         <span className="truncate text-[10px] uppercase tracking-tighter">{match.team2}</span>
                                                                         <span className="font-black text-sm">{match.score2 ?? '-'}</span>
                                                                     </div>
-                                                                    {buildGoogleCalendarUrl(match, selectedCompetition.name) && (
-                                                                        <a
-                                                                            href={buildGoogleCalendarUrl(match, selectedCompetition.name)!}
-                                                                            target="_blank"
-                                                                            rel="noreferrer"
-                                                                            className="w-full py-3 rounded-2xl bg-primary/10 hover:bg-primary/90 text-primary hover:text-black transition-all font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2"
-                                                                        >
-                                                                            <span className="material-symbols-outlined text-sm font-bold">event</span>
-                                                                            Google Calendar
-                                                                        </a>
+                                                                    {match.scheduledDate && (
+                                                                        user?.id === selectedCompetition.ownerId ? (
+                                                                            <button
+                                                                                onClick={() => void handleGoogleCalendarAction('bracket', roundIdx, matchIdx, match, selectedCompetition.name)}
+                                                                                className="w-full py-3 rounded-2xl bg-primary/10 hover:bg-primary/90 text-primary hover:text-black transition-all font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2"
+                                                                            >
+                                                                                <span className="material-symbols-outlined text-sm font-bold">event</span>
+                                                                                {!calendarConnected ? 'Conectar Calendar' : match.googleCalendarHtmlLink ? 'Abrir evento' : 'Crear evento'}
+                                                                            </button>
+                                                                        ) : buildGoogleCalendarUrl(match, selectedCompetition.name) && (
+                                                                            <a
+                                                                                href={buildGoogleCalendarUrl(match, selectedCompetition.name)!}
+                                                                                target="_blank"
+                                                                                rel="noreferrer"
+                                                                                className="w-full py-3 rounded-2xl bg-primary/10 hover:bg-primary/90 text-primary hover:text-black transition-all font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2"
+                                                                            >
+                                                                                <span className="material-symbols-outlined text-sm font-bold">event</span>
+                                                                                Google Calendar
+                                                                            </a>
+                                                                        )
                                                                     )}
                                                                     {!match.played && (user?.id === selectedCompetition.ownerId || selectedCompetition.teams.some(t => t.ownerId === user?.id && (t.teamName === match.team1 || t.teamName === match.team2))) && (
                                                                         <div className="space-y-2">

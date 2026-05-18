@@ -4,15 +4,19 @@ import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import type { User } from '../types';
 import { auth, db } from '../firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
-import { GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
+import { GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User as FirebaseUser, reauthenticateWithPopup } from "firebase/auth";
 
 interface AuthContextType {
   user: User | null;
   login: () => Promise<void>;
+  connectGoogleCalendar: () => Promise<void>;
+  disconnectGoogleCalendar: () => void;
   logout: () => void;
   loginAsGuest: () => void;
   isLoading: boolean;
   isAdmin: boolean;
+  calendarAccessToken: string | null;
+  calendarConnected: boolean;
 }
 
 const ADMIN_UID = '5BxSxrB1JCdFEWONXX4nvlrVHEo2';
@@ -21,10 +25,13 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 // Use a specific key for the guest user to avoid conflicts
 const GUEST_USER_STORAGE_KEY = 'bloodbowl-guest-user';
+const CALENDAR_TOKEN_STORAGE_KEY = 'bloodbowl-google-calendar-token';
+const CALENDAR_TOKEN_OWNER_STORAGE_KEY = 'bloodbowl-google-calendar-token-owner';
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [calendarAccessToken, setCalendarAccessToken] = useState<string | null>(null);
 
   useEffect(() => {
     // If auth is not initialized (due to config error), only check for guest session.
@@ -65,8 +72,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           name: firebaseUser.displayName || 'Entrenador',
           email: firebaseUser.email || '',
           picture: firebaseUser.photoURL || '',
-          isAdmin: isAdminFlag
+          isAdmin: isAdminFlag,
+          googleCalendarConnected: false,
         };
+
+        const storedOwnerId = sessionStorage.getItem(CALENDAR_TOKEN_OWNER_STORAGE_KEY);
+        const storedToken = sessionStorage.getItem(CALENDAR_TOKEN_STORAGE_KEY);
+        if (storedOwnerId === firebaseUser.uid && storedToken) {
+          setCalendarAccessToken(storedToken);
+          newUser.googleCalendarConnected = true;
+        } else {
+          sessionStorage.removeItem(CALENDAR_TOKEN_STORAGE_KEY);
+          sessionStorage.removeItem(CALENDAR_TOKEN_OWNER_STORAGE_KEY);
+          setCalendarAccessToken(null);
+        }
 
         // Ensure any guest data is cleared now that a real user is logged in.
         localStorage.removeItem(GUEST_USER_STORAGE_KEY);
@@ -83,6 +102,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         } catch {
           setUser(null);
         }
+        sessionStorage.removeItem(CALENDAR_TOKEN_STORAGE_KEY);
+        sessionStorage.removeItem(CALENDAR_TOKEN_OWNER_STORAGE_KEY);
+        setCalendarAccessToken(null);
       }
       setIsLoading(false);
     });
@@ -104,6 +126,35 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const connectGoogleCalendar = async () => {
+    if (!auth || !auth.currentUser) {
+      throw new Error("Necesitas iniciar sesión con Google antes de conectar el calendario.");
+    }
+    const provider = new GoogleAuthProvider();
+    provider.addScope('https://www.googleapis.com/auth/calendar.events');
+    provider.setCustomParameters({
+      prompt: 'consent',
+      include_granted_scopes: 'true'
+    });
+    const result = await reauthenticateWithPopup(auth.currentUser, provider);
+    const credential = GoogleAuthProvider.credentialFromResult(result);
+    const token = credential?.accessToken;
+    if (!token) {
+      throw new Error("Google no devolvió permiso de calendario.");
+    }
+    sessionStorage.setItem(CALENDAR_TOKEN_STORAGE_KEY, token);
+    sessionStorage.setItem(CALENDAR_TOKEN_OWNER_STORAGE_KEY, auth.currentUser.uid);
+    setCalendarAccessToken(token);
+    setUser(current => current ? { ...current, googleCalendarConnected: true } : current);
+  };
+
+  const disconnectGoogleCalendar = () => {
+    sessionStorage.removeItem(CALENDAR_TOKEN_STORAGE_KEY);
+    sessionStorage.removeItem(CALENDAR_TOKEN_OWNER_STORAGE_KEY);
+    setCalendarAccessToken(null);
+    setUser(current => current ? { ...current, googleCalendarConnected: false } : current);
+  };
+
   const loginAsGuest = () => {
     // Before logging in as guest, ensure any Firebase session is signed out.
     if (auth && auth.currentUser) {
@@ -122,6 +173,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const logout = () => {
     // Clear guest data regardless of user type
     localStorage.removeItem(GUEST_USER_STORAGE_KEY);
+    sessionStorage.removeItem(CALENDAR_TOKEN_STORAGE_KEY);
+    sessionStorage.removeItem(CALENDAR_TOKEN_OWNER_STORAGE_KEY);
+    setCalendarAccessToken(null);
 
     // If it's a Firebase user, sign them out.
     // onAuthStateChanged will then set user to null.
@@ -135,7 +189,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const value = { user, login, logout, loginAsGuest, isLoading, isAdmin: user?.isAdmin || false };
+  const value = {
+    user,
+    login,
+    connectGoogleCalendar,
+    disconnectGoogleCalendar,
+    logout,
+    loginAsGuest,
+    isLoading,
+    isAdmin: user?.isAdmin || false,
+    calendarAccessToken,
+    calendarConnected: !!calendarAccessToken,
+  };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
