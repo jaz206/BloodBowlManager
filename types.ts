@@ -212,6 +212,7 @@ export interface CompetitionTeam {
   teamName: string;
   ownerId: string;
   ownerName: string;
+  ownerEmail?: string;
   isManual?: boolean;
   // Franquicia de Competición (Clon)
   teamState?: ManagedTeam;
@@ -274,6 +275,11 @@ export interface Matchup {
   score2?: number;
   winner?: string;
   played?: boolean;
+  scheduledDate?: string;
+  scheduledEndDate?: string;
+  dateStatus?: 'proposed' | 'confirmed' | 'played' | 'postponed';
+  calendarTitle?: string;
+  invitedEmails?: string[];
   resolution?: MatchResolution;
 }
 
@@ -290,6 +296,18 @@ export interface CompetitionRules {
 }
 
 export type CompetitionPhase = 'registration' | 'regular_season' | 'playoffs' | 'offseason' | 'redraft';
+
+export type CompetitionAvailability = 'weekdays' | 'weekends' | 'both';
+export type CompetitionCadence = 'weekly' | 'biweekly';
+
+export interface CompetitionSchedulingPreferences {
+  availability: CompetitionAvailability;
+  cadence: CompetitionCadence;
+  preferredTime: string;
+  durationMinutes: number;
+  startDate: string;
+  timezone?: string;
+}
 
 export interface Competition {
   id: string;
@@ -310,6 +328,7 @@ export interface Competition {
   bracket?: Record<string, Matchup[]> | null;
   createdAt?: any;
   rules?: CompetitionRules;
+  scheduling?: CompetitionSchedulingPreferences;
   baseTeam?: ManagedTeam; // Equipo base del propietario (host)
   reports?: MatchReport[]; // Crónicas y noticias S3
 }

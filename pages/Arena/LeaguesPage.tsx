@@ -105,6 +105,14 @@ export const Leagues: React.FC<LeaguesProps> = ({
 
     const [joinModalState, setJoinModalState] = useState<{ comp: Competition | null; teamToJoin: string }>({ comp: null, teamToJoin: '' });
     const [scoreModalState, setScoreModalState] = useState<{ isOpen: boolean; roundIndex: string; matchIndex: number; matchup: Matchup; } | null>(null);
+    const [scheduleEditState, setScheduleEditState] = useState<{
+        isOpen: boolean;
+        source: 'schedule' | 'bracket';
+        roundIndex: string;
+        matchIndex: number;
+        scheduledDate: string;
+        durationMinutes: number;
+    } | null>(null);
     const [confirmation, setConfirmation] = useState<{ title: string; message: string; onConfirm: () => void; type?: 'danger' | 'info' } | null>(null);
     const [showReportModal, setShowReportModal] = useState(false);
     const [reportForm, setReportForm] = useState({ headline: '', subHeadline: '', article: '', homeTeam: '', opponentTeam: '', score1: 0, score2: 0 });
@@ -278,6 +286,91 @@ export const Leagues: React.FC<LeaguesProps> = ({
         const next = new Date(date);
         next.setDate(next.getDate() + (cadence === 'biweekly' ? 14 : 7));
         return next;
+    };
+
+    const getMatchDateStatusLabel = (match: Matchup) => {
+        if (match.dateStatus === 'played' || match.played) return 'Acta registrada';
+        if (match.dateStatus === 'confirmed') return 'Fecha confirmada';
+        if (match.dateStatus === 'postponed') return 'Partido aplazado';
+        return 'Fecha propuesta';
+    };
+
+    const toLocalDateTimeInputValue = (isoDate?: string) => {
+        const date = isoDate ? new Date(isoDate) : new Date();
+        if (Number.isNaN(date.getTime())) return '';
+        const offsetMs = date.getTimezoneOffset() * 60_000;
+        return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
+    };
+
+    const getMatchDurationMinutes = (match: Matchup) => {
+        if (match.scheduledDate && match.scheduledEndDate) {
+            const start = new Date(match.scheduledDate).getTime();
+            const end = new Date(match.scheduledEndDate).getTime();
+            const diff = Math.round((end - start) / 60_000);
+            if (Number.isFinite(diff) && diff > 0) return diff;
+        }
+        return selectedCompetition?.scheduling?.durationMinutes || 180;
+    };
+
+    const updateCompetitionMatch = (
+        source: 'schedule' | 'bracket',
+        roundIndex: string,
+        matchIndex: number,
+        updater: (match: Matchup) => void
+    ) => {
+        if (!selectedCompetition) return;
+        const updatedComp = cloneCompetition(selectedCompetition);
+        const collection = source === 'schedule' ? updatedComp.schedule : updatedComp.bracket;
+        const match = collection?.[roundIndex]?.[matchIndex];
+        if (!match) return;
+        updater(match);
+        onCompetitionUpdate(updatedComp);
+        setSelectedCompetition(updatedComp);
+    };
+
+    const openScheduleEditor = (source: 'schedule' | 'bracket', roundIndex: string, matchIndex: number, match: Matchup) => {
+        setScheduleEditState({
+            isOpen: true,
+            source,
+            roundIndex,
+            matchIndex,
+            scheduledDate: toLocalDateTimeInputValue(match.scheduledDate),
+            durationMinutes: getMatchDurationMinutes(match),
+        });
+    };
+
+    const handleConfirmMatchDate = (source: 'schedule' | 'bracket', roundIndex: string, matchIndex: number) => {
+        updateCompetitionMatch(source, roundIndex, matchIndex, match => {
+            match.dateStatus = 'confirmed';
+        });
+    };
+
+    const handlePostponeMatch = (source: 'schedule' | 'bracket', roundIndex: string, matchIndex: number) => {
+        updateCompetitionMatch(source, roundIndex, matchIndex, match => {
+            match.dateStatus = 'postponed';
+        });
+    };
+
+    const handleSaveMatchDate = () => {
+        if (!scheduleEditState) return;
+        const start = new Date(scheduleEditState.scheduledDate);
+        if (Number.isNaN(start.getTime())) {
+            setConfirmation({
+                title: 'Fecha no valida',
+                message: 'Necesitas indicar una fecha y una hora validas para guardar este partido.',
+                onConfirm: () => setConfirmation(null),
+                type: 'info'
+            });
+            return;
+        }
+
+        const end = new Date(start.getTime() + (scheduleEditState.durationMinutes * 60_000));
+        updateCompetitionMatch(scheduleEditState.source, scheduleEditState.roundIndex, scheduleEditState.matchIndex, match => {
+            match.scheduledDate = start.toISOString();
+            match.scheduledEndDate = end.toISOString();
+            match.dateStatus = 'confirmed';
+        });
+        setScheduleEditState(null);
     };
 
     const applySchedulingToRounds = (
@@ -548,6 +641,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
         match.score1 = resolution.team1.score;
         match.score2 = resolution.team2.score;
         match.played = true;
+        match.dateStatus = 'played';
         match.resolution = resolution;
 
         const winner = resolution.team1.score > resolution.team2.score
@@ -1905,7 +1999,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                                 <span>TV real {(opponentReady?.realTV || 0) / 1000}k</span>
                                                             </div>
                                                             <p className="mt-2 text-[10px] font-black uppercase tracking-widest italic text-primary">
-                                                                {formatScheduledMatchDate(nextMatch.scheduledDate)}
+                                                                {nextMatch.dateStatus === 'postponed' ? 'Partido aplazado' : formatScheduledMatchDate(nextMatch.scheduledDate)}
                                                             </p>
                                                         </div>
                                                     </div>
@@ -2241,8 +2335,8 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                         {(round as Matchup[]).map((match, matchIdx) => (
                                                             <div key={matchIdx} className="bg-black/40 p-4 rounded-3xl border border-white/5 flex flex-col gap-3 group">
                                                                 <div className="flex items-center justify-between gap-3 text-[10px] font-black uppercase tracking-widest italic text-slate-500">
-                                                                    <span>{match.dateStatus === 'confirmed' ? 'Fecha confirmada' : 'Fecha propuesta'}</span>
-                                                                    <span className="text-primary">{formatScheduledMatchDate(match.scheduledDate)}</span>
+                                                                    <span>{getMatchDateStatusLabel(match)}</span>
+                                                                    <span className="text-primary">{match.dateStatus === 'postponed' ? 'Aplazado' : formatScheduledMatchDate(match.scheduledDate)}</span>
                                                                 </div>
                                                                 {!!match.invitedEmails?.length && (
                                                                     <div className="text-[9px] font-bold uppercase tracking-widest text-slate-600">
@@ -2267,6 +2361,30 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                                 </div>
                                                                 <span className="flex-1 text-left font-black text-[11px] uppercase italic truncate text-slate-300">{match.team2}</span>
                                                                 </div>
+                                                                {!match.played && (user?.id === selectedCompetition.ownerId || selectedCompetition.teams.some(t => t.ownerId === user?.id && (t.teamName === match.team1 || t.teamName === match.team2))) && (
+                                                                    <div className="flex flex-wrap gap-2">
+                                                                        {match.dateStatus !== 'confirmed' && (
+                                                                            <button
+                                                                                onClick={() => handleConfirmMatchDate('schedule', roundIdx, matchIdx)}
+                                                                                className="px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[10px] font-black uppercase tracking-widest"
+                                                                            >
+                                                                                Confirmar
+                                                                            </button>
+                                                                        )}
+                                                                        <button
+                                                                            onClick={() => openScheduleEditor('schedule', roundIdx, matchIdx, match)}
+                                                                            className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-[10px] font-black uppercase tracking-widest"
+                                                                        >
+                                                                            Mover fecha
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => handlePostponeMatch('schedule', roundIdx, matchIdx)}
+                                                                            className="px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[10px] font-black uppercase tracking-widest"
+                                                                        >
+                                                                            Aplazar
+                                                                        </button>
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         ))}
                                                     </div>
@@ -2290,8 +2408,8 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                             <div key={matchIdx} className="relative group">
                                                                 <div className="bg-zinc-900 border border-white/10 p-4 rounded-[2rem] shadow-2xl relative z-10 space-y-3">
                                                                     <div className="flex items-center justify-between gap-3 text-[10px] font-black uppercase tracking-widest italic text-slate-500">
-                                                                        <span>{match.dateStatus === 'confirmed' ? 'Fecha confirmada' : 'Fecha propuesta'}</span>
-                                                                        <span className="text-primary">{formatScheduledMatchDate(match.scheduledDate)}</span>
+                                                                        <span>{getMatchDateStatusLabel(match)}</span>
+                                                                        <span className="text-primary">{match.dateStatus === 'postponed' ? 'Aplazado' : formatScheduledMatchDate(match.scheduledDate)}</span>
                                                                     </div>
                                                                     <div className="w-full flex justify-between items-center p-3 rounded-2xl bg-black/40 text-slate-400 font-bold">
                                                                         <span className="truncate text-[10px] uppercase tracking-tighter">{match.team1}</span>
@@ -2303,13 +2421,37 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                                         <span className="font-black text-sm">{match.score2 ?? '-'}</span>
                                                                     </div>
                                                                     {!match.played && (user?.id === selectedCompetition.ownerId || selectedCompetition.teams.some(t => t.ownerId === user?.id && (t.teamName === match.team1 || t.teamName === match.team2))) && (
-                                                                        <button
-                                                                            onClick={() => openManualResolution(roundIdx, matchIdx, match)}
-                                                                            className="w-full mt-2 py-3 rounded-2xl bg-primary/10 hover:bg-primary/90 text-primary hover:text-black transition-all font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2"
-                                                                        >
-                                                                            <span className="material-symbols-outlined text-sm font-bold">edit</span>
-                                                                            {match.played ? 'Editar acta' : 'Registrar acta'}
-                                                                        </button>
+                                                                        <div className="space-y-2">
+                                                                            <button
+                                                                                onClick={() => openManualResolution(roundIdx, matchIdx, match)}
+                                                                                className="w-full mt-2 py-3 rounded-2xl bg-primary/10 hover:bg-primary/90 text-primary hover:text-black transition-all font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2"
+                                                                            >
+                                                                                <span className="material-symbols-outlined text-sm font-bold">edit</span>
+                                                                                {match.played ? 'Editar acta' : 'Registrar acta'}
+                                                                            </button>
+                                                                            <div className="flex flex-wrap gap-2">
+                                                                                {match.dateStatus !== 'confirmed' && (
+                                                                                    <button
+                                                                                        onClick={() => handleConfirmMatchDate('bracket', roundIdx, matchIdx)}
+                                                                                        className="px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[10px] font-black uppercase tracking-widest"
+                                                                                    >
+                                                                                        Confirmar
+                                                                                    </button>
+                                                                                )}
+                                                                                <button
+                                                                                    onClick={() => openScheduleEditor('bracket', roundIdx, matchIdx, match)}
+                                                                                    className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-[10px] font-black uppercase tracking-widest"
+                                                                                >
+                                                                                    Mover fecha
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => handlePostponeMatch('bracket', roundIdx, matchIdx)}
+                                                                                    className="px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[10px] font-black uppercase tracking-widest"
+                                                                                >
+                                                                                    Aplazar
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
                                                                     )}
                                                                 </div>
                                                             </div>
@@ -2640,6 +2782,58 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                     </>
                                 );
                             })()}
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {scheduleEditState?.isOpen && (
+                    <div className="leagues-modal-overlay fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={() => setScheduleEditState(null)}>
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="bg-zinc-900 border border-white/5 rounded-[2.5rem] shadow-2xl max-w-xl w-full overflow-hidden relative"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="p-8 border-b border-white/5 space-y-2">
+                                <h3 className="text-xl font-black text-white italic uppercase tracking-tighter">Gestionar fecha</h3>
+                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Mover, confirmar o reprogramar este partido de liga</p>
+                            </div>
+                            <div className="p-8 space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <label className="space-y-3">
+                                        <span className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Fecha y hora</span>
+                                        <input
+                                            type="datetime-local"
+                                            value={scheduleEditState.scheduledDate}
+                                            onChange={e => setScheduleEditState(current => current ? { ...current, scheduledDate: e.target.value } : current)}
+                                            className="w-full bg-black/60 border border-white/10 rounded-2xl py-4 px-4 text-white focus:ring-2 focus:ring-primary/50 outline-none transition-all font-bold"
+                                        />
+                                    </label>
+                                    <label className="space-y-3">
+                                        <span className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Duracion en minutos</span>
+                                        <input
+                                            type="number"
+                                            min="30"
+                                            step="15"
+                                            value={scheduleEditState.durationMinutes}
+                                            onChange={e => setScheduleEditState(current => current ? { ...current, durationMinutes: Math.max(30, Number(e.target.value) || 30) } : current)}
+                                            className="w-full bg-black/60 border border-white/10 rounded-2xl py-4 px-4 text-white focus:ring-2 focus:ring-primary/50 outline-none transition-all font-bold"
+                                        />
+                                    </label>
+                                </div>
+                                <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed">
+                                        Al guardar, esta fecha quedará marcada como confirmada dentro de la liga.
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="p-8 bg-black/40 flex gap-4">
+                                <button onClick={() => setScheduleEditState(null)} className="flex-1 py-4 text-slate-400 font-black uppercase tracking-widest text-[10px] hover:text-white transition-colors">Cancelar</button>
+                                <button onClick={handleSaveMatchDate} className="flex-1 py-4 bg-primary text-black font-black rounded-2xl uppercase tracking-widest text-[10px] shadow-lg shadow-primary/10">Guardar fecha</button>
+                            </div>
                         </motion.div>
                     </div>
                 )}
