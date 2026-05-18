@@ -312,6 +312,34 @@ export const Leagues: React.FC<LeaguesProps> = ({
         return selectedCompetition?.scheduling?.durationMinutes || 180;
     };
 
+    const formatGoogleCalendarDate = (isoDate?: string) => {
+        if (!isoDate) return '';
+        const date = new Date(isoDate);
+        if (Number.isNaN(date.getTime())) return '';
+        return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
+    };
+
+    const buildGoogleCalendarUrl = (match: Matchup, competitionName: string) => {
+        if (!match.scheduledDate || !match.scheduledEndDate) return null;
+        const start = formatGoogleCalendarDate(match.scheduledDate);
+        const end = formatGoogleCalendarDate(match.scheduledEndDate);
+        if (!start || !end) return null;
+
+        const title = match.calendarTitle || `[${competitionName}] ${match.team1} vs ${match.team2}`;
+        const details = [
+            `Competicion: ${competitionName}`,
+            `Partido: ${match.team1} vs ${match.team2}`,
+            match.invitedEmails?.length ? `Participantes con correo: ${match.invitedEmails.join(', ')}` : 'Participantes manuales o sin correo: revisar liga',
+        ].join('\n');
+
+        const url = new URL('https://calendar.google.com/calendar/render');
+        url.searchParams.set('action', 'TEMPLATE');
+        url.searchParams.set('text', title);
+        url.searchParams.set('dates', `${start}/${end}`);
+        url.searchParams.set('details', details);
+        return url.toString();
+    };
+
     const updateCompetitionMatch = (
         source: 'schedule' | 'bracket',
         roundIndex: string,
@@ -1983,14 +2011,14 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                     <h3 className="text-xl font-black text-white italic tracking-tighter uppercase">Próximo <span className="text-primary italic">Encuentro</span></h3>
                                                 </div>
 
-                                                <div className="bg-zinc-900/60 border border-white/5 rounded-[2.5rem] p-6 md:p-8 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6 xl:gap-8 relative overflow-hidden group min-w-0">
+                                                <div className="bg-zinc-900/60 border border-white/5 rounded-[2.5rem] p-6 md:p-8 grid grid-cols-1 xl:grid-cols-[minmax(0,320px)_minmax(0,1fr)] gap-6 xl:gap-8 relative overflow-hidden group min-w-0">
                                                     <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                                     
                                                     <div className="flex items-center gap-4 md:gap-6 relative z-10 w-full min-w-0">
                                                         <div className="size-16 md:size-20 bg-zinc-800 rounded-3xl border border-white/10 flex items-center justify-center text-3xl md:text-4xl text-primary font-black italic shrink-0">
                                                             {opponentName.charAt(0)}
                                                         </div>
-                                                        <div>
+                                                        <div className="min-w-0">
                                                             <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-1 italic">Próxima mesa</p>
                                                             <h4 className="text-2xl md:text-3xl font-black text-white italic uppercase tracking-tighter leading-none mb-2 break-words">{opponentName}</h4>
                                                             <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-500 font-bold uppercase min-w-0">
@@ -2004,8 +2032,8 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                         </div>
                                                     </div>
 
-                                                    <div className="relative z-10 w-full xl:w-auto space-y-4 min-w-0">
-                                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 xl:min-w-[420px] min-w-0">
+                                                    <div className="relative z-10 w-full space-y-4 min-w-0">
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 min-w-0">
                                                             <div className="rounded-2xl border border-white/10 bg-black/40 p-4 space-y-1">
                                                                 <p className="text-[9px] font-black text-slate-500 uppercase">Mi franquicia</p>
                                                                 <p className="text-sm font-black text-white uppercase italic break-words">{myFranchise?.teamName}</p>
@@ -2034,27 +2062,38 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                             {!!myReady?.journeymenNeeded && <span className="text-amber-400">{myReady.journeymenNeeded} sustitutos</span>}
                                                         </div>
 
-                                                            <div className="flex flex-col xl:flex-row gap-3">
-                                                                <button 
-                                                                    onClick={() => nextRoundIndex != null && openManualResolution(nextRoundIndex, nextMatchIndex, nextMatch!)}
-                                                                    className="w-full xl:w-auto bg-primary text-black font-black px-8 py-5 rounded-2xl flex items-center justify-center gap-3 transition-all hover:scale-105 active:scale-95 uppercase tracking-tighter text-sm shadow-xl shadow-primary/10"
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                                                            <button 
+                                                                onClick={() => nextRoundIndex != null && openManualResolution(nextRoundIndex, nextMatchIndex, nextMatch!)}
+                                                                className="w-full bg-primary text-black font-black px-6 py-5 rounded-2xl flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-95 uppercase tracking-tighter text-sm shadow-xl shadow-primary/10"
+                                                            >
+                                                                <span className="material-symbols-outlined font-bold">fact_check</span>
+                                                                Registrar resultado de mesa
+                                                            </button>
+                                                            {buildGoogleCalendarUrl(nextMatch, selectedCompetition.name) && (
+                                                                <a
+                                                                    href={buildGoogleCalendarUrl(nextMatch, selectedCompetition.name)!}
+                                                                    target="_blank"
+                                                                    rel="noreferrer"
+                                                                    className="w-full bg-black/40 border border-white/10 text-white font-black px-6 py-5 rounded-2xl flex items-center justify-center gap-3 transition-all hover:border-primary/30 hover:text-primary uppercase tracking-tighter text-sm"
                                                                 >
-                                                                    <span className="material-symbols-outlined font-bold">fact_check</span>
-                                                                    Registrar resultado de mesa
+                                                                    <span className="material-symbols-outlined font-bold">event</span>
+                                                                    Google Calendar
+                                                                </a>
+                                                            )}
+                                                            {onNavigateToMatch && (
+                                                                <button 
+                                                                    onClick={() => onNavigateToMatch(nextMatch!, selectedCompetition, myFranchise?.teamState, opponentFranchise?.teamState)}
+                                                                    className="w-full bg-black/40 border border-white/10 text-white font-black px-6 py-5 rounded-2xl flex items-center justify-center gap-3 transition-all hover:border-primary/30 hover:text-primary uppercase tracking-tighter text-sm"
+                                                                >
+                                                                    <span className="material-symbols-outlined font-bold">sports_esports</span>
+                                                                    Abrir en Arena
                                                                 </button>
-                                                                {onNavigateToMatch && (
-                                                                    <button 
-                                                                        onClick={() => onNavigateToMatch(nextMatch!, selectedCompetition, myFranchise?.teamState, opponentFranchise?.teamState)}
-                                                                        className="w-full xl:w-auto bg-black/40 border border-white/10 text-white font-black px-8 py-5 rounded-2xl flex items-center justify-center gap-3 transition-all hover:border-primary/30 hover:text-primary uppercase tracking-tighter text-sm"
-                                                                    >
-                                                                        <span className="material-symbols-outlined font-bold">sports_esports</span>
-                                                                        Abrir en Arena
-                                                                    </button>
-                                                                )}
-                                                            </div>
-                                                            <p className="text-[9px] font-bold uppercase text-slate-500 leading-relaxed">
-                                                                El gestor de ligas prioriza actas de mesa. Arena queda como apoyo opcional.
-                                                            </p>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-[9px] font-bold uppercase text-slate-500 leading-relaxed">
+                                                            El gestor de ligas prioriza actas de mesa. Arena queda como apoyo opcional.
+                                                        </p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -2343,6 +2382,17 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                                         Invitables: {match.invitedEmails.join(', ')}
                                                                     </div>
                                                                 )}
+                                                                {buildGoogleCalendarUrl(match, selectedCompetition.name) && (
+                                                                    <a
+                                                                        href={buildGoogleCalendarUrl(match, selectedCompetition.name)!}
+                                                                        target="_blank"
+                                                                        rel="noreferrer"
+                                                                        className="inline-flex w-fit items-center gap-2 px-3 py-2 rounded-xl bg-primary/10 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-widest"
+                                                                    >
+                                                                        <span className="material-symbols-outlined text-sm font-bold">event</span>
+                                                                        Google Calendar
+                                                                    </a>
+                                                                )}
                                                                 <div className="flex items-center justify-between gap-4">
                                                                 <span className="flex-1 text-right font-black text-[11px] uppercase italic truncate text-slate-300">{match.team1}</span>
                                                                 <div className="flex items-center gap-4 px-4 py-2 bg-zinc-900 rounded-2xl border border-white/10 shrink-0 relative overflow-hidden">
@@ -2420,6 +2470,17 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                                         <span className="truncate text-[10px] uppercase tracking-tighter">{match.team2}</span>
                                                                         <span className="font-black text-sm">{match.score2 ?? '-'}</span>
                                                                     </div>
+                                                                    {buildGoogleCalendarUrl(match, selectedCompetition.name) && (
+                                                                        <a
+                                                                            href={buildGoogleCalendarUrl(match, selectedCompetition.name)!}
+                                                                            target="_blank"
+                                                                            rel="noreferrer"
+                                                                            className="w-full py-3 rounded-2xl bg-primary/10 hover:bg-primary/90 text-primary hover:text-black transition-all font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2"
+                                                                        >
+                                                                            <span className="material-symbols-outlined text-sm font-bold">event</span>
+                                                                            Google Calendar
+                                                                        </a>
+                                                                    )}
                                                                     {!match.played && (user?.id === selectedCompetition.ownerId || selectedCompetition.teams.some(t => t.ownerId === user?.id && (t.teamName === match.team1 || t.teamName === match.team2))) && (
                                                                         <div className="space-y-2">
                                                                             <button
