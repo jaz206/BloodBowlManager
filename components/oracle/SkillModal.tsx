@@ -1,4 +1,5 @@
-﻿import React from 'react';
+import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
 import type { Skill } from '../../types';
 import { isEliteSkill } from '../../utils/skillUtils';
@@ -11,6 +12,14 @@ interface SkillModalProps {
 const SkillModal: React.FC<SkillModalProps> = ({ skill, onClose }) => {
   const { language } = useLanguage();
 
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
+
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
       onClose();
@@ -21,7 +30,7 @@ const SkillModal: React.FC<SkillModalProps> = ({ skill, onClose }) => {
   const description = language === 'es' ? (skill.desc_es || skill.desc_en) : skill.desc_en;
   const elite = isEliteSkill(skill);
 
-  return (
+  const modalContent = (
     <div
       className="fixed inset-0 bg-[rgba(255,248,231,0.68)] backdrop-blur-md flex items-center justify-center z-[2000] p-4 animate-fade-in-fast"
       style={{ zIndex: 2000 }}
@@ -30,7 +39,7 @@ const SkillModal: React.FC<SkillModalProps> = ({ skill, onClose }) => {
       aria-modal="true"
       aria-labelledby="skill-modal-title"
     >
-      <div className="blood-ui-light-card max-w-lg w-full transform animate-slide-in-up overflow-hidden shadow-[0_24px_70px_rgba(92,68,39,0.16)] rounded-[1.8rem]">
+      <div className="blood-ui-light-card max-w-lg w-full max-h-[calc(100vh-2rem)] transform animate-slide-in-up overflow-hidden shadow-[0_24px_70px_rgba(92,68,39,0.16)] rounded-[1.8rem] flex flex-col">
         <div className="flex justify-between items-center p-6 border-b border-[rgba(111,87,56,0.12)] bg-[rgba(255,251,241,0.55)]">
           <div className="space-y-3">
             <h2 id="skill-modal-title" className="blood-ui-light-title text-2xl uppercase italic tracking-tighter">{name}</h2>
@@ -64,7 +73,7 @@ const SkillModal: React.FC<SkillModalProps> = ({ skill, onClose }) => {
             </svg>
           </button>
         </div>
-        <div className="p-8 space-y-4">
+        <div className="p-8 space-y-4 overflow-y-auto">
           <p className="blood-ui-light-body font-medium leading-relaxed italic text-base">{description}</p>
         </div>
         <div className="p-6 bg-[rgba(255,251,241,0.62)] border-t border-[rgba(111,87,56,0.12)] flex justify-end">
@@ -87,6 +96,8 @@ const SkillModal: React.FC<SkillModalProps> = ({ skill, onClose }) => {
       `}</style>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default SkillModal;
