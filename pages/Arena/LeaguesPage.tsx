@@ -1563,7 +1563,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                     </div>
                                     
                                     {selectedCompetition.teams.length > 0 ? (
-                                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 2xl:grid-cols-2 gap-4">
                                             {selectedCompetition.teams.map(t => (
                                                 <div
                                                     key={t.entryId || `${t.ownerId || 'manual'}:${t.ownerName}:${t.teamName}`}
@@ -1580,14 +1580,15 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                         </div>
                                                     </div>
                                                     <div className="mt-auto flex flex-col gap-3 min-w-0">
-                                                        {t.stats && (
-                                                            <div className="text-left shrink-0">
-                                                                <p className="text-[10px] font-black text-primary italic uppercase">{t.stats.points} PTS</p>
-                                                                <p className="text-[8px] text-slate-600 font-bold uppercase">{t.stats.played} PJ</p>
-                                                            </div>
-                                                        )}
-                                                        {user?.id === selectedCompetition.ownerId && (
-                                                            <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                                                        <div className="flex items-center justify-between gap-3 min-w-0 flex-wrap">
+                                                            {t.stats && (
+                                                                <div className="text-left shrink-0">
+                                                                    <p className="text-[10px] font-black text-primary italic uppercase">{t.stats.points} PTS</p>
+                                                                    <p className="text-[8px] text-slate-600 font-bold uppercase">{t.stats.played} PJ</p>
+                                                                </div>
+                                                            )}
+                                                            {user?.id === selectedCompetition.ownerId && (
+                                                                <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end ml-auto">
                                                                 {t.teamState && (
                                                                     <button
                                                                         onClick={() => openCloneDashboard(t)}
@@ -1615,8 +1616,9 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                                         <span className="material-symbols-outlined text-[18px]">delete</span>
                                                                     </button>
                                                                 )}
-                                                            </div>
-                                                        )}
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             ))}
@@ -1683,29 +1685,29 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                     </div>
                                                 </div>
 
-                                                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
-                                                    <div className="p-4 bg-zinc-900/40 border border-white/5 rounded-3xl space-y-1">
-                                                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic">Tesoreria</p>
+                                                <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4">
+                                                    <div className="p-4 bg-zinc-900/40 border border-white/5 rounded-3xl space-y-1 min-w-0">
+                                                        <p className="text-[8px] sm:text-[9px] font-black text-slate-500 uppercase italic leading-tight break-words">Tesoreria</p>
                                                         <p className="text-xl font-black text-primary italic">{Math.round(treasury / 1000)}k</p>
                                                     </div>
-                                                    <div className="p-4 bg-zinc-900/40 border border-white/5 rounded-3xl space-y-1">
-                                                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic">Fans</p>
+                                                    <div className="p-4 bg-zinc-900/40 border border-white/5 rounded-3xl space-y-1 min-w-0">
+                                                        <p className="text-[8px] sm:text-[9px] font-black text-slate-500 uppercase italic leading-tight break-words">Fans</p>
                                                         <p className="text-xl font-black text-white italic">{fans}</p>
                                                     </div>
-                                                    <div className="p-4 bg-zinc-900/40 border border-white/5 rounded-3xl space-y-1">
-                                                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic">Disponibles</p>
+                                                    <div className="p-4 bg-zinc-900/40 border border-white/5 rounded-3xl space-y-1 min-w-0">
+                                                        <p className="text-[8px] sm:text-[9px] font-black text-slate-500 uppercase italic leading-tight break-words">Disponibles</p>
                                                         <p className="text-xl font-black text-white italic">{ready?.availableCount || 0}</p>
                                                     </div>
-                                                    <div className="p-4 bg-zinc-900/40 border border-white/5 rounded-3xl space-y-1">
-                                                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic">MNG</p>
+                                                    <div className="p-4 bg-zinc-900/40 border border-white/5 rounded-3xl space-y-1 min-w-0">
+                                                        <p className="text-[8px] sm:text-[9px] font-black text-slate-500 uppercase italic leading-tight break-words">MNG</p>
                                                         <p className="text-xl font-black text-amber-400 italic">{mngCount}</p>
                                                     </div>
-                                                    <div className="p-4 bg-zinc-900/40 border border-white/5 rounded-3xl space-y-1">
-                                                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic">Lesiones</p>
+                                                    <div className="p-4 bg-zinc-900/40 border border-white/5 rounded-3xl space-y-1 min-w-0">
+                                                        <p className="text-[8px] sm:text-[9px] font-black text-slate-500 uppercase italic leading-tight break-words">Lesiones</p>
                                                         <p className="text-xl font-black text-red-400 italic">{injuryCount}</p>
                                                     </div>
-                                                    <div className="p-4 bg-zinc-900/40 border border-white/5 rounded-3xl space-y-1">
-                                                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic">Subidas</p>
+                                                    <div className="p-4 bg-zinc-900/40 border border-white/5 rounded-3xl space-y-1 min-w-0">
+                                                        <p className="text-[8px] sm:text-[9px] font-black text-slate-500 uppercase italic leading-tight break-words">Subidas</p>
                                                         <p className="text-xl font-black text-primary italic">{pendingLevelUps}</p>
                                                     </div>
                                                 </div>
@@ -1887,17 +1889,17 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                     <h3 className="text-xl font-black text-white italic tracking-tighter uppercase">Próximo <span className="text-primary italic">Encuentro</span></h3>
                                                 </div>
 
-                                                <div className="bg-zinc-900/60 border border-white/5 rounded-[2.5rem] p-8 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden group">
+                                                <div className="bg-zinc-900/60 border border-white/5 rounded-[2.5rem] p-6 md:p-8 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6 xl:gap-8 relative overflow-hidden group min-w-0">
                                                     <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                                     
-                                                    <div className="flex items-center gap-6 relative z-10 w-full md:w-auto">
-                                                        <div className="size-20 bg-zinc-800 rounded-3xl border border-white/10 flex items-center justify-center text-4xl text-primary font-black italic">
+                                                    <div className="flex items-center gap-4 md:gap-6 relative z-10 w-full min-w-0">
+                                                        <div className="size-16 md:size-20 bg-zinc-800 rounded-3xl border border-white/10 flex items-center justify-center text-3xl md:text-4xl text-primary font-black italic shrink-0">
                                                             {opponentName.charAt(0)}
                                                         </div>
                                                         <div>
                                                             <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-1 italic">Próxima mesa</p>
-                                                            <h4 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">{opponentName}</h4>
-                                                            <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                                                            <h4 className="text-2xl md:text-3xl font-black text-white italic uppercase tracking-tighter leading-none mb-2 break-words">{opponentName}</h4>
+                                                            <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-500 font-bold uppercase min-w-0">
                                                                 <span>{opponentFranchise?.teamState?.rosterName || 'Desconocido'}</span>
                                                                 <span className="w-1 h-1 rounded-full bg-slate-700"></span>
                                                                 <span>TV real {(opponentReady?.realTV || 0) / 1000}k</span>
@@ -1908,21 +1910,21 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                         </div>
                                                     </div>
 
-                                                    <div className="relative z-10 w-full md:w-auto space-y-4">
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 min-w-[320px]">
+                                                    <div className="relative z-10 w-full xl:w-auto space-y-4 min-w-0">
+                                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 xl:min-w-[420px] min-w-0">
                                                             <div className="rounded-2xl border border-white/10 bg-black/40 p-4 space-y-1">
-                                                                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Mi franquicia</p>
-                                                                <p className="text-sm font-black text-white uppercase italic">{myFranchise?.teamName}</p>
-                                                                <div className="flex flex-wrap gap-2 text-[9px] font-bold uppercase">
+                                                                <p className="text-[9px] font-black text-slate-500 uppercase">Mi franquicia</p>
+                                                                <p className="text-sm font-black text-white uppercase italic break-words">{myFranchise?.teamName}</p>
+                                                                <div className="flex flex-wrap gap-2 text-[9px] font-bold uppercase min-w-0">
                                                                     <span className="text-white">{myReady?.availableCount || 0} listos</span>
                                                                     <span className="text-red-400">{myReady?.unavailableCount || 0} bajas</span>
                                                                     <span className="text-primary">{(myReady?.realTV || 0) / 1000}k TV</span>
                                                                 </div>
                                                             </div>
                                                             <div className="rounded-2xl border border-white/10 bg-black/40 p-4 space-y-1">
-                                                                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Rival</p>
-                                                                <p className="text-sm font-black text-white uppercase italic">{opponentFranchise?.teamName}</p>
-                                                                <div className="flex flex-wrap gap-2 text-[9px] font-bold uppercase">
+                                                                <p className="text-[9px] font-black text-slate-500 uppercase">Rival</p>
+                                                                <p className="text-sm font-black text-white uppercase italic break-words">{opponentFranchise?.teamName}</p>
+                                                                <div className="flex flex-wrap gap-2 text-[9px] font-bold uppercase min-w-0">
                                                                     <span className="text-white">{opponentReady?.availableCount || 0} listos</span>
                                                                     <span className="text-red-400">{opponentReady?.unavailableCount || 0} bajas</span>
                                                                     <span className="text-primary">{(opponentReady?.realTV || 0) / 1000}k TV</span>
@@ -1930,7 +1932,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                             </div>
                                                         </div>
 
-                                                        <div className="flex flex-wrap items-center gap-3 text-[10px] font-black uppercase tracking-widest italic text-slate-400">
+                                                        <div className="flex flex-wrap items-center gap-3 text-[10px] font-black uppercase italic text-slate-400 min-w-0">
                                                             <span>Diferencia TV: <span className="text-white">{tvDifference / 1000}k</span></span>
                                                             {underdog && selectedCompetition.rules?.pettyCashEnabled && tvDifference > 0 && (
                                                                 <span className="text-primary">Petty Cash para {underdog}</span>
@@ -1938,10 +1940,10 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                             {!!myReady?.journeymenNeeded && <span className="text-amber-400">{myReady.journeymenNeeded} sustitutos</span>}
                                                         </div>
 
-                                                            <div className="flex flex-col md:flex-row gap-3">
+                                                            <div className="flex flex-col xl:flex-row gap-3">
                                                                 <button 
                                                                     onClick={() => nextRoundIndex != null && openManualResolution(nextRoundIndex, nextMatchIndex, nextMatch!)}
-                                                                    className="w-full md:w-auto bg-primary text-black font-black px-10 py-5 rounded-2xl flex items-center justify-center gap-3 transition-all hover:scale-105 active:scale-95 uppercase tracking-tighter text-sm shadow-xl shadow-primary/10"
+                                                                    className="w-full xl:w-auto bg-primary text-black font-black px-8 py-5 rounded-2xl flex items-center justify-center gap-3 transition-all hover:scale-105 active:scale-95 uppercase tracking-tighter text-sm shadow-xl shadow-primary/10"
                                                                 >
                                                                     <span className="material-symbols-outlined font-bold">fact_check</span>
                                                                     Registrar resultado de mesa
@@ -1949,14 +1951,14 @@ export const Leagues: React.FC<LeaguesProps> = ({
                                                                 {onNavigateToMatch && (
                                                                     <button 
                                                                         onClick={() => onNavigateToMatch(nextMatch!, selectedCompetition, myFranchise?.teamState, opponentFranchise?.teamState)}
-                                                                        className="w-full md:w-auto bg-black/40 border border-white/10 text-white font-black px-8 py-5 rounded-2xl flex items-center justify-center gap-3 transition-all hover:border-primary/30 hover:text-primary uppercase tracking-tighter text-sm"
+                                                                        className="w-full xl:w-auto bg-black/40 border border-white/10 text-white font-black px-8 py-5 rounded-2xl flex items-center justify-center gap-3 transition-all hover:border-primary/30 hover:text-primary uppercase tracking-tighter text-sm"
                                                                     >
                                                                         <span className="material-symbols-outlined font-bold">sports_esports</span>
                                                                         Abrir en Arena
                                                                     </button>
                                                                 )}
                                                             </div>
-                                                            <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
+                                                            <p className="text-[9px] font-bold uppercase text-slate-500 leading-relaxed">
                                                                 El gestor de ligas prioriza actas de mesa. Arena queda como apoyo opcional.
                                                             </p>
                                                     </div>
