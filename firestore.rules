@@ -154,7 +154,14 @@ service cloud.firestore {
       allow read: if canReadCompetitionData(resource.data);
 
       allow create: if hasValidOwnershipOnCreate();
-      allow update: if (isAdmin() || isDocOwnerOrCreator()) && keepsOwnership();
+      allow update: if (
+        (isAdmin() || isDocOwnerOrCreator())
+        || (
+          signedIn()
+          && resource.data.status == 'Open'
+          && isPublicCompetition(resource.data)
+        )
+      ) && keepsOwnership();
       allow delete: if isAdmin() || isDocOwnerOrCreator();
 
       match /{document=**} {

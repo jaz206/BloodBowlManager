@@ -28,7 +28,7 @@ interface LeaguesProps {
     managedTeams: ManagedTeam[];
     initialCompetitions: Competition[];
     onCompetitionCreate: (comp: Omit<Competition, 'id'>) => Promise<string | null> | string | null;
-    onCompetitionUpdate: (comp: Competition) => void;
+    onCompetitionUpdate: (comp: Competition) => Promise<boolean> | boolean;
     onCompetitionDelete: (id: string) => void;
     onNavigateToMatch?: (matchup: Matchup, comp: Competition, myTeam?: ManagedTeam, opponentTeam?: ManagedTeam) => void;
     isGuest: boolean;
@@ -352,8 +352,19 @@ export const Leagues: React.FC<LeaguesProps> = ({
         const match = collection?.[roundIndex]?.[matchIndex];
         if (!match) return;
         updater(match);
-        onCompetitionUpdate(updatedComp);
-        setSelectedCompetition(updatedComp);
+        void (async () => {
+            const saved = await onCompetitionUpdate(updatedComp);
+            if (!saved) {
+                setConfirmation({
+                    title: "No se pudo guardar",
+                    message: "Firebase no aceptó el cambio. Revisa permisos y vuelve a intentarlo.",
+                    onConfirm: () => setConfirmation(null),
+                    type: 'info'
+                });
+                return;
+            }
+            setSelectedCompetition(updatedComp);
+        })();
     };
 
     const openScheduleEditor = (source: 'schedule' | 'bracket', roundIndex: string, matchIndex: number, match: Matchup) => {
@@ -803,7 +814,7 @@ export const Leagues: React.FC<LeaguesProps> = ({
         setStatsModalTeam(updatedTeam);
     };
 
-    const handleJoinCompetition = () => {
+    const handleJoinCompetition = async () => {
         if (!joinModalState.comp || !user) return;
 
         if (joinModalState.comp.status !== 'Open') {
@@ -865,17 +876,24 @@ export const Leagues: React.FC<LeaguesProps> = ({
             participantIds: Array.from(new Set([...(cleanComp.participantIds || []), user.id])),
             teams: [...cleanComp.teams, createCompetitionEntry(baseTeam, user.id, user.name, user.email || '', false)]
         };
-        onCompetitionUpdate(updatedComp as Competition);
-        
-        // Update local state if we are in detail view
+        const saved = await onCompetitionUpdate(updatedComp as Competition);
+        if (!saved) {
+            setConfirmation({
+                title: "No se pudo inscribir",
+                message: "La liga no aceptó la inscripción. Si estás con otra cuenta, faltan permisos para unirse a la competición.",
+                onConfirm: () => setConfirmation(null),
+                type: 'info'
+            });
+            return;
+        }
+
         if (selectedCompetition && selectedCompetition.id === updatedComp.id) {
             setSelectedCompetition(updatedComp);
         }
-
         setJoinModalState({ comp: null, teamToJoin: '' });
     };
 
-    const handleAddManualParticipant = () => {
+    const handleAddManualParticipant = async () => {
         if (!selectedCompetition || !user) return;
 
         if (selectedCompetition.status !== 'Open') {
@@ -997,7 +1015,16 @@ export const Leagues: React.FC<LeaguesProps> = ({
                 : [...cleanComp.teams, manualEntry]
         };
 
-        onCompetitionUpdate(updatedComp);
+        const saved = await onCompetitionUpdate(updatedComp);
+        if (!saved) {
+            setConfirmation({
+                title: "No se pudo guardar",
+                message: "Firebase no aceptó el participante manual. Revisa permisos y vuelve a intentarlo.",
+                onConfirm: () => setConfirmation(null),
+                type: 'info'
+            });
+            return;
+        }
         setSelectedCompetition(updatedComp);
         resetManualParticipantState();
     };
@@ -1018,9 +1045,20 @@ export const Leagues: React.FC<LeaguesProps> = ({
                     ...cleanComp,
                     teams: cleanComp.teams.filter(team => team.entryId !== entryId)
                 };
-                onCompetitionUpdate(updatedComp);
-                setSelectedCompetition(updatedComp);
-                setConfirmation(null);
+                void (async () => {
+                    const saved = await onCompetitionUpdate(updatedComp);
+                    if (!saved) {
+                        setConfirmation({
+                            title: "No se pudo eliminar",
+                            message: "Firebase no aceptó el borrado del participante manual.",
+                            onConfirm: () => setConfirmation(null),
+                            type: 'info'
+                        });
+                        return;
+                    }
+                    setSelectedCompetition(updatedComp);
+                    setConfirmation(null);
+                })();
             }
         });
     };
@@ -1060,21 +1098,43 @@ export const Leagues: React.FC<LeaguesProps> = ({
             };
         }
 
-        onCompetitionUpdate(updatedComp);
-        setSelectedCompetition(updatedComp);
+        void (async () => {
+            const saved = await onCompetitionUpdate(updatedComp);
+            if (!saved) {
+                setConfirmation({
+                    title: "No se pudo iniciar",
+                    message: "Firebase no aceptó el inicio de la competición.",
+                    onConfirm: () => setConfirmation(null),
+                    type: 'info'
+                });
+                return;
+            }
+            setSelectedCompetition(updatedComp);
+        })();
     };
 
     const handleSaveScore = (resolution: MatchResolution) => {
         if (!selectedCompetition || !scoreModalState) return;
         const updatedComp = applyMatchResolution(selectedCompetition, scoreModalState.roundIndex, scoreModalState.matchIndex, resolution);
-        onCompetitionUpdate(updatedComp);
-        setSelectedCompetition(updatedComp);
-        const preferredTeam = updatedComp.teams.find(team => team.teamName === resolution.team1.teamName)
-            || updatedComp.teams.find(team => team.teamName === resolution.team2.teamName);
-        if (preferredTeam?.entryId) {
-            setSelectedEntryId(preferredTeam.entryId);
-        }
-        setScoreModalState(null);
+        void (async () => {
+            const saved = await onCompetitionUpdate(updatedComp);
+            if (!saved) {
+                setConfirmation({
+                    title: "No se pudo guardar el acta",
+                    message: "Firebase no aceptó el resultado del partido.",
+                    onConfirm: () => setConfirmation(null),
+                    type: 'info'
+                });
+                return;
+            }
+            setSelectedCompetition(updatedComp);
+            const preferredTeam = updatedComp.teams.find(team => team.teamName === resolution.team1.teamName)
+                || updatedComp.teams.find(team => team.teamName === resolution.team2.teamName);
+            if (preferredTeam?.entryId) {
+                setSelectedEntryId(preferredTeam.entryId);
+            }
+            setScoreModalState(null);
+        })();
     };
 
     const openManualResolution = (roundIndex: string, matchIndex: number, matchup: Matchup) => {

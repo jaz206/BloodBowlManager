@@ -133,6 +133,7 @@ const MainApp: React.FC = () => {
         teamName: team?.teamName || team?.name || 'Equipo',
         ownerId: team?.ownerId || '',
         ownerName: team?.ownerName || '',
+        ownerEmail: team?.ownerEmail || '',
         stats: team?.stats || {
           played: 0,
           won: 0,
@@ -171,6 +172,14 @@ const MainApp: React.FC = () => {
         prayersToNuffleEnabled: competition.rules.prayersToNuffleEnabled ?? true,
         expensiveMistakesEnabled: competition.rules.expensiveMistakesEnabled ?? true,
         redraftBudgetBase: competition.rules.redraftBudgetBase ?? 0,
+      } : undefined,
+      scheduling: competition?.scheduling ? {
+        availability: competition.scheduling.availability || 'both',
+        cadence: competition.scheduling.cadence || 'weekly',
+        preferredTime: competition.scheduling.preferredTime || '20:30',
+        durationMinutes: competition.scheduling.durationMinutes || 180,
+        startDate: competition.scheduling.startDate || new Date().toISOString().slice(0, 10),
+        timezone: competition.scheduling.timezone || 'Europe/Madrid',
       } : undefined,
       baseTeam: competition?.baseTeam,
       reports: Array.isArray(competition?.reports) ? competition!.reports : [],
@@ -577,17 +586,20 @@ const MainApp: React.FC = () => {
   };
 
   const handleCompetitionUpdate = async (updatedComp: Competition) => {
-    if (!user || isGuest || !db || !updatedComp.id) return;
+    if (!user || isGuest || !db || !updatedComp.id) return false;
     setSyncState('syncing');
     try {
       const normalizedComp = normalizeCompetition(updatedComp);
+      const firestoreSafeCompetition = stripUndefinedDeep(normalizedComp);
       const compRef = doc(db, 'leagues', updatedComp.id);
-      const { id, ...data } = normalizedComp;
+      const { id, ...data } = firestoreSafeCompetition;
       await updateDoc(compRef, data);
       setSyncState('synced');
+      return true;
     } catch (error) {
       console.error("Error updating competition:", error);
       setSyncState('error');
+      return false;
     }
   };
 
